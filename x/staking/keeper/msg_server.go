@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"slices"
 	"strconv"
 	"time"
 
@@ -85,13 +86,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 	cp := sdkCtx.ConsensusParams()
 	if cp.Validator != nil {
 		pkType := pk.Type()
-		hasKeyType := false
-		for _, keyType := range cp.Validator.PubKeyTypes {
-			if pkType == keyType {
-				hasKeyType = true
-				break
-			}
-		}
+		hasKeyType := slices.Contains(cp.Validator.PubKeyTypes, pkType)
 		if !hasKeyType {
 			return nil, errorsmod.Wrapf(
 				types.ErrValidatorPubKeyTypeNotSupported,

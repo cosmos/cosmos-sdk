@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/math"
@@ -296,7 +296,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 			if tc.expPass {
 				suite.stakingKeeper.EXPECT().ApplyAndReturnValidatorSetUpdates(gomock.Any()).Return(nil, nil).AnyTimes()
 				suite.Require().NotPanics(func() {
-					genutil.DeliverGenTxs(
+					_, _ = genutil.DeliverGenTxs(
 						suite.ctx, genTxs, suite.stakingKeeper, tc.deliverTxFn,
 						suite.encodingConfig.TxConfig,
 					)

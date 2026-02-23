@@ -67,7 +67,6 @@ func TestPaginate(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		i, tc := i, tc
 		t.Run(tc.name, func(t *testing.T) {
 			start, end := client.Paginate(tc.numObjs, tc.page, tc.limit, tc.defLimit)
 			require.Equal(t, tc.expectedStart, start, "invalid result; test case #%d", i)

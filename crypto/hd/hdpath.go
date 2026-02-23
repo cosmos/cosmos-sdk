@@ -87,7 +87,7 @@ func NewParamsFromPath(path string) (*BIP44Params, error) {
 			fmt.Errorf("fourth and fifth field in path must not be hardened (ie. not contain the suffix ', got %s and %s", spl[3], spl[4])
 	}
 
-	if !(change == 0 || change == 1) {
+	if change != 0 && change != 1 {
 		return nil, fmt.Errorf("change field can only be 0 or 1")
 	}
 
@@ -160,7 +160,7 @@ func ComputeMastersFromSeed(seed []byte) (secret, chainCode [32]byte) {
 	curveIdentifier := []byte("Bitcoin seed")
 	secret, chainCode = i64(curveIdentifier, seed)
 
-	return
+	return secret, chainCode
 }
 
 // DerivePrivateKeyForPath derives the private key by following the BIP 32/44 path from privKeyBytes,
@@ -272,7 +272,7 @@ func i64(key, data []byte) (il, ir [32]byte) {
 	copy(il[:], I[:32])
 	copy(ir[:], I[32:])
 
-	return
+	return il, ir
 }
 
 // CreateHDPath returns BIP 44 object from account and index parameters.

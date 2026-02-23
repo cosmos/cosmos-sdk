@@ -308,7 +308,6 @@ func (s *E2ETestSuite) TestCmdRevokeAuthorizations() {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdRevokeAuthorization(addresscodec.NewBech32Codec("cosmos"))
 			clientCtx := val.ClientCtx
@@ -455,7 +454,6 @@ func (s *E2ETestSuite) TestNewExecGenericAuthorized() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.ClientCtx
@@ -561,7 +559,6 @@ func (s *E2ETestSuite) TestNewExecGrantAuthorized() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.ClientCtx
@@ -760,7 +757,6 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.ClientCtx
@@ -827,7 +823,6 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.ClientCtx
@@ -985,7 +980,6 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.ClientCtx
@@ -1053,7 +1047,6 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.ClientCtx

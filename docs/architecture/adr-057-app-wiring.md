@@ -306,13 +306,13 @@ change to a module should be handled as follows:
 - the semantic major version should be incremented, and
 - a new semantically versioned module config protobuf type should be created.
 
-For instance, if we have the SDK module for bank in the go module `cosmossdk.io/x/bank` with the module config type
+For instance, if we have the SDK module for bank in the go module `github.com/cosmos/cosmos-sdk/x/bank` with the module config type
 `cosmos.bank.module.v1.Module`, and we want to make a state machine breaking change to the module, we would:
-- create a new go module `cosmossdk.io/x/bank/v2`,
+- create a new go module `github.com/cosmos/cosmos-sdk/x/bank/v2`,
 - with the module config protobuf type `cosmos.bank.module.v2.Module`.
 
 This _does not_ mean that we need to increment the protobuf API version for bank. Both modules can support
-`cosmos.bank.v1`, but `cosmossdk.io/x/bank/v2` will be a separate go module with a separate module config type.
+`cosmos.bank.v1`, but `github.com/cosmos/cosmos-sdk/x/bank/v2` will be a separate go module with a separate module config type.
 
 This practice will eventually allow us to use appconfig to load new versions of a module via a configuration change.
 

@@ -31,7 +31,7 @@ In the Cosmos SDK, Protobuf is the main [encoding](./encoding) library. This bri
 Each module exposes a [Protobuf `Query` service](../../build/building-modules/02-messages-and-queries.md#queries) that defines state queries. The `Query` services and a transaction service used to broadcast transactions are hooked up to the gRPC server via the following function inside the application:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/server/types/app.go#L46-L48
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/server/types/app.go#L46-L48
 ```
 
 Note: It is not possible to expose any [Protobuf `Msg` service](../../build/building-modules/02-messages-and-queries.md#messages) endpoints via gRPC. Transactions must be generated and signed using the CLI or programmatically before they can be broadcasted using gRPC. See [Generating, Signing, and Broadcasting Transactions](../../user/run-node/03-txs.md) for more information.
@@ -66,7 +66,7 @@ If, for various reasons, you cannot use gRPC (for example, you are building a we
 [gRPC-gateway](https://grpc-ecosystem.github.io/grpc-gateway/) is a tool to expose gRPC endpoints as REST endpoints. For each gRPC endpoint defined in a Protobuf `Query` service, the Cosmos SDK offers a REST equivalent. For instance, querying a balance could be done via the `/cosmos.bank.v1beta1.QueryAllBalances` gRPC endpoint, or alternatively via the gRPC-gateway `"/cosmos/bank/v1beta1/balances/{address}"` REST endpoint: both will return the same result. For each RPC method defined in a Protobuf `Query` service, the corresponding REST endpoint is defined as an option:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/bank/v1beta1/query.proto#L23-L30
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/proto/cosmos/bank/v1beta1/query.proto#L23-L30
 ```
 
 For application developers, gRPC-gateway REST routes needs to be wired up to the REST server, this is done by calling the `RegisterGRPCGatewayRoutes` function on the ModuleManager.
@@ -78,7 +78,7 @@ A [Swagger](https://swagger.io/) (or OpenAPIv2) specification file is exposed un
 Enabling the `/swagger` endpoint is configurable inside `~/.simapp/config/app.toml` via the `api.swagger` field, which is set to false by default.
 
 For application developers, you may want to generate your own Swagger definitions based on your custom modules.
-The Cosmos SDK's [Swagger generation script](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/scripts/protoc-swagger-gen.sh) is a good place to start.
+The Cosmos SDK's [Swagger generation script](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/scripts/protoc-swagger-gen.sh) is a good place to start.
 
 ## CometBFT RPC
 

@@ -88,9 +88,23 @@ func (s *eventsTestSuite) TestEventManager() {
 	s.Require().Equal(em.Events(), events.AppendEvent(event))
 }
 
+func (s *eventsTestSuite) TestOverrideEvents() {
+	em := sdk.NewEventManager()
+	event := sdk.NewEvent("reward", sdk.NewAttribute("x", "y"))
+	events := sdk.Events{sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))}
+
+	em.EmitEvents(events)
+	em.EmitEvent(event)
+
+	s.Require().Len(em.Events(), 2)
+
+	em.OverrideEvents(events)
+	s.Require().Len(em.Events(), 1)
+}
+
 func (s *eventsTestSuite) TestEmitTypedEvent() {
 	s.Run("deterministic key-value order", func() {
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			em := sdk.NewEventManager()
 			coin := sdk.NewCoin("fakedenom", math.NewInt(1999999))
 			s.Require().NoError(em.EmitTypedEvent(&coin))
@@ -268,7 +282,6 @@ func (s *eventsTestSuite) TestMarkEventsToIndex() {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		s.T().Run(name, func(_ *testing.T) {
 			s.Require().Equal(tc.expected, sdk.MarkEventsToIndex(tc.events, tc.indexSet))
 		})

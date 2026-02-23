@@ -4,6 +4,8 @@ package cosmos.app.v1alpha1;
 
 import "google/protobuf/descriptor.proto";
 
+option go_package = "cosmossdk.io/depinject/appconfig/v1alpha1";
+
 extend google.protobuf.MessageOptions {
   // module indicates that this proto type is a config object for an app module
   // and optionally provides other descriptive information about the module.

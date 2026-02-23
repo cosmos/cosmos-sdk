@@ -3,6 +3,7 @@ package tx
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
@@ -83,6 +84,23 @@ func (w *wrapper) GetMsgsV2() ([]protov2.Message, error) {
 	}
 
 	return w.msgsV2, nil
+}
+
+func (w *wrapper) SetTimeoutTimestamp(timestamp time.Time) {
+	// Only set TimeoutTimestamp if we have a non-zero time.Time.
+	// Setting timestamppb.New() with a zero/default value time.Time results in a non-zero timestamppb.Timestamp,
+	// which causes the value to show up in the signature - breaking <v0.53.x compatibility.
+	if !timestamp.IsZero() && timestamp.Unix() > 0 {
+		w.tx.Body.TimeoutTimestamp = &timestamp
+	}
+}
+
+func (w *wrapper) GetTimeoutTimeStamp() time.Time {
+	t := w.tx.Body.TimeoutTimestamp
+	if t == nil {
+		return time.Time{}
+	}
+	return *t
 }
 
 func (w *wrapper) ValidateBasic() error {
@@ -221,6 +239,11 @@ func (w *wrapper) GetTimeoutHeight() uint64 {
 	return w.tx.Body.TimeoutHeight
 }
 
+// GetUnordered returns the transaction's unordered field (if set).
+func (w *wrapper) GetUnordered() bool {
+	return w.tx.Body.Unordered
+}
+
 func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	signerInfos := w.tx.AuthInfo.SignerInfos
 	sigs := w.tx.Signatures
@@ -278,6 +301,13 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 // SetTimeoutHeight sets the transaction's height timeout.
 func (w *wrapper) SetTimeoutHeight(height uint64) {
 	w.tx.Body.TimeoutHeight = height
+
+	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
+	w.bodyBz = nil
+}
+
+func (w *wrapper) SetUnordered(v bool) {
+	w.tx.Body.Unordered = v
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	w.bodyBz = nil

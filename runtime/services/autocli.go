@@ -25,7 +25,7 @@ type AutoCLIQueryService struct {
 }
 
 // NewAutoCLIQueryService returns a AutoCLIQueryService for the provided modules.
-func NewAutoCLIQueryService(appModules map[string]interface{}) *AutoCLIQueryService {
+func NewAutoCLIQueryService(appModules map[string]any) *AutoCLIQueryService {
 	return &AutoCLIQueryService{
 		moduleOptions: ExtractAutoCLIOptions(appModules),
 	}
@@ -36,7 +36,7 @@ func NewAutoCLIQueryService(appModules map[string]interface{}) *AutoCLIQueryServ
 // Example Usage:
 //
 //	ExtractAutoCLIOptions(ModuleManager.Modules)
-func ExtractAutoCLIOptions(appModules map[string]interface{}) map[string]*autocliv1.ModuleOptions {
+func ExtractAutoCLIOptions(appModules map[string]any) map[string]*autocliv1.ModuleOptions {
 	moduleOptions := map[string]*autocliv1.ModuleOptions{}
 	for modName, mod := range appModules {
 		if autoCliMod, ok := mod.(interface {
@@ -113,7 +113,7 @@ func (a *autocliConfigurator) RegisterMigration(string, uint64, module.Migration
 	return nil
 }
 
-func (a *autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
+func (a *autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss any) {
 	if a.registryCache == nil {
 		a.registryCache, a.err = proto.MergedRegistry()
 	}
@@ -137,7 +137,7 @@ type autocliServiceRegistrar struct {
 	serviceName string
 }
 
-func (a *autocliServiceRegistrar) RegisterService(sd *grpc.ServiceDesc, _ interface{}) {
+func (a *autocliServiceRegistrar) RegisterService(sd *grpc.ServiceDesc, _ any) {
 	a.serviceName = sd.ServiceName
 }
 

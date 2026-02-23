@@ -47,7 +47,6 @@ func TestGetSimulationLog(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.store, func(t *testing.T) {
 			require.Equal(t, tt.expectedLog, GetSimulationLog(tt.store, decoders, tt.kvPairs, tt.kvPairs), tt.store)
 		})
@@ -110,6 +109,8 @@ func checkDiffResults(t *testing.T, store1, store2 storetypes.KVStore, noDiff bo
 }
 
 func initTestStores(t *testing.T) (storetypes.KVStore, storetypes.KVStore) {
+	t.Helper()
+
 	db := dbm.NewMemDB()
 	ms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 
@@ -117,6 +118,6 @@ func initTestStores(t *testing.T) (storetypes.KVStore, storetypes.KVStore) {
 	key2 := storetypes.NewKVStoreKey("store2")
 	require.NotPanics(t, func() { ms.MountStoreWithDB(key1, storetypes.StoreTypeIAVL, db) })
 	require.NotPanics(t, func() { ms.MountStoreWithDB(key2, storetypes.StoreTypeIAVL, db) })
-	require.NotPanics(t, func() { ms.LoadLatestVersion() })
+	require.NotPanics(t, func() { _ = ms.LoadLatestVersion() })
 	return ms.GetKVStore(key1), ms.GetKVStore(key2)
 }

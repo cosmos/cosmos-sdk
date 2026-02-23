@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +24,7 @@ import (
 
 // SetupSimulation creates the config, db (levelDB), temporary directory and logger for the simulation tests.
 // If `skip` is false it skips the current test. `skip` should be set using the `FlagEnabledValue` flag.
-// Returns error on an invalid db intantiation or temp dir creation.
+// Returns error on an invalid db instantiation or temp dir creation.
 func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, skip bool) (dbm.DB, string, log.Logger, bool, error) {
 	if !skip {
 		return nil, "", nil, true, nil
@@ -31,7 +32,7 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 
 	var logger log.Logger
 	if verbose {
-		logger = log.NewLogger(os.Stdout) // TODO(mr): enable selection of log destination.
+		logger = log.NewLogger(os.Stdout)
 	} else {
 		logger = log.NewNopLogger()
 	}
@@ -51,11 +52,19 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
+//
+// Deprecated: use BuildSimulationOperations with TxConfig
 func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes.Config) []simtypes.WeightedOperation {
+	return BuildSimulationOperations(app, cdc, config, moduletestutil.MakeTestTxConfig())
+}
+
+// BuildSimulationOperations retrieves the simulation params from the provided file path
+// and returns all the modules weighted operations
+func BuildSimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes.Config, txConfig client.TxConfig) []simtypes.WeightedOperation {
 	simState := module.SimulationState{
 		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,
-		TxConfig:  moduletestutil.MakeTestTxConfig(),
+		TxConfig:  txConfig,
 		BondDenom: sdk.DefaultBondDenom,
 	}
 
@@ -71,8 +80,7 @@ func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes
 		}
 	}
 
-	//nolint:staticcheck // used for legacy testing
-	simState.LegacyProposalContents = app.SimulationManager().GetProposalContents(simState)
+	simState.LegacyProposalContents = app.SimulationManager().GetProposalContents(simState) //nolint:staticcheck // we're testing the old way here
 	simState.ProposalMsgs = app.SimulationManager().GetProposalMsgs(simState)
 	return app.SimulationManager().WeightedOperations(simState)
 }
@@ -116,7 +124,7 @@ func PrintStats(db dbm.DB) {
 // GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on the
 // each's module store key and the prefix bytes of the KVPair's key.
 func GetSimulationLog(storeName string, sdr simtypes.StoreDecoderRegistry, kvAs, kvBs []kv.Pair) (log string) {
-	for i := 0; i < len(kvAs); i++ {
+	for i := range kvAs {
 		if len(kvAs[i].Value) == 0 && len(kvBs[i].Value) == 0 {
 			// skip if the value doesn't have any bytes
 			continue

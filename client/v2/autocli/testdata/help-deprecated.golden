@@ -8,7 +8,7 @@ Flags:
       --a-bool                                                               
       --a-coin cosmos.base.v1beta1.Coin                                      
       --a-consensus-address account address or key name                      
-      --a-message testpb.AMessage (json)                                     
+      --a-message testpbpulsar.AMessage (json)                               
       --a-validator-address account address or key name                      
       --an-address account address or key name                               
       --an-enum Enum (unspecified | one | two | five | neg-three)             (default unspecified)
@@ -41,7 +41,7 @@ Flags:
       --positional2 string                                                   
       --positional3-varargs cosmos.base.v1beta1.Coin (repeated)              
       --shorthand-deprecated-field string                                    
-      --some-messages testpb.AMessage (json) (repeated)                      
+      --some-messages testpbpulsar.AMessage (json) (repeated)                
       --str string                                                           
       --strings strings                                                      
       --timestamp timestamp (RFC 3339)                                       

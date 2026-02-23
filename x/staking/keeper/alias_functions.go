@@ -169,5 +169,5 @@ func (k Keeper) GetAllSDKDelegations(ctx context.Context) (delegations []types.D
 		delegations = append(delegations, delegation)
 	}
 
-	return
+	return delegations, err
 }

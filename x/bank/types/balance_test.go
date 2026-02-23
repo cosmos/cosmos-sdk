@@ -103,7 +103,6 @@ func TestBalanceValidate(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.balance.Validate()
 
@@ -127,7 +126,6 @@ func TestBalance_GetAddress(t *testing.T) {
 		{"valid address", "cosmos1vy0ga0klndqy92ceqehfkvgmn4t94eteq4hmqv", false},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			b := bank.Balance{Address: tt.Address}
 			if !tt.err {
@@ -159,7 +157,7 @@ func TestSanitizeBalances(t *testing.T) {
 	// 3. Compare and ensure that all the values are sorted in ascending order.
 	// Invariant after sorting:
 	//    a[i] <= a[i+1...n]
-	for i := 0; i < len(sorted); i++ {
+	for i := range sorted {
 		ai := sorted[i]
 		// Ensure that every single value that comes after i is less than it.
 		for j := i + 1; j < len(sorted); j++ {
@@ -172,7 +170,7 @@ func TestSanitizeBalances(t *testing.T) {
 }
 
 func makeRandomAddressesAndPublicKeys(n int) (accL []sdk.AccAddress, pkL []*ed25519.PubKey) {
-	for i := 0; i < n; i++ {
+	for range n {
 		pk := ed25519.GenPrivKey().PubKey().(*ed25519.PubKey)
 		pkL = append(pkL, pk)
 		accL = append(accL, sdk.AccAddress(pk.Address()))
@@ -180,7 +178,7 @@ func makeRandomAddressesAndPublicKeys(n int) (accL []sdk.AccAddress, pkL []*ed25
 	return accL, pkL
 }
 
-var sink, revert interface{}
+var sink, revert any
 
 func BenchmarkSanitizeBalances500(b *testing.B) {
 	benchmarkSanitizeBalances(b, 500)
@@ -191,6 +189,7 @@ func BenchmarkSanitizeBalances1000(b *testing.B) {
 }
 
 func benchmarkSanitizeBalances(b *testing.B, nAddresses int) {
+	b.Helper()
 	b.ReportAllocs()
 	tokens := sdk.TokensFromConsensusPower(81, sdk.DefaultPowerReduction)
 	coin := sdk.NewCoin("benchcoin", tokens)

@@ -3,6 +3,8 @@ package types
 import (
 	"fmt"
 	"io"
+	"maps"
+	"slices"
 
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	dbm "github.com/cosmos/cosmos-db"
@@ -85,12 +87,7 @@ func (s *StoreUpgrades) IsAdded(key string) bool {
 	if s == nil {
 		return false
 	}
-	for _, added := range s.Added {
-		if key == added {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s.Added, key)
 }
 
 // IsDeleted returns true if the given key should be deleted
@@ -98,12 +95,7 @@ func (s *StoreUpgrades) IsDeleted(key string) bool {
 	if s == nil {
 		return false
 	}
-	for _, d := range s.Deleted {
-		if d == key {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s.Deleted, key)
 }
 
 // RenamedFrom returns the oldKey if it was renamed
@@ -209,6 +201,12 @@ type CommitMultiStore interface {
 
 	// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
 	SetIAVLDisableFastNode(disable bool)
+
+	// SetIAVLSyncPruning set sync/async pruning on iavl.
+	// It is not recommended to use this option.
+	// It is here to enable the prune command to force this to true, allowing the command to wait
+	// for the pruning to finish before returning.
+	SetIAVLSyncPruning(sync bool)
 
 	// RollbackToVersion rollback the db to specific version(height).
 	RollbackToVersion(version int64) error
@@ -463,9 +461,7 @@ type TraceContext map[string]interface{}
 // Clone clones tc into another instance of TraceContext.
 func (tc TraceContext) Clone() TraceContext {
 	ret := TraceContext{}
-	for k, v := range tc {
-		ret[k] = v
-	}
+	maps.Copy(ret, tc)
 
 	return ret
 }
@@ -476,9 +472,7 @@ func (tc TraceContext) Merge(newTc TraceContext) TraceContext {
 		tc = TraceContext{}
 	}
 
-	for k, v := range newTc {
-		tc[k] = v
-	}
+	maps.Copy(tc, newTc)
 
 	return tc
 }

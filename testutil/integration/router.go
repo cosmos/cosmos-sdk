@@ -103,7 +103,10 @@ func NewIntegrationApp(
 		}
 	}
 
-	bApp.Commit()
+	_, err := bApp.Commit()
+	if err != nil {
+		panic(fmt.Errorf("failed to commit application: %w", err))
+	}
 
 	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
 
@@ -130,7 +133,7 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 	}
 
 	if cfg.AutomaticCommit {
-		defer app.Commit()
+		defer app.Commit() //nolint:errcheck // not needed in testing
 	}
 
 	if cfg.AutomaticFinalizeBlock {

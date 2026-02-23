@@ -221,7 +221,11 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 	sig := sigs[0]
 	sender := sig.Signer.String()
 	priority := mp.cfg.TxPriority.GetTxPriority(ctx, tx)
-	nonce := sig.Sequence
+	nonce, err := ChooseNonce(sig.Sequence, tx)
+	if err != nil {
+		return err
+	}
+
 	key := txMeta[C]{nonce: nonce, priority: priority, sender: sender}
 
 	senderIndex, ok := mp.senderIndices[sender]
@@ -456,7 +460,10 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 
 	sig := sigs[0]
 	sender := sig.Signer.String()
-	nonce := sig.Sequence
+	nonce, err := ChooseNonce(sig.Sequence, tx)
+	if err != nil {
+		return err
+	}
 
 	scoreKey := txMeta[C]{nonce: nonce, sender: sender}
 	score, ok := mp.scores[scoreKey]

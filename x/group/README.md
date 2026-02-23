@@ -101,7 +101,7 @@ custom decision policies, as long as they adhere to the `DecisionPolicy`
 interface:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/group/types.go#L27-L45
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/x/group/types.go#L27-L45
 ```
 
 #### Threshold decision policy
@@ -337,7 +337,7 @@ The metadata has a maximum length that is chosen by the app developer, and
 passed into the group keeper as a config.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L67-L80
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/proto/cosmos/group/v1/tx.proto#L67-L80
 ```
 
 It's expected to fail if
@@ -350,7 +350,7 @@ It's expected to fail if
 Group members can be updated with the `UpdateGroupMembers`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L88-L102
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/proto/cosmos/group/v1/tx.proto#L88-L102
 ```
 
 In the list of `MemberUpdates`, an existing member can be removed by setting its weight to 0.
@@ -365,7 +365,7 @@ It's expected to fail if:
 The `UpdateGroupAdmin` can be used to update a group admin.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L107-L120
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/proto/cosmos/group/v1/tx.proto#L107-L120
 ```
 
 It's expected to fail if the signer is not the admin of the group.
@@ -375,7 +375,7 @@ It's expected to fail if the signer is not the admin of the group.
 The `UpdateGroupMetadata` can be used to update a group metadata.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L125-L138
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/proto/cosmos/group/v1/tx.proto#L125-L138
 ```
 
 It's expected to fail if:
@@ -388,7 +388,7 @@ It's expected to fail if:
 A new group policy can be created with the `MsgCreateGroupPolicy`, which has an admin address, a group id, a decision policy and some optional metadata.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L147-L165
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/proto/cosmos/group/v1/tx.proto#L147-L165
 ```
 
 It's expected to fail if:
@@ -402,7 +402,7 @@ It's expected to fail if:
 A new group with policy can be created with the `MsgCreateGroupWithPolicy`, which has an admin address, a list of members, a decision policy, a `group_policy_as_admin` field to optionally set group and group policy admin with group policy address and some optional metadata for group and group policy.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L191-L215
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/proto/cosmos/group/v1/tx.proto#L191-L215
 ```
 
 It's expected to fail for the same reasons as `Msg/CreateGroup` and `Msg/CreateGroupPolicy`.
@@ -412,7 +412,7 @@ It's expected to fail for the same reasons as `Msg/CreateGroup` and `Msg/CreateG
 The `UpdateGroupPolicyAdmin` can be used to update a group policy admin.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L173-L186
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/proto/cosmos/group/v1/tx.proto#L173-L186
 ```
 
 It's expected to fail if the signer is not the admin of the group policy.
@@ -422,7 +422,7 @@ It's expected to fail if the signer is not the admin of the group policy.
 The `UpdateGroupPolicyDecisionPolicy` can be used to update a decision policy.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L226-L241
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/proto/cosmos/group/v1/tx.proto#L226-L241
 ```
 
 It's expected to fail if:
@@ -435,7 +435,7 @@ It's expected to fail if:
 The `UpdateGroupPolicyMetadata` can be used to update a group policy metadata.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L246-L259
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/proto/cosmos/group/v1/tx.proto#L246-L259
 ```
 
 It's expected to fail if:
@@ -449,7 +449,7 @@ A new proposal can be created with the `MsgSubmitProposal`, which has a group po
 An optional `Exec` value can be provided to try to execute the proposal immediately after proposal creation. Proposers signatures are considered as yes votes in this case.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L281-L315
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/proto/cosmos/group/v1/tx.proto#L281-L315
 ```
 
 It's expected to fail if:
@@ -462,7 +462,7 @@ It's expected to fail if:
 A proposal can be withdrawn using `MsgWithdrawProposal` which has an `address` (can be either a proposer or the group policy admin) and a `proposal_id` (which has to be withdrawn).
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L323-L333
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/proto/cosmos/group/v1/tx.proto#L323-L333
 ```
 
 It's expected to fail if:
@@ -476,7 +476,7 @@ A new vote can be created with the `MsgVote`, given a proposal id, a voter addre
 An optional `Exec` value can be provided to try to execute the proposal immediately after voting.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L338-L358
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/proto/cosmos/group/v1/tx.proto#L338-L358
 ```
 
 It's expected to fail if:
@@ -489,7 +489,7 @@ It's expected to fail if:
 A proposal can be executed with the `MsgExec`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L363-L373
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/proto/cosmos/group/v1/tx.proto#L363-L373
 ```
 
 The messages that are part of this proposal won't be executed if:
@@ -502,7 +502,7 @@ The messages that are part of this proposal won't be executed if:
 The `MsgLeaveGroup` allows group member to leave a group.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L381-L391
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/proto/cosmos/group/v1/tx.proto#L381-L391
 ```
 
 It's expected to fail if:

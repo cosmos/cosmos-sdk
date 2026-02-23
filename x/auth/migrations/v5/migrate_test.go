@@ -8,6 +8,8 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestMigrate(t *testing.T) {
@@ -21,7 +23,7 @@ func TestMigrate(t *testing.T) {
 	legacySeqBytes, err := (&types.UInt64Value{Value: wantValue}).Marshal()
 	require.NoError(t, err)
 
-	err = kv.OpenKVStore(ctx).Set(LegacyGlobalAccountNumberKey, legacySeqBytes)
+	err = kv.OpenKVStore(ctx).Set(authtypes.LegacyGlobalAccountNumberKey, legacySeqBytes)
 	require.NoError(t, err)
 
 	err = Migrate(ctx, kv, seq)

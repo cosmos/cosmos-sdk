@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -108,7 +108,6 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			_, err = s.keeper.VerifyInvariant(s.ctx, tc.input)
 			if tc.expErr {
@@ -167,7 +166,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			_, err := s.keeper.UpdateParams(s.ctx, tc.input)
 

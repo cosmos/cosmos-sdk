@@ -3,14 +3,14 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"reflect"
+	"slices"
 	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	proto "github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -22,6 +22,7 @@ type EventManagerI interface {
 	EmitTypedEvents(tevs ...proto.Message) error
 	EmitEvent(event Event)
 	EmitEvents(events Events)
+	OverrideEvents(events Events)
 }
 
 // ----------------------------------------------------------------------------
@@ -43,15 +44,24 @@ func NewEventManager() *EventManager {
 func (em *EventManager) Events() Events { return em.events }
 
 // EmitEvent stores a single Event object.
+//
 // Deprecated: Use EmitTypedEvent
 func (em *EventManager) EmitEvent(event Event) {
 	em.events = em.events.AppendEvent(event)
 }
 
 // EmitEvents stores a series of Event objects.
+//
 // Deprecated: Use EmitTypedEvents
 func (em *EventManager) EmitEvents(events Events) {
 	em.events = em.events.AppendEvents(events)
+}
+
+// OverrideEvents removes all previous events and sets a
+// completely new series of Event objects. Should only be used
+// in cases where existing events should be modified.
+func (em *EventManager) OverrideEvents(events Events) {
+	em.events = events
 }
 
 // ABCIEvents returns all stored Event objects as abci.Event objects.
@@ -100,8 +110,7 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 	}
 
 	// sort the keys to ensure the order is always the same
-	keys := maps.Keys(attrMap)
-	slices.Sort(keys)
+	keys := slices.Sorted(maps.Keys(attrMap))
 
 	attrs := make([]abci.EventAttribute, 0, len(attrMap))
 	for _, k := range keys {

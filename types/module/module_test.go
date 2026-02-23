@@ -9,9 +9,9 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
@@ -165,27 +165,6 @@ func TestManagerOrderSetters(t *testing.T) {
 	require.Equal(t, []string{"module3", "module2", "module1"}, mm.OrderPrecommiters)
 }
 
-func TestManager_RegisterInvariants(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	t.Cleanup(mockCtrl.Finish)
-
-	mockAppModule1 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
-	mockAppModule2 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
-	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
-	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
-	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	// TODO: This is not working for Core API modules yet
-	mm := module.NewManager(mockAppModule1, mockAppModule2, module.CoreAppModuleBasicAdaptor("mockAppModule3", mockAppModule3))
-	require.NotNil(t, mm)
-	require.Equal(t, 3, len(mm.Modules))
-
-	// test RegisterInvariants
-	mockInvariantRegistry := mock.NewMockInvariantRegistry(mockCtrl)
-	mockAppModule1.EXPECT().RegisterInvariants(gomock.Eq(mockInvariantRegistry)).Times(1)
-	mockAppModule2.EXPECT().RegisterInvariants(gomock.Eq(mockInvariantRegistry)).Times(1)
-	mm.RegisterInvariants(mockInvariantRegistry)
-}
-
 func TestManager_RegisterQueryServices(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
@@ -211,7 +190,7 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 	mockAppModule1.EXPECT().RegisterServices(cfg).Times(1)
 	mockAppModule2.EXPECT().RegisterServices(cfg).Times(1)
 
-	require.NotPanics(t, func() { mm.RegisterServices(cfg) })
+	require.NotPanics(t, func() { _ = mm.RegisterServices(cfg) })
 }
 
 func TestManager_InitGenesis(t *testing.T) {
@@ -612,7 +591,7 @@ func (MockCoreAppModule) DefaultGenesis(target appmodule.GenesisTarget) error {
 	if err != nil {
 		return err
 	}
-	someFieldWriter.Write([]byte(`"someKey"`))
+	_, _ = someFieldWriter.Write([]byte(`"someKey"`))
 	return someFieldWriter.Close()
 }
 
@@ -639,7 +618,7 @@ func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.Gen
 	if err != nil {
 		return err
 	}
-	wrt.Write([]byte(`"someKey"`))
+	_, _ = wrt.Write([]byte(`"someKey"`))
 	return wrt.Close()
 }
 

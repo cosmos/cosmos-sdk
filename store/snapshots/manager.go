@@ -8,6 +8,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"slices"
 	"sort"
 	"sync"
 
@@ -368,11 +369,8 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 		return errorsmod.Wrap(err, "multistore restore")
 	}
 
-	for {
-		if nextItem.Item == nil {
-			// end of stream
-			break
-		}
+	for nextItem.Item != nil {
+
 		metadata := nextItem.GetExtension()
 		if metadata == nil {
 			return errorsmod.Wrapf(storetypes.ErrLogic, "unknown snapshot item %T", nextItem.Item)
@@ -496,12 +494,7 @@ func (m *Manager) sortedExtensionNames() []string {
 
 // IsFormatSupported returns if the snapshotter supports restoration from given format.
 func IsFormatSupported(snapshotter types.ExtensionSnapshotter, format uint32) bool {
-	for _, i := range snapshotter.SupportedFormats() {
-		if i == format {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(snapshotter.SupportedFormats(), format)
 }
 
 // SnapshotIfApplicable takes a snapshot of the current state if we are on a snapshot height.

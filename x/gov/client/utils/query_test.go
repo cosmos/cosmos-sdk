@@ -140,8 +140,6 @@ func TestGetPaginatedVotes(t *testing.T) {
 			},
 		},
 	} {
-		tc := tc
-
 		t.Run(tc.description, func(t *testing.T) {
 			marshaled := make([]cmttypes.Tx, len(tc.msgs))
 			cli := TxSearchMock{txs: marshaled, txConfig: encCfg.TxConfig}

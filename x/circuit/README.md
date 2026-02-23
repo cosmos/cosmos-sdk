@@ -168,3 +168,90 @@ The circuit module emits the following events:
 * `DisableListPrefix` -  `0x02`
 
 ## Client - list and describe CLI commands and gRPC and REST endpoints
+
+## Examples: Using Circuit Breaker CLI Commands
+
+This section provides practical examples for using the Circuit Breaker module through the command-line interface (CLI). These examples demonstrate how to authorize accounts, disable (trip) specific message types, and re-enable (reset) them when needed.
+
+### Querying Circuit Breaker Permissions
+
+Check an account's current circuit breaker permissions:
+
+```bash
+# Query permissions for a specific account
+<appd> query circuit account-permissions <account_address>
+
+# Example:
+simd query circuit account-permissions cosmos1...
+```
+
+Check which message types are currently disabled:
+
+```bash
+# Query all disabled message types
+<appd> query circuit disabled-list
+
+# Example:
+simd query circuit disabled-list
+```
+
+### Authorizing an Account as Circuit Breaker
+
+Only a super-admin or the module authority (typically the governance module account) can grant circuit breaker permissions to other accounts:
+
+```bash
+# Grant LEVEL_ALL_MSGS permission (can disable any message type)
+<appd> tx circuit authorize <grantee_address> --level=ALL_MSGS --from=<super_admin_key> --gas=auto --gas-adjustment=1.5
+
+# Grant LEVEL_SOME_MSGS permission (can only disable specific message types)
+<appd> tx circuit authorize <grantee_address> --level=SOME_MSGS --limit-type-urls="/cosmos.bank.v1beta1.MsgSend,/cosmos.staking.v1beta1.MsgDelegate" --from=<super_admin_key> --gas=auto --gas-adjustment=1.5
+
+# Grant LEVEL_SUPER_ADMIN permission (can disable messages and authorize other accounts)
+<appd> tx circuit authorize <grantee_address> --level=SUPER_ADMIN --from=<super_admin_key> --gas=auto --gas-adjustment=1.5
+```
+
+### Disabling Message Processing (Trip)
+
+Disable specific message types to prevent their execution (requires authorization):
+
+```bash
+# Disable a single message type
+<appd> tx circuit trip --type-urls="/cosmos.bank.v1beta1.MsgSend" --from=<authorized_key> --gas=auto --gas-adjustment=1.5
+
+# Disable multiple message types
+<appd> tx circuit trip --type-urls="/cosmos.bank.v1beta1.MsgSend,/cosmos.staking.v1beta1.MsgDelegate" --from=<authorized_key> --gas=auto --gas-adjustment=1.5
+
+# Disable all message types (emergency measure)
+<appd> tx circuit trip --from=<authorized_key> --gas=auto --gas-adjustment=1.5
+```
+
+### Re-enabling Message Processing (Reset)
+
+Re-enable previously disabled message types (requires authorization):
+
+```bash
+# Re-enable a single message type
+<appd> tx circuit reset --type-urls="/cosmos.bank.v1beta1.MsgSend" --from=<authorized_key> --gas=auto --gas-adjustment=1.5
+
+# Re-enable multiple message types
+<appd> tx circuit reset --type-urls="/cosmos.bank.v1beta1.MsgSend,/cosmos.staking.v1beta1.MsgDelegate" --from=<authorized_key> --gas=auto --gas-adjustment=1.5
+
+# Re-enable all disabled message types
+<appd> tx circuit reset --from=<authorized_key> --gas=auto --gas-adjustment=1.5
+```
+
+### Usage in Emergency Scenarios
+
+In case of a critical vulnerability in a specific message type:
+
+1. Quickly disable the vulnerable message type:
+   ```bash
+   <appd> tx circuit trip --type-urls="/cosmos.vulnerable.v1beta1.MsgVulnerable" --from=<authorized_key> --gas=auto --gas-adjustment=1.5
+   ```
+
+2. After a fix is deployed, re-enable the message type:
+   ```bash
+   <appd> tx circuit reset --type-urls="/cosmos.vulnerable.v1beta1.MsgVulnerable" --from=<authorized_key> --gas=auto --gas-adjustment=1.5
+   ```
+
+This allows chains to surgically disable problematic functionality without halting the entire chain, providing time for developers to implement and deploy fixes.

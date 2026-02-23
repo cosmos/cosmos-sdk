@@ -163,9 +163,9 @@ func TestGlobalLabelsEventsMarshalling(t *testing.T) {
 
 func TestGlobalLabelsWriteRead(t *testing.T) {
 	expected := [][]string{{"labelname3", "labelvalue3"}, {"labelname4", "labelvalue4"}}
-	expectedRaw := make([]interface{}, len(expected))
+	expectedRaw := make([]any, len(expected))
 	for i, exp := range expected {
-		pair := make([]interface{}, len(exp))
+		pair := make([]any, len(exp))
 		for j, s := range exp {
 			pair[j] = s
 		}
@@ -233,4 +233,209 @@ func TestAppConfig(t *testing.T) {
 	appCfg := new(Config)
 	require.NoError(t, v.Unmarshal(appCfg))
 	require.EqualValues(t, appCfg, defAppConfig)
+}
+
+func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupViper  func(*viper.Viper)
+		expectError bool
+		errorMsg    string
+		validate    func(*testing.T, Config)
+	}{
+		{
+			name: "valid single historical grpc address",
+			setupViper: func(v *viper.Viper) {
+				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [0, 1000]}`)
+			},
+			expectError: false,
+			validate: func(t *testing.T, cfg Config) {
+				t.Helper()
+				require.Len(t, cfg.GRPC.HistoricalGRPCAddressBlockRange, 1)
+				expectedRange := BlockRange{0, 1000}
+				address, exists := cfg.GRPC.HistoricalGRPCAddressBlockRange[expectedRange]
+				require.True(t, exists, "Block range [0, 1000] should exist")
+				require.Equal(t, "localhost:9091", address)
+			},
+		},
+		{
+			name: "valid multiple historical grpc addresses",
+			setupViper: func(v *viper.Viper) {
+				v.Set("grpc.historical-grpc-address-block-range",
+					`{"localhost:9091": [0, 1000], "localhost:9092": [1001, 2000], "localhost:9093": [2001, 3000]}`)
+			},
+			expectError: false,
+			validate: func(t *testing.T, cfg Config) {
+				t.Helper()
+				require.Len(t, cfg.GRPC.HistoricalGRPCAddressBlockRange, 3)
+				testCases := []struct {
+					blockRange BlockRange
+					address    string
+				}{
+					{BlockRange{0, 1000}, "localhost:9091"},
+					{BlockRange{1001, 2000}, "localhost:9092"},
+					{BlockRange{2001, 3000}, "localhost:9093"},
+				}
+				for _, tc := range testCases {
+					address, exists := cfg.GRPC.HistoricalGRPCAddressBlockRange[tc.blockRange]
+					require.True(t, exists, "Block range %v should exist", tc.blockRange)
+					require.Equal(t, tc.address, address)
+				}
+			},
+		},
+		{
+			name: "empty configuration",
+			setupViper: func(v *viper.Viper) {
+				v.Set("grpc.historical-grpc-address-block-range", "")
+			},
+			expectError: false,
+			validate: func(t *testing.T, cfg Config) {
+				t.Helper()
+				require.Nil(t, cfg.GRPC.HistoricalGRPCAddressBlockRange)
+			},
+		},
+		{
+			name:        "no configuration set",
+			setupViper:  func(v *viper.Viper) {},
+			expectError: false,
+			validate: func(t *testing.T, cfg Config) {
+				t.Helper()
+				require.Nil(t, cfg.GRPC.HistoricalGRPCAddressBlockRange)
+			},
+		},
+		{
+			name: "invalid JSON format",
+			setupViper: func(v *viper.Viper) {
+				// missing closing brace
+				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [0, 1000]`)
+			},
+			expectError: true,
+			errorMsg:    "failed to parse historical-grpc-address-block-range as JSON",
+		},
+		{
+			name: "negative start block",
+			setupViper: func(v *viper.Viper) {
+				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [-1, 1000]}`)
+			},
+			expectError: true,
+			errorMsg:    "block numbers cannot be negative",
+		},
+		{
+			name: "negative end block",
+			setupViper: func(v *viper.Viper) {
+				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [0, -100]}`)
+			},
+			expectError: true,
+			errorMsg:    "block numbers cannot be negative",
+		},
+		{
+			name: "start block greater than end block",
+			setupViper: func(v *viper.Viper) {
+				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [1000, 500]}`)
+			},
+			expectError: true,
+			errorMsg:    "start block must be <= end block",
+		},
+		{
+			name: "single block range (start equals end)",
+			setupViper: func(v *viper.Viper) {
+				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [1000, 1000]}`)
+			},
+			expectError: false,
+			validate: func(t *testing.T, cfg Config) {
+				t.Helper()
+				require.Len(t, cfg.GRPC.HistoricalGRPCAddressBlockRange, 1)
+				expectedRange := BlockRange{1000, 1000}
+				address, exists := cfg.GRPC.HistoricalGRPCAddressBlockRange[expectedRange]
+				require.True(t, exists)
+				require.Equal(t, "localhost:9091", address)
+			},
+		},
+		{
+			name: "zero to zero range",
+			setupViper: func(v *viper.Viper) {
+				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [0, 0]}`)
+			},
+			expectError: false,
+			validate: func(t *testing.T, cfg Config) {
+				t.Helper()
+				require.Len(t, cfg.GRPC.HistoricalGRPCAddressBlockRange, 1)
+				expectedRange := BlockRange{0, 0}
+				address, exists := cfg.GRPC.HistoricalGRPCAddressBlockRange[expectedRange]
+				require.True(t, exists)
+				require.Equal(t, "localhost:9091", address)
+			},
+		},
+		{
+			name: "large block numbers",
+			setupViper: func(v *viper.Viper) {
+				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [1000000, 2000000]}`)
+			},
+			expectError: false,
+			validate: func(t *testing.T, cfg Config) {
+				t.Helper()
+				require.Len(t, cfg.GRPC.HistoricalGRPCAddressBlockRange, 1)
+				expectedRange := BlockRange{1000000, 2000000}
+				address, exists := cfg.GRPC.HistoricalGRPCAddressBlockRange[expectedRange]
+				require.True(t, exists)
+				require.Equal(t, "localhost:9091", address)
+			},
+		},
+		{
+			name: "invalid array length (too few elements)",
+			setupViper: func(v *viper.Viper) {
+				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [100]}`)
+			},
+			expectError: true,
+			errorMsg:    "start block must be <= end block",
+		},
+		{
+			name: "invalid array length (too many elements)",
+			setupViper: func(v *viper.Viper) {
+				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [0, 1000, 2000]}`)
+			},
+			expectError: false,
+			validate: func(t *testing.T, cfg Config) {
+				t.Helper()
+				require.Len(t, cfg.GRPC.HistoricalGRPCAddressBlockRange, 1)
+				expectedRange := BlockRange{0, 1000}
+				address, exists := cfg.GRPC.HistoricalGRPCAddressBlockRange[expectedRange]
+				require.True(t, exists)
+				require.Equal(t, "localhost:9091", address)
+			},
+		},
+		{
+			name: "address with port and protocol",
+			setupViper: func(v *viper.Viper) {
+				v.Set("grpc.historical-grpc-address-block-range", `{"https://archive.example.com:9091": [0, 1000]}`)
+			},
+			expectError: false,
+			validate: func(t *testing.T, cfg Config) {
+				t.Helper()
+				require.Len(t, cfg.GRPC.HistoricalGRPCAddressBlockRange, 1)
+				expectedRange := BlockRange{0, 1000}
+				address, exists := cfg.GRPC.HistoricalGRPCAddressBlockRange[expectedRange]
+				require.True(t, exists)
+				require.Equal(t, "https://archive.example.com:9091", address)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := viper.New()
+			v.Set("minimum-gas-prices", "0stake")
+			tt.setupViper(v)
+			cfg, err := GetConfig(v)
+			if tt.expectError {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.errorMsg)
+			} else {
+				require.NoError(t, err)
+				if tt.validate != nil {
+					tt.validate(t, cfg)
+				}
+			}
+		})
+	}
 }

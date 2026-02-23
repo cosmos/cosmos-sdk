@@ -117,7 +117,7 @@ func (a table) Set(store types.KVStore, rowID RowID, newValue proto.Message) err
 	var oldValue proto.Message
 	if a.Has(store, rowID) {
 		oldValue = reflect.New(a.model).Interface().(proto.Message)
-		a.GetOne(store, rowID, oldValue)
+		_ = a.GetOne(store, rowID, oldValue)
 	}
 
 	newValueEncoded, err := a.cdc.Marshal(newValue)
@@ -252,7 +252,7 @@ func (a table) Export(store types.KVStore, dest ModelSlicePtr) (uint64, error) {
 
 // Import clears the table and initializes it from the given data interface{}.
 // data should be a slice of structs that implement PrimaryKeyed.
-func (a table) Import(store types.KVStore, data interface{}, _ uint64) error {
+func (a table) Import(store types.KVStore, data any, _ uint64) error {
 	// Clear all data
 	keys := a.keys(store)
 	for _, key := range keys {
@@ -268,7 +268,7 @@ func (a table) Import(store types.KVStore, data interface{}, _ uint64) error {
 	}
 
 	// Import values from slice
-	for i := 0; i < modelSlice.Len(); i++ {
+	for i := range modelSlice.Len() {
 		obj, ok := modelSlice.Index(i).Interface().(PrimaryKeyed)
 		if !ok {
 			return errorsmod.Wrapf(errors.ErrORMInvalidArgument, "unsupported type :%s", reflect.TypeOf(data).Elem().Elem())

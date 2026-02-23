@@ -19,12 +19,12 @@ var addr1 = sdk.AccAddress([]byte("addr1"))
 
 func (s *paginationTestSuite) TestFilteredPaginations() {
 	var balances sdk.Coins
-	for i := 0; i < numBalances; i++ {
+	for i := range numBalances {
 		denom := fmt.Sprintf("foo%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))
 	}
 
-	for i := 0; i < 4; i++ {
+	for i := range 4 {
 		denom := fmt.Sprintf("test%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 250))
 	}
@@ -92,12 +92,12 @@ func (s *paginationTestSuite) TestFilteredPaginations() {
 
 func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 	var balances sdk.Coins
-	for i := 0; i < numBalances; i++ {
+	for i := range numBalances {
 		denom := fmt.Sprintf("foo%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		denom := fmt.Sprintf("test%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 250))
 	}
@@ -170,12 +170,12 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 
 func (s *paginationTestSuite) TestFilteredPaginate() {
 	var balances sdk.Coins
-	for i := 0; i < numBalances; i++ {
+	for i := range numBalances {
 		denom := fmt.Sprintf("foo%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))
 	}
 
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		denom := fmt.Sprintf("test%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 250))
 	}

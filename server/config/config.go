@@ -1,10 +1,12 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 
 	"github.com/spf13/viper"
+	"google.golang.org/grpc"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
@@ -124,6 +126,21 @@ type APIConfig struct {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/6420
 }
 
+// BlockRange represents a range of block heights as [start_block, end_block] (inclusive).
+// It is used to map gRPC historical connections to specific block height ranges for routing
+// historical queries to appropriate archive nodes.
+//
+// Example:
+//   - [0, 1000] represents blocks from genesis (0) through block 1000
+//   - [1001, 2000] represents blocks from 1001 through 2000
+//
+// Both start and end blocks must be non-negative, and start must be less than or equal to end.
+type BlockRange [2]int
+
+// HistoricalGRPCConnections is a map of block ranges to gRPC client connections
+// used for routing requests to different backend nodes based on block height.
+type HistoricalGRPCConnections map[BlockRange]*grpc.ClientConn
+
 // GRPCConfig defines configuration for the gRPC server.
 type GRPCConfig struct {
 	// Enable defines if the gRPC server should be enabled.
@@ -139,6 +156,12 @@ type GRPCConfig struct {
 	// MaxSendMsgSize defines the max message size in bytes the server can send.
 	// The default value is math.MaxInt32.
 	MaxSendMsgSize int `mapstructure:"max-send-msg-size"`
+
+	// SkipCheckHeader defines if the gRPC server should bypass check header.
+	SkipCheckHeader bool `mapstructure:"skip-check-header"`
+
+	// HistoricalGRPCAddressBlockRange maps block ranges to gRPC addresses for routing historical queries.
+	HistoricalGRPCAddressBlockRange map[BlockRange]string `mapstructure:"-"`
 }
 
 // GRPCWebConfig defines configuration for the gRPC-web server.
@@ -244,10 +267,11 @@ func DefaultConfig() *Config {
 			RPCMaxBodyBytes:    1000000,
 		},
 		GRPC: GRPCConfig{
-			Enable:         true,
-			Address:        DefaultGRPCAddress,
-			MaxRecvMsgSize: DefaultGRPCMaxRecvMsgSize,
-			MaxSendMsgSize: DefaultGRPCMaxSendMsgSize,
+			Enable:          true,
+			Address:         DefaultGRPCAddress,
+			MaxRecvMsgSize:  DefaultGRPCMaxRecvMsgSize,
+			MaxSendMsgSize:  DefaultGRPCMaxSendMsgSize,
+			SkipCheckHeader: false,
 		},
 		GRPCWeb: GRPCWebConfig{
 			Enable: true,
@@ -274,12 +298,32 @@ func GetConfig(v *viper.Viper) (Config, error) {
 	if err := v.Unmarshal(conf); err != nil {
 		return Config{}, fmt.Errorf("error extracting app config: %w", err)
 	}
+	raw := v.GetString("grpc.historical-grpc-address-block-range")
+	if len(raw) > 0 {
+		data := make(map[string]BlockRange)
+		if err := json.Unmarshal([]byte(raw), &data); err != nil {
+			return Config{}, fmt.Errorf("failed to parse historical-grpc-address-block-range as JSON: %w (value: %s)", err, raw)
+		}
+		historicalGRPCAddressBlockRange := make(map[BlockRange]string, len(data))
+		for address, blockRange := range data {
+			if blockRange[0] < 0 || blockRange[1] < 0 {
+				return Config{}, fmt.Errorf("invalid block range [%d, %d] for address %s: block numbers cannot be negative",
+					blockRange[0], blockRange[1], address)
+			}
+			if blockRange[0] > blockRange[1] {
+				return Config{}, fmt.Errorf("invalid block range [%d, %d] for address %s: start block must be <= end block",
+					blockRange[0], blockRange[1], address)
+			}
+			historicalGRPCAddressBlockRange[blockRange] = address
+		}
+		conf.GRPC.HistoricalGRPCAddressBlockRange = historicalGRPCAddressBlockRange
+	}
 	return *conf, nil
 }
 
 // ValidateBasic returns an error if min-gas-prices field is empty in BaseConfig. Otherwise, it returns nil.
 func (c Config) ValidateBasic() error {
-	if c.BaseConfig.MinGasPrices == "" {
+	if c.MinGasPrices == "" {
 		return sdkerrors.ErrAppConfig.Wrap("set min gas price in app.toml or flag or env variable")
 	}
 	if c.Pruning == pruningtypes.PruningOptionEverything && c.StateSync.SnapshotInterval > 0 {

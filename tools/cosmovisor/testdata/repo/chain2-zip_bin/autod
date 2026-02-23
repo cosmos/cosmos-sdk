@@ -6,8 +6,13 @@ echo Args: $@
 echo 'ERROR: UPGRADE "chain3" NEEDED at height: 936: ref_to_chain3-zip_dir.json module=main'
 
 # this update info doesn't contain binaries, instead it is a reference for further download instructions.
-# echo '{"name":"chain3","height":936,"info":"{\"binaries\":{\"linux/amd64\":\"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/ref_to_chain3-zip_dir.json?checksum=sha256:a95075f4dd83bc9f0f556ef73e64ce000f9bf3a6beeb9d4ae32f594b1417ef7a\"}}"}' > $3
-echo '{"name":"chain3","height":936,"info":"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/ref_to_chain3-zip_dir.json?checksum=sha256:a95075f4dd83bc9f0f556ef73e64ce000f9bf3a6beeb9d4ae32f594b1417ef7a"}' >$3
+cat > "$3" <<EOL
+{
+	"name": "chain3",
+	"height": 936,
+	"info": "https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/ref_to_chain3-zip_dir.json?checksum=sha256:6758973f7404f6d34381029931b85826fc7a6315584ede03bad4c19e9b787f6c"
+}
+EOL
 
 sleep 1
 echo 'Do not print'

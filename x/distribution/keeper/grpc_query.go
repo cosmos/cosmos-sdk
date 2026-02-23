@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -27,7 +28,7 @@ func NewQuerier(keeper Keeper) Querier {
 }
 
 // Params queries params of distribution module
-func (k Querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k Querier) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	params, err := k.Keeper.Params.Get(ctx)
 	if err != nil {
 		return nil, err
@@ -255,7 +256,7 @@ func (k Querier) DelegationRewards(ctx context.Context, req *types.QueryDelegati
 	return &types.QueryDelegationRewardsResponse{Rewards: rewards}, nil
 }
 
-// DelegationTotalRewards the total rewards accrued by a each validator
+// DelegationTotalRewards the total rewards accrued by each validator
 func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDelegationTotalRewardsRequest) (*types.QueryDelegationTotalRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -331,7 +332,6 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 			return false
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -362,7 +362,11 @@ func (k Querier) DelegatorWithdrawAddress(ctx context.Context, req *types.QueryD
 }
 
 // CommunityPool queries the community pool coins
-func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
+func (k Querier) CommunityPool(ctx context.Context, _ *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
+	if k.HasExternalCommunityPool() {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "external community pool is enabled - use the CommunityPool query exposed by the external community pool")
+	}
+
 	pool, err := k.FeePool.Get(ctx)
 	if err != nil {
 		return nil, err

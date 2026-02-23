@@ -50,14 +50,17 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			Service: upgradev1beta1.Msg_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
+					RpcMethod:   "CancelUpgrade",
+					Use:         "cancel-upgrade-proposal",
+					Short:       "Submit a proposal to cancel a planned chain upgrade.",
+					GovProposal: true,
+				},
+				{
 					RpcMethod: "SoftwareUpgrade",
 					Skip:      true, // skipped because authority gated
 				},
-				{
-					RpcMethod: "CancelUpgrade",
-					Skip:      true, // skipped because authority gated
-				},
 			},
+			EnhanceCustomCommand: true,
 		},
 	}
 }

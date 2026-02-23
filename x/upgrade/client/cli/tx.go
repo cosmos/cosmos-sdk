@@ -127,7 +127,7 @@ func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 	// add common proposal flags
 	flags.AddTxFlagsToCmd(cmd)
 	cli.AddGovPropFlagsToCmd(cmd)
-	cmd.MarkFlagRequired(cli.FlagTitle)
+	_ = cmd.MarkFlagRequired(cli.FlagTitle)
 
 	return cmd
 }
@@ -176,7 +176,7 @@ func NewCmdSubmitCancelUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 	// add common proposal flags
 	flags.AddTxFlagsToCmd(cmd)
 	cli.AddGovPropFlagsToCmd(cmd)
-	cmd.MarkFlagRequired(cli.FlagTitle)
+	_ = cmd.MarkFlagRequired(cli.FlagTitle)
 
 	return cmd
 }

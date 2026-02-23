@@ -174,7 +174,6 @@ func (s *E2ETestSuite) TestSimulateTx_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			// Broadcast the tx via gRPC via the validator's clientCtx (which goes
 			// through Tendermint).
@@ -505,7 +504,6 @@ func (s *E2ETestSuite) TestBroadcastTx_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			// Broadcast the tx via gRPC via the validator's clientCtx (which goes
 			// through Tendermint).
@@ -557,6 +555,26 @@ func (s *E2ETestSuite) TestBroadcastTx_GRPCGateway() {
 			}
 		})
 	}
+}
+
+func (s *E2ETestSuite) TestUnorderedCannotUseSequence() {
+	val1 := *s.network.Validators[0]
+	coins := sdk.NewInt64Coin(s.cfg.BondDenom, 15)
+	_, err := cli.MsgSendExec(
+		val1.ClientCtx,
+		val1.Address,
+		val1.Address,
+		sdk.NewCoins(coins),
+		addresscodec.NewBech32Codec("cosmos"),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+		fmt.Sprintf("--sequence=%d", 15),
+		"--unordered",
+		fmt.Sprintf("--timeout-duration=%s", "10s"),
+	)
+	s.Require().ErrorContains(err, "if any flags in the group [unordered sequence] are set none of the others can be; [sequence unordered] were all set")
 }
 
 func (s *E2ETestSuite) TestSimMultiSigTx() {
@@ -684,6 +702,7 @@ func (s *E2ETestSuite) TestGetBlockWithTxs_GRPC() {
 		{"with pagination request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 1}}, false, "", 1},
 		{"page all request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, "", 1},
 		{"block with 0 tx", &tx.GetBlockWithTxsRequest{Height: s.txHeight - 1, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, "", 0},
+		{"query limit with large value", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 50000000}}, false, "", 1},
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
@@ -765,7 +784,6 @@ func (s *E2ETestSuite) TestTxEncode_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.TxEncode(context.Background(), tc.req)
 			if tc.expErr {
@@ -844,7 +862,6 @@ func (s *E2ETestSuite) TestTxDecode_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.TxDecode(context.Background(), tc.req)
 			if tc.expErr {
@@ -934,7 +951,6 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.TxEncodeAmino(context.Background(), tc.req)
 			if tc.expErr {
@@ -1020,7 +1036,6 @@ func (s *E2ETestSuite) TestTxDecodeAmino_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.TxDecodeAmino(context.Background(), tc.req)
 			if tc.expErr {
@@ -1122,15 +1137,15 @@ func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
 
 // protoTxProvider is a type which can provide a proto transaction. It is a
 // workaround to get access to the wrapper TxBuilder's method GetProtoTx().
-// Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint
-// using a proto Tx field.
+//
+// Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint using a proto Tx field.
 type protoTxProvider interface {
 	GetProtoTx() *tx.Tx
 }
 
 // txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
-// Deprecated: It's used for testing the deprecated Simulate gRPC endpoint
-// using a proto Tx field and for testing the TxEncode endpoint.
+//
+// Deprecated: It's used for testing the deprecated Simulate gRPC endpoint  using a proto Tx field and for testing the TxEncode endpoint.
 func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) {
 	protoProvider, ok := txBuilder.(protoTxProvider)
 	if !ok {

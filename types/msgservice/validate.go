@@ -26,7 +26,7 @@ func ValidateProtoAnnotations(protoFiles signing.ProtoFileResolver) error {
 
 	var serviceErrs []error
 	protoFiles.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
-		for i := 0; i < fd.Services().Len(); i++ {
+		for i := range fd.Services().Len() {
 			sd := fd.Services().Get(i)
 			if sd.Name() == "Msg" {
 				// We use the heuristic that services name Msg are exactly the

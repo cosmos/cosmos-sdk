@@ -191,7 +191,7 @@ func bcrypt(password []byte, cost uint32, salt []byte) ([]byte, error) {
 	}
 
 	for i := 0; i < 24; i += 8 {
-		for j := 0; j < 64; j++ {
+		for range 64 {
 			c.Encrypt(cipherData[i:i+8], cipherData[i:i+8])
 		}
 	}
@@ -218,9 +218,8 @@ func expensiveBlowfishSetup(key []byte, cost uint32, salt []byte) (*blowfish.Cip
 		return nil, err
 	}
 
-	var i, rounds uint64
-	rounds = 1 << cost
-	for i = 0; i < rounds; i++ {
+	var rounds uint64 = 1 << cost
+	for range rounds {
 		blowfish.ExpandKey(ckey, c)
 		blowfish.ExpandKey(csalt, c)
 	}
@@ -239,7 +238,7 @@ func (p *hashed) Hash() []byte {
 	}
 	arr[n] = '$'
 	n++
-	copy(arr[n:], []byte(fmt.Sprintf("%02d", p.cost)))
+	copy(arr[n:], fmt.Appendf(nil, "%02d", p.cost))
 	n += 2
 	arr[n] = '$'
 	n++

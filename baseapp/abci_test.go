@@ -22,8 +22,8 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -42,6 +42,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
+
+type mockABCIListener struct {
+	ListenCommitFn func(context.Context, abci.ResponseCommit, []*storetypes.StoreKVPair) error
+}
+
+func (m mockABCIListener) ListenFinalizeBlock(_ context.Context, _ abci.RequestFinalizeBlock, _ abci.ResponseFinalizeBlock) error {
+	return nil
+}
+
+func (m *mockABCIListener) ListenCommit(ctx context.Context, commit abci.ResponseCommit, pairs []*storetypes.StoreKVPair) error {
+	return m.ListenCommitFn(ctx, commit, pairs)
+}
 
 func TestABCI_Info(t *testing.T) {
 	suite := NewBaseAppSuite(t)
@@ -623,10 +635,10 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 	nBlocks := 3
 	txPerHeight := 5
 
-	for blockN := 0; blockN < nBlocks; blockN++ {
+	for blockN := range nBlocks {
 
 		txs := [][]byte{}
-		for i := 0; i < txPerHeight; i++ {
+		for i := range txPerHeight {
 			counter := int64(blockN*txPerHeight + i)
 			tx := newTxCounter(t, suite.txConfig, counter, counter)
 
@@ -642,7 +654,7 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		for i := 0; i < txPerHeight; i++ {
+		for i := range txPerHeight {
 			counter := int64(blockN*txPerHeight + i)
 			require.True(t, res.TxResults[i].IsOK(), fmt.Sprintf("%v", res))
 
@@ -704,7 +716,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 0, Signer: addr.String()})
 	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 1, Signer: addr.String()})
 
-	builder.SetMsgs(msgs...)
+	require.NoError(t, builder.SetMsgs(msgs...))
 	builder.SetMemo(tx.GetMemo())
 	setTxSignature(t, builder, 0)
 
@@ -737,7 +749,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasConsumed))
-			return
+			return newCtx, err
 		})
 	}
 	suite := NewBaseAppSuite(t, anteOpt)
@@ -750,7 +762,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{gasConsumed})
 
 	nBlocks := 3
-	for blockN := 0; blockN < nBlocks; blockN++ {
+	for blockN := range nBlocks {
 		count := int64(blockN + 1)
 
 		tx := newTxCounter(t, suite.txConfig, count, count)
@@ -797,7 +809,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 func TestABCI_InvalidTransaction(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			return
+			return newCtx, err
 		})
 	}
 
@@ -876,7 +888,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	{
 		txBuilder := suite.txConfig.NewTxBuilder()
 		_, _, addr := testdata.KeyTestPubAddr()
-		txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{Signer: addr.String()})
+		require.NoError(t, txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{Signer: addr.String()}))
 		setTxSignature(t, txBuilder, 0)
 		unknownRouteTx := txBuilder.GetTx()
 
@@ -889,10 +901,10 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 
 		txBuilder = suite.txConfig.NewTxBuilder()
-		txBuilder.SetMsgs(
+		require.NoError(t, txBuilder.SetMsgs(
 			&baseapptestutil.MsgCounter{Signer: addr.String()},
 			&baseapptestutil.MsgCounter2{Signer: addr.String()},
-		)
+		))
 		setTxSignature(t, txBuilder, 0)
 		unknownRouteTx = txBuilder.GetTx()
 
@@ -908,13 +920,13 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	// Transaction with an unregistered message
 	{
 		txBuilder := suite.txConfig.NewTxBuilder()
-		txBuilder.SetMsgs(&testdata.MsgCreateDog{})
+		require.NoError(t, txBuilder.SetMsgs(&testdata.MsgCreateDog{}))
 		tx := txBuilder.GetTx()
 
 		_, _, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
 		require.Error(t, err)
 		space, code, _ := errorsmod.ABCIInfo(err, false)
-		require.EqualValues(t, sdkerrors.ErrTxDecode.ABCICode(), code)
+		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code)
 		require.EqualValues(t, sdkerrors.ErrTxDecode.Codespace(), space)
 	}
 }
@@ -1035,7 +1047,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 			count, _ := parseTxMemo(t, tx)
 			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
 
-			return
+			return newCtx, err
 		})
 	}
 
@@ -1081,7 +1093,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 		require.NoError(t, err)
 
 		// execute the transaction multiple times
-		for j := 0; j < tc.numDelivers; j++ {
+		for j := range tc.numDelivers {
 
 			_, result, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
 
@@ -1136,7 +1148,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 				return newCtx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 			}
 
-			return
+			return newCtx, err
 		})
 	}
 
@@ -1175,7 +1187,7 @@ func TestABCI_Query(t *testing.T) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			store := ctx.KVStore(capKey1)
 			store.Set(key, value)
-			return
+			return newCtx, err
 		})
 	}
 
@@ -1310,6 +1322,18 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 			commitHeight: 10000,
 			expected:     0,
 		},
+		"no pruning due to min retain blocks equal to commit height": {
+			bapp:         baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetMinRetainBlocks(499000)),
+			maxAgeBlocks: 362880,
+			commitHeight: 499000,
+			expected:     0,
+		},
+		"no pruning due to min retain blocks greater than commit height": {
+			bapp:         baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetMinRetainBlocks(499001)),
+			maxAgeBlocks: 362880,
+			commitHeight: 499000,
+			expected:     0,
+		},
 		"disable pruning": {
 			bapp: baseapp.NewBaseApp(
 				name, logger, db, nil,
@@ -1324,7 +1348,6 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 
 		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 		_, err = tc.bapp.InitChain(&abci.RequestInitChain{
@@ -1532,10 +1555,11 @@ func TestABCI_Proposals_WithVE(t *testing.T) {
 
 	suite := NewBaseAppSuite(t, setInitChainerOpt, prepareOpt)
 
-	suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		InitialHeight:   1,
 		ConsensusParams: &cmtproto.ConsensusParams{},
 	})
+	require.NoError(t, err)
 
 	reqPrepareProposal := abci.RequestPrepareProposal{
 		MaxTxBytes: 100000,
@@ -1582,7 +1606,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		tx2 := newTxCounter(t, suite.txConfig, int64(i), int64(i))
 		err := pool.Insert(sdk.Context{}, tx2)
 		require.NoError(t, err)
@@ -1672,11 +1696,12 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
 	// set max block gas limit to 100
-	suite.baseApp.InitChain(&abci.RequestInitChain{
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{
 			Block: &cmtproto.BlockParams{MaxGas: 100},
 		},
 	})
+	require.NoError(t, err)
 
 	// insert 100 txs, each with a gas limit of 10
 	_, _, addr := testdata.KeyTestPubAddr()
@@ -1685,7 +1710,7 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 		msgs := []sdk.Msg{msg}
 
 		builder := suite.txConfig.NewTxBuilder()
-		builder.SetMsgs(msgs...)
+		require.NoError(t, builder.SetMsgs(msgs...))
 		builder.SetMemo("counter=" + strconv.FormatInt(i, 10) + "&failOnAnte=false")
 		builder.SetGasLimit(10)
 		setTxSignature(t, builder, uint64(i))
@@ -1957,7 +1982,7 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 
 	// Let's pretend something happened and PrepareProposal gets called many
 	// times, this must be safe to do.
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		resPrepareProposal, err := suite.baseApp.PrepareProposal(&reqPrepareProposal)
 		require.NoError(t, err)
 		require.Equal(t, 0, len(resPrepareProposal.Txs))
@@ -1971,7 +1996,7 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 
 	// Let's pretend something happened and ProcessProposal gets called many
 	// times, this must be safe to do.
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		resProcessProposal, err := suite.baseApp.ProcessProposal(&reqProcessProposal)
 		require.NoError(t, err)
 		require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
@@ -1999,13 +2024,14 @@ func TestABCI_HaltChain(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(tc.haltHeight), baseapp.SetHaltTime(tc.haltTime))
-			suite.baseApp.InitChain(&abci.RequestInitChain{
+			_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 				ConsensusParams: &cmtproto.ConsensusParams{},
 				InitialHeight:   tc.blockHeight,
 			})
+			require.NoError(t, err)
 
 			app := suite.baseApp
-			_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 				Height: tc.blockHeight,
 				Time:   time.Unix(tc.blockTime, 0),
 			})
@@ -2066,7 +2092,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	numVals := 12
 	privKeys := make([]secp256k1.PrivKey, numVals)
 	vals := make([]sdk.ConsAddress, numVals)
-	for i := 0; i < numVals; i++ {
+	for i := range numVals {
 		privKey := secp256k1.GenPrivKey()
 		privKeys[i] = privKey
 
@@ -2176,7 +2202,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 	allVEs := [][]byte{}
 	// simulate getting 10 vote extensions from 10 validators
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		ve, err := suite.baseApp.ExtendVote(context.TODO(), &abci.RequestExtendVote{Height: 1})
 		require.NoError(t, err)
 		allVEs = append(allVEs, ve.VoteExtension)
@@ -2361,7 +2387,7 @@ func TestOptimisticExecution(t *testing.T) {
 	require.NoError(t, err)
 
 	// run 50 blocks
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		tx := newTxCounter(t, suite.txConfig, 0, 1)
 		txBytes, err := suite.txConfig.TxEncoder()(tx)
 		require.NoError(t, err)
@@ -2492,4 +2518,20 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 
 	require.NotEmpty(t, res.TxResults[0].Events)
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
+}
+
+func TestFinalizeBlockDeferResponseHandle(t *testing.T) {
+	suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(1), func(ba *baseapp.BaseApp) {
+		ba.SetStreamingManager(storetypes.StreamingManager{
+			ABCIListeners: []storetypes.ABCIListener{
+				&mockABCIListener{},
+			},
+		})
+	})
+
+	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 2,
+	})
+	require.Empty(t, res)
+	require.NotEmpty(t, err)
 }

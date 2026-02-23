@@ -5,12 +5,15 @@ deps:
   - buf.build/cosmos/cosmos-proto
   - buf.build/cosmos/gogo-proto
   - buf.build/googleapis/googleapis
+  - buf.build/protocolbuffers/wellknowntypes
 breaking:
   use:
     - FILE
+  ignore:
+    - testpb
 lint:
   use:
-    - DEFAULT
+    - STANDARD
     - COMMENTS
     - FILE_LOWER_SNAKE_CASE
   except:

@@ -66,7 +66,7 @@ Internally, the `EventManager` tracks a list of Events for the entire execution 
 (i.e. transaction execution, `BeginBlock`, `EndBlock`).
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/events.go#L19-L26
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/types/events.go#L18-L25
 ```
 
 The `EventManager` comes with a set of useful methods to manage Events. The method
@@ -74,7 +74,7 @@ that is used most by module and application developers is `EmitTypedEvent` or `E
 an Event in the `EventManager`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/events.go#L53-L62
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/types/events.go#L51-L60
 ```
 
 Module developers should handle Event emission via the `EventManager#EmitTypedEvent` or `EventManager#EmitEvent` in each message
@@ -85,7 +85,7 @@ the [`Context`](./02-context.md), where Event should be already registered, and 
 **Typed events:**
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/group/keeper/msg_server.go#L95-L97
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/x/group/keeper/msg_server.go#L95-L97
 ```
 
 **Legacy events:**
@@ -125,7 +125,7 @@ The main `eventCategory` you can subscribe to are:
 These Events are triggered from the `state` package after a block is committed. You can get the
 full list of Event categories [on the CometBFT Go documentation](https://pkg.go.dev/github.com/cometbft/cometbft/types#pkg-constants).
 
-The `type` and `attribute` value of the `query` allow you to filter the specific Event you are looking for. For example, a `Mint` transaction triggers an Event of type `EventMint` and has an `Id` and an `Owner` as `attributes` (as defined in the [`events.proto` file of the `NFT` module](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/nft/v1beta1/event.proto#L21-L31)).
+The `type` and `attribute` value of the `query` allow you to filter the specific Event you are looking for. For example, a `Mint` transaction triggers an Event of type `EventMint` and has an `Id` and an `Owner` as `attributes` (as defined in the [`events.proto` file of the `NFT` module](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/proto/cosmos/nft/v1beta1/event.proto#L21-L31)).
 
 Subscribing to this Event would be done like so:
 
@@ -142,7 +142,7 @@ Subscribing to this Event would be done like so:
 
 where `ownerAddress` is an address following the [`AccAddress`](../beginner/03-accounts.md#addresses) format.
 
-The same way can be used to subscribe to [legacy events](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/types/events.go).
+The same way can be used to subscribe to [legacy events](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/x/bank/types/events.go).
 
 ## Default Events
 

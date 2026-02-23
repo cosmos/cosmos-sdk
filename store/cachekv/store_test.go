@@ -464,7 +464,7 @@ func randInt(n int) int {
 	return unsafe.NewRand().Int() % n
 }
 
-// useful for replaying a error case if we find one
+// useful for replaying an error case if we find one
 func doOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, op int, args ...int) {
 	t.Helper()
 	switch op {
@@ -474,15 +474,24 @@ func doOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, op int, args ...int
 		err := truth.Set(keyFmt(k), valFmt(k))
 		require.NoError(t, err)
 	case opSetRange:
+		if len(args) < 2 {
+			require.Fail(t, "not enough args for set range")
+		}
 		start := args[0]
 		end := args[1]
 		setRange(t, st, truth, start, end)
 	case opDel:
+		if len(args) < 1 {
+			require.Fail(t, "not enough args for del")
+		}
 		k := args[0]
 		st.Delete(keyFmt(k))
 		err := truth.Delete(keyFmt(k))
 		require.NoError(t, err)
 	case opDelRange:
+		if len(args) < 2 {
+			require.Fail(t, "not enough args for del range")
+		}
 		start := args[0]
 		end := args[1]
 		deleteRange(t, st, truth, start, end)
@@ -543,7 +552,6 @@ func assertIterateDomainCheck(t *testing.T, st types.KVStore, mem dbm.DB, r []ke
 	require.NoError(t, err)
 
 	krc := newKeyRangeCounter(r)
-	i := 0
 
 	for ; krc.valid(); krc.next() {
 		require.True(t, itr.Valid())
@@ -560,7 +568,6 @@ func assertIterateDomainCheck(t *testing.T, st types.KVStore, mem dbm.DB, r []ke
 
 		itr.Next()
 		itr2.Next()
-		i++
 	}
 
 	require.False(t, itr.Valid())

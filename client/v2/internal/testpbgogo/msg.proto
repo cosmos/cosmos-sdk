@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package testpbgogo;
+
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+
+service MsgGogoOnly {
+  // Send a request and returns the request as a response.
+  rpc Send(MsgRequestGogoOnly) returns (MsgResponseGoGoOnly) {
+    option (cosmos_proto.method_added_in) = "cosmos-sdk v0.50.0";
+  };
+}
+
+message MsgRequestGogoOnly {
+  option (cosmos.msg.v1.signer) = "an_address";
+
+  string                                str        = 3;
+  cosmos.base.v1beta1.Coin              a_coin     = 18 [(gogoproto.nullable) = false];
+  string                                an_address = 19 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string a_validator_address        = 33 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+}
+
+message MsgResponseGoGoOnly {
+  MsgRequestGogoOnly request = 1;
+}

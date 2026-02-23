@@ -17,6 +17,7 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/log"
 
@@ -97,7 +98,9 @@ func startInProcess(cfg Config, val *Validator) error {
 	grpcCfg := val.AppConfig.GRPC
 
 	if grpcCfg.Enable {
-		grpcSrv, err := servergrpc.NewGRPCServer(val.ClientCtx, app, grpcCfg)
+		grpcLogger := logger.With(log.ModuleKey, "grpc-server")
+		var grpcSrv *grpc.Server
+		grpcSrv, val.ClientCtx, err = servergrpc.NewGRPCServerAndContext(val.ClientCtx, app, grpcCfg, grpcLogger)
 		if err != nil {
 			return err
 		}
@@ -105,7 +108,7 @@ func startInProcess(cfg Config, val *Validator) error {
 		// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
 		// that the server is gracefully shut down.
 		val.errGroup.Go(func() error {
-			return servergrpc.StartGRPCServer(ctx, logger.With(log.ModuleKey, "grpc-server"), grpcCfg, grpcSrv)
+			return servergrpc.StartGRPCServer(ctx, grpcLogger, grpcCfg, grpcSrv)
 		})
 
 		val.grpc = grpcSrv
@@ -128,7 +131,7 @@ func startInProcess(cfg Config, val *Validator) error {
 func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 	genTime := cmttime.Now()
 
-	for i := 0; i < cfg.NumValidators; i++ {
+	for i := range cfg.NumValidators {
 		cmtCfg := vals[i].Ctx.Config
 
 		nodeDir := filepath.Join(outputDir, vals[i].Moniker, "simd")
@@ -194,7 +197,7 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 	}
 
 	// generate empty genesis files for each validator and save
-	for i := 0; i < cfg.NumValidators; i++ {
+	for i := range cfg.NumValidators {
 		if err := appGenesis.SaveAs(genFiles[i]); err != nil {
 			return err
 		}
@@ -232,5 +235,5 @@ func FreeTCPAddr() (addr, port string, closeFn func() error, err error) {
 	portI := l.Addr().(*net.TCPAddr).Port
 	port = fmt.Sprintf("%d", portI)
 	addr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
-	return
+	return addr, port, closeFn, err
 }

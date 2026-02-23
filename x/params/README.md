@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # `x/params`
 
-> Note: The Params module has been depreacted in favour of each module housing its own parameters. 
+NOTE: `x/params` is deprecated as of Cosmos SDK v0.53 and will be removed in the next release.
 
 ## Abstract
 

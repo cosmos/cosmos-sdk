@@ -40,7 +40,7 @@ func FuzzPagination(f *testing.F) {
 	}
 
 	// 1.5. Use the inprocess fuzzer to mutate variables.
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		qr := new(query.PageRequest)
 		gf.Fuzz(qr)
 		seeds = append(seeds, qr)
@@ -57,7 +57,7 @@ func FuzzPagination(f *testing.F) {
 
 	// 3. Setup the keystore.
 	var balances sdk.Coins
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		denom := fmt.Sprintf("foo%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, int64(100+i)))
 	}

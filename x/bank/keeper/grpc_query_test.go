@@ -72,14 +72,12 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 			types.NewQueryBalanceRequest(addr, barDenom),
 			"",
 			func(res *types.QueryBalanceResponse) {
-				suite.True(res.Balance.IsEqual(newBarCoin(30)))
+				suite.True(res.Balance.Equal(newBarCoin(30)))
 			},
 		},
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		suite.Run(tc.name, func() {
 			res, err := queryClient.Balance(gocontext.Background(), tc.req)
 			if tc.expectErrMsg == "" {
@@ -593,7 +591,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 	suite.mockMintCoins(mintAcc)
 	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		addr := sdk.AccAddress(fmt.Sprintf("account-%d", i))
 
 		bal := sdk.NewCoins(sdk.NewCoin(
@@ -818,7 +816,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwnersByQuery() {
 	suite.mockMintCoins(mintAcc)
 	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, newCoins))
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		addr := sdk.AccAddress(fmt.Sprintf("account-%d", i))
 
 		bal := sdk.NewCoins(sdk.NewCoin(

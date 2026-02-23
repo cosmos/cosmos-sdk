@@ -8,8 +8,12 @@ import (
 	"cosmossdk.io/log/v2"
 	db "github.com/cometbft/cometbft-db"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/cosmos/iavl"
 	iavldb "github.com/cosmos/iavl/db"
+
+	storetypes "cosmossdk.io/store/types"
 )
 
 type Importer struct {
@@ -228,6 +232,29 @@ func (i *Importer) importExporter(exporter *iavl.Exporter) error {
 }
 
 func ImportIAVLV1Store(v1Db db.DB, multiStoreDir string, log log.Logger) error {
+	const (
+		latestVersionKey = "s/latest"
+		commitInfoKeyFmt = "s/%d" // s/<version>
+	)
+	bz, err := v1Db.Get([]byte(latestVersionKey))
+	if err != nil {
+		return fmt.Errorf("failed to get latest version: %w", err)
+	}
+	var latestVersion int64
+	if err := gogotypes.StdInt64Unmarshal(&latestVersion, bz); err != nil {
+		panic(err)
+	}
+
+	bz, err = v1Db.Get([]byte(fmt.Sprintf(commitInfoKeyFmt, latestVersion)))
+	if err != nil {
+		return fmt.Errorf("failed to get commit info for latest version: %w", err)
+	}
+
+	var ci storetypes.CommitInfo
+	if err := proto.Unmarshal(bz, &ci); err != nil {
+		return fmt.Errorf("failed to unmarshal commit info for latest version: %w", err)
+	}
+
 	panic("TODO")
 }
 

@@ -6,7 +6,7 @@ import (
 
 	ics23 "github.com/cosmos/ics23/go"
 
-	sdkmaps "cosmossdk.io/store/internal/maps"
+	sdkmaps "cosmossdk.io/store/types/maps"
 )
 
 var (

@@ -153,9 +153,9 @@ func loadOrphans(dir, tree, cs string) ([]internal.OrphanEntry, error) {
 	}
 	defer f.Close()
 
-	rdr, err := internal.NewStructMmap[internal.OrphanEntry](f)
-	if err != nil {
-		return nil, err
+	rdr, rdrErr := internal.NewStructMmapDebug[internal.OrphanEntry](f, true)
+	if rdr == nil {
+		return nil, rdrErr
 	}
 	defer rdr.Close()
 
@@ -165,7 +165,7 @@ func loadOrphans(dir, tree, cs string) ([]internal.OrphanEntry, error) {
 		entry := rdr.UnsafeItem(i)
 		entries = append(entries, *entry)
 	}
-	return entries, nil
+	return entries, rdrErr
 }
 
 func loadWALStartVersion(dir, tree, cs string) string {

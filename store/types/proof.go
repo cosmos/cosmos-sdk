@@ -3,13 +3,13 @@ package types
 import (
 	"fmt"
 
+	storeproofs "cosmossdk.io/store/proofs"
 	"github.com/cometbft/cometbft/crypto/merkle"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/cosmos/ics23/go"
 
 	errorsmod "cosmossdk.io/errors"
-	sdkmaps "cosmossdk.io/store/internal/maps"
-	sdkproofs "cosmossdk.io/store/internal/proofs"
+	sdkmaps "cosmossdk.io/store/types/maps"
 )
 
 const (
@@ -157,7 +157,7 @@ func ProofOpFromMap(cmap map[string][]byte, storeName string) (ret cmtprotocrypt
 	}
 
 	// convert merkle.SimpleProof to CommitmentProof
-	existProof, err := sdkproofs.ConvertExistenceProof(proof, []byte(storeName), cmap[storeName])
+	existProof, err := storeproofs.ConvertExistenceProof(proof, []byte(storeName), cmap[storeName])
 	if err != nil {
 		err = fmt.Errorf("could not convert simple proof to existence proof: %w", err)
 		return ret, err

@@ -20,7 +20,7 @@ type Changeset struct {
 
 // NewChangeset creates a new Changeset with the given TreeStore and ChangesetFiles.
 func NewChangeset(treeStore *TreeStore, files *ChangesetFiles) (*Changeset, error) {
-	const orphanWriterBufSize = 4 * 1024 // 4kb
+	const orphanWriterBufSize = SizeOrphanEntry * 342 // roughly 4kb, but aligned to orphan size, so the file size is correct in a crash scenario
 	cs := &Changeset{
 		treeStore:    treeStore,
 		files:        files,

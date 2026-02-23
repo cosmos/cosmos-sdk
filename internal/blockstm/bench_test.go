@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/test-go/testify/require"
+	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
 )
@@ -17,11 +17,12 @@ func executeBlock(stores map[storetypes.StoreKey]int, storage MultiStore, worker
 		m := make(map[string]any)
 		incarnationCache[i].Store(&m)
 	}
-	return ExecuteBlock(context.Background(), block.Size(), stores, storage, worker, func(txn TxnIndex, store MultiStore) {
-		cache := incarnationCache[txn].Swap(nil)
-		block.ExecuteTx(txn, store, *cache)
-		incarnationCache[txn].Store(cache)
-	})
+	return ExecuteBlockWithEstimates(context.Background(), block.Size(), stores, storage, worker,
+		nil, func(txn TxnIndex, store MultiStore) {
+			cache := incarnationCache[txn].Swap(nil)
+			block.ExecuteTx(txn, store, *cache)
+			incarnationCache[txn].Store(cache)
+		})
 }
 
 func BenchmarkBlockSTM(b *testing.B) {

@@ -1,12 +1,14 @@
 package types
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"maps"
 	"slices"
 
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/store/metrics"
@@ -155,9 +157,14 @@ type CacheMultiStore interface {
 
 // CommitMultiStore is an interface for a MultiStore without cache capabilities.
 type CommitMultiStore interface {
+	// TODO deprecate the old commit interface
 	Committer
 	MultiStore
 	snapshottypes.Snapshotter
+	io.Closer
+
+	StartCommit(context.Context, MultiStore, cmtproto.Header) (CommitFinalizer, error)
+	GetCommitInfo(ver int64) (*CommitInfo, error)
 
 	// EarliestVersion returns the earliest version in the store
 	EarliestVersion() int64
@@ -228,21 +235,37 @@ type CommitMultiStore interface {
 	SetMetrics(metrics metrics.StoreMetrics)
 }
 
+type CommitFinalizer interface {
+	// PrepareFinalize signals finalization and waits until the hash is ready.
+	// After PrepareFinalize is called, Rollback will return an error.
+	PrepareFinalize() (CommitID, error)
+	// Finalize signals finalization and waits for the commit to complete (including fsync).
+	// After Finalize is called, Rollback will return an error.
+	Finalize() (CommitID, error)
+	// Rollback aborts the in-progress commit and leaves the stores in the previous state.
+	// Rollback returns an error if SignalFinalize, PrepareFinalize, or Finalize has been called.
+	Rollback() error
+}
+
 //---------subsp-------------------------------
 // KVStore
 
 // GBasicKVStore is a simple interface to get/set data
 type GBasicKVStore[V any] interface {
 	// Get returns nil if key doesn't exist. Panics on nil key.
+	// It is safe to call Get from multiple go routines as long as there are no concurrent writes.
 	Get(key []byte) V
 
 	// Has checks if a key exists. Panics on nil key.
+	// It is safe to call Has from multiple go routines as long as there are no concurrent writes.
 	Has(key []byte) bool
 
 	// Set sets the key. Panics on nil key or value.
+	// Concurrent writes are not allowed and may cause undefined behavior.
 	Set(key []byte, value V)
 
 	// Delete deletes the key. Panics on nil key.
+	// Concurrent writes are not allowed and may cause undefined behavior.
 	Delete(key []byte)
 }
 
@@ -257,13 +280,15 @@ type GKVStore[V any] interface {
 	// To iterate over entire domain, use store.Iterator(nil, nil)
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	// Exceptionally allowed for cachekv.Store, safe to write in the modules.
+	// It is safe to call Iterator from multiple go routines as long as there are no concurrent writes.
 	Iterator(start, end []byte) GIterator[V]
 
-	// Iterator over a domain of keys in descending order. End is exclusive.
+	// ReverseIterator over a domain of keys in descending order. End is exclusive.
 	// Start must be less than end, or the Iterator is invalid.
 	// Iterator must be closed by caller.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	// Exceptionally allowed for cachekv.Store, safe to write in the modules.
+	// It is safe to call ReverseIterator from multiple go routines as long as there are no concurrent writes.
 	ReverseIterator(start, end []byte) GIterator[V]
 }
 

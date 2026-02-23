@@ -7,7 +7,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,17 +14,11 @@ import (
 
 var _ sdk.TxRunner = STMRunner{}
 
-func NewSTMRunner(
-	txDecoder sdk.TxDecoder,
-	stores []storetypes.StoreKey,
-	workers int, estimate bool,
-	coinDenom func(storetypes.MultiStore) string,
-) *STMRunner {
+func NewSTMRunner(txDecoder sdk.TxDecoder, stores []storetypes.StoreKey, workers int, coinDenom func(storetypes.MultiStore) string) *STMRunner {
 	return &STMRunner{
 		txDecoder: txDecoder,
 		stores:    stores,
 		workers:   workers,
-		estimate:  estimate,
 		coinDenom: coinDenom,
 	}
 }
@@ -35,12 +28,11 @@ type STMRunner struct {
 	txDecoder sdk.TxDecoder
 	stores    []storetypes.StoreKey
 	workers   int
-	estimate  bool
 	coinDenom func(storetypes.MultiStore) string
 }
 
 func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]byte, deliverTx sdk.DeliverTxFunc) ([]*abci.ExecTxResult, error) {
-	var authStore, bankStore int
+	authStore, bankStore := -1, -1
 	index := make(map[storetypes.StoreKey]int, len(e.stores))
 	for i, k := range e.stores {
 		switch k.Name() {
@@ -68,9 +60,11 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 		memTxs    []sdk.Tx
 	)
 
-	if e.estimate {
-		memTxs, estimates = preEstimates(txs, e.workers, authStore, bankStore, e.coinDenom(ms), e.txDecoder)
+	var authKVStore storetypes.KVStore
+	if authStore >= 0 {
+		authKVStore = ms.GetKVStore(e.stores[authStore])
 	}
+	memTxs, estimates = preEstimates(txs, e.workers, authStore, bankStore, e.coinDenom(ms), e.txDecoder, authKVStore)
 
 	if err := ExecuteBlockWithEstimates(
 		ctx,
@@ -108,7 +102,13 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 
 // preEstimates returns a static estimation of the written keys for each transaction.
 // NOTE: make sure it sync with the latest sdk logic when sdk upgrade.
-func preEstimates(txs [][]byte, workers, authStore, bankStore int, coinDenom string, txDecoder sdk.TxDecoder) ([]sdk.Tx, []MultiLocations) {
+func preEstimates(
+	txs [][]byte,
+	workers, authStore, bankStore int,
+	coinDenom string,
+	txDecoder sdk.TxDecoder,
+	authKVStore storetypes.KVStore,
+) ([]sdk.Tx, []MultiLocations) {
 	memTxs := make([]sdk.Tx, len(txs))
 	estimates := make([]MultiLocations, len(txs))
 
@@ -121,35 +121,31 @@ func preEstimates(txs [][]byte, workers, authStore, bankStore int, coinDenom str
 			}
 			memTxs[i] = tx
 
-			feeTx, ok := tx.(sdk.FeeTx)
-			if !ok {
-				continue
+			var estimate MultiLocations
+			// Construct x/auth estimates
+			if authStore >= 0 {
+				est, ok := EstimateAuth(tx, authKVStore)
+				if !ok || est == nil {
+					break
+				}
+				if estimate == nil {
+					estimate = make(MultiLocations, 2)
+				}
+				estimate[authStore] = est
 			}
-			feePayer := sdk.AccAddress(feeTx.FeePayer())
-
-			// account key
-			accKey, err := collections.EncodeKeyWithPrefix(
-				collections.NewPrefix(1),
-				sdk.AccAddressKey,
-				feePayer,
-			)
-			if err != nil {
-				continue
+			// Construct x/bank estimates
+			if bankStore >= 0 {
+				est, ok := EstimateBank(tx, coinDenom)
+				if ok || est == nil {
+					if estimate == nil {
+						estimate = make(MultiLocations, 2)
+					}
+					estimate[bankStore] = est
+				}
 			}
-
-			// balance key
-			balanceKey, err := collections.EncodeKeyWithPrefix(
-				collections.NewPrefix(2),
-				collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
-				collections.Join(feePayer, coinDenom),
-			)
-			if err != nil {
-				continue
-			}
-
-			estimates[i] = MultiLocations{
-				authStore: {accKey},
-				bankStore: {balanceKey},
+			// Set estimates if any exist
+			if estimate != nil {
+				estimates[i] = estimate
 			}
 		}
 	}

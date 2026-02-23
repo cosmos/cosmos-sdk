@@ -1,0 +1,19 @@
+package internal
+
+type WALOpType int
+
+const (
+	WALOpSet WALOpType = iota
+	WALOpDelete
+	WALOpCommit
+)
+
+type WALEntry struct {
+	Op                     WALOpType
+	Version                uint64
+	Key, Value             UnsafeBytes
+	KeyOffset, ValueOffset int
+	Checkpoint             bool
+	// EndOffset is the file offset immediately after the end of this WAL entry, used for rollback.
+	EndOffset int
+}

@@ -25,6 +25,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
+
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/mem"
 	"cosmossdk.io/store/metrics"
@@ -1010,8 +1011,21 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 
 	if !db.pruningActive.CompareAndSwap(false, true) {
 		// another prune started since we checked, skip
+		db.logger.Warn("skipping pruning since another prune is already in progress",
+			"version", version,
+			"retain_version", retainVersion,
+			"pruning_interval", db.pruningOptions.Interval,
+			"keep_recent", db.pruningOptions.KeepRecent,
+		)
 		return
 	}
+	db.logger.Info("starting pruning old versions of IAVL trees",
+		"version", version,
+		"retain_version", retainVersion,
+		"pruning_interval", db.pruningOptions.Interval,
+		"keep_recent", db.pruningOptions.KeepRecent,
+	)
+
 	done := make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -1030,7 +1044,12 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 // pruneNow prunes old versions of the IAVL trees according to the pruning options, keeping the most recent `keepRecent` versions and pruning the rest.
 // This function is only intended to be called from pruneIfNeeded or by tests.
 func (db *CommitMultiTree) pruneNow(ctx context.Context, retainVersion uint64) {
-	ctx, span := tracer.Start(ctx, "CommitMultiTree.Prune")
+	ctx, span := tracer.Start(ctx, "CommitMultiTree.Prune",
+		trace.WithAttributes(
+			attribute.Int64("retain_version", int64(retainVersion)),
+			attribute.Int64("current_version", db.LatestVersion()),
+		),
+	)
 	defer span.End()
 
 	db.earliestVersion.Store(int64(retainVersion))

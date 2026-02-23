@@ -6,20 +6,63 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
+	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 
-func (m *model) buildTreesTable() {
-	names, err := scanTrees(m.dir)
+type treesKeyMap struct {
+	Enter      key.Binding
+	CommitInfo key.Binding
+}
+
+func (k treesKeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Enter, k.CommitInfo}
+}
+
+func (k treesKeyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{k.ShortHelp()}
+}
+
+type treesView struct {
+	dir     string
+	table   table.Model
+	columns []table.Column
+	keys    treesKeyMap
+	width   int
+	err     string
+}
+
+func newTreesView(dir string, height int) *treesView {
+	v := &treesView{
+		dir: dir,
+		keys: treesKeyMap{
+			Enter: key.NewBinding(
+				key.WithKeys("enter"),
+				key.WithHelp("enter", "select"),
+			),
+			CommitInfo: key.NewBinding(
+				key.WithKeys("c"),
+				key.WithHelp("c", "commit info"),
+			),
+		},
+	}
+	v.buildTable(height)
+	return v
+}
+
+func (v *treesView) buildTable(height int) {
+	names, err := scanTrees(v.dir)
 	if err != nil {
-		m.err = err.Error()
+		v.err = err.Error()
 		return
 	}
 	rows := make([]table.Row, len(names))
 	for i, name := range names {
-		treeDir := filepath.Join(m.dir, "stores", name+".iavl")
+		treeDir := filepath.Join(v.dir, "stores", name+".iavl")
 		entries, _ := os.ReadDir(treeDir)
 		csCount := 0
 		var totalSize int64
@@ -50,6 +93,46 @@ func (m *model) buildTreesTable() {
 		{Title: "Changesets", Width: 12},
 		{Title: "Size", Width: 12},
 	}
-	m.columns = cols
-	m.table = newTable(cols, rows, m.tableHeight())
+	v.columns = cols
+	v.table = newTable(cols, rows, height)
+}
+
+func (v *treesView) Update(msg tea.Msg) (viewModel, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		v.width = msg.Width
+		v.table.SetHeight(contentHeight(msg.Height))
+		return v, nil
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, v.keys.Enter):
+			row := v.table.SelectedRow()
+			if row == nil {
+				return v, nil
+			}
+			child := newChangesetsView(v.dir, row[0], contentHeight(0))
+			return v, pushView(child)
+		case key.Matches(msg, v.keys.CommitInfo):
+			child := newCommitInfoView(v.dir, contentHeight(0))
+			return v, pushView(child)
+		}
+	}
+	var cmd tea.Cmd
+	v.table, cmd = v.table.Update(msg)
+	return v, cmd
+}
+
+func (v *treesView) View() string {
+	if v.err != "" {
+		return v.err
+	}
+	return v.table.View() + "\n" + renderInfoPanel(v.columns, v.table.SelectedRow(), v.width)
+}
+
+func (v *treesView) Title() string {
+	return "IAVL Trees: " + v.dir
+}
+
+func (v *treesView) KeyMap() help.KeyMap {
+	return v.keys
 }

@@ -11,7 +11,11 @@ import (
 	"cosmossdk.io/log/v2"
 )
 
-func ReplayWALForStartup(ctx context.Context, root *NodePointer, walFile *os.File, rootVersion, expectedVersion uint32, logger log.Logger, autoRepair bool) (*NodePointer, uint32, error) {
+// ReplayWALForStartup replays WAL entries from walFile starting from root at rootVersion up to expectedVersion.
+// It returns the new root node pointer at the expected version if possible, the actual version reached, a bool indicating whether a rollback was needed, and any error encountered.
+// If autoRepair is true, it will attempt to roll back the WAL file to the last good offset if it encounters entries beyond the expected version,
+// which can happen if there was a crash during a commit that caused partial writes to the WAL.
+func ReplayWALForStartup(ctx context.Context, root *NodePointer, walFile *os.File, rootVersion, expectedVersion uint32, logger log.Logger, autoRepair bool) (*NodePointer, uint32, bool, error) {
 	_, span := tracer.Start(ctx, "ReplayWALForStartup",
 		trace.WithAttributes(
 			attribute.String("walFile", walFile.Name()),
@@ -20,55 +24,67 @@ func ReplayWALForStartup(ctx context.Context, root *NodePointer, walFile *os.Fil
 	)
 	defer span.End()
 
-	var rollbackOffset int
+	var lastGoodOffset int // defaults to zero or start of the file
+	var needRollback bool
 	for entry, err := range ReadWAL(walFile) {
 		if err != nil {
-			return nil, 0, fmt.Errorf("failed to read WAL: %w", err)
+			if expectedVersion != 0 && rootVersion == expectedVersion {
+				// if we are at the expected version already and we have some corrupted data from a partial write
+				// we stop reading further and just roll back to the last good offset
+				// which should be the end of the last commit entry, since we got to the right commit
+				needRollback = true
+				break
+			}
+			return nil, 0, false, fmt.Errorf("failed to read WAL: %w", err)
 		}
 
 		if entry.Version <= uint64(rootVersion) {
+			if entry.Op == WALOpCommit {
+				// this is also a good rollback offset, since it's the end of a commit, so capture it
+				lastGoodOffset = entry.EndOffset
+			}
 			continue
 		}
 		if expectedVersion != 0 {
 			if entry.Version == uint64(expectedVersion)+1 {
 				// we will need to rollback these entries but this isn't an error quite yet
-				if rollbackOffset == 0 {
-					rollbackOffset = entry.Offset
-				}
+				needRollback = true
 				continue
 			}
 			if entry.Version > uint64(expectedVersion)+1 {
 				// this means we've gone more than 1 version beyond the expected version
 				// this is an unrecoverable error (some unexpected data corruption)
-				return nil, 0, fmt.Errorf("WAL commit version %d is more than 1 version beyond expected version %d, WAL is corrupted", entry.Version, expectedVersion)
+				return nil, 0, false, fmt.Errorf("WAL commit version %d is more than 1 version beyond expected version %d, WAL is corrupted", entry.Version, expectedVersion)
 			}
 		}
 
 		root, err = applyWalEntry(entry, root, rootVersion)
 		if err != nil {
-			return nil, 0, err
+			return nil, 0, false, err
 		}
 
 		if entry.Op == WALOpCommit {
 			rootVersion++
+			// then end of a commit is a good rollback offset, so capture it
+			lastGoodOffset = entry.EndOffset
 		}
 	}
 
-	if rollbackOffset > 0 {
+	if needRollback {
 		if !autoRepair {
-			return nil, 0, fmt.Errorf("WAL contains entries beyond expected version %d, auto repair disabled", expectedVersion)
+			return nil, 0, false, fmt.Errorf("WAL contains entries beyond expected version %d, auto repair disabled", expectedVersion)
 		}
 
-		logger.WarnContext(ctx, "WAL contains entries beyond expected version, rolling back to expected version", "walFile", walFile.Name(), "expectedVersion", expectedVersion, "rollbackOffset", rollbackOffset)
+		logger.WarnContext(ctx, "WAL contains entries beyond expected version, rolling back to expected version", "walFile", walFile.Name(), "expectedVersion", expectedVersion, "rollbackOffset", lastGoodOffset)
 		// must rollback if we saw extra entries past the expected version
-		err := RollbackFileToOffset(walFile, int64(rollbackOffset))
+		err := RollbackFileToOffset(walFile, int64(lastGoodOffset))
 		if err != nil {
-			return nil, 0, fmt.Errorf("failed to rollback WAL file to offset %d: %w", rollbackOffset, err)
+			return nil, 0, false, fmt.Errorf("failed to rollback WAL file to offset %d: %w", lastGoodOffset, err)
 		}
 	}
 
 	// finished replaying WAL
-	return root, rootVersion, nil
+	return root, rootVersion, needRollback, nil
 }
 
 // ReplayWALForQuery replays WAL entries from walFile starting from root at rootVersion up to targetVersion.

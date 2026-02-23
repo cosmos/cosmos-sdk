@@ -35,8 +35,9 @@ type errMsg struct{ err error }
 
 // globalKeyMap defines keybindings available on every view.
 type globalKeyMap struct {
-	Back key.Binding
-	Quit key.Binding
+	Back    key.Binding
+	Quit    key.Binding
+	Refresh key.Binding
 }
 
 func newGlobalKeyMap() globalKeyMap {
@@ -49,14 +50,24 @@ func newGlobalKeyMap() globalKeyMap {
 			key.WithKeys("q", "ctrl+c"),
 			key.WithHelp("q", "quit"),
 		),
+		Refresh: key.NewBinding(
+			key.WithKeys("r"),
+			key.WithHelp("r", "refresh"),
+		),
 	}
+}
+
+// refreshable is optionally implemented by views that can reload data from disk.
+type refreshable interface {
+	refresh()
 }
 
 // combinedKeyMap merges view-specific keys with global keys for the help footer.
 type combinedKeyMap struct {
-	view     help.KeyMap
-	global   globalKeyMap
-	showBack bool
+	view        help.KeyMap
+	global      globalKeyMap
+	showBack    bool
+	showRefresh bool
 }
 
 func (c combinedKeyMap) ShortHelp() []key.Binding {
@@ -64,16 +75,23 @@ func (c combinedKeyMap) ShortHelp() []key.Binding {
 	if c.showBack {
 		bindings = append(bindings, c.global.Back)
 	}
+	if c.showRefresh {
+		bindings = append(bindings, c.global.Refresh)
+	}
 	bindings = append(bindings, c.global.Quit)
 	return bindings
 }
 
 func (c combinedKeyMap) FullHelp() [][]key.Binding {
 	groups := c.view.FullHelp()
-	global := []key.Binding{c.global.Quit}
+	var global []key.Binding
 	if c.showBack {
-		global = append([]key.Binding{c.global.Back}, global...)
+		global = append(global, c.global.Back)
 	}
+	if c.showRefresh {
+		global = append(global, c.global.Refresh)
+	}
+	global = append(global, c.global.Quit)
 	groups = append(groups, global)
 	return groups
 }
@@ -167,6 +185,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, cmd
 			}
 			return m, nil
+		case key.Matches(msg, m.keys.Refresh):
+			top := m.stack[len(m.stack)-1]
+			if r, ok := top.(refreshable); ok {
+				r.refresh()
+				m.err = ""
+			}
+			return m, nil
 		}
 	}
 
@@ -185,7 +210,8 @@ func (m model) View() string {
 
 	top := m.stack[len(m.stack)-1]
 	title := boxStyle.Render(top.Title())
-	footer := boxStyle.Render(m.help.View(combinedKeyMap{view: top.KeyMap(), global: m.keys, showBack: len(m.stack) > 1}))
+	_, topIsRefreshable := top.(refreshable)
+	footer := boxStyle.Render(m.help.View(combinedKeyMap{view: top.KeyMap(), global: m.keys, showBack: len(m.stack) > 1, showRefresh: topIsRefreshable}))
 
 	if m.err != "" {
 		errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Padding(0, 1)

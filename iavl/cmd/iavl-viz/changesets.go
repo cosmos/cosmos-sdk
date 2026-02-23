@@ -285,3 +285,9 @@ func (v *changesetsView) Title() string {
 func (v *changesetsView) KeyMap() help.KeyMap {
 	return v.keys
 }
+
+func (v *changesetsView) refresh() {
+	fresh := newChangesetsView(v.dir, v.treeName, contentHeight(v.height))
+	fresh.width, fresh.height = v.width, v.height
+	*v = *fresh
+}

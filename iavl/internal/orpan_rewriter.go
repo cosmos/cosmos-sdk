@@ -26,10 +26,6 @@ func (or *OrphanRewriter) Preprocess(retainCriteria RetainCriteria, compactedOrp
 	defer rdr.Close()
 
 	toDelete = make(map[NodeID]uint32)
-	err = or.existingWriter.Flush()
-	if err != nil {
-		return nil, fmt.Errorf("failed to flush existing orphan writer: %w", err)
-	}
 	n := rdr.Count()
 	for i := 0; i < n; i++ {
 		entry := rdr.UnsafeItem(i)

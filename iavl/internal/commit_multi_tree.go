@@ -23,6 +23,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
 
 	"cosmossdk.io/store/cachekv"
@@ -1010,8 +1011,21 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 
 	if !db.pruningActive.CompareAndSwap(false, true) {
 		// another prune started since we checked, skip
+		db.logger.Warn("skipping pruning since another prune is already in progress",
+			"version", version,
+			"retain_version", retainVersion,
+			"pruning_interval", db.pruningOptions.Interval,
+			"keep_recent", db.pruningOptions.KeepRecent,
+		)
 		return
 	}
+	db.logger.Info("starting pruning old versions of IAVL trees",
+		"version", version,
+		"retain_version", retainVersion,
+		"pruning_interval", db.pruningOptions.Interval,
+		"keep_recent", db.pruningOptions.KeepRecent,
+	)
+
 	done := make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -1030,7 +1044,12 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 // pruneNow prunes old versions of the IAVL trees according to the pruning options, keeping the most recent `keepRecent` versions and pruning the rest.
 // This function is only intended to be called from pruneIfNeeded or by tests.
 func (db *CommitMultiTree) pruneNow(ctx context.Context, retainVersion uint64) {
-	ctx, span := tracer.Start(ctx, "CommitMultiTree.Prune")
+	ctx, span := tracer.Start(ctx, "CommitMultiTree.Prune",
+		trace.WithAttributes(
+			attribute.Int64("retain_version", int64(retainVersion)),
+			attribute.Int64("current_version", db.LatestVersion()),
+		),
+	)
 	defer span.End()
 
 	db.earliestVersion.Store(int64(retainVersion))
@@ -1098,4 +1117,105 @@ func (db *CommitMultiTree) Describe() MultiTreeDescription {
 	}
 }
 
-var _ storetypes.CommitMultiStore = &CommitMultiTree{}
+var (
+	_ storetypes.CommitMultiStore = &CommitMultiTree{}
+	_ storetypes.Queryable        = &CommitMultiTree{}
+)
+
+// Query routes a query request to a sub-store by name and appends the multi-store proof when requested.
+func (db *CommitMultiTree) Query(req *storetypes.RequestQuery) (*storetypes.ResponseQuery, error) {
+	storeName, subpath, err := parseQueryPath(req.Path)
+	if err != nil {
+		return &storetypes.ResponseQuery{}, err
+	}
+
+	store := db.getStoreByName(storeName)
+	if store == nil {
+		return &storetypes.ResponseQuery{}, errorsmod.Wrapf(storetypes.ErrUnknownRequest, "no such store: %s", storeName)
+	}
+
+	queryable, ok := store.(storetypes.Queryable)
+	if !ok {
+		return &storetypes.ResponseQuery{}, errorsmod.Wrapf(storetypes.ErrUnknownRequest, "store %s (type %T) doesn't support queries", storeName, store)
+	}
+
+	subReq := *req
+	subReq.Path = subpath
+	res, err := queryable.Query(&subReq)
+	if err != nil {
+		return res, err
+	}
+
+	if !req.Prove || !queryRequiresProof(subpath) {
+		return res, nil
+	}
+
+	if res.ProofOps == nil || len(res.ProofOps.Ops) == 0 {
+		return &storetypes.ResponseQuery{}, errorsmod.Wrap(storetypes.ErrInvalidRequest, "proof is unexpectedly empty; ensure height has not been pruned")
+	}
+
+	commitInfo, err := db.commitInfoForProof(res.Height)
+	if err != nil {
+		return &storetypes.ResponseQuery{}, err
+	}
+	if err := validateCommitInfoHash(commitInfo, storeName); err != nil {
+		return &storetypes.ResponseQuery{}, err
+	}
+
+	res.ProofOps.Ops = append(res.ProofOps.Ops, commitInfo.ProofOp(storeName))
+
+	return res, nil
+}
+
+func queryRequiresProof(subpath string) bool {
+	return subpath == "/key"
+}
+
+func parseQueryPath(path string) (storeName, subpath string, err error) {
+	if !strings.HasPrefix(path, "/") {
+		return "", "", errorsmod.Wrapf(storetypes.ErrUnknownRequest, "invalid path: %s", path)
+	}
+
+	storeName, subpath, found := strings.Cut(path[1:], "/")
+	if !found {
+		return storeName, "", nil
+	}
+
+	return storeName, "/" + subpath, nil
+}
+
+func (db *CommitMultiTree) getStoreByName(name string) any {
+	for _, si := range db.stores {
+		if si.key.Name() == name {
+			return si.store
+		}
+	}
+	return nil
+}
+
+func (db *CommitMultiTree) commitInfoForProof(height int64) (*storetypes.CommitInfo, error) {
+	lastCommitInfo := db.commitData.Load()
+	latest := lastCommitInfo.commitId.Version
+	if height == latest && lastCommitInfo != nil && lastCommitInfo.commitInfo.Version == height {
+		return lastCommitInfo.commitInfo, nil
+	}
+
+	return db.GetCommitInfo(height)
+}
+
+func validateCommitInfoHash(commitInfo *storetypes.CommitInfo, storeName string) error {
+	for _, storeInfo := range commitInfo.StoreInfos {
+		if storeInfo.Name != storeName {
+			continue
+		}
+
+		// TODO: we can actually recover here, but we'd need to recompute the hashes in the tree.
+		if len(storeInfo.CommitId.Hash) == 0 {
+			return errorsmod.Wrapf(storetypes.ErrInvalidRequest, "proof store hash is missing for store %s at height %d", storeName, commitInfo.Version)
+		}
+
+		return nil
+	}
+
+	return errorsmod.Wrapf(storetypes.ErrInvalidRequest, "proof store %s is missing from commit info at height %d", storeName, commitInfo.Version)
+}

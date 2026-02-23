@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
+	"cosmossdk.io/store/types/kv"
 )
 
 func bz(s string) []byte { return []byte(s) }

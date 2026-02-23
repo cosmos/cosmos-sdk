@@ -13,11 +13,11 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
+	"cosmossdk.io/store/types/kv"
 	"cosmossdk.io/store/wrapper"
 )
 

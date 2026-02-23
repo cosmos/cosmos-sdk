@@ -149,9 +149,17 @@ func (ts *TreeStore) load() error {
 	}
 
 	ts.changesetsByVersion.Ascend(replayFromVersion, func(_ uint32, cs *Changeset) bool {
-		root, version, err = ReplayWALForStartup(ctx, root, cs.files.WALFile(), version, ts.opts.ExpectedVersion, ts.logger, !ts.opts.DisableAutoRepair)
+		var repaired bool
+		root, version, repaired, err = ReplayWALForStartup(ctx, root, cs.files.WALFile(), version, ts.opts.ExpectedVersion, ts.logger, !ts.opts.DisableAutoRepair)
 		if err != nil {
 			return false
+		}
+		if repaired {
+			// if we did any WAL repairs, we need to reload the changeset reader to ensure it reflects the repaired state of the WAL files
+			err = cs.OpenNewReader()
+			if err != nil {
+				return false
+			}
 		}
 		return true
 	})

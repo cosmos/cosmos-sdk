@@ -46,9 +46,13 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*Ch
 	}
 	dir := filepath.Join(treeDir, dirName)
 
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		// TODO consider erroring if the directory already exists, but for now this could happen if we closed right after rolling over and it would just be an empty dir and not a bug
-		return nil, fmt.Errorf("failed to create changeset dir: %w", err)
+	var existingDir bool
+	if err := os.Mkdir(dir, 0o755); err != nil {
+		if errors.Is(err, os.ErrExist) {
+			existingDir = true
+		} else {
+			return nil, fmt.Errorf("failed to create changeset dir: %w", err)
+		}
 	}
 
 	cr := &ChangesetFiles{
@@ -61,6 +65,18 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*Ch
 	err = cr.open(writeModeFlags)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
+	}
+
+	if existingDir {
+		// an existing directory is okay if and only if all the files are empty,
+		// otherwise we risk data loss by writing to an existing changeset
+		for _, f := range cr.allFiles() {
+			info, err := f.Stat()
+			if err == nil && info.Size() > 0 {
+				cr.Close() // close files before returning error
+				return nil, fmt.Errorf("changeset dir already exists and is not empty: %s", dir)
+			}
+		}
 	}
 
 	return cr, nil
@@ -267,6 +283,17 @@ func (cr *ChangesetFiles) MarkReadyAndClose(endVersion uint32) (finalDir string,
 	return finalDir, nil
 }
 
+func (cr *ChangesetFiles) allFiles() []*os.File {
+	return []*os.File{
+		cr.walFile,
+		cr.kvDataFile,
+		cr.branchesFile,
+		cr.leavesFile,
+		cr.checkpointsFile,
+		cr.orphansFile,
+	}
+}
+
 // Close closes all changeset files.
 func (cr *ChangesetFiles) Close() error {
 	if cr.closed {
@@ -274,15 +301,16 @@ func (cr *ChangesetFiles) Close() error {
 	}
 
 	cr.closed = true
-	err := errors.Join(
-		cr.walFile.Close(),
-		cr.kvDataFile.Close(),
-		cr.branchesFile.Close(),
-		cr.leavesFile.Close(),
-		cr.checkpointsFile.Close(),
-		cr.orphansFile.Close(),
-	)
-	return err
+	var errs []error
+	for _, f := range cr.allFiles() {
+		if f != nil {
+			err := f.Close()
+			if err != nil {
+				errs = append(errs, fmt.Errorf("failed to close file %s: %w", f.Name(), err))
+			}
+		}
+	}
+	return errors.Join(errs...)
 }
 
 // DeleteFiles deletes all changeset files and the changeset directory.

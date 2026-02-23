@@ -9,41 +9,41 @@ import (
 type Options struct {
 	// ChangesetRolloverSize is the size in bytes at which a changeset is rolled over to a new changeset.
 	// By default this is set to 2GB.
-	ChangesetRolloverSize int64 `json:"changeset_rollover_size"`
+	ChangesetRolloverSize int64 `json:"changeset_rollover_size" mapstructure:"changeset_rollover_size" yaml:"changeset_rollover_size"`
 	// CompactionRolloverSize is the size in bytes at which a compacted changeset rolls over
 	// to a new changeset.
 	// By default this is set to 4GB.
-	CompactionRolloverSize int64 `json:"compaction_rollover_size"`
+	CompactionRolloverSize int64 `json:"compaction_rollover_size" mapstructure:"compaction_rollover_size" yaml:"compaction_rollover_size"`
 	// BranchEvictDepth is the depth at which branch nodes are evicted from the cache.
 	// Branch nodes occupy less memory than leaf nodes because they don't have values,
 	// so it is reasonable to keep more of them in cache.
 	// Must be >= LeafEvictDepth (clamped if set lower), since evicting a branch node
 	// makes its children unreachable without a disk read.
 	// By default this is set to 24.
-	BranchEvictDepth uint8 `json:"branch_evict_depth"`
+	BranchEvictDepth uint8 `json:"branch_evict_depth" mapstructure:"branch_evict_depth" yaml:"branch_evict_depth"`
 	// LeafEvictDepth is the depth at which leaf nodes are evicted from the cache.
 	// Must be <= BranchEvictDepth.
 	// By default this is set to 20.
-	LeafEvictDepth uint8 `json:"leaf_evict_depth"`
+	LeafEvictDepth uint8 `json:"leaf_evict_depth" mapstructure:"leaf_evict_depth" yaml:"leaf_evict_depth"`
 	// CheckpointInterval is the number of versions between checkpoints.
 	// By default this is set to 100.
 	// Checkpoints will also always be taken when changesets are rolled over due to reaching the ChangesetRolloverSize, regardless of this setting.
-	CheckpointInterval int `json:"checkpoint_interval"`
+	CheckpointInterval int `json:"checkpoint_interval" mapstructure:"checkpoint_interval" yaml:"checkpoint_interval"`
 	// DisableWALFsync, if true, disables fsync calls for the WAL file.
 	// This is not recommended, but may speed things up if you're using very slow storage.
 	// On a modern SSD, no benchmarks have indicated that there is any commit latency as a result of fsync calls,
 	// so this should not be needed.
 	// CPU heavy operations generally take much longer than the WAL writing phase and WAL writing is almost never the blocker.
-	DisableWALFsync bool `json:"disable_wal_fsync"`
+	DisableWALFsync bool `json:"disable_wal_fsync" mapstructure:"disable_wal_fsync" yaml:"disable_wal_fsync"`
 	// RootCacheSize is the number of recent roots to cache in memory.
 	// Caching recent roots can speed up access to historical state but uses more memory.
 	// A recent root is defined as a recently committed version of the tree
 	// or a recently checked out historical version.
 	// This defaults to caching 3 recent roots. Setting this to a negative value disables root caching.
-	RootCacheSize int `json:"root_cache_size"`
+	RootCacheSize int `json:"root_cache_size" mapstructure:"root_cache_size" yaml:"root_cache_size"`
 	// RootCacheExpiry is the expiration time in milliseconds for cached roots.
 	// This defaults to 1 second.
-	RootCacheExpiry int64 `json:"root_cache_expiry"`
+	RootCacheExpiry int64 `json:"root_cache_expiry" mapstructure:"root_cache_expiry" yaml:"root_cache_expiry"`
 }
 
 func (opts Options) toInternalOpts() internal.Options {

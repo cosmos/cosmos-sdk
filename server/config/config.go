@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
-
+	"github.com/cosmos/cosmos-sdk/iavl"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -205,18 +205,24 @@ type (
 	}
 )
 
+type IAVLXConfig struct {
+	Enable  bool         `mapstructure:"enable"`
+	Options iavl.Options `mapstructure:"options"`
+}
+
 // Config defines the server's top level configuration
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
 
 	// Deprecated: Use OpenTelemetry instead, see the `telemetry` package for more details.
-	Telemetry telemetry.Config `mapstructure:"telemetry"` //nolint:staticcheck // TODO: switch to OpenTelemetry
-	API       APIConfig        `mapstructure:"api"`
-	GRPC      GRPCConfig       `mapstructure:"grpc"`
-	GRPCWeb   GRPCWebConfig    `mapstructure:"grpc-web"`
-	StateSync StateSyncConfig  `mapstructure:"state-sync"`
-	Streaming StreamingConfig  `mapstructure:"streaming"`
-	Mempool   MempoolConfig    `mapstructure:"mempool"`
+	Telemetry    telemetry.Config `mapstructure:"telemetry"` //nolint:staticcheck // TODO: switch to OpenTelemetry
+	API          APIConfig        `mapstructure:"api"`
+	GRPC         GRPCConfig       `mapstructure:"grpc"`
+	GRPCWeb      GRPCWebConfig    `mapstructure:"grpc-web"`
+	StateSync    StateSyncConfig  `mapstructure:"state-sync"`
+	Streaming    StreamingConfig  `mapstructure:"streaming"`
+	Mempool      MempoolConfig    `mapstructure:"mempool"`
+	IAVLXOptions IAVLXConfig      `mapstructure:"iavlx"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.

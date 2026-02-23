@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -591,21 +590,20 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 
 func enableIavx(appOpts types.AppOptions, homeDir string) func(*baseapp.BaseApp) {
 	return func(bapp *baseapp.BaseApp) {
-		var opts iavl.Options
-		optsJson, ok := appOpts.Get(FlagIAVLXOptions).(string)
-		if !ok || optsJson == "" {
+		var cfg config.IAVLXConfig
+		v := appOpts.(*viper.Viper)
+		if err := v.UnmarshalKey("iavlx", &cfg); err != nil {
+			panic(fmt.Errorf("failed to unmarshal iavlx config: %w", err))
+		}
+
+		if !cfg.Enable {
 			fmt.Println("Using iavl/v1")
 			return
 		}
 
-		err := json.Unmarshal([]byte(optsJson), &opts)
-		if err != nil {
-			panic(fmt.Errorf("failed to unmarshal iavlx options: %w", err))
-		}
-
 		db, err := iavl.LoadCommitMultiTree(
 			filepath.Join(homeDir, "data", "iavlx"),
-			opts,
+			cfg.Options,
 			bapp.Logger(),
 		)
 		if err != nil {

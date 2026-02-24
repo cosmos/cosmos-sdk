@@ -5,7 +5,7 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 
 	nftmodulev1 "github.com/cosmos/cosmos-sdk/contrib/api/cosmos/nft/module/v1"
-	_ "github.com/cosmos/cosmos-sdk/contrib/x/nft/module"
+	_ "github.com/cosmos/cosmos-sdk/contrib/x/nft/module" // import as blank for app wiring
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring

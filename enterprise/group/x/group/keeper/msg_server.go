@@ -1073,6 +1073,9 @@ func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, reqGroupPolicy, reqAdmin st
 
 // doUpdateGroup first makes sure that the group admin initiated the group update,
 // before performing the group update and emitting an event.
+// Active proposals remain SUBMITTED until tally time, when they are tallied against
+// the updated group state and may be accepted or rejected (unlike doUpdateGroupPolicy,
+// which aborts proposals immediately).
 func (k Keeper) doUpdateGroup(ctx sdk.Context, groupID uint64, reqGroupAdmin string, action actionFn, errNote string) error {
 	groupInfo, err := k.getGroupInfo(ctx, groupID)
 	if err != nil {

@@ -11,21 +11,22 @@ func TestUint40(t *testing.T) {
 		name        string
 		value       uint64
 		expectPanic bool
-		str         string
+		wantStr     string
 	}{
 		{
-			name: "zero",
-			str:  "0",
+			name:    "zero",
+			value:   0,
+			wantStr: "0",
 		},
 		{
-			name:  "max",
-			value: 1<<40 - 1,
-			str:   "1099511627775",
+			name:    "max",
+			value:   MaxUint40,
+			wantStr: "1099511627775",
 		},
 		{
-			name:  "arbitrary",
-			value: 109951162777,
-			str:   "109951162777",
+			name:    "arbitrary",
+			value:   12345678,
+			wantStr: "12345678",
 		},
 		{
 			name:        "overflow",
@@ -41,10 +42,14 @@ func TestUint40(t *testing.T) {
 				})
 			} else {
 				u := NewUint40(tt.value)
-				got := u.ToUint64()
-				require.Equal(t, tt.value, got)
-				require.Equal(t, tt.str, u.String())
+				require.Equal(t, tt.value, u.ToUint64())
+				require.Equal(t, tt.wantStr, u.String())
 			}
 		})
 	}
+}
+
+func TestUint40_IsZero(t *testing.T) {
+	require.True(t, NewUint40(0).IsZero())
+	require.False(t, NewUint40(1).IsZero())
 }

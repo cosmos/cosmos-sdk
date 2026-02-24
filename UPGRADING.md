@@ -6,6 +6,12 @@ Note, always read the **App Wiring Changes** section for more information on app
 
 For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/CHANGELOG.md).
 
+
+## Summary
+
+The release of Cosmos SDK v0.54.0 brings exciting new feature previews, an enhanced observability stack, and tightens the 
+developer experience of building an application with Cosmos SDK.
+
 ## x/gov
 
 ### Keeper Initialization
@@ -71,6 +77,9 @@ The epochs module's `NewAppModule` function now requires the epoch keeper by poi
 The bank module now contains an `EndBlock` method to support the new BlockSTM experimental package. All applications, whether using BlockSTM or not, must add `x/bank`'s `ModuleName` to the `ModuleManager`'s `SetOrderEndBlockers` method as the first entry.
 
 ### Module Deprecations
+
+Cosmos SDK v0.54.0 drops support for the circuit, nft, and crisis modules. Developers can still use these modules,
+however, they will no longer be actively maintained by Cosmos Labs.
 
 ### x/circuit
 
@@ -154,12 +163,16 @@ NOTE: the go implementation of [otelconf](https://pkg.go.dev/go.opentelemetry.io
 
 ## Experimental Packages
 
-For Q1 of 2026, Cosmos Labs has been focusing on greatly improving performance of Cosmos SDK applications. v0.54 of Cosmos SDK introduces two experimental packages: IAVLX and BlockSTM.
+For Q1 of 2026, Cosmos Labs has been focusing on greatly improving performance of Cosmos SDK applications. v0.54 of Cosmos SDK introduces two performance related experimental packages: IAVLX and BlockSTM.
+
+NOTE: It is important to emphasize that these are **experimental** packages. We DO NOT recommend running chains with these packages enabled in production. Their inclusion in this release is for experimentation purposes only.
 
 ### IAVLX
 
-IAVLX is a new, WAL-based, ACID storage engine for Cosmos applications. Currently, IAVLX is only available for new applications; we are actively working on IAVL v1 migration paths. 
+IAVLX is a new, WAL-based, ACID storage engine for Cosmos applications. Currently, IAVLX is only available for new applications; we are actively working on IAVL v1 migration paths.
+Developers interested in experimenting with IAVLX should read the documentation [here](link/to/docs).
 
 ### BlockSTM
 
-BlockSTM enables deterministic, concurrent execution of transactions, improving block execution speeds by up to X%. 
+BlockSTM enables deterministic, concurrent execution of transactions, improving block execution speeds by up to X%.
+Developers interested in experimenting with BlockSTM should read the documentation [here](link/to/docs).

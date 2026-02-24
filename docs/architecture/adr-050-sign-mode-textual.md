@@ -316,7 +316,7 @@ Updates in the 2nd category include changes to any of the value renderers or to 
 
 We define a spec version, which is an integer that must be incremented on each update of either category. This spec version will be exposed by the SDK's implementation, and can be communicated to clients. For example, SDK v0.50 might use the spec version 1, and SDK v0.51 might use 2; thanks to this versioning, clients can know how to craft SIGN_MODE_TEXTUAL transactions based on the target SDK version.
 
-The current spec version is defined in the "Status" section, on the top of this document. It is initialized to `0` to allow flexibility in choosing how to define future versions, as it would allow adding a field either in the SignDoc Go struct or in Protobuf in a backwards-compatible way.
+The current spec version is defined in the "Status" section, at the top of this document. It is initialized to `0` to allow flexibility in choosing how to define future versions, as it would allow adding a field either in the SignDoc Go struct or in Protobuf in a backwards-compatible way.
 
 ## Additional Formatting by the Hardware Device
 

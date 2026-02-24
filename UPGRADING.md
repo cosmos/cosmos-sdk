@@ -12,9 +12,11 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
 The release of Cosmos SDK v0.54.0 brings exciting new feature previews, an enhanced observability stack, and tightens the 
 developer experience of building an application with Cosmos SDK.
 
-## x/gov
+## App Wiring Changes
 
-### Keeper Initialization
+### x/gov
+
+#### Keeper Initialization
 
 The `x/gov` module has been decoupled from `x/staking`. The `keeper.NewKeeper` constructor now requires a `CalculateVoteResultsAndVotingPowerFn` parameter instead of a `StakingKeeper`.
 
@@ -50,7 +52,7 @@ govKeeper := govkeeper.NewKeeper(
 
 For applications using depinject, the governance module now accepts an optional `CalculateVoteResultsAndVotingPowerFn`. If not provided, it will use the `StakingKeeper` (also optional) to create the default function.
 
-### GovHooks Interface
+#### GovHooks Interface
 
 The `AfterProposalSubmission` hook now includes the proposer address as a parameter.
 
@@ -68,15 +70,27 @@ func (h MyGovHooks) AfterProposalSubmission(ctx context.Context, proposalID uint
 }
 ```
 
-## x/epochs
+### x/epochs
 
 The epochs module's `NewAppModule` function now requires the epoch keeper by pointer instead of value, fixing a bug related to setting hooks via depinject.
 
-## x/bank
+### x/bank
 
 The bank module now contains an `EndBlock` method to support the new BlockSTM experimental package. All applications, whether using BlockSTM or not, must add `x/bank`'s `ModuleName` to the `ModuleManager`'s `SetOrderEndBlockers` method as the first entry.
 
-### Module Deprecations
+### NodeService
+
+The node service has been updated to return the node's earliest store height in the `Status` query. Please update your registration with the following code (make sure you are already updated to `cosmossdk.io/store/v2`):
+
+```go
+func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg, func() int64 {
+		return app.CommitMultiStore().EarliestVersion()
+	})
+}
+```
+
+## Module Deprecations
 
 Cosmos SDK v0.54.0 drops support for the circuit, nft, and crisis modules. Developers can still use these modules,
 however, they will no longer be actively maintained by Cosmos Labs.
@@ -93,18 +107,6 @@ The nft module is no longer being actively maintained by Cosmos Labs and was mov
 
 The crisis module is no longer being actively maintained by Cosmos Labs and was moved to `contrib/x/crisis`.
 
-## NodeService
-
-The node service has been updated to return the node's earliest store height in the `Status` query. Please update your registration with the following code (make sure you are already updated to `cosmossdk.io/store/v2`):
-
-```go
-func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
-	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg, func() int64 {
-		return app.CommitMultiStore().EarliestVersion()
-	})
-}
-```
-
 ## Cosmos Enterprise
 
 Cosmos Enterprise is Cosmos Labs' new enterprise offering, designed for teams operating production-grade Cosmos-based blockchain networks. It combines hardened protocol modules, on-premises and managed infrastructure components, and direct access to the engineers building the Cosmos technology stack.
@@ -115,7 +117,7 @@ The groups module is now being maintained under the Cosmos Enterprise offering. 
 
 ### PoA Module
 
-v0.54 includes a Proof of Authority (POA) module under the Cosmos Enterprise offering. Please see [Cosmos Enterprise](https://docs.cosmos.network/enterprise/overview) to learn more about using the PoA module in your application.
+Cosmos SDK v0.54 includes a Proof of Authority (POA) module under the Cosmos Enterprise offering. Please see [Cosmos Enterprise](https://docs.cosmos.network/enterprise/overview) to learn more about using the PoA module in your application.
 
 
 ## Moved Go Modules
@@ -129,13 +131,13 @@ To improve maintainability and unify the import paths of Cosmos SDK's module off
 
 ## Log v2
 
-The log package has been updated to `log/v2`. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/log/v2`. Usage of the logger itself does not need to be updated.
-This update adds contextual methods to the logger interface, allowing logs to be correlated with OpenTelemetry traces. Logs can be scraped with OpenTelemetry's [FileLog Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/filelogreceiver).
+The log package has been updated to `v2`. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/log/v2`. Usage of the logger itself does not need to be updated.
+The v2 release of log adds contextual methods to the logger interface (InfoContext, DebugContext, etc.), allowing logs to be correlated with OpenTelemetry traces. We recommend scraping logs with OpenTelemetry's [FileLog Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/filelogreceiver).
 To learn more about the new features offered in `log/v2`, as well as setting up log correlation, see the log package's [README](log/README.md).
 
 ## Store v2
 
-The store package has been updated to `v2`. This release supports the new, lightning fast storage backend, IAVLX. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/store/v2`.
+The store package has been updated to `v2`. Store v2 enables support for the new experimental packages: BlockSTM and IAVLX. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/store/v2`.
 
 ## Client v2
 

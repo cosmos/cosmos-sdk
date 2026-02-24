@@ -122,12 +122,13 @@ Cosmos SDK v0.54 includes a Proof of Authority (POA) module under the Cosmos Ent
 
 ## Moved Go Modules
 
-To improve maintainability and unify the import paths of Cosmos SDK's module offerings, all `cosmossdk.io/x/<module>` modules have been moved to the main `github.com/cosmos/cosmos-sdk` go module. The following import paths must be updated:
+To improve maintainability and standardize import paths across Cosmos SDK modules and libraries, most packages have been consolidated under the github.com/cosmos/cosmos-sdk Go module. The following import paths must be updated:
 
 - `cosmossdk.io/x/evidence` -> `github.com/cosmos/cosmos-sdk/x/evidence`
 - `cosmossdk.io/x/feegrant` -> `github.com/cosmos/cosmos-sdk/x/feegrant` 
 - `cosmossdk.io/x/upgrade` -> `github.com/cosmos/cosmos-sdk/x/upgrade`
 - `cosmossdk.io/x/tx` -> `github.com/cosmos/cosmos-sdk/x/tx`
+- `cosmossdk.io/systemtests` -> `github.com/cosmos/cosmos-sdk/testutil/systemtests`
 
 ## Log v2
 

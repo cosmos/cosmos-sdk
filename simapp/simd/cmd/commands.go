@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/simapp"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 

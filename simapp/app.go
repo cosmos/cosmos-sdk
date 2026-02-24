@@ -1,5 +1,3 @@
-//go:build app_v1
-
 package simapp
 
 import (
@@ -18,24 +16,25 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/circuit"
-	circuitkeeper "cosmossdk.io/x/circuit/keeper"
-	circuittypes "cosmossdk.io/x/circuit/types"
-	"cosmossdk.io/x/evidence"
-	evidencekeeper "cosmossdk.io/x/evidence/keeper"
-	evidencetypes "cosmossdk.io/x/evidence/types"
-	"cosmossdk.io/x/feegrant"
-	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	feegrantmodule "cosmossdk.io/x/feegrant/module"
-	"cosmossdk.io/x/nft"
-	nftkeeper "cosmossdk.io/x/nft/keeper"
-	nftmodule "cosmossdk.io/x/nft/module"
-	"cosmossdk.io/x/tx/signing"
-	"cosmossdk.io/x/upgrade"
-	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
+
+	"github.com/cosmos/cosmos-sdk/contrib/x/circuit"
+	circuitkeeper "github.com/cosmos/cosmos-sdk/contrib/x/circuit/keeper"
+	circuittypes "github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
+	"github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	nftkeeper "github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
+	nftmodule "github.com/cosmos/cosmos-sdk/contrib/x/nft/module"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/upgrade"
+	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -45,6 +44,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/contrib/x/group"
+	groupkeeper "github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
+	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -91,9 +93,6 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
-	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -456,11 +455,11 @@ func NewSimApp(
 		runtime.NewKVStoreService(keys[govtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.StakingKeeper,
 		app.DistrKeeper,
 		app.MsgServiceRouter(),
 		govConfig,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(app.StakingKeeper),
 		// govkeeper.WithCustomCalculateVoteResultsAndVotingPowerFn(...), // Add if you want to use a custom vote calculation function.
 	)
 
@@ -469,7 +468,7 @@ func NewSimApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 
@@ -499,7 +498,7 @@ func NewSimApp(
 
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-			// insert epoch hooks receivers here
+		// insert epoch hooks receivers here
 		),
 	)
 
@@ -528,7 +527,7 @@ func NewSimApp(
 		nftmodule.NewAppModule(appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		circuit.NewAppModule(appCodec, app.CircuitKeeper),
-		epochs.NewAppModule(app.EpochsKeeper),
+		epochs.NewAppModule(&app.EpochsKeeper),
 		protocolpool.NewAppModule(app.ProtocolPoolKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
@@ -568,6 +567,7 @@ func NewSimApp(
 		epochstypes.ModuleName,
 	)
 	app.ModuleManager.SetOrderEndBlockers(
+		banktypes.ModuleName,
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		genutiltypes.ModuleName,
@@ -882,7 +882,9 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 }
 
 func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
-	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg, func() int64 {
+		return app.CommitMultiStore().EarliestVersion()
+	})
 }
 
 // GetMaccPerms returns a copy of the module account permissions

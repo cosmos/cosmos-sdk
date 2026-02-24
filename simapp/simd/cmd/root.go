@@ -1,11 +1,9 @@
-//go:build app_v1
-
 package cmd
 
 import (
 	"os"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
 	dbm "github.com/cosmos/cosmos-db"

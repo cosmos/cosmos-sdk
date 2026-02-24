@@ -73,216 +73,120 @@ func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMembe
 }
 
 func (s *TestSuite) TestCreateGroup() {
-	addrs := s.addrs
-	addr1 := addrs[0]
-	addr3 := addrs[2]
-	addr5 := addrs[4]
-	addr6 := addrs[5]
+	admin := s.addrs[0]
+	addr3 := s.addrs[2]
+	addr5 := s.addrs[4]
+	addr6 := s.addrs[5]
 
-	members := []group.MemberRequest{{
-		Address: addr5.String(),
-		Weight:  "1",
-	}, {
-		Address: addr6.String(),
-		Weight:  "2",
-	}}
-
-	expGroups := []*group.GroupInfo{
-		{
-			Id:          s.groupID,
-			Version:     1,
-			Admin:       addr1.String(),
-			TotalWeight: "3",
-			CreatedAt:   s.blockTime,
-		},
-		{
-			Id:          2,
-			Version:     1,
-			Admin:       addr1.String(),
-			TotalWeight: "3",
-			CreatedAt:   s.blockTime,
-		},
+	// Valid members used by success cases
+	validMembers := []group.MemberRequest{
+		{Address: addr5.String(), Weight: "1"},
+		{Address: addr6.String(), Weight: "2"},
 	}
 
-	specs := map[string]struct {
-		req                    *group.MsgCreateGroup
-		expErr                 bool
-		expErrMsg              string
-		expGroups              []*group.GroupInfo
-		skipGroupsByAdminCheck bool // when true, skip groups-by-admin assertion (for specs that run in random order)
+	// --- Error cases: validation failures (no groups created) ---
+	// Setup creates group 1; next group ID would be 2. Error cases must not create any group.
+	nextGroupIDBeforeErrors := uint64(2)
+	errorSpecs := []struct {
+		name   string
+		req    *group.MsgCreateGroup
+		expErr string
 	}{
-		"all good": {
-			req: &group.MsgCreateGroup{
-				Admin:   addr1.String(),
-				Members: members,
+		{"invalid admin address", &group.MsgCreateGroup{
+			Admin: "invalid", Members: validMembers,
+		}, "invalid admin address"},
+		{"group metadata too long", &group.MsgCreateGroup{
+			Admin: admin.String(), Members: validMembers, Metadata: strings.Repeat("a", 256),
+		}, "group metadata: limit exceeded"},
+		{"invalid member address", &group.MsgCreateGroup{
+			Admin: admin.String(), Members: []group.MemberRequest{{Address: "invalid", Weight: "1"}},
+		}, "member address invalid"},
+		{"member metadata too long", &group.MsgCreateGroup{
+			Admin: admin.String(), Members: []group.MemberRequest{
+				{Address: addr3.String(), Weight: "1", Metadata: strings.Repeat("a", 256)},
 			},
-			expGroups:              expGroups,
-			skipGroupsByAdminCheck: true, // map iteration order is non-deterministic
-		},
-		"group metadata too long": {
-			req: &group.MsgCreateGroup{
-				Admin:    addr1.String(),
-				Members:  members,
-				Metadata: strings.Repeat("a", 256),
+		}, "metadata: limit exceeded"},
+		{"zero member weight", &group.MsgCreateGroup{
+			Admin: admin.String(), Members: []group.MemberRequest{{Address: addr3.String(), Weight: "0"}},
+		}, "expected a positive decimal"},
+		{"empty members - group must not be empty", &group.MsgCreateGroup{
+			Admin: admin.String(), Members: []group.MemberRequest{},
+		}, "group must not be empty"},
+		{"invalid member weight - Inf", &group.MsgCreateGroup{
+			Admin: admin.String(), Members: []group.MemberRequest{{Address: addr3.String(), Weight: "inf"}},
+		}, "expected a finite decimal"},
+		{"invalid member weight - NaN", &group.MsgCreateGroup{
+			Admin: admin.String(), Members: []group.MemberRequest{{Address: addr3.String(), Weight: "NaN"}},
+		}, "expected a finite decimal"},
+		{"duplicate member addresses", &group.MsgCreateGroup{
+			Admin: admin.String(), Members: []group.MemberRequest{
+				{Address: addr5.String(), Weight: "1"}, {Address: addr5.String(), Weight: "2"},
 			},
-			expErr:    true,
-			expErrMsg: "group metadata: limit exceeded",
-		},
-		"invalid member address": {
-			req: &group.MsgCreateGroup{
-				Admin: addr1.String(),
-				Members: []group.MemberRequest{{
-					Address: "invalid",
-					Weight:  "1",
-				}},
-			},
-			expErr:    true,
-			expErrMsg: "member address invalid",
-		},
-		"member metadata too long": {
-			req: &group.MsgCreateGroup{
-				Admin: addr1.String(),
-				Members: []group.MemberRequest{{
-					Address:  addr3.String(),
-					Weight:   "1",
-					Metadata: strings.Repeat("a", 256),
-				}},
-			},
-			expErr:    true,
-			expErrMsg: "metadata: limit exceeded",
-		},
-		"zero member weight": {
-			req: &group.MsgCreateGroup{
-				Admin: addr1.String(),
-				Members: []group.MemberRequest{{
-					Address: addr3.String(),
-					Weight:  "0",
-				}},
-			},
-			expErr:    true,
-			expErrMsg: "expected a positive decimal",
-		},
-		"empty members - group must not be empty": {
-			req: &group.MsgCreateGroup{
-				Admin:   addr1.String(),
-				Members: []group.MemberRequest{},
-			},
-			expErr:    true,
-			expErrMsg: "group must not be empty",
-		},
-		"invalid member weight - Inf": {
-			req: &group.MsgCreateGroup{
-				Admin: addr1.String(),
-				Members: []group.MemberRequest{{
-					Address: addr3.String(),
-					Weight:  "inf",
-				}},
-			},
-			expErr:    true,
-			expErrMsg: "expected a finite decimal",
-		},
-		"invalid member weight - NaN": {
-			req: &group.MsgCreateGroup{
-				Admin: addr1.String(),
-				Members: []group.MemberRequest{{
-					Address: addr3.String(),
-					Weight:  "NaN",
-				}},
-			},
-			expErr:    true,
-			expErrMsg: "expected a finite decimal",
-		},
-		"duplicate member addresses": {
-			req: &group.MsgCreateGroup{
-				Admin: addr1.String(),
-				Members: []group.MemberRequest{
-					{Address: addr5.String(), Weight: "1"},
-					{Address: addr5.String(), Weight: "2"},
-				},
-			},
-			expErr:    true,
-			expErrMsg: "duplicate",
-		},
-		"negative member weight": {
-			req: &group.MsgCreateGroup{
-				Admin: addr1.String(),
-				Members: []group.MemberRequest{{
-					Address: addr3.String(),
-					Weight:  "-1",
-				}},
-			},
-			expErr:    true,
-			expErrMsg: "expected a non-negative decimal",
-		},
-		"empty weight string": {
-			req: &group.MsgCreateGroup{
-				Admin: addr1.String(),
-				Members: []group.MemberRequest{{
-					Address: addr3.String(),
-					Weight:  "",
-				}},
-			},
-			expErr:    true,
-			expErrMsg: "invalid",
-		},
-		"fractional weights - valid": {
-			req: &group.MsgCreateGroup{
-				Admin: addr1.String(),
-				Members: []group.MemberRequest{
-					{Address: addr5.String(), Weight: "0.5"},
-					{Address: addr6.String(), Weight: "1.5"},
-				},
-			},
-			expGroups:              nil,
-			skipGroupsByAdminCheck: true,
-		},
-		"single member group": {
-			req: &group.MsgCreateGroup{
-				Admin: addr1.String(),
-				Members: []group.MemberRequest{{
-					Address: addr5.String(),
-					Weight:  "1",
-				}},
-			},
-			expGroups:              nil,
-			skipGroupsByAdminCheck: true,
-		},
+		}, "duplicate"},
+		{"negative member weight", &group.MsgCreateGroup{
+			Admin: admin.String(), Members: []group.MemberRequest{{Address: addr3.String(), Weight: "-1"}},
+		}, "expected a non-negative decimal"},
+		{"empty weight string", &group.MsgCreateGroup{
+			Admin: admin.String(), Members: []group.MemberRequest{{Address: addr3.String(), Weight: ""}},
+		}, "invalid"},
 	}
 
-	var seq uint32 = 1
-	for msg, spec := range specs {
-		s.Run(msg, func() {
+	for _, spec := range errorSpecs {
+		s.Run(spec.name, func() {
+			_, err := s.groupKeeper.CreateGroup(s.ctx, spec.req)
+			s.Require().Error(err)
+			s.Require().Contains(err.Error(), spec.expErr)
+			// Ensure no group was created on validation failure
+			_, err = s.groupKeeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: nextGroupIDBeforeErrors})
+			s.Require().Error(err)
+		})
+	}
+
+	// --- Success cases: run in deterministic order so we can assert group IDs ---
+	successSpecs := []struct {
+		name           string
+		req            *group.MsgCreateGroup
+		expID          uint64
+		expTotalWeight string
+	}{
+		{"all good - two members", &group.MsgCreateGroup{
+			Admin: admin.String(), Members: validMembers,
+		}, 2, "3"},
+		{"fractional weights - valid", &group.MsgCreateGroup{
+			Admin: admin.String(), Members: []group.MemberRequest{
+				{Address: addr5.String(), Weight: "0.5"}, {Address: addr6.String(), Weight: "1.5"},
+			},
+		}, 3, "2.0"},
+		{"single member group", &group.MsgCreateGroup{
+			Admin: admin.String(), Members: []group.MemberRequest{{Address: addr5.String(), Weight: "1"}},
+		}, 4, "1"},
+	}
+
+	for _, spec := range successSpecs {
+		s.Run(spec.name, func() {
 			blockTime := sdk.UnwrapSDKContext(s.ctx).BlockTime()
 			res, err := s.groupKeeper.CreateGroup(s.ctx, spec.req)
-			if spec.expErr {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), spec.expErrMsg)
-				_, err := s.groupKeeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: uint64(seq + 1)})
-				s.Require().Error(err)
-				return
-			}
-
 			s.Require().NoError(err)
+
 			id := res.GroupId
+			s.Assert().Equal(spec.expID, id, "group ID should increment sequentially")
 
-			seq++
-			s.Assert().Equal(uint64(seq), id)
-
-			// then all data persisted
-			loadedGroupRes, err := s.groupKeeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: id})
+			// Group info persisted correctly
+			loadedGroup, err := s.groupKeeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: id})
 			s.Require().NoError(err)
-			s.Assert().Equal(spec.req.Admin, loadedGroupRes.Info.Admin)
-			s.Assert().Equal(spec.req.Metadata, loadedGroupRes.Info.Metadata)
-			s.Assert().Equal(id, loadedGroupRes.Info.Id)
-			s.Assert().Equal(uint64(1), loadedGroupRes.Info.Version)
+			s.Assert().Equal(spec.req.Admin, loadedGroup.Info.Admin)
+			s.Assert().Equal(spec.req.Metadata, loadedGroup.Info.Metadata)
+			s.Assert().Equal(id, loadedGroup.Info.Id)
+			s.Assert().Equal(uint64(1), loadedGroup.Info.Version)
+			s.Assert().Equal(spec.expTotalWeight, loadedGroup.Info.TotalWeight)
 
-			// and members are stored as well
+			// Members persisted correctly (sort by address for comparison)
 			membersRes, err := s.groupKeeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{GroupId: id})
 			s.Require().NoError(err)
-			loadedMembers := membersRes.Members
-			expectedMembers := spec.req.Members
-			s.Require().Equal(len(expectedMembers), len(loadedMembers))
-			// we reorder members by address to be able to compare them
+			s.Require().Equal(len(spec.req.Members), len(membersRes.Members))
+
+			expectedMembers := make([]group.MemberRequest, len(spec.req.Members))
+			copy(expectedMembers, spec.req.Members)
 			sort.Slice(expectedMembers, func(i, j int) bool {
 				addri, err := sdk.AccAddressFromBech32(expectedMembers[i].Address)
 				s.Require().NoError(err)
@@ -290,37 +194,30 @@ func (s *TestSuite) TestCreateGroup() {
 				s.Require().NoError(err)
 				return bytes.Compare(addri, addrj) < 0
 			})
-			for i := range loadedMembers {
-				s.Assert().Equal(expectedMembers[i].Metadata, loadedMembers[i].Member.Metadata)
-				s.Assert().Equal(expectedMembers[i].Address, loadedMembers[i].Member.Address)
-				s.Assert().Equal(expectedMembers[i].Weight, loadedMembers[i].Member.Weight)
-				s.Assert().Equal(blockTime, loadedMembers[i].Member.AddedAt)
-				s.Assert().Equal(id, loadedMembers[i].GroupId)
+			for i := range membersRes.Members {
+				gm := membersRes.Members[i]
+				m := gm.Member
+				s.Assert().Equal(expectedMembers[i].Metadata, m.Metadata)
+				s.Assert().Equal(expectedMembers[i].Address, m.Address)
+				s.Assert().Equal(expectedMembers[i].Weight, m.Weight)
+				s.Assert().Equal(blockTime, m.AddedAt)
+				s.Assert().Equal(id, gm.GroupId)
 			}
 
-			// query groups by admin - verify our created group exists (map iteration order is non-deterministic)
-			groupsRes, err := s.groupKeeper.GroupsByAdmin(s.ctx, &group.QueryGroupsByAdminRequest{Admin: addr1.String()})
+			// Created group appears in GroupsByAdmin
+			groupsRes, err := s.groupKeeper.GroupsByAdmin(s.ctx, &group.QueryGroupsByAdminRequest{Admin: admin.String()})
 			s.Require().NoError(err)
-			loadedGroups := groupsRes.Groups
 			var found bool
-			for _, g := range loadedGroups {
+			for _, g := range groupsRes.Groups {
 				if g.Id == id {
 					found = true
 					s.Assert().Equal(spec.req.Admin, g.Admin)
-					s.Assert().Equal(loadedGroupRes.Info.TotalWeight, g.TotalWeight)
+					s.Assert().Equal(loadedGroup.Info.TotalWeight, g.TotalWeight)
 					s.Assert().Equal(uint64(1), g.Version)
 					break
 				}
 			}
 			s.Require().True(found, "created group should appear in groups-by-admin")
-			if !spec.skipGroupsByAdminCheck && spec.expGroups != nil {
-				s.Require().Equal(len(spec.expGroups), len(loadedGroups))
-				sort.Slice(loadedGroups, func(i, j int) bool { return loadedGroups[i].Id < loadedGroups[j].Id })
-				for i := range spec.expGroups {
-					s.Assert().Equal(spec.expGroups[i].TotalWeight, loadedGroups[i].TotalWeight)
-					s.Assert().Equal(spec.expGroups[i].Id, loadedGroups[i].Id)
-				}
-			}
 		})
 	}
 }

@@ -474,26 +474,19 @@ func doOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, op int, args ...int
 		err := truth.Set(keyFmt(k), valFmt(k))
 		require.NoError(t, err)
 	case opSetRange:
-		if len(args) < 2 {
-			require.Fail(t, "not enough args for set range")
-		}
-		start := args[0]
-		end := args[1]
+		require.True(t, len(args) > 1)
+		start := args[0] //nolint:gosec // this is not out of range
+		end := args[1]   //nolint:gosec // this is not out of range
 		setRange(t, st, truth, start, end)
 	case opDel:
-		if len(args) < 1 {
-			require.Fail(t, "not enough args for del")
-		}
-		k := args[0]
+		k := args[0] //nolint:gosec // this is not out of range
 		st.Delete(keyFmt(k))
 		err := truth.Delete(keyFmt(k))
 		require.NoError(t, err)
 	case opDelRange:
-		if len(args) < 2 {
-			require.Fail(t, "not enough args for del range")
-		}
-		start := args[0]
-		end := args[1]
+		require.True(t, len(args) > 1)
+		start := args[0] //nolint:gosec // this is not out of range
+		end := args[1]   //nolint:gosec // this is not out of range
 		deleteRange(t, st, truth, start, end)
 	case opWrite:
 		st.Write()

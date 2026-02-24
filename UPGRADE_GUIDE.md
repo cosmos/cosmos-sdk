@@ -1,6 +1,6 @@
 # Upgrade Guide
 
-This document provides a full guide for upgrading a Cosmos SDK chain from `v0.50.x` to `v0.53.x`.
+This document provides a full guide for upgrading a Cosmos SDK chain from `v0.53.x` to `v0.54.x`.
 
 This guide includes one **required** change and three **optional** features.
 

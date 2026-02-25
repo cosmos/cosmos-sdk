@@ -38,6 +38,16 @@ const (
 	QueryPathStore  = "store"
 
 	QueryPathBroadcastTx = "/cosmos.tx.v1beta1.Service/BroadcastTx"
+
+	TelemetrySubsystem            = "abci"
+	MetricOETime                  = "oe_time"
+	MetricInternalFinalizeTime    = "internal_finalize_time"
+	MetricExecuteWithExecutorTime = "execute_with_executor_time"
+	MetricGetFinalizeStateTime    = "get_finalize_state_time"
+	MetricPreBlockTime            = "pre_block_time"
+	MetricBeginBlockTime          = "begin_block_time"
+	MetricEndBlockTime            = "end_block_time"
+	MetricOEAborted               = "oe_aborted"
 )
 
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
@@ -392,6 +402,22 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 	}
 
 	return app.abciHandlers.CheckTxHandler(runTx, req)
+}
+
+// InsertTx inserts a tx into the applications mempool.
+func (app *BaseApp) InsertTx(req *abci.RequestInsertTx) (*abci.ResponseInsertTx, error) {
+	if app.abciHandlers.InsertTxHandler == nil {
+		return nil, errors.New("InsertTx handler not set")
+	}
+	return app.abciHandlers.InsertTxHandler(req)
+}
+
+// ReapTxs returns new valid txs from the applications mempool.
+func (app *BaseApp) ReapTxs(req *abci.RequestReapTxs) (*abci.ResponseReapTxs, error) {
+	if app.abciHandlers.ReapTxsHandler == nil {
+		return nil, errors.New("ReapTxs handler not set")
+	}
+	return app.abciHandlers.ReapTxsHandler(req)
 }
 
 // PrepareProposal implements the PrepareProposal ABCI method and returns a
@@ -960,6 +986,10 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	if app.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
+		if aborted {
+			//nolint:staticcheck // todo: refactor
+			telemetry.IncrCounter(1, TelemetrySubsystem, MetricOEAborted)
+		}
 		// Wait for the OE to finish, regardless of whether it was aborted or not
 		res, err = app.optimisticExec.WaitResult()
 

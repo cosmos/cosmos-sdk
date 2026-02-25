@@ -15,6 +15,7 @@ func main() {
 	rootCmd.AddCommand(
 		newViewCmd(),
 		newImportCmd(),
+		newRollbackCmd(),
 	)
 
 	if err := rootCmd.Execute(); err != nil {

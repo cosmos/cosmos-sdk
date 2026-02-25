@@ -70,12 +70,13 @@ func RollbackTree(treeDir string, targetVersion uint64, logger log.Logger, backu
 			if err != nil {
 				return fmt.Errorf("failed to move old changeset dir %s to backup: %w", dir.Name(), err)
 			}
-		}
-
-		if startVersion > latestStartVersion {
+		} else if startVersion > latestStartVersion {
 			latestStartVersion = startVersion
 			latestChangesetDir = dir.Name()
 		}
+	}
+	if latestChangesetDir == "" {
+		return fmt.Errorf("no valid changeset dir found in tree dir %s", treeDir)
 	}
 
 	backupPath := filepath.Join(backupDir, latestChangesetDir)
@@ -92,6 +93,7 @@ func RollbackTree(treeDir string, targetVersion uint64, logger log.Logger, backu
 	}
 
 	files, err := OpenChangesetFiles(dir)
+	defer files.Close()
 	if err != nil {
 		return fmt.Errorf("failed to open changeset files in dir %s: %w", latestChangesetDir, err)
 	}
@@ -104,6 +106,10 @@ func RollbackTree(treeDir string, targetVersion uint64, logger log.Logger, backu
 	}
 
 	// rollback checkpoints
+	err = rollbackCheckpoints(files, uint32(targetVersion), logger)
+	if err != nil {
+		return fmt.Errorf("failed to rollback checkpoint files: %w", err)
+	}
 
 	return nil
 }
@@ -167,25 +173,29 @@ func rollbackCheckpoints(files *ChangesetFiles, targetVersion uint32, logger log
 
 	if lastGoodCp == nil {
 		// just truncate everything to zero
-		errors.Join(
+		err = errors.Join(
 			RollbackFileToOffset(files.CheckpointsFile(), 0),
 			RollbackFileToOffset(files.BranchesFile(), 0),
 			RollbackFileToOffset(files.LeavesFile(), 0),
-			RollbackFileToOffset(files.OrphansFile(), 0),
 			RollbackFileToOffset(files.KVDataFile(), 0),
+			RollbackFileToOffset(files.OrphansFile(), 0),
 		)
 	} else {
 		branchesOffset := (lastGoodCp.Branches.StartOffset + lastGoodCp.Branches.Count) * SizeBranch
 		leavesOffset := (lastGoodCp.Leaves.StartOffset + lastGoodCp.Leaves.Count) * SizeLeaf
 		kvDataOffset := lastGoodCp.KVEndOffset
 		cpInfoOffset := int64((lastGoodIdx + 1) * CheckpointInfoSize)
-		// TODO clean up orphans file
-		errors.Join(
+		err = errors.Join(
 			RollbackFileToOffset(files.CheckpointsFile(), cpInfoOffset),
 			RollbackFileToOffset(files.BranchesFile(), int64(branchesOffset)),
 			RollbackFileToOffset(files.LeavesFile(), int64(leavesOffset)),
 			RollbackFileToOffset(files.KVDataFile(), int64(kvDataOffset)),
+			// TODO clean up orphans file preserving valid orphans, for now just nuke it and leave some garbage
+			RollbackFileToOffset(files.OrphansFile(), 0),
 		)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to rollback checkpoint files: %w", err)
 	}
 
 	return nil

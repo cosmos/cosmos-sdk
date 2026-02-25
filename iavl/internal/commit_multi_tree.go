@@ -667,17 +667,17 @@ func (db *CommitMultiTree) SetIAVLDisableFastNode(disable bool) {}
 func (db *CommitMultiTree) SetIAVLSyncPruning(sync bool) {}
 
 func (db *CommitMultiTree) RollbackToVersion(version int64) error {
-	db.commitMutex.Lock()
-	defer db.commitMutex.Unlock()
-
-	latestVersion := db.LatestVersion()
-	ctx, span := tracer.Start(context.Background(), "CommitMultiTree.RollbackToVersion",
-		trace.WithAttributes(
-			attribute.Int64("currentVersion", latestVersion),
-			attribute.Int64("targetVersion", version),
-		),
-	)
-	defer span.End()
+	//db.commitMutex.Lock()
+	//defer db.commitMutex.Unlock()
+	//
+	//latestVersion := db.LatestVersion()
+	//ctx, span := tracer.Start(context.Background(), "CommitMultiTree.RollbackToVersion",
+	//	trace.WithAttributes(
+	//		attribute.Int64("currentVersion", latestVersion),
+	//		attribute.Int64("targetVersion", version),
+	//	),
+	//)
+	//defer span.End()
 
 	panic("TODO")
 }

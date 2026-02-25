@@ -3,17 +3,9 @@ package internal
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
 
 	"cosmossdk.io/log/v2"
-	db "github.com/cometbft/cometbft-db"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/gogoproto/proto"
-	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/cosmos/iavl"
-	iavldb "github.com/cosmos/iavl/db"
-
-	storetypes "cosmossdk.io/store/types"
 )
 
 type Importer struct {
@@ -229,70 +221,4 @@ func (i *Importer) importExporter(exporter *iavl.Exporter) error {
 		}
 	}
 	return nil
-}
-
-func ImportIAVLV1Store(v1Db db.DB, multiStoreDir string, log log.Logger) error {
-	const (
-		latestVersionKey = "s/latest"
-		commitInfoKeyFmt = "s/%d" // s/<version>
-	)
-	bz, err := v1Db.Get([]byte(latestVersionKey))
-	if err != nil {
-		return fmt.Errorf("failed to get latest version: %w", err)
-	}
-	var latestVersion int64
-	if err := gogotypes.StdInt64Unmarshal(&latestVersion, bz); err != nil {
-		panic(err)
-	}
-
-	bz, err = v1Db.Get([]byte(fmt.Sprintf(commitInfoKeyFmt, latestVersion)))
-	if err != nil {
-		return fmt.Errorf("failed to get commit info for latest version: %w", err)
-	}
-
-	var ci storetypes.CommitInfo
-	if err := proto.Unmarshal(bz, &ci); err != nil {
-		return fmt.Errorf("failed to unmarshal commit info for latest version: %w", err)
-	}
-
-	panic("TODO")
-}
-
-func importIAVLV1Tree(v1Db dbm.DB, store, multiStoreDir string, log log.Logger) error {
-	treeDir := filepath.Join(multiStoreDir, "stores", fmt.Sprintf("%s.iavl", store))
-
-	v1Prefix := "s/k:" + store + "/"
-	v1Db = dbm.NewPrefixDB(v1Db, []byte(v1Prefix))
-	tree := iavl.NewMutableTree(iavldb.NewWrapper(v1Db), 0, false, log)
-	_, err := tree.Load()
-	if err != nil {
-		return fmt.Errorf("failed to load IAVL tree: %w", err)
-	}
-
-	version, err := tree.GetLatestVersion()
-	if err != nil {
-		return fmt.Errorf("failed to get latest version of IAVL tree: %w", err)
-	}
-
-	imTree, err := tree.GetImmutable(version)
-	if err != nil {
-		return fmt.Errorf("failed to get immutable tree for version %d: %w", version, err)
-	}
-
-	exporter, err := imTree.Export()
-	if err != nil {
-		return fmt.Errorf("failed to create exporter for version %d: %w", version, err)
-	}
-
-	importer, err := NewImporter(uint32(version), treeDir, log)
-	if err != nil {
-		return fmt.Errorf("failed to create importer for version %d: %w", version, err)
-	}
-
-	err = importer.importExporter(exporter)
-	if err != nil {
-		return fmt.Errorf("failed to import exported nodes for version %d: %w", version, err)
-	}
-
-	return importer.Finalize()
 }

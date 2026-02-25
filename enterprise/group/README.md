@@ -2,7 +2,7 @@
 
 > **Part of Cosmos SDK Enterprise Modules** | [Enterprise Modules](../README.md)
 >
-> **Full Documentation**: [docs.cosmos.network/enterprise/components/group/overview](https://docs.cosmos.network/enterprise/components/poa/overview)
+> **Full Documentation**: [docs.cosmos.network/enterprise/components/group/overview](https://docs.cosmos.network/enterprise/components/group/overview)
 >
 > **License Notice**: This module uses the [Source Available Evaluation License](./LICENSE), different from the core SDK's Apache-2.0 license. See the [License](#license) section for details.
 

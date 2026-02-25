@@ -54,7 +54,12 @@ func ImportIAVLV1MultiStore(dataDir, outDir string, logger log.Logger) error {
 		}
 	}
 
-	// TODO save commit info
+	err = saveCommitInfo(outDir, &ci)
+	if err != nil {
+		return fmt.Errorf("failed to save commit info: %w", err)
+	}
+
+	logger.Info("Successfully imported IAVL v1 multi-store", "version", ci.Version, "storeCount", len(ci.StoreInfos))
 
 	return nil
 }

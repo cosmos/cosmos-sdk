@@ -10,7 +10,7 @@ import (
 // GenerateID creates a deterministic pseudorandom integer using data in the sdk context as entropy sources.
 // The top bit of this int is always set to 1 to avoid conflicts with legacy IDs which were generated
 // via incrementing a sequence number.
-func GenerateID(ctx sdk.Context) uint64 {
+func GenerateID(ctx sdk.Context, acc sdk.AccountI) uint64 {
 	blkHeader := ctx.BlockHeader()
 
 	h := sha256.New()
@@ -18,6 +18,10 @@ func GenerateID(ctx sdk.Context) uint64 {
 	h.Write(blkHeader.AppHash)
 	_ = binary.Write(h, binary.BigEndian, int64(ctx.TxIndex()))
 	_ = binary.Write(h, binary.BigEndian, int64(ctx.MsgIndex()))
+	h.Write(acc.GetAddress())
+	if macc, ok := acc.(sdk.ModuleAccountI); ok {
+		h.Write([]byte(macc.GetName()))
+	}
 
 	digest := h.Sum(nil)
 	x := binary.BigEndian.Uint64(digest[:8])

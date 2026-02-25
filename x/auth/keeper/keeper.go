@@ -50,7 +50,7 @@ type AccountKeeperI interface {
 	GetSequence(context.Context, sdk.AccAddress) (uint64, error)
 
 	// Fetch the next account number, and increment the internal counter.
-	NextAccountNumber(context.Context) uint64
+	NextAccountNumber(context.Context, sdk.AccountI) uint64
 
 	// GetModulePermissions fetches per-module account permissions
 	GetModulePermissions() map[string]types.PermissionsForAddress
@@ -204,8 +204,8 @@ func (ak AccountKeeper) GetSequence(ctx context.Context, addr sdk.AccAddress) (u
 
 // NextAccountNumber returns new account number.
 // The global account number is pseudorandomly generated and not meant to be a secure random number.
-func (ak AccountKeeper) NextAccountNumber(ctx context.Context) uint64 {
-	return types.GenerateID(sdk.UnwrapSDKContext(ctx))
+func (ak AccountKeeper) NextAccountNumber(ctx context.Context, acc sdk.AccountI) uint64 {
+	return types.GenerateID(sdk.UnwrapSDKContext(ctx), acc)
 }
 
 // GetModulePermissions fetches per-module account permissions.

@@ -14,7 +14,13 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
-func ImportIAVLV1MultiStore(v1Db dbm.DB, multiStoreDir string, log log.Logger) error {
+func ImportIAVLV1MultiStore(v1Dir, outDir string, logger log.Logger) error {
+	logger.Info("Starting import of IAVL v1 multi-store", "sourceDir", v1Dir, "destDir", outDir)
+	v1Db, err := dbm.NewGoLevelDB("", v1Dir, nil)
+	if err != nil {
+		return fmt.Errorf("failed to open source database: %w", err)
+	}
+
 	const (
 		latestVersionKey = "s/latest"
 		commitInfoKeyFmt = "s/%d" // s/<version>
@@ -38,8 +44,10 @@ func ImportIAVLV1MultiStore(v1Db dbm.DB, multiStoreDir string, log log.Logger) e
 		return fmt.Errorf("failed to unmarshal commit info for latest version: %w", err)
 	}
 
+	logger.Info("Successfully read latest commit info", "version", ci.Version, "timestamp", ci.Timestamp, "storeCount", len(ci.StoreInfos))
+
 	for _, store := range ci.StoreInfos {
-		importErr := importIAVLV1Store(v1Db, store.Name, multiStoreDir, log)
+		importErr := importIAVLV1Store(v1Db, store.Name, outDir, logger)
 		if importErr != nil {
 			return fmt.Errorf("failed to import IAVL tree for store %s: %w", store.Name, importErr)
 		}

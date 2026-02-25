@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"cosmossdk.io/log/v2"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
@@ -27,12 +25,7 @@ func newImportCmd() *cobra.Command {
 			return cmd.Help()
 		}
 
-		db, err := dbm.NewGoLevelDB("", from, nil)
-		if err != nil {
-			return fmt.Errorf("failed to open source database: %w", err)
-		}
-
-		return internal.ImportIAVLV1MultiStore(db, to, log.NewLogger(os.Stdout))
+		return internal.ImportIAVLV1MultiStore(from, to, log.NewLogger(os.Stdout))
 	}
 	return cmd
 }

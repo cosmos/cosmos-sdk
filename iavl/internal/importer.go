@@ -32,6 +32,9 @@ func NewImporter(stagedVersion uint32, treeDir string, log log.Logger) (*Importe
 		return nil, fmt.Errorf("failed to create changeset writer: %w", err)
 	}
 
+	// we must force the writer's checkpoint to 1 or else writing nodes will fail
+	cw.checkpoint = 1
+
 	return &Importer{
 		stagedVersion: stagedVersion,
 		writer:        cw,
@@ -81,14 +84,22 @@ func (i *Importer) Add(exportNode *ExportNode) error {
 		i.branchCount++
 		node.nodeId = NewNodeID(false, 1, i.branchCount)
 
-		leftPtr := i.stack[stackSize-1]
-		rightPtr := i.stack[stackSize-2]
+		// In post-order export (left subtree, right subtree, parent), the left child
+		// is pushed first (stack[stackSize-2]) and the right child last (stack[stackSize-1]).
+		leftPtr := i.stack[stackSize-2]
+		rightPtr := i.stack[stackSize-1]
 		left := leftPtr.Mem.Load()
 		right := rightPtr.Mem.Load()
 		if left == nil || right == nil {
 			return fmt.Errorf("child node is nil for branch node at height %d", height)
 		}
-		if left.height != height-1 || right.height != height-1 {
+		// IAVL height = max(left.height, right.height) + 1, so the taller child must be
+		// at exactly height-1. The shorter child may be at height-1 or height-2 (AVL balance).
+		maxChildHeight := left.height
+		if right.height > maxChildHeight {
+			maxChildHeight = right.height
+		}
+		if maxChildHeight != height-1 {
 			return fmt.Errorf("invalid child stack for branch node at height %d: left child height %d, right child height %d", height, left.height, right.height)
 		}
 
@@ -200,8 +211,12 @@ func (i *Importer) writeNode(np *NodePointer) error {
 	}
 
 	// remove the recursive references to avoid memory leak
-	node.left.Mem.Store(nil)
-	node.right.Mem.Store(nil)
+	if node.left != nil {
+		node.left.Mem.Store(nil)
+	}
+	if node.right != nil {
+		node.right.Mem.Store(nil)
+	}
 
 	return nil
 }

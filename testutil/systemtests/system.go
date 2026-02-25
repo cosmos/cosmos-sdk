@@ -281,7 +281,12 @@ func (s *SystemUnderTest) AwaitUpgradeInfo(t *testing.T) {
 }
 
 func (s *SystemUnderTest) AwaitChainStopped() {
+	deadline := time.Now().Add(30 * time.Second)
 	for s.anyNodeRunning() {
+		if time.Now().After(deadline) {
+			s.Log("Warning: timeout waiting for chain to stop\n")
+			return
+		}
 		time.Sleep(s.blockTime)
 	}
 }
@@ -526,42 +531,55 @@ func (s *SystemUnderTest) AwaitNodesSynced(t *testing.T, nodeIDs ...int) {
 	}
 
 	targetHeight := s.currentHeight.Load()
-	timeout := time.Duration(len(nodeIDs)+1) * s.blockTime * 10
+	timeout := time.Duration(len(nodeIDs)+1) * s.blockTime * 5
 	deadline := time.Now().Add(timeout)
 
 	for _, nodeID := range nodeIDs {
 		rpcAddr := fmt.Sprintf("tcp://127.0.0.1:%d", DefaultRpcPort+nodeID)
+		synced := false
 
-		for time.Now().Before(deadline) {
-			con, err := client.New(rpcAddr, "/websocket")
-			if err != nil {
+		for time.Now().Before(deadline) && !synced {
+			// Use a channel to timeout the connection attempt
+			resultCh := make(chan int64, 1)
+			go func() {
+				con, err := client.New(rpcAddr, "/websocket")
+				if err != nil {
+					resultCh <- -1
+					return
+				}
+				if err := con.Start(); err != nil {
+					resultCh <- -1
+					return
+				}
+				defer con.Stop()
+
+				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+				defer cancel()
+				result, err := con.Status(ctx)
+				if err != nil {
+					resultCh <- -1
+					return
+				}
+				resultCh <- result.SyncInfo.LatestBlockHeight
+			}()
+
+			// Wait for result with timeout
+			select {
+			case height := <-resultCh:
+				if height >= targetHeight {
+					s.Logf("Node %d synced to height %d\n", nodeID, height)
+					synced = true
+				}
+			case <-time.After(5 * time.Second):
+				// Connection attempt timed out, try again
+			}
+
+			if !synced {
 				time.Sleep(s.blockTime / 2)
-				continue
 			}
-			if err := con.Start(); err != nil {
-				time.Sleep(s.blockTime / 2)
-				continue
-			}
-
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			result, err := con.Status(ctx)
-			cancel()
-			_ = con.Stop()
-
-			if err != nil {
-				time.Sleep(s.blockTime / 2)
-				continue
-			}
-
-			if result.SyncInfo.LatestBlockHeight >= targetHeight {
-				s.Logf("Node %d synced to height %d\n", nodeID, result.SyncInfo.LatestBlockHeight)
-				break
-			}
-
-			time.Sleep(s.blockTime / 2)
 		}
 
-		if time.Now().After(deadline) {
+		if !synced {
 			t.Fatalf("timeout waiting for node %d to sync to height %d", nodeID, targetHeight)
 		}
 	}

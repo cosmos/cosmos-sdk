@@ -9,6 +9,8 @@ import (
 )
 
 type Importer struct {
+	logger log.Logger
+
 	branchCount   uint32
 	leafCount     uint32
 	stack         []*NodePointer
@@ -17,8 +19,8 @@ type Importer struct {
 	writer *ChangesetWriter
 }
 
-func NewImporter(stagedVersion uint32, treeDir string, log log.Logger) (*Importer, error) {
-	ts, err := NewTreeStore(treeDir, TreeOptions{}, log)
+func NewImporter(stagedVersion uint32, treeDir string, logger log.Logger) (*Importer, error) {
+	ts, err := NewTreeStore(treeDir, TreeOptions{}, logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tree store: %w", err)
 	}
@@ -36,6 +38,7 @@ func NewImporter(stagedVersion uint32, treeDir string, log log.Logger) (*Importe
 	cw.checkpoint = 1
 
 	return &Importer{
+		logger:        logger,
 		stagedVersion: stagedVersion,
 		writer:        cw,
 	}, nil
@@ -189,6 +192,8 @@ func (i *Importer) Finalize() error {
 	if err != nil {
 		return fmt.Errorf("failed to close changeset: %w", err)
 	}
+
+	i.logger.Info("Successfully finalized import", "version", cpInfo.Version, "checkpoint", cpInfo.Checkpoint, "rootID", cpInfo.RootID, "branchCount", cpInfo.Branches.Count, "leafCount", cpInfo.Leaves.Count)
 
 	return nil
 }

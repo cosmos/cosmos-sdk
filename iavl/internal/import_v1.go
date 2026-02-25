@@ -59,16 +59,18 @@ func ImportIAVLV1MultiStore(dataDir, outDir string, logger log.Logger) error {
 	return nil
 }
 
-func importIAVLV1Store(v1Db dbm.DB, store, multiStoreDir string, log log.Logger) error {
+func importIAVLV1Store(v1Db dbm.DB, store, multiStoreDir string, logger log.Logger) error {
 	treeDir := filepath.Join(multiStoreDir, "stores", fmt.Sprintf("%s.iavl", store))
 	err := os.MkdirAll(treeDir, 0700)
 	if err != nil {
 		return fmt.Errorf("failed to mkdir %s: %w", treeDir, err)
 	}
 
+	logger.Info("Importing iavl/v1 store", "store", store, "destDir", treeDir)
+
 	v1Prefix := "s/k:" + store + "/"
 	v1Db = dbm.NewPrefixDB(v1Db, []byte(v1Prefix))
-	tree := iavl.NewMutableTree(iavldb.NewWrapper(v1Db), 0, false, log)
+	tree := iavl.NewMutableTree(iavldb.NewWrapper(v1Db), 0, false, logger)
 	_, err = tree.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load IAVL tree: %w", err)
@@ -89,7 +91,7 @@ func importIAVLV1Store(v1Db dbm.DB, store, multiStoreDir string, log log.Logger)
 		return fmt.Errorf("failed to create exporter for version %d: %w", version, err)
 	}
 
-	importer, err := NewImporter(uint32(version), treeDir, log)
+	importer, err := NewImporter(uint32(version), treeDir, logger)
 	if err != nil {
 		return fmt.Errorf("failed to create importer for version %d: %w", version, err)
 	}

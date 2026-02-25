@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync/atomic"
 
 	"go.opentelemetry.io/contrib/otelconf"
 	"go.opentelemetry.io/contrib/propagators/b3"
@@ -32,7 +33,13 @@ const (
 var (
 	openTelemetrySDK *otelconf.SDK
 	shutdownFuncs    []func(context.Context) error
+	otelConfigured   atomic.Bool
 )
+
+// IsOtelConfigured reports whether the OpenTelemetry SDK has been successfully initialized.
+func IsOtelConfigured() bool {
+	return otelConfigured.Load()
+}
 
 func init() {
 	if otelFilePath := os.Getenv(otelConfigEnvVar); otelFilePath != "" {
@@ -119,6 +126,7 @@ func InitializeOpenTelemetry(filePath string) error {
 	otel.SetTracerProvider(openTelemetrySDK.TracerProvider())
 	otel.SetMeterProvider(openTelemetrySDK.MeterProvider())
 	logglobal.SetLoggerProvider(openTelemetrySDK.LoggerProvider())
+	otelConfigured.Store(true)
 
 	return nil
 }

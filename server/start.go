@@ -38,6 +38,11 @@ import (
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
+	"go.opentelemetry.io/contrib/bridges/otelslog"
+
+	"cosmossdk.io/log/v2"
+	sdkSlog "cosmossdk.io/log/v2/slog"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -227,6 +232,20 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 		return fmt.Errorf("failed to get and validate config: %w", err)
 	}
 
+	// Initialize OTel first so IsOtelConfigured() reflects reality below.
+	// Moving this up from after startApp is safe: OTel uses a delegate pattern,
+	// and instruments/tracers already obtained will transparently forward to the real SDK.
+	otelFile := filepath.Join(clientCtx.HomeDir, "config", telemetry.OtelFileName)
+	if err := telemetry.InitializeOpenTelemetry(otelFile); err != nil {
+		return fmt.Errorf("failed to initialize OpenTelemetry: %w", err)
+	}
+
+	// If OTel is configured, fan out logs to both console and OTel.
+	if telemetry.IsOtelConfigured() {
+		otelLogger := sdkSlog.NewCustomLogger(otelslog.NewLogger(""))
+		svrCtx.Logger = log.NewMultiLogger(svrCtx.Logger, otelLogger)
+	}
+
 	app, appCleanupFn, err := startApp(svrCtx, appCreator, opts)
 	if err != nil {
 		return fmt.Errorf("failed to start app: %w", err)
@@ -236,11 +255,6 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 	metrics, err := startTelemetry(svrCfg)
 	if err != nil {
 		return fmt.Errorf("failed to start telemetry: %w", err)
-	}
-
-	otelFile := filepath.Join(clientCtx.HomeDir, "config", telemetry.OtelFileName)
-	if err := telemetry.InitializeOpenTelemetry(otelFile); err != nil {
-		return fmt.Errorf("failed to initialize OpenTelemetry: %w", err)
 	}
 
 	emitServerInfoMetrics()

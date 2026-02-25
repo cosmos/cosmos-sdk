@@ -671,15 +671,34 @@ func (db *CommitMultiTree) RollbackToVersion(version int64) error {
 	//defer db.commitMutex.Unlock()
 	//
 	//latestVersion := db.LatestVersion()
-	//ctx, span := tracer.Start(context.Background(), "CommitMultiTree.RollbackToVersion",
+	//_, span := tracer.Start(context.Background(), "CommitMultiTree.RollbackToVersion",
 	//	trace.WithAttributes(
 	//		attribute.Int64("currentVersion", latestVersion),
 	//		attribute.Int64("targetVersion", version),
 	//	),
 	//)
 	//defer span.End()
+	//
+	//
+	//// save constructor args to re-open tree
+	//path, opts, logger := db.dir, db.opts, db.logger
+	//err := db.Close()
+	//if err != nil {
+	//	return fmt.Errorf("failed to close db during rollback: %w", err)
+	//}
+	//
+	//err = RollbackMultiTree(path, uint64(version), logger, "")
+	//if err != nil {
+	//	return fmt.Errorf("failed to rollback multi tree to version %d: %w", version, err)
+	//}
 
-	panic("TODO")
+	//newDb, err := LoadCommitMultiTree(path, opts, logger)
+	//if err != nil {
+	//	return fmt.Errorf("failed to reload multi tree after rollback: %w", err)
+	//}
+	//
+	//*db = *newDb
+	panic("TODO: how do we reopen?")
 }
 
 func (db *CommitMultiTree) ListeningEnabled(key storetypes.StoreKey) bool {

@@ -6,12 +6,17 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"cosmossdk.io/log/v2"
 	cp "github.com/otiai10/copy"
 )
 
 func RollbackMultiTree(multiTreeDir string, targetVersion uint64, logger log.Logger, backupDir string) error {
+	if backupDir == "" {
+		backupDir = filepath.Join(multiTreeDir, fmt.Sprintf("bak-%s", time.Now().Format("20260102150405")))
+	}
+
 	logger.Info("Rolling back multi-tree", "dir", multiTreeDir, "targetVersion", targetVersion)
 	err := rollbackCommitInfos(multiTreeDir, targetVersion, logger, backupDir)
 	if err != nil {

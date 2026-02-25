@@ -59,17 +59,26 @@ func doCrashTest(t *testing.T, graceful bool) {
 	heightBeforeCrash := sut.CurrentHeight()
 	t.Logf("Height before crash: %d", heightBeforeCrash)
 
-	// Crash the entire chain (non-graceful - simulates datacenter power failure)
-	t.Log("Crashing entire chain (non-graceful)...")
-	sut.KillChain(false)
+	// Crash the entire chain
+	if graceful {
+		t.Log("Crashing entire chain (graceful)...")
+	} else {
+		t.Log("Crashing entire chain (non-graceful)...")
+	}
+	sut.KillChain(graceful)
 
 	// Verify all nodes are stopped
 	assert.Empty(t, sut.RunningNodes(), "all nodes should be stopped")
 	assert.False(t, sut.IsNodeRunning(0), "node 0 should be stopped")
 	t.Log("All nodes crashed")
 
-	// Wait 2 seconds for the DevOps team to wake up
-	time.Sleep(2 * time.Second)
+	// Wait for locks to be released - longer for non-graceful kills
+	if graceful {
+		time.Sleep(2 * time.Second)
+	} else {
+		// Non-graceful kills need more time for OS to release LevelDB file locks
+		time.Sleep(5 * time.Second)
+	}
 
 	// Restart all nodes
 	t.Log("Restarting all nodes...")

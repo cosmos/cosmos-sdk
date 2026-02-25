@@ -125,7 +125,6 @@ linters:
       - examples$
       # todo: fix these before merging (WIP)
       - blockstm
-      - iavlx
 issues:
   max-issues-per-linter: 10000
   max-same-issues: 10000
@@ -161,4 +160,3 @@ formatters:
       - examples$
       # todo: fix these before merging (WIP)
       - blockstm
-      - iavlx

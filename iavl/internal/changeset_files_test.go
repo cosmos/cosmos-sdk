@@ -53,6 +53,53 @@ func TestParseChangesetDirName(t *testing.T) {
 			dirName:   "5000000000",
 			wantValid: false,
 		},
+		{
+			name:      "zero version",
+			dirName:   "0",
+			wantStart: 0,
+			wantValid: true,
+		},
+		{
+			name:      "max uint32",
+			dirName:   "4294967295",
+			wantStart: 4294967295,
+			wantValid: true,
+		},
+		{
+			name:      "one-past max uint32",
+			dirName:   "4294967296",
+			wantValid: false,
+		},
+		{
+			name:      "dash but no dot",
+			dirName:   "100-200",
+			wantValid: false,
+		},
+		{
+			name:      "invalid startVersion in compacted",
+			dirName:   "abc-200.300",
+			wantValid: false,
+		},
+		{
+			name:      "invalid endVersion in compacted",
+			dirName:   "100-abc.300",
+			wantValid: false,
+		},
+		{
+			name:      "invalid compactedAt",
+			dirName:   "100-200.abc",
+			wantValid: false,
+		},
+		{
+			name:      "empty startVersion",
+			dirName:   "-200.300",
+			wantValid: false,
+		},
+		{
+			name:      "empty endVersion",
+			dirName:   "100-.300",
+			wantValid: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -82,10 +129,13 @@ func TestCreateChangesetFiles_Uncompacted(t *testing.T) {
 
 	// All files should exist
 	require.NotNil(t, cf.KVDataFile())
+	require.NotNil(t, cf.WALFile())
 	require.NotNil(t, cf.BranchesFile())
 	require.NotNil(t, cf.LeavesFile())
 	require.NotNil(t, cf.CheckpointsFile())
 	require.NotNil(t, cf.OrphansFile())
+
+	require.Equal(t, treeDir, cf.TreeDir())
 }
 
 func TestCreateChangesetFiles_Compacted(t *testing.T) {
@@ -180,4 +230,90 @@ func TestOpenChangesetFiles_InvalidDir(t *testing.T) {
 	_, err := OpenChangesetFiles(invalidDir)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid changeset dir name")
+}
+
+func TestCreateChangesetFiles_ExistingNonEmptyDir(t *testing.T) {
+	treeDir := t.TempDir()
+
+	cf, err := CreateChangesetFiles(treeDir, 100, 0)
+	require.NoError(t, err)
+
+	// Write a byte to the WAL file to make the directory non-empty
+	_, err = cf.WALFile().Write([]byte{0x01})
+	require.NoError(t, err)
+	require.NoError(t, cf.Close())
+
+	// Second creation attempt must fail
+	_, err = CreateChangesetFiles(treeDir, 100, 0)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "already exists and is not empty")
+}
+
+func TestCreateChangesetFiles_ExistingEmptyDir(t *testing.T) {
+	treeDir := t.TempDir()
+
+	cf, err := CreateChangesetFiles(treeDir, 100, 0)
+	require.NoError(t, err)
+	require.NoError(t, cf.Close())
+
+	// All files are empty — re-opening should succeed
+	cf2, err := CreateChangesetFiles(treeDir, 100, 0)
+	require.NoError(t, err)
+	defer cf2.Close()
+}
+
+func TestOpenChangesetFiles_CompactedDir(t *testing.T) {
+	treeDir := t.TempDir()
+
+	cf, err := CreateChangesetFiles(treeDir, 100, 200)
+	require.NoError(t, err)
+
+	finalDir, err := cf.MarkReadyAndClose(150)
+	require.NoError(t, err)
+	require.Equal(t, filepath.Join(treeDir, "100-150.200"), finalDir)
+
+	cf2, err := OpenChangesetFiles(finalDir)
+	require.NoError(t, err)
+	defer cf2.Close()
+
+	require.Equal(t, uint32(100), cf2.StartVersion())
+	require.Equal(t, uint32(150), cf2.EndVersion())
+	require.Equal(t, uint32(200), cf2.CompactedAtVersion())
+	require.NotNil(t, cf2.WALFile())
+}
+
+func TestOpenChangesetFiles_NonExistent(t *testing.T) {
+	treeDir := t.TempDir()
+
+	// Valid name, but the directory was never created
+	_, err := OpenChangesetFiles(filepath.Join(treeDir, "999"))
+	require.Error(t, err)
+}
+
+func TestMarkReadyAndClose_OnUncompacted(t *testing.T) {
+	treeDir := t.TempDir()
+
+	cf, err := CreateChangesetFiles(treeDir, 100, 0)
+	require.NoError(t, err)
+	defer cf.Close()
+
+	// Uncompacted dirs have no -tmp suffix; MarkReadyAndClose must reject them
+	_, err = cf.MarkReadyAndClose(150)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "does not have -tmp suffix")
+}
+
+func TestDeleteFiles_AfterClose(t *testing.T) {
+	treeDir := t.TempDir()
+
+	cf, err := CreateChangesetFiles(treeDir, 100, 0)
+	require.NoError(t, err)
+
+	dir := cf.Dir()
+
+	require.NoError(t, cf.Close())
+	require.NoError(t, cf.DeleteFiles())
+
+	_, err = os.Stat(dir)
+	require.True(t, os.IsNotExist(err))
 }

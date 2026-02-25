@@ -440,3 +440,225 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	require.NoError(err)
 	require.Equal(stakingtypes.Unbonded, validator.Status)
 }
+
+// TestUnbondAllMatureValidators_PendingSlotCleanup verifies that pending slots are properly
+// cleaned up when validators are unbonded, ensuring consistency between queue keys and
+// pending slot index.
+func (s *KeeperTestSuite) TestUnbondAllMatureValidators_PendingSlotCleanup() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
+
+	// Create two different slots
+	slot1Time := ctx.BlockTime().Add(time.Hour)
+	slot1Height := ctx.BlockHeight() + 10
+
+	slot2Time := ctx.BlockTime().Add(2 * time.Hour)
+	slot2Height := ctx.BlockHeight() + 20
+
+	// Create multiple validators with different unbonding times/heights
+	valPubKey0 := PKs[0]
+	valAddr0 := sdk.ValAddress(valPubKey0.Address().Bytes())
+	validator0 := testutil.NewValidator(s.T(), valAddr0, valPubKey0)
+	validator0, _ = validator0.AddTokensFromDel(keeper.TokensFromConsensusPower(ctx, 10))
+	validator0.Status = stakingtypes.Unbonding
+	validator0.UnbondingTime = slot1Time
+	validator0.UnbondingHeight = slot1Height
+
+	valPubKey1 := PKs[1]
+	valAddr1 := sdk.ValAddress(valPubKey1.Address().Bytes())
+	validator1 := testutil.NewValidator(s.T(), valAddr1, valPubKey1)
+	validator1, _ = validator1.AddTokensFromDel(keeper.TokensFromConsensusPower(ctx, 10))
+	validator1.Status = stakingtypes.Unbonding
+	validator1.UnbondingTime = slot1Time
+	validator1.UnbondingHeight = slot1Height
+
+	valPubKey2 := PKs[2]
+	valAddr2 := sdk.ValAddress(valPubKey2.Address().Bytes())
+	validator2 := testutil.NewValidator(s.T(), valAddr2, valPubKey2)
+	validator2, _ = validator2.AddTokensFromDel(keeper.TokensFromConsensusPower(ctx, 10))
+	validator2.Status = stakingtypes.Unbonding
+	validator2.UnbondingTime = slot2Time
+	validator2.UnbondingHeight = slot2Height
+
+	// Set up validators in the store
+	require.NoError(keeper.SetValidator(ctx, validator0))
+	require.NoError(keeper.SetValidator(ctx, validator1))
+	require.NoError(keeper.SetValidator(ctx, validator2))
+
+	// Add validators to different slots
+	// Slot 1: validator0 and validator1
+	require.NoError(keeper.SetUnbondingValidatorsQueue(ctx, slot1Time, slot1Height, []string{
+		valAddr0.String(),
+		valAddr1.String(),
+	}))
+
+	// Slot 2: validator2
+	require.NoError(keeper.SetUnbondingValidatorsQueue(ctx, slot2Time, slot2Height, []string{
+		valAddr2.String(),
+	}))
+
+	// Verify pending slots are populated
+	slots, err := keeper.GetValidatorQueuePendingSlots(ctx)
+	require.NoError(err)
+	require.Len(slots, 2)
+
+	// Verify both slots are in pending
+	foundSlot1 := false
+	foundSlot2 := false
+	for _, slot := range slots {
+		if slot.Time.Equal(slot1Time) && slot.Height == slot1Height {
+			foundSlot1 = true
+		}
+		if slot.Time.Equal(slot2Time) && slot.Height == slot2Height {
+			foundSlot2 = true
+		}
+	}
+	require.True(foundSlot1, "slot1 should be in pending slots")
+	require.True(foundSlot2, "slot2 should be in pending slots")
+
+	// Advance time and height to make slot1 mature
+	ctx = ctx.WithBlockTime(slot1Time).WithBlockHeight(slot1Height)
+
+	// Unbond mature validators (slot1 should be processed)
+	require.NoError(keeper.UnbondAllMatureValidators(ctx))
+
+	// Verify slot1 validators are unbonded
+	val0, err := keeper.GetValidator(ctx, valAddr0)
+	require.NoError(err)
+	require.Equal(stakingtypes.Unbonded, val0.Status)
+
+	val1, err := keeper.GetValidator(ctx, valAddr1)
+	require.NoError(err)
+	require.Equal(stakingtypes.Unbonded, val1.Status)
+
+	// Verify slot1 is removed from pending slots (since it became empty)
+	slots, err = keeper.GetValidatorQueuePendingSlots(ctx)
+	require.NoError(err)
+	require.Len(slots, 1, "slot1 should be removed from pending after becoming empty")
+
+	// Verify slot2 is still in pending (not mature yet)
+	foundSlot2 = false
+	for _, slot := range slots {
+		if slot.Time.Equal(slot2Time) && slot.Height == slot2Height {
+			foundSlot2 = true
+		}
+	}
+	require.True(foundSlot2, "slot2 should still be in pending slots")
+
+	// Verify slot1 queue key is deleted (GetUnbondingValidators should return empty)
+	vals, err := keeper.GetUnbondingValidators(ctx, slot1Time, slot1Height)
+	require.NoError(err)
+	require.Empty(vals, "slot1 queue key should be deleted")
+
+	// Advance to make slot2 mature
+	ctx = ctx.WithBlockTime(slot2Time).WithBlockHeight(slot2Height)
+
+	// Unbond mature validators (slot2 should be processed)
+	require.NoError(keeper.UnbondAllMatureValidators(ctx))
+
+	// Verify slot2 validator is unbonded
+	val2, err := keeper.GetValidator(ctx, valAddr2)
+	require.NoError(err)
+	require.Equal(stakingtypes.Unbonded, val2.Status)
+
+	// Verify slot2 is removed from pending slots
+	slots, err = keeper.GetValidatorQueuePendingSlots(ctx)
+	require.NoError(err)
+	require.Empty(slots, "all slots should be removed from pending after processing")
+
+	// Verify slot2 queue key is deleted (GetUnbondingValidators should return empty)
+	vals, err = keeper.GetUnbondingValidators(ctx, slot2Time, slot2Height)
+	require.NoError(err)
+	require.Empty(vals, "slot2 queue key should be deleted")
+}
+
+// TestUnbondAllMatureValidators_PendingSlotCleanup_MultipleValidatorsInSlot verifies
+// that when a slot has multiple validators, the slot is only removed from pending
+// when all validators are unbonded.
+func (s *KeeperTestSuite) TestUnbondAllMatureValidators_PendingSlotCleanup_MultipleValidatorsInSlot() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
+
+	slotTime := ctx.BlockTime().Add(time.Hour)
+	slotHeight := ctx.BlockHeight() + 10
+
+	valPubKey0 := PKs[0]
+	valAddr0 := sdk.ValAddress(valPubKey0.Address().Bytes())
+	validator0 := testutil.NewValidator(s.T(), valAddr0, valPubKey0)
+	validator0, _ = validator0.AddTokensFromDel(keeper.TokensFromConsensusPower(ctx, 10))
+	validator0.Status = stakingtypes.Unbonding
+	validator0.UnbondingTime = slotTime
+	validator0.UnbondingHeight = slotHeight
+
+	valPubKey1 := PKs[1]
+	valAddr1 := sdk.ValAddress(valPubKey1.Address().Bytes())
+	validator1 := testutil.NewValidator(s.T(), valAddr1, valPubKey1)
+	validator1, _ = validator1.AddTokensFromDel(keeper.TokensFromConsensusPower(ctx, 10))
+	validator1.Status = stakingtypes.Unbonding
+	validator1.UnbondingTime = slotTime
+	validator1.UnbondingHeight = slotHeight
+
+	require.NoError(keeper.SetValidator(ctx, validator0))
+	require.NoError(keeper.SetValidator(ctx, validator1))
+
+	// Add both validators to the same slot
+	require.NoError(keeper.SetUnbondingValidatorsQueue(ctx, slotTime, slotHeight, []string{
+		valAddr0.String(),
+		valAddr1.String(),
+	}))
+
+	// Verify slot is in pending
+	slots, err := keeper.GetValidatorQueuePendingSlots(ctx)
+	require.NoError(err)
+	require.Len(slots, 1)
+
+	// Advance to make slot mature
+	ctx = ctx.WithBlockTime(slotTime).WithBlockHeight(slotHeight)
+
+	// Unbond mature validators - both should be processed
+	require.NoError(keeper.UnbondAllMatureValidators(ctx))
+
+	// Verify both validators are unbonded
+	val0, err := keeper.GetValidator(ctx, valAddr0)
+	require.NoError(err)
+	require.Equal(stakingtypes.Unbonded, val0.Status)
+
+	val1, err := keeper.GetValidator(ctx, valAddr1)
+	require.NoError(err)
+	require.Equal(stakingtypes.Unbonded, val1.Status)
+
+	// Verify slot is removed from pending (all validators unbonded)
+	slots, err = keeper.GetValidatorQueuePendingSlots(ctx)
+	require.NoError(err)
+	require.Empty(slots, "slot should be removed after all validators are unbonded")
+}
+
+// TestUnbondAllMatureValidators_PendingSlotCleanup_AlreadyDeletedSlot verifies
+// that already-deleted slots are properly cleaned up from pending.
+func (s *KeeperTestSuite) TestUnbondAllMatureValidators_PendingSlotCleanup_AlreadyDeletedSlot() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
+
+	slotTime := ctx.BlockTime().Add(time.Hour)
+	slotHeight := ctx.BlockHeight() + 10
+
+	// Manually add a slot to pending without creating the queue entry
+	// This simulates a scenario where the queue key was deleted but pending slot wasn't updated
+	require.NoError(keeper.AddValidatorQueuePendingSlot(ctx, slotTime, slotHeight))
+
+	// Verify slot is in pending
+	slots, err := keeper.GetValidatorQueuePendingSlots(ctx)
+	require.NoError(err)
+	require.Len(slots, 1)
+
+	// Advance to make slot "mature"
+	ctx = ctx.WithBlockTime(slotTime).WithBlockHeight(slotHeight)
+
+	// UnbondAllMatureValidators should handle the missing queue key gracefully
+	require.NoError(keeper.UnbondAllMatureValidators(ctx))
+
+	// Verify the orphaned pending slot is cleaned up
+	slots, err = keeper.GetValidatorQueuePendingSlots(ctx)
+	require.NoError(err)
+	require.Empty(slots, "orphaned pending slot should be cleaned up")
+}

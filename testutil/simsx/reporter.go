@@ -249,7 +249,7 @@ func (s *ExecutionSummary) String() string {
 	keys := slices.Sorted(maps.Keys(s.counts))
 	var sb strings.Builder
 	for _, key := range keys {
-		sb.WriteString(fmt.Sprintf("%s: %d\n", key, s.counts[key]))
+		fmt.Fprintf(&sb, "%s: %d\n", key, s.counts[key])
 	}
 	if len(s.skipReasons) != 0 {
 		sb.WriteString("\nSkip reasons:\n")
@@ -257,7 +257,7 @@ func (s *ExecutionSummary) String() string {
 	for m, c := range s.skipReasons {
 		values := maps.Values(c)
 		keys := maps.Keys(c)
-		sb.WriteString(fmt.Sprintf("%d\t%s: %q\n", sum(slices.Collect(values)), m, slices.Collect(keys)))
+		fmt.Fprintf(&sb, "%d\t%s: %q\n", sum(slices.Collect(values)), m, slices.Collect(keys))
 	}
 	return sb.String()
 }

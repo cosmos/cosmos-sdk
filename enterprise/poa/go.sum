@@ -110,8 +110,6 @@ github.com/cncf/xds/go v0.0.0-20210805033703-aa0b78936158/go.mod h1:eXthEFrGJvWH
 github.com/cncf/xds/go v0.0.0-20210922020428-25de7278fc84/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
 github.com/cncf/xds/go v0.0.0-20211001041855-01bcc9b48dfe/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
 github.com/cncf/xds/go v0.0.0-20211011173535-cb28da3451f1/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
-github.com/cockroachdb/apd/v2 v2.0.2 h1:weh8u7Cneje73dDh+2tEVLUvyBc89iwepWCD8b8034E=
-github.com/cockroachdb/apd/v2 v2.0.2/go.mod h1:DDxRlzC2lo3/vSlmSoS7JkqbbrARPuFOGr0B9pvN3Gw=
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/cockroachdb/datadriven v1.0.3-0.20230413201302-be42291fc80f h1:otljaYPt5hWxV3MUfO5dFPFiOXg9CyG5/kCfayTqsJ4=
 github.com/cockroachdb/datadriven v1.0.3-0.20230413201302-be42291fc80f/go.mod h1:a9RdTaap04u637JoCzcUoIcDmvwSUtcUFtT/C3kJlTU=
@@ -130,8 +128,8 @@ github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb/go.mod h1:
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
 github.com/cometbft/cometbft v0.39.0-beta.2.0.20260219154603-da56c5f931bf h1:q6IEBWUxSmqoAjdxYaHXxftXvDXlNbvYjLOCYlXv9BE=
 github.com/cometbft/cometbft v0.39.0-beta.2.0.20260219154603-da56c5f931bf/go.mod h1:T03VwyPk5ySZztAiM2giOvlhQ9wkpj5QEZBwpYwihpM=
-github.com/cometbft/cometbft-db v1.0.4 h1:cezb8yx/ZWcF124wqUtAFjAuDksS1y1yXedvtprUFxs=
-github.com/cometbft/cometbft-db v1.0.4/go.mod h1:M+BtHAGU2XLrpUxo3Nn1nOCcnVCiLM9yx5OuT0u5SCA=
+github.com/cometbft/cometbft-db v0.14.3 h1:foX2zuH/L6feyUSLDWg9YRLvt9w8iWVo883wGcyhdQk=
+github.com/cometbft/cometbft-db v0.14.3/go.mod h1:5CcpGc+0fgZh8ecKa38MwDHfmRAGiRgQg6bGNs1HA/g=
 github.com/containerd/continuity v0.3.0 h1:nisirsYROK15TAMVukJOUyGJjz4BNQJBVsNvAXZJ/eg=
 github.com/containerd/continuity v0.3.0/go.mod h1:wJEAIwKOm/pBZuBd0JmeTvnLquTB1Ag8espWhkykbPM=
 github.com/coreos/go-semver v0.2.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3EedlOD2RNk=

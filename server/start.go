@@ -240,8 +240,8 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 		return fmt.Errorf("failed to initialize OpenTelemetry: %w", err)
 	}
 
-	// If OTel is configured, fan out logs to both console and OTel.
-	if telemetry.IsOtelConfigured() {
+	// If OTel log pipeline has active exporters, fan out logs to both console and OTel.
+	if telemetry.IsOtelLoggerEnabled() {
 		otelLogger := sdkSlog.NewCustomLogger(otelslog.NewLogger(""))
 		svrCtx.Logger = log.NewMultiLogger(svrCtx.Logger, otelLogger)
 	}

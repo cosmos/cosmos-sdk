@@ -1,7 +1,6 @@
 package internal
 
-// TODO we need to refactor these tests to align with the current ChangesetFiles
-//func TestParseChangesetDirName(t *testing.T) {
+// func TestParseChangesetDirName(t *testing.T) {
 //	tests := []struct {
 //		name            string
 //		dirName         string

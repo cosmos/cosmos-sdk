@@ -12,6 +12,99 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/systemtests"
 )
 
+func TestEntireChainNonGracefulCrashRecovery(t *testing.T) {
+	// Scenario:
+	// 1. Start network with multiple validators
+	// 2. Send transactions (sanity check)
+	// 3. Crash the entire network, non-gracefully
+	// 4. Restart the nodes
+	// 5. Verify chain health and transaction execution
+	doCrashTest(t, false)
+}
+
+func TestEntireChainGracefulCrashRecovery(t *testing.T) {
+	// Scenario:
+	// 1. Start network with multiple validators
+	// 2. Send transactions (sanity check)
+	// 3. Crash the entire network, gracefully
+	// 4. Restart the nodes
+	// 5. Verify chain health and transaction execution
+	doCrashTest(t, true)
+}
+
+func doCrashTest(t *testing.T, graceful bool) {
+	sut := systemtests.Sut
+	sut.ResetChain(t)
+
+	require.GreaterOrEqual(t, sut.NodesCount(), 2, "chaos test requires at least 2 nodes")
+
+	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
+
+	sender := cli.AddKey("sender")
+	receiver := cli.AddKey("receiver")
+	sut.ModifyGenesisCLI(t,
+		[]string{"genesis", "add-genesis-account", sender, "10000000stake"},
+	)
+
+	sut.StartChain(t)
+
+	initialHeight := sut.CurrentHeight()
+	t.Logf("Chain started at height %d with %d nodes", initialHeight, sut.NodesCount())
+
+	rsp := cli.Run("tx", "bank", "send", sender, receiver, "1000stake", "--from="+sender, "--fees=1stake")
+	systemtests.RequireTxSuccess(t, rsp)
+	assert.Equal(t, int64(1000), cli.QueryBalance(receiver, "stake"))
+	t.Log("Initial transaction successful")
+
+	heightBeforeCrash := sut.CurrentHeight()
+	t.Logf("Height before crash: %d", heightBeforeCrash)
+
+	// Crash the entire chain (non-graceful - simulates datacenter power failure)
+	t.Log("Crashing entire chain (non-graceful)...")
+	sut.KillChain(false)
+
+	// Verify all nodes are stopped
+	assert.Empty(t, sut.RunningNodes(), "all nodes should be stopped")
+	assert.False(t, sut.IsNodeRunning(0), "node 0 should be stopped")
+	t.Log("All nodes crashed")
+
+	// Wait 2 seconds for the DevOps team to wake up
+	time.Sleep(2 * time.Second)
+
+	// Restart all nodes
+	t.Log("Restarting all nodes...")
+	allNodes := make([]int, sut.NodesCount())
+	for i := range allNodes {
+		allNodes[i] = i
+	}
+	require.NoError(t, sut.StartNodes(t, allNodes...))
+
+	// Wait for at least one node to be up and syncing
+	sut.AwaitNodeUp(t, "tcp://localhost:26657")
+
+	// Wait for nodes to sync
+	t.Log("Waiting for nodes to sync...")
+	sut.AwaitNodesSynced(t, allNodes...)
+
+	// Verify chain resumed from where it left off
+	sut.AwaitNBlocks(t, 2)
+	heightAfterRecovery := sut.CurrentHeight()
+	t.Logf("Height after recovery: %d", heightAfterRecovery)
+	assert.GreaterOrEqual(t, heightAfterRecovery, heightBeforeCrash, "chain should resume from previous height")
+
+	// Verify all nodes are running
+	runningNodes := sut.RunningNodes()
+	assert.Len(t, runningNodes, sut.NodesCount(), "all nodes should be running")
+
+	// Send transaction to verify chain is fully operational
+	rsp = cli.Run("tx", "bank", "send", sender, receiver, "500stake", "--from="+sender, "--fees=1stake")
+	systemtests.RequireTxSuccess(t, rsp)
+
+	expectedBalance := int64(1000 + 500)
+	actualBalance := cli.QueryBalance(receiver, "stake")
+	assert.Equal(t, expectedBalance, actualBalance, "receiver should have correct balance after recovery")
+}
+
 func TestNodeCrashRecovery(t *testing.T) {
 	// Scenario:
 	// 1. Start network with multiple validators

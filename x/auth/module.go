@@ -145,10 +145,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
 	}
-
-	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4To5); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 4 to 5", types.ModuleName))
-	}
 }
 
 // InitGenesis performs genesis initialization for the auth module. It returns

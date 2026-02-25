@@ -16,7 +16,7 @@ type ChangesetFiles struct {
 	treeDir      string
 	startVersion uint32
 	endVersion   uint32 // 0 if original changeset
-	compactedAt  uint32
+	compactedAt  uint32 // 0 if original changeset
 
 	walFile         *os.File
 	kvDataFile      *os.File

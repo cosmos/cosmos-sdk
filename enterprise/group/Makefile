@@ -1,40 +1,14 @@
 ###############################################################################
-###                                Protobuf                                 ###
+###                         Group Module Makefile                           ###
 ###############################################################################
 
-BUF_VERSION=1.64
-BUILDER_VERSION=0.18.0
+include ../make/enterprise.mk
 
-.PHONY: proto-all proto-format proto-gen proto-lint
+###############################################################################
+###                         Module-Specific Build                           ###
+###############################################################################
 
-proto-all: proto-format proto-lint proto-gen
-
-proto-format:
-	@echo "🤖 Running protobuf formatter..."
-	@docker run --rm --volume "$(PWD)":/workspace --workdir /workspace \
-		bufbuild/buf:$(BUF_VERSION) format --diff --write
-	@echo "✅ Completed protobuf formatting!"
-
-proto-gen:
-	@echo "🤖 Generating code from protobuf..."
-	@docker run --rm --volume "$(PWD)":/workspace --workdir /workspace \
-		ghcr.io/cosmos/proto-builder:$(BUILDER_VERSION) sh ./scripts/protogen.sh
-	@echo "✅ Completed code generation!"
-
-proto-lint:
-	@echo "🤖 Running protobuf linter..."
-	@docker run --rm --volume "$(PWD)":/workspace --workdir /workspace \
-		bufbuild/buf:$(BUF_VERSION) lint
-	@echo "✅ Completed protobuf linting!"
-
-license:
-	@echo "🤖 Adding license headers to all source files..."
-	@./scripts/add-license.sh
-	@echo "✅ License headers added!"
-
-.PHONY: build build-docker install license
-
-BUILD_DIR ?= ./build
+.PHONY: build build-docker install test-fuzz
 
 # Build group module and simd binary
 build:
@@ -55,15 +29,8 @@ build-docker: build
 	@docker build -t group-simd .
 
 ###############################################################################
-###                                  Tests                                  ###
+###                         Module-Specific Tests                           ###
 ###############################################################################
-
-.PHONY: test test-verbose test-race test-cover test-fuzz
-
-#? test: Run all tests
-test:
-	@echo "--> Running tests"
-	@go test ./...
 
 #? test-fuzz: Run types-level fuzz tests (30s each)
 test-fuzz:
@@ -76,38 +43,3 @@ test-fuzz:
 	@go test -fuzz=FuzzTallyResultTotalCounts -fuzztime=30s ./x/group
 	@go test -fuzz=FuzzVoteOptionFromString -fuzztime=30s ./x/group
 	@echo "--> Fuzz tests completed"
-
-#? test-verbose: Run all tests with verbose output
-test-verbose:
-	@echo "--> Running tests (verbose)"
-	@go test -v ./...
-
-#? test-cover: Run all tests with coverage report
-test-cover:
-	@echo "--> Running tests (with coverage)"
-	@go test -cover ./...
-
-test-system: build
-	@mkdir -p ./tests/systemtests/binaries
-	@cp $(BUILD_DIR)/simd ./tests/systemtests/binaries/
-	@$(MAKE) -C tests/systemtests test
-
-###############################################################################
-###                                 Linting                                 ###
-###############################################################################
-golangci_lint_cmd=golangci-lint
-golangci_version=v2.9.0
-
-#? lint: Run latest golangci-lint linter
-lint:
-	@echo "--> Running linter"
-	@go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(golangci_version)
-	@$(golangci_lint_cmd) run --timeout=15m
-.PHONY: lint
-
-#? lint-fix: Run latest golangci-lint linter and apply fixes
-lint-fix:
-	@echo "--> Running linter"
-	@go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(golangci_version)
-	@$(golangci_lint_cmd) run --timeout=15m --fix
-.PHONY: lint-fix

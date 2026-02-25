@@ -441,6 +441,7 @@ func (s *SystemUnderTest) StartNodes(t *testing.T, nodeIDs ...int) error {
 
 		s.awaitProcessCleanup(nodeID, cmd)
 	}
+	s.ChainStarted = true
 	return nil
 }
 

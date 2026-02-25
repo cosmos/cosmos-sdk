@@ -552,7 +552,9 @@ func (s *SystemUnderTest) AwaitNodesSynced(t *testing.T, nodeIDs ...int) {
 					resultCh <- -1
 					return
 				}
-				defer con.Stop()
+				defer func() {
+					require.NoError(t, con.Stop())
+				}()
 
 				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 				defer cancel()

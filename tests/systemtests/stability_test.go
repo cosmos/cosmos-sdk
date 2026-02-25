@@ -33,6 +33,7 @@ func TestEntireChainGracefulCrashRecovery(t *testing.T) {
 }
 
 func doCrashTest(t *testing.T, graceful bool) {
+	t.Helper()
 	sut := systemtests.Sut
 	sut.ResetChain(t)
 

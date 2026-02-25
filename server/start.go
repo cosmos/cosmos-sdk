@@ -38,8 +38,6 @@ import (
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
-	"go.opentelemetry.io/contrib/bridges/otelslog"
-
 	"cosmossdk.io/log/v2"
 	sdkSlog "cosmossdk.io/log/v2/slog"
 
@@ -55,6 +53,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/version"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 )
 
 // CometBFT full-node start flags
@@ -232,9 +232,7 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 		return fmt.Errorf("failed to get and validate config: %w", err)
 	}
 
-	// Initialize OTel first so IsOtelConfigured() reflects reality below.
-	// Moving this up from after startApp is safe: OTel uses a delegate pattern,
-	// and instruments/tracers already obtained will transparently forward to the real SDK.
+	// Initialize OTel first so IsOtelLoggerEnabled() reflects reality below.
 	otelFile := filepath.Join(clientCtx.HomeDir, "config", telemetry.OtelFileName)
 	if err := telemetry.InitializeOpenTelemetry(otelFile); err != nil {
 		return fmt.Errorf("failed to initialize OpenTelemetry: %w", err)

@@ -2,7 +2,7 @@
 
 > **Part of Cosmos SDK Enterprise Modules** | [Enterprise Modules](../README.md)
 >
-> **Full Documentation**: [docs/architecture.md](./docs/architecture.md) | [API Reference](./docs/api.md)
+> **Full Documentation**: [docs.cosmos.network/enterprise/components/group/overview](https://docs.cosmos.network/enterprise/components/poa/overview)
 >
 > **License Notice**: This module uses the [Source Available Evaluation License](./LICENSE), different from the core SDK's Apache-2.0 license. See the [License](#license) section for details.
 
@@ -21,34 +21,7 @@ The Group module allows any set of accounts to form a named group, attach one or
 
 ## Architecture
 
-The Group module interacts with two core Cosmos SDK modules:
-
-```
-                        ┌──────────────────────────────────────────┐
-                        │              x/group module              │
-                        │                                          │
-  Members ──submit──▶   │  ┌─────────┐    ┌──────────────────┐   │
-  Members ──vote────▶   │  │  Group  │───▶│   Group Policy   │   │
-                        │  │         │    │  (decision policy)│   │
-                        │  └─────────┘    └────────┬─────────┘   │
-                        │                          │              │
-                        │               ┌──────────▼──────────┐  │
-                        │               │      Proposal        │  │
-                        │               │  (messages + votes)  │  │
-                        │               └──────────┬──────────┘  │
-                        │                          │              │
-                        │               ┌──────────▼──────────┐  │
-                        │               │  Message Execution   │  │
-                        │               │  (via msg router)    │  │
-                        │               └─────────────────────┘  │
-                        └──────────────────────────────────────────┘
-                                   │                  │
-                            ┌──────▼──────┐   ┌───────▼──────┐
-                            │   x/auth    │   │   x/bank     │
-                            │  (accounts, │   │  (spendable  │
-                            │  addr codec)│   │   balances)  │
-                            └─────────────┘   └──────────────┘
-```
+![diagram](./docs/architecture.png)
 
 ### Module Interactions
 
@@ -65,29 +38,6 @@ The Group module interacts with two core Cosmos SDK modules:
 
 - Go 1.25+
 - Docker (for proto generation)
-
-### Build
-
-```bash
-# Build the module and simd binary
-make build
-
-# Or with go directly
-go build ./...
-```
-
-### Test
-
-```bash
-# Run unit tests
-make test
-
-# Run linter
-make lint
-
-# Run fuzz tests (types-level, coverage-guided)
-make test-fuzz
-```
 
 ## Usage
 
@@ -214,129 +164,6 @@ simd tx group leave-group [member-address] [group-id]
 ```bash
 simd tx group withdraw-proposal [proposal-id] [group-policy-admin-or-proposer]
 ```
-
-## Testing & Development
-
-### Run Tests
-
-**Unit tests:**
-```bash
-go test ./x/group/...
-```
-
-**Keeper tests:**
-```bash
-go test ./x/group/keeper/...
-```
-
-**All tests with coverage:**
-```bash
-make test-cover
-```
-
-**Fuzz tests:**
-```bash
-make test-fuzz
-```
-
-**System tests:**
-```bash
-make test-system
-```
-
-## Configuration
-
-### Genesis Configuration
-
-The group module starts with an empty genesis state by default. Groups are created at runtime through transactions.
-
-```json
-{
-  "group": {
-    "group_seq": "0",
-    "groups": [],
-    "group_members": [],
-    "group_policy_seq": "0",
-    "group_policies": [],
-    "proposal_seq": "0",
-    "proposals": [],
-    "votes": []
-  }
-}
-```
-
-### Module Parameters
-
-The group module is configured at initialization time (not via on-chain governance):
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `MaxExecutionPeriod` | `336h` (2 weeks) | Max duration after a proposal's voting period ends that members can execute it |
-| `MaxMetadataLen` | `255` | Maximum byte length for metadata fields on groups, policies, proposals, and votes |
-
-## Features In Detail
-
-### Groups and Membership
-
-- **Weighted Members**: Each member has a decimal weight; the group's total weight is the sum of all member weights
-- **Admin Control**: A group admin can add, remove, and update members; the admin can also transfer admin rights
-- **Dynamic Updates**: Member weights can be changed at any time; active proposals automatically see updated totals at tally time
-
-### Group Policies and Decision Policies
-
-- **Multiple Policies Per Group**: A group can have many group policy accounts, each independently configured
-- **Threshold Policy**: A proposal passes when the sum of YES vote weights meets or exceeds a defined threshold
-- **Percentage Policy**: A proposal passes when the YES percentage of total group weight meets or exceeds a defined percentage
-- **Extensible**: Custom decision policies can be registered by implementing the `DecisionPolicy` interface
-
-### Proposal Lifecycle
-
-1. Any group member submits a proposal containing one or more messages
-2. Members vote `YES`, `NO`, `ABSTAIN`, or `NO_WITH_VETO` during the voting window
-3. At voting period end (EndBlock), the keeper tallies votes and marks proposals `ACCEPTED` or `REJECTED`
-4. Accepted proposals can be executed by any account within `MaxExecutionPeriod`
-5. After `MaxExecutionPeriod` elapses, expired proposals are pruned from state
-
-### Message Execution
-
-- Accepted proposals execute their embedded messages through the BaseApp message router
-- The group policy account address is used as the signer for executed messages
-- Execution can be attempted immediately after voting with `--exec try`, or separately via `exec`
-
-## Development
-
-### Project Structure
-
-```
-enterprise/group/
-├── proto/cosmos/group/v1/    # Protobuf definitions
-├── api/cosmos/group/v1/      # Generated pulsar/grpc files
-├── x/group/                  # Module implementation
-│   ├── keeper/
-│   │   ├── keeper.go         # Keeper initialization and ORM setup
-│   │   ├── msg_server.go     # Transaction handlers
-│   │   ├── grpc_query.go     # Query handlers
-│   │   ├── tally.go          # Vote tallying logic
-│   │   └── proposal_executor.go # Message execution
-│   ├── client/cli/           # CLI commands
-│   ├── module/
-│   │   ├── module.go         # AppModule implementation
-│   │   ├── abci.go           # EndBlock logic
-│   │   └── autocli.go        # AutoCLI query/tx descriptors
-│   └── internal/
-│       └── orm/              # Object-Relational Mapping layer
-├── simapp/                   # Test application with group module
-└── tests/systemtests/        # Black-box system tests
-```
-
-### Adding New Features
-
-1. Define protobuf messages in `proto/`
-2. Generate code: `make proto-gen`
-3. Implement message handler in `keeper/msg_server.go`
-4. Add query handler in `keeper/grpc_query.go`
-5. Register CLI commands in `client/cli/tx.go` or via `module/autocli.go`
-6. Write tests in `keeper/*_test.go`
 
 ## License
 

@@ -72,13 +72,8 @@ func doCrashTest(t *testing.T, graceful bool) {
 	assert.False(t, sut.IsNodeRunning(0), "node 0 should be stopped")
 	t.Log("All nodes crashed")
 
-	// Wait for locks to be released - longer for non-graceful kills
-	if graceful {
-		time.Sleep(2 * time.Second)
-	} else {
-		// Non-graceful kills need more time for OS to release LevelDB file locks
-		time.Sleep(5 * time.Second)
-	}
+	// Wait for OS to fully release LevelDB file locks after process exit
+	time.Sleep(5 * time.Second)
 
 	// Restart all nodes
 	t.Log("Restarting all nodes...")

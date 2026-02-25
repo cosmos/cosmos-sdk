@@ -1,12 +1,10 @@
 # enterprise/make/enterprise.mk - Shared Makefile for enterprise modules
 # Include from module Makefiles: include ../make/enterprise.mk
 #
-# Module Makefiles should define (before or after include):
-#   - DOCKER_IMAGE: Docker image tag for build-docker (e.g. group-simd, poa-node)
-#   - build, install, build-docker: Module-specific build targets
-#
-# Optional overrides:
-#   - BUILD_DIR: Default ./build
+# Optional overrides (set before include):
+#   DOCKER_IMAGE: Docker image tag for build-docker (default: $(ENTERPRISE_MODULE)-simd)
+#   BUILD_MODULE_FIRST: If set, run 'go build ./...' before building simd (group uses this)
+#   BUILD_DIR: Default ./build
 
 ###############################################################################
 ###                              Variables                                  ###
@@ -14,6 +12,7 @@
 
 # Derived from CURDIR when in enterprise/group or enterprise/poa
 ENTERPRISE_MODULE ?= $(notdir $(CURDIR))
+DOCKER_IMAGE ?= $(ENTERPRISE_MODULE)-simd
 
 ###############################################################################
 ###                              Tool Versions                              ###
@@ -55,10 +54,34 @@ license:
 	@echo "✅ License headers added!"
 
 ###############################################################################
-###                                  Tests                                  ###
+###                                  Build                                  ###
 ###############################################################################
 
 BUILD_DIR ?= ./build
+
+.PHONY: build install build-docker
+
+build:
+ifdef BUILD_MODULE_FIRST
+	@echo "Building module..."
+	@go build ./...
+endif
+	@echo "Building simd..."
+	@mkdir -p $(BUILD_DIR)
+	@go build -C simapp -o ../$(BUILD_DIR)/simd ./simd
+
+install: build
+	@cp $(BUILD_DIR)/simd $(shell go env GOPATH)/bin/simd
+
+build-docker: build
+	@echo "Building Linux binary for Docker..."
+	@GOOS=linux go build -C simapp -o ../$(BUILD_DIR)/simd-linux ./simd
+	@echo "Building Docker image..."
+	@docker build -t $(DOCKER_IMAGE) .
+
+###############################################################################
+###                                  Tests                                  ###
+###############################################################################
 golangci_lint_cmd=golangci-lint
 
 .PHONY: test test-verbose test-cover test-system

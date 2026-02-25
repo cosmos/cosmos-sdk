@@ -2,23 +2,8 @@
 ###                          PoA Module Makefile                            ###
 ###############################################################################
 
+DOCKER_IMAGE = poa-node
 include ../make/enterprise.mk
-
-###############################################################################
-###                         Module-Specific Build                           ###
-###############################################################################
-
-.PHONY: build build-docker install
-
-build:
-	@go build -C simapp -o ../$(BUILD_DIR)/simd ./simd/
-
-install:
-	@go install -C simapp ./simd/
-
-build-docker: build
-	@GOOS=linux go build -C simapp -o ../$(BUILD_DIR)/simd-linux ./simd/
-	@docker build -t poa-node .
 
 ###############################################################################
 ###                         Module-Specific: Localnet                       ###

@@ -2,35 +2,14 @@
 ###                         Group Module Makefile                           ###
 ###############################################################################
 
+BUILD_MODULE_FIRST = 1
 include ../make/enterprise.mk
-
-###############################################################################
-###                         Module-Specific Build                           ###
-###############################################################################
-
-.PHONY: build build-docker install test-fuzz
-
-# Build group module and simd binary
-build:
-	@echo "Building group module..."
-	@go build ./...
-	@echo "Building simd..."
-	@mkdir -p $(BUILD_DIR)
-	@go build -C simapp -o ../$(BUILD_DIR)/simd ./simd
-
-# Install simd binary to GOPATH/bin
-install: build
-	@cp $(BUILD_DIR)/simd $(shell go env GOPATH)/bin/simd
-
-build-docker: build
-	@echo "Building Linux binary for Docker..."
-	@GOOS=linux go build -C simapp -o ../$(BUILD_DIR)/simd-linux ./simd
-	@echo "Building Docker image..."
-	@docker build -t group-simd .
 
 ###############################################################################
 ###                         Module-Specific Tests                           ###
 ###############################################################################
+
+.PHONY: test-fuzz
 
 #? test-fuzz: Run types-level fuzz tests (30s each)
 test-fuzz:

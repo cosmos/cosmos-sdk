@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-
 	storetypes "cosmossdk.io/store/types"
+
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
@@ -344,14 +344,14 @@ func parseCommitInfoFile(path string) (*storetypes.CommitInfo, error) {
 }
 
 func main() {
-	dir := "."
-	if len(os.Args) > 1 {
-		dir = os.Args[1]
+	rootCmd := &cobra.Command{
+		Use:   "iavl",
+		Short: "IAVL tree inspection and management tool",
 	}
 
-	p := tea.NewProgram(initialModel(dir), tea.WithAltScreen())
-	if _, err := p.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+	rootCmd.AddCommand(newViewCmd())
+
+	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }

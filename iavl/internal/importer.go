@@ -29,7 +29,8 @@ func NewImporter(stagedVersion uint32, treeDir string, logger log.Logger) (*Impo
 		return nil, fmt.Errorf("cannot import into non-empty tree store, latest version is %d", ts.LatestVersion())
 	}
 
-	cw, err := NewChangesetWriter(treeDir, stagedVersion, ts)
+	// we set staged version of the writer to 1 so that this is the changeset 1 which contains all historical nodes
+	cw, err := NewChangesetWriter(treeDir, 1, ts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create changeset writer: %w", err)
 	}

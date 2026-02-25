@@ -862,7 +862,19 @@ func (db *CommitMultiTree) SetIAVLDisableFastNode(disable bool) {}
 func (db *CommitMultiTree) SetIAVLSyncPruning(sync bool) {}
 
 func (db *CommitMultiTree) RollbackToVersion(version int64) error {
-	return fmt.Errorf("RollbackToVersion has not been implemented yet")
+	db.commitMutex.Lock()
+	defer db.commitMutex.Unlock()
+
+	latestVersion := db.LatestVersion()
+	ctx, span := tracer.Start(context.Background(), "CommitMultiTree.RollbackToVersion",
+		trace.WithAttributes(
+			attribute.Int64("currentVersion", latestVersion),
+			attribute.Int64("targetVersion", version),
+		),
+	)
+	defer span.End()
+
+	panic("TODO")
 }
 
 func (db *CommitMultiTree) ListeningEnabled(key storetypes.StoreKey) bool {
@@ -1080,7 +1092,13 @@ func (db *CommitMultiTree) pruneNow(ctx context.Context, retainVersion uint64) {
 }
 
 func deleteOldCommitInfos(dir string, retainVersion uint64) error {
-	commitInfoDir := filepath.Join(dir, commitInfoSubPath)
+	return deleteCommitInfos(dir, func(version uint64) bool {
+		return version >= retainVersion
+	})
+}
+
+func deleteCommitInfos(multiTreeDir string, retain func(uint64) bool) error {
+	commitInfoDir := filepath.Join(multiTreeDir, commitInfoSubPath)
 	entries, err := os.ReadDir(commitInfoDir)
 	if err != nil {
 		return fmt.Errorf("failed to read commit info dir: %w", err)
@@ -1092,7 +1110,7 @@ func deleteOldCommitInfos(dir string, retainVersion uint64) error {
 		if err != nil {
 			continue
 		}
-		if version < retainVersion {
+		if !retain(version) {
 			err := os.Remove(filepath.Join(commitInfoDir, entry.Name()))
 			if err != nil {
 				return fmt.Errorf("failed to delete old commit info file %s: %w", entry.Name(), err)

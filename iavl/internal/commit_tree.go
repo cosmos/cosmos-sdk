@@ -20,6 +20,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
+
 	"cosmossdk.io/store/cachekv"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/store/types/kv"
@@ -540,4 +541,30 @@ func (c *CommitTree) prune(ctx context.Context, retainVersion uint32) error {
 		RetainVersion:          retainVersion,
 		CompactionRolloverSize: c.opts.CompactionRolloverSize,
 	})
+}
+
+func (c *CommitTree) RollbackToVersion(ctx context.Context, version uint32) error {
+	c.commitMutex.Lock()
+	defer c.commitMutex.Unlock()
+
+	err := c.treeStore.rollbackToVersion(version)
+	if err != nil {
+		return fmt.Errorf("rolling back tree store to version %d: %w", version, err)
+	}
+
+	//// save metadata before closing since we'll need it to reopen
+	//dir, opts, logger := c.treeStore.dir, c.treeStore.opts, c.treeStore.logger
+	//
+	//// just close and reload the tree store
+	//err = c.treeStore.Close()
+	//if err != nil {
+	//	return fmt.Errorf("closing tree store: %w", err)
+	//}
+	//newStore, err := NewTreeStore(dir, opts, logger)
+	//if err != nil {
+	//	return fmt.Errorf("creating tree store: %w", err)
+	//}
+	//c.treeStore = newStore
+
+	return nil
 }

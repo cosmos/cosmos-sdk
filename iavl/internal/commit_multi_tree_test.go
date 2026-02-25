@@ -271,6 +271,9 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 		sim.openV2Tree(t)
 	}
 
+	// optionally rollback both stores to a previous version
+	sim.checkVersionRollback(t, commitId1.Version)
+
 	// optionally check history by reopening old versions
 	checkHistory := rapid.Bool().Draw(t, "checkHistory")
 	if checkHistory && commitId1.Version > 1 {
@@ -297,6 +300,49 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 			compareIteratorsAtVersion(t, iterV1, iterV2)
 		}
 	}
+}
+
+func (sim *SimCommitMultiTree) checkVersionRollback(t *rapid.T, commitVersion int64) {
+	doRollback := rapid.Bool().Draw(t, "doVersionRollback")
+	if !doRollback || commitVersion <= 1 {
+		return
+	}
+
+	oldestVersion := 1
+	keepWindow := int(commitVersion) - int(sim.pruningOpts.KeepRecent)
+	if keepWindow > oldestVersion {
+		oldestVersion = keepWindow
+	}
+	if oldestVersion >= int(commitVersion) {
+		return
+	}
+
+	rollbackVersion := int64(rapid.IntRange(oldestVersion, int(commitVersion)-1).Draw(t, "rollbackVersion"))
+	t.Logf("rolling back from version %d to version %d", commitVersion, rollbackVersion)
+
+	require.NoError(t, sim.mtV1.RollbackToVersion(rollbackVersion))
+	require.NoError(t, sim.mtV2.RollbackToVersion(rollbackVersion))
+
+	// verify both stores agree after rollback
+	ms1 := sim.mtV1.CacheMultiStore()
+	ms2 := sim.mtV2.CacheMultiStore()
+	for _, storeKey := range sim.kvStoreKeys {
+		iterV1 := ms1.GetKVStore(storeKey).Iterator(nil, nil)
+		iterV2 := ms2.GetKVStore(storeKey).Iterator(nil, nil)
+		t.Logf("comparing store %s after rollback to version %d", storeKey.Name(), rollbackVersion)
+		compareIteratorsAtVersion(t, iterV1, iterV2)
+	}
+
+	// reset lastPruneVersion if we rolled back past it
+	if sim.lastPruneVersion > rollbackVersion {
+		sim.lastPruneVersion = rollbackVersion
+	}
+
+	//// optionally close and reopen V2 to verify rolled-back state persists to disk
+	//if rapid.Bool().Draw(t, "closeReopenAfterRollback") {
+	//	require.NoError(t, sim.mtV2.Close())
+	//	sim.openV2Tree(t)
+	//}
 }
 
 func (sim *SimCommitMultiTree) applyVersionUpdates(t *rapid.T, cacheMs1, cacheMs2 store.MultiStore) {

@@ -2,9 +2,10 @@ package v6
 
 import (
 	"context"
+	"errors"
+
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
-	"errors"
 )
 
 func Migrate(ctx context.Context, storeService storetypes.KVStoreService, sequence collections.Sequence) error {

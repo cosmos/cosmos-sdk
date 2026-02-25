@@ -64,6 +64,7 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*Ch
 
 	err = cr.open(writeModeFlags)
 	if err != nil {
+		cr.Close() // close any files that were opened before returning error
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
 
@@ -76,6 +77,10 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*Ch
 				cr.Close() // close files before returning error
 				return nil, fmt.Errorf("changeset dir already exists and is not empty: %s", dir)
 			}
+			if err != nil {
+				cr.Close() // close files before returning error
+				return nil, fmt.Errorf("failed to stat file %s: %w", f.Name(), err)
+			}
 		}
 	}
 
@@ -85,7 +90,7 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*Ch
 const writeModeFlags = os.O_RDWR | os.O_CREATE | os.O_APPEND
 
 // OpenChangesetFiles opens an existing changeset directory and files.
-// All files are opened in readonly mode, except for orphans.dat and info.dat which are opened in read-write mode
+// All files are opened in readonly mode, except for orphans.dat which are opened in read-write mode
 // to track orphan data and statistics.
 func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
 	startVersion, endVersion, compactedAt, valid := ParseChangesetDirName(filepath.Base(dirName))
@@ -110,6 +115,7 @@ func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
 
 	err = cr.open(os.O_RDONLY)
 	if err != nil {
+		cr.Close() // close any files that were opened before returning error
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
 
@@ -274,12 +280,12 @@ func (cr *ChangesetFiles) MarkReadyAndClose(endVersion uint32) (finalDir string,
 	if err != nil {
 		return "", fmt.Errorf("failed to rename changeset directory from %s to %s: %w", tmpDir, finalDir, err)
 	}
+	cr.dir = finalDir
+	cr.endVersion = endVersion
 	err = cr.Close()
 	if err != nil {
 		return "", fmt.Errorf("failed to close changeset files: %w", err)
 	}
-	cr.dir = finalDir
-	cr.endVersion = endVersion
 	return finalDir, nil
 }
 
@@ -287,8 +293,8 @@ func (cr *ChangesetFiles) allFiles() []*os.File {
 	return []*os.File{
 		cr.walFile,
 		cr.kvDataFile,
-		cr.branchesFile,
 		cr.leavesFile,
+		cr.branchesFile,
 		cr.checkpointsFile,
 		cr.orphansFile,
 	}

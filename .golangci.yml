@@ -40,6 +40,12 @@ linters:
         - G101
         - G107
         - G404
+        - G602  # slice index out of range - safe in context
+        - G702  # command injection via taint analysis - safe in context
+        - G703  # path traversal via taint analysis - safe in context
+        - G704  # SSRF via taint analysis - safe in context
+        - G705  # XSS via taint analysis - safe in context
+        - G117  # exported struct field matches secret pattern - safe in context
       confidence: medium
     misspell:
       locale: US

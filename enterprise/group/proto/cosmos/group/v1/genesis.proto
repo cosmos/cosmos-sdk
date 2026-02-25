@@ -1,0 +1,51 @@
+// IMPORTANT LICENSE NOTICE
+//
+// SPDX-License-Identifier: CosmosLabs-Evaluation-Only
+//
+// This file is NOT licensed under the Apache License 2.0.
+//
+// Licensed under the Cosmos Labs Source Available Evaluation License, which forbids:
+// - commercial use,
+// - production use, and
+// - redistribution.
+//
+// See https://github.com/cosmos/cosmos-sdk/blob/main/enterprise/group/LICENSE for full terms.
+// Copyright (c) 2026 Cosmos Labs US Inc.
+
+syntax = "proto3";
+
+package cosmos.group.v1;
+
+import "cosmos/group/v1/types.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/enterprise/group";
+
+// GenesisState defines the group module's genesis state.
+message GenesisState {
+  // group_seq is the group table orm.Sequence,
+  // it is used to get the next group ID.
+  uint64 group_seq = 1;
+
+  // groups is the list of groups info.
+  repeated GroupInfo groups = 2;
+
+  // group_members is the list of groups members.
+  repeated GroupMember group_members = 3;
+
+  // group_policy_seq is the group policy table orm.Sequence,
+  // it is used to generate the next group policy account address.
+  uint64 group_policy_seq = 4;
+
+  // group_policies is the list of group policies info.
+  repeated GroupPolicyInfo group_policies = 5;
+
+  // proposal_seq is the proposal table orm.Sequence,
+  // it is used to get the next proposal ID.
+  uint64 proposal_seq = 6;
+
+  // proposals is the list of proposals.
+  repeated Proposal proposals = 7;
+
+  // votes is the list of votes.
+  repeated Vote votes = 8;
+}

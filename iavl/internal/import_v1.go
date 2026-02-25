@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"cosmossdk.io/log/v2"
@@ -14,9 +15,9 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
-func ImportIAVLV1MultiStore(v1Dir, outDir string, logger log.Logger) error {
-	logger.Info("Starting import of IAVL v1 multi-store", "sourceDir", v1Dir, "destDir", outDir)
-	v1Db, err := dbm.NewGoLevelDB("", v1Dir, nil)
+func ImportIAVLV1MultiStore(dataDir, outDir string, logger log.Logger) error {
+	logger.Info("Starting import of IAVL v1 multi-store", "sourceDir", dataDir, "destDir", outDir)
+	v1Db, err := dbm.NewGoLevelDB("application", dataDir, nil)
 	if err != nil {
 		return fmt.Errorf("failed to open source database: %w", err)
 	}
@@ -60,11 +61,15 @@ func ImportIAVLV1MultiStore(v1Dir, outDir string, logger log.Logger) error {
 
 func importIAVLV1Store(v1Db dbm.DB, store, multiStoreDir string, log log.Logger) error {
 	treeDir := filepath.Join(multiStoreDir, "stores", fmt.Sprintf("%s.iavl", store))
+	err := os.MkdirAll(treeDir, 0700)
+	if err != nil {
+		return fmt.Errorf("failed to mkdir %s: %w", treeDir, err)
+	}
 
 	v1Prefix := "s/k:" + store + "/"
 	v1Db = dbm.NewPrefixDB(v1Db, []byte(v1Prefix))
 	tree := iavl.NewMutableTree(iavldb.NewWrapper(v1Db), 0, false, log)
-	_, err := tree.Load()
+	_, err = tree.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load IAVL tree: %w", err)
 	}

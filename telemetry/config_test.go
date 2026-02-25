@@ -11,7 +11,7 @@ func TestCosmosExtraUnmarshal(t *testing.T) {
 	tests := []struct {
 		name     string
 		yaml     string
-		expected extraConfig
+		expected ExtraConfig
 	}{
 		{
 			name: "instruments with empty config",
@@ -21,8 +21,8 @@ cosmos_extra:
     host: {}
     runtime: {}
 `,
-			expected: extraConfig{
-				CosmosExtra: &cosmosExtra{
+			expected: ExtraConfig{
+				CosmosExtra: &CosmosExtra{
 					Instruments: map[string]map[string]any{
 						"host":    {},
 						"runtime": {},
@@ -39,8 +39,8 @@ cosmos_extra:
     diskio:
       disable_virtual_device_filter: true
 `,
-			expected: extraConfig{
-				CosmosExtra: &cosmosExtra{
+			expected: ExtraConfig{
+				CosmosExtra: &CosmosExtra{
 					Instruments: map[string]map[string]any{
 						"host": {},
 						"diskio": {
@@ -60,8 +60,8 @@ cosmos_extra:
     - tracecontext
     - baggage
 `,
-			expected: extraConfig{
-				CosmosExtra: &cosmosExtra{
+			expected: ExtraConfig{
+				CosmosExtra: &CosmosExtra{
 					Instruments: map[string]map[string]any{
 						"host": {},
 					},
@@ -83,8 +83,8 @@ cosmos_extra:
   propagators:
     - tracecontext
 `,
-			expected: extraConfig{
-				CosmosExtra: &cosmosExtra{
+			expected: ExtraConfig{
+				CosmosExtra: &CosmosExtra{
 					TraceFile:   "/tmp/traces.json",
 					MetricsFile: "/tmp/metrics.json",
 					Instruments: map[string]map[string]any{
@@ -103,7 +103,7 @@ cosmos_extra:
 			yaml: `
 cosmos_extra:
 `,
-			expected: extraConfig{
+			expected: ExtraConfig{
 				CosmosExtra: nil, // YAML with just "cosmos_extra:" and no value results in nil
 			},
 		},
@@ -112,8 +112,8 @@ cosmos_extra:
 			yaml: `
 cosmos_extra: {}
 `,
-			expected: extraConfig{
-				CosmosExtra: &cosmosExtra{},
+			expected: ExtraConfig{
+				CosmosExtra: &CosmosExtra{},
 			},
 		},
 		{
@@ -121,7 +121,7 @@ cosmos_extra: {}
 			yaml: `
 some_other_key: value
 `,
-			expected: extraConfig{
+			expected: ExtraConfig{
 				CosmosExtra: nil,
 			},
 		},
@@ -158,8 +158,8 @@ cosmos_extra:
   propagators:
     - tracecontext
 `,
-			expected: extraConfig{
-				CosmosExtra: &cosmosExtra{
+			expected: ExtraConfig{
+				CosmosExtra: &CosmosExtra{
 					Instruments: map[string]map[string]any{
 						"host":    {},
 						"runtime": {},
@@ -175,7 +175,7 @@ cosmos_extra:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var cfg extraConfig
+			var cfg ExtraConfig
 			err := yaml.Unmarshal([]byte(tc.yaml), &cfg)
 			require.NoError(t, err)
 

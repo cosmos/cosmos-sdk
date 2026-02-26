@@ -1,0 +1,53 @@
+// IMPORTANT LICENSE NOTICE
+//
+// SPDX-License-Identifier: CosmosLabs-Evaluation-Only
+//
+// This file is NOT licensed under the Apache License 2.0.
+//
+// Licensed under the Cosmos Labs Source Available Evaluation License, which forbids:
+// - commercial use,
+// - production use, and
+// - redistribution.
+//
+// See https://github.com/cosmos/cosmos-sdk/blob/main/enterprise/group/LICENSE for full terms.
+// Copyright (c) 2026 Cosmos Labs US Inc.
+
+package group_test
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
+	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+)
+
+// TestGogoUnmarshalProposal tests some weird behavior in gogoproto
+// unmarshalling.
+// This test serves as a showcase that we need to be careful when unmarshalling
+// multiple times into the same reference.
+func TestGogoUnmarshalProposal(t *testing.T) {
+	encodingConfig := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	cdc := encodingConfig.Codec
+
+	p1 := group.Proposal{Proposers: []string{"foo"}}
+	p2 := group.Proposal{Proposers: []string{"bar"}}
+
+	p1Bz, err := cdc.Marshal(&p1)
+	require.NoError(t, err)
+	p2Bz, err := cdc.Marshal(&p2)
+	require.NoError(t, err)
+
+	var p group.Proposal
+	err = cdc.Unmarshal(p1Bz, &p)
+	require.NoError(t, err)
+
+	var i group.Proposal
+	err = cdc.Unmarshal(p2Bz, &i)
+	require.NoError(t, err)
+
+	require.Len(t, p.Proposers, 1)
+	require.Len(t, i.Proposers, 1)
+}

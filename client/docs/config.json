@@ -7,10 +7,21 @@
   },
   "apis": [
     {
+      "url": "./tmp-swagger-gen/cosmos/app/v1alpha1/query.swagger.json"
+    },
+    {
       "url": "./tmp-swagger-gen/cosmos/auth/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "AuthParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/authz/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "AuthzParams"
         }
       }
     },
@@ -23,6 +34,9 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/cosmos/base/node/v1beta1/query.swagger.json"
+    },
+    {
       "url": "./tmp-swagger-gen/cosmos/base/tendermint/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
@@ -31,13 +45,26 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/cosmos/base/node/v1beta1/query.swagger.json"
+      "url": "./tmp-swagger-gen/cosmos/consensus/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ConsensusParams"
+        }
+      }
     },
     {
       "url": "./tmp-swagger-gen/cosmos/distribution/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "DistributionParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/epochs/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "EpochsParams"
         }
       }
     },
@@ -50,10 +77,10 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/cosmos/gov/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/cosmos/feegrant/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
-          "Params": "GovParams"
+          "Params": "FeegrantParams"
         }
       }
     },
@@ -73,6 +100,14 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/cosmos/gov/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "GovParams"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/cosmos/mint/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
@@ -85,6 +120,15 @@
       "operationIds": {
         "rename": {
           "Params": "Params"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/protocolpool/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ProtocolpoolParams",
+          "CommunityPool": "ProtocolpoolCommunityPool"
         }
       }
     },
@@ -118,33 +162,6 @@
           "Params": "UpgradeParams"
         }
       }
-    },
-    {
-      "url": "./tmp-swagger-gen/cosmos/authz/v1beta1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "AuthzParams"
-        }
-      }
-    },
-    {
-      "url": "./tmp-swagger-gen/cosmos/feegrant/v1beta1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "FeegrantParams"
-        }
-      }
-    },
-    {
-      "url": "./tmp-swagger-gen/cosmos/consensus/v1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "ConsensusParams"
-        }
-      }
-    },
-    {
-      "url": "./tmp-swagger-gen/cosmos/app/v1alpha1/query.swagger.json"
     }
   ]
 }

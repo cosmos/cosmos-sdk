@@ -19,6 +19,8 @@ tools-stamp
 buf-stamp
 artifacts
 simapp/simd/simd
+enterprise/group/simapp/simd/simd
+enterprise/group/build/
 
 # Go
 go.work

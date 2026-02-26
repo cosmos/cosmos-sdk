@@ -31,7 +31,6 @@ type Config struct {
 var (
 	configRegistry = make(map[string]*Config)
 	registryMutex  sync.Mutex
-	configKey      string
 )
 
 // getConfigKey returns a unique config scope identifier.
@@ -39,10 +38,6 @@ var (
 func getConfigKey() string {
 	if id := os.Getenv(EnvConfigScope); id != "" {
 		return id
-	}
-
-	if configKey != "" {
-		return configKey
 	}
 
 	exe, errExec := os.Executable()
@@ -56,8 +51,7 @@ func getConfigKey() string {
 		host = "unknown-host"
 	}
 
-	configKey = fmt.Sprintf("%s|%s|%d", host, exe, pid)
-	return configKey
+	return fmt.Sprintf("%s|%s|%d", host, exe, pid)
 }
 
 // NewConfig returns a new Config with default values.

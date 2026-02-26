@@ -1,6 +1,6 @@
 ## Quick Start For Local Telemetry
 
-To quickly setup a local telemetry environment where OpenTelemetry data is sent to a local instance of Grafana LGTM:
+To quickly set up a local telemetry environment where OpenTelemetry data is sent to a local instance of Grafana LGTM:
 
 start the [Grafana LGTM docker image](https://hub.docker.com/r/grafana/otel-lgtm):
 
@@ -69,12 +69,12 @@ cosmos_extra:
     - tracecontext
 ```
 
-NOTE: the go implementation may not support all options, so check the go [otelconf](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) documentation carefully to see what is actually supported.
+NOTE: The Go implementation may not support all options, so check the Go [otelconf](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) documentation carefully to see what is actually supported.
 
 ### Environment Variable
 
 Using the environment variable method will instantiate the OpenTelemetry SDK before global meters and spans. 
-This allows meters and traces to use direct references to the underlying instrument.
+This allows meters and traces to use direct references to the underlying instruments.
 
 Set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of the configuration file:
    
@@ -101,7 +101,7 @@ IMPORTANT: Make sure `telemetry.Shutdown()` is called when the application is sh
 
 If the steps above are followed, developers can follow the official Go OpenTelemetry conventions
 of declaring package-level tracer and meter instances using `otel.Tracer()` and `otel.Meter()`.
-NOTE: it is important to thread `context.Context` properly for spans and metrics to be correlated.
+NOTE: It is important to thread `context.Context` properly for spans and metrics to be correlated.
 When using the SDK's context type, spans must be started with the context's `StartSpan` method to
 get an SDK context which has the span set correctly.
 

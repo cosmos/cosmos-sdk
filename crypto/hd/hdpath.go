@@ -248,7 +248,8 @@ func addScalars(a, b []byte) [32]byte {
 	aInt := new(big.Int).SetBytes(a)
 	bInt := new(big.Int).SetBytes(b)
 	sInt := new(big.Int).Add(aInt, bInt)
-	x := sInt.Mod(sInt, secp.S256().N).Bytes()
+	// TODO: replace secp.S256().N with secp256k1 package's new API - elliptic.Curve is deprecated (SA1019)
+	x := sInt.Mod(sInt, secp.S256().N).Bytes() //nolint:staticcheck // TODO: migrate off deprecated elliptic.Curve
 	x2 := [32]byte{}
 	copy(x2[32-len(x):], x)
 

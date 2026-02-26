@@ -488,13 +488,27 @@ localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
 
+###############################################################################
+###                              Enterprise Modules                          ###
+###############################################################################
+#
+# Delegate to enterprise module Makefiles. Examples:
+#   make enterprise-all-lint      # Run lint in group and poa
+#   make enterprise-all-test      # Run test in group and poa
+#   make enterprise-group-build   # Run build in group only
+#   make enterprise-poa-localnet  # Run localnet in poa only
+#
+enterprise-%:
+	$(MAKE) -C enterprise $*
+
+.PHONY: enterprise-%
+
 test-system: build-v53 build
 	mkdir -p ./tests/systemtests/binaries/
 	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
 	mkdir -p ./tests/systemtests/binaries/v0.53
 	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
 	$(MAKE) -C tests/systemtests test
-	$(MAKE) -C enterprise/poa/ test-system
 .PHONY: test-system
 
 # build-v53 checks out the v0.53.x branch, builds the binary, and renames it to simdv53.

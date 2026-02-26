@@ -6,6 +6,36 @@ Note, always read the **App Wiring Changes** section for more information on app
 
 For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/CHANGELOG.md).
 
+## Table of Contents
+
+- [Summary](#summary)
+- [App Wiring Changes](#app-wiring-changes)
+    - [x/gov](#xgov)
+        - [Keeper Initialization](#keeper-initialization)
+        - [GovHooks Interface](#govhooks-interface)
+    - [x/epochs](#xepochs)
+    - [x/bank](#xbank)
+    - [NodeService](#nodeservice)
+- [Module Deprecations](#module-deprecations)
+    - [x/circuit](#xcircuit)
+    - [x/nft](#xnft)
+    - [x/crisis](#xcrisis)
+- [Cosmos Enterprise](#cosmos-enterprise)
+    - [Groups Module](#groups-module)
+    - [PoA Module](#poa-module)
+- [Module Version Updates](#module-version-updates)
+- [Moved Go Modules](#moved-go-modules)
+- [Log v2](#log-v2)
+- [Store v2](#store-v2)
+- [Telemetry](#telemetry)
+    - [Adoption of OpenTelemetry and Deprecation of githubcomhashicorpgo-metrics](#adoption-of-opentelemetry-and-deprecation-of-githubcomhashicorpgo-metrics)
+- [Experimental Packages](#experimental-packages)
+    - [BlockSTM](#blockstm)
+- [Upgrade Handler](#upgrade-handler)
+- [Upcoming Features](#upcoming-features)
+    - [IAVLX](#iavlx)
+        - [Wiring up IAVLX (DO NOT RUN IN PRODUCTION)](#wiring-up-iavlx-do-not-run-in-production)
+
 ## Summary
 
 The release of Cosmos SDK v0.54.0 brings exciting new feature previews, an enhanced observability stack, bug fixes, and a developer QoL improvements.
@@ -148,7 +178,7 @@ To learn more about the new features offered in `log/v2`, as well as setting up 
 
 ## Store v2
 
-The store package has been updated to `v2`. Store v2 enables support for the new experimental packages: BlockSTM and IAVLX. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/store/v2`.
+The store package has been updated to `v2`. Store v2 enables support for the new experimental package: BlockSTM, and the upcoming IAVL upgrade, IAVLX. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/store/v2`.
 
 ## Telemetry
 
@@ -249,70 +279,9 @@ func ExampleWithSDKContext(ctx sdk.Context) error {
 
 ## Experimental Packages
 
-For Q1 of 2026, Cosmos Labs has been focusing on greatly improving performance of Cosmos SDK applications. v0.54 of Cosmos SDK introduces two performance related experimental packages: IAVLX and BlockSTM.
+For Q1 of 2026, Cosmos Labs has been focusing on greatly improving performance of Cosmos SDK applications. v0.54 of Cosmos SDK introduces a performance related experimental package: BlockSTM.
 
-NOTE: It is important to emphasize that these are **experimental** packages. We DO NOT recommend running chains with these packages enabled in production. Their inclusion in this release is for experimentation purposes only.
-
-### IAVLX
-
-IAVLX is a new, WAL-based, ACID storage engine for Cosmos applications. Currently, IAVLX is only available for new applications; we are actively working on IAVL v1 migration paths.
-Developers interested in experimenting with IAVLX should read the documentation [here](link/to/docs).
-
-Below is an example of setting up IAVLX:
-
-:::warning
-IAVLX is experimental. Test thoroughly before production use. Code for migrating from IAVL v1 is not yet available.
-:::
-
-1. Add the following imports
-```go
-import (
-    "github.com/cosmos/cosmos-sdk/baseapp"
-    "github.com/cosmos/cosmos-sdk/iavlx"
-)
-```
-
-2. Create a BaseApp option to configure IAVLX:
-
-```go
-func setupIAVLXStore(appOpts servertypes.AppOptions) func(*baseapp.BaseApp) {
-    return func(app *baseapp.BaseApp) {
-        homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
-        dbPath := filepath.Join(homeDir, "data", "iavlx")
-		
-        opts := &iavlx.Options{
-            EvictDepth:            20,
-            ReaderUpdateInterval:  1,
-            WriteWAL:              true,
-            MinCompactionSeconds:  30,
-            RetainVersions:        1,
-            CompactWAL:            true,
-            DisableCompaction:     false,
-            CompactionOrphanAge:   200,
-            CompactionOrphanRatio: 0.95,
-            CompactAfterVersions:  2000,
-            ChangesetMaxTarget:    2147483648,
-            ZeroCopy:              true,
-            FsyncInterval:         1000,
-        }
-
-        db, err := iavlx.LoadDB(dbPath, opts, logger)
-        if err != nil {
-            panic(err)
-        }
-
-        app.SetCMS(db)
-    }
-}
-```
-
-3. Add the option to BaseApp initialization
-
-```go
-baseAppOptions = append(baseAppOptions, setupIAVLXStore(appOpts))
-
-bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
-```
+NOTE: It is important to emphasize that this is an **experimental** package. We DO NOT recommend running chains with this package enabled in production. The inclusion in this release is for experimentation purposes only.
 
 ### BlockSTM
 
@@ -387,4 +356,69 @@ func (app SimApp) RegisterUpgradeHandlers() {
       app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
     }
 }
+```
+
+## Upcoming Features
+
+The following packages are being actively developed and will be released at a future time.
+
+### IAVLX
+
+IAVLX is an upcoming WAL-based, ACID storage engine for Cosmos applications. It is inspired by [MEMIAVL](https://github.com/crypto-org-chain/cronos-store/tree/703ea3d46c70b3f8b2fb0371dbdd87e763dc39b2/memiavl), and the unreleased [IAVL v2](https://github.com/cosmos/iavl/tree/master/v2).
+Developers interested in experimenting with IAVLX should read the documentation [here](link/to/docs). You can follow along the development of IAVLX and try the code yourself with the [feat/iavlx](todo feat branch) branch.
+
+#### Wiring up IAVLX (DO NOT RUN IN PRODUCTION)
+
+:::warning
+IAVLX is experimental. Test thoroughly before production use. Code for migrating from IAVL v1 is not yet available.
+:::
+
+1. Add the following imports
+```go
+import (
+    "github.com/cosmos/cosmos-sdk/baseapp"
+    "github.com/cosmos/cosmos-sdk/iavlx"
+)
+```
+
+2. Create a BaseApp option to configure IAVLX:
+
+```go
+func setupIAVLXStore(appOpts servertypes.AppOptions) func(*baseapp.BaseApp) {
+    return func(app *baseapp.BaseApp) {
+        homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+        dbPath := filepath.Join(homeDir, "data", "iavlx")
+		
+        opts := &iavlx.Options{
+            EvictDepth:            20,
+            ReaderUpdateInterval:  1,
+            WriteWAL:              true,
+            MinCompactionSeconds:  30,
+            RetainVersions:        1,
+            CompactWAL:            true,
+            DisableCompaction:     false,
+            CompactionOrphanAge:   200,
+            CompactionOrphanRatio: 0.95,
+            CompactAfterVersions:  2000,
+            ChangesetMaxTarget:    2147483648,
+            ZeroCopy:              true,
+            FsyncInterval:         1000,
+        }
+
+        db, err := iavlx.LoadDB(dbPath, opts, logger)
+        if err != nil {
+            panic(err)
+        }
+
+        app.SetCMS(db)
+    }
+}
+```
+
+3. Add the option to BaseApp initialization
+
+```go
+baseAppOptions = append(baseAppOptions, setupIAVLXStore(appOpts))
+
+bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 ```

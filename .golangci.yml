@@ -119,12 +119,10 @@ linters:
       - types/coin_regex.go
       - testutil/testdata
       - x/params
-      - x/crisis
+      - contrib
       - third_party$
       - builtin$
       - examples$
-      # todo: fix these before merging (WIP)
-      - blockstm
 issues:
   max-issues-per-linter: 10000
   max-same-issues: 10000
@@ -154,9 +152,7 @@ formatters:
       - types/coin_regex.go
       - testutil/testdata
       - x/params
-      - x/crisis
+      - contrib
       - third_party$
       - builtin$
       - examples$
-      # todo: fix these before merging (WIP)
-      - blockstm

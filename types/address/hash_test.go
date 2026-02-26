@@ -61,6 +61,21 @@ func (suite *AddressSuite) TestComposed() {
 	_, err = Compose(typ, []Addressable{a1, addrMock{make([]byte, 300)}})
 	assert.Error(err)
 	assert.Contains(err.Error(), "should be max 255 bytes, got 300")
+
+	// strict weak ordering: irreflexive and asymmetric
+	la := []byte{1, 2}
+	lb := []byte{3, 4}
+	assert.False(lessBytes(la, la), "lessBytes must be irreflexive")
+	assert.True(lessBytes(la, lb), "lessBytes(a,b) must be true when a < b")
+	assert.False(lessBytes(lb, la), "lessBytes must be asymmetric")
+
+	// Compose must be deterministic with duplicate sub-addresses
+	dup := addrMock{[]byte{1, 2, 3}}
+	addr1, err := Compose("test", []Addressable{dup, dup, dup})
+	assert.NoError(err)
+	addr2, err := Compose("test", []Addressable{dup, dup, dup})
+	assert.NoError(err)
+	assert.Equal(addr1, addr2, "Compose with duplicates must be deterministic")
 }
 
 func (suite *AddressSuite) TestModule() {

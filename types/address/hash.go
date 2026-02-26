@@ -53,7 +53,7 @@ func Compose(typ string, subAddresses []Addressable) ([]byte, error) {
 		totalLen += len(as[i])
 	}
 
-	sort.Slice(as, func(i, j int) bool { return bytes.Compare(as[i], as[j]) < 0 })
+	sort.Slice(as, func(i, j int) bool { return lessBytes(as[i], as[j]) })
 	key := make([]byte, totalLen)
 	offset := 0
 	for i := range as {
@@ -61,6 +61,10 @@ func Compose(typ string, subAddresses []Addressable) ([]byte, error) {
 		offset += len(as[i])
 	}
 	return Hash(typ, key), nil
+}
+
+func lessBytes(a, b []byte) bool {
+	return bytes.Compare(a, b) < 0
 }
 
 // Module is a specialized version of a composed address for modules. Each module account

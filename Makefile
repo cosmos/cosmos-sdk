@@ -52,10 +52,6 @@ ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
   build_tags += libsecp256k1_sdk
 endif
 
-ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += app_v1
-endif
-
 whitespace :=
 whitespace += $(whitespace)
 comma := ,
@@ -379,7 +375,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v2.9.0
+golangci_version=v2.10.1
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"

@@ -276,3 +276,5 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../
 
 replace cosmossdk.io/store => ../../store
+
+replace cosmossdk.io/log/v2 => ../../log

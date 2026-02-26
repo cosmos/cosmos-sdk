@@ -35,12 +35,17 @@ jobs:
           vulnerabilities=$(grep -o 'GO-[0-9]\{4\}-[0-9]\+' govulncheck-output.txt | sort | uniq)
           echo "Detected vulnerabilities: $vulnerabilities"
 
-          # Check if any vulnerability other than GO-2025-3443 exists
+          # Known vulnerabilities to ignore (with tracking issues):
+          # - GO-2025-3443: CometBFT v0.38.16, v1.0.0 (fixed in v0.38.17+, v1.0.1+)
+          # - GO-2026-4479: pion/dtls/v2 AES GCM nonce reuse. No fix for v2 branch.
+          #                 Pulled via libp2->pion/stun. Tracking: https://github.com/libp2p/go-libp2p/issues/3464
+          IGNORED_VULNS="GO-2025-3443 GO-2026-4479"
+
           for vuln in $vulnerabilities; do
-            if [ "$vuln" != "GO-2025-3443" ]; then
-              echo "Found vulnerability $vuln, failing..."
+            if ! echo "$IGNORED_VULNS" | grep -qw "$vuln"; then
+              echo "Found unexpected vulnerability $vuln, failing..."
               exit 1
             fi
           done
 
-          echo "Only known vulnerability (GO-2025-3443) present. Continuing."
+          echo "Only known/ignored vulnerabilities present. Continuing."

@@ -10,7 +10,18 @@ import (
 )
 
 // ChangesetFiles encapsulates management of changeset files.
-// This type is shared between the Changeset and ChangesetWriter types.
+//
+// A changeset contains the following files:
+// - wal.log: the WAL entries for all versions in the changeset
+// - kv.dat: key-value data which isn't in the WAL
+// - checkpoints.dat: checkpoint metadata
+// - branches.dat: the actual BranchLayout structs for checkpoints
+// - leaves.dat: the actual LeafLayout structs for checkpoints
+// - orphans.dat: a log of orphan node IDs and versions they were orphaned at for pruning
+//
+// Changeset are identified by their directory in two formats:
+// - original, uncompacted changesets: {startVersion}/
+// - compacted changesets: {startVersion}-{endVersion}.{compactedAt}/
 type ChangesetFiles struct {
 	dir          string
 	treeDir      string
@@ -32,6 +43,11 @@ type ChangesetFiles struct {
 // If compactedAt is 0, the changeset is considered original and uncompacted.
 // If compactedAt is greater than 0, the changeset is considered compacted and will be suffixed with -tmp
 // until MarkReady is called.
+//
+// If the directory already exists, it will be used if and only if all the changeset files within it are empty,
+// otherwise an error will be returned to avoid data corruption.
+// Sometimes during normal operation, a new changeset is created but not written to, this is okay,
+// and we want to continue using this directory, but only if it is truly unused (i.e. all files are empty).
 func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*ChangesetFiles, error) {
 	// ensure absolute path
 	var err error
@@ -90,8 +106,8 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*Ch
 const writeModeFlags = os.O_RDWR | os.O_CREATE | os.O_APPEND
 
 // OpenChangesetFiles opens an existing changeset directory and files.
-// All files are opened in readonly mode, except for orphans.dat which are opened in read-write mode
-// to track orphan data and statistics.
+// All files are opened in readonly mode, except for orphans.dat which is opened in read-write mode
+// to track orphan data.
 func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
 	startVersion, endVersion, compactedAt, valid := ParseChangesetDirName(filepath.Base(dirName))
 	if !valid {
@@ -122,6 +138,8 @@ func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
 	return cr, nil
 }
 
+// open opens all changeset files with the specified mode, except for orphans.dat which is always opened with write
+// permissions to allow tracking of orphan data.
 func (cr *ChangesetFiles) open(mode int) error {
 	var err error
 
@@ -168,6 +186,10 @@ func (cr *ChangesetFiles) open(mode int) error {
 // and end version plus compacted at version (if these are available).
 // If the directory name is invalid, valid will be false.
 // If a changeset is original and uncompacted, endVersion and compactedAt will be 0.
+//
+// Valid directory name formats are:
+// - original, uncompacted changesets: {startVersion}/
+// - compacted changesets: {startVersion}-{endVersion}.{compactedAt}/
 func ParseChangesetDirName(dirName string) (startVersion, endVersion, compactedAt uint32, valid bool) {
 	var err error
 	var v uint64
@@ -264,12 +286,17 @@ func (cr *ChangesetFiles) CompactedAtVersion() uint32 {
 }
 
 // EndVersion returns the end version of the changeset if it is known, or 0.
-// For original changesets, this will always return 0.
-// For sealed, compacted changesets, this will return the accurate end version of the changeset.
+// For original changesets, this will always return 0 and the end version must be determined by
+// reading to the end of the WAL.
+// For sealed, compacted changesets, this will always return the accurate end version of the changeset.
 func (cr *ChangesetFiles) EndVersion() uint32 {
 	return cr.endVersion
 }
 
+// MarkReadyAndClose marks a compacted changeset as ready by renaming the directory to remove the -tmp suffix,
+// and then closes all files.
+// It is an error to call this method on an original, uncompacted changeset (i.e. one without the -tmp suffix)
+// since these changesets are already considered ready.
 func (cr *ChangesetFiles) MarkReadyAndClose(endVersion uint32) (finalDir string, err error) {
 	tmpDir := cr.dir
 	if !strings.HasSuffix(tmpDir, "-tmp") {
@@ -301,6 +328,7 @@ func (cr *ChangesetFiles) allFiles() []*os.File {
 }
 
 // Close closes all changeset files.
+// Calls to Close are idempotent and will not return an error if the files are already closed.
 func (cr *ChangesetFiles) Close() error {
 	if cr.closed {
 		return nil

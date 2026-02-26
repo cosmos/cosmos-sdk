@@ -365,7 +365,7 @@ app.BankKeeper = app.BankKeeper.WithObjStoreKey(oKeys[banktypes.ObjectStoreKey])
 
 ## Upgrade Handler
 
-The following is an example upgrade handler for v0.54.0.
+The following is an example upgrade handler for upgrading from **v0.53.6** to **v0.54.0**.
 
 ```go
 const UpgradeName = "v0.53.6-to-v0.54.0"

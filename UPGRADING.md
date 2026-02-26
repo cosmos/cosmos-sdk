@@ -38,7 +38,7 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
 
 ## Summary
 
-The release of Cosmos SDK v0.54.0 brings exciting new feature previews, an enhanced observability stack, bug fixes, and a developer QoL improvements.
+The release of Cosmos SDK v0.54.0 brings exciting new feature previews, an enhanced observability stack, bug fixes, and developer QoL improvements.
 
 ## App Wiring Changes
 
@@ -144,7 +144,7 @@ The crisis module is no longer being actively maintained by Cosmos Labs and was 
 
 ## Cosmos Enterprise
 
-Cosmos Enterprise is Cosmos Labs' new enterprise offering, designed for teams operating production-grade Cosmos-based blockchain networks. It combines hardened protocol modules, on-premises and managed infrastructure components, and direct access to the engineers building the Cosmos technology stack.
+[Cosmos Enterprise](https://docs.cosmos.network/enterprise/overview) is Cosmos Labs' new enterprise offering, designed for teams operating production-grade Cosmos-based blockchain networks. It combines hardened protocol modules, on-premises and managed infrastructure components, and direct access to the engineers building the Cosmos technology stack.
 
 ### Groups Module
 
@@ -152,7 +152,7 @@ The groups module is now being maintained under the Cosmos Enterprise offering. 
 
 ### PoA Module
 
-Cosmos SDK v0.54 includes a Proof of Authority (POA) module under the Cosmos Enterprise offering. Please see [Cosmos Enterprise](https://docs.cosmos.network/enterprise/overview) to learn more about using the PoA module in your application.
+Cosmos SDK v0.54 includes a Proof of Authority (POA) module under the Cosmos Enterprise offering. Please see [Cosmos Enterprise](https://docs.cosmos.network/enterprise/components/poa/overview) to learn more about using the PoA module in your application.
 
 
 ## Module Version Updates

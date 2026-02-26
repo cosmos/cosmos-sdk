@@ -277,6 +277,7 @@ require (
 )
 
 replace (
+	cosmossdk.io/log/v2 => ../../../../log
 	cosmossdk.io/store => ../../../../store
 	github.com/cosmos/cosmos-sdk => ../../../../
 	github.com/cosmos/cosmos-sdk/enterprise/poa => ../../

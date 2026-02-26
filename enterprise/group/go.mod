@@ -275,6 +275,7 @@ require (
 )
 
 replace (
+	cosmossdk.io/log/v2 => ../../log
 	cosmossdk.io/store => ../../store
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	github.com/cosmos/cosmos-sdk => ../../.

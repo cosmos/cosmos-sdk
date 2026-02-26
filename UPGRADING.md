@@ -2,13 +2,13 @@
 
 This document provides a reference for upgrading from `v0.53.x` to `v0.54.x` of Cosmos SDK.
 
-Note, always read the **App Wiring Changes** section for more information on application wiring updates.
+Note, always read the [**App Wiring Changes**](#app-wiring-changes) section for more information on application wiring updates.
 
 For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/CHANGELOG.md).
 
 ## Summary
 
-The release of Cosmos SDK v0.54.0 brings exciting new feature previews, an enhanced observability stack, bug fixes, and a developer QoL improvements.
+The release of Cosmos SDK v0.54.0 brings exciting new feature previews, an enhanced observability stack, bug fixes, and developer QoL improvements.
 
 ## App Wiring Changes
 
@@ -97,8 +97,7 @@ func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Conf
 
 ## Module Deprecations
 
-Cosmos SDK v0.54.0 drops support for the circuit, nft, and crisis modules. Developers can still use these modules,
-however, they will no longer be actively maintained by Cosmos Labs.
+Cosmos SDK v0.54.0 drops support for the circuit, nft, and crisis modules. Developers can still use these modules; however, they will no longer be actively maintained by Cosmos Labs.
 
 ### x/circuit
 
@@ -114,7 +113,7 @@ The crisis module is no longer being actively maintained by Cosmos Labs and was 
 
 ## Cosmos Enterprise
 
-Cosmos Enterprise is Cosmos Labs' new enterprise offering, designed for teams operating production-grade Cosmos-based blockchain networks. It combines hardened protocol modules, on-premises and managed infrastructure components, and direct access to the engineers building the Cosmos technology stack.
+[Cosmos Enterprise](https://docs.cosmos.network/enterprise/overview) is Cosmos Labs' new enterprise offering, designed for teams operating production-grade Cosmos-based blockchain networks. It combines hardened protocol modules, on-premises and managed infrastructure components, and direct access to the engineers building the Cosmos technology stack.
 
 ### Groups Module
 
@@ -122,7 +121,7 @@ The groups module is now being maintained under the Cosmos Enterprise offering. 
 
 ### PoA Module
 
-Cosmos SDK v0.54 includes a Proof of Authority (POA) module under the Cosmos Enterprise offering. Please see [Cosmos Enterprise](https://docs.cosmos.network/enterprise/overview) to learn more about using the PoA module in your application.
+Cosmos SDK v0.54 includes a Proof of Authority (POA) module under the Cosmos Enterprise offering. Please see [Cosmos Enterprise](https://docs.cosmos.network/enterprise/components/poa/overview) to learn more about using the PoA module in your application.
 
 
 ## Module Version Updates
@@ -143,7 +142,7 @@ To improve maintainability and standardize import paths across Cosmos SDK module
 ## Log v2
 
 The log package has been updated to `v2`. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/log/v2`. Usage of the logger itself does not need to be updated.
-The v2 release of log adds contextual methods to the logger interface (InfoContext, DebugContext, etc.), allowing logs to be correlated with OpenTelemetry traces.
+The v2 release of log adds contextual methods to the logger interface (`InfoContext`, `DebugContext`, etc.), allowing logs to be correlated with OpenTelemetry traces.
 To learn more about the new features offered in `log/v2`, as well as setting up log correlation, see the log package's [README](log/README.md).
 
 ## Store v2
@@ -156,9 +155,9 @@ The telemetry package has been deprecated and users are encouraged to switch to 
 
 ### Adoption of OpenTelemetry and Deprecation of `github.com/hashicorp/go-metrics`
 
-Previously, Cosmos SDK telemetry support was provided by `github.com/hashicorp/go-metrics` which was undermaintained and only supported metrics instrumentation.
+Previously, Cosmos SDK telemetry support was provided by `github.com/hashicorp/go-metrics`, which was under-maintained and only supported metrics instrumentation.
 OpenTelemetry provides an integrated solution for metrics, traces, and logging which is widely adopted and actively maintained.
-The existing wrapper functions in the `telemetry` package required acquiring mutex locks and map lookups for every metric operation which is suboptimal. OpenTelemetry's API uses atomic concurrency wherever possible and should introduce less performance overhead during metric collection.
+The existing wrapper functions in the `telemetry` package required acquiring mutex locks and map lookups for every metric operation, which is suboptimal. OpenTelemetry's API uses atomic concurrency wherever possible and should introduce less performance overhead during metric collection.
 
 See the [README.md](./telemetry/README.md) in the `telemetry` package to learn how to set up OpenTelemetry with Cosmos SDK v0.54.0+.
 
@@ -249,7 +248,7 @@ func ExampleWithSDKContext(ctx sdk.Context) error {
 
 ## Experimental Packages
 
-For Q1 of 2026, Cosmos Labs has been focusing on greatly improving performance of Cosmos SDK applications. v0.54 of Cosmos SDK introduces two performance related experimental packages: IAVLX and BlockSTM.
+For Q1 of 2026, Cosmos Labs has been focusing on greatly improving the performance of Cosmos SDK applications. v0.54 of Cosmos SDK introduces two performance-related experimental packages: IAVLX and BlockSTM.
 
 NOTE: It is important to emphasize that these are **experimental** packages. We DO NOT recommend running chains with these packages enabled in production. Their inclusion in this release is for experimentation purposes only.
 
@@ -316,7 +315,7 @@ bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOpt
 
 ### BlockSTM
 
-BlockSTM enables deterministic, concurrent execution of transactions, improving block execution speeds by up to X%. // TODO: REAL NUMBER
+BlockSTM enables deterministic, concurrent execution of transactions, improving block execution speed by up to X%. // TODO: REAL NUMBER
 Developers interested in experimenting with BlockSTM should read the documentation [here](link/to/docs).
 
 Below is an example of setting up BlockSTM:

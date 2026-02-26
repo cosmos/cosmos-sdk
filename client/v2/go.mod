@@ -277,7 +277,7 @@ require (
 // 	<temporary replace>
 // )
 replace (
+	cosmossdk.io/log/v2 => ../../log
 	cosmossdk.io/store => ../../store
 	github.com/cosmos/cosmos-sdk => ../../.
-	cosmossdk.io/log/v2 => ../../log
 )

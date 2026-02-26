@@ -280,7 +280,6 @@ require (
 )
 
 replace (
-	cosmossdk.io/store => ../../store
 	cosmossdk.io/log/v2 => ../../log
+	cosmossdk.io/store => ../../store
 )
-

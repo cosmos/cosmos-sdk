@@ -15,7 +15,7 @@ require (
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.54.0-rc.1
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.1.0.20251127205138-44ca1c39b279
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/spf13/cobra v1.10.2
@@ -27,6 +27,8 @@ require (
 	gotest.tools/v3 v3.5.2
 	pgregory.net/rapid v1.2.0
 )
+
+require github.com/cosmos/cosmos-sdk/enterprise/group v0.0.0-00010101000000-000000000000
 
 require (
 	cel.dev/expr v0.25.1 // indirect
@@ -98,7 +100,7 @@ require (
 	github.com/danieljoos/wincred v1.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/davidlazar/go-crypto v0.0.0-20200604182044-b73af7476f6c // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dgraph-io/badger/v4 v4.9.1 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.4.0 // indirect
@@ -332,6 +334,7 @@ require (
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/store => ../store
+	github.com/cosmos/cosmos-sdk/enterprise/group => ../enterprise/group
 )
 
 // Below are the long-lived replace for tests.

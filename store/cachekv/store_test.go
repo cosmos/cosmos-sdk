@@ -476,7 +476,7 @@ func doOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, op int, args ...int
 	case opSetRange:
 		require.True(t, len(args) > 1)
 		start := args[0]
-		end := args[1] //nolint:gosec // this is not out of range
+		end := args[1]
 		setRange(t, st, truth, start, end)
 	case opDel:
 		k := args[0]
@@ -486,7 +486,7 @@ func doOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, op int, args ...int
 	case opDelRange:
 		require.True(t, len(args) > 1)
 		start := args[0]
-		end := args[1] //nolint:gosec // this is not out of range
+		end := args[1]
 		deleteRange(t, st, truth, start, end)
 	case opWrite:
 		st.Write()

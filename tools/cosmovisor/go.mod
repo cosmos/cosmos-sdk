@@ -5,7 +5,7 @@ go 1.25.7
 require (
 	cosmossdk.io/log/v2 v2.0.1
 	github.com/cometbft/cometbft v0.39.0-beta.2.0.20260219154603-da56c5f931bf
-	github.com/cometbft/cometbft-db v0.14.1
+	github.com/cometbft/cometbft-db v0.14.3
 	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/otiai10/copy v1.14.1
@@ -90,7 +90,7 @@ require (
 	github.com/cosmos/ledger-cosmos-go v1.0.0 // indirect
 	github.com/danieljoos/wincred v1.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dgraph-io/badger/v4 v4.6.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.4.0 // indirect

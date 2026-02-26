@@ -73,39 +73,39 @@ linters:
       - std-error-handling
     rules:
       - linters:
-        - staticcheck
-        text: 'ST1000:'
+          - staticcheck
+        text: "ST1000:"
       - linters:
-         - revive
-        text: 'or be unexported' # don't report types that have no comments at all. there are way too many of these.
+          - revive
+        text: "or be unexported" # don't report types that have no comments at all. there are way too many of these.
       - linters:
           - staticcheck
-        text: 'ST1003:'
+        text: "ST1003:"
       - linters:
           - staticcheck
-        text: 'ST1016:'
+        text: "ST1016:"
       - linters:
           - staticcheck
         path: migrations
-        text: 'SA1019:'
+        text: "SA1019:"
       - linters:
           - staticcheck
-        text: 'SA1019: codec.NewAminoCodec is deprecated'
+        text: "SA1019: codec.NewAminoCodec is deprecated"
       - linters:
           - staticcheck
-        text: 'SA1019: legacybech32.MustMarshalPubKey'
+        text: "SA1019: legacybech32.MustMarshalPubKey"
       - linters:
           - staticcheck
-        text: 'SA1019: legacybech32.MarshalPubKey'
+        text: "SA1019: legacybech32.MarshalPubKey"
       - linters:
           - staticcheck
-        text: 'SA1019: legacybech32.UnmarshalPubKey'
+        text: "SA1019: legacybech32.UnmarshalPubKey"
       - linters:
           - staticcheck
-        text: 'SA1019: params.SendEnabled is deprecated'
+        text: "SA1019: params.SendEnabled is deprecated"
       - linters:
           - gosec
-        text: 'G115: integer overflow conversion'
+        text: "G115: integer overflow conversion"
       - linters:
           - nolintlint
         text: leading space
@@ -119,7 +119,7 @@ linters:
       - types/coin_regex.go
       - testutil/testdata
       - x/params
-      - x/crisis
+      - contrib
       - third_party$
       - builtin$
       - examples$
@@ -141,7 +141,6 @@ formatters:
     gofumpt:
       extra-rules: true
   exclusions:
-
     generated: lax
     paths:
       - server/grpc/gogoreflection/fix_registration.go
@@ -153,7 +152,7 @@ formatters:
       - types/coin_regex.go
       - testutil/testdata
       - x/params
-      - x/crisis
+      - contrib
       - third_party$
       - builtin$
       - examples$

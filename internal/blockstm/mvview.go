@@ -2,10 +2,13 @@ package blockstm
 
 import (
 	"io"
+	"time"
 
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/tracekv"
 	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 var (
@@ -63,6 +66,7 @@ func (s *GMVMemoryView[V]) waitFor(txn TxnIndex) {
 }
 
 func (s *GMVMemoryView[V]) ApplyWriteSet(version TxnVersion) Locations {
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVViewApplyWriteSet) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	if s.writeSet == nil || s.writeSet.Len() == 0 {
 		return nil
 	}
@@ -81,10 +85,19 @@ func (s *GMVMemoryView[V]) ReadSet() *ReadSet {
 	return s.readSet
 }
 
+func (s *GMVMemoryView[V]) WriteCount() int {
+	if s.writeSet == nil {
+		return 0
+	}
+	return s.writeSet.Len()
+}
+
 func (s *GMVMemoryView[V]) Get(key []byte) V {
+	start := time.Now()
 	if s.writeSet != nil {
 		if value, found := s.writeSet.OverlayGet(key); found {
 			// value written by this txn
+			telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadWriteSet) //nolint:staticcheck // TODO: switch to OpenTelemetry
 			// zero value means deleted
 			return value
 		}
@@ -93,8 +106,10 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 	for {
 		value, version, estimate := s.mvData.Read(key, s.txn)
 		if estimate {
+			estimateStart := time.Now()
 			// read ESTIMATE mark, wait for the blocking txn to finish
 			s.waitFor(version.Index)
+			telemetry.MeasureSince(estimateStart, TelemetrySubsystem, KeyMVViewEstimateWait) //nolint:staticcheck // TODO: switch to OpenTelemetry
 			continue
 		}
 
@@ -102,8 +117,11 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 		// if not found, record version ⊥ when reading from storage.
 		s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{key, version})
 		if !version.Valid() {
-			return s.storage.Get(key)
+			result := s.storage.Get(key)
+			telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadStorage) //nolint:staticcheck // TODO: switch to OpenTelemetry
+			return result
 		}
+		telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadMVData) //nolint:staticcheck // TODO: switch to OpenTelemetry
 		return value
 	}
 }
@@ -113,6 +131,7 @@ func (s *GMVMemoryView[V]) Has(key []byte) bool {
 }
 
 func (s *GMVMemoryView[V]) Set(key []byte, value V) {
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVViewWrite) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	if s.mvData.isZero(value) {
 		panic("nil value is not allowed")
 	}
@@ -121,6 +140,7 @@ func (s *GMVMemoryView[V]) Set(key []byte, value V) {
 }
 
 func (s *GMVMemoryView[V]) Delete(key []byte) {
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVViewDelete) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	var empty V
 	s.init()
 	s.writeSet.OverlaySet(key, empty)
@@ -135,6 +155,7 @@ func (s *GMVMemoryView[V]) ReverseIterator(start, end []byte) storetypes.GIterat
 }
 
 func (s *GMVMemoryView[V]) iterator(opts IteratorOptions) storetypes.GIterator[V] {
+	iterStart := time.Now()
 	mvIter := s.mvData.Iterator(opts, s.txn, s.waitFor)
 
 	var parentIter, wsIter storetypes.GIterator[V]
@@ -173,6 +194,10 @@ func (s *GMVMemoryView[V]) iterator(opts IteratorOptions) storetypes.GIterator[V
 			Stop:            stopKey,
 			Reads:           reads,
 		})
+
+		// Measure iterator duration and track keys read
+		telemetry.MeasureSince(iterStart, TelemetrySubsystem, KeyMVViewIteratorKeys)             //nolint:staticcheck // TODO: switch to OpenTelemetry
+		telemetry.IncrCounter(float32(len(reads)), TelemetrySubsystem, KeyMVViewIteratorKeysCnt) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	}
 
 	// three-way merge iterator

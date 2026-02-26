@@ -370,7 +370,7 @@ func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt s
 
 // UncheckedSetBalance sets the coin balance for an account by address.
 // Warning: This method does not check invariants around locked balances, does not update supply properly,
-// and does not emit send events! It is only inteded for use as part of a low level library for managing balances.
+// and does not emit send events! It is only intended for use as part of a low level library for managing balances.
 func (k BaseSendKeeper) UncheckedSetBalance(ctx context.Context, addr sdk.AccAddress, balance sdk.Coin) error {
 	if !balance.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, balance.String())

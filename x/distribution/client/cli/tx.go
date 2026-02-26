@@ -43,6 +43,7 @@ func NewTxCmd(valAc, ac address.Codec) *cobra.Command {
 		NewSetWithdrawAddrCmd(ac),
 		NewFundCommunityPoolCmd(ac),
 		NewDepositValidatorRewardsPoolCmd(valAc, ac),
+		NewWithdrawValidatorCommissionCmd(valAc, ac),
 	)
 
 	return distTxCmd
@@ -61,12 +62,7 @@ func newSplitAndApply(
 	// split messages into slices of length chunkSize
 	totalMessages := len(msgs)
 	for i := 0; i < len(msgs); i += chunkSize {
-
-		sliceEnd := i + chunkSize
-		if sliceEnd > totalMessages {
-			sliceEnd = totalMessages
-		}
-
+		sliceEnd := min(i+chunkSize, totalMessages)
 		msgChunk := msgs[i:sliceEnd]
 		if err := genOrBroadcastFn(clientCtx, fs, msgChunk...); err != nil {
 			return err
@@ -307,5 +303,32 @@ func NewDepositValidatorRewardsPoolCmd(valCodec, ac address.Codec) *cobra.Comman
 
 	flags.AddTxFlagsToCmd(cmd)
 
+	return cmd
+}
+
+// NewWithdrawValidatorCommissionCmd returns a CLI command handler for creating a MsgWithdrawValidatorCommission transaction.
+func NewWithdrawValidatorCommissionCmd(valCodec, ac address.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "withdraw-validator-commission [validator-addr]",
+		Short: "Withdraw commissions from a validator address (must be a validator operator)",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			_, err = ac.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+			_, err = valCodec.StringToBytes(args[0])
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), types.NewMsgWithdrawValidatorCommission(args[0]))
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

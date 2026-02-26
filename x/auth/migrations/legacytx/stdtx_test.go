@@ -90,7 +90,6 @@ func TestStdSignBytes(t *testing.T) {
 		FileResolver: proto.HybridResolver,
 	})
 	for i, tc := range tests {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			anyMsgs := make([]*anypb.Any, len(tc.args.msgs))
 			for j, msg := range tc.args.msgs {

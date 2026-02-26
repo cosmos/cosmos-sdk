@@ -131,13 +131,14 @@ func AddGovPropFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagMetadata, "", "The metadata to include with the governance proposal")
 	cmd.Flags().String(FlagTitle, "", "The title to put on the governance proposal")
 	cmd.Flags().String(FlagSummary, "", "The summary to include with the governance proposal")
+	// cmd.Flags().Bool(FlagExpedited, false, "Whether to expedite the governance proposal") // cannot be enabled because of IBC redefining this flag in `upgrade-channels` command.
 }
 
-// ReadGovPropFlags parses a MsgSubmitProposal from the provided context and flags.
+// ReadGovPropCmdFlags parses a MsgSubmitProposal from the provided context and flags.
 // Setting the messages is up to the caller.
 //
 // See also AddGovPropFlagsToCmd.
-func ReadGovPropFlags(clientCtx client.Context, flagSet *pflag.FlagSet) (*govv1.MsgSubmitProposal, error) {
+func ReadGovPropCmdFlags(proposer string, flagSet *pflag.FlagSet) (*govv1.MsgSubmitProposal, error) {
 	rv := &govv1.MsgSubmitProposal{}
 
 	deposit, err := flagSet.GetString(FlagDeposit)
@@ -166,7 +167,22 @@ func ReadGovPropFlags(clientCtx client.Context, flagSet *pflag.FlagSet) (*govv1.
 		return nil, fmt.Errorf("could not read summary: %w", err)
 	}
 
-	rv.Proposer = clientCtx.GetFromAddress().String()
+	// rv.Expedited, err = flagSet.GetBool(FlagExpedited)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("could not read expedited: %w", err)
+	// }
+
+	rv.Proposer = proposer
 
 	return rv, nil
+}
+
+// ReadGovPropFlags parses a MsgSubmitProposal from the provided context and flags.
+// Setting the messages is up to the caller.
+//
+// See also AddGovPropFlagsToCmd.
+//
+// Deprecated: use ReadPropCmdFlags instead, as this depends on global bech32 prefixes.
+func ReadGovPropFlags(clientCtx client.Context, flagSet *pflag.FlagSet) (*govv1.MsgSubmitProposal, error) {
+	return ReadGovPropCmdFlags(clientCtx.GetFromAddress().String(), flagSet)
 }

@@ -41,6 +41,17 @@ func TestFactoryPrepare(t *testing.T) {
 	require.NotEqual(t, output, factory)
 	require.Equal(t, output.AccountNumber(), uint64(10))
 	require.Equal(t, output.Sequence(), uint64(1))
+
+	// sequence and unordered set should break the tx.
+	factory = Factory{}.WithAccountRetriever(client.MockAccountRetriever{ReturnAccNum: 10, ReturnAccSeq: 15}).WithUnordered(true).WithSequence(15)
+	_, err = factory.Prepare(clientCtx.WithFrom("foo"))
+	require.ErrorContains(t, err, "unordered transactions must not have sequence values set")
+
+	// unordered set should ignore the retrieved sequence value.
+	factory = Factory{}.WithAccountRetriever(client.MockAccountRetriever{ReturnAccNum: 10, ReturnAccSeq: 15}).WithUnordered(true)
+	output, err = factory.Prepare(clientCtx.WithFrom("foo"))
+	require.NoError(t, err)
+	require.Zero(t, output.Sequence())
 }
 
 func TestFactory_getSimPKType(t *testing.T) {

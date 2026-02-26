@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/rand" // #nosec // math/rand is used for random selection and seeded from crypto/rand
+	"slices"
 	"sync"
 
 	"github.com/huandu/skiplist"
@@ -137,7 +138,10 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 
 	sig := sigs[0]
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
-	nonce := sig.Sequence
+	nonce, err := ChooseNonce(sig.Sequence, tx)
+	if err != nil {
+		return err
+	}
 
 	senderTxs, found := snm.senders[sender]
 	if !found {
@@ -225,7 +229,10 @@ func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
 
 	sig := sigs[0]
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
-	nonce := sig.Sequence
+	nonce, err := ChooseNonce(sig.Sequence, tx)
+	if err != nil {
+		return err
+	}
 
 	senderTxs, found := snm.senders[sender]
 	if !found {
@@ -288,5 +295,5 @@ func (i *senderNonceMempoolIterator) Tx() sdk.Tx {
 }
 
 func removeAtIndex[T any](slice []T, index int) []T {
-	return append(slice[:index], slice[index+1:]...)
+	return slices.Delete(slice, index, index+1)
 }

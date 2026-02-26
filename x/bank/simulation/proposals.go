@@ -11,13 +11,14 @@ import (
 )
 
 // Simulation operation weights constants
+// will be removed in the future
 const (
 	DefaultWeightMsgUpdateParams int = 100
-
-	OpWeightMsgUpdateParams = "op_weight_msg_update_params"
+	OpWeightMsgUpdateParams          = "op_weight_msg_update_params"
 )
 
 // ProposalMsgs defines the module weighted proposals' contents
+// migrate to the msg factories instead, this method will be removed in the future
 func ProposalMsgs() []simtypes.WeightedProposalMsg {
 	return []simtypes.WeightedProposalMsg{
 		simulation.NewWeightedProposalMsg(
@@ -29,6 +30,7 @@ func ProposalMsgs() []simtypes.WeightedProposalMsg {
 }
 
 // SimulateMsgUpdateParams returns a random MsgUpdateParams
+// will be removed in the future
 func SimulateMsgUpdateParams(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
 	// use the default gov module account address as authority
 	var authority sdk.AccAddress = address.Module("gov")

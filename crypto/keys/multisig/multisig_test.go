@@ -134,7 +134,7 @@ func TestVerifyMultisignature(t *testing.T) {
 				sig = multisig.NewMultisig(len(pubKeys))
 				signBytesFn := func(mode signing.SignMode) ([]byte, error) { return msg, nil }
 
-				for i := 0; i < k-1; i++ {
+				for i := range k - 1 {
 					signingIndex := signingIndices[i]
 					require.NoError(
 						multisig.AddSignatureFromPubKey(sig, sigs[signingIndex], pubKeys[signingIndex], pubKeys),
@@ -298,7 +298,7 @@ func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 
 func generatePubKeys(n int) []cryptotypes.PubKey {
 	pks := make([]cryptotypes.PubKey, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		pks[i] = secp256k1.GenPrivKey().PubKey()
 	}
 	return pks
@@ -308,24 +308,24 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []cryptotypes.PubK
 	pubKeys = make([]cryptotypes.PubKey, n)
 	signatures = make([]signing.SignatureData, n)
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		privkey := secp256k1.GenPrivKey()
 		pubKeys[i] = privkey.PubKey()
 
 		sig, _ := privkey.Sign(msg)
 		signatures[i] = &signing.SingleSignatureData{Signature: sig}
 	}
-	return
+	return pubKeys, signatures
 }
 
 func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.MultiSignatureData) {
 	pubKeys := make([]cryptotypes.PubKey, n)
 	signatures := make([]signing.SignatureData, n)
 	bitArray := cryptotypes.NewCompactBitArray(n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		nestedPks, nestedSigs := generatePubKeysAndSignatures(5, msg)
 		nestedBitArray := cryptotypes.NewCompactBitArray(5)
-		for j := 0; j < 5; j++ {
+		for j := range 5 {
 			nestedBitArray.SetIndex(j, true)
 		}
 		nestedSig := &signing.MultiSignatureData{
@@ -348,7 +348,7 @@ func reorderPubKey(pk *kmultisig.LegacyAminoPubKey) (other *kmultisig.LegacyAmin
 	pubkeysCpy[0] = pk.PubKeys[1]
 	pubkeysCpy[1] = pk.PubKeys[0]
 	other = &kmultisig.LegacyAminoPubKey{Threshold: 2, PubKeys: pubkeysCpy}
-	return
+	return other
 }
 
 func TestDisplay(t *testing.T) {

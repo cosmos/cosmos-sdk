@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	db "github.com/cosmos/cosmos-db"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/mock"
@@ -75,7 +75,6 @@ func TestStrategies(t *testing.T) {
 	}
 
 	for name, tc := range testcases {
-		tc := tc // Local copy to avoid shadowing.
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

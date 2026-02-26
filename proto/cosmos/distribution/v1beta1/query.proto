@@ -67,6 +67,8 @@ service Query {
   }
 
   // CommunityPool queries the community pool coins.
+  //
+  // WARNING: This query will fail if an external community pool is used.
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/community_pool";
   }

@@ -136,7 +136,7 @@ func TestDeposits(t *testing.T) {
 			deposit, err = govKeeper.Deposits.Get(ctx, collections.Join(proposalID, TestAddrs[1]))
 			require.Nil(t, err)
 			require.Equal(t, fourStake, sdk.NewCoins(deposit.Amount...))
-			govKeeper.RefundAndDeleteDeposits(ctx, proposalID)
+			require.NoError(t, govKeeper.RefundAndDeleteDeposits(ctx, proposalID))
 			deposit, err = govKeeper.Deposits.Get(ctx, collections.Join(proposalID, TestAddrs[1]))
 			require.ErrorIs(t, err, collections.ErrNotFound)
 			require.Equal(t, addr0Initial, bankKeeper.GetAllBalances(ctx, TestAddrs[0]))
@@ -148,7 +148,7 @@ func TestDeposits(t *testing.T) {
 			proposalID = proposal.Id
 			_, err = govKeeper.AddDeposit(ctx, proposalID, TestAddrs[0], fourStake)
 			require.NoError(t, err)
-			govKeeper.DeleteAndBurnDeposits(ctx, proposalID)
+			require.NoError(t, govKeeper.DeleteAndBurnDeposits(ctx, proposalID))
 			deposits, _ = govKeeper.GetDeposits(ctx, proposalID)
 			require.Len(t, deposits, 0)
 			require.Equal(t, addr0Initial.Sub(fourStake...), bankKeeper.GetAllBalances(ctx, TestAddrs[0]))
@@ -334,7 +334,7 @@ func TestValidateInitialDeposit(t *testing.T) {
 			}
 			params.MinInitialDepositRatio = sdkmath.LegacyNewDec(tc.minInitialDepositPercent).Quo(sdkmath.LegacyNewDec(100)).String()
 
-			govKeeper.Params.Set(ctx, params)
+			require.NoError(t, govKeeper.Params.Set(ctx, params))
 
 			err := govKeeper.ValidateInitialDeposit(ctx, tc.initialDeposit, tc.expedited)
 
@@ -375,11 +375,12 @@ func TestChargeDeposit(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			testName := func(i int) string {
-				if i == 0 {
+				switch i {
+				case 0:
 					return fmt.Sprintf("%s and dest address is %s", tc.name, "nil")
-				} else if i == 1 {
+				case 1:
 					return fmt.Sprintf("%s and dest address is normal address", tc.name)
 				}
 				return fmt.Sprintf("%s and dest address is community address", tc.name)

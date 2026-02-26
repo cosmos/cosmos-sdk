@@ -86,7 +86,7 @@ func (s *TestSuite) TestBatchMint() {
 			func(tokens []nft.NFT) {
 				s.saveClass(tokens)
 				idx := rand.Intn(len(tokens))
-				s.nftKeeper.Mint(s.ctx, tokens[idx], receiver)
+				s.Require().NoError(s.nftKeeper.Mint(s.ctx, tokens[idx], receiver))
 			},
 			[]nft.NFT{
 				{ClassId: "classID1", Id: "nftID1"},
@@ -156,7 +156,7 @@ func (s *TestSuite) TestBatchBurn() {
 			"success",
 			func() {
 				s.saveClass(tokens)
-				s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
+				s.Require().NoError(s.nftKeeper.BatchMint(s.ctx, tokens, receiver))
 			},
 			"classID1",
 			[]string{"nftID1", "nftID2"},
@@ -216,7 +216,7 @@ func (s *TestSuite) TestBatchUpdate() {
 			"success",
 			func() {
 				s.saveClass(tokens)
-				s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
+				s.Require().NoError(s.nftKeeper.BatchMint(s.ctx, tokens, receiver))
 			},
 			[]nft.NFT{
 				{ClassId: "classID1", Id: "nftID1", Uri: "nftID1_URI"},
@@ -286,7 +286,7 @@ func (s *TestSuite) TestBatchTransfer() {
 			"success",
 			func() {
 				s.saveClass(tokens)
-				s.nftKeeper.BatchMint(s.ctx, tokens, owner)
+				s.Require().NoError(s.nftKeeper.BatchMint(s.ctx, tokens, owner))
 			},
 			"classID1",
 			[]string{"nftID1", "nftID2"},
@@ -296,7 +296,7 @@ func (s *TestSuite) TestBatchTransfer() {
 			"failed with not exist classID",
 			func() {
 				s.saveClass(tokens)
-				s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
+				s.Require().NoError(s.nftKeeper.BatchMint(s.ctx, tokens, receiver))
 			},
 			"classID3",
 			[]string{"nftID1", "nftID2"},

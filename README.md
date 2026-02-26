@@ -14,12 +14,6 @@
   <a href="https://goreportcard.com/report/github.com/cosmos/cosmos-sdk">
     <img alt="Go report card" src="https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk" />
   </a>
-  <a href="https://sonarcloud.io/summary/overall?id=cosmos_cosmos-sdk">
-    <img alt="Code Coverage" src="https://sonarcloud.io/api/project_badges/measure?project=cosmos_cosmos-sdk&metric=coverage" />
-  </a>
-  <a href="https://sonarcloud.io/summary/overall?id=cosmos_cosmos-sdk">
-    <img alt="SonarCloud Analysis" src="https://sonarcloud.io/api/project_badges/measure?project=cosmos_cosmos-sdk&metric=alert_status">
-  </a>
 </div>
 <div align="center">
   <a href="https://discord.gg/AzefAFd">
@@ -40,11 +34,16 @@ The Cosmos SDK is a framework for building blockchain applications. [CometBFT (B
 
 ## Quick Start
 
-To learn how the Cosmos SDK works from a high-level perspective, see the Cosmos SDK [High-Level Intro](https://docs.cosmos.network/main/intro/overview.html).
+To learn how the Cosmos SDK works from a high-level perspective, see the Cosmos SDK [High-Level Intro](https://docs.cosmos.network/main/intro/overview).
 
 If you want to get started quickly and learn how to build on top of Cosmos SDK, visit [Cosmos SDK Tutorials](https://tutorials.cosmos.network). You can also fork the tutorial's repository to get started building your own Cosmos SDK application.
 
 For more information, see the [Cosmos SDK Documentation](https://docs.cosmos.network).
+
+## Modules
+
+The Cosmos SDK maintains a set of modules that can be included in your blockchain application.  For more information
+on modules, see our [introduction doc](./x/README.md).
 
 ## Contributing
 

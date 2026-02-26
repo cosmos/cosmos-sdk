@@ -1,0 +1,105 @@
+modules:
+  - name: runtime
+    config:
+      "@type": cosmos.app.runtime.v1alpha1.Module
+      app_name: SimApp
+      # NOTE: upgrade module is required to be prioritized
+      pre_blockers: [ upgrade, auth ]
+      # During begin block slashing happens after distr.BeginBlocker so that
+      # there is nothing left over in the validator fee pool, so as to keep the
+      # CanWithdrawInvariant invariant.
+      # NOTE: staking module is required if HistoricalEntries param > 0
+      begin_blockers: [ mint, distribution, protocolpool, slashing, evidence, staking, authz, epochs ]
+      end_blockers: [ gov, staking, feegrant, group, protocolpool ]
+      override_store_keys:
+        - module_name: auth
+          kv_store_key: acc
+      skip_store_keys: [ tx ]
+      # NOTE: The genutils module must occur after staking so that pools are
+      # properly initialized with tokens from genesis accounts.
+      # NOTE: The genutils module must also occur after auth so that it can access the params from auth.
+      init_genesis: [ auth, bank, distribution, staking, slashing, gov, mint, genutil, evidence, authz, feegrant, nft, group, upgrade, vesting, circuit, epochs, protocolpool ]
+      export_genesis: [ consensus, auth, protocolpool, bank, distribution, staking, slashing, gov, mint, genutil, evidence, authz, feegrant, nft, group, upgrade, vesting, circuit, epochs ]
+      # Uncomment if you want to set a custom migration order here.
+      # order_migrations: []
+  - name: auth
+    config:
+      "@type": cosmos.auth.module.v1.Module
+      bech32_prefix: cosmos
+      module_account_permissions:
+        - account: fee_collector
+        - account: distribution
+        - account: mint
+          permissions: [ minter ]
+        - account: bonded_tokens_pool
+          permissions: [ burner, staking ]
+        - account: not_bonded_tokens_pool
+          permissions: [ burner, staking ]
+        - account: gov
+          permissions: [ burner ]
+        - account: nft
+        - account: protocolpool
+        - account: protocolpool_escrow
+  - name: vesting
+    config:
+      "@type": cosmos.vesting.module.v1.Module
+  - name: bank
+    config:
+      "@type": cosmos.bank.module.v1.Module
+      blocked_module_accounts_override: [ fee_collector, distribution, mint, bonded_tokens_pool, not_bonded_tokens_pool, nft ]
+  - name: staking
+    config:
+      "@type": cosmos.staking.module.v1.Module
+      bech32_prefix_validator: cosmosvaloper
+      bech32_prefix_consensus: cosmosvalcons
+  - name: slashing
+    config:
+      "@type": cosmos.slashing.module.v1.Module
+  - name: tx
+    config:
+      "@type": cosmos.tx.config.v1.Config
+      skip_ante_handler: true
+  - name: genutil
+    config:
+      "@type": cosmos.genutil.module.v1.Module
+  - name: authz
+    config:
+      "@type": cosmos.authz.module.v1.Module
+  - name: upgrade
+    config:
+      "@type": cosmos.upgrade.module.v1.Module
+  - name: distribution
+    config:
+      "@type": cosmos.distribution.module.v1.Module
+  - name: evidence
+    config:
+      "@type": cosmos.evidence.module.v1.Module
+  - name: mint
+    config:
+      "@type": cosmos.mint.module.v1.Module
+  - name: group
+    config:
+      "@type": cosmos.group.module.v1.Module
+      max_execution_period: 1209600s
+      max_metadata_len: 255
+  - name: nft
+    config:
+      "@type": cosmos.nft.module.v1.Module
+  - name: feegrant
+    config:
+      "@type": cosmos.feegrant.module.v1.Module
+  - name: gov
+    config:
+      "@type": cosmos.gov.module.v1.Module
+  - name: consensus
+    config:
+      "@type": cosmos.consensus.module.v1.Module
+  - name: circuit
+    config:
+      "@type": cosmos.circuit.module.v1.Module
+  - name: epochs
+    config:
+      "@type": cosmos.epochs.module.v1.Module
+  - name: protocolpool
+    config:
+      "@type": cosmos.protocolpool.module.v1.Module

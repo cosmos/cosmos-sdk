@@ -20,6 +20,8 @@ import (
 )
 
 func cleanupKeys(t *testing.T, kb keyring.Keyring, keys ...string) func() {
+	t.Helper()
+
 	return func() {
 		for _, k := range keys {
 			if err := kb.Delete(k); err != nil {
@@ -59,7 +61,6 @@ func Test_runListCmd(t *testing.T) {
 		{"keybase: w/key", kbHome2, false},
 	}
 	for _, tt := range testData {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			cmd.SetArgs([]string{
 				fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, tt.kbDir),

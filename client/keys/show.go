@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/mdp/qrterminal/v3"
 	"github.com/spf13/cobra"
 
 	errorsmod "cosmossdk.io/errors"
@@ -29,6 +30,7 @@ const (
 	FlagDevice = "device"
 
 	flagMultiSigThreshold = "multisig-threshold"
+	flagQRCode            = "qrcode"
 )
 
 // ShowKeysCmd shows key information for a given key name.
@@ -48,6 +50,7 @@ consisting of all the keys provided by name and multisig threshold.`,
 	f.BoolP(FlagPublicKey, "p", false, "Output the public key only (cannot be used with --output)")
 	f.BoolP(FlagDevice, "d", false, "Output the address in a ledger device (cannot be used with --pubkey)")
 	f.Int(flagMultiSigThreshold, 1, "K out of N required signatures")
+	f.Bool(flagQRCode, false, "Display key address QR code (will be ignored if -a or --address is false)")
 
 	return cmd
 }
@@ -63,15 +66,24 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	if len(args) == 1 {
 		k, err = fetchKey(clientCtx.Keyring, args[0])
 		if err != nil {
-			return fmt.Errorf("%s is not a valid name or address: %v", args[0], err)
+			return fmt.Errorf("%s is not a valid name or address: %w", args[0], err)
 		}
 	} else {
 		pks := make([]cryptotypes.PubKey, len(args))
-		for i, keyref := range args {
-			k, err := fetchKey(clientCtx.Keyring, keyref)
-			if err != nil {
-				return fmt.Errorf("%s is not a valid name or address: %v", keyref, err)
+		seenKeys := make(map[string]struct{})
+		for i, keyRef := range args {
+			if _, ok := seenKeys[keyRef]; ok {
+				// we just show warning message instead of return error in case someone relies on this behavior.
+				cmd.PrintErrf("WARNING: duplicate keys found: %s.\n\n", keyRef)
+			} else {
+				seenKeys[keyRef] = struct{}{}
 			}
+
+			k, err := fetchKey(clientCtx.Keyring, keyRef)
+			if err != nil {
+				return fmt.Errorf("%s is not a valid name or address: %w", keyRef, err)
+			}
+
 			key, err := k.GetPubKey()
 			if err != nil {
 				return err
@@ -95,6 +107,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	isShowAddr, _ := cmd.Flags().GetBool(FlagAddress)
 	isShowPubKey, _ := cmd.Flags().GetBool(FlagPublicKey)
 	isShowDevice, _ := cmd.Flags().GetBool(FlagDevice)
+	isShowQRCode, _ := cmd.Flags().GetBool(flagQRCode)
 
 	isOutputSet := false
 	tmp := cmd.Flag(flags.FlagOutput)
@@ -129,6 +142,8 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		out := ko.Address
 		if isShowPubKey {
 			out = ko.PubKey
+		} else if isShowQRCode {
+			qrterminal.GenerateHalfBlock(out, qrterminal.H, cmd.OutOrStdout())
 		}
 
 		if _, err := fmt.Fprintln(cmd.OutOrStdout(), out); err != nil {

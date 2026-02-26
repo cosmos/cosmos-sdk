@@ -39,6 +39,6 @@ type genesisWriter struct {
 }
 
 func (r genesisWriter) Close() error {
-	r.sink.m[r.field] = r.Buffer.Bytes()
+	r.sink.m[r.field] = r.Bytes()
 	return nil
 }

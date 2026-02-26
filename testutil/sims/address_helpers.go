@@ -101,7 +101,7 @@ func CreateIncrementalAccounts(accNum int) []sdk.AccAddress {
 // CreateRandomAccounts is a strategy used by addTestAddrs() in order to generated addresses in random order.
 func CreateRandomAccounts(accNum int) []sdk.AccAddress {
 	testAddrs := make([]sdk.AccAddress, accNum)
-	for i := 0; i < accNum; i++ {
+	for i := range accNum {
 		pk := ed25519.GenPrivKey().PubKey()
 		testAddrs[i] = sdk.AccAddress(pk.Address())
 	}

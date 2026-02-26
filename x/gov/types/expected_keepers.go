@@ -12,8 +12,8 @@ import (
 
 // ParamSubspace defines the expected Subspace interface for parameters (noalias)
 type ParamSubspace interface {
-	Get(ctx sdk.Context, key []byte, ptr interface{})
-	Set(ctx sdk.Context, key []byte, param interface{})
+	Get(ctx sdk.Context, key []byte, ptr any)
+	Set(ctx sdk.Context, key []byte, param any)
 }
 
 // StakingKeeper expected staking keeper (Validator and Delegator sets) (noalias)

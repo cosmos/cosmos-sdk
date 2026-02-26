@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -1086,7 +1087,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[1].priv}, []uint64{accs[1].acc.GetAccountNumber()}, []uint64{accs[1].acc.GetSequence()}
 				msgs := []sdk.Msg{testdata.NewTestMsg(accs[1].acc.GetAddress())}
-				suite.txBuilder.SetMsgs(msgs...)
+				require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
 				suite.txBuilder.SetFeeAmount(feeAmount)
 				suite.txBuilder.SetGasLimit(gasLimit)
 
@@ -1132,7 +1133,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[1].priv}, []uint64{accs[1].acc.GetAccountNumber()}, []uint64{accs[1].acc.GetSequence()}
 				msgs := []sdk.Msg{testdata.NewTestMsg(accs[1].acc.GetAddress())}
-				suite.txBuilder.SetMsgs(msgs...)
+				require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
 				suite.txBuilder.SetFeeAmount(feeAmount)
 				suite.txBuilder.SetGasLimit(gasLimit)
 
@@ -1194,7 +1195,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptotypes.PubKey, signatures [][]byte) {
 	pubkeys = make([]cryptotypes.PubKey, n)
 	signatures = make([][]byte, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		var privkey cryptotypes.PrivKey = secp256k1.GenPrivKey()
 
 		// TODO: also generate ed25519 keys as below when ed25519 keys are
@@ -1209,7 +1210,7 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptoty
 		pubkeys[i] = privkey.PubKey()
 		signatures[i], _ = privkey.Sign(msg)
 	}
-	return
+	return pubkeys, signatures
 }
 
 func expectedGasCostByKeys(pubkeys []cryptotypes.PubKey) uint64 {
@@ -1231,7 +1232,7 @@ func expectedGasCostByKeys(pubkeys []cryptotypes.PubKey) uint64 {
 func TestCountSubkeys(t *testing.T) {
 	genPubKeys := func(n int) []cryptotypes.PubKey {
 		var ret []cryptotypes.PubKey
-		for i := 0; i < n; i++ {
+		for range n {
 			ret = append(ret, secp256k1.GenPrivKey().PubKey())
 		}
 		return ret
@@ -1273,7 +1274,7 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 					addrs []sdk.AccAddress
 					privs []cryptotypes.PrivKey
 				)
-				for i := 0; i < 8; i++ {
+				for i := range 8 {
 					addrs = append(addrs, accs[i].acc.GetAddress())
 					privs = append(privs, accs[i].priv)
 				}
@@ -1446,4 +1447,35 @@ func TestAnteHandlerReCheck(t *testing.T) {
 
 	_, err = suite.anteHandler(suite.ctx, tx, false)
 	require.NotNil(t, err, "antehandler on recheck did not fail once feePayer no longer has sufficient funds")
+}
+
+func TestAnteHandlerUnorderedTx(t *testing.T) {
+	suite := SetupTestSuiteWithUnordered(t, false, true)
+	accs := suite.CreateTestAccounts(1)
+	msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
+
+	// First send a normal sequential tx with sequence 0
+	suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), authtypes.FeeCollectorName, testdata.NewTestFeeAmount()).Return(nil).AnyTimes()
+
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{1000}, []uint64{0}
+	_, err := suite.DeliverMsgs(t, privs, []sdk.Msg{msg}, testdata.NewTestFeeAmount(), testdata.NewTestGasLimit(), accNums, accSeqs, suite.ctx.ChainID(), false)
+	require.NoError(t, err)
+
+	// we try to send another tx with the same sequence, it will fail
+	_, err = suite.DeliverMsgs(t, privs, []sdk.Msg{msg}, testdata.NewTestFeeAmount(), testdata.NewTestGasLimit(), accNums, accSeqs, suite.ctx.ChainID(), false)
+	require.Error(t, err)
+
+	// now we'll still use the same sequence but because it's unordered, it will be ignored and accepted anyway
+	msgs := []sdk.Msg{msg}
+	require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
+	suite.txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
+	suite.txBuilder.SetGasLimit(testdata.NewTestGasLimit())
+
+	tx, txErr := suite.CreateTestUnorderedTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT, true, time.Now().Add(time.Minute))
+	require.NoError(t, txErr)
+	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
+	bytesCtx := suite.ctx.WithTxBytes(txBytes)
+	require.NoError(t, err)
+	_, err = suite.anteHandler(bytesCtx, tx, false)
+	require.NoError(t, err)
 }

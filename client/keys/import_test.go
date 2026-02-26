@@ -82,10 +82,10 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 			// Now add a temporary keybase
 			kbHome := filepath.Join(t.TempDir(), fmt.Sprintf("kbhome-%s", tc.name))
 			// Create dir, otherwise os.WriteFile will fail
-			if _, err := os.Stat(kbHome); os.IsNotExist(err) {
-				err = os.MkdirAll(kbHome, 0o700)
-				require.NoError(t, err)
-			}
+			require.NoError(t, os.MkdirAll(kbHome, 0o700))
+			t.Cleanup(func() {
+				require.NoError(t, os.RemoveAll(kbHome))
+			})
 			kb, err := keyring.New(sdk.KeyringServiceName(), tc.keyringBackend, kbHome, nil, cdc)
 			require.NoError(t, err)
 
@@ -127,12 +127,20 @@ func Test_runImportHexCmd(t *testing.T) {
 		name           string
 		keyringBackend string
 		hexKey         string
+		stdInput       bool
 		keyType        string
 		expectError    bool
 	}{
 		{
 			name:           "test backend success",
 			keyringBackend: keyring.BackendTest,
+			hexKey:         "0xa3e57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
+			keyType:        "secp256k1",
+		},
+		{
+			name:           "read the hex key from standard input",
+			keyringBackend: keyring.BackendTest,
+			stdInput:       true,
 			hexKey:         "0xa3e57952e835ed30eea86a2993ac2a61c03e74f2085b3635bd94aa4d7ae0cfdf",
 			keyType:        "secp256k1",
 		},
@@ -146,6 +154,10 @@ func Test_runImportHexCmd(t *testing.T) {
 
 			// Now add a temporary keybase
 			kbHome := filepath.Join(t.TempDir(), fmt.Sprintf("kbhome-%s", tc.name))
+			t.Cleanup(func() {
+				require.NoError(t, os.RemoveAll(kbHome))
+			})
+
 			kb, err := keyring.New(sdk.KeyringServiceName(), tc.keyringBackend, kbHome, nil, cdc)
 			require.NoError(t, err)
 
@@ -156,17 +168,17 @@ func Test_runImportHexCmd(t *testing.T) {
 				WithCodec(cdc)
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
-			t.Cleanup(cleanupKeys(t, kb, "keyname1"))
-
-			defer func() {
-				_ = os.RemoveAll(kbHome)
-			}()
-
-			cmd.SetArgs([]string{
-				"keyname1", tc.hexKey,
+			args := []string{"keyname1"}
+			if tc.stdInput {
+				mockIn.Reset(tc.hexKey)
+			} else {
+				args = append(args, tc.hexKey)
+			}
+			cmd.SetArgs(append(
+				args,
 				fmt.Sprintf("--%s=%s", flags.FlagKeyType, tc.keyType),
 				fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, tc.keyringBackend),
-			})
+			))
 
 			err = cmd.ExecuteContext(ctx)
 			if tc.expectError {
@@ -176,4 +188,38 @@ func Test_runImportHexCmd(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_runImportCmdWithEmptyName(t *testing.T) {
+	cmd := ImportKeyCommand()
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+	// Now add a temporary keybase
+	kbHome := t.TempDir()
+	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
+	require.NoError(t, err)
+
+	clientCtx := client.Context{}.
+		WithKeyringDir(kbHome).
+		WithKeyring(kb).
+		WithInput(mockIn).
+		WithCodec(cdc)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+	cmd.SetArgs([]string{
+		"", "fake-file",
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+
+	require.ErrorContains(t, cmd.ExecuteContext(ctx), "the provided name is invalid or empty after trimming whitespace")
+
+	cmd = ImportKeyHexCommand()
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	testutil.ApplyMockIODiscardOutErr(cmd)
+	cmd.SetArgs([]string{
+		"", "fake-hex",
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+
+	require.ErrorContains(t, cmd.ExecuteContext(ctx), "the provided name is invalid or empty after trimming whitespace")
 }

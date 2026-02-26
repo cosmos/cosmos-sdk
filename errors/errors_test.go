@@ -118,6 +118,8 @@ func (s *errorsTestSuite) TestIsOf() {
 	err := ErrInvalidAddress
 	errW := Wrap(ErrLogic, "more info")
 
+	require.False(IsOf(nil), "nil should always have no causer")
+	require.False(IsOf(nil, err), "nil should always have no causer")
 	require.False(IsOf(errNil), "nil error should always have no causer")
 	require.False(IsOf(errNil, err), "nil error should always have no causer")
 

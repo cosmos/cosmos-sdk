@@ -22,6 +22,7 @@ type signModeLegacyAminoJSONHandler struct{}
 
 // NewSignModeLegacyAminoJSONHandler returns a new signModeLegacyAminoJSONHandler.
 // Note: The public constructor is only used for testing.
+//
 // Deprecated: Please use x/tx/signing/aminojson instead.
 func NewSignModeLegacyAminoJSONHandler() signing.SignModeHandler {
 	return signModeLegacyAminoJSONHandler{}

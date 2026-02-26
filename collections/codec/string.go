@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-func NewStringKeyCodec[T ~string]() KeyCodec[T] { return stringKey[T]{} }
+func NewStringKeyCodec[T ~string]() NameableKeyCodec[T] { return stringKey[T]{} }
 
 const (
 	// StringDelimiter defines the delimiter of a string key when used in non-terminal encodings.
@@ -65,4 +65,8 @@ func (stringKey[T]) Stringify(key T) string {
 
 func (stringKey[T]) KeyType() string {
 	return "string"
+}
+
+func (s stringKey[T]) WithName(name string) KeyCodec[T] {
+	return NamedKeyCodec[T]{KeyCodec: s, Name: name}
 }

@@ -60,8 +60,6 @@ account key. It implies --signature-only.
 
 	flags.AddTxFlagsToCmd(cmd)
 
-	cmd.MarkFlagRequired(flags.FlagFrom)
-
 	return cmd
 }
 
@@ -147,7 +145,10 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				msgs = append(msgs, unsignedStdTx.GetMsgs()...)
 			}
 			// set the new appened msgs into builder
-			txBuilder.SetMsgs(msgs...)
+			err := txBuilder.SetMsgs(msgs...)
+			if err != nil {
+				return err
+			}
 
 			// set the memo,fees,feeGranter,feePayer from cmd flags
 			txBuilder.SetMemo(txFactory.Memo())
@@ -268,7 +269,7 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 		txFactory,
 		clientCtx,
 		multisigAddr,
-		clientCtx.GetFromName(),
+		clientCtx.FromName,
 		txBuilder,
 		clientCtx.Offline,
 		true,
@@ -319,7 +320,7 @@ func setOutputFile(cmd *cobra.Command) (func(), error) {
 
 	cmd.SetOut(fp)
 
-	return func() { fp.Close() }, nil
+	return func() { _ = fp.Close() }, nil
 }
 
 // GetSignCommand returns the transaction sign command.
@@ -352,8 +353,6 @@ be generated via the 'multisign' command.
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	flags.AddTxFlagsToCmd(cmd)
 
-	cmd.MarkFlagRequired(flags.FlagFrom)
-
 	return cmd
 }
 
@@ -361,8 +360,8 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 	// Conditionally mark the account and sequence numbers required as no RPC
 	// query will be done.
 	if offline, _ := cmd.Flags().GetBool(flags.FlagOffline); offline {
-		cmd.MarkFlagRequired(flags.FlagAccountNumber)
-		cmd.MarkFlagRequired(flags.FlagSequence)
+		_ = cmd.MarkFlagRequired(flags.FlagAccountNumber)
+		_ = cmd.MarkFlagRequired(flags.FlagSequence)
 	}
 }
 
@@ -456,7 +455,7 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx 
 		}
 		printSignatureOnly = true
 	} else {
-		err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, overwrite)
+		err = authclient.SignTx(txF, clientCtx, clientCtx.FromName, txBuilder, clientCtx.Offline, overwrite)
 	}
 	if err != nil {
 		return err

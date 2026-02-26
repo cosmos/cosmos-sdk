@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -102,7 +102,6 @@ func (suite *HandlerTestSuite) TestProposalHandler() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			err := suite.govHandler(suite.ctx, tc.proposal)
 			if tc.expErr {

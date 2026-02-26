@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	fmt "fmt"
 	strings "strings"
+	"time"
 
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
@@ -71,12 +72,30 @@ type (
 		GetMemo() string
 	}
 
+	// TxWithTimeoutTimeStamp extends the Tx interface by allowing a transaction to
+	// set a timeout timestamp.
+	TxWithTimeoutTimeStamp interface {
+		Tx
+
+		// GetTimeoutTimeStamp gets the timeout timestamp for the tx.
+		// IMPORTANT: when the uint value is needed here, you MUST use UnixNano.
+		GetTimeoutTimeStamp() time.Time
+	}
+
 	// TxWithTimeoutHeight extends the Tx interface by allowing a transaction to
 	// set a height timeout.
 	TxWithTimeoutHeight interface {
 		Tx
 
 		GetTimeoutHeight() uint64
+	}
+
+	// TxWithUnordered extends the Tx interface by allowing a transaction to set
+	// the unordered field, which implicitly relies on TxWithTimeoutTimeStamp.
+	TxWithUnordered interface {
+		TxWithTimeoutTimeStamp
+
+		GetUnordered() bool
 	}
 
 	// HasValidateBasic defines a type that has a ValidateBasic method.

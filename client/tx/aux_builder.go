@@ -2,9 +2,11 @@ package tx
 
 import (
 	"context"
+	"time"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -56,6 +58,18 @@ func (b *AuxTxBuilder) SetTimeoutHeight(height uint64) {
 
 	b.body.TimeoutHeight = height
 	b.auxSignerData.SignDoc.BodyBytes = nil
+}
+
+// SetTimeoutTimestamp sets a timeout timestamp in the tx.
+func (b *AuxTxBuilder) SetTimeoutTimestamp(timestamp time.Time) {
+	// Only set TimeoutTimestamp if we have a non-zero time.Time.
+	// Setting timestamppb.New() with a zero/default value time.Time results in a non-zero timestamppb.Timestamp,
+	// which causes the value to show up in the signature - breaking <v0.53.x compatibility.
+	if !timestamp.IsZero() && timestamp.Unix() > 0 {
+		b.checkEmptyFields()
+		b.body.TimeoutTimestamp = timestamppb.New(timestamp)
+		b.auxSignerData.SignDoc.BodyBytes = nil
+	}
 }
 
 // SetMsgs sets an array of Msgs in the tx.
@@ -209,9 +223,11 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 			})
 
 			auxBody := &txv1beta1.TxBody{
-				Messages:      body.Messages,
-				Memo:          body.Memo,
-				TimeoutHeight: body.TimeoutHeight,
+				Messages:         body.Messages,
+				Memo:             body.Memo,
+				TimeoutHeight:    body.TimeoutHeight,
+				TimeoutTimestamp: body.TimeoutTimestamp,
+				Unordered:        body.Unordered,
 				// AuxTxBuilder has no concern with extension options, so we set them to nil.
 				// This preserves pre-PR#16025 behavior where extension options were ignored, this code path:
 				// https://github.com/cosmos/cosmos-sdk/blob/ac3c209326a26b46f65a6cc6f5b5ebf6beb79b38/client/tx/aux_builder.go#L193

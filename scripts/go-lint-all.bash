@@ -2,6 +2,9 @@
 
 set -e -o pipefail
 
+LINT_TAGS="e2e,ledger,test_ledger_mock,system_test,sims"
+export LINT_TAGS
+
 REPO_ROOT="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
 export REPO_ROOT
 
@@ -10,7 +13,7 @@ lint_module() {
   shift
   (cd "$(dirname "$root")" &&
     echo "linting $(grep "^module" go.mod) [$(date -Iseconds -u)]" &&
-    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@")
+    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=${LINT_TAGS})
 }
 export -f lint_module
 
@@ -32,7 +35,7 @@ else
   for f in $(dirname $(echo "$GIT_DIFF" | tr -d "'") | uniq); do
     echo "linting $f [$(date -Iseconds -u)]" &&
     (cd "$f" &&
-    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@") || status=$?
+    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" --build-tags=${LINT_TAGS}) || status=$?
   done
   if [[ $status -eq 0 ]]; then
     echo "linting succeeded"

@@ -132,7 +132,7 @@ func (a AutoUInt64Table) Export(store storetypes.KVStore, dest ModelSlicePtr) (u
 
 // Import clears the table and initializes it from the given data interface{}.
 // data should be a slice of structs that implement PrimaryKeyed.
-func (a AutoUInt64Table) Import(store storetypes.KVStore, data interface{}, seqValue uint64) error {
+func (a AutoUInt64Table) Import(store storetypes.KVStore, data any, seqValue uint64) error {
 	if err := a.seq.InitVal(store, seqValue); err != nil {
 		return errors.Wrap(err, "sequence")
 	}

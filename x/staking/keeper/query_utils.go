@@ -80,7 +80,7 @@ func (k Keeper) GetAllDelegatorDelegations(ctx context.Context, delegator sdk.Ac
 			return nil, err
 		}
 		delegations = append(delegations, delegation)
-		i++
+		_ = i
 	}
 
 	return delegations, nil
@@ -105,7 +105,7 @@ func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.Ac
 			return nil, err
 		}
 		unbondingDelegations = append(unbondingDelegations, unbondingDelegation)
-		i++
+		_ = i
 	}
 
 	return unbondingDelegations, nil
@@ -127,8 +127,7 @@ func (k Keeper) GetAllRedelegations(
 	srcValFilter := !(srcValAddress.Empty())
 	dstValFilter := !(dstValAddress.Empty())
 
-	redelegations := []types.Redelegation{}
-
+	var redelegations []types.Redelegation
 	for ; iterator.Valid(); iterator.Next() {
 		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Value())
 		valSrcAddr, err := k.validatorAddressCodec.StringToBytes(redelegation.ValidatorSrcAddress)

@@ -7,12 +7,14 @@ start the [Grafana LGTM docker image](https://hub.docker.com/r/grafana/otel-lgtm
 ```shell
 docker run -p 3000:3000 -p 4317:4317 -p 4318:4318 --rm -ti grafana/otel-lgtm
 ```
-## Environment Variable
 
-Using the environment variable method will instantiate the OpenTelemetry SDK before global meters and spans. 
-This allows meters and traces to use direct references to the underlying instrument.
+## Setting Up OpenTelemetry Configuration
 
-Create a basic OpenTelemetry configuration file which will send data to the local instance of Grafana LGTM:
+We support two methods of setting up the OpenTelemetry configuration: via environment variable, and via node config.
+
+## Example Configuration
+
+Below is an example configuration for OpenTelemetry.
 
 ```yaml
 file_format: "1.0-rc.3"
@@ -67,21 +69,21 @@ cosmos_extra:
     - tracecontext
 ```
 
-For a full list of configurable options see: https://github.com/open-telemetry/opentelemetry-configuration/blob/main/examples/kitchen-sink.yaml.
 NOTE: the go implementation may not support all options, so check the go [otelconf](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) documentation carefully to see what is actually supported.
 
-3. set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of the configuration file:
-   `export OTEL_EXPERIMENTAL_CONFIG_FILE=path/to/config.yaml`
-4. start your application or tests
-5. view the data in Grafana LGTM at http://localhost:3000/. The Drilldown views are suggested for getting started.
+### Environment Variable
 
-## Node Home OpenTelemetry file
+Using the environment variable method will instantiate the OpenTelemetry SDK before global meters and spans. 
+This allows meters and traces to use direct references to the underlying instrument.
 
-The node's `init` command will generate an empty otel file in the `~/.<node_home>/config` directory. Place your otel configuration
-here. 
+Set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of the configuration file:
+   
+Example: `export OTEL_EXPERIMENTAL_CONFIG_FILE=path/to/config.yaml`
 
-When the node's `start` command is run, the OpenTelemetry SDK will be initialized using this file. 
-If left empty, all meters and tracers will be noop.
+## Node Config OpenTelemetry file
+
+The node's `init` command will generate an empty otel file in the `~/.<node_home>/config` directory. 
+You can paste your OpenTelemetry configuration here instead of using an environment variable. Note that when the environment variable is present, the configuration in the node config directory will be ignored.
 
 ## OpenTelemetry Initialization
 
@@ -90,21 +92,33 @@ point of initialization such that end users can just use the official
 OpenTelemetry declarative configuration
 spec: https://opentelemetry.io/docs/languages/sdk-configuration/declarative-configuration/
 End users only need to set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of
-an OpenTelemetry configuration file, or fill out the otel.yaml file in the node's config directory and that's it.
-All the documentation necessary is provided in the OpenTelemetry documentation.
+an OpenTelemetry configuration file, or paste their config in the otel.yaml file in the node's config directory.
+All the documentation for application instrumentation is provided in the OpenTelemetry documentation.
 
 ## Developer Usage
 
-If using the environment variable method, importing the baseapp package will cause the telemetry's initialization to run.
-Otherwise, ensure the otel.yaml file in the node's config directory is filled out.
+IMPORTANT: Make sure `telemetry.Shutdown()` is called when the application is shutting down.
 
-IMPORTANT: Make sure Shutdown() is called when the application is shutting down.
-
-Tests can use the TestingMain function at startup to accomplish this.
-
-If these steps are followed, developers can follow the official golang otel conventions
-of declaring package-level tracer and meter instances using otel.Tracer() and otel.Meter().
-NOTE: it is important to thread context.Context properly for spans and metrics to be
-correlated correctly.
-When using the SDK's context type, spans must be started with Context.StartSpan to
+If the steps above are followed, developers can follow the official Go OpenTelemetry conventions
+of declaring package-level tracer and meter instances using `otel.Tracer()` and `otel.Meter()`.
+NOTE: it is important to thread `context.Context` properly for spans and metrics to be correlated.
+When using the SDK's context type, spans must be started with the context's `StartSpan` method to
 get an SDK context which has the span set correctly.
+
+```go
+import (
+	"go.opentelemetry.io/otel"
+
+    sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var (
+    tracer = otel.Tracer("cosmos-sdk/baseapp")
+)
+
+func Example(ctx sdk.Context) {
+   ctx, span := ctx.StartSpan(tracer, "VerifyVoteExtension")
+   defer span.End()
+   // ....
+}
+```

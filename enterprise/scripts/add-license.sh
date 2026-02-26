@@ -2,6 +2,26 @@
 
 set -e
 
+# Usage: add-license.sh <module_dir> <license_path>
+#   module_dir:  Full path to the enterprise module (e.g. /path/to/enterprise/group)
+#   license_path: Path for LICENSE link in header (e.g. enterprise/group)
+#
+# Must be run from repo root or with absolute paths.
+
+MODULE_DIR="$1"
+LICENSE_PATH="$2"
+
+if [[ -z "$MODULE_DIR" || -z "$LICENSE_PATH" ]]; then
+    echo "Usage: add-license.sh <module_dir> <license_path>"
+    echo "  e.g. add-license.sh /path/to/enterprise/group enterprise/group"
+    exit 1
+fi
+
+if [[ ! -d "$MODULE_DIR" ]]; then
+    echo "Error: Module directory does not exist: $MODULE_DIR"
+    exit 1
+fi
+
 # Convert license text to Go-style comments
 go_license_header() {
     echo "// IMPORTANT LICENSE NOTICE"
@@ -15,7 +35,7 @@ go_license_header() {
     echo "// - production use, and"
     echo "// - redistribution."
     echo "//"
-    echo "// See https://github.com/cosmos/cosmos-sdk/blob/main/enterprise/poa/LICENSE for full terms."
+    echo "// See https://github.com/cosmos/cosmos-sdk/blob/main/${LICENSE_PATH}/LICENSE for full terms."
     echo "// Copyright (c) 2026 Cosmos Labs US Inc."
     echo ""
 }
@@ -57,7 +77,7 @@ process_files() {
 
     while IFS= read -r -d '' file; do
         add_go_license "$file"
-    done < <(find . -type f -name "$pattern" \
+    done < <(find "$MODULE_DIR" -type f -name "$pattern" \
         ! -path "*/build/*" \
         ! -path "*/.git/*" \
         ! -path "*/vendor/*" \
@@ -67,7 +87,7 @@ process_files() {
 }
 
 main() {
-    echo "Adding license headers to source files..."
+    echo "Adding license headers to source files in $MODULE_DIR..."
 
     # Process Go files
     echo "Processing .go files..."
@@ -81,7 +101,8 @@ main() {
 }
 
 # Allow running on specific files if provided
-if [ $# -gt 0 ]; then
+if [ $# -gt 2 ]; then
+    shift 2
     for file in "$@"; do
         if [ -f "$file" ]; then
             add_go_license "$file"

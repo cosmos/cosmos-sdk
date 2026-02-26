@@ -267,6 +267,7 @@ require (
 	github.com/zondax/ledger-go v1.0.1 // indirect
 	go.etcd.io/bbolt v1.4.3 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
+	go.opentelemetry.io/contrib/bridges/otelslog v0.15.0 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.39.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.65.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/host v0.65.0 // indirect
@@ -330,10 +331,15 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-// Below are the long-lived replace of the SimApp
+// short-lived replaces, should be removed after tags are cut
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
+	cosmossdk.io/log/v2 => ../log
 	cosmossdk.io/store => ../store
+)
+
+// long-lived replaces
+replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

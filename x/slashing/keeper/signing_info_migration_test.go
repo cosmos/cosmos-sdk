@@ -242,4 +242,111 @@ func TestMigrateSignedBlocksWindow(t *testing.T) {
 		require.NoError(err)
 		require.Equal(int64(0), actualMisses)
 	})
+
+	// Test Case 6: Multiple validators migrated together
+	t.Run("multiple validators", func(t *testing.T) {
+		// Clear previous test data for consAddr
+		require.NoError(keeper.DeleteMissedBlockBitmap(ctx, consAddr))
+
+		// Create a second validator
+		_, pubKey2, addr2 := testdata.KeyTestPubAddr()
+		_ = pubKey2
+		consAddr2 := sdk.ConsAddress(addr2)
+
+		oldWindow := int64(10)
+		newWindow := int64(5)
+
+		// Validator 1: 6 misses, all in positions 0-4
+		signInfo1 := slashingtypes.ValidatorSigningInfo{
+			Address:             consAddr.String(),
+			StartHeight:         0,
+			IndexOffset:         7,
+			MissedBlocksCounter: 6,
+		}
+		require.NoError(keeper.SetValidatorSigningInfo(ctx, consAddr, signInfo1))
+		require.NoError(keeper.SetMissedBlockBitmapValue(ctx, consAddr, 0, true))
+		require.NoError(keeper.SetMissedBlockBitmapValue(ctx, consAddr, 1, true))
+		require.NoError(keeper.SetMissedBlockBitmapValue(ctx, consAddr, 2, true))
+		require.NoError(keeper.SetMissedBlockBitmapValue(ctx, consAddr, 3, true))
+		require.NoError(keeper.SetMissedBlockBitmapValue(ctx, consAddr, 4, true))
+		require.NoError(keeper.SetMissedBlockBitmapValue(ctx, consAddr, 8, true))
+
+		// Validator 2: 2 misses, scattered
+		signInfo2 := slashingtypes.ValidatorSigningInfo{
+			Address:             consAddr2.String(),
+			StartHeight:         0,
+			IndexOffset:         4,
+			MissedBlocksCounter: 2,
+		}
+		require.NoError(keeper.SetValidatorSigningInfo(ctx, consAddr2, signInfo2))
+		require.NoError(keeper.SetMissedBlockBitmapValue(ctx, consAddr2, 1, true))
+		require.NoError(keeper.SetMissedBlockBitmapValue(ctx, consAddr2, 7, true))
+
+		// Run migration
+		err := keeper.MigrateSignedBlocksWindow(ctx, oldWindow, newWindow)
+		require.NoError(err)
+
+		// Verify validator 1: proportional counter = 6 * 5/10 = 3
+		updated1, err := keeper.GetValidatorSigningInfo(ctx, consAddr)
+		require.NoError(err)
+		require.Equal(int64(3), updated1.MissedBlocksCounter)
+		require.Equal(int64(2), updated1.IndexOffset) // 7 % 5 = 2
+
+		// Verify validator 1 bitmap matches counter
+		misses1 := int64(0)
+		err = keeper.IterateMissedBlockBitmap(ctx, consAddr, func(index int64, missed bool) (stop bool) {
+			if missed {
+				misses1++
+			}
+			return false
+		})
+		require.NoError(err)
+		require.Equal(int64(3), misses1)
+
+		// Verify validator 2: proportional counter = 2 * 5/10 = 1
+		updated2, err := keeper.GetValidatorSigningInfo(ctx, consAddr2)
+		require.NoError(err)
+		require.Equal(int64(1), updated2.MissedBlocksCounter)
+		require.Equal(int64(4), updated2.IndexOffset) // 4 % 5 = 4
+
+		// Verify validator 2 bitmap matches counter
+		misses2 := int64(0)
+		err = keeper.IterateMissedBlockBitmap(ctx, consAddr2, func(index int64, missed bool) (stop bool) {
+			if missed {
+				misses2++
+			}
+			return false
+		})
+		require.NoError(err)
+		require.Equal(int64(1), misses2)
+
+		// Cleanup
+		require.NoError(keeper.DeleteMissedBlockBitmap(ctx, consAddr2))
+	})
+
+	// Test Case 7: Counter exceeds old window (corrupted state guard)
+	t.Run("corrupted counter exceeding window", func(t *testing.T) {
+		require.NoError(keeper.DeleteMissedBlockBitmap(ctx, consAddr))
+
+		oldWindow := int64(10)
+		newWindow := int64(5)
+
+		// Corrupted state: counter is larger than window
+		signInfo := slashingtypes.ValidatorSigningInfo{
+			Address:             consAddr.String(),
+			StartHeight:         0,
+			IndexOffset:         3,
+			MissedBlocksCounter: 15, // corrupted: > oldWindow
+		}
+		require.NoError(keeper.SetValidatorSigningInfo(ctx, consAddr, signInfo))
+
+		err := keeper.MigrateSignedBlocksWindow(ctx, oldWindow, newWindow)
+		require.NoError(err)
+
+		// Should clamp to oldWindow first: min(15, 10) = 10
+		// Then proportional: 10 * 5/10 = 5
+		updatedInfo, err := keeper.GetValidatorSigningInfo(ctx, consAddr)
+		require.NoError(err)
+		require.Equal(int64(5), updatedInfo.MissedBlocksCounter)
+	})
 }

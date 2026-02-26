@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/tidwall/btree"
+	"github.com/cosmos/btree"
 )
 
 // BTreeIteratorG iterates over btree.

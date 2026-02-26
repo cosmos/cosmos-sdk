@@ -17,16 +17,19 @@ func (m multiLogger) Info(msg string, kv ...any) {
 		l.Info(msg, kv...)
 	}
 }
+
 func (m multiLogger) Warn(msg string, kv ...any) {
 	for _, l := range m.loggers {
 		l.Warn(msg, kv...)
 	}
 }
+
 func (m multiLogger) Error(msg string, kv ...any) {
 	for _, l := range m.loggers {
 		l.Error(msg, kv...)
 	}
 }
+
 func (m multiLogger) Debug(msg string, kv ...any) {
 	for _, l := range m.loggers {
 		l.Debug(msg, kv...)
@@ -38,16 +41,19 @@ func (m multiLogger) InfoContext(ctx context.Context, msg string, kv ...any) {
 		l.InfoContext(ctx, msg, kv...)
 	}
 }
+
 func (m multiLogger) WarnContext(ctx context.Context, msg string, kv ...any) {
 	for _, l := range m.loggers {
 		l.WarnContext(ctx, msg, kv...)
 	}
 }
+
 func (m multiLogger) ErrorContext(ctx context.Context, msg string, kv ...any) {
 	for _, l := range m.loggers {
 		l.ErrorContext(ctx, msg, kv...)
 	}
 }
+
 func (m multiLogger) DebugContext(ctx context.Context, msg string, kv ...any) {
 	for _, l := range m.loggers {
 		l.DebugContext(ctx, msg, kv...)

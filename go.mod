@@ -231,7 +231,6 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20251114093237-2ab5a27a1729 // indirect
 	github.com/oklog/run v1.2.0 // indirect
-	github.com/opencontainers/image-spec v1.1.0-rc5 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/petermattis/goid v0.0.0-20260113132338-7c7de50cc741 // indirect
@@ -371,5 +370,3 @@ retract (
 	// do not use
 	v0.43.0
 )
-
-replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.39.0-beta.2.0.20260217150107-284338bcd3d9

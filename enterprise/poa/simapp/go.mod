@@ -29,7 +29,6 @@ require (
 	filippo.io/edwards25519 v1.1.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
-	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
@@ -301,5 +300,3 @@ replace (
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
-
-replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.39.0-beta.2.0.20251126123012-df4eef0f2a40

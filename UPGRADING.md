@@ -125,6 +125,11 @@ The groups module is now being maintained under the Cosmos Enterprise offering. 
 Cosmos SDK v0.54 includes a Proof of Authority (POA) module under the Cosmos Enterprise offering. Please see [Cosmos Enterprise](https://docs.cosmos.network/enterprise/overview) to learn more about using the PoA module in your application.
 
 
+## Module Version Updates
+
+- `cosmossdk.io/client/v2` has been updated to v2.x.x ?? // TODO: Finalize this.
+- `cosmossdk.io/api` has been updated to vx.x.x // TODO: Finalize this.
+
 ## Moved Go Modules
 
 To improve maintainability and standardize import paths across Cosmos SDK modules and libraries, some packages have been consolidated under the github.com/cosmos/cosmos-sdk Go module. The following import paths must be updated:
@@ -144,10 +149,6 @@ To learn more about the new features offered in `log/v2`, as well as setting up 
 ## Store v2
 
 The store package has been updated to `v2`. Store v2 enables support for the new experimental packages: BlockSTM and IAVLX. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/store/v2`.
-
-## Client v2
-
-The `cosmossdk.io/client/v2` package has been updated to ??? to support the new log and store releases. // TODO: THIS MIGHT BE V3???
 
 ## Telemetry
 

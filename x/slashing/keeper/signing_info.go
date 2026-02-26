@@ -268,3 +268,85 @@ func (k Keeper) GetValidatorMissedBlocks(ctx context.Context, addr sdk.ConsAddre
 
 	return missedBlocks, err
 }
+
+// MigrateSignedBlocksWindow migrates validator signing info and missed block bitmaps
+// when the SignedBlocksWindow parameter changes. This function:
+// 1. Truncates bitmaps to the new window size
+// 2. Adjusts the bitmap to match the proportionally scaled counter
+// 3. Updates IndexOffset to wrap within the new window
+//
+// The proportional approach ensures validators maintain their relative miss rate
+// while preventing counter drift and immediate unfair slashing.
+func (k Keeper) MigrateSignedBlocksWindow(ctx context.Context, oldWindow, newWindow int64) error {
+	return k.IterateValidatorSigningInfos(ctx, func(addr sdk.ConsAddress, signInfo types.ValidatorSigningInfo) (stop bool) {
+		// Calculate proportional counter (floor division for leniency)
+		proportionalCounter := (signInfo.MissedBlocksCounter * newWindow) / oldWindow
+
+		// Read missed blocks from the old bitmap within the new window range
+		missedPositions := []int64{}
+		err := k.IterateMissedBlockBitmap(ctx, addr, func(index int64, missed bool) (stop bool) {
+			if missed && index < newWindow {
+				missedPositions = append(missedPositions, index)
+			}
+			return false
+		})
+		if err != nil {
+			return true // stop iteration on error
+		}
+
+		actualMissedCount := int64(len(missedPositions))
+
+		// Delete the entire old bitmap
+		if err := k.DeleteMissedBlockBitmap(ctx, addr); err != nil {
+			return true
+		}
+
+		// Adjust bitmap to match proportional counter
+		if actualMissedCount > proportionalCounter {
+			// Too many misses - remove excess from the left (earliest positions)
+			toRemove := actualMissedCount - proportionalCounter
+			missedPositions = missedPositions[toRemove:]
+		} else if actualMissedCount < proportionalCounter {
+			// Too few misses - add fabricated misses at positions visited last
+			// These positions are furthest from the current IndexOffset
+			toAdd := proportionalCounter - actualMissedCount
+			currentIndex := signInfo.IndexOffset % newWindow
+
+			// Find positions visited last (working backwards from current position)
+			added := int64(0)
+			for i := int64(1); added < toAdd && i <= newWindow; i++ {
+				// Position visited last is (currentIndex - i + newWindow) % newWindow
+				fabricatedPos := (currentIndex - i + newWindow) % newWindow
+				// Only add if not already in missedPositions
+				alreadyExists := false
+				for _, pos := range missedPositions {
+					if pos == fabricatedPos {
+						alreadyExists = true
+						break
+					}
+				}
+				if !alreadyExists {
+					missedPositions = append(missedPositions, fabricatedPos)
+					added++
+				}
+			}
+		}
+
+		// Write the adjusted bitmap
+		for _, pos := range missedPositions {
+			if err := k.SetMissedBlockBitmapValue(ctx, addr, pos, true); err != nil {
+				return true
+			}
+		}
+
+		// Update signing info
+		signInfo.MissedBlocksCounter = proportionalCounter
+		signInfo.IndexOffset = signInfo.IndexOffset % newWindow
+
+		if err := k.SetValidatorSigningInfo(ctx, addr, signInfo); err != nil {
+			return true
+		}
+
+		return false // continue iteration
+	})
+}

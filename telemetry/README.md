@@ -1,6 +1,6 @@
 ## Quick Start For Local Telemetry
 
-To quickly setup a local telemetry environment where OpenTelemetry data is sent to a local instance of Grafana LGTM:
+To quickly set up a local telemetry environment where OpenTelemetry data is sent to a local instance of Grafana LGTM:
 
 start the [Grafana LGTM docker image](https://hub.docker.com/r/grafana/otel-lgtm):
 
@@ -69,7 +69,7 @@ cosmos_extra:
     - tracecontext
 ```
 
-NOTE: the go implementation may not support all options, so check the go [otelconf](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) documentation carefully to see what is actually supported.
+NOTE: the Go implementation may not support all options, so check the go [otelconf](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) documentation carefully to see what is actually supported.
 
 ### Environment Variable
 

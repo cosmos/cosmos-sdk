@@ -13,10 +13,12 @@ const (
 	KeyExecutionRatio  = "execution_ratio"
 
 	// MVData Metrics
+
 	KeyMVDataRead  = "mvdata_read"
 	KeyMVDataWrite = "mvdata_write"
 
 	// MVView Metrics
+
 	KeyMVViewReadWriteSet    = "mvview_read_writeset"
 	KeyMVViewReadMVData      = "mvview_read_mvdata"
 	KeyMVViewReadStorage     = "mvview_read_storage"
@@ -28,6 +30,7 @@ const (
 	KeyMVViewEstimateWait    = "mvview_estimate_wait"
 
 	// Executor/Transaction Metrics
+
 	KeyTxReadCount        = "tx_read_count"
 	KeyTxWriteCount       = "tx_write_count"
 	KeyTxNewLocationWrite = "tx_new_location_write"

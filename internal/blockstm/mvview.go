@@ -66,7 +66,7 @@ func (s *GMVMemoryView[V]) waitFor(txn TxnIndex) {
 }
 
 func (s *GMVMemoryView[V]) ApplyWriteSet(version TxnVersion) Locations {
-	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVViewApplyWriteSet)
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVViewApplyWriteSet) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	if s.writeSet == nil || s.writeSet.Len() == 0 {
 		return nil
 	}
@@ -97,7 +97,7 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 	if s.writeSet != nil {
 		if value, found := s.writeSet.OverlayGet(key); found {
 			// value written by this txn
-			telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadWriteSet)
+			telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadWriteSet) //nolint:staticcheck // TODO: switch to OpenTelemetry
 			// zero value means deleted
 			return value
 		}
@@ -109,7 +109,7 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 			estimateStart := time.Now()
 			// read ESTIMATE mark, wait for the blocking txn to finish
 			s.waitFor(version.Index)
-			telemetry.MeasureSince(estimateStart, TelemetrySubsystem, KeyMVViewEstimateWait)
+			telemetry.MeasureSince(estimateStart, TelemetrySubsystem, KeyMVViewEstimateWait) //nolint:staticcheck // TODO: switch to OpenTelemetry
 			continue
 		}
 
@@ -118,10 +118,10 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 		s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{key, version})
 		if !version.Valid() {
 			result := s.storage.Get(key)
-			telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadStorage)
+			telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadStorage) //nolint:staticcheck // TODO: switch to OpenTelemetry
 			return result
 		}
-		telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadMVData)
+		telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadMVData) //nolint:staticcheck // TODO: switch to OpenTelemetry
 		return value
 	}
 }
@@ -131,7 +131,7 @@ func (s *GMVMemoryView[V]) Has(key []byte) bool {
 }
 
 func (s *GMVMemoryView[V]) Set(key []byte, value V) {
-	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVViewWrite)
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVViewWrite) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	if s.mvData.isZero(value) {
 		panic("nil value is not allowed")
 	}
@@ -140,7 +140,7 @@ func (s *GMVMemoryView[V]) Set(key []byte, value V) {
 }
 
 func (s *GMVMemoryView[V]) Delete(key []byte) {
-	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVViewDelete)
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVViewDelete) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	var empty V
 	s.init()
 	s.writeSet.OverlaySet(key, empty)
@@ -196,7 +196,7 @@ func (s *GMVMemoryView[V]) iterator(opts IteratorOptions) storetypes.GIterator[V
 		})
 
 		// Measure iterator duration and track keys read
-		telemetry.MeasureSince(iterStart, TelemetrySubsystem, KeyMVViewIteratorKeys)
+		telemetry.MeasureSince(iterStart, TelemetrySubsystem, KeyMVViewIteratorKeys)             //nolint:staticcheck // TODO: switch to OpenTelemetry
 		telemetry.IncrCounter(float32(len(reads)), TelemetrySubsystem, KeyMVViewIteratorKeysCnt) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	}
 

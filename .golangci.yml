@@ -119,7 +119,7 @@ linters:
       - types/coin_regex.go
       - testutil/testdata
       - x/params
-      - x/crisis
+      - contrib
       - third_party$
       - builtin$
       - examples$
@@ -154,7 +154,7 @@ formatters:
       - types/coin_regex.go
       - testutil/testdata
       - x/params
-      - x/crisis
+      - contrib
       - third_party$
       - builtin$
       - examples$

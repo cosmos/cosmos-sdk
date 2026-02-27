@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/cosmos/btree"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 // BTree wraps an atomic pointer to an unsafe btree.BTreeG
@@ -26,12 +28,12 @@ func NewBTree[T any](less func(a, b T) bool, degree int) *BTree[T] {
 }
 
 func (bt *BTree[T]) Get(item T) (result T, ok bool) {
-	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyGet)
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyGet) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	return bt.Load().Get(item)
 }
 
 func (bt *BTree[T]) GetOrDefault(item T, fillDefaults func(*T)) T {
-	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyGetOrDefault)
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyGetOrDefault) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	for {
 		t := bt.Load()
 		result, ok := t.Get(item)
@@ -49,7 +51,7 @@ func (bt *BTree[T]) GetOrDefault(item T, fillDefaults func(*T)) T {
 }
 
 func (bt *BTree[T]) Set(item T) (prev T, ok bool) {
-	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeySet)
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeySet) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	for {
 		t := bt.Load()
 		c := t.Copy()
@@ -62,7 +64,7 @@ func (bt *BTree[T]) Set(item T) (prev T, ok bool) {
 }
 
 func (bt *BTree[T]) Delete(item T) (prev T, ok bool) {
-	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyDelete)
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyDelete) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	for {
 		t := bt.Load()
 		c := t.Copy()
@@ -75,7 +77,7 @@ func (bt *BTree[T]) Delete(item T) (prev T, ok bool) {
 }
 
 func (bt *BTree[T]) Scan(iter func(item T) bool) {
-	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyScan)
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyScan) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	bt.Load().Scan(iter)
 }
 
@@ -89,7 +91,7 @@ func (bt *BTree[T]) Iter() btree.IterG[T] {
 
 // ReverseSeek returns the first item that is less than or equal to the pivot
 func (bt *BTree[T]) ReverseSeek(pivot T) (result T, ok bool) {
-	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyReverseSeek)
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyReverseSeek) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	bt.Load().Descend(pivot, func(item T) bool {
 		result = item
 		ok = true

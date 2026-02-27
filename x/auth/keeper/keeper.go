@@ -149,7 +149,7 @@ func NewAccountKeeper(
 		permAddrs:       permAddrs,
 		authority:       authority,
 		Params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		AccountNumber:   collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
+		AccountNumber:   collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"), //nolint:staticcheck // kept in place for the migration
 		Accounts:        collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
 		UnorderedNonces: collections.NewKeySet(sb, types.UnorderedNoncesKey, "unordered_nonces", collections.PairKeyCodec(collections.Int64Key, collections.BytesKey)),
 	}

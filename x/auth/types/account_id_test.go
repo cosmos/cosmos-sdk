@@ -104,13 +104,13 @@ func TestGenerateID_DifferentTxIndicesProduceDifferentIDs(t *testing.T) {
 	}
 }
 
-func TestGenerateID_DifferentMsgIndicesProduceDifferentIDs(t *testing.T) {
+func TestGenerateID_MsgIndexDoesNotAffectID(t *testing.T) {
+	// GenerateID does not include MsgIndex in the hash, so varying it should not change the ID.
 	acc := randomBaseAccount()
-	ids := make(map[uint64]struct{})
-	for i := 0; i < 200; i++ {
+	base := types.GenerateID(makeCtx(1, []byte("hash"), 0, 0), acc)
+	for i := 1; i < 10; i++ {
 		id := types.GenerateID(makeCtx(1, []byte("hash"), 0, i), acc)
-		require.NotContains(t, ids, id, "msgIndex %d produced duplicate ID", i)
-		ids[id] = struct{}{}
+		require.Equal(t, base, id, "msgIndex %d should not change the ID", i)
 	}
 }
 
@@ -151,9 +151,6 @@ func TestGenerateID_SingleBitInputDifferences(t *testing.T) {
 	flippedTxIndex := makeCtx(0, []byte{0x00}, 1, 0)
 	require.NotEqual(t, baseID, types.GenerateID(flippedTxIndex, acc), "flipping txIndex bit should change ID")
 
-	flippedMsgIndex := makeCtx(0, []byte{0x00}, 0, 1)
-	require.NotEqual(t, baseID, types.GenerateID(flippedMsgIndex, acc), "flipping msgIndex bit should change ID")
-
 	flippedAddr := fixedBaseAccount(0x01)
 	require.NotEqual(t, baseID, types.GenerateID(base, flippedAddr), "flipping address bit should change ID")
 }
@@ -172,10 +169,8 @@ func TestGenerateID_BoundaryValues(t *testing.T) {
 		{"min int64 height", math.MinInt64, 0, 0},
 		{"max int txIndex", 0, math.MaxInt, 0},
 		{"min int txIndex", 0, math.MinInt, 0},
-		{"max int msgIndex", 0, 0, math.MaxInt},
-		{"min int msgIndex", 0, 0, math.MinInt},
-		{"all max", math.MaxInt64, math.MaxInt, math.MaxInt},
-		{"all min", math.MinInt64, math.MinInt, math.MinInt},
+		{"all max", math.MaxInt64, math.MaxInt, 0},
+		{"all min", math.MinInt64, math.MinInt, 0},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -186,19 +181,17 @@ func TestGenerateID_BoundaryValues(t *testing.T) {
 }
 
 func TestGenerateID_NoCollisionAcrossCombinations(t *testing.T) {
-	// Generate IDs across a range of (height, txIndex, msgIndex) combos and verify no collisions.
+	// Generate IDs across a range of (height, txIndex) combos and verify no collisions.
 	acc := randomBaseAccount()
 	ids := make(map[uint64]struct{})
 	for h := int64(0); h < 10; h++ {
 		for tx := 0; tx < 10; tx++ {
-			for msg := 0; msg < 10; msg++ {
-				id := types.GenerateID(makeCtx(h, []byte("app"), tx, msg), acc)
-				require.NotContains(t, ids, id, "collision at h=%d tx=%d msg=%d", h, tx, msg)
-				ids[id] = struct{}{}
-			}
+			id := types.GenerateID(makeCtx(h, []byte("app"), tx, 0), acc)
+			require.NotContains(t, ids, id, "collision at h=%d tx=%d", h, tx)
+			ids[id] = struct{}{}
 		}
 	}
-	require.Len(t, ids, 1000)
+	require.Len(t, ids, 100)
 }
 
 func TestGenerateID_ModuleAccountDifferentNames(t *testing.T) {

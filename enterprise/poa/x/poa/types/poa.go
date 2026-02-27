@@ -16,19 +16,32 @@ package types
 
 import (
 	"fmt"
+	"math"
 
 	"cosmossdk.io/core/address"
 	sdkerrors "cosmossdk.io/errors"
 )
 
+// MaxValidatorPower is the maximum allowed validator power (CometBFT uses int64 for voting power).
+const MaxValidatorPower = math.MaxInt64
+
+// MinPubKeyLength is the minimum expected pubkey serialized length (ed25519 ~34 bytes, secp256k1 ~35 bytes with proto overhead).
+const MinPubKeyLength = 30
+
+// MaxPubKeyLength is the maximum allowed pubkey serialized length (includes proto overhead).
+const MaxPubKeyLength = 128
+
 // ValidateBasic performs basic validation on a Validator.
 // It ensures that:
-//   - Power is non-negative
+//   - Power is non-negative and does not overflow
 //   - Metadata passes validation (operator address, moniker, and description are valid)
-//   - PubKey is not nil
+//   - PubKey is not nil and has valid length
 func (v *Validator) ValidateBasic() error {
 	if v.Power < 0 {
 		return ErrNegativeValidatorPower
+	}
+	if v.Power > MaxValidatorPower {
+		return ErrValidatorPowerOverflow
 	}
 
 	if err := v.Metadata.ValidateBasic(); err != nil {
@@ -39,6 +52,13 @@ func (v *Validator) ValidateBasic() error {
 	if v.PubKey == nil {
 		return fmt.Errorf("validator pubkey cannot be nil")
 	}
+	// Validate pubkey length (Value contains serialized pubkey bytes)
+	if len(v.PubKey.Value) < MinPubKeyLength {
+		return sdkerrors.Wrapf(ErrInvalidPubKeyLength, "pubkey length %d is below minimum %d", len(v.PubKey.Value), MinPubKeyLength)
+	}
+	if len(v.PubKey.Value) > MaxPubKeyLength {
+		return sdkerrors.Wrapf(ErrInvalidPubKeyLength, "pubkey length %d exceeds maximum %d", len(v.PubKey.Value), MaxPubKeyLength)
+	}
 
 	return nil
 }
@@ -47,11 +67,14 @@ func (v *Validator) ValidateBasic() error {
 // It ensures that:
 //   - All validators pass basic validation
 //   - No duplicate operator addresses exist across validators
+//   - Total power does not overflow int64
+//   - Total power is greater than zero (at least one validator with non-zero power)
 //
 // Returns an error with the validator index if validation fails.
 func ValidateValidatorSet(vs []Validator) error {
 	// Track operator addresses to detect duplicates
 	operatorAddresses := make(map[string]struct{})
+	var totalPower int64
 
 	// Validate each validator
 	for i, validator := range vs {
@@ -66,6 +89,16 @@ func ValidateValidatorSet(vs []Validator) error {
 			return fmt.Errorf("duplicate operator address %s found in validators", operatorAddr)
 		}
 		operatorAddresses[operatorAddr] = struct{}{}
+
+		// Check for total power overflow when summing
+		if totalPower > math.MaxInt64-validator.Power {
+			return ErrTotalPowerOverflow
+		}
+		totalPower += validator.Power
+	}
+
+	if totalPower <= 0 {
+		return sdkerrors.Wrap(ErrInvalidTotalPower, "total power must be greater than zero")
 	}
 
 	return nil
@@ -162,6 +195,13 @@ func (m *MsgCreateValidator) Validate(ac address.Codec) error {
 	// Check that pubkey is not nil
 	if m.PubKey == nil {
 		return fmt.Errorf("validator pubkey cannot be nil")
+	}
+	// Validate pubkey length
+	if len(m.PubKey.Value) < MinPubKeyLength {
+		return sdkerrors.Wrapf(ErrInvalidPubKeyLength, "pubkey length %d is below minimum %d", len(m.PubKey.Value), MinPubKeyLength)
+	}
+	if len(m.PubKey.Value) > MaxPubKeyLength {
+		return sdkerrors.Wrapf(ErrInvalidPubKeyLength, "pubkey length %d exceeds maximum %d", len(m.PubKey.Value), MaxPubKeyLength)
 	}
 
 	return nil

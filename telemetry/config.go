@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/contrib/propagators/b3"
 	"go.opentelemetry.io/contrib/propagators/jaeger"
 	"go.opentelemetry.io/otel"
+	otellog "go.opentelemetry.io/otel/log"
 	logglobal "go.opentelemetry.io/otel/log/global"
 	lognoop "go.opentelemetry.io/otel/log/noop"
 	metricnoop "go.opentelemetry.io/otel/metric/noop"
@@ -33,6 +34,20 @@ var (
 	openTelemetrySDK *otelconf.SDK
 	shutdownFuncs    []func(context.Context) error
 )
+
+// IsOtelLoggerEnabled reports whether the global OTel log pipeline has active exporters.
+// It returns false for the noop provider or any real provider with no log processors configured.
+func IsOtelLoggerEnabled() bool {
+	l := logglobal.GetLoggerProvider().Logger("")
+	// check if loggers are enabled at SeverityFatal4, which is the most severe level.
+	// If this returns false, it means either the provider is a noop or there are no processors configured to handle logs at any severity level.
+	// NOTE: there are some edge cases in the future where maybe a real logger
+	// could be filtering out our messages, based on logger name or event name
+	// but for now this filtering doesn't exist and this check should be sufficient
+	return l.Enabled(context.Background(), otellog.EnabledParameters{
+		Severity: otellog.SeverityFatal4,
+	})
+}
 
 func init() {
 	if otelFilePath := os.Getenv(otelConfigEnvVar); otelFilePath != "" {
@@ -118,7 +133,8 @@ func InitializeOpenTelemetry(filePath string) error {
 	// setup otel global providers
 	otel.SetTracerProvider(openTelemetrySDK.TracerProvider())
 	otel.SetMeterProvider(openTelemetrySDK.MeterProvider())
-	logglobal.SetLoggerProvider(openTelemetrySDK.LoggerProvider())
+	loggerProvider := openTelemetrySDK.LoggerProvider()
+	logglobal.SetLoggerProvider(loggerProvider)
 
 	return nil
 }

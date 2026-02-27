@@ -23,7 +23,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log/v2"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -32,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 type appModule struct {

@@ -11,8 +11,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/x/tx/internal/testpb"
-	"cosmossdk.io/x/tx/signing/textual"
+	"github.com/cosmos/cosmos-sdk/x/tx/internal/testpb"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual"
 )
 
 type repeatedJSONTest struct {

@@ -4,8 +4,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/cosmos/btree"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )

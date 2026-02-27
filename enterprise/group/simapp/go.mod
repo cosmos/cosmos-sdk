@@ -220,6 +220,7 @@ require (
 	github.com/zondax/ledger-go v1.0.1 // indirect
 	go.etcd.io/bbolt v1.4.3 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
+	go.opentelemetry.io/contrib/bridges/otelslog v0.15.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.65.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/host v0.65.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.65.0 // indirect
@@ -285,6 +286,7 @@ replace github.com/cosmos/cosmos-sdk/enterprise/group => ..
 
 replace (
 	cosmossdk.io/client/v2 => ../../../client/v2
+	cosmossdk.io/log/v2 => ../../../log
 	cosmossdk.io/store => ../../../store
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	github.com/cosmos/cosmos-sdk => ../../../.

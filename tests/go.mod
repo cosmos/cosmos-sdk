@@ -270,6 +270,7 @@ require (
 	github.com/zondax/ledger-go v1.0.1 // indirect
 	go.etcd.io/bbolt v1.4.3 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
+	go.opentelemetry.io/contrib/bridges/otelslog v0.15.0 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.39.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.65.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/host v0.65.0 // indirect
@@ -339,6 +340,7 @@ replace (
 
 // Below are the long-lived replace for tests.
 replace (
+	cosmossdk.io/log/v2 => ../log
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
 

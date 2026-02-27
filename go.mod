@@ -61,6 +61,7 @@ require (
 	github.com/test-go/testify v1.1.4
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
+	go.opentelemetry.io/contrib/bridges/otelslog v0.15.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.65.0
 	go.opentelemetry.io/contrib/instrumentation/host v0.65.0
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.65.0
@@ -336,7 +337,10 @@ require (
 
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
-replace cosmossdk.io/store => ./store
+replace (
+	cosmossdk.io/log/v2 => ./log
+	cosmossdk.io/store => ./store
+)
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

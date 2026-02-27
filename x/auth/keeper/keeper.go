@@ -105,6 +105,7 @@ type AccountKeeper struct {
 	// State
 	Schema          collections.Schema
 	Params          collections.Item[types.Params]
+	AccountNumber   collections.Sequence
 	Accounts        *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
 	UnorderedNonces collections.KeySet[collections.Pair[int64, []byte]]
 }
@@ -148,6 +149,7 @@ func NewAccountKeeper(
 		permAddrs:       permAddrs,
 		authority:       authority,
 		Params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		AccountNumber:   collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 		Accounts:        collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
 		UnorderedNonces: collections.NewKeySet(sb, types.UnorderedNoncesKey, "unordered_nonces", collections.PairKeyCodec(collections.Int64Key, collections.BytesKey)),
 	}

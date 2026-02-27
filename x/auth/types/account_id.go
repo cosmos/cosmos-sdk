@@ -17,7 +17,6 @@ func GenerateID(ctx sdk.Context, acc sdk.AccountI) uint64 {
 	_ = binary.Write(h, binary.BigEndian, blkHeader.Height)
 	h.Write(blkHeader.AppHash)
 	_ = binary.Write(h, binary.BigEndian, int64(ctx.TxIndex()))
-	_ = binary.Write(h, binary.BigEndian, int64(ctx.MsgIndex()))
 	h.Write(acc.GetAddress())
 	if macc, ok := acc.(sdk.ModuleAccountI); ok {
 		h.Write([]byte(macc.GetName()))

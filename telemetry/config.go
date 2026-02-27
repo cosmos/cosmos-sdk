@@ -56,7 +56,6 @@ func InitializeOpenTelemetry(filePath string) error {
 	if openTelemetrySDK != nil {
 		return nil
 	}
-	var err error
 
 	var opts []otelconf.ConfigurationOption
 
@@ -84,28 +83,27 @@ func InitializeOpenTelemetry(filePath string) error {
 
 	opts = append(opts, otelconf.WithOpenTelemetryConfiguration(*cfg))
 
-	// parse cosmos extra config
-	var extraCfg ExtraConfig
-	err = yaml.Unmarshal(bz, &extraCfg)
-	if err == nil {
-		if extraCfg.CosmosExtra != nil {
-			extra := *extraCfg.CosmosExtra
-			for name, cfg := range extra.Instruments {
-				inst := registry.Get(name)
-				if inst == nil {
-					return fmt.Errorf("unknown instrument: %s", name)
-				}
-				fmt.Printf("Initializing %s instrumentation\n", name)
-				if err := inst.Start(cfg); err != nil {
-					return fmt.Errorf("failed to start %s instrumentation: %w", name, err)
-				}
+	// parse supplemental config (features not yet supported by otelconf)
+	var supplemental struct {
+		CosmosExtra *SupplementalOptions `yaml:"cosmos_extra"`
+	}
+	if err := yaml.Unmarshal(bz, &supplemental); err == nil && supplemental.CosmosExtra != nil {
+		extra := *supplemental.CosmosExtra
+		for name, cfg := range extra.Instruments {
+			inst := registry.Get(name)
+			if inst == nil {
+				return fmt.Errorf("unknown instrument: %s", name)
 			}
+			fmt.Printf("Initializing %s instrumentation\n", name)
+			if err := inst.Start(cfg); err != nil {
+				return fmt.Errorf("failed to start %s instrumentation: %w", name, err)
+			}
+		}
 
-			// TODO: this code should be removed once propagation is properly supported by otelconf.
-			if len(extra.Propagators) > 0 {
-				propagator := initPropagator(extra.Propagators)
-				otel.SetTextMapPropagator(propagator)
-			}
+		// TODO: this code should be removed once propagation is properly supported by otelconf.
+		if len(extra.Propagators) > 0 {
+			propagator := initPropagator(extra.Propagators)
+			otel.SetTextMapPropagator(propagator)
 		}
 	}
 
@@ -159,22 +157,16 @@ func setNoop() {
 	logglobal.SetLoggerProvider(lognoop.NewLoggerProvider())
 }
 
-// ExtraConfig is the top-level wrapper for Cosmos-specific OpenTelemetry extensions.
-// It is intended to be marshaled alongside an [otelconf.OpenTelemetryConfiguration]
-// to produce a complete otel.yaml file.
-type ExtraConfig struct {
-	CosmosExtra *CosmosExtra `json:"cosmos_extra" yaml:"cosmos_extra" mapstructure:"cosmos_extra"`
-}
-
-// CosmosExtra provides extensions to the OpenTelemetry declarative configuration.
-// These options allow features not yet supported by otelconf, such as writing traces/metrics/logs to local
-// files, enabling additional host/runtime instrumentation, and configuring custom propagators.
+// SupplementalOptions provides configuration for OpenTelemetry features not yet
+// supported by [otelconf], such as writing traces/metrics/logs to local files,
+// enabling additional host/runtime instrumentation, and configuring custom
+// propagators.
 //
 // When present in otel.yaml under the `cosmos_extra` key, these fields
 // augment/override portions of the OpenTelemetry SDK initialization.
 //
 // For an example configuration, see the README in this package.
-type CosmosExtra struct {
+type SupplementalOptions struct {
 	// TraceFile is an optional path to a file where spans should be exported
 	// using the stdouttrace exporter. If empty, no file-based trace export is
 	// configured.

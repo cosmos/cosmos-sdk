@@ -4,7 +4,7 @@ go 1.25.7
 
 require (
 	cosmossdk.io/log/v2 v2.0.1
-	github.com/cometbft/cometbft v0.39.0-beta.2.0.20260219154603-da56c5f931bf
+	github.com/cometbft/cometbft v0.39.0-beta.2.0.20260224200643-e10492fb96af
 	github.com/cometbft/cometbft-db v0.14.3
 	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
 	github.com/fsnotify/fsnotify v1.9.0
@@ -235,7 +235,7 @@ require (
 	golang.org/x/arch v0.24.0 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
-	golang.org/x/net v0.50.0 // indirect
+	golang.org/x/net v0.51.0 // indirect
 	golang.org/x/oauth2 v0.35.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect

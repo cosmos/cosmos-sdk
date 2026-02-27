@@ -1049,6 +1049,20 @@ func (mr *MockBankKeeperMockRecorder) TotalSupply(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalSupply", reflect.TypeOf((*MockBankKeeper)(nil).TotalSupply), arg0, arg1)
 }
 
+// UncheckedSetBalance mocks base method.
+func (m *MockBankKeeper) UncheckedSetBalance(ctx context.Context, addr types0.AccAddress, balance types0.Coin) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UncheckedSetBalance", ctx, addr, balance)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UncheckedSetBalance indicates an expected call of UncheckedSetBalance.
+func (mr *MockBankKeeperMockRecorder) UncheckedSetBalance(ctx, addr, balance any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UncheckedSetBalance", reflect.TypeOf((*MockBankKeeper)(nil).UncheckedSetBalance), ctx, addr, balance)
+}
+
 // UndelegateCoins mocks base method.
 func (m *MockBankKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegatorAddr types0.AccAddress, amt types0.Coins) error {
 	m.ctrl.T.Helper()

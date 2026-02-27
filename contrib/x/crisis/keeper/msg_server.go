@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"

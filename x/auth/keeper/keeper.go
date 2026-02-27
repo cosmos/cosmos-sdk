@@ -49,7 +49,7 @@ type AccountKeeperI interface {
 	// Fetch the sequence of an account at a specified address.
 	GetSequence(context.Context, sdk.AccAddress) (uint64, error)
 
-	// Fetch the next account number, and increment the internal counter.
+	// Fetch a unique account number.
 	NextAccountNumber(context.Context, sdk.AccountI) uint64
 
 	// GetModulePermissions fetches per-module account permissions

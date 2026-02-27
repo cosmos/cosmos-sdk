@@ -1,6 +1,7 @@
 package blockstm
 
 import (
+	"sync"
 	"sync/atomic"
 
 	storetypes "cosmossdk.io/store/types"
@@ -17,7 +18,24 @@ type MVMemory struct {
 	scheduler   *Scheduler
 	stores      map[storetypes.StoreKey]int
 	data        []MVStore
+	preState    []preStateCache
 	lastReadSet []atomic.Pointer[MultiReadSet]
+}
+
+type preStateCache struct {
+	data sync.Map
+}
+
+func (c *preStateCache) Load(key Key) (any, bool) {
+	v, ok := c.data.Load(string(key))
+	if !ok {
+		return nil, false
+	}
+	return v, true
+}
+
+func (c *preStateCache) Store(key Key, value any) {
+	c.data.Store(string(key), value)
 }
 
 func NewMVMemory(
@@ -41,6 +59,7 @@ func NewMVMemoryWithEstimates(
 		scheduler:   scheduler,
 		stores:      stores,
 		data:        data,
+		preState:    make([]preStateCache, len(stores)),
 		lastReadSet: make([]atomic.Pointer[MultiReadSet], block_size),
 	}
 
@@ -97,7 +116,7 @@ func (mv *MVMemory) View(txn TxnIndex) *MultiMVMemoryView {
 
 func (mv *MVMemory) newMVView(name storetypes.StoreKey, txn TxnIndex) MVView {
 	i := mv.stores[name]
-	return NewMVView(i, mv.storage.GetStore(name), mv.GetMVStore(i), mv.scheduler, txn)
+	return NewMVView(i, mv.storage.GetStore(name), mv.GetMVStore(i), mv.scheduler, txn, &mv.preState[i])
 }
 
 func (mv *MVMemory) GetMVStore(i int) MVStore {

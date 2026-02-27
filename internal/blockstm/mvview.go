@@ -11,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
+const preStateMaxCacheValueBytes = 4096
+
 var (
 	_ storetypes.KVStore    = (*GMVMemoryView[[]byte])(nil)
 	_ storetypes.ObjKVStore = (*GMVMemoryView[any])(nil)
@@ -23,6 +25,7 @@ type GMVMemoryView[V any] struct {
 	storage   storetypes.GKVStore[V]
 	mvData    *GMVData[V]
 	scheduler *Scheduler
+	preState  *preStateCache
 	store     int
 
 	txn      TxnIndex
@@ -30,26 +33,47 @@ type GMVMemoryView[V any] struct {
 	writeSet *GMemDB[V]
 }
 
-func NewMVView(store int, storage storetypes.Store, mvData MVStore, scheduler *Scheduler, txn TxnIndex) MVView {
+func NewMVView(store int, storage storetypes.Store, mvData MVStore, scheduler *Scheduler, txn TxnIndex, preState *preStateCache) MVView {
 	switch data := mvData.(type) {
 	case *GMVData[any]:
-		return NewGMVMemoryView(store, storage.(storetypes.ObjKVStore), data, scheduler, txn)
+		return NewGMVMemoryView(store, storage.(storetypes.ObjKVStore), data, scheduler, txn, preState)
 	case *GMVData[[]byte]:
-		return NewGMVMemoryView(store, storage.(storetypes.KVStore), data, scheduler, txn)
+		return NewGMVMemoryView(store, storage.(storetypes.KVStore), data, scheduler, txn, preState)
 	default:
 		panic("unsupported value type")
 	}
 }
 
-func NewGMVMemoryView[V any](store int, storage storetypes.GKVStore[V], mvData *GMVData[V], scheduler *Scheduler, txn TxnIndex) *GMVMemoryView[V] {
+func NewGMVMemoryView[V any](store int, storage storetypes.GKVStore[V], mvData *GMVData[V], scheduler *Scheduler, txn TxnIndex, preState *preStateCache) *GMVMemoryView[V] {
 	return &GMVMemoryView[V]{
 		store:     store,
 		storage:   storage,
 		mvData:    mvData,
 		scheduler: scheduler,
+		preState:  preState,
 		txn:       txn,
 		readSet:   new(ReadSet),
 	}
+}
+
+func (s *GMVMemoryView[V]) getFromPreState(key []byte) V {
+	if s.preState != nil {
+		if cached, ok := s.preState.Load(key); ok {
+			return cached.(V)
+		}
+	}
+
+	result := s.storage.Get(key)
+	if s.preState != nil {
+		if bytesValue, ok := any(result).([]byte); ok {
+			if len(bytesValue) <= preStateMaxCacheValueBytes {
+				s.preState.Store(key, any(result))
+			}
+		} else {
+			s.preState.Store(key, any(result))
+		}
+	}
+	return result
 }
 
 func (s *GMVMemoryView[V]) init() {
@@ -105,7 +129,7 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 		// if not found, record version ⊥ when reading from storage.
 		s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{key, version})
 		if !version.Valid() {
-			result := s.storage.Get(key)
+			result := s.getFromPreState(key)
 			telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadStorage) //nolint:staticcheck // TODO: switch to OpenTelemetry
 			return result
 		}

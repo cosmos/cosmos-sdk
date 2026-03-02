@@ -134,7 +134,7 @@ confix:
 
 #? mocks: Generate mock file
 mocks: $(MOCKS_DIR)
-	@go install go.uber.org/mock/mockgen@v0.6.0
+	@go install go.uber.org/mock/mockgen@latest
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
 

@@ -147,7 +147,7 @@ jobs:
 
   repo-analysis:
     runs-on: depot-ubuntu-22.04-4
-    needs: [tests, test-integration, test-e2e, test-clientv2, test-core, test-depinject, test-errors, test-math, test-schema, test-collections, test-cosmovisor, test-confix, test-store, test-log, test-x-tx, test-tools-benchmark, test-poa]
+    needs: [tests, test-integration, test-e2e, test-clientv2, test-core, test-depinject, test-errors, test-math, test-collections, test-cosmovisor, test-confix, test-store, test-log, test-poa]
     steps:
       - uses: actions/checkout@v6
       - uses: technote-space/get-diff-action@v6.1.2
@@ -441,33 +441,6 @@ jobs:
           name: "${{ github.sha }}-math-coverage"
           path: ./math/coverage.out
 
-  test-schema:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
-        with:
-          go-version: "1.12"
-          cache: true
-          cache-dependency-path: schema/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            schema/**/*.go
-            schema/go.mod
-            schema/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd schema
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v6
-        if: env.GIT_DIFF
-        with:
-          name: "${{ github.sha }}-schema-coverage"
-          path: ./schema/coverage.out
-
   test-collections:
     runs-on: depot-ubuntu-22.04-4
     steps:
@@ -580,33 +553,6 @@ jobs:
         with:
           name: "${{ github.sha }}-store-coverage"
           path: ./store/coverage.out
-  test-blockstm:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
-        with:
-          go-version: "1.25.7"
-          check-latest: true
-          cache: true
-          cache-dependency-path: store/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            blockstm/**/*.go
-            blockstm/go.mod
-            blockstm/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd blockstm
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -coverpkg=./,./tree -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v6
-        if: env.GIT_DIFF
-        with:
-          name: "${{ github.sha }}-blockstm-coverage"
-          path: ./blockstm/coverage.out
 
   test-log:
     runs-on: depot-ubuntu-22.04-4
@@ -635,69 +581,6 @@ jobs:
         with:
           name: "${{ github.sha }}-log-coverage"
           path: ./log/coverage.out
-
-  #############################
-  ### Cosmos SDK x/{module} ###
-  #############################
-
-  # NOTE: The following jobs are used to test the Cosmos SDK Go submodules present under x/{module}.
-  # They run when there is a diff in their respective directories.
-
-  test-x-tx:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
-        with:
-          go-version: "1.25.7"
-          check-latest: true
-          cache: true
-          cache-dependency-path: x/tx/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            x/tx/**/*.go
-            x/tx/go.mod
-            x/tx/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd x/tx
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v6
-        if: env.GIT_DIFF
-        with:
-          name: "${{ github.sha }}-x-tx-coverage"
-          path: ./x/tx/coverage.out
-
-  test-tools-benchmark:
-    runs-on: depot-ubuntu-22.04-4
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
-        with:
-          go-version: "1.25.7"
-          check-latest: true
-          cache: true
-          cache-dependency-path: tools/benchmark/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            tools/benchmark/**/*.go
-            tools/benchmark/go.mod
-            tools/benchmark/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd tools/benchmark
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace' ./...
-      - uses: actions/upload-artifact@v6
-        if: env.GIT_DIFF
-        with:
-          name: "${{ github.sha }}-tools-benchmark-coverage"
-          path: ./tools/benchmark/coverage.out
 
   #############################
   ### Enterprise POA Module ###

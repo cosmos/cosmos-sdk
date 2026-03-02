@@ -767,7 +767,7 @@ func TestGRPCPool(t *testing.T) {
 
 	f = initDeterministicFixture(t) // reset
 	getStaticValidator(t, f)
-	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6242, false)
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6302, false)
 }
 
 func TestGRPCRedelegations(t *testing.T) {

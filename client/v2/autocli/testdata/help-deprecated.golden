@@ -6,7 +6,7 @@ Usage:
 
 Flags:
       --a-bool                                                               
-      --a-coin cosmos.base.v1beta1.Coin                                      
+      --a-coin cosmos.base.v1beta1.Coin                                       (default zero)
       --a-consensus-address account address or key name                      
       --a-message testpbpulsar.AMessage (json)                               
       --a-validator-address account address or key name                      

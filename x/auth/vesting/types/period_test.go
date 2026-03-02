@@ -271,8 +271,14 @@ func TestAlignSchedules(t *testing.T) {
 	if end != 255 {
 		t.Errorf("want end 255, got %d", end)
 	}
+	if len(p) < 1 {
+		t.Errorf("want positive p length, got %d", len(p))
+	}
 	if p[0].Length != 10 {
 		t.Errorf("want p first length unchanged, got %d", p[0].Length)
+	}
+	if len(q) < 1 {
+		t.Errorf("want positive q length, got %d", len(q))
 	}
 	if q[0].Length != 140 {
 		t.Errorf("want q first length 140, got %d", q[0].Length)

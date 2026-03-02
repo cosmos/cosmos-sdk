@@ -15,7 +15,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -178,7 +177,7 @@ func TestDeductFees_WithName_Table(t *testing.T) {
 		},
 		{
 			name:             "fee collector module",
-			altCollectorName: types.FeeCollectorName,
+			altCollectorName: authtypes.FeeCollectorName,
 			expectedError:    nil,
 		},
 	}
@@ -212,12 +211,12 @@ func TestDeductFees_WithName_Table(t *testing.T) {
 			coins := sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(200)))
 
 			// Using mock bank keeper
-			s.bankKeeper.EXPECT().MintCoins(s.ctx, types.FeeCollectorName, coins).Return(nil)
-			s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.ctx, types.FeeCollectorName, accs[0].acc.GetAddress(), coins).Return(nil)
+			s.bankKeeper.EXPECT().MintCoins(s.ctx, authtypes.FeeCollectorName, coins).Return(nil)
+			s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.ctx, authtypes.FeeCollectorName, accs[0].acc.GetAddress(), coins).Return(nil)
 
-			err = s.bankKeeper.MintCoins(s.ctx, types.FeeCollectorName, coins)
+			err = s.bankKeeper.MintCoins(s.ctx, authtypes.FeeCollectorName, coins)
 			require.NoError(t, err)
-			err = s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, types.FeeCollectorName, accs[0].acc.GetAddress(), coins)
+			err = s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.FeeCollectorName, accs[0].acc.GetAddress(), coins)
 			require.NoError(t, err)
 
 			s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), tc.altCollectorName, gomock.Any()).Return(nil)

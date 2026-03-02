@@ -2563,9 +2563,21 @@ func TestFinalizeBlockDeferResponseHandle(t *testing.T) {
 		})
 	})
 
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(signalCh)
+
 	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 2,
 	})
+
+	select {
+	case sig := <-signalCh:
+		t.Logf("Received expected signal: %v", sig)
+	case <-time.After(5 * time.Second):
+		t.Log("Expected signal but didn't receive one")
+	}
+
 	require.Empty(t, res)
 	require.NotEmpty(t, err)
 }

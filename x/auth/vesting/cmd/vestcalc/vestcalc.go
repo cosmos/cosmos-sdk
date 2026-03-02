@@ -74,7 +74,7 @@ func divideCoins(coins sdk.Coins, divisor int) ([]sdk.Coins, error) {
 	for _, coin := range coins {
 		dividedCoin, err := divide(coin.Amount, divisor)
 		if err != nil {
-			return nil, fmt.Errorf("cannot divide %s: %v", coin.Denom, err)
+			return nil, fmt.Errorf("cannot divide %s: %w", coin.Denom, err)
 		}
 		divisionsByDenom[coin.Denom] = dividedCoin
 	}
@@ -496,7 +496,7 @@ func genWriteConfig() (writeConfig, error) {
 	wc := writeConfig{}
 	coins, err := sdk.ParseCoinsNormalized(*flagCoins)
 	if err != nil {
-		return wc, fmt.Errorf("cannot parse --coins: %v", err)
+		return wc, fmt.Errorf("cannot parse --coins: %w", err)
 	}
 	wc.Coins = coins
 	if *flagMonths < 1 {
@@ -513,21 +513,21 @@ func genWriteConfig() (writeConfig, error) {
 func (wc writeConfig) generateEvents() ([]event, error) {
 	divisions, err := divideCoins(wc.Coins, wc.Months)
 	if err != nil {
-		return nil, fmt.Errorf("vesting amount division failed: %v", err)
+		return nil, fmt.Errorf("vesting amount division failed: %w", err)
 	}
 	times, err := monthlyVestTimes(wc.Start, wc.Months, wc.TimeOfDay)
 	if err != nil {
-		return nil, fmt.Errorf("vesting time calcuation failed: %v", err)
+		return nil, fmt.Errorf("vesting time calcuation failed: %w", err)
 	}
 	events, err := zipEvents(divisions, times)
 	if err != nil {
-		return nil, fmt.Errorf("vesting event generation failed: %v", err)
+		return nil, fmt.Errorf("vesting event generation failed: %w", err)
 	}
 	if len(wc.Cliffs) > 0 {
 		last := maxTime(wc.Cliffs)
 		events, err = applyCliff(events, last)
 		if err != nil {
-			return nil, fmt.Errorf("vesting cliff failed: %v", err)
+			return nil, fmt.Errorf("vesting cliff failed: %w", err)
 		}
 	}
 	return events, nil

@@ -529,7 +529,7 @@ func (s *CLITestSuite) msgSubmitLegacyProposal(clientCtx client.Context, from, t
 
 	args = append(args, extraArgs...)
 
-	cmd := govcli.NewCmdSubmitLegacyProposal()
+	cmd := govcli.NewCmdSubmitLegacyProposal() //nolint:staticcheck // SA1019: deprecated is the *point*
 
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)

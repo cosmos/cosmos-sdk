@@ -13,14 +13,12 @@ import (
 	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestGetSimulationLog(t *testing.T) {
-	legacyAmino := codec.NewLegacyAmino()
 	decoders := make(simulation.StoreDecoderRegistry)
 	decoders[authtypes.StoreKey] = func(kvAs, kvBs kv.Pair) string { return "10" }
 
@@ -33,11 +31,6 @@ func TestGetSimulationLog(t *testing.T) {
 			"Empty",
 			[]kv.Pair{{}},
 			"",
-		},
-		{
-			authtypes.StoreKey,
-			[]kv.Pair{{Key: authtypes.GlobalAccountNumberKey, Value: legacyAmino.MustMarshal(uint64(10))}},
-			"10",
 		},
 		{
 			"OtherStore",

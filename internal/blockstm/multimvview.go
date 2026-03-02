@@ -63,3 +63,25 @@ func (mv *MultiMVMemoryView) ApplyWriteSet(version TxnVersion) MultiLocations {
 	}
 	return newLocations
 }
+
+// CountReads returns the total number of reads across all stores
+func (mv *MultiMVMemoryView) CountReads() int {
+	count := 0
+	for _, view := range mv.views {
+		rs := view.ReadSet()
+		count += len(rs.Reads)
+		for _, iter := range rs.Iterators {
+			count += len(iter.Reads)
+		}
+	}
+	return count
+}
+
+// CountWrites returns the total number of writes across all stores
+func (mv *MultiMVMemoryView) CountWrites() int {
+	count := 0
+	for _, view := range mv.views {
+		count += view.WriteCount()
+	}
+	return count
+}

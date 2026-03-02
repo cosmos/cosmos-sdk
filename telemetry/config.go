@@ -83,12 +83,12 @@ func InitializeOpenTelemetry(filePath string) error {
 
 	opts = append(opts, otelconf.WithOpenTelemetryConfiguration(*cfg))
 
-	// parse supplemental config (features not yet supported by otelconf)
+	// parse extensions config (features not yet supported by otelconf)
 	var supplemental struct {
-		CosmosExtra *SupplementalOptions `yaml:"cosmos_extra"`
+		Extensions *ExtensionOptions `yaml:"extensions"`
 	}
-	if err := yaml.Unmarshal(bz, &supplemental); err == nil && supplemental.CosmosExtra != nil {
-		extra := *supplemental.CosmosExtra
+	if err := yaml.Unmarshal(bz, &supplemental); err == nil && supplemental.Extensions != nil {
+		extra := *supplemental.Extensions
 		for name, cfg := range extra.Instruments {
 			inst := registry.Get(name)
 			if inst == nil {
@@ -157,16 +157,16 @@ func setNoop() {
 	logglobal.SetLoggerProvider(lognoop.NewLoggerProvider())
 }
 
-// SupplementalOptions provides configuration for OpenTelemetry features not yet
+// ExtensionOptions provides configuration for OpenTelemetry features not yet
 // supported by [otelconf], such as writing traces/metrics/logs to local files,
 // enabling additional host/runtime instrumentation, and configuring custom
 // propagators.
 //
-// When present in otel.yaml under the `cosmos_extra` key, these fields
+// When present in otel.yaml under the `extensions` key, these fields
 // augment/override portions of the OpenTelemetry SDK initialization.
 //
 // For an example configuration, see the README in this package.
-type SupplementalOptions struct {
+type ExtensionOptions struct {
 	// TraceFile is an optional path to a file where spans should be exported
 	// using the stdouttrace exporter. If empty, no file-based trace export is
 	// configured.

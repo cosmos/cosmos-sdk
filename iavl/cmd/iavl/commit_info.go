@@ -71,3 +71,5 @@ func (v *commitInfoView) Title() string {
 func (v *commitInfoView) KeyMap() help.KeyMap {
 	return emptyKeyMap{}
 }
+
+func (v *commitInfoView) HelpDoc() string { return commitInfoHelpDoc }

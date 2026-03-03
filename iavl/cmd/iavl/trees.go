@@ -136,3 +136,5 @@ func (v *treesView) Title() string {
 func (v *treesView) KeyMap() help.KeyMap {
 	return v.keys
 }
+
+func (v *treesView) HelpDoc() string { return treesHelpDoc }

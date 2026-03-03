@@ -81,3 +81,5 @@ func (v *orphansView) Title() string {
 func (v *orphansView) KeyMap() help.KeyMap {
 	return emptyKeyMap{}
 }
+
+func (v *orphansView) HelpDoc() string { return orphansHelpDoc }

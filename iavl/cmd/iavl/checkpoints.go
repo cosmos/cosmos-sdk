@@ -210,3 +210,5 @@ func (v *checkpointsView) Title() string {
 func (v *checkpointsView) KeyMap() help.KeyMap {
 	return v.keys
 }
+
+func (v *checkpointsView) HelpDoc() string { return checkpointsHelpDoc }

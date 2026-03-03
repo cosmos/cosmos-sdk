@@ -82,3 +82,5 @@ func (v *branchesView) Title() string {
 func (v *branchesView) KeyMap() help.KeyMap {
 	return emptyKeyMap{}
 }
+
+func (v *branchesView) HelpDoc() string { return branchesHelpDoc }

@@ -127,6 +127,8 @@ func (v *walAnalysisView) KeyMap() help.KeyMap {
 	return v.keys
 }
 
+func (v *walAnalysisView) HelpDoc() string { return walAnalysisHelpDoc }
+
 // walEntriesView shows individual WAL entries for a version.
 
 type walEntriesView struct {
@@ -189,3 +191,5 @@ func (v *walEntriesView) Title() string {
 func (v *walEntriesView) KeyMap() help.KeyMap {
 	return emptyKeyMap{}
 }
+
+func (v *walEntriesView) HelpDoc() string { return walEntriesHelpDoc }

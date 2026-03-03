@@ -38,6 +38,7 @@ type globalKeyMap struct {
 	Back    key.Binding
 	Quit    key.Binding
 	Refresh key.Binding
+	Help    key.Binding
 }
 
 func newGlobalKeyMap() globalKeyMap {
@@ -53,6 +54,10 @@ func newGlobalKeyMap() globalKeyMap {
 		Refresh: key.NewBinding(
 			key.WithKeys("r"),
 			key.WithHelp("r", "refresh"),
+		),
+		Help: key.NewBinding(
+			key.WithKeys("?"),
+			key.WithHelp("?", "help"),
 		),
 	}
 }
@@ -79,6 +84,7 @@ func (c combinedKeyMap) ShortHelp() []key.Binding {
 		bindings = append(bindings, c.global.Refresh)
 	}
 	bindings = append(bindings, c.global.Quit)
+	bindings = append(bindings, c.global.Help)
 	return bindings
 }
 
@@ -98,12 +104,13 @@ func (c combinedKeyMap) FullHelp() [][]key.Binding {
 
 // model is the root Bubble Tea model with a stack of views.
 type model struct {
-	stack  []viewModel
-	width  int
-	height int
-	help   help.Model
-	keys   globalKeyMap
-	err    string
+	stack     []viewModel
+	width     int
+	height    int
+	help      help.Model
+	keys      globalKeyMap
+	err       string
+	helpModal helpModal
 }
 
 var tableStyles table.Styles
@@ -159,6 +166,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.help.Width = msg.Width
+		m.helpModal.resize(msg.Width, msg.Height)
 		// Delegate to current view.
 		top := m.stack[len(m.stack)-1]
 		var cmd tea.Cmd
@@ -167,6 +175,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 
 	case tea.KeyMsg:
+		// When modal is open, intercept all keys.
+		if m.helpModal.visible {
+			switch {
+			case key.Matches(msg, m.keys.Help), key.Matches(msg, m.keys.Back):
+				m.helpModal.visible = false
+				return m, nil
+			default:
+				var cmd tea.Cmd
+				m.helpModal.viewport, cmd = m.helpModal.viewport.Update(msg)
+				return m, cmd
+			}
+		}
+
 		switch {
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
@@ -192,6 +213,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.err = ""
 			}
 			return m, nil
+		case key.Matches(msg, m.keys.Help):
+			top := m.stack[len(m.stack)-1]
+			doc := appHelpDoc
+			if d, ok := top.(helpDocer); ok {
+				doc = d.HelpDoc()
+			}
+			m.helpModal.open(doc, m.width, m.height)
+			return m, nil
 		}
 	}
 
@@ -204,6 +233,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+	if m.helpModal.visible {
+		return m.helpModal.render(m.width, m.height)
+	}
+
 	boxStyle := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("240"))

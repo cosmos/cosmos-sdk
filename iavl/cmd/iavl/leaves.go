@@ -78,3 +78,5 @@ func (v *leavesView) Title() string {
 func (v *leavesView) KeyMap() help.KeyMap {
 	return emptyKeyMap{}
 }
+
+func (v *leavesView) HelpDoc() string { return leavesHelpDoc }

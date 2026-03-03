@@ -158,6 +158,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case helpRenderedMsg:
+		m.helpModal.setRendered(msg)
+		return m, nil
+
 	case errMsg:
 		m.err = msg.err.Error()
 		return m, nil
@@ -166,7 +170,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.help.Width = msg.Width
-		m.helpModal.resize(msg.Width, msg.Height)
+		if cmd := m.helpModal.resize(msg.Width, msg.Height); cmd != nil {
+			return m, cmd
+		}
 		// Delegate to current view.
 		top := m.stack[len(m.stack)-1]
 		var cmd tea.Cmd
@@ -177,15 +183,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		// When modal is open, intercept all keys.
 		if m.helpModal.visible {
-			switch {
-			case key.Matches(msg, m.keys.Help), key.Matches(msg, m.keys.Back):
+			if key.Matches(msg, m.keys.Help) || key.Matches(msg, m.keys.Back) {
 				m.helpModal.visible = false
 				return m, nil
-			default:
-				var cmd tea.Cmd
-				m.helpModal.viewport, cmd = m.helpModal.viewport.Update(msg)
-				return m, cmd
 			}
+			cmd, _ := m.helpModal.handleKey(msg)
+			return m, cmd
 		}
 
 		switch {
@@ -219,8 +222,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if d, ok := top.(helpDocer); ok {
 				doc = d.HelpDoc()
 			}
-			m.helpModal.open(doc, m.width, m.height)
-			return m, nil
+			cmd := m.helpModal.open(doc, m.width, m.height)
+			return m, cmd
 		}
 	}
 

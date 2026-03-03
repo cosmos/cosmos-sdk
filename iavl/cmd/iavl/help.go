@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/viewport"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 
@@ -15,63 +17,228 @@ type helpDocer interface {
 	HelpDoc() string
 }
 
-// helpModal holds state for the floating help documentation modal.
-type helpModal struct {
-	visible  bool
-	viewport viewport.Model
-	content  string // raw markdown, stored for re-render on resize
-	width    int
-	height   int
+// docEntry is one entry in the help sidebar TOC.
+type docEntry struct {
+	label string
+	doc   string // raw markdown
 }
 
-func (h *helpModal) open(doc string, totalW, totalH int) {
-	h.content = doc
-	h.width = totalW
-	h.height = totalH
-	h.visible = true
+const sidebarW = 16
 
-	// Border is 1 cell on each side; padding adds 2 more each side horizontally.
-	// vpW = totalW - 2 (border) - 4 (padding)
-	vpW := totalW - 6
-	if vpW < 10 {
-		vpW = 10
+// allDocs is the fixed list of help topics in sidebar order.
+var allDocs = []docEntry{
+	{label: "Overview", doc: appHelpDoc},
+	{label: "Trees", doc: treesHelpDoc},
+	{label: "Changesets", doc: loadDocMarkdown("changesets.md")},
+	{label: "Checkpoints", doc: checkpointsHelpDoc},
+	{label: "Leaves", doc: leavesHelpDoc},
+	{label: "Branches", doc: branchesHelpDoc},
+	{label: "Orphans", doc: orphansHelpDoc},
+	{label: "WAL Analysis", doc: walAnalysisHelpDoc},
+	{label: "WAL Entries", doc: walEntriesHelpDoc},
+	{label: "Commit Info", doc: commitInfoHelpDoc},
+}
+
+// helpModal holds state for the floating help documentation modal.
+type helpModal struct {
+	visible        bool
+	viewport       viewport.Model
+	sidebarCursor  int
+	sidebarFocused bool
+	renderCache    map[int]string
+	cacheVpW       int
+	width          int
+	height         int
+}
+
+// helpRenderedMsg is sent when background glamour rendering completes.
+type helpRenderedMsg struct {
+	idx      int
+	vpW      int
+	rendered string
+}
+
+func (h *helpModal) vpDims(totalW, totalH int) (vpW, vpH int) {
+	// Inner content width = totalW - 6 (border 1+1, padding 2+2).
+	// Split as: sidebar(sidebarW) + divider(1) + viewport(rest).
+	vpW = totalW - 6 - sidebarW - 1
+	if vpW < 20 {
+		vpW = 20
 	}
-	// border (2) + title (1) + footer (1) = 4 lines overhead
-	vpH := totalH - 4
+	// border(2) + title(1) + footer(1) = 4 lines overhead
+	vpH = totalH - 4
 	if vpH < 5 {
 		vpH = 5
 	}
-
-	r, err := glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithWordWrap(vpW))
-	var rendered string
-	if err == nil {
-		rendered, err = r.Render(doc)
-	}
-	if err != nil {
-		rendered = doc
-	}
-
-	vp := viewport.New(vpW, vpH)
-	vp.SetContent(rendered)
-	h.viewport = vp
+	return
 }
 
-func (h *helpModal) resize(totalW, totalH int) {
-	if !h.visible {
-		return
+// open makes the modal visible immediately and returns a Cmd to render the
+// active doc in the background.
+func (h *helpModal) open(activeDoc string, totalW, totalH int) tea.Cmd {
+	h.visible = true
+	h.width = totalW
+	h.height = totalH
+	h.sidebarFocused = false
+	if h.renderCache == nil {
+		h.renderCache = make(map[int]string)
 	}
-	h.open(h.content, totalW, totalH)
+
+	// Find the sidebar entry matching the active doc.
+	h.sidebarCursor = 0
+	for i, e := range allDocs {
+		if e.doc == activeDoc {
+			h.sidebarCursor = i
+			break
+		}
+	}
+
+	vpW, vpH := h.vpDims(totalW, totalH)
+	h.cacheVpW = vpW
+	h.viewport = viewport.New(vpW, vpH)
+	return h.loadCurrent()
+}
+
+// loadCurrent populates the viewport for the current sidebar cursor, returning
+// a background render Cmd if the doc is not yet cached.
+func (h *helpModal) loadCurrent() tea.Cmd {
+	idx := h.sidebarCursor
+	if idx < 0 || idx >= len(allDocs) {
+		return nil
+	}
+	if rendered, ok := h.renderCache[idx]; ok {
+		h.viewport.SetContent(rendered)
+		h.viewport.GotoTop()
+		return nil
+	}
+	h.viewport.SetContent("Rendering…")
+	h.viewport.GotoTop()
+	vpW := h.cacheVpW
+	doc := allDocs[idx].doc
+	return func() tea.Msg {
+		r, err := glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithWordWrap(vpW))
+		var rendered string
+		if err == nil {
+			rendered, err = r.Render(doc)
+		}
+		if err != nil {
+			rendered = doc
+		}
+		return helpRenderedMsg{idx: idx, vpW: vpW, rendered: rendered}
+	}
+}
+
+// setRendered is called when a background render completes.
+func (h *helpModal) setRendered(msg helpRenderedMsg) {
+	if msg.vpW != h.cacheVpW {
+		return // stale render from before a resize; discard
+	}
+	h.renderCache[msg.idx] = msg.rendered
+	if msg.idx == h.sidebarCursor {
+		h.viewport.SetContent(msg.rendered)
+		h.viewport.GotoTop()
+	}
+}
+
+func (h *helpModal) resize(totalW, totalH int) tea.Cmd {
+	if !h.visible {
+		return nil
+	}
+	vpW, vpH := h.vpDims(totalW, totalH)
+	if vpW != h.cacheVpW {
+		h.renderCache = make(map[int]string) // invalidate cache on width change
+		h.cacheVpW = vpW
+	}
+	h.width = totalW
+	h.height = totalH
+	h.viewport.Width = vpW
+	h.viewport.Height = vpH
+	return h.loadCurrent()
+}
+
+// handleKey routes key events inside the modal. Returns a Cmd and whether
+// the modal should close.
+func (h *helpModal) handleKey(msg tea.KeyMsg) (tea.Cmd, bool) {
+	switch msg.String() {
+	case "tab":
+		h.sidebarFocused = !h.sidebarFocused
+		return nil, false
+	}
+
+	if h.sidebarFocused {
+		switch msg.String() {
+		case "up", "k":
+			if h.sidebarCursor > 0 {
+				h.sidebarCursor--
+				return h.loadCurrent(), false
+			}
+		case "down", "j":
+			if h.sidebarCursor < len(allDocs)-1 {
+				h.sidebarCursor++
+				return h.loadCurrent(), false
+			}
+		}
+		return nil, false
+	}
+
+	// Content pane focused — pass all other keys to the viewport.
+	var cmd tea.Cmd
+	h.viewport, cmd = h.viewport.Update(msg)
+	return cmd, false
 }
 
 func (h *helpModal) render(totalW, totalH int) string {
+	vpH := h.viewport.Height
+
+	dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("242"))
+	activeStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("62")).Bold(true)
+	selectedStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("62"))
+
+	// Sidebar column.
+	var sidebarLines []string
+	for i, e := range allDocs {
+		label := e.label
+		if len([]rune(label)) > sidebarW-2 {
+			label = string([]rune(label)[:sidebarW-2])
+		}
+		var line string
+		switch {
+		case i == h.sidebarCursor && h.sidebarFocused:
+			line = activeStyle.Width(sidebarW).Render("▶ " + label)
+		case i == h.sidebarCursor:
+			line = selectedStyle.Width(sidebarW).Render("  " + label)
+		default:
+			line = dimStyle.Width(sidebarW).Render("  " + label)
+		}
+		sidebarLines = append(sidebarLines, line)
+	}
+	// Pad sidebar to vpH lines.
+	blank := strings.Repeat(" ", sidebarW)
+	for len(sidebarLines) < vpH {
+		sidebarLines = append(sidebarLines, blank)
+	}
+	sidebarBlock := strings.Join(sidebarLines[:vpH], "\n")
+
+	// Divider column.
+	divLines := make([]string, vpH)
+	for i := range divLines {
+		divLines[i] = dimStyle.Render("│")
+	}
+	dividerBlock := strings.Join(divLines, "\n")
+
+	body := lipgloss.JoinHorizontal(lipgloss.Top, sidebarBlock, dividerBlock, h.viewport.View())
+
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("62"))
 	footerStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("242"))
 
 	title := titleStyle.Render(" Documentation ")
-	body := h.viewport.View()
-	footer := footerStyle.Render(" ? or esc  close  •  ↑/↓ / j/k  scroll  •  pgup/pgdn  page ")
-
-	content := title + "\n" + body + "\n" + footer
+	var footerHint string
+	if h.sidebarFocused {
+		footerHint = " tab: content  ↑/↓: navigate  esc/?: close "
+	} else {
+		footerHint = " tab: topics  ↑/↓/pgup/pgdn: scroll  esc/?: close "
+	}
+	footer := footerStyle.Render(footerHint)
 
 	boxStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
@@ -79,7 +246,7 @@ func (h *helpModal) render(totalW, totalH int) string {
 		Padding(0, 2).
 		Width(totalW - 2)
 
-	return boxStyle.Render(content)
+	return boxStyle.Render(title + "\n" + body + "\n" + footer)
 }
 
 // Per-view help doc constants.

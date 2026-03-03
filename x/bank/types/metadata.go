@@ -8,6 +8,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	MaxDenomUnits  = 64
+	MaxAliases     = 16
+	MaxAliasLength = 128
+)
+
 // Validate performs a basic validation of the coin metadata fields. It checks:
 //   - Name and Symbol are not blank
 //   - Base and Display denominations are valid coin denominations
@@ -30,6 +36,10 @@ func (m Metadata) Validate() error {
 
 	if err := sdk.ValidateDenom(m.Display); err != nil {
 		return fmt.Errorf("invalid metadata display denom: %w", err)
+	}
+
+	if len(m.DenomUnits) > MaxDenomUnits {
+		return fmt.Errorf("too many denomination units: %d > max %d", len(m.DenomUnits), MaxDenomUnits)
 	}
 
 	var (
@@ -83,6 +93,10 @@ func (du DenomUnit) Validate() error {
 		return fmt.Errorf("invalid denom unit: %w", err)
 	}
 
+	if len(du.Aliases) > MaxAliases {
+		return fmt.Errorf("too many aliases for denom unit %s: %d > max %d", du.Denom, len(du.Aliases), MaxAliases)
+	}
+
 	seenAliases := make(map[string]bool)
 	for _, alias := range du.Aliases {
 		if seenAliases[alias] {
@@ -91,6 +105,10 @@ func (du DenomUnit) Validate() error {
 
 		if strings.TrimSpace(alias) == "" {
 			return fmt.Errorf("alias for denom unit %s cannot be blank", du.Denom)
+		}
+
+		if len(alias) > MaxAliasLength {
+			return fmt.Errorf("alias for denom unit %s is too long: %d > max %d", du.Denom, len(alias), MaxAliasLength)
 		}
 
 		seenAliases[alias] = true

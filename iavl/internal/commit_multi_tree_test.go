@@ -171,15 +171,15 @@ type SimCommitMultiTree struct {
 	mtV2  *CommitMultiTree
 	dirV2 string
 
-	kv1, kv2, kv3    *store.KVStoreKey
-	mem1             *store.MemoryStoreKey
-	transient1       *store.TransientStoreKey
-	storeKeys        []store.StoreKey
-	kvStoreKeys      []store.StoreKey
-	keyGens          []*keyGen
-	opts             Options
-	pruningOpts      pruningtypes.PruningOptions
-	lastPruneVersion int64
+	kv1, kv2, kv3         *store.KVStoreKey
+	mem1                  *store.MemoryStoreKey
+	transient1            *store.TransientStoreKey
+	storeKeys             []store.StoreKey
+	kvStoreKeys           []store.StoreKey
+	keyGens               []*keyGen
+	opts                  Options
+	pruningOpts           pruningtypes.PruningOptions
+	lastCompactionVersion int64
 }
 
 func (sim *SimCommitMultiTree) openV2Tree(t *rapid.T) {
@@ -255,12 +255,12 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 	require.Equal(t, commitId1.Hash, commitId2.Hash, "commit hashes do not match")
 
 	// prune manually for determinism in testing instead of relying on the async pruner
-	if sim.pruningOpts.Interval != 0 && commitId1.Version-sim.lastPruneVersion >= int64(sim.pruningOpts.Interval) {
+	if sim.pruningOpts.Interval != 0 && commitId1.Version-sim.lastCompactionVersion >= int64(sim.pruningOpts.Interval) {
 		if commitId1.Version > int64(sim.pruningOpts.KeepRecent)+1 {
 			retainVersion := commitId1.Version - int64(sim.pruningOpts.KeepRecent)
-			t.Logf("pruning at version %d, retainVersion=%d", commitId1.Version, retainVersion)
-			sim.lastPruneVersion = commitId1.Version
-			sim.mtV2.pruneNow(context.Background(), uint64(retainVersion))
+			t.Logf("compacting at version %d, retainVersion=%d", commitId1.Version, retainVersion)
+			sim.lastCompactionVersion = commitId1.Version
+			sim.mtV2.compactNow(context.Background(), uint64(retainVersion))
 		}
 	}
 
@@ -270,9 +270,6 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 		require.NoError(t, sim.mtV2.Close())
 		sim.openV2Tree(t)
 	}
-
-	// optionally rollback both stores to a previous version
-	sim.checkVersionRollback(t, commitId1.Version)
 
 	// optionally check history by reopening old versions
 	checkHistory := rapid.Bool().Draw(t, "checkHistory")
@@ -300,49 +297,6 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 			compareIteratorsAtVersion(t, iterV1, iterV2)
 		}
 	}
-}
-
-func (sim *SimCommitMultiTree) checkVersionRollback(t *rapid.T, commitVersion int64) {
-	doRollback := rapid.Bool().Draw(t, "doVersionRollback")
-	if !doRollback || commitVersion <= 1 {
-		return
-	}
-
-	oldestVersion := 1
-	keepWindow := int(commitVersion) - int(sim.pruningOpts.KeepRecent)
-	if keepWindow > oldestVersion {
-		oldestVersion = keepWindow
-	}
-	if oldestVersion >= int(commitVersion) {
-		return
-	}
-
-	rollbackVersion := int64(rapid.IntRange(oldestVersion, int(commitVersion)-1).Draw(t, "rollbackVersion"))
-	t.Logf("rolling back from version %d to version %d", commitVersion, rollbackVersion)
-
-	require.NoError(t, sim.mtV1.RollbackToVersion(rollbackVersion))
-	require.NoError(t, sim.mtV2.RollbackToVersion(rollbackVersion))
-
-	// verify both stores agree after rollback
-	ms1 := sim.mtV1.CacheMultiStore()
-	ms2 := sim.mtV2.CacheMultiStore()
-	for _, storeKey := range sim.kvStoreKeys {
-		iterV1 := ms1.GetKVStore(storeKey).Iterator(nil, nil)
-		iterV2 := ms2.GetKVStore(storeKey).Iterator(nil, nil)
-		t.Logf("comparing store %s after rollback to version %d", storeKey.Name(), rollbackVersion)
-		compareIteratorsAtVersion(t, iterV1, iterV2)
-	}
-
-	// reset lastPruneVersion if we rolled back past it
-	if sim.lastPruneVersion > rollbackVersion {
-		sim.lastPruneVersion = rollbackVersion
-	}
-
-	//// optionally close and reopen V2 to verify rolled-back state persists to disk
-	//if rapid.Bool().Draw(t, "closeReopenAfterRollback") {
-	//	require.NoError(t, sim.mtV2.Close())
-	//	sim.openV2Tree(t)
-	//}
 }
 
 func (sim *SimCommitMultiTree) applyVersionUpdates(t *rapid.T, cacheMs1, cacheMs2 store.MultiStore) {

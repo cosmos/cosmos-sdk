@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-type CompactOptions struct {
+type CompactorOptions struct {
 	RetainCriteria  RetainCriteria
 	CompactedAt     uint32 // version at which compaction is done
 	WALStartVersion uint32
@@ -44,7 +44,7 @@ type pendingCompactionEntry struct {
 	origStartCheckpoint uint32
 }
 
-func NewCompactor(ctx context.Context, reader *ChangesetReader, opts CompactOptions, store *TreeStore) (*Compactor, error) {
+func NewCompactor(ctx context.Context, reader *ChangesetReader, opts CompactorOptions, store *TreeStore) (*Compactor, error) {
 	files := reader.changeset.files
 	startingVersion := files.StartVersion()
 	lastCompactedAt := files.CompactedAtVersion()

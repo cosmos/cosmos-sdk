@@ -536,8 +536,8 @@ func iavlProofOps(tree *TreeReader, key []byte, exists bool) (*cmtprotocrypto.Pr
 	return &cmtprotocrypto.ProofOps{Ops: []cmtprotocrypto.ProofOp{op.ProofOp()}}, nil
 }
 
-func (c *CommitTree) prune(ctx context.Context, retainVersion uint32) error {
-	return RunCompactor(ctx, c.treeStore, PruneOptions{
+func (c *CommitTree) compact(ctx context.Context, retainVersion uint32) error {
+	return RunCompactor(ctx, c.treeStore, CompactionOptions{
 		RetainVersion:          retainVersion,
 		CompactionRolloverSize: c.opts.CompactionRolloverSize,
 	})

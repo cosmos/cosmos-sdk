@@ -10,9 +10,9 @@ import (
 )
 
 type MultiTreeDescription struct {
-	Version          uint64                     `json:"version"`
-	Trees            map[string]TreeDescription `json:"tree_descriptions"`
-	LastPruneVersion uint64                     `json:"last_prune_version"`
+	Version               uint64                     `json:"version"`
+	Trees                 map[string]TreeDescription `json:"tree_descriptions"`
+	LastCompactionVersion uint64                     `json:"last_compaction_version"`
 }
 
 func RenderHTML(w io.Writer, desc MultiTreeDescription) error {
@@ -137,7 +137,7 @@ var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
 <h1>IAVL Tree Inspector</h1>
 <div class="meta">
   Version: <span>{{.Version}}</span> &middot;
-  Last Prune Version: <span>{{.LastPruneVersion}}</span>
+  Last Compaction Version: <span>{{.LastCompactionVersion}}</span>
 </div>
 
 {{range $name, $tree := .Trees}}

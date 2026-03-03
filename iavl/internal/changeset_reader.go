@@ -138,7 +138,7 @@ func (cr *ChangesetReader) GetCheckpointInfo(checkpoint uint32) (*CheckpointInfo
 			return item, nil
 		}
 	}
-	return nil, fmt.Errorf("checkpoint %d not found in changeset %s (have %d..%d, likely pruned during compaction)",
+	return nil, fmt.Errorf("checkpoint %d not found in changeset %s (have %d..%d, likely removed during compaction)",
 		checkpoint, cr.changeset.Files().Dir(), cr.firstCheckpoint, cr.lastCheckpoint)
 }
 

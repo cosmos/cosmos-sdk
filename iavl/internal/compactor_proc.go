@@ -11,15 +11,15 @@ import (
 type CompactorProc struct {
 	treeStore    *TreeStore
 	curCompactor *Compactor
-	options      PruneOptions
+	options      CompactionOptions
 }
 
-func RunCompactor(ctx context.Context, treeStore *TreeStore, options PruneOptions) error {
+func RunCompactor(ctx context.Context, treeStore *TreeStore, options CompactionOptions) error {
 	cp := newCompactorProc(treeStore, options)
 	return cp.startCompactionRun(ctx)
 }
 
-func newCompactorProc(treeStore *TreeStore, options PruneOptions) *CompactorProc {
+func newCompactorProc(treeStore *TreeStore, options CompactionOptions) *CompactorProc {
 	return &CompactorProc{
 		treeStore: treeStore,
 		options:   options,
@@ -53,7 +53,7 @@ func (cp *CompactorProc) startCompactionRun(ctx context.Context) error {
 	}
 	retainVersion := info.Version
 
-	cpOpts := CompactOptions{
+	cpOpts := CompactorOptions{
 		RetainCriteria: func(createCheckpoint, orphanVersion uint32) bool {
 			// retain if the node was orphaned at or after the version of the oldest retained checkpoint
 			return orphanVersion >= retainVersion
@@ -84,7 +84,7 @@ func (cp *CompactorProc) startCompactionRun(ctx context.Context) error {
 	return nil
 }
 
-func (cp *CompactorProc) compactOne(ctx context.Context, cs *Changeset, opts CompactOptions) error {
+func (cp *CompactorProc) compactOne(ctx context.Context, cs *Changeset, opts CompactorOptions) error {
 	ctx, span := tracer.Start(ctx, "CompactorProc.compactOne",
 		trace.WithAttributes(
 			attribute.String("changesetDir", cs.Files().Dir()),

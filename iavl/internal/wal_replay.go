@@ -133,7 +133,7 @@ func applyWalEntry(entry WALEntry, root *NodePointer, version uint32) (newRoot *
 	case WALOpCommit:
 		if entry.Version != uint64(stagedVersion) {
 			if entry.Version < uint64(stagedVersion) {
-				return nil, fmt.Errorf("version %d is no longer available (WAL starts at version %d); it may have been pruned", stagedVersion, entry.Version)
+				return nil, fmt.Errorf("version %d is no longer available (WAL starts at version %d); it may have been compacted away", stagedVersion, entry.Version)
 			}
 			return nil, fmt.Errorf("WAL commit version %d does not match expected staged version %d, WAL is corrupted", entry.Version, stagedVersion)
 		}

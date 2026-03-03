@@ -1,6 +1,6 @@
 package internal
 
-type PruneOptions struct {
+type CompactionOptions struct {
 	RetainVersion          uint32
 	CompactionRolloverSize int64
 }

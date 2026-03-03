@@ -50,12 +50,12 @@ type CommitMultiTree struct {
 	commitData      atomic.Pointer[commitData]
 	earliestVersion atomic.Int64
 
-	pruningMu      sync.Mutex
-	cancelPruning  context.CancelFunc
-	pruningActive  atomic.Bool
-	pruningDone    chan struct{}
-	pruningOptions pruningtypes.PruningOptions
-	logger         log.Logger
+	compactionMu     sync.Mutex
+	cancelCompaction context.CancelFunc
+	compactionActive atomic.Bool
+	compactionDone   chan struct{}
+	pruningOptions   pruningtypes.PruningOptions
+	logger           log.Logger
 }
 
 func (db *CommitMultiTree) EarliestVersion() int64 {
@@ -137,7 +137,7 @@ func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.Mul
 			finalizer.err.Store(err)
 		}
 		close(finalizer.done)
-		db.pruneIfNeeded() // start background pruning when needed
+		db.compactIfNeeded() // start background compaction when needed
 	}()
 	return finalizer, nil
 }
@@ -743,16 +743,16 @@ func (db *CommitMultiTree) LatestVersion() int64 {
 }
 
 func (db *CommitMultiTree) Close() error {
-	db.pruningMu.Lock()
-	cancel := db.cancelPruning
-	done := db.pruningDone
-	db.pruningMu.Unlock()
+	db.compactionMu.Lock()
+	cancel := db.cancelCompaction
+	done := db.compactionDone
+	db.compactionMu.Unlock()
 
 	if cancel != nil {
 		cancel()
 	}
 	if done != nil {
-		// wait for any ongoing pruning to finish before closing stores
+		// wait for any ongoing compaction to finish before closing stores
 		<-done
 	}
 	var errGroup errgroup.Group
@@ -825,7 +825,7 @@ func (db *CommitMultiTree) cacheMultiStore(version int64) storetypes.CacheMultiS
 	})
 }
 
-func (db *CommitMultiTree) pruneIfNeeded() {
+func (db *CommitMultiTree) compactIfNeeded() {
 	if db.pruningOptions.Strategy == pruningtypes.PruningNothing || db.pruningOptions.Interval == 0 {
 		return
 	}
@@ -845,9 +845,9 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 	}
 	retainVersion := version - db.pruningOptions.KeepRecent
 
-	if !db.pruningActive.CompareAndSwap(false, true) {
-		// another prune started since we checked, skip
-		db.logger.Warn("skipping pruning since another prune is already in progress",
+	if !db.compactionActive.CompareAndSwap(false, true) {
+		// another compaction started since we checked, skip
+		db.logger.Warn("skipping compaction since another compaction is already in progress",
 			"version", version,
 			"retain_version", retainVersion,
 			"pruning_interval", db.pruningOptions.Interval,
@@ -855,7 +855,7 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 		)
 		return
 	}
-	db.logger.Info("starting pruning old versions of IAVL trees",
+	db.logger.Info("starting compaction of old versions of IAVL trees",
 		"version", version,
 		"retain_version", retainVersion,
 		"pruning_interval", db.pruningOptions.Interval,
@@ -865,22 +865,22 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 	done := make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
 
-	db.pruningMu.Lock()
-	db.pruningDone = done
-	db.cancelPruning = cancel
-	db.pruningMu.Unlock()
+	db.compactionMu.Lock()
+	db.compactionDone = done
+	db.cancelCompaction = cancel
+	db.compactionMu.Unlock()
 
 	go func() {
-		defer db.pruningActive.Store(false)
+		defer db.compactionActive.Store(false)
 		defer close(done)
-		db.pruneNow(ctx, retainVersion)
+		db.compactNow(ctx, retainVersion)
 	}()
 }
 
-// pruneNow prunes old versions of the IAVL trees according to the pruning options, keeping the most recent `keepRecent` versions and pruning the rest.
-// This function is only intended to be called from pruneIfNeeded or by tests.
-func (db *CommitMultiTree) pruneNow(ctx context.Context, retainVersion uint64) {
-	ctx, span := tracer.Start(ctx, "CommitMultiTree.Prune",
+// compactNow compacts old versions of the IAVL trees according to the pruning options, keeping the most recent `keepRecent` versions and compacting the rest.
+// This function is only intended to be called from compactIfNeeded or by tests.
+func (db *CommitMultiTree) compactNow(ctx context.Context, retainVersion uint64) {
+	ctx, span := tracer.Start(ctx, "CommitMultiTree.Compact",
 		trace.WithAttributes(
 			attribute.Int64("retain_version", int64(retainVersion)),
 			attribute.Int64("current_version", db.LatestVersion()),
@@ -896,19 +896,19 @@ func (db *CommitMultiTree) pruneNow(ctx context.Context, retainVersion uint64) {
 	}
 
 	for _, si := range db.iavlStores {
-		ctx, span := tracer.Start(ctx, "PruneStore",
+		ctx, span := tracer.Start(ctx, "CompactStore",
 			trace.WithAttributes(
 				attribute.String("store", si.key.Name()),
 			),
 		)
 		ct, ok := si.store.(*CommitTree)
 		if !ok {
-			db.logger.Error(fmt.Sprintf("store %s is not a CommitTree, cannot prune", si.key.Name()))
+			db.logger.Error(fmt.Sprintf("store %s is not a CommitTree, cannot compact", si.key.Name()))
 			continue
 		}
-		err := ct.prune(ctx, uint32(retainVersion))
+		err := ct.compact(ctx, uint32(retainVersion))
 		if err != nil {
-			db.logger.Error(fmt.Sprintf("failed to prune store %s: %v", si.key.Name(), err))
+			db.logger.Error(fmt.Sprintf("failed to compact store %s: %v", si.key.Name(), err))
 			continue
 		}
 		span.End()
@@ -993,7 +993,7 @@ func (db *CommitMultiTree) Query(req *storetypes.RequestQuery) (*storetypes.Resp
 	}
 
 	if res.ProofOps == nil || len(res.ProofOps.Ops) == 0 {
-		return &storetypes.ResponseQuery{}, errorsmod.Wrap(storetypes.ErrInvalidRequest, "proof is unexpectedly empty; ensure height has not been pruned")
+		return &storetypes.ResponseQuery{}, errorsmod.Wrap(storetypes.ErrInvalidRequest, "proof is unexpectedly empty; ensure height has not been compacted away")
 	}
 
 	commitInfo, err := db.commitInfoForProof(res.Height)

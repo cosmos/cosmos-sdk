@@ -29,6 +29,11 @@ func NewMVData(blockSize int) *MVData {
 	return NewGMVData(blockSize, storetypes.BytesIsZero, storetypes.BytesValueLen)
 }
 
+// GMVData is the multi-version data for a store.
+// it's splited into two parts: the index and the data, the data part records the WriteSets populated each
+// incarnation execution, and the index part keeps track of which txn index touched the key.
+// In this way, we can record the whole WriteSet in one go, and implement the index part with a bitmap,
+// reduced the memory allocation significantly.
 type GMVData[V any] struct {
 	isZero   func(V) bool
 	valueLen func(V) int

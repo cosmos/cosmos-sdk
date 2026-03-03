@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
+	"git
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
@@ -11,6 +14,25 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/iavl/docs"
 )
+dalSidebarKeyMap is the help footer shown when the sidebar has focus.
+type modalSidebarKeyMap struct{}
+
+func (modalSidebarKeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{
+		key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "content pane")),
+		key.NewBinding(key.WithKeys("up", "down"), key.WithHelp("↑/↓", "navigate")),
+		key.NewBinding(key.WithKeys("esc", "?"), key.WithHelp("esc/?", "close")),
+		key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
+	}
+}
+func (modalSidebarKeyMap) FullHelp() [][]key.Binding { return nil }
+
+// modalContentKeyMap is the help footer shown when the content pane has focus.
+type modalContentKeyMap struct{}
+
+func (modalContentKeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{
+		key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "
 
 // helpDocer is optionally implemented by views to provide per-view documentation.
 type helpDocer interface {
@@ -29,7 +51,7 @@ const sidebarW = 16
 var allDocs = []docEntry{
 	{label: "Overview", doc: appHelpDoc},
 	{label: "Trees", doc: treesHelpDoc},
-	{label: "Changesets", doc: loadDocMarkdown("changesets.md")},
+	{label: "Changesets", doc: changesetsHelpDoc},
 	{label: "Checkpoints", doc: checkpointsHelpDoc},
 	{label: "Leaves", doc: leavesHelpDoc},
 	{label: "Branches", doc: branchesHelpDoc},
@@ -235,16 +257,17 @@ func (h *helpModal) render(totalW, totalH int) string {
 	var footerHint string
 	if h.sidebarFocused {
 		footerHint = " tab: content  ↑/↓: navigate  esc/?: close "
-	} else {
 		footerHint = " tab: topics  ↑/↓/pgup/pgdn: scroll  esc/?: close "
 	}
-	footer := footerStyle.Render(footerHint)
 
-	boxStyle := lipgloss.NewStyle().
+	hlp := help.New()
+	hlp.Width = totalW - 6 // inner content width (border 2 + padding 4)
+	var footer string
+
+		footer = hlp.View(modalSidebarKeyMap{})
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("62")).
+		footer = hlp.View(modalContentKeyMap{})
 		Padding(0, 2).
-		Width(totalW - 2)
 
 	return boxStyle.Render(title + "\n" + body + "\n" + footer)
 }
@@ -293,9 +316,11 @@ func loadDocMarkdown(docFileName string) string {
 	return string(data)
 }
 
-const treesHelpDoc = "# Trees\n\nTODO: trees docs\n"
+var treesHelpDoc = loadDocMarkdown("multitree.md")
 
-const checkpointsHelpDoc = "# Checkpoints\n\nTODO: checkpoints docs\n"
+var changesetsHelpDoc = loadDocMarkdown("changeset.md")
+
+var checkpointsHelpDoc = loadDocMarkdown("checkpoint.md")
 
 const leavesHelpDoc = "# Leaves\n\nTODO: leaves docs\n"
 

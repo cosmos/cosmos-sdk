@@ -34,7 +34,7 @@ message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "admin";
 
   Params params = 1 [(gogoproto.nullable) = false];
-  string admin = 2;
+  string admin  = 2;
 }
 
 message MsgUpdateParamsResponse {}
@@ -42,10 +42,10 @@ message MsgUpdateParamsResponse {}
 message MsgCreateValidator {
   option (cosmos.msg.v1.signer) = "operator_address";
 
-  google.protobuf.Any pub_key = 1;
-  string moniker = 2;
-  string description = 3;
-  string operator_address = 4;
+  google.protobuf.Any pub_key          = 1;
+  string              moniker          = 2;
+  string              description      = 3;
+  string              operator_address = 4;
 }
 
 message MsgCreateValidatorResponse {}
@@ -54,7 +54,7 @@ message MsgUpdateValidators {
   option (cosmos.msg.v1.signer) = "admin";
 
   repeated Validator validators = 1 [(gogoproto.nullable) = false];
-  string admin = 2;
+  string             admin      = 2;
 }
 
 message MsgUpdateValidatorsResponse {}

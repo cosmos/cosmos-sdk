@@ -6,7 +6,6 @@ import (
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
-	"git
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
@@ -14,25 +13,16 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/iavl/docs"
 )
-dalSidebarKeyMap is the help footer shown when the sidebar has focus.
-type modalSidebarKeyMap struct{}
 
-func (modalSidebarKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{
-		key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "content pane")),
-		key.NewBinding(key.WithKeys("up", "down"), key.WithHelp("↑/↓", "navigate")),
-		key.NewBinding(key.WithKeys("esc", "?"), key.WithHelp("esc/?", "close")),
-		key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
+// glamourStyle is detected once at startup, before BubbleTea takes over the
+// terminal. glamour.WithAutoStyle() re-queries the terminal on every call via
+// termenv OSC 11, which hangs up to 5 s when BubbleTea is in raw mode.
+var glamourStyle = func() string {
+	if lipgloss.HasDarkBackground() {
+		return "dark"
 	}
-}
-func (modalSidebarKeyMap) FullHelp() [][]key.Binding { return nil }
-
-// modalContentKeyMap is the help footer shown when the content pane has focus.
-type modalContentKeyMap struct{}
-
-func (modalContentKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{
-		key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "
+	return "light"
+}()
 
 // helpDocer is optionally implemented by views to provide per-view documentation.
 type helpDocer interface {
@@ -60,6 +50,32 @@ var allDocs = []docEntry{
 	{label: "WAL Entries", doc: walEntriesHelpDoc},
 	{label: "Commit Info", doc: commitInfoHelpDoc},
 }
+
+// modalSidebarKeyMap is the help footer shown when the sidebar has focus.
+type modalSidebarKeyMap struct{}
+
+func (modalSidebarKeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{
+		key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "content pane")),
+		key.NewBinding(key.WithKeys("up", "down"), key.WithHelp("↑/↓", "navigate")),
+		key.NewBinding(key.WithKeys("esc", "?"), key.WithHelp("esc/?", "close")),
+		key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
+	}
+}
+func (modalSidebarKeyMap) FullHelp() [][]key.Binding { return nil }
+
+// modalContentKeyMap is the help footer shown when the content pane has focus.
+type modalContentKeyMap struct{}
+
+func (modalContentKeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{
+		key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "topics")),
+		key.NewBinding(key.WithKeys("up", "down", "pgup", "pgdown"), key.WithHelp("↑/↓/pgup/pgdn", "scroll")),
+		key.NewBinding(key.WithKeys("esc", "?"), key.WithHelp("esc/?", "close")),
+		key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
+	}
+}
+func (modalContentKeyMap) FullHelp() [][]key.Binding { return nil }
 
 // helpModal holds state for the floating help documentation modal.
 type helpModal struct {
@@ -138,7 +154,7 @@ func (h *helpModal) loadCurrent() tea.Cmd {
 	vpW := h.cacheVpW
 	doc := allDocs[idx].doc
 	return func() tea.Msg {
-		r, err := glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithWordWrap(vpW))
+		r, err := glamour.NewTermRenderer(glamour.WithStylePath(glamourStyle), glamour.WithWordWrap(vpW))
 		var rendered string
 		if err == nil {
 			rendered, err = r.Render(doc)
@@ -209,7 +225,7 @@ func (h *helpModal) handleKey(msg tea.KeyMsg) (tea.Cmd, bool) {
 	return cmd, false
 }
 
-func (h *helpModal) render(totalW, totalH int) string {
+func (h *helpModal) render(totalW, _ int) string {
 	vpH := h.viewport.Height
 
 	dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("242"))
@@ -251,23 +267,22 @@ func (h *helpModal) render(totalW, totalH int) string {
 	body := lipgloss.JoinHorizontal(lipgloss.Top, sidebarBlock, dividerBlock, h.viewport.View())
 
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("62"))
-	footerStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("242"))
-
 	title := titleStyle.Render(" Documentation ")
-	var footerHint string
-	if h.sidebarFocused {
-		footerHint = " tab: content  ↑/↓: navigate  esc/?: close "
-		footerHint = " tab: topics  ↑/↓/pgup/pgdn: scroll  esc/?: close "
-	}
 
 	hlp := help.New()
 	hlp.Width = totalW - 6 // inner content width (border 2 + padding 4)
 	var footer string
-
+	if h.sidebarFocused {
 		footer = hlp.View(modalSidebarKeyMap{})
-		Border(lipgloss.RoundedBorder()).
+	} else {
 		footer = hlp.View(modalContentKeyMap{})
+	}
+
+	boxStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("62")).
 		Padding(0, 2).
+		Width(totalW - 2)
 
 	return boxStyle.Render(title + "\n" + body + "\n" + footer)
 }

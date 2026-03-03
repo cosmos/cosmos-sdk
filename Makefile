@@ -134,7 +134,7 @@ confix:
 
 #? mocks: Generate mock file
 mocks: $(MOCKS_DIR)
-	@go install go.uber.org/mock/mockgen@v0.6.0
+	@go install go.uber.org/mock/mockgen@latest
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
 
@@ -397,7 +397,7 @@ lint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.18.0
+protoVer=0.18.1
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
@@ -421,6 +421,17 @@ proto-lint:
 
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
+
+# Build and push proto-builder image for amd64 and arm64 to ghcr.io.
+# Usage: make proto-docker-build [protoVer=0.18.1]
+# Requires: docker buildx, ghcr.io login (echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin)
+proto-docker-build:
+	docker buildx build \
+		--platform linux/amd64,linux/arm64 \
+		--push \
+		-f contrib/devtools/Dockerfile \
+		-t ghcr.io/cosmos/proto-builder:$(protoVer) \
+		contrib/devtools
 
 CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.38.0/proto/tendermint
 
@@ -459,7 +470,7 @@ proto-update-deps:
 
 	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) buf mod update
 
-.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps
+.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-docker-build proto-update-deps
 
 ###############################################################################
 ###                                Localnet                                 ###

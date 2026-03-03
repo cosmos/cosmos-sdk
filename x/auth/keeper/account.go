@@ -22,7 +22,7 @@ func (ak AccountKeeper) NewAccountWithAddress(ctx context.Context, addr sdk.AccA
 
 // NewAccount sets the next account number to a given account interface
 func (ak AccountKeeper) NewAccount(ctx context.Context, acc sdk.AccountI) sdk.AccountI {
-	if err := acc.SetAccountNumber(ak.NextAccountNumber(ctx)); err != nil {
+	if err := acc.SetAccountNumber(ak.NextAccountNumber(ctx, acc)); err != nil {
 		panic(err)
 	}
 

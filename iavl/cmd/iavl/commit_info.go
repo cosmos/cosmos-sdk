@@ -72,4 +72,4 @@ func (v *commitInfoView) KeyMap() help.KeyMap {
 	return emptyKeyMap{}
 }
 
-func (v *commitInfoView) HelpDoc() string { return commitInfoHelpDoc }
+func (v *commitInfoView) HelpDocKey() string { return "commit-info.md" }

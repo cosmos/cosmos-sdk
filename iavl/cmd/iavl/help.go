@@ -24,31 +24,33 @@ var glamourStyle = func() string {
 	return "light"
 }()
 
-// helpDocer is optionally implemented by views to provide per-view documentation.
+// helpDocer is optionally implemented by views to identify their help topic.
+// The returned key is the .md filename in the embedded docs (e.g. "checkpoint.md").
 type helpDocer interface {
-	HelpDoc() string
+	HelpDocKey() string
 }
 
 // docEntry is one entry in the help sidebar TOC.
+// key is the .md filename; content is loaded on demand via loadDocMarkdown.
 type docEntry struct {
+	key   string
 	label string
-	doc   string // raw markdown
 }
 
 const sidebarW = 16
 
 // allDocs is the fixed list of help topics in sidebar order.
 var allDocs = []docEntry{
-	{label: "Overview", doc: appHelpDoc},
-	{label: "Trees", doc: treesHelpDoc},
-	{label: "Changesets", doc: changesetsHelpDoc},
-	{label: "Checkpoints", doc: checkpointsHelpDoc},
-	{label: "Leaves", doc: leavesHelpDoc},
-	{label: "Branches", doc: branchesHelpDoc},
-	{label: "Orphans", doc: orphansHelpDoc},
-	{label: "WAL Analysis", doc: walAnalysisHelpDoc},
-	{label: "WAL Entries", doc: walEntriesHelpDoc},
-	{label: "Commit Info", doc: commitInfoHelpDoc},
+	{key: "overview.md", label: "Overview"},
+	{key: "multitree.md", label: "Trees"},
+	{key: "changeset.md", label: "Changesets"},
+	{key: "checkpoint.md", label: "Checkpoints"},
+	{key: "leaves.md", label: "Leaves"},
+	{key: "branches.md", label: "Branches"},
+	{key: "orphans.md", label: "Orphans"},
+	{key: "wal-analysis.md", label: "WAL Analysis"},
+	{key: "wal-entries.md", label: "WAL Entries"},
+	{key: "commit-info.md", label: "Commit Info"},
 }
 
 // modalSidebarKeyMap is the help footer shown when the sidebar has focus.
@@ -113,7 +115,7 @@ func (h *helpModal) vpDims(totalW, totalH int) (vpW, vpH int) {
 
 // open makes the modal visible immediately and returns a Cmd to render the
 // active doc in the background.
-func (h *helpModal) open(activeDoc string, totalW, totalH int) tea.Cmd {
+func (h *helpModal) open(docKey string, totalW, totalH int) tea.Cmd {
 	h.visible = true
 	h.width = totalW
 	h.height = totalH
@@ -122,10 +124,10 @@ func (h *helpModal) open(activeDoc string, totalW, totalH int) tea.Cmd {
 		h.renderCache = make(map[int]string)
 	}
 
-	// Find the sidebar entry matching the active doc.
+	// Find the sidebar entry matching the key.
 	h.sidebarCursor = 0
 	for i, e := range allDocs {
-		if e.doc == activeDoc {
+		if e.key == docKey {
 			h.sidebarCursor = i
 			break
 		}
@@ -152,7 +154,7 @@ func (h *helpModal) loadCurrent() tea.Cmd {
 	h.viewport.SetContent("Rendering…")
 	h.viewport.GotoTop()
 	vpW := h.cacheVpW
-	doc := allDocs[idx].doc
+	doc := loadDocMarkdown(allDocs[idx].key)
 	return func() tea.Msg {
 		r, err := glamour.NewTermRenderer(glamour.WithStylePath(glamourStyle), glamour.WithWordWrap(vpW))
 		var rendered string
@@ -287,42 +289,6 @@ func (h *helpModal) render(totalW, _ int) string {
 	return boxStyle.Render(title + "\n" + body + "\n" + footer)
 }
 
-// Per-view help doc constants.
-
-const appHelpDoc = `# IAVL Browser
-
-Interactive terminal UI for browsing IAVL store data.
-
-## Navigation
-
-- **enter** — drill into selected item
-- **esc** — go back to previous view
-- **q** — quit
-- **r** — refresh current view
-- **?** — open this documentation
-
-## Views
-
-| View | Description |
-|------|-------------|
-| Trees | Top-level list of all IAVL trees in the store directory |
-| Changesets | Changesets (version segments) for a single tree |
-| Checkpoints | Checkpoints within a changeset |
-| Leaves | Leaf nodes in a checkpoint |
-| Branches | Branch nodes in a checkpoint |
-| Orphans | Orphaned nodes in a changeset |
-| WAL Analysis | Write-ahead log summary by version |
-| WAL Entries | Individual WAL entries for one version |
-| Commit Info | Committed block hashes and store metadata |
-
-## Table Controls
-
-- **↑ / k** — move up
-- **↓ / j** — move down
-- **pgup / pgdn** — page up / down
-- **home / end** — jump to top / bottom
-`
-
 func loadDocMarkdown(docFileName string) string {
 	data, err := docs.Docs.ReadFile(docFileName)
 	if err != nil {
@@ -330,21 +296,3 @@ func loadDocMarkdown(docFileName string) string {
 	}
 	return string(data)
 }
-
-var treesHelpDoc = loadDocMarkdown("multitree.md")
-
-var changesetsHelpDoc = loadDocMarkdown("changeset.md")
-
-var checkpointsHelpDoc = loadDocMarkdown("checkpoint.md")
-
-const leavesHelpDoc = "# Leaves\n\nTODO: leaves docs\n"
-
-const branchesHelpDoc = "# Branches\n\nTODO: branches docs\n"
-
-const orphansHelpDoc = "# Orphans\n\nTODO: orphans docs\n"
-
-const walAnalysisHelpDoc = "# WAL Analysis\n\nTODO: WAL analysis docs\n"
-
-const walEntriesHelpDoc = "# WAL Entries\n\nTODO: WAL entries docs\n"
-
-const commitInfoHelpDoc = "# Commit Info\n\nTODO: commit info docs\n"

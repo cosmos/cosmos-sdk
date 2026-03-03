@@ -221,11 +221,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case key.Matches(msg, m.keys.Help):
 			top := m.stack[len(m.stack)-1]
-			doc := appHelpDoc
+			docKey := "overview.md"
 			if d, ok := top.(helpDocer); ok {
-				doc = d.HelpDoc()
+				docKey = d.HelpDocKey()
 			}
-			cmd := m.helpModal.open(doc, m.width, m.height)
+			cmd := m.helpModal.open(docKey, m.width, m.height)
 			return m, cmd
 		}
 	}

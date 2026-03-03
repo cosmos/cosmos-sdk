@@ -137,4 +137,4 @@ func (v *treesView) KeyMap() help.KeyMap {
 	return v.keys
 }
 
-func (v *treesView) HelpDoc() string { return treesHelpDoc }
+func (v *treesView) HelpDocKey() string { return "multitree.md" }

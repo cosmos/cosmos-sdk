@@ -82,4 +82,4 @@ func (v *orphansView) KeyMap() help.KeyMap {
 	return emptyKeyMap{}
 }
 
-func (v *orphansView) HelpDoc() string { return orphansHelpDoc }
+func (v *orphansView) HelpDocKey() string { return "orphans.md" }

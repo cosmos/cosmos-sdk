@@ -79,6 +79,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (telemetry) [#26006](https://github.com/cosmos/cosmos-sdk/pull/26006) Export `ExtensionOptions` type for programmatic otel.yaml generation.
 * [#25955](https://github.com/cosmos/cosmos-sdk/pull/25955) Use cosmos/btree directly instead of replacing it in go.mods
 * (types) [#25342](https://github.com/cosmos/cosmos-sdk/pull/25342) Undeprecated `EmitEvent` and `EmitEvents` on the `EventManager`.  These functions will continue to be maintained.
 * (types) [#24668](https://github.com/cosmos/cosmos-sdk/pull/24668) Scope the global config to a particular binary so that multiple SDK binaries can be properly run on the same machine.

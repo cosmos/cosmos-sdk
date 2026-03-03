@@ -183,7 +183,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		// When modal is open, intercept all keys.
 		if m.helpModal.visible {
-			if key.Matches(msg, m.keys.Help) || key.Matches(msg, m.keys.Back) {
+			switch {
+			case key.Matches(msg, m.keys.Quit):
+				return m, tea.Quit
+			case key.Matches(msg, m.keys.Help), key.Matches(msg, m.keys.Back):
 				m.helpModal.visible = false
 				return m, nil
 			}

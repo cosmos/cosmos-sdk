@@ -41,7 +41,6 @@ const sidebarW = 16
 
 // allDocs is the fixed list of help topics in sidebar order.
 var allDocs = []docEntry{
-	{key: "overview.md", label: "Overview"},
 	{key: "multitree.md", label: "Trees"},
 	{key: "changeset.md", label: "Changesets"},
 	{key: "checkpoint.md", label: "Checkpoints"},

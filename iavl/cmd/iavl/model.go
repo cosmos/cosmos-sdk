@@ -221,7 +221,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case key.Matches(msg, m.keys.Help):
 			top := m.stack[len(m.stack)-1]
-			docKey := "overview.md"
+			docKey := "multitree.md"
 			if d, ok := top.(helpDocer); ok {
 				docKey = d.HelpDocKey()
 			}

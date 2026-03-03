@@ -286,7 +286,9 @@ func (v *changesetsView) KeyMap() help.KeyMap {
 	return v.keys
 }
 
-func (v *changesetsView) HelpDoc() string { return changesetsHelpDoc }
+func (v *changesetsView) HelpDoc() string {
+	return loadDocMarkdown("changeset.md")
+}
 
 func (v *changesetsView) refresh() {
 	fresh := newChangesetsView(v.dir, v.treeName, contentHeight(v.height))

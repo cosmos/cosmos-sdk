@@ -1,9 +1,13 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/cosmos/cosmos-sdk/iavl/docs"
 )
 
 // helpDocer is optionally implemented by views to provide per-view documentation.
@@ -26,27 +30,19 @@ func (h *helpModal) open(doc string, totalW, totalH int) {
 	h.height = totalH
 	h.visible = true
 
-	modalW := totalW * 3 / 4
-	if modalW < 60 {
-		modalW = 60
-	}
-	modalH := totalH * 3 / 4
-	if modalH < 20 {
-		modalH = 20
-	}
-
-	// 2 border + 4 padding on each side = 6 chars horizontal overhead
-	vpW := modalW - 6
+	// Border is 1 cell on each side; padding adds 2 more each side horizontally.
+	// vpW = totalW - 2 (border) - 4 (padding)
+	vpW := totalW - 6
 	if vpW < 10 {
 		vpW = 10
 	}
-	// border (2) + title line (1) + footer line (1) + top/bottom padding (2 each) = 8 lines overhead
-	vpH := modalH - 8
+	// border (2) + title (1) + footer (1) = 4 lines overhead
+	vpH := totalH - 4
 	if vpH < 5 {
 		vpH = 5
 	}
 
-	r, err := glamour.NewTermRenderer(glamour.WithStylePath("dark"), glamour.WithWordWrap(vpW))
+	r, err := glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithWordWrap(vpW))
 	var rendered string
 	if err == nil {
 		rendered, err = r.Render(doc)
@@ -68,16 +64,6 @@ func (h *helpModal) resize(totalW, totalH int) {
 }
 
 func (h *helpModal) render(totalW, totalH int) string {
-	modalW := totalW * 3 / 4
-	if modalW < 60 {
-		modalW = 60
-	}
-	modalH := totalH * 3 / 4
-	if modalH < 20 {
-		modalH = 20
-	}
-	_ = modalH
-
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("62"))
 	footerStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("242"))
 
@@ -91,10 +77,9 @@ func (h *helpModal) render(totalW, totalH int) string {
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("62")).
 		Padding(0, 2).
-		Width(modalW)
+		Width(totalW - 2)
 
-	modal := boxStyle.Render(content)
-	return lipgloss.Place(totalW, totalH, lipgloss.Center, lipgloss.Center, modal)
+	return boxStyle.Render(content)
 }
 
 // Per-view help doc constants.
@@ -133,9 +118,15 @@ Interactive terminal UI for browsing IAVL store data.
 - **home / end** — jump to top / bottom
 `
 
-const treesHelpDoc = "# Trees\n\nTODO: trees docs\n"
+func loadDocMarkdown(docFileName string) string {
+	data, err := docs.Docs.ReadFile(docFileName)
+	if err != nil {
+		return fmt.Sprintf("# %s\n\nDocumentation not found: %s", docFileName, err)
+	}
+	return string(data)
+}
 
-const changesetsHelpDoc = "# Changesets\n\nTODO: changesets docs\n"
+const treesHelpDoc = "# Trees\n\nTODO: trees docs\n"
 
 const checkpointsHelpDoc = "# Checkpoints\n\nTODO: checkpoints docs\n"
 

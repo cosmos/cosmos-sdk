@@ -3,10 +3,12 @@ package blockstm
 import (
 	"bytes"
 	"sync/atomic"
+	"time"
 
 	storetypes "cosmossdk.io/store/types"
 
 	tree2 "github.com/cosmos/cosmos-sdk/internal/blockstm/tree"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 const (
@@ -14,9 +16,9 @@ const (
 	InnerBTreeDegree = 4
 )
 
-type DataEntry[V any] struct {
+type TxDataEntry[V any] struct {
 	Incarnation Incarnation
-	Data        *GMemDB[V]
+	WriteSet    *GMemDB[V]
 
 	// mark all the writes in this txn as ESTIMATE
 	Estimate bool
@@ -36,7 +38,7 @@ type GMVData[V any] struct {
 	valueLen func(V) int
 
 	// txn -> (incarnation, estimate, key -> value)
-	data []atomic.Pointer[DataEntry[V]]
+	data []atomic.Pointer[TxDataEntry[V]]
 }
 
 func NewMVStore(key storetypes.StoreKey, blockSize int) MVStore {
@@ -54,7 +56,7 @@ func NewGMVData[V any](blockSize int, isZero func(V) bool, valueLen func(V) int)
 		isZero:   isZero,
 		valueLen: valueLen,
 
-		data: make([]atomic.Pointer[DataEntry[V]], blockSize),
+		data: make([]atomic.Pointer[TxDataEntry[V]], blockSize),
 	}
 }
 
@@ -71,15 +73,17 @@ func (d *GMVData[V]) getStoreOrDefault(key Key) *BitmapIndex {
 
 // Consolidate returns wroteNewLocation
 func (d *GMVData[V]) Consolidate(version TxnVersion, writeSet *GMemDB[V]) bool {
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVDataConsolidate) //nolint:staticcheck // TODO: switch to OpenTelemetry
+
 	if writeSet == nil || writeSet.Len() == 0 {
 		// delete old indexes
 		d.ConsolidateEmpty(version.Index)
 		return false
 	}
 
-	prevData := d.data[version.Index].Swap(&DataEntry[V]{
+	prevData := d.data[version.Index].Swap(&TxDataEntry[V]{
 		Incarnation: version.Incarnation,
-		Data:        writeSet,
+		WriteSet:    writeSet,
 	})
 
 	var wroteNewLocation bool
@@ -91,7 +95,7 @@ func (d *GMVData[V]) Consolidate(version TxnVersion, writeSet *GMemDB[V]) bool {
 		wroteNewLocation = true
 	} else {
 		// diff writeSet to update indexes
-		DiffMemDB(prevData.Data, writeSet, func(key Key, is_new bool) bool {
+		DiffMemDB(prevData.WriteSet, writeSet, func(key Key, is_new bool) bool {
 			if is_new {
 				// new key, add to index
 				d.Set(key, version.Index)
@@ -110,7 +114,7 @@ func (d *GMVData[V]) Consolidate(version TxnVersion, writeSet *GMemDB[V]) bool {
 func (d *GMVData[V]) ConsolidateEmpty(txn TxnIndex) {
 	old := d.data[txn].Swap(nil)
 	if old != nil {
-		old.Data.Scan(func(key Key, _ V) bool {
+		old.WriteSet.Scan(func(key Key, _ V) bool {
 			d.Delete(key, txn)
 			return true
 		})
@@ -159,9 +163,9 @@ func (d *GMVData[V]) InitWithEstimates(txn TxnIndex, estimates Locations) {
 	for _, key := range estimates {
 		d.Set(key, txn)
 	}
-	d.data[txn].Store(&DataEntry[V]{
+	d.data[txn].Store(&TxDataEntry[V]{
 		Estimate: true,
-		Data:     NewWriteSet(d.isZero, d.valueLen),
+		WriteSet: NewWriteSet(d.isZero, d.valueLen),
 	})
 }
 
@@ -184,6 +188,7 @@ func (d *GMVData[V]) Delete(key Key, txn TxnIndex) {
 // If the key is found but value is an estimate, returns `(value, version, true)`.
 // If the key is found, returns `(value, version, false)`, `value` can be zero value which means deleted.
 func (d *GMVData[V]) Read(key Key, txn TxnIndex) (V, TxnVersion, bool) {
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVDataRead) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	var zero V
 	if txn == 0 {
 		return zero, InvalidTxnVersion, false
@@ -222,7 +227,7 @@ func (d *GMVData[V]) resolveValue(key Key, txn TxnIndex, store *BitmapIndex) (V,
 			return zero, TxnVersion{Index: idx, Incarnation: 0}, true
 		}
 
-		v, ok := entry.Data.OverlayGet(key)
+		v, ok := entry.WriteSet.OverlayGet(key)
 		if !ok {
 			// could happen because we don't synchronize bitmap and data, just try again to find the next closest txn
 			txn = idx
@@ -314,7 +319,7 @@ func (d *GMVData[V]) SnapshotTo(cb func(Key, V) bool) {
 			return true
 		}
 
-		v, ok := d.data[txn].Load().Data.OverlayGet(outer.Key)
+		v, ok := d.data[txn].Load().WriteSet.OverlayGet(outer.Key)
 		if !ok {
 			return true
 		}

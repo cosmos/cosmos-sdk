@@ -10,9 +10,8 @@ import (
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log/v2"
 
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

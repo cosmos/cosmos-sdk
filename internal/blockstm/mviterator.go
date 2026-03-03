@@ -1,7 +1,7 @@
 package blockstm
 
 import (
-	"github.com/tidwall/btree"
+	"github.com/cosmos/btree"
 
 	storetypes "cosmossdk.io/store/types"
 

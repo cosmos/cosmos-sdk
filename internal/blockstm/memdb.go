@@ -3,7 +3,7 @@ package blockstm
 import (
 	"io"
 
-	"github.com/tidwall/btree"
+	"github.com/cosmos/btree"
 
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/tracekv"
@@ -32,7 +32,7 @@ func NewObjMemDB() *ObjMemDB {
 	return NewGMemDB(storetypes.AnyIsZero, storetypes.AnyValueLen)
 }
 
-// GMemDB is a generic implementation of an in memory Store backed by tidwall/btree.
+// GMemDB is a generic implementation of an in memory Store backed by cosmos/btree.
 type GMemDB[V any] struct {
 	btree.BTreeG[memdbItem[V]]
 	isZero   func(V) bool

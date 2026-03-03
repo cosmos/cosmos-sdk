@@ -24,7 +24,7 @@ metrics may be added or removed at will and without much friction. To do this, w
 [go-metrics](https://github.com/hashicorp/go-metrics) library.
 
 Finally, operators may enable telemetry along with specific configuration options. If enabled, metrics
-will be exposed via `/metrics?format={text|prometheus}` via the API server.
+will be exposed at `/metrics?format={text|prometheus}` via the API server.
 
 ## Decision
 

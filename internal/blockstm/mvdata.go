@@ -11,10 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
-const (
-	OuterBTreeDegree = 4 // Since we do copy-on-write a lot, smaller degree means smaller allocations
-	InnerBTreeDegree = 4
-)
+// Since we do copy-on-write a lot, smaller degree means smaller allocations
+// NOTE: we can use a sync.Map to replace the btree, at the cost of iteration performance.
+const IndexBTreeDegree = 4
 
 type dataEntry[V any] struct {
 	Incarnation Incarnation
@@ -54,7 +53,7 @@ func NewGMVData[V any](blockSize int, isZero func(V) bool, valueLen func(V) int)
 		isZero:   isZero,
 		valueLen: valueLen,
 
-		index: *tree2.NewBTree(tree2.KeyItemLess[indexEntry], OuterBTreeDegree),
+		index: *tree2.NewBTree(tree2.KeyItemLess[indexEntry], IndexBTreeDegree),
 		data:  make([]atomic.Pointer[dataEntry[V]], blockSize),
 	}
 }

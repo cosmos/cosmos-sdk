@@ -10,7 +10,7 @@ import (
 
 // MVIterator is an iterator for a multi-versioned store.
 type MVIterator[V any] struct {
-	tree2.BTreeIteratorG[dataItem]
+	tree2.BTreeIteratorG[indexEntry]
 	txn TxnIndex
 
 	// cache current found value and version
@@ -30,14 +30,14 @@ type MVIterator[V any] struct {
 var _ storetypes.Iterator = (*MVIterator[[]byte])(nil)
 
 func NewMVIterator[V any](
-	opts IteratorOptions, txn TxnIndex, iter btree.IterG[dataItem],
+	opts IteratorOptions, txn TxnIndex, iter btree.IterG[indexEntry],
 	waitFn func(TxnIndex),
 	resolveInnerValue func(Key, TxnIndex, *BitmapIndex) (V, TxnVersion, bool),
 ) *MVIterator[V] {
 	it := &MVIterator[V]{
 		BTreeIteratorG: *tree2.NewBTreeIteratorG(
-			dataItem{Key: opts.Start},
-			dataItem{Key: opts.End},
+			indexEntry{Key: opts.Start},
+			indexEntry{Key: opts.End},
 			iter,
 			opts.Ascending,
 		),
@@ -111,7 +111,7 @@ func (it *MVIterator[V]) resolveValue() {
 // - (nil, Invalid, true) if the value is not found
 // - (nil, Invalid, false) if the value is an estimate and we should fail the validation
 // - (v, ver, true) if the value is found at idx
-func (it *MVIterator[V]) resolveValueInner(item dataItem) (V, TxnVersion, bool) {
+func (it *MVIterator[V]) resolveValueInner(item indexEntry) (V, TxnVersion, bool) {
 	for {
 		v, ver, estimate := it.resolveInnerValue(item.Key, it.txn, item.Index)
 		if estimate {

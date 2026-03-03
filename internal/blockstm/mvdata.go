@@ -16,7 +16,7 @@ const (
 	InnerBTreeDegree = 4
 )
 
-type TxDataEntry[V any] struct {
+type dataEntry[V any] struct {
 	Incarnation Incarnation
 	WriteSet    *GMemDB[V]
 
@@ -31,14 +31,13 @@ func NewMVData(blockSize int) *MVData {
 }
 
 type GMVData[V any] struct {
-	// key -> bitmap(txn)
-	tree2.BTree[dataItem]
-
 	isZero   func(V) bool
 	valueLen func(V) int
 
+	// key -> bitmap(txn)
+	index tree2.BTree[indexEntry]
 	// txn -> (incarnation, estimate, key -> value)
-	data []atomic.Pointer[TxDataEntry[V]]
+	data []atomic.Pointer[dataEntry[V]]
 }
 
 func NewMVStore(key storetypes.StoreKey, blockSize int) MVStore {
@@ -52,23 +51,23 @@ func NewMVStore(key storetypes.StoreKey, blockSize int) MVStore {
 
 func NewGMVData[V any](blockSize int, isZero func(V) bool, valueLen func(V) int) *GMVData[V] {
 	return &GMVData[V]{
-		BTree:    *tree2.NewBTree(tree2.KeyItemLess[dataItem], OuterBTreeDegree),
 		isZero:   isZero,
 		valueLen: valueLen,
 
-		data: make([]atomic.Pointer[TxDataEntry[V]], blockSize),
+		index: *tree2.NewBTree(tree2.KeyItemLess[indexEntry], OuterBTreeDegree),
+		data:  make([]atomic.Pointer[dataEntry[V]], blockSize),
 	}
 }
 
 // getStore returns `nil` if not found
 func (d *GMVData[V]) getStore(key Key) *BitmapIndex {
-	outer, _ := d.Get(dataItem{Key: key})
+	outer, _ := d.index.Get(indexEntry{Key: key})
 	return outer.Index
 }
 
 // getTreeOrDefault set a new tree atomically if not found.
 func (d *GMVData[V]) getStoreOrDefault(key Key) *BitmapIndex {
-	return d.GetOrDefault(dataItem{Key: key}, (*dataItem).Init).Index
+	return d.index.GetOrDefault(indexEntry{Key: key}, (*indexEntry).Init).Index
 }
 
 // Consolidate returns wroteNewLocation
@@ -81,7 +80,7 @@ func (d *GMVData[V]) Consolidate(version TxnVersion, writeSet *GMemDB[V]) bool {
 		return false
 	}
 
-	prevData := d.data[version.Index].Swap(&TxDataEntry[V]{
+	prevData := d.data[version.Index].Swap(&dataEntry[V]{
 		Incarnation: version.Incarnation,
 		WriteSet:    writeSet,
 	})
@@ -163,7 +162,7 @@ func (d *GMVData[V]) InitWithEstimates(txn TxnIndex, estimates Locations) {
 	for _, key := range estimates {
 		d.Set(key, txn)
 	}
-	d.data[txn].Store(&TxDataEntry[V]{
+	d.data[txn].Store(&dataEntry[V]{
 		Estimate: true,
 		WriteSet: NewWriteSet(d.isZero, d.valueLen),
 	})
@@ -242,7 +241,7 @@ func (d *GMVData[V]) Iterator(
 	opts IteratorOptions, txn TxnIndex,
 	waitFn func(TxnIndex),
 ) *MVIterator[V] {
-	return NewMVIterator(opts, txn, d.Iter(), waitFn, d.resolveValue)
+	return NewMVIterator(opts, txn, d.index.Iter(), waitFn, d.resolveValue)
 }
 
 // ValidateReadSet validates the read descriptors,
@@ -273,7 +272,7 @@ func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, rs *ReadSet) bool {
 // validateIterator validates the iteration descriptor by replaying and compare the recorded reads.
 // returns true if valid.
 func (d *GMVData[V]) validateIterator(desc IteratorDescriptor, txn TxnIndex) bool {
-	it := NewMVIterator(desc.IteratorOptions, txn, d.Iter(), nil, d.resolveValue)
+	it := NewMVIterator(desc.IteratorOptions, txn, d.index.Iter(), nil, d.resolveValue)
 	defer it.Close()
 
 	var i int
@@ -313,7 +312,7 @@ func (d *GMVData[V]) Snapshot() (snapshot []GKVPair[V]) {
 }
 
 func (d *GMVData[V]) SnapshotTo(cb func(Key, V) bool) {
-	d.Scan(func(outer dataItem) bool {
+	d.index.Scan(func(outer indexEntry) bool {
 		txn, ok := outer.Index.Max()
 		if !ok {
 			return true
@@ -346,19 +345,19 @@ type GKVPair[V any] struct {
 }
 type KVPair = GKVPair[[]byte]
 
-type dataItem struct {
+type indexEntry struct {
 	Key   Key
 	Index *BitmapIndex
 }
 
-func (d *dataItem) Init() {
+func (d *indexEntry) Init() {
 	if d.Index == nil {
 		d.Index = NewBitmapIndex()
 	}
 }
 
-var _ tree2.KeyItem = dataItem{}
+var _ tree2.KeyItem = indexEntry{}
 
-func (item dataItem) GetKey() []byte {
+func (item indexEntry) GetKey() []byte {
 	return item.Key
 }

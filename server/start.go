@@ -32,10 +32,13 @@ import (
 	"github.com/hashicorp/go-metrics"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"cosmossdk.io/log/v2"
+	sdkSlog "cosmossdk.io/log/v2/slog"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -226,6 +229,18 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 		return fmt.Errorf("failed to get and validate config: %w", err)
 	}
 
+	// Initialize OTel first so IsOtelLoggerEnabled() reflects reality below.
+	otelFile := filepath.Join(clientCtx.HomeDir, "config", telemetry.OtelFileName)
+	if err := telemetry.InitializeOpenTelemetry(otelFile); err != nil {
+		return fmt.Errorf("failed to initialize OpenTelemetry: %w", err)
+	}
+
+	// If OTel log pipeline has active exporters, fan out logs to both console and OTel.
+	if telemetry.IsOtelLoggerEnabled() {
+		otelLogger := sdkSlog.NewCustomLogger(otelslog.NewLogger(""))
+		svrCtx.Logger = log.NewMultiLogger(svrCtx.Logger, otelLogger)
+	}
+
 	app, appCleanupFn, err := startApp(svrCtx, appCreator, opts)
 	if err != nil {
 		return fmt.Errorf("failed to start app: %w", err)
@@ -235,11 +250,6 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 	metrics, err := startTelemetry(svrCfg)
 	if err != nil {
 		return fmt.Errorf("failed to start telemetry: %w", err)
-	}
-
-	otelFile := filepath.Join(clientCtx.HomeDir, "config", telemetry.OtelFileName)
-	if err := telemetry.InitializeOpenTelemetry(otelFile); err != nil {
-		return fmt.Errorf("failed to initialize OpenTelemetry: %w", err)
 	}
 
 	emitServerInfoMetrics()

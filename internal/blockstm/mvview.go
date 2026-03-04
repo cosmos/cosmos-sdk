@@ -103,8 +103,9 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 		// if not found, record version ⊥ when reading from storage.
 		s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{key, version})
 		if !version.Valid() {
+			result := s.storage.Get(key)
 			telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadStorage) //nolint:staticcheck // TODO: switch to OpenTelemetry
-			return s.storage.Get(key)
+			return result
 		}
 		telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadMVData) //nolint:staticcheck // TODO: switch to OpenTelemetry
 		return value

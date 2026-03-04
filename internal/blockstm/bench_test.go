@@ -18,9 +18,7 @@ func BenchmarkBlockSTM(b *testing.B) {
 		key := storetypes.NewKVStoreKey(strconv.FormatInt(int64(i), 10))
 		stores[key] = i + 2
 	}
-	abasamevalueKeys := abaSameValueKeys(10000)
 	hasKeys := hasKeys(10000)
-	abaBigValue := make([]byte, 64<<10) // 64KiB
 	iterateAccounts := 100
 	testCases := []struct {
 		name  string
@@ -39,16 +37,6 @@ func BenchmarkBlockSTM(b *testing.B) {
 			func(storage MultiStore) { prepopulateIterateAccounts(storage, iterateAccounts) },
 		},
 		{"iterate-newkeys-2000", iterateNewKeysBlock(2000), nil},
-		{
-			"aba-samevalue-10000",
-			abaSameValueBlock(abasamevalueKeys),
-			func(storage MultiStore) { prepopulateABASameValue(storage, abasamevalueKeys) },
-		},
-		{
-			"aba-samevalue-bigvalue-10000",
-			abaSameValueBlockWithValue(abasamevalueKeys, abaBigValue),
-			func(storage MultiStore) { prepopulateABASameValueWithValue(storage, abasamevalueKeys, abaBigValue) },
-		},
 	}
 	for _, tc := range testCases {
 		b.Run(tc.name+"-sequential", func(b *testing.B) {
@@ -142,31 +130,6 @@ func runSequential(storage MultiStore, block *MockBlock) {
 	}
 }
 
-func abaSameValueKeys(n int) [][]byte {
-	keys := make([][]byte, n)
-	for i := 0; i < n; i++ {
-		keys[i] = []byte(fmt.Sprintf("aba-samevalue/%08d", i))
-	}
-	return keys
-}
-
-// prepopulateABASameValue seeds storage with values matching the transaction writes.
-// This creates a scenario where value-based validation prevents unnecessary re-execution.
-func prepopulateABASameValue(storage MultiStore, keys [][]byte) {
-	kv := storage.GetKVStore(StoreKeyAuth)
-	value := []byte{1}
-	for _, key := range keys {
-		kv.Set(key, value)
-	}
-}
-
-func prepopulateABASameValueWithValue(storage MultiStore, keys [][]byte, value []byte) {
-	kv := storage.GetKVStore(StoreKeyAuth)
-	for _, key := range keys {
-		kv.Set(key, value)
-	}
-}
-
 func hasKeys(n int) [][]byte {
 	keys := make([][]byte, n)
 	for i := 0; i < n; i++ {
@@ -192,29 +155,6 @@ func hasBlock(size, readsPerTx int, keys [][]byte) *MockBlock {
 			for j := 0; j < readsPerTx; j++ {
 				_ = kv.Has(keys[(idx+j)%len(keys)])
 			}
-			return nil
-		}
-	}
-	return NewMockBlock(txs)
-}
-
-func abaSameValueBlock(keys [][]byte) *MockBlock {
-	value := []byte{1}
-	return abaSameValueBlockWithValue(keys, value)
-}
-
-func abaSameValueBlockWithValue(keys [][]byte, value []byte) *MockBlock {
-	txs := make([]Tx, len(keys))
-	for i := range keys {
-		idx := i
-		txs[i] = func(store MultiStore, _ Cache) error {
-			kv := store.GetKVStore(StoreKeyAuth)
-			// Read dependency on previous key.
-			if idx > 0 {
-				_ = kv.Get(keys[idx-1])
-			}
-			// Write same value as pre-state.
-			kv.Set(keys[idx], value)
 			return nil
 		}
 	}

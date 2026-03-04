@@ -63,14 +63,14 @@ func NewGMVData[V any](blockSize int, isZero func(V) bool, valueLen func(V) int)
 	}
 }
 
-// getStore returns `nil` if not found
-func (d *GMVData[V]) getStore(key Key) *BitmapIndex {
+// getIndex returns `nil` if not found
+func (d *GMVData[V]) getIndex(key Key) *BitmapIndex {
 	outer, _ := d.index.Get(indexEntry{Key: key})
 	return outer.Index
 }
 
-// getTreeOrDefault set a new tree atomically if not found.
-func (d *GMVData[V]) getStoreOrDefault(key Key) *BitmapIndex {
+// getIndexOrDefault set a new tree atomically if not found.
+func (d *GMVData[V]) getIndexOrDefault(key Key) *BitmapIndex {
 	return d.index.GetOrDefault(indexEntry{Key: key}, (*indexEntry).Init).Index
 }
 
@@ -163,24 +163,32 @@ func (d *GMVData[V]) ClearEstimates(txn TxnIndex) {
 }
 
 func (d *GMVData[V]) InitWithEstimates(txn TxnIndex, estimates Locations) {
+	var zero V
+
+	// populate writeset to keep it consistent with index
+	writeSet := NewWriteSet(d.isZero, d.valueLen)
 	for _, key := range estimates {
-		d.Set(key, txn)
+		writeSet.OverlaySet(key, zero)
 	}
 	d.data[txn].Store(&dataEntry[V]{
 		Estimate: true,
-		WriteSet: NewWriteSet(d.isZero, d.valueLen),
+		WriteSet: writeSet,
 	})
+
+	for _, key := range estimates {
+		d.Set(key, txn)
+	}
 }
 
 // Set add txn to the key's bitmap index.
 func (d *GMVData[V]) Set(key Key, txn TxnIndex) {
-	tree := d.getStoreOrDefault(key)
-	tree.Set(txn)
+	idx := d.getIndexOrDefault(key)
+	idx.Set(txn)
 }
 
 // Delete removes txn from the key's bitmap index.
 func (d *GMVData[V]) Delete(key Key, txn TxnIndex) {
-	tree := d.getStore(key)
+	tree := d.getIndex(key)
 	if tree != nil {
 		tree.Delete(txn)
 	}
@@ -197,7 +205,7 @@ func (d *GMVData[V]) Read(key Key, txn TxnIndex) (V, TxnVersion, bool) {
 		return zero, InvalidTxnVersion, false
 	}
 
-	store := d.getStore(key)
+	store := d.getIndex(key)
 	if store == nil {
 		return zero, InvalidTxnVersion, false
 	}

@@ -24,27 +24,25 @@ type GMVMemoryView[V any] struct {
 	mvData    *GMVData[V]
 	scheduler *Scheduler
 	preState  *preStateCache
-	store     int
 
 	txn      TxnIndex
 	readSet  *ReadSet
 	writeSet *GMemDB[V]
 }
 
-func NewMVView(store int, storage storetypes.Store, mvData MVStore, scheduler *Scheduler, txn TxnIndex, preState *preStateCache) MVView {
+func NewMVView(storage storetypes.Store, mvData MVStore, scheduler *Scheduler, txn TxnIndex, preState *preStateCache) MVView {
 	switch data := mvData.(type) {
 	case *GMVData[any]:
-		return NewGMVMemoryView(store, storage.(storetypes.ObjKVStore), data, scheduler, txn, preState)
+		return NewGMVMemoryView(storage.(storetypes.ObjKVStore), data, scheduler, txn, preState)
 	case *GMVData[[]byte]:
-		return NewGMVMemoryView(store, storage.(storetypes.KVStore), data, scheduler, txn, preState)
+		return NewGMVMemoryView(storage.(storetypes.KVStore), data, scheduler, txn, preState)
 	default:
 		panic("unsupported value type")
 	}
 }
 
-func NewGMVMemoryView[V any](store int, storage storetypes.GKVStore[V], mvData *GMVData[V], scheduler *Scheduler, txn TxnIndex, preState *preStateCache) *GMVMemoryView[V] {
+func NewGMVMemoryView[V any](storage storetypes.GKVStore[V], mvData *GMVData[V], scheduler *Scheduler, txn TxnIndex, preState *preStateCache) *GMVMemoryView[V] {
 	return &GMVMemoryView[V]{
-		store:     store,
 		storage:   storage,
 		mvData:    mvData,
 		scheduler: scheduler,
@@ -56,8 +54,15 @@ func NewGMVMemoryView[V any](store int, storage storetypes.GKVStore[V], mvData *
 
 func (s *GMVMemoryView[V]) getFromPreState(key []byte) V {
 	if s.preState != nil {
-		if cached, ok := s.preState.Load(key); ok {
-			return cached.(V)
+		if value, ok := s.preState.Get(key); ok {
+			if value == nil {
+				var empty V
+				return empty
+			}
+
+			if typed, ok := value.(V); ok {
+				return typed
+			}
 		}
 	}
 

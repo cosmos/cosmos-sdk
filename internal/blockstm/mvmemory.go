@@ -22,8 +22,12 @@ type MVMemory struct {
 	lastReadSet []atomic.Pointer[MultiReadSet]
 }
 
+// preStateCache is a per-store, concurrent read-through cache.
+// It is shared by all views of one store, loads on miss, and binds its backing store once.
 type preStateCache struct {
-	data sync.Map
+	data        sync.Map
+	storage     storetypes.Store
+	storageOnce sync.Once
 }
 
 func (c *preStateCache) Load(key Key) (any, bool) {
@@ -36,6 +40,37 @@ func (c *preStateCache) Load(key Key) (any, bool) {
 
 func (c *preStateCache) Store(key Key, value any) {
 	c.data.Store(string(key), value)
+}
+
+// BindStorage sets the backing store once, subsequent calls are ignored.
+func (c *preStateCache) BindStorage(storage storetypes.Store) {
+	c.storageOnce.Do(func() {
+		c.storage = storage
+	})
+}
+
+// Get returns a value from cache, or loads from the bound store if not present.
+func (c *preStateCache) Get(key Key) (any, bool) {
+	if v, ok := c.Load(key); ok {
+		return v, true
+	}
+
+	if c.storage == nil {
+		return nil, false
+	}
+
+	var result any
+	switch storage := c.storage.(type) {
+	case storetypes.KVStore:
+		result = storage.Get(key)
+	case storetypes.ObjKVStore:
+		result = storage.Get(key)
+	default:
+		return nil, false
+	}
+
+	c.Store(key, result)
+	return result, true
 }
 
 func NewMVMemory(
@@ -116,7 +151,9 @@ func (mv *MVMemory) View(txn TxnIndex) *MultiMVMemoryView {
 
 func (mv *MVMemory) newMVView(name storetypes.StoreKey, txn TxnIndex) MVView {
 	i := mv.stores[name]
-	return NewMVView(i, mv.storage.GetStore(name), mv.GetMVStore(i), mv.scheduler, txn, &mv.preState[i])
+	store := mv.storage.GetStore(name)
+	mv.preState[i].BindStorage(store)
+	return NewMVView(store, mv.GetMVStore(i), mv.scheduler, txn, &mv.preState[i])
 }
 
 func (mv *MVMemory) GetMVStore(i int) MVStore {

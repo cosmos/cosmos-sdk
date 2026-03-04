@@ -62,17 +62,17 @@ require (
 	github.com/test-go/testify v1.1.4
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
-	go.opentelemetry.io/contrib/bridges/otelslog v0.15.0
+	go.opentelemetry.io/contrib/bridges/otelslog v0.16.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.65.0
 	go.opentelemetry.io/contrib/instrumentation/host v0.65.0
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.65.0
 	go.opentelemetry.io/contrib/otelconf v0.20.0
 	go.opentelemetry.io/contrib/propagators/b3 v1.40.0
 	go.opentelemetry.io/contrib/propagators/jaeger v1.40.0
-	go.opentelemetry.io/otel v1.40.0
-	go.opentelemetry.io/otel/log v0.16.0
-	go.opentelemetry.io/otel/metric v1.40.0
-	go.opentelemetry.io/otel/trace v1.40.0
+	go.opentelemetry.io/otel v1.41.0
+	go.opentelemetry.io/otel/log v0.17.0
+	go.opentelemetry.io/otel/metric v1.41.0
+	go.opentelemetry.io/otel/trace v1.41.0
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v3 v3.0.4
 	golang.org/x/crypto v0.48.0

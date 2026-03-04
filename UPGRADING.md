@@ -28,7 +28,7 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
 - [Log v2](#log-v2)
 - [Store v2](#store-v2)
 - [Telemetry](#telemetry)
-    - [Adoption of OpenTelemetry and Deprecation of githubcomhashicorpgo-metrics](#adoption-of-opentelemetry-and-deprecation-of-githubcomhashicorpgo-metrics)
+    - [OpenTelemetry](#adoption-of-opentelemetry-and-deprecation-of-githubcomhashicorpgo-metrics)
 - [Experimental Packages](#experimental-packages)
     - [BlockSTM](#blockstm)
 - [Upgrade Handler](#upgrade-handler)
@@ -184,7 +184,7 @@ The store package has been updated to `v2`. Store v2 enables support for the new
 
 The telemetry package has been deprecated and users are encouraged to switch to OpenTelemetry.
 
-### Adoption of OpenTelemetry and Deprecation of `github.com/hashicorp/go-metrics`
+### OpenTelemetry
 
 Previously, Cosmos SDK telemetry support was provided by `github.com/hashicorp/go-metrics` which was undermaintained and only supported metrics instrumentation.
 OpenTelemetry provides an integrated solution for metrics, traces, and logging which is widely adopted and actively maintained.

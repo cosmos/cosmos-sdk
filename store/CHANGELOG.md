@@ -25,6 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Breaking Changes
+
+* [#26037](https://github.com/cosmos/cosmos-sdk/pull/26037) Remove `CommitStore` and `CommitKVStore` interfaces. Remove `GetCommitStore` and `GetCommitKVStore` from the `CommitMultiStore` interface. Change `MultiStorePersistentCache.GetStoreCache` to take `KVStore`.
+
 ### Bug Fixes
 
 * [#20425](https://github.com/cosmos/cosmos-sdk/pull/20425) Fix nil pointer panic when querying historical state where a new store does not exist.

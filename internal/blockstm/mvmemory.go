@@ -1,7 +1,6 @@
 package blockstm
 
 import (
-	"sync"
 	"sync/atomic"
 
 	storetypes "cosmossdk.io/store/types"
@@ -14,67 +13,29 @@ type (
 
 // MVMemory implements `Algorithm 2 The MVMemory module`
 type MVMemory struct {
-	storage     MultiStore
-	scheduler   *Scheduler
-	stores      map[storetypes.StoreKey]int
-	data        []MVStore
-	preState    []preStateCache
+	scheduler *Scheduler
+	// map StoreKey to array index
+	stores map[storetypes.StoreKey]int
+
+	// multi-version data structure for each store
+	data []MVStore
+	// parent storage for each store
+	storage []any
+
+	// read sets of transactions
 	lastReadSet []atomic.Pointer[MultiReadSet]
-}
-
-// preStateCache is a per-store, concurrent read-through cache.
-// It is shared by all views of one store, and reads through to the pre-bound backing store on cache miss.
-type preStateCache struct {
-	data    sync.Map
-	storage storetypes.Store
-}
-
-func (c *preStateCache) Load(key Key) (any, bool) {
-	v, ok := c.data.Load(string(key))
-	if !ok {
-		return nil, false
-	}
-	return v, true
-}
-
-func (c *preStateCache) Store(key Key, value any) {
-	c.data.Store(string(key), value)
-}
-
-// Get returns a value from cache, or loads from the pre-bound store on cache miss.
-func (c *preStateCache) Get(key Key) (any, bool) {
-	if v, ok := c.Load(key); ok {
-		return v, true
-	}
-
-	if c.storage == nil {
-		return nil, false
-	}
-
-	var result any
-	switch storage := c.storage.(type) {
-	case storetypes.KVStore:
-		result = storage.Get(key)
-	case storetypes.ObjKVStore:
-		result = storage.Get(key)
-	default:
-		return nil, false
-	}
-
-	c.Store(key, result)
-	return result, true
 }
 
 func NewMVMemory(
 	block_size int, stores map[storetypes.StoreKey]int,
-	storage MultiStore, scheduler *Scheduler,
+	storage []any, scheduler *Scheduler,
 ) *MVMemory {
 	return NewMVMemoryWithEstimates(block_size, stores, storage, scheduler, nil)
 }
 
 func NewMVMemoryWithEstimates(
 	block_size int, stores map[storetypes.StoreKey]int,
-	storage MultiStore, scheduler *Scheduler, estimates []MultiLocations,
+	storage []any, scheduler *Scheduler, estimates []MultiLocations,
 ) *MVMemory {
 	data := make([]MVStore, len(stores))
 	for key, i := range stores {
@@ -86,12 +47,7 @@ func NewMVMemoryWithEstimates(
 		scheduler:   scheduler,
 		stores:      stores,
 		data:        data,
-		preState:    make([]preStateCache, len(stores)),
 		lastReadSet: make([]atomic.Pointer[MultiReadSet], block_size),
-	}
-
-	for key, i := range stores {
-		mv.preState[i].storage = storage.GetStore(key)
 	}
 
 	// init with pre-estimates
@@ -147,8 +103,7 @@ func (mv *MVMemory) View(txn TxnIndex) *MultiMVMemoryView {
 
 func (mv *MVMemory) newMVView(name storetypes.StoreKey, txn TxnIndex) MVView {
 	i := mv.stores[name]
-	store := mv.storage.GetStore(name)
-	return NewMVView(store, mv.GetMVStore(i), mv.scheduler, txn, &mv.preState[i])
+	return NewMVView(mv.storage[i], mv.GetMVStore(i), mv.scheduler, txn)
 }
 
 func (mv *MVMemory) GetMVStore(i int) MVStore {

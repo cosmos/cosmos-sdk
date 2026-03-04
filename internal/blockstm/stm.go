@@ -65,7 +65,7 @@ func executeBlockWithEstimatesImpl(
 	ctx context.Context,
 	blockSize int,
 	stores map[storetypes.StoreKey]int,
-	storage MultiStore,
+	parent MultiStore,
 	executors int,
 	estimates []MultiLocations, // txn -> multi-locations
 	txExecutor TxExecutor,
@@ -79,6 +79,10 @@ func executeBlockWithEstimatesImpl(
 
 	// Create a new scheduler
 	scheduler := NewScheduler(blockSize)
+
+	// wrap parent storage with read cache
+	storage := MultiStoreToCachedStorage(parent, stores)
+
 	mvMemory := NewMVMemoryWithEstimates(blockSize, stores, storage, scheduler, estimates)
 
 	// var wg sync.WaitGroup
@@ -120,7 +124,7 @@ func executeBlockWithEstimatesImpl(
 	decreaseCount = scheduler.decreaseCnt.Load()
 
 	// Write the snapshot into the storage
-	mvMemory.WriteSnapshot(storage)
+	mvMemory.WriteSnapshot(parent)
 	return executed, validated, decreaseCount, nil
 }
 

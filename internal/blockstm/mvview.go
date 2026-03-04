@@ -20,57 +20,34 @@ var (
 
 // GMVMemoryView wraps `MVMemory` for execution of a single transaction.
 type GMVMemoryView[V any] struct {
-	storage   storetypes.GKVStore[V]
+	storage   GStorage[V]
 	mvData    *GMVData[V]
 	scheduler *Scheduler
-	preState  *preStateCache
 
 	txn      TxnIndex
 	readSet  *ReadSet
 	writeSet *GMemDB[V]
 }
 
-func NewMVView(storage storetypes.Store, mvData MVStore, scheduler *Scheduler, txn TxnIndex, preState *preStateCache) MVView {
+func NewMVView(storage any, mvData MVStore, scheduler *Scheduler, txn TxnIndex) MVView {
 	switch data := mvData.(type) {
 	case *GMVData[any]:
-		return NewGMVMemoryView(storage.(storetypes.ObjKVStore), data, scheduler, txn, preState)
+		return NewGMVMemoryView(storage.(ObjKVStorage), data, scheduler, txn)
 	case *GMVData[[]byte]:
-		return NewGMVMemoryView(storage.(storetypes.KVStore), data, scheduler, txn, preState)
+		return NewGMVMemoryView(storage.(KVStorage), data, scheduler, txn)
 	default:
 		panic("unsupported value type")
 	}
 }
 
-func NewGMVMemoryView[V any](storage storetypes.GKVStore[V], mvData *GMVData[V], scheduler *Scheduler, txn TxnIndex, preState *preStateCache) *GMVMemoryView[V] {
+func NewGMVMemoryView[V any](storage GStorage[V], mvData *GMVData[V], scheduler *Scheduler, txn TxnIndex) *GMVMemoryView[V] {
 	return &GMVMemoryView[V]{
 		storage:   storage,
 		mvData:    mvData,
 		scheduler: scheduler,
-		preState:  preState,
 		txn:       txn,
 		readSet:   new(ReadSet),
 	}
-}
-
-func (s *GMVMemoryView[V]) getFromPreState(key []byte) V {
-	if s.preState != nil {
-		if value, ok := s.preState.Get(key); ok {
-			if value == nil {
-				var empty V
-				return empty
-			}
-
-			if typed, ok := value.(V); ok {
-				return typed
-			}
-		}
-	}
-
-	result := s.storage.Get(key)
-	if s.preState != nil {
-		s.preState.Store(key, any(result))
-	}
-	return result
 }
 
 func (s *GMVMemoryView[V]) init() {
@@ -126,9 +103,8 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 		// if not found, record version ⊥ when reading from storage.
 		s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{key, version})
 		if !version.Valid() {
-			result := s.getFromPreState(key)
 			telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadStorage) //nolint:staticcheck // TODO: switch to OpenTelemetry
-			return result
+			return s.storage.Get(key)
 		}
 		telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadMVData) //nolint:staticcheck // TODO: switch to OpenTelemetry
 		return value

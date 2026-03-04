@@ -57,7 +57,7 @@ logger_provider:
             endpoint: http://localhost:4317
 
 
-cosmos_extra:
+extensions:
   instruments:
     host: {} # enable optional host instrumentation with go.opentelemetry.io/contrib/instrumentation/host
     runtime: {} # enable optional runtime instrumentation with go.opentelemetry.io/contrib/instrumentation/runtime

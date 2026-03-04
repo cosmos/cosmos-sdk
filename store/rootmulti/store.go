@@ -263,7 +263,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			rs.removalMap[key] = true
 		} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
 			// handle renames specially
-			// make an unregistered key to satisfy loadCommitStore params
+			// make an unregistered key to satisfy loadCommitStoreFromParams
 			oldKey := types.NewKVStoreKey(oldName)
 			oldParams := newStoreParams(oldKey, storeParams.db, storeParams.typ, 0)
 

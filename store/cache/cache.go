@@ -12,9 +12,9 @@ import (
 var (
 	_ types.MultiStorePersistentCache = (*KVStoreCacheManager)(nil)
 
-	// DefaultCommitKVStoreCacheSize defines the persistent ARC cache size for a
+	// DefaultKVStoreCacheSize defines the persistent ARC cache size for a
 	// KVStoreCache.
-	DefaultCommitKVStoreCacheSize uint = 1000
+	DefaultKVStoreCacheSize uint = 1000
 )
 
 type (

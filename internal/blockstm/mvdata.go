@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
-// Since we do copy-on-write a lot, smaller degree means smaller allocations
+// IndexBTreeDegree use smaller degree since we do copy-on-write.
 // NOTE: we can use a sync.Map to replace the btree, at the cost of iteration performance.
 const IndexBTreeDegree = 4
 

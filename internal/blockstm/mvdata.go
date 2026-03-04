@@ -315,6 +315,8 @@ func (d *GMVData[V]) Snapshot() (snapshot []GKVPair[V]) {
 	return snapshot
 }
 
+// SnapshotTo is only called after the parallel execution is done,
+// so we don't protect with locks and assume data is consistent.
 func (d *GMVData[V]) SnapshotTo(cb func(Key, V) bool) {
 	d.index.Scan(func(outer indexEntry) bool {
 		txn, ok := outer.Index.Max()

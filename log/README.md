@@ -34,7 +34,7 @@ To get log correlation with Tempo and Loki, simply scrape the logs in JSON forma
 
 In the `Trace to logs` section:
 - Set data source to Loki if not already
-- Set `Span start time shift` to an reasonable amount of time (+/-1m)
+- Set `Span start time shift` to a reasonable amount of time (+/-1m)
 - Set the custom query to: `{${__tags}} | trace_id = "${__trace.traceId}"`
 
 ## Future Considerations

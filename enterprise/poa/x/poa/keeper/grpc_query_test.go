@@ -17,12 +17,12 @@ package keeper
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 )
 
 func TestValidatorsQueryDescendingOrder(t *testing.T) {
@@ -438,7 +438,7 @@ func TestWithdrawableFeesQuery(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint to allocate fees
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Query should show 100 allocated
@@ -543,7 +543,7 @@ func TestWithdrawableFeesQuery(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint to allocate (each gets 100)
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Change power distribution

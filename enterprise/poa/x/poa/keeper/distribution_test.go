@@ -17,13 +17,13 @@ package keeper
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
 
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestProportionalDistribution(t *testing.T) {
@@ -322,7 +322,7 @@ func TestProportionalDistribution(t *testing.T) {
 
 			// Checkpointing is required here to simulate the above calculation
 			// where we divide every loop.
-			err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+			err = f.poaKeeper.checkpointAllValidators(f.ctx)
 			require.NoError(t, err)
 		}
 
@@ -361,7 +361,7 @@ func TestProportionalDistribution(t *testing.T) {
 			totalDistributedSecond = totalDistributedSecond.Add(distributed)
 			// Checkpointing is required here to simulate the above calculation
 			// where we divide every loop.
-			err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+			err = f.poaKeeper.checkpointAllValidators(f.ctx)
 			require.NoError(t, err)
 		}
 
@@ -424,7 +424,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.True(t, accFees1Before.IsZero())
 
 		// Checkpoint all validators
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// After checkpoint, validator 1 should have 25% (250 stake)
@@ -456,7 +456,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		_, consAddr2 := createValidator(t, f, 2, 300)
 
 		// Checkpoint with no fees
-		err := f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err := f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// All validators should have no fees
@@ -487,7 +487,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint all validators
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Validator 1 should get 100% (all fees)
@@ -513,7 +513,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees1)
 		require.NoError(t, err)
 
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Each should have 100
@@ -526,7 +526,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees2)
 		require.NoError(t, err)
 
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Each should now have 200
@@ -560,7 +560,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint all
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Validator 1: 25% of each
@@ -613,7 +613,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint again
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Now validator 1 has 200 power out of 300 total = 2/3 of new fees
@@ -641,7 +641,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint should succeed but not allocate (total power is 0)
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Total allocated should still be 0
@@ -662,7 +662,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint once to allocate all fees
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Verify all fees are allocated
@@ -671,7 +671,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, totalAllocated)
 
 		// Checkpoint again - should do nothing since unallocated is zero
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Validator fees should remain the same
@@ -715,7 +715,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint again
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Validators 1 and 2: 100 (before) + 100 (new share) each
@@ -768,7 +768,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint to allocate fees
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Validator should have 0.25 stake (25% of 1)
@@ -807,7 +807,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Total allocated should be 100
@@ -854,7 +854,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint to allocate fees
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Verify allocated fees for all denominations
@@ -913,7 +913,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint to allocate fees
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Calculate expected decimal amounts
@@ -963,7 +963,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint again
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Verify remainders accumulate with new fees
@@ -1039,7 +1039,7 @@ func TestGetValidatorAllocatedFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Get fees - should be 100
@@ -1148,7 +1148,7 @@ func TestGetUnallocatedFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Allocate some fees
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Add more fees
@@ -1193,7 +1193,7 @@ func TestGetUnallocatedFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Allocate all fees
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		unallocated, err := f.poaKeeper.getUnallocatedFees(f.ctx)

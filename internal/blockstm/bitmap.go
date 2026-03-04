@@ -29,6 +29,10 @@ func (s *BitmapIndex) Delete(version TxnIndex) {
 
 // PreviousValue returns the closest version that's less than the given version, exclusive.
 func (s *BitmapIndex) PreviousValue(target TxnIndex) (TxnIndex, bool) {
+	if target <= 0 {
+		return 0, false
+	}
+
 	s.RLock()
 	prev := s.bitmap.PreviousValue(uint32(target - 1))
 	s.RUnlock()

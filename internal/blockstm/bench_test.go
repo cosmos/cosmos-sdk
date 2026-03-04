@@ -79,7 +79,7 @@ func BenchmarkBlockSTM(b *testing.B) {
 				b.ResetTimer()
 				var executedTotal, validatedTotal uint64
 				for i := 0; i < b.N; i++ {
-					executed, validated, err := executeBlockWithEstimatesImpl(
+					executed, validated, _, err := executeBlockWithEstimatesImpl(
 						context.Background(),
 						tc.block.Size(),
 						stores,
@@ -91,7 +91,6 @@ func BenchmarkBlockSTM(b *testing.B) {
 							tc.block.ExecuteTx(txn, store, *cache)
 							incarnationCache[txn].Store(cache)
 						},
-						false,
 					)
 					require.NoError(b, err)
 					executedTotal += executed

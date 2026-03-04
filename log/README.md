@@ -25,6 +25,27 @@ type Logger interface {
 }
 ```
 
+### Example
+
+Below is an example of how logs can be correlated with traces. In Grafana, clicking on the `UpdateBalance` trace will show the "Hello World" log,
+as the span context was properly threaded to the logger's `InfoContext` call.
+
+```go
+func (k Keeper) UpdateBalance(ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) error {
+	ctx, span := ctx.StartSpan(tracer, "UpdateBalance")
+	defer span.End()
+	
+	logger := ctx.Logger()
+	logger.InfoContext(ctx, "Hello World")
+	
+	// ... other logic ...
+	
+	return nil
+}
+```
+
+### otelslog
+
 If your OpenTelemetry configuration contained a [logger provider](https://opentelemetry.io/docs/concepts/signals/logs/#logger-provider), the Cosmos SDK will automatically provision a MultiLogger,
 logging to both stdout via the existing `zerolog` wrapper, and to the configured logger provider via `otelslog`.
 
@@ -39,6 +60,6 @@ In the `Trace to logs` section:
 
 ## Future Considerations
 
-OpenTelemetry has built log bridges, which automatically forward logs to the configured logger provider. For example, OpenTelemetry has bridges for zap and slog, but currently, not zerolog.
+OpenTelemetry implements log bridges, which automatically forward logs to the configured logger provider. For example, OpenTelemetry has bridges for zap and slog, but currently, not zerolog.
 A zerolog bridge is possible, however it is blocked by an open PR in the zerolog repo: https://github.com/rs/zerolog/pull/682
 If this bridge is added to the core otel stack, this should be the preferred solution to log exporting instead of a MultiLogger. More info: https://github.com/open-telemetry/opentelemetry-go-contrib/issues/5969

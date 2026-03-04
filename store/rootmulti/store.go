@@ -20,6 +20,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
+
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
@@ -567,7 +568,7 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	for k, v := range rs.stores {
 		var store types.CacheWrapper = v
 		if kv, ok := v.(types.KVStore); ok {
-			var kvStore types.KVStore = kv
+			kvStore := kv
 			if rs.interBlockCache != nil {
 				kvStore = rs.interBlockCache.GetStoreCache(k, kv)
 			}

@@ -11,8 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
-const preStateMaxCacheValueBytes = 4096
-
 var (
 	_ storetypes.KVStore    = (*GMVMemoryView[[]byte])(nil)
 	_ storetypes.ObjKVStore = (*GMVMemoryView[any])(nil)
@@ -65,13 +63,7 @@ func (s *GMVMemoryView[V]) getFromPreState(key []byte) V {
 
 	result := s.storage.Get(key)
 	if s.preState != nil {
-		if bytesValue, ok := any(result).([]byte); ok {
-			if len(bytesValue) <= preStateMaxCacheValueBytes {
-				s.preState.Store(key, any(result))
-			}
-		} else {
-			s.preState.Store(key, any(result))
-		}
+		s.preState.Store(key, any(result))
 	}
 	return result
 }

@@ -20,7 +20,7 @@ type MVMemory struct {
 	// multi-version data structure for each store
 	data []MVStore
 	// parent storage for each store
-	storage []any
+	storage []Storage
 
 	// read sets of transactions
 	lastReadSet []atomic.Pointer[MultiReadSet]
@@ -28,14 +28,14 @@ type MVMemory struct {
 
 func NewMVMemory(
 	block_size int, stores map[storetypes.StoreKey]int,
-	storage []any, scheduler *Scheduler,
+	storage []Storage, scheduler *Scheduler,
 ) *MVMemory {
 	return NewMVMemoryWithEstimates(block_size, stores, storage, scheduler, nil)
 }
 
 func NewMVMemoryWithEstimates(
 	block_size int, stores map[storetypes.StoreKey]int,
-	storage []any, scheduler *Scheduler, estimates []MultiLocations,
+	storage []Storage, scheduler *Scheduler, estimates []MultiLocations,
 ) *MVMemory {
 	data := make([]MVStore, len(stores))
 	for key, i := range stores {
@@ -90,9 +90,9 @@ func (mv *MVMemory) ValidateReadSet(txn TxnIndex) bool {
 	return true
 }
 
-func (mv *MVMemory) WriteSnapshot(storage MultiStore) {
+func (mv *MVMemory) WriteSnapshot(parent MultiStore) {
 	for name, i := range mv.stores {
-		mv.data[i].SnapshotToStore(storage.GetStore(name))
+		mv.data[i].SnapshotToStore(parent.GetStore(name))
 	}
 }
 

@@ -29,7 +29,7 @@ type GMVMemoryView[V any] struct {
 	writeSet *GMemDB[V]
 }
 
-func NewMVView(storage any, mvData MVStore, scheduler *Scheduler, txn TxnIndex) MVView {
+func NewMVView(storage Storage, mvData MVStore, scheduler *Scheduler, txn TxnIndex) MVView {
 	switch data := mvData.(type) {
 	case *GMVData[any]:
 		return NewGMVMemoryView(storage.(ObjKVStorage), data, scheduler, txn)

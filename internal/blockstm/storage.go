@@ -19,16 +19,21 @@ var (
 	_ ObjKVStorage = (*GCachedStorage[any])(nil)
 )
 
+// Storage is a common interface for KVStorage and ObjKVStorage.
+type Storage interface {
+	GetStoreType() storetypes.StoreType
+}
+
 // GStorage represents a read-only version of kv store,
 // it provides the pre-state during the whole execution of block-stm.
 // It can be implemented by either a plain KVStore, or a cached one.
 type GStorage[V any] interface {
+	Storage
+
 	Get(key []byte) V
 
 	Iterator(start, end []byte) storetypes.GIterator[V]
 	ReverseIterator(start, end []byte) storetypes.GIterator[V]
-
-	GetStoreType() storetypes.StoreType
 }
 
 // GCachedStorage wraps a plain kv store with a thread-safe cache, it's useful when we need to
@@ -55,15 +60,15 @@ func (s *GCachedStorage[V]) Get(key []byte) V {
 }
 
 // MultiStoreToCachedStorage convert MultiStore to an array of GStorage, wrap each store with a cache.
-func MultiStoreToCachedStorage(ms MultiStore, stores map[storetypes.StoreKey]int) []any {
-	storage := make([]any, len(stores))
+func MultiStoreToCachedStorage(ms MultiStore, stores map[storetypes.StoreKey]int) []Storage {
+	storage := make([]Storage, len(stores))
 	for key, i := range stores {
 		store := ms.GetStore(key)
 		switch v := store.(type) {
 		case storetypes.KVStore:
-			storage[i] = NewGCachedStorage[[]byte](v)
+			storage[i] = NewGCachedStorage(v)
 		case storetypes.ObjKVStore:
-			storage[i] = NewGCachedStorage[any](v)
+			storage[i] = NewGCachedStorage(v)
 		default:
 			panic("unsupported store type")
 		}
@@ -72,8 +77,8 @@ func MultiStoreToCachedStorage(ms MultiStore, stores map[storetypes.StoreKey]int
 }
 
 // MultiStoreToStorage convert MultiStore to an array of GStorage without cache.
-func MultiStoreToStorage(ms MultiStore, stores map[storetypes.StoreKey]int) []any {
-	storage := make([]any, len(stores))
+func MultiStoreToStorage(ms MultiStore, stores map[storetypes.StoreKey]int) []Storage {
+	storage := make([]Storage, len(stores))
 	for key, i := range stores {
 		store := ms.GetStore(key)
 		switch v := store.(type) {

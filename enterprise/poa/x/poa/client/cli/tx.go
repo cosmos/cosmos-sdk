@@ -21,15 +21,15 @@ import (
 	"os"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // NewTxCommand returns the root transaction command for the POA module.

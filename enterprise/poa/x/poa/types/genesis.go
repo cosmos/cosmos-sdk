@@ -17,10 +17,10 @@ package types
 import (
 	"fmt"
 
+	"cosmossdk.io/core/address"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	"cosmossdk.io/core/address"
 )
 
 // ValidateBasic performs basic validation on the GenesisState.

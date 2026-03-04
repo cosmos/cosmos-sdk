@@ -42,12 +42,12 @@ func TestGetObjKVStore(t *testing.T) {
 	require.NotNil(t, store1)
 	require.IsType(t, &transient.ObjStore{}, store1)
 
-	store2 := ms.GetCommitStore(key)
+	store2 := ms.stores[key]
 	require.NotNil(t, store2)
 	require.IsType(t, &transient.ObjStore{}, store2)
 }
 
-func TestGetCommitKVStore(t *testing.T) {
+func TestGetKVStore(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 	err := ms.LoadLatestVersion()
@@ -55,11 +55,11 @@ func TestGetCommitKVStore(t *testing.T) {
 
 	key := ms.keysByName["store1"]
 
-	store1 := ms.GetCommitKVStore(key)
+	store1 := ms.GetKVStore(key)
 	require.NotNil(t, store1)
 	require.IsType(t, &iavl.Store{}, store1)
 
-	store2 := ms.GetCommitStore(key)
+	store2 := ms.stores[key]
 	require.NotNil(t, store2)
 	require.IsType(t, &iavl.Store{}, store2)
 }
@@ -830,7 +830,7 @@ func TestSetInitialVersion(t *testing.T) {
 	multi.Commit()
 	require.Equal(t, int64(5), multi.LastCommitID().Version)
 
-	ckvs := multi.GetCommitKVStore(multi.keysByName["store1"])
+	ckvs := multi.stores[multi.keysByName["store1"]]
 	iavlStore, ok := ckvs.(*iavl.Store)
 	require.True(t, ok)
 	require.True(t, iavlStore.VersionExists(5))
@@ -1031,7 +1031,7 @@ func getExpectedCommitID(store *Store, ver int64) types.CommitID {
 	}
 }
 
-func hashStores(stores map[types.StoreKey]types.CommitStore) []byte {
+func hashStores(stores map[types.StoreKey]storeCommitter) []byte {
 	m := make(map[string][]byte, len(stores))
 	for key, store := range stores {
 		if store.GetStoreType() != types.StoreTypeIAVL {
@@ -1090,17 +1090,17 @@ func TestStateListeners(t *testing.T) {
 }
 
 type commitStoreStub struct {
-	types.CommitStore
+	storeCommitter
 	Committed int
 }
 
 func (stub *commitStoreStub) Commit() types.CommitID {
-	commitID := stub.CommitStore.Commit()
+	commitID := stub.storeCommitter.Commit()
 	stub.Committed++
 	return commitID
 }
 
-func prepareStoreMap() (map[types.StoreKey]types.CommitStore, error) {
+func prepareStoreMap() (map[types.StoreKey]storeCommitter, error) {
 	var db dbm.DB = dbm.NewMemDB()
 	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
@@ -1111,18 +1111,18 @@ func prepareStoreMap() (map[types.StoreKey]types.CommitStore, error) {
 	if err := store.LoadLatestVersion(); err != nil {
 		return nil, err
 	}
-	return map[types.StoreKey]types.CommitStore{
+	return map[types.StoreKey]storeCommitter{
 		testStoreKey1: &commitStoreStub{
-			CommitStore: store.GetStoreByName("iavl1").(types.CommitStore),
+			storeCommitter: store.stores[store.keysByName["iavl1"]],
 		},
 		testStoreKey2: &commitStoreStub{
-			CommitStore: store.GetStoreByName("iavl2").(types.CommitStore),
+			storeCommitter: store.stores[store.keysByName["iavl2"]],
 		},
 		testStoreKey3: &commitStoreStub{
-			CommitStore: store.GetStoreByName("trans1").(types.CommitStore),
+			storeCommitter: store.stores[store.keysByName["trans1"]],
 		},
 		testStoreKey4: &commitStoreStub{
-			CommitStore: store.GetStoreByName("obj1").(types.CommitStore),
+			storeCommitter: store.stores[store.keysByName["obj1"]],
 		},
 	}, nil
 }

@@ -11,6 +11,7 @@ var commithash = []byte("FAKE_HASH")
 var (
 	_ types.KVStore   = (*commitDBStoreAdapter)(nil)
 	_ types.Committer = (*commitDBStoreAdapter)(nil)
+	_ storeCommitter  = (*commitDBStoreAdapter)(nil)
 )
 
 //----------------------------------------

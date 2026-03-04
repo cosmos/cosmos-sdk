@@ -31,16 +31,10 @@ type Committer interface {
 	GetPruning() pruningtypes.PruningOptions
 }
 
-// CommitStore is an interface for Commit and Store capabilities.
-type CommitStore interface {
-	Committer
-	Store
-}
-
 // Queryable allows a Store to expose internal state to the abci.Query
 // interface. Multistore can route requests to the proper Store.
 //
-// This is an optional, but useful extension to any CommitStore
+// This is an optional, but useful extension to any Store
 type Queryable interface {
 	Query(*RequestQuery) (*ResponseQuery, error)
 }
@@ -166,12 +160,6 @@ type CommitMultiStore interface {
 	// If db == nil, the new store will use the CommitMultiStore db.
 	MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB)
 
-	// Panics on a nil key.
-	GetCommitStore(key StoreKey) CommitStore
-
-	// Panics on a nil key.
-	GetCommitKVStore(key StoreKey) CommitKVStore
-
 	// Load the latest persisted version. Called once after all calls to
 	// Mount*Store() are complete.
 	LoadLatestVersion() error
@@ -193,7 +181,7 @@ type CommitMultiStore interface {
 	LoadVersion(ver int64) error
 
 	// Set an inter-block (persistent) cache that maintains a mapping from
-	// StoreKeys to CommitKVStores.
+	// StoreKeys to KVStores.
 	SetInterBlockCache(MultiStorePersistentCache)
 
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
@@ -314,12 +302,6 @@ type CacheKVStore interface {
 
 	// Writes operations to underlying KVStore
 	Write()
-}
-
-// CommitKVStore is an interface for MultiStore.
-type CommitKVStore interface {
-	Committer
-	KVStore
 }
 
 //----------------------------------------
@@ -541,14 +523,11 @@ func (tc TraceContext) Merge(newTc TraceContext) TraceContext {
 }
 
 // MultiStorePersistentCache defines an interface which provides inter-block
-// (persistent) caching capabilities for multiple CommitKVStores based on StoreKeys.
+// (persistent) caching capabilities for multiple KVStores based on StoreKeys.
 type MultiStorePersistentCache interface {
-	// Wrap and return the provided CommitKVStore with an inter-block (persistent)
+	// Wrap and return the provided KVStore with an inter-block (persistent)
 	// cache.
-	GetStoreCache(key StoreKey, store CommitKVStore) CommitKVStore
-
-	// Return the underlying CommitKVStore for a StoreKey.
-	Unwrap(key StoreKey) CommitKVStore
+	GetStoreCache(key StoreKey, store KVStore) KVStore
 
 	// Reset the entire set of internal caches.
 	Reset()

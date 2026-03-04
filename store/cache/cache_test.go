@@ -18,7 +18,7 @@ import (
 
 func TestGetOrSetStoreCache(t *testing.T) {
 	db := wrapper.NewDBWrapper(dbm.NewMemDB())
-	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
+	mngr := cache.NewKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
 	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
@@ -29,22 +29,9 @@ func TestGetOrSetStoreCache(t *testing.T) {
 	require.Equal(t, store2, mngr.GetStoreCache(sKey, store))
 }
 
-func TestUnwrap(t *testing.T) {
-	db := wrapper.NewDBWrapper(dbm.NewMemDB())
-	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
-
-	sKey := types.NewKVStoreKey("test")
-	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
-	store := iavlstore.UnsafeNewStore(tree)
-	_ = mngr.GetStoreCache(sKey, store)
-
-	require.Equal(t, store, mngr.Unwrap(sKey))
-	require.Nil(t, mngr.Unwrap(types.NewKVStoreKey("test2")))
-}
-
 func TestStoreCache(t *testing.T) {
 	db := wrapper.NewDBWrapper(dbm.NewMemDB())
-	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
+	mngr := cache.NewKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
 	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
@@ -70,7 +57,7 @@ func TestStoreCache(t *testing.T) {
 
 func TestReset(t *testing.T) {
 	db := wrapper.NewDBWrapper(dbm.NewMemDB())
-	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
+	mngr := cache.NewKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
 	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
@@ -80,17 +67,14 @@ func TestReset(t *testing.T) {
 	require.NotNil(t, store2)
 	require.Equal(t, store2, mngr.GetStoreCache(sKey, store))
 
-	// reset and check if the cache is gone
+	// reset and check if the cache is recreated
 	mngr.Reset()
-	require.Nil(t, mngr.Unwrap(sKey))
-
-	// check if the cache is recreated
 	require.Equal(t, store2, mngr.GetStoreCache(sKey, store))
 }
 
 func TestCacheWrap(t *testing.T) {
 	db := wrapper.NewDBWrapper(dbm.NewMemDB())
-	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
+	mngr := cache.NewKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
 	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())

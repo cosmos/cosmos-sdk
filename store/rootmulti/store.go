@@ -12,6 +12,12 @@ import (
 	"sync"
 	"sync/atomic"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
+	protoio "github.com/cosmos/gogoproto/io"
+	gogotypes "github.com/cosmos/gogoproto/types"
+	iavltree "github.com/cosmos/iavl"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cachemulti"
@@ -26,11 +32,6 @@ import (
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/transient"
 	"cosmossdk.io/store/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cosmos/cosmos-db"
-	protoio "github.com/cosmos/gogoproto/io"
-	gogotypes "github.com/cosmos/gogoproto/types"
-	iavltree "github.com/cosmos/iavl"
 )
 
 const (

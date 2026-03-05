@@ -438,7 +438,7 @@ func TestWithdrawableFeesQuery(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint to allocate fees
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Query should show 100 allocated
@@ -543,7 +543,7 @@ func TestWithdrawableFeesQuery(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint to allocate (each gets 100)
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Change power distribution

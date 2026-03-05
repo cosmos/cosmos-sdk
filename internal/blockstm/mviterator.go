@@ -3,9 +3,8 @@ package blockstm
 import (
 	"github.com/cosmos/btree"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
-
 	tree2 "github.com/cosmos/cosmos-sdk/internal/blockstm/tree"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 // MVIterator is an iterator for a multi-versioned store.

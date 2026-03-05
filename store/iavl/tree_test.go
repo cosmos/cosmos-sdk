@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
+
 	"github.com/cosmos/cosmos-sdk/store/v2/wrapper"
 )
 

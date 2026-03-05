@@ -3,7 +3,6 @@ package v2
 import (
 	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
-
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v1auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v1"
 )

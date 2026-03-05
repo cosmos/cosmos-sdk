@@ -5,9 +5,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
-
 	tree2 "github.com/cosmos/cosmos-sdk/internal/blockstm/tree"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 

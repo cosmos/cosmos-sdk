@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log/v2"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 

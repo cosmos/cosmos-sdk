@@ -25,7 +25,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/log/v2"
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -33,6 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/keeper"
 	module2 "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/module"
 	grouptestutil "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/testutil"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"

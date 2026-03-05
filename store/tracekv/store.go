@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 

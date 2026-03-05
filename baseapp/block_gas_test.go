@@ -13,7 +13,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log/v2"
 	sdkmath "cosmossdk.io/math"
-	store "cosmossdk.io/store/types"
+	store "github.com/cosmos/cosmos-sdk/store/v2/types"
 
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"

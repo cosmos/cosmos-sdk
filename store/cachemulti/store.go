@@ -5,8 +5,8 @@ import (
 	"io"
 	"maps"
 
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 // storeNameCtxKey is the TraceContext metadata key that identifies

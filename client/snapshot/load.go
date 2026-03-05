@@ -13,7 +13,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	snapshottypes "cosmossdk.io/store/snapshots/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
 
 	"github.com/cosmos/cosmos-sdk/server"
 )

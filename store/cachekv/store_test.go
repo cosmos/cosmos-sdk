@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math/unsafe"
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func newCacheKVStore() types.CacheKVStore {

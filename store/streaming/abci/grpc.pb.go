@@ -5,9 +5,9 @@ package abci
 
 import (
 	context "context"
-	types1 "cosmossdk.io/store/types"
 	fmt "fmt"
 	types "github.com/cometbft/cometbft/abci/types"
+	types1 "github.com/cosmos/cosmos-sdk/store/v2/types"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
 	grpc "google.golang.org/grpc"

@@ -11,7 +11,7 @@ import (
 
 	"cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

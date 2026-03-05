@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	coreaddress "cosmossdk.io/core/address"
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"

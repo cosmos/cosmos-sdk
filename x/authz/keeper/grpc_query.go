@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/errors"
-	"cosmossdk.io/store/prefix"
+	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"

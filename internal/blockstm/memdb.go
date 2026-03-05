@@ -5,9 +5,9 @@ import (
 
 	"github.com/cosmos/btree"
 
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/tracekv"
-	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/tracekv"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 
 	tree2 "github.com/cosmos/cosmos-sdk/internal/blockstm/tree"
 )

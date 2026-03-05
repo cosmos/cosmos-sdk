@@ -18,7 +18,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 
 	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 	orm "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/internal/orm"

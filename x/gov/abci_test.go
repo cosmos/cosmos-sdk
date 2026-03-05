@@ -5,13 +5,12 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/gogoproto/proto"
+	anypb "github.com/cosmos/gogoproto/types/any"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-
-	"github.com/cosmos/gogoproto/proto"
-	anypb "github.com/cosmos/gogoproto/types/any"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"

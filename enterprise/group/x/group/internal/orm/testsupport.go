@@ -41,7 +41,7 @@ func NewMockContext() *MockContext {
 
 func (m MockContext) KVStore(key storetypes.StoreKey) storetypes.KVStore {
 	if s := m.store.GetKVStore(key); s != nil {
-		return s.(storetypes.KVStore)
+		return s
 	}
 	m.store.MountStoreWithDB(key, storetypes.StoreTypeIAVL, m.db)
 	if err := m.store.LoadLatestVersion(); err != nil {

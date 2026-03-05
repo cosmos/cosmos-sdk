@@ -148,7 +148,7 @@ func (k *Keeper) CreateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, v
 		// Checkpoint all validators if requested. The only time we don't want to do this is
 		// during ImportGenesis, where we re-add all the validators one by one.
 		if checkpoint {
-			if err := k.CheckpointAllValidators(ctx); err != nil {
+			if err := k.checkpointAllValidators(ctx); err != nil {
 				return err
 			}
 		}
@@ -216,7 +216,7 @@ func (k *Keeper) createABCIValidatorUpdate(pubKeyAny *codectypes.Any, power int6
 // This checkpoints all validators before making the change to ensure accurate fee distribution.
 func (k *Keeper) SetValidatorPower(ctx sdk.Context, consAddress sdk.ConsAddress, power int64) error {
 	// Checkpoint all validators before any power change
-	if err := k.CheckpointAllValidators(ctx); err != nil {
+	if err := k.checkpointAllValidators(ctx); err != nil {
 		return err
 	}
 

@@ -27,26 +27,29 @@ import (
 )
 
 type MockContext struct {
-	db    *dbm.MemDB
-	store storetypes.CommitMultiStore
+	db      *dbm.MemDB
+	store   storetypes.CommitMultiStore
+	mounted map[storetypes.StoreKey]bool
 }
 
 func NewMockContext() *MockContext {
 	db := dbm.NewMemDB()
 	return &MockContext{
-		db:    dbm.NewMemDB(),
-		store: store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics()),
+		db:      db,
+		store:   store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics()),
+		mounted: make(map[storetypes.StoreKey]bool),
 	}
 }
 
-func (m MockContext) KVStore(key storetypes.StoreKey) storetypes.KVStore {
-	if s := m.store.GetKVStore(key); s != nil {
-		return s
+func (m *MockContext) KVStore(key storetypes.StoreKey) storetypes.KVStore {
+	if !m.mounted[key] {
+		m.store.MountStoreWithDB(key, storetypes.StoreTypeIAVL, m.db)
+		if err := m.store.LoadLatestVersion(); err != nil {
+			panic(err)
+		}
+		m.mounted[key] = true
 	}
-	m.store.MountStoreWithDB(key, storetypes.StoreTypeIAVL, m.db)
-	if err := m.store.LoadLatestVersion(); err != nil {
-		panic(err)
-	}
+	// GetKVStore will panic if the store isn't mounted yet
 	return m.store.GetKVStore(key)
 }
 

@@ -287,6 +287,12 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	rs.lastCommitInfo.Store(cInfo)
 	rs.stores = newStores
 
+	// Flush the inter-block cache so stale wrappers around old store instances
+	// are not served on subsequent access.
+	if rs.interBlockCache != nil {
+		rs.interBlockCache.Reset()
+	}
+
 	// load any snapshot heights we missed from disk to be pruned on the next run
 	if err := rs.pruningManager.LoadSnapshotHeights(rs.db); err != nil {
 		return err

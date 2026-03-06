@@ -51,8 +51,9 @@ func NewGMemDB[V any](
 	}
 }
 
-// NewGMemDBNonConcurrent returns a new BTree which is not concurrency safe.
-func NewGMemDBNonConcurrent[V any](
+// NewWriteSet is built in views, and stored in the MVData as a whole, and not modified thereafter,
+// no need for locks.
+func NewWriteSet[V any](
 	isZero func(V) bool,
 	valueLen func(V) int,
 ) *GMemDB[V] {

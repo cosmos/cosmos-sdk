@@ -457,6 +457,12 @@ func (c Context) StartSpan(tracer trace.Tracer, spanName string, opts ...trace.S
 // valuePreservingContext ensures Value falls back to the original context when
 // the span context does not contain the key, fixing value loss when tracer.Start
 // returns a context that does not chain to the parent.
+//
+// Limitation: Value uses nil to decide whether to fall back. "key not found" and
+// "key found with nil value" are indistinguishable, so a base context that
+// intentionally stores nil for a key will trigger fallback lookup and may return
+// a stale value from fallback. For internal keys (e.g. gas register) this is
+// acceptable; custom contexts that store nil should be aware of this trade-off.
 type valuePreservingContext struct {
 	base     context.Context
 	fallback context.Context
@@ -476,6 +482,10 @@ func (v *valuePreservingContext) Deadline() (time.Time, bool) { return v.base.De
 // MergeContextForValue returns a context that for Value() lookups checks base first,
 // then fallback. Used when replacing a context while preserving values set during the
 // replaced segment (e.g. after ante handler, to retain gas register and similar).
+//
+// When used for ante aftermath: base = pre-ante ctx (removes span), fallback = ante ctx.
+// New keys set in ante (e.g. gas register) are preserved via fallback. Ante-handler
+// overrides of pre-existing keys are discarded (base wins); document this if relevant.
 func MergeContextForValue(base, fallback context.Context) context.Context {
 	return &valuePreservingContext{base: base, fallback: fallback}
 }

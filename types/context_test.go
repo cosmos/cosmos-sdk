@@ -280,13 +280,27 @@ func (s *contextTestSuite) TestStartSpanWithoutValuePreservationLosesValues() {
 
 func (s *contextTestSuite) TestMergeContextForValue() {
 	key := testContextKey{}
-	val := "from-fallback"
 
+	// Key present only in fallback — fallback path
 	base := context.Background()
-	fallback := context.WithValue(context.Background(), key, val)
-
+	fallback := context.WithValue(context.Background(), key, "from-fallback")
 	merged := types.MergeContextForValue(base, fallback)
-	s.Require().Equal(val, merged.Value(key), "Value() must fall back to fallback when key not in base")
+	s.Require().Equal("from-fallback", merged.Value(key), "Value() must fall back to fallback when key not in base")
+
+	// Key present only in base — base path
+	baseOnly := context.WithValue(context.Background(), key, "from-base")
+	merged2 := types.MergeContextForValue(baseOnly, context.Background())
+	s.Require().Equal("from-base", merged2.Value(key), "Value() must return base value when key present only in base")
+
+	// Key present in both — base must take precedence over fallback
+	baseBoth := context.WithValue(context.Background(), key, "from-base")
+	fallbackBoth := context.WithValue(context.Background(), key, "from-fallback")
+	merged3 := types.MergeContextForValue(baseBoth, fallbackBoth)
+	s.Require().Equal("from-base", merged3.Value(key), "base must take priority over fallback")
+
+	// Key absent from both — should return nil
+	merged4 := types.MergeContextForValue(context.Background(), context.Background())
+	s.Require().Nil(merged4.Value(key), "key absent from both must return nil")
 }
 
 func (s *contextTestSuite) TestNonMergedContextDoesNotPreserveValues() {

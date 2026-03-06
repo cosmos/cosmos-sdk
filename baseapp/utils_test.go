@@ -223,6 +223,39 @@ func counterEvent(evType string, msgCount int64) sdk.Events {
 	}
 }
 
+// anteContextTestKey is a context key for TestAnteHandlerContextValuesPreserved.
+type anteContextTestKey struct{}
+
+const anteContextTestValue = "from-ante"
+
+// anteHandlerThatSetsContextValue returns an ante handler that sets a context value.
+// Used to test that MergeContextForValue preserves values across the ante/runMsgs boundary.
+func anteHandlerThatSetsContextValue(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) sdk.AnteHandler {
+	t.Helper()
+
+	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
+		ctx = ctx.WithValue(anteContextTestKey{}, anteContextTestValue)
+		return anteHandlerTxTest(t, capKey, storeKey)(ctx, tx, simulate)
+	}
+}
+
+// counterServerRequiresAnteContextValue is a CounterServer that fails if the ante-set context value is missing.
+func counterServerRequiresAnteContextValue(t *testing.T, capKey storetypes.StoreKey, deliverKey []byte) *mockCounterServer {
+	t.Helper()
+
+	return &mockCounterServer{
+		incrementCounterFn: func(ctx context.Context, msg *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
+			sdkCtx := sdk.UnwrapSDKContext(ctx)
+			val := sdkCtx.Value(anteContextTestKey{})
+			if val != anteContextTestValue {
+				return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
+					"context value not preserved: got %v, want %q", val, anteContextTestValue)
+			}
+			return incrementCounter(ctx, t, capKey, deliverKey, msg)
+		},
+	}
+}
+
 func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) sdk.AnteHandler {
 	t.Helper()
 

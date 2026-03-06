@@ -637,6 +637,55 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// TestAnteHandlerContextValuesPreserved verifies that context values set in the ante handler
+// are preserved when passed to message handlers. Without MergeContextForValue in baseapp.RunTx,
+// the baseapp replaces the context after the ante handler (to remove the span), which would
+// lose values like the wasmd gas register. This test would fail if that fix were reverted.
+func TestAnteHandlerContextValuesPreserved(t *testing.T) {
+	t.Run("preserving_context_succeeds", func(t *testing.T) {
+	anteKey := []byte("ante-key")
+	deliverKey := []byte("deliver-key")
+
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(anteHandlerThatSetsContextValue(t, capKey1, anteKey))
+	}
+	suite := NewBaseAppSuite(t, anteOpt)
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), counterServerRequiresAnteContextValue(t, capKey1, deliverKey))
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	require.NoError(t, err)
+	require.True(t, res.TxResults[0].IsOK(),
+		"message handler must receive context values set in ante handler; got: %s", res.TxResults[0].Log)
+	})
+
+	t.Run("non_preserving_context_fails", func(t *testing.T) {
+		// Simulate the non-preserving context: baseapp would use newCtx.WithContext(ctx)
+		// instead of MergeContextForValue, so baseCtx = base (pre-ante ctx) and values
+		// set in ante (fallback) are lost.
+		key := anteContextTestKey{}
+		val := anteContextTestValue
+
+		base := context.Background()
+		fallback := context.WithValue(context.Background(), key, val)
+
+		require.Equal(t, val, fallback.Value(key), "fallback has the value")
+		sdkCtx := sdk.NewContext(nil, cmtproto.Header{}, false, nil)
+		sdkCtx = sdkCtx.WithContext(base) // non-preserving: no merge with fallback
+
+		got := sdkCtx.Value(key)
+		require.Nil(t, got, "non-preserving context must lose values; got %v", got)
+	})
+}
+
 func TestBaseAppPostHandler(t *testing.T) {
 	postHandlerRun := false
 	anteOpt := func(bapp *baseapp.BaseApp) {

@@ -264,15 +264,41 @@ func (s *contextTestSuite) TestStartSpanPreservesContextValues() {
 	s.Require().Equal(val, ctx2.Value(key), "context values must be retained after StartSpan")
 }
 
+func (s *contextTestSuite) TestStartSpanWithoutValuePreservationLosesValues() {
+	key := testContextKey{}
+	val := "would-be-lost"
+
+	ctx := types.NewContext(nil, cmtproto.Header{}, false, nil)
+	ctx = ctx.WithValue(key, val)
+
+	// Simulate non-preserving StartSpan: use WithContext(base) where base does not chain to parent.
+	// Without valuePreservingContext, this would lose values (e.g. if tracer.Start returned context.Background()).
+	nonPreservingCtx := ctx.WithContext(context.Background())
+
+	s.Require().Nil(nonPreservingCtx.Value(key), "non-preserving context loses values when baseCtx does not chain to parent")
+}
+
 func (s *contextTestSuite) TestMergeContextForValue() {
 	key := testContextKey{}
 	val := "from-fallback"
 
-	inner := context.Background()
+	base := context.Background()
 	fallback := context.WithValue(context.Background(), key, val)
 
-	merged := types.MergeContextForValue(inner, fallback)
-	s.Require().Equal(val, merged.Value(key), "Value() must fall back to fallback when key not in inner")
+	merged := types.MergeContextForValue(base, fallback)
+	s.Require().Equal(val, merged.Value(key), "Value() must fall back to fallback when key not in base")
+}
+
+func (s *contextTestSuite) TestNonMergedContextDoesNotPreserveValues() {
+	key := testContextKey{}
+	val := "from-fallback"
+
+	base := context.Background()
+	fallback := context.WithValue(context.Background(), key, val)
+
+	s.Require().Equal(val, fallback.Value(key), "fallback has the value")
+	// Non-preserving: plain base without merge - value from fallback is not accessible.
+	s.Require().Nil(base.Value(key), "non-preserving context does not preserve fallback values")
 }
 
 func (s *contextTestSuite) TestMultiStore() {

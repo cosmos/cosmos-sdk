@@ -450,7 +450,7 @@ func (c Context) WithIncarnationCache(cache map[string]any) Context {
 // lookups to lose app-set values; this method ensures they are preserved.
 func (c Context) StartSpan(tracer trace.Tracer, spanName string, opts ...trace.SpanStartOption) (Context, trace.Span) {
 	goCtx, span := tracer.Start(c.baseCtx, spanName, opts...)
-	preservedCtx := &valuePreservingContext{inner: goCtx, fallback: c.baseCtx}
+	preservedCtx := &valuePreservingContext{base: goCtx, fallback: c.baseCtx}
 	return c.WithContext(preservedCtx), span
 }
 
@@ -458,26 +458,26 @@ func (c Context) StartSpan(tracer trace.Tracer, spanName string, opts ...trace.S
 // the span context does not contain the key, fixing value loss when tracer.Start
 // returns a context that does not chain to the parent.
 type valuePreservingContext struct {
-	inner    context.Context
+	base     context.Context
 	fallback context.Context
 }
 
 func (v *valuePreservingContext) Value(key any) any {
-	if val := v.inner.Value(key); val != nil {
+	if val := v.base.Value(key); val != nil {
 		return val
 	}
 	return v.fallback.Value(key)
 }
 
-func (v *valuePreservingContext) Done() <-chan struct{}       { return v.inner.Done() }
-func (v *valuePreservingContext) Err() error                 { return v.inner.Err() }
-func (v *valuePreservingContext) Deadline() (time.Time, bool) { return v.inner.Deadline() }
+func (v *valuePreservingContext) Done() <-chan struct{}       { return v.base.Done() }
+func (v *valuePreservingContext) Err() error                 { return v.base.Err() }
+func (v *valuePreservingContext) Deadline() (time.Time, bool) { return v.base.Deadline() }
 
-// MergeContextForValue returns a context that for Value() lookups checks inner first,
+// MergeContextForValue returns a context that for Value() lookups checks base first,
 // then fallback. Used when replacing a context while preserving values set during the
 // replaced segment (e.g. after ante handler, to retain gas register and similar).
-func MergeContextForValue(inner, fallback context.Context) context.Context {
-	return &valuePreservingContext{inner: inner, fallback: fallback}
+func MergeContextForValue(base, fallback context.Context) context.Context {
+	return &valuePreservingContext{base: base, fallback: fallback}
 }
 
 var (

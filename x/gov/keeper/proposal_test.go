@@ -294,6 +294,19 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 	suite.Require().NotNil(votes)
 }
 
+// TestSubmitProposalEventMessages is a regression test ensuring that the
+// proposal_messages event attribute does not start with a leading comma.
+func (suite *KeeperTestSuite) TestSubmitProposalEventMessages() {
+	_, err := suite.govKeeper.SubmitProposal(suite.ctx, TestProposal, "", "test", "summary", suite.addrs[0], false)
+	suite.Require().NoError(err)
+
+	events := suite.ctx.EventManager().Events()
+	attrs, found := events.GetAttributes(types.AttributeKeyProposalMessages)
+	suite.Require().True(found)
+	suite.Require().NotEmpty(attrs)
+	suite.Require().False(strings.HasPrefix(attrs[0].Value, ","), "proposal_messages should not start with a comma, got: %s", attrs[0].Value)
+}
+
 func TestMigrateProposalMessages(t *testing.T) {
 	content := v1beta1.NewTextProposal("Test", "description")
 	contentMsg, err := v1.NewLegacyContent(content, sdk.AccAddress("test1").String())

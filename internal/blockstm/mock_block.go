@@ -19,8 +19,7 @@ var (
 )
 
 type (
-	Cache map[string]interface{}
-	Tx    func(MultiStore, Cache) error
+	Tx func(MultiStore) error
 )
 
 type MockBlock struct {
@@ -39,8 +38,8 @@ func (b *MockBlock) Size() int {
 	return len(b.Txs)
 }
 
-func (b *MockBlock) ExecuteTx(txn TxnIndex, store MultiStore, cache Cache) {
-	b.Results[txn] = b.Txs[txn](store, cache)
+func (b *MockBlock) ExecuteTx(txn TxnIndex, store MultiStore) {
+	b.Results[txn] = b.Txs[txn](store)
 }
 
 // Simulated transaction logic for tests and benchmarks
@@ -48,16 +47,16 @@ func (b *MockBlock) ExecuteTx(txn TxnIndex, store MultiStore, cache Cache) {
 // NoopTx verifies a signature and increases the nonce of the sender
 func NoopTx(i int, sender string) Tx {
 	verifySig := genRandomSignature()
-	return func(store MultiStore, cache Cache) error {
-		verifySig(cache)
+	return func(store MultiStore) error {
+		verifySig()
 		return increaseNonce(i, sender, store.GetKVStore(StoreKeyAuth))
 	}
 }
 
 func BankTransferTx(i int, sender, receiver string, amount uint64) Tx {
 	base := NoopTx(i, sender)
-	return func(store MultiStore, cache Cache) error {
-		if err := base(store, cache); err != nil {
+	return func(store MultiStore) error {
+		if err := base(store); err != nil {
 			return err
 		}
 
@@ -67,8 +66,8 @@ func BankTransferTx(i int, sender, receiver string, amount uint64) Tx {
 
 func IterateTx(i int, sender, receiver string, amount uint64) Tx {
 	base := BankTransferTx(i, sender, receiver, amount)
-	return func(store MultiStore, cache Cache) error {
-		if err := base(store, cache); err != nil {
+	return func(store MultiStore) error {
+		if err := base(store); err != nil {
 			return err
 		}
 
@@ -107,7 +106,7 @@ func IterateTx(i int, sender, receiver string, amount uint64) Tx {
 	}
 }
 
-func genRandomSignature() func(Cache) {
+func genRandomSignature() func() {
 	privKey := secp256k1.GenPrivKey()
 	signBytes := make([]byte, 1024)
 	if _, err := cryptorand.Read(signBytes); err != nil {
@@ -116,16 +115,8 @@ func genRandomSignature() func(Cache) {
 	sig, _ := privKey.Sign(signBytes)
 	pubKey := privKey.PubKey()
 
-	return func(cache Cache) {
-		if cache != nil {
-			if _, ok := cache[SigVerificationResultCacheKey]; ok {
-				return
-			}
-		}
+	return func() {
 		pubKey.VerifySignature(signBytes, sig)
-		if cache != nil {
-			cache[SigVerificationResultCacheKey] = struct{}{}
-		}
 	}
 }
 

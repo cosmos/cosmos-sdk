@@ -3,7 +3,6 @@ package blockstm
 import (
 	"context"
 	"sync"
-	"sync/atomic"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -57,11 +56,6 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 		return nil, nil
 	}
 	results := make([]*abci.ExecTxResult, blockSize)
-	incarnationCache := make([]atomic.Pointer[map[string]any], blockSize)
-	for i := 0; i < blockSize; i++ {
-		m := make(map[string]any)
-		incarnationCache[i].Store(&m)
-	}
 
 	var (
 		estimates []MultiLocations
@@ -80,24 +74,11 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 		e.workers,
 		estimates,
 		func(txn TxnIndex, ms MultiStore) {
-			var cache map[string]any
-
-			// only one of the concurrent incarnations gets the cache if there are any, otherwise execute without
-			// cache, concurrent incarnations should be rare.
-			v := incarnationCache[txn].Swap(nil)
-			if v != nil {
-				cache = *v
-			}
-
 			var memTx sdk.Tx
 			if memTxs != nil {
 				memTx = memTxs[txn]
 			}
-			results[txn] = deliverTx(txs[txn], memTx, msWrapper{ms}, int(txn), cache)
-
-			if v != nil {
-				incarnationCache[txn].Store(v)
-			}
+			results[txn] = deliverTx(txs[txn], memTx, msWrapper{ms}, int(txn))
 		},
 	); err != nil {
 		return nil, err

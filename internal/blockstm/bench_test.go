@@ -3,7 +3,6 @@ package blockstm
 import (
 	"context"
 	"strconv"
-	"sync/atomic"
 	"testing"
 
 	"github.com/test-go/testify/require"
@@ -12,15 +11,8 @@ import (
 )
 
 func executeBlock(stores map[storetypes.StoreKey]int, storage MultiStore, worker int, block *MockBlock) error {
-	incarnationCache := make([]atomic.Pointer[map[string]any], block.Size())
-	for i := 0; i < block.Size(); i++ {
-		m := make(map[string]any)
-		incarnationCache[i].Store(&m)
-	}
 	return ExecuteBlock(context.Background(), block.Size(), stores, storage, worker, func(txn TxnIndex, store MultiStore) {
-		cache := incarnationCache[txn].Swap(nil)
-		block.ExecuteTx(txn, store, *cache)
-		incarnationCache[txn].Store(cache)
+		block.ExecuteTx(txn, store)
 	})
 }
 
@@ -62,6 +54,6 @@ func BenchmarkBlockSTM(b *testing.B) {
 
 func runSequential(storage MultiStore, block *MockBlock) {
 	for i, tx := range block.Txs {
-		block.Results[i] = tx(storage, nil)
+		block.Results[i] = tx(storage)
 	}
 }

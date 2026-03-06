@@ -31,7 +31,7 @@ func (d DefaultRunner) Run(ctx context.Context, _ storetypes.MultiStore, txs [][
 		var response *abci.ExecTxResult
 
 		if memTx, err := d.txDecoder(rawTx); err == nil {
-			response = deliverTx(rawTx, memTx, nil, i, nil)
+			response = deliverTx(rawTx, memTx, nil, i)
 		} else {
 			// In the case where a transaction included in a block proposal is malformed,
 			// we still want to return a default response to comet. This is because comet

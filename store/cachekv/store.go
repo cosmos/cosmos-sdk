@@ -44,7 +44,7 @@ func NewStore(parent types.KVStore) *Store {
 }
 
 func (store *GStore[V]) GetStoreType() types.StoreType {
-	return types.StoreTypeIAVL
+	return store.parent.GetStoreType()
 }
 
 func (store *GStore[V]) CacheWrap() types.CacheWrap {
@@ -166,6 +166,7 @@ func (store *GStore[V]) Write() {
 	})
 
 	store.writeMap.Clear()
+	store.dirty = false
 }
 
 func (store *GStore[V]) iterator(start, end []byte, ascending bool) types.GIterator[V] {

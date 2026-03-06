@@ -10,6 +10,7 @@ import (
 	cmttime "github.com/cometbft/cometbft/types/time"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/log/v2"
@@ -244,6 +245,34 @@ func (s *contextTestSuite) TestUnwrapSDKContext() {
 	ctx = context.WithValue(sdkCtx, struct{}{}, "bar") //nolint:staticcheck // this is fine for testing
 	sdkCtx2 = types.UnwrapSDKContext(ctx)
 	s.Require().Equal(sdkCtx, sdkCtx2)
+}
+
+// testContextKey is a private key type for TestStartSpanPreservesContextValues.
+type testContextKey struct{}
+
+func (s *contextTestSuite) TestStartSpanPreservesContextValues() {
+	key := testContextKey{}
+	val := "preserved-value"
+
+	ctx := types.NewContext(nil, cmtproto.Header{}, false, nil)
+	ctx = ctx.WithValue(key, val)
+
+	tracer := otel.Tracer("cosmos-sdk/types")
+	ctx2, span := ctx.StartSpan(tracer, "test")
+	defer span.End()
+
+	s.Require().Equal(val, ctx2.Value(key), "context values must be retained after StartSpan")
+}
+
+func (s *contextTestSuite) TestMergeContextForValue() {
+	key := testContextKey{}
+	val := "from-fallback"
+
+	inner := context.Background()
+	fallback := context.WithValue(context.Background(), key, val)
+
+	merged := types.MergeContextForValue(inner, fallback)
+	s.Require().Equal(val, merged.Value(key), "Value() must fall back to fallback when key not in inner")
 }
 
 func (s *contextTestSuite) TestMultiStore() {

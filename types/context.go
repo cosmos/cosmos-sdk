@@ -443,9 +443,41 @@ func (c Context) WithIncarnationCache(cache map[string]any) Context {
 // StartSpan starts an otel span and returns a new context with the span attached.
 // Use this instead of calling tracer.Start directly to have the span correctly
 // attached to this context type.
+//
+// Context values set on the original context (e.g. via WithValue) are retained
+// in the returned context. tracer.Start may return a context that does not
+// chain to the parent (e.g. noop tracer), which would otherwise cause Value
+// lookups to lose app-set values; this method ensures they are preserved.
 func (c Context) StartSpan(tracer trace.Tracer, spanName string, opts ...trace.SpanStartOption) (Context, trace.Span) {
 	goCtx, span := tracer.Start(c.baseCtx, spanName, opts...)
-	return c.WithContext(goCtx), span
+	preservedCtx := &valuePreservingContext{inner: goCtx, fallback: c.baseCtx}
+	return c.WithContext(preservedCtx), span
+}
+
+// valuePreservingContext ensures Value falls back to the original context when
+// the span context does not contain the key, fixing value loss when tracer.Start
+// returns a context that does not chain to the parent.
+type valuePreservingContext struct {
+	inner    context.Context
+	fallback context.Context
+}
+
+func (v *valuePreservingContext) Value(key any) any {
+	if val := v.inner.Value(key); val != nil {
+		return val
+	}
+	return v.fallback.Value(key)
+}
+
+func (v *valuePreservingContext) Done() <-chan struct{}       { return v.inner.Done() }
+func (v *valuePreservingContext) Err() error                 { return v.inner.Err() }
+func (v *valuePreservingContext) Deadline() (time.Time, bool) { return v.inner.Deadline() }
+
+// MergeContextForValue returns a context that for Value() lookups checks inner first,
+// then fallback. Used when replacing a context while preserving values set during the
+// replaced segment (e.g. after ante handler, to retain gas register and similar).
+func MergeContextForValue(inner, fallback context.Context) context.Context {
+	return &valuePreservingContext{inner: inner, fallback: fallback}
 }
 
 var (

@@ -904,8 +904,9 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		anteCtx, anteSpan := anteCtx.StartSpan(tracer, "anteHandler")
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 		anteSpan.End()
-		// now we should back to the previous go context which didn't capture the anteHandler instrumentation span
-		newCtx = newCtx.WithContext(ctx)
+		// now we should back to the previous go context which didn't capture the anteHandler instrumentation span.
+		// MergeContextForValue preserves values set during ante (e.g. gas register) that would otherwise be lost.
+		newCtx = newCtx.WithContext(sdk.MergeContextForValue(ctx, newCtx.Context()))
 
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is a store branch, or something else

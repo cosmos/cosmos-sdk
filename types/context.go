@@ -417,6 +417,7 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	return cc, writeCache
 }
 
+// StartSpan starts an otel span and returns a new context with the span attached.
 // Use this instead of calling tracer.Start directly to have the span correctly
 // attached to this context type.
 func (c Context) StartSpan(tracer trace.Tracer, spanName string, opts ...trace.SpanStartOption) (Context, trace.Span) {

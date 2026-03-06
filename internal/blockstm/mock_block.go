@@ -11,8 +11,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
-const SigVerificationResultCacheKey = "ante:SigVerificationResult"
-
 var (
 	StoreKeyAuth = storetypes.NewKVStoreKey("acc")
 	StoreKeyBank = storetypes.NewKVStoreKey("bank")

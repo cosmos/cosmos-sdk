@@ -120,6 +120,8 @@ func (s *Scheduler) TryValidateNextVersion(idxToValidate uint64) (TxnVersion, bo
 
 	incarnation, ok := s.txnStatus[idxToValidate].IsExecuted()
 	if !ok {
+		// Need to rollback the validation index because we're still executing this txn
+		s.DecreaseValidationIdx(TxnIndex(idxToValidate))
 		return InvalidTxnVersion, false
 	}
 

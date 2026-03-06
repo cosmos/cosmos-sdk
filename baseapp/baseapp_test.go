@@ -643,28 +643,28 @@ func TestBaseAppAnteHandler(t *testing.T) {
 // lose values like the wasmd gas register. This test would fail if that fix were reverted.
 func TestAnteHandlerContextValuesPreserved(t *testing.T) {
 	t.Run("preserving_context_succeeds", func(t *testing.T) {
-	anteKey := []byte("ante-key")
-	deliverKey := []byte("deliver-key")
+		anteKey := []byte("ante-key")
+		deliverKey := []byte("deliver-key")
 
-	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(anteHandlerThatSetsContextValue(t, capKey1, anteKey))
-	}
-	suite := NewBaseAppSuite(t, anteOpt)
-	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), counterServerRequiresAnteContextValue(t, capKey1, deliverKey))
+		anteOpt := func(bapp *baseapp.BaseApp) {
+			bapp.SetAnteHandler(anteHandlerThatSetsContextValue(t, capKey1, anteKey))
+		}
+		suite := NewBaseAppSuite(t, anteOpt)
+		baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), counterServerRequiresAnteContextValue(t, capKey1, deliverKey))
 
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
-		ConsensusParams: &cmtproto.ConsensusParams{},
-	})
-	require.NoError(t, err)
+		_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+			ConsensusParams: &cmtproto.ConsensusParams{},
+		})
+		require.NoError(t, err)
 
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
-	txBytes, err := suite.txConfig.TxEncoder()(tx)
-	require.NoError(t, err)
+		tx := newTxCounter(t, suite.txConfig, 0, 0)
+		txBytes, err := suite.txConfig.TxEncoder()(tx)
+		require.NoError(t, err)
 
-	res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
-	require.NoError(t, err)
-	require.True(t, res.TxResults[0].IsOK(),
-		"message handler must receive context values set in ante handler; got: %s", res.TxResults[0].Log)
+		res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+		require.NoError(t, err)
+		require.True(t, res.TxResults[0].IsOK(),
+			"message handler must receive context values set in ante handler; got: %s", res.TxResults[0].Log)
 	})
 
 	t.Run("non_preserving_context_fails", func(t *testing.T) {

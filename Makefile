@@ -52,10 +52,6 @@ ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
   build_tags += libsecp256k1_sdk
 endif
 
-ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += app_v1
-endif
-
 whitespace :=
 whitespace += $(whitespace)
 comma := ,
@@ -138,7 +134,7 @@ confix:
 
 #? mocks: Generate mock file
 mocks: $(MOCKS_DIR)
-	@go install go.uber.org/mock/mockgen@v0.6.0
+	@go install go.uber.org/mock/mockgen@latest
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
 
@@ -379,7 +375,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v2.6.2
+golangci_version=v2.10.1
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
@@ -401,7 +397,7 @@ lint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.17.1
+protoVer=0.18.1
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
@@ -425,6 +421,17 @@ proto-lint:
 
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
+
+# Build and push proto-builder image for amd64 and arm64 to ghcr.io.
+# Usage: make proto-docker-build [protoVer=0.18.1]
+# Requires: docker buildx, ghcr.io login (echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin)
+proto-docker-build:
+	docker buildx build \
+		--platform linux/amd64,linux/arm64 \
+		--push \
+		-f contrib/devtools/Dockerfile \
+		-t ghcr.io/cosmos/proto-builder:$(protoVer) \
+		contrib/devtools
 
 CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.38.0/proto/tendermint
 
@@ -463,7 +470,7 @@ proto-update-deps:
 
 	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) buf mod update
 
-.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps
+.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-docker-build proto-update-deps
 
 ###############################################################################
 ###                                Localnet                                 ###
@@ -492,13 +499,35 @@ localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
 
-test-system: build-v53 build
+###############################################################################
+###                              Enterprise Modules                          ###
+###############################################################################
+#
+# Delegate to enterprise module Makefiles. Examples:
+#   make enterprise-all-lint      # Run lint in group and poa
+#   make enterprise-all-test      # Run test in group and poa
+#   make enterprise-group-build   # Run build in group only
+#   make enterprise-poa-localnet  # Run localnet in poa only
+#
+enterprise-%:
+	$(MAKE) -C enterprise $*
+
+.PHONY: enterprise-%
+
+build-system-test-current: build
+	mkdir -p ./tests/systemtests/binaries/
+	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
+
+test-system: build-v53 build-system-test-current
 	mkdir -p ./tests/systemtests/binaries/
 	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
 	mkdir -p ./tests/systemtests/binaries/v0.53
 	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
 	$(MAKE) -C tests/systemtests test
-.PHONY: test-system
+	$(MAKE) -C enterprise/poa/ test-system
+	$(MAKE) -C enterprise/group/ test-system
+
+.PHONY: test-system build-system-test-current
 
 # build-v53 checks out the v0.53.x branch, builds the binary, and renames it to simdv53.
 build-v53:

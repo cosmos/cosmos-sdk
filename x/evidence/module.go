@@ -48,7 +48,7 @@ type AppModuleBasic struct {
 	evidenceHandlers []eviclient.EvidenceHandler // eviclient evidence submission handlers
 }
 
-// NewAppModuleBasic creates a AppModuleBasic without the codec.
+// NewAppModuleBasic creates an AppModuleBasic without the codec.
 func NewAppModuleBasic(evidenceHandlers ...eviclient.EvidenceHandler) AppModuleBasic {
 	return AppModuleBasic{
 		evidenceHandlers: evidenceHandlers,
@@ -89,6 +89,10 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux 
 
 // GetTxCmd returns the evidence module's root tx command.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
+	if len(a.evidenceHandlers) == 0 {
+		return nil
+	}
+
 	evidenceCLIHandlers := make([]*cobra.Command, len(a.evidenceHandlers))
 
 	for i, evidenceHandler := range a.evidenceHandlers {
@@ -135,7 +139,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-// InitGenesis performs the evidence module's genesis initialization It returns
+// InitGenesis performs the evidence module's genesis initialization. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) {
 	var gs types.GenesisState

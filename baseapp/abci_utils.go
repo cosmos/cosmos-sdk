@@ -40,8 +40,8 @@ type (
 // a proposer in PrepareProposal. It returns an error if any signature is invalid
 // or if unexpected vote extensions and/or signatures are found or less than 2/3
 // power is received.
-// NOTE: From v0.50.5 `currentHeight` and `chainID` arguments are ignored for fixing an issue.
-// They will be removed from the function in v0.51+.
+// NOTE: From v0.50.5 the height (`int64`) and chain ID (`string`) parameters are ignored to fix an issue.
+// The values are instead read from ctx.HeaderInfo(). These parameters will be removed from the function in v0.51+.
 func ValidateVoteExtensions(
 	ctx sdk.Context,
 	valStore ValidatorStore,
@@ -285,12 +285,19 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs(ctx)}, nil
 		}
 
-		selectedTxsSignersSeqs := make(map[string]uint64)
+		type invalidTx struct {
+			tx  sdk.Tx
+			err error
+		}
+
 		var (
-			resError        error
-			selectedTxsNums int
-			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid dead lock
+			// invalid txs to be removed out of the loop to avoid dead lock
+			invalidTxs             []invalidTx
+			resError               error
+			selectedTxsNums        int
+			selectedTxsSignersSeqs = make(map[string]uint64)
 		)
+
 		mempool.SelectBy(ctx, h.mempool, req.Txs, func(memTx sdk.Tx) bool {
 			unorderedTx, ok := memTx.(sdk.TxWithUnordered)
 			isUnordered := ok && unorderedTx.GetUnordered()
@@ -335,7 +342,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			// check again.
 			txBz, err := h.txVerifier.PrepareProposalVerifyTx(memTx)
 			if err != nil {
-				invalidTxs = append(invalidTxs, memTx)
+				invalidTxs = append(invalidTxs, invalidTx{tx: memTx, err: err})
 			} else {
 				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, memTx, txBz)
 				if stop {
@@ -370,8 +377,13 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			return nil, resError
 		}
 
-		for _, tx := range invalidTxs {
-			err := h.mempool.Remove(tx)
+		for _, invalidTx := range invalidTxs {
+			reason := mempool.RemoveReason{
+				Caller: mempool.CallerPrepareProposalRemoveInvalid,
+				Error:  invalidTx.err,
+			}
+
+			err := mempool.RemoveWithReason(ctx, h.mempool, invalidTx.tx, reason)
 			if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 				return nil, err
 			}

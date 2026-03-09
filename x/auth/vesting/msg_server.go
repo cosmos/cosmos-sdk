@@ -77,14 +77,14 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 	s.SetAccount(ctx, vestingAccount)
 
 	defer func() {
-		telemetry.IncrCounter(1, "new", "account")
+		telemetry.IncrCounter(1, "new", "account") //nolint:staticcheck // TODO: switch to OpenTelemetry
 
 		for _, a := range msg.Amount {
 			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
+				telemetry.SetGaugeWithLabels( //nolint:staticcheck // TODO: switch to OpenTelemetry
 					[]string{"tx", "msg", "create_vesting_account"},
 					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
 				)
 			}
 		}
@@ -135,14 +135,14 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 	s.SetAccount(ctx, vestingAccount)
 
 	defer func() {
-		telemetry.IncrCounter(1, "new", "account")
+		telemetry.IncrCounter(1, "new", "account") //nolint:staticcheck // TODO: switch to OpenTelemetry
 
 		for _, a := range msg.Amount {
 			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
+				telemetry.SetGaugeWithLabels( //nolint:staticcheck // TODO: switch to OpenTelemetry
 					[]string{"tx", "msg", "create_permanent_locked_account"},
 					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
 				)
 			}
 		}
@@ -206,14 +206,14 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	s.SetAccount(ctx, vestingAccount)
 
 	defer func() {
-		telemetry.IncrCounter(1, "new", "account")
+		telemetry.IncrCounter(1, "new", "account") //nolint:staticcheck // TODO: switch to OpenTelemetry
 
 		for _, a := range totalCoins {
 			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
+				telemetry.SetGaugeWithLabels( //nolint:staticcheck // TODO: switch to OpenTelemetry
 					[]string{"tx", "msg", "create_periodic_vesting_account"},
 					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
 				)
 			}
 		}

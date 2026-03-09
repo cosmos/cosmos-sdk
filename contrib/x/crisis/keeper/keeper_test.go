@@ -3,16 +3,16 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/contrib/x/crisis"
-	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/keeper"
-	crisistestutil "github.com/cosmos/cosmos-sdk/contrib/x/crisis/testutil"
-	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	storetypes "cosmossdk.io/store/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/keeper"
+	crisistestutil "github.com/cosmos/cosmos-sdk/contrib/x/crisis/testutil"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"

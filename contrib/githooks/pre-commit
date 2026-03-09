@@ -2,7 +2,7 @@
 
 set -e
 
-CMDS='git go gofmt goimports misspell'
+CMDS='git go gofmt gci misspell'
 STAGED_GO_FILES=$(git diff --cached --name-only -- '*.go')
 
 f_echo_stderr() {
@@ -31,7 +31,7 @@ if [[ $STAGED_GO_FILES != "" ]]; then
 
     gofmt -w -s $file
     misspell -w $file
-    goimports -w -local github.com/cosmos/cosmos-sdk $file
+    gci write -s standard -s default -s "prefix(cosmossdk.io)" -s "prefix(github.com/cosmos/cosmos-sdk)" $file
     git add $file
 
   done

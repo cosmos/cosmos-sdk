@@ -43,7 +43,7 @@ func (k BaseSendKeeper) SendCoinsFromModuleToAccountVirtual(
 
 // SendCoinsToVirtual accumulate the recipient's coins in a per-transaction transient state,
 // which are sumed up and added to the real account at the end of block.
-// Events are emiited the same as normal send.
+// Events are emitted the same as normal send.
 func (k BaseSendKeeper) SendCoinsToVirtual(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	var err error
 	err = k.subUnlockedCoins(ctx, fromAddr, amt)
@@ -57,7 +57,9 @@ func (k BaseSendKeeper) SendCoinsToVirtual(ctx context.Context, fromAddr, toAddr
 	}
 
 	k.addVirtualCoins(ctx, toAddr, amt)
-	k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt)
+	if err := k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -80,7 +82,9 @@ func (k BaseSendKeeper) SendCoinsFromVirtual(ctx context.Context, fromAddr, toAd
 	}
 
 	k.ensureAccountCreated(ctx, toAddr)
-	k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt)
+	if err := k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt); err != nil {
+		return err
+	}
 	return nil
 }
 

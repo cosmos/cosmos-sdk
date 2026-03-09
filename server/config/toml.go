@@ -90,6 +90,10 @@ app-db-backend = "{{ .BaseConfig.AppDBBackend }}"
 ###                         Telemetry Configuration                         ###
 ###############################################################################
 
+# DEPRECATED: telemetry will be removed in a future release as we migrate to OpenTelemetry.
+# To route the existing metrics to OpenTelemetry, set metrics-sink to 'otel'.
+# It is highly encouraged to begin migrating telemetry data to use native OpenTelemetry.
+# See https://opentelemetry.io/docs/languages/go/getting-started/ to get started.
 [telemetry]
 
 # Prefixed with keys to separate services.
@@ -187,7 +191,7 @@ max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
 # Format: '{"address1": [start_block, end_block], "address2": [start_block, end_block]}'
 # Example: '{"0.0.0.0:26113": [0, 1000], "0.0.0.0:26114": [1001, 2000]}'
 # Leave empty to disable historical gRPC routing.
-historical-grpc-address-block-range = "{{ printf "{" }}{{ range $k, $v := .GRPC.HistoricalGRPCAddressBlockRange }}\"{{ $v }}\": [{{index $k 0 }}, {{ index $k 1}}]{{ end }}{{ printf "}" }}"
+historical-grpc-address-block-range = "{{ printf "{" }}{{$first := true}}{{ range $k, $v := .GRPC.HistoricalGRPCAddressBlockRange }}{{if $first}}{{$first = false}}{{else}}, {{end}}\"{{ $v }}\": [{{index $k 0 }}, {{ index $k 1}}]{{ end }}{{ printf "}" }}"
 
 ###############################################################################
 ###                        gRPC Web Configuration                           ###

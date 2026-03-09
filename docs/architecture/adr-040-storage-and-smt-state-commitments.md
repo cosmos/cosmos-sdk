@@ -192,7 +192,7 @@ The presented workaround can be used until the IBC module is fully upgraded to s
 
 We consider a compression of prefix keys by creating a mapping from module key to an integer, and serializing the integer using varint coding. Varint coding assures that different values don't have common byte prefix. For Merkle Proofs we can't use prefix compression - so it should only apply for the `SS` keys. Moreover, the prefix compression should be only applied for the module namespace. More precisely:
 
-* each module has it's own namespace;
+* each module has its own namespace;
 * when accessing a module namespace we create a KVStore with embedded prefix;
 * that prefix will be compressed only when accessing and managing `SS`.
 
@@ -279,7 +279,7 @@ We were discussing use case where modules can use a support database, which is n
 ## References
 
 * [IAVL What's Next?](https://github.com/cosmos/cosmos-sdk/issues/7100)
-* [IAVL overview](https://docs.google.com/document/d/16Z_hW2rSAmoyMENO-RlAhQjAG3mSNKsQueMnKpmcBv0/edit#heading=h.yd2th7x3o1iv) of it's state v0.15
+* [IAVL overview](https://docs.google.com/document/d/16Z_hW2rSAmoyMENO-RlAhQjAG3mSNKsQueMnKpmcBv0/edit#heading=h.yd2th7x3o1iv) of its state v0.15
 * [State commitments and storage report](https://paper.dropbox.com/published/State-commitments-and-storage-review--BDvA1MLwRtOx55KRihJ5xxLbBw-KeEB7eOd11pNrZvVtqUgL3h)
 * [Celestia (LazyLedger) SMT](https://github.com/lazyledger/smt)
 * Facebook Diem (Libra) SMT [design](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)

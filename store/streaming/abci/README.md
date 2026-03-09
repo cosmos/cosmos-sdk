@@ -35,7 +35,7 @@ for the documentation.
 
 ### gRPC Client and Server
 
-Implementing the ABCIListener gRPC client and server is a simple and straight forward process.
+Implementing the ABCIListener gRPC client and server is a simple and straightforward process.
 
 To create the client and server we create a `ListenerGRPCPlugin` struct that implements the
 `plugin.GRPCPlugin` interface and a `Impl` property that will contain a concrete implementation
@@ -185,7 +185,7 @@ Export a plugin from one of the Go or Python examples.
 export COSMOS_SDK_ABCI="{path to}/cosmos-sdk/store/streaming/abci/examples/file/file"
 ```
 
-where `{path to}` is the parent path to the `cosmos-sdk` repo on you system.
+where `{path to}` is the parent path to the `cosmos-sdk` repo on your system.
 
 Test:
 

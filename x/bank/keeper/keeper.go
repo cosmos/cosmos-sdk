@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -53,6 +53,7 @@ type Keeper interface {
 	CreditVirtualAccounts(ctx context.Context) error
 	SendCoinsFromVirtual(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsToVirtual(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
+	UncheckedSetBalance(ctx context.Context, addr sdk.AccAddress, balance sdk.Coin) error
 
 	DelegateCoins(ctx context.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoins(ctx context.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
@@ -150,7 +151,7 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 		}
 
 		balances = balances.Add(balance)
-		err := k.setBalance(ctx, delegatorAddr, balance.Sub(coin))
+		err := k.UncheckedSetBalance(ctx, delegatorAddr, balance.Sub(coin))
 		if err != nil {
 			return err
 		}

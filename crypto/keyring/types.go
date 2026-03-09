@@ -6,7 +6,7 @@ import (
 )
 
 // Language is a language to create the BIP 39 mnemonic in.
-// Currently, only english is supported though.
+// Currently, only English is supported though.
 // Find a list of all supported languages in the BIP 39 spec (word lists).
 type Language int
 

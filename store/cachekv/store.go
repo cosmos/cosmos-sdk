@@ -139,7 +139,7 @@ func (store *GStore[V]) resetCaches() {
 	store.sortedCache = btree.NewBTree[V]()
 }
 
-// Write implements Cachetypes.KVStore.
+// Write implements types.CacheKVStore.
 func (store *GStore[V]) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
@@ -251,7 +251,7 @@ func findStartIndex(strL []string, startQ string) int {
 		midStr := strL[mid]
 		if midStr == startQ {
 			// Handle condition where there might be multiple values equal to startQ.
-			// We are looking for the very first value < midStL, that i+1 will be the first
+			// We are looking for the very first value < midStr, that i+1 will be the first
 			// element >= midStr.
 			for i := mid - 1; i >= 0; i-- {
 				if strL[i] != midStr {
@@ -262,7 +262,7 @@ func findStartIndex(strL []string, startQ string) int {
 		}
 		if midStr < startQ {
 			left = mid + 1
-		} else { // midStrL > startQ
+		} else { // midStr > startQ
 			right = mid - 1
 		}
 	}
@@ -284,8 +284,8 @@ func findEndIndex(strL []string, endQ string) int {
 		mid = (left + right) >> 1
 		midStr := strL[mid]
 		if midStr == endQ {
-			// Handle condition where there might be multiple values equal to startQ.
-			// We are looking for the very first value < midStL, that i+1 will be the first
+			// Handle condition where there might be multiple values equal to endQ.
+			// We are looking for the very first value < midStr, that i+1 will be the first
 			// element >= midStr.
 			for i := mid - 1; i >= 0; i-- {
 				if strL[i] < midStr {
@@ -296,7 +296,7 @@ func findEndIndex(strL []string, endQ string) int {
 		}
 		if midStr < endQ {
 			left = mid + 1
-		} else { // midStrL > startQ
+		} else { // midStr > endQ
 			right = mid - 1
 		}
 	}

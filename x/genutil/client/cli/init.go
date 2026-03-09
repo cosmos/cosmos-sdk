@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -182,6 +183,12 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
 
 			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+
+			otelFile := filepath.Join(clientCtx.HomeDir, "config", telemetry.OtelFileName)
+			if err := os.WriteFile(otelFile, []byte{}, 0o600); err != nil {
+				return errorsmod.Wrap(err, "Failed to create otel.yaml file")
+			}
+
 			return displayInfo(toPrint)
 		},
 	}

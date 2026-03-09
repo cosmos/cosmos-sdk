@@ -6,10 +6,11 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"go.opentelemetry.io/otel/trace"
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/gaskv"
 	storetypes "cosmossdk.io/store/types"
 )
@@ -57,7 +58,7 @@ type Context struct {
 	execMode             ExecMode
 	minGasPrice          DecCoins
 	consParams           cmtproto.ConsensusParams
-	eventManager         EventManagerI
+	eventManager         *EventManager
 	priority             int64 // The tx priority, only relevant in CheckTx
 	kvGasConfig          storetypes.GasConfig
 	transientKVGasConfig storetypes.GasConfig
@@ -100,7 +101,7 @@ func (c Context) IsReCheckTx() bool                             { return c.reche
 func (c Context) IsSigverifyTx() bool                           { return c.sigverifyTx }
 func (c Context) ExecMode() ExecMode                            { return c.execMode }
 func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrice }
-func (c Context) EventManager() EventManagerI                   { return c.eventManager }
+func (c Context) EventManager() *EventManager                   { return c.eventManager }
 func (c Context) Priority() int64                               { return c.priority }
 func (c Context) KVGasConfig() storetypes.GasConfig             { return c.kvGasConfig }
 func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.transientKVGasConfig }
@@ -308,7 +309,7 @@ func (c Context) WithConsensusParams(params cmtproto.ConsensusParams) Context {
 }
 
 // WithEventManager returns a Context with an updated event manager
-func (c Context) WithEventManager(em EventManagerI) Context {
+func (c Context) WithEventManager(em *EventManager) Context {
 	c.eventManager = em
 	return c
 }
@@ -437,6 +438,14 @@ func (c Context) SetIncarnationCache(key string, value any) {
 func (c Context) WithIncarnationCache(cache map[string]any) Context {
 	c.incarnationCache = cache
 	return c
+}
+
+// StartSpan starts an otel span and returns a new context with the span attached.
+// Use this instead of calling tracer.Start directly to have the span correctly
+// attached to this context type.
+func (c Context) StartSpan(tracer trace.Tracer, spanName string, opts ...trace.SpanStartOption) (Context, trace.Span) {
+	goCtx, span := tracer.Start(c.baseCtx, spanName, opts...)
+	return c.WithContext(goCtx), span
 }
 
 var (

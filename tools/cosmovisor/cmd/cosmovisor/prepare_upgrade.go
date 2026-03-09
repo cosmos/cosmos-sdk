@@ -13,8 +13,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"cosmossdk.io/tools/cosmovisor"
-	"cosmossdk.io/x/upgrade/plan"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
+
+	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func NewPrepareUpgradeCmd() *cobra.Command {

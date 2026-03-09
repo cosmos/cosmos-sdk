@@ -11,7 +11,7 @@ import (
 
 // EndBlocker checks all registered invariants
 func EndBlocker(ctx context.Context, k keeper.Keeper) {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker) //nolint:staticcheck // TODO: switch to OpenTelemetry
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	if k.InvCheckPeriod() == 0 || sdkCtx.BlockHeight()%int64(k.InvCheckPeriod()) != 0 {

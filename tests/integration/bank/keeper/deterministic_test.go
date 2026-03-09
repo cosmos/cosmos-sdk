@@ -9,7 +9,7 @@ import (
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -226,7 +226,7 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 	assert.NilError(t, err)
 
 	req := banktypes.NewQuerySpendableBalancesRequest(addr1, nil)
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.SpendableBalances, 2032, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.SpendableBalances, 2059, false)
 }
 
 func TestGRPCQueryTotalSupply(t *testing.T) {

@@ -2,7 +2,8 @@ package crisis
 
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	crisisv1beta1 "cosmossdk.io/api/cosmos/crisis/v1beta1"
+
+	crisisv1beta1 "github.com/cosmos/cosmos-sdk/contrib/api/cosmos/crisis/v1beta1"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.

@@ -63,6 +63,9 @@ msg := &types.MsgUpdateParams{
     Validator: &types.ValidatorParams{
         PubKeyTypes: []string{"ed25519"},
     },
+    Abci: &types.ABCIParams{
+        VoteExtensionsEnableHeight: 0,
+    },
 }
 ```
 

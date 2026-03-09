@@ -27,7 +27,7 @@ type MockGovHooksReceiver struct {
 	AfterProposalVotingPeriodEndedValid bool
 }
 
-func (h *MockGovHooksReceiver) AfterProposalSubmission(ctx context.Context, proposalID uint64) error {
+func (h *MockGovHooksReceiver) AfterProposalSubmission(ctx context.Context, proposalID uint64, proposerAddr sdk.AccAddress) error {
 	h.AfterProposalSubmissionValid = true
 	return nil
 }

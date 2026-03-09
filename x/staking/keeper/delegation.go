@@ -353,6 +353,7 @@ func (k Keeper) IterateDelegatorRedelegations(ctx context.Context, delegator sdk
 	if err != nil {
 		return err
 	}
+	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		red, err := types.UnmarshalRED(k.cdc, iterator.Value())
@@ -560,6 +561,7 @@ func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, 
 	if err != nil {
 		return nil, err
 	}
+	defer iterator.Close()
 
 	i := 0
 	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
@@ -677,8 +679,8 @@ func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) err
 	return store.Set(types.GetREDByValDstIndexKey(delegatorAddress, valSrcAddr, valDestAddr), []byte{})
 }
 
-// SetRedelegationEntry adds an entry to the unbonding delegation at the given
-// addresses. It creates the unbonding delegation if it does not exist.
+// SetRedelegationEntry adds an entry to the redelegation at the given
+// addresses. It creates the redelegation if it does not exist.
 func (k Keeper) SetRedelegationEntry(ctx context.Context,
 	delegatorAddr sdk.AccAddress, validatorSrcAddr,
 	validatorDstAddr sdk.ValAddress, creationHeight int64,

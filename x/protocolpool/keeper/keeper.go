@@ -201,8 +201,8 @@ func (k Keeper) validateAuthority(ctx sdk.Context, authority string) error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
 	}
 
-	if ctx.ConsensusParams().Authority.Authority != authority {
-		return errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", ctx.ConsensusParams().Authority.Authority, authority)
+	if ctx.Authority() != authority {
+		return errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", ctx.Authority(), authority)
 	}
 
 	return nil

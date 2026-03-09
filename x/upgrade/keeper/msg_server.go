@@ -57,8 +57,8 @@ func (k msgServer) CancelUpgrade(ctx context.Context, msg *types.MsgCancelUpgrad
 
 func validateAuthority(ctx context.Context, authority string) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if sdkCtx.ConsensusParams().Authority.Authority != authority {
-		return errors.Wrapf(types.ErrInvalidSigner, "expected %s got %s", sdkCtx.ConsensusParams().Authority.Authority, authority)
+	if sdkCtx.Authority() != authority {
+		return errors.Wrapf(types.ErrInvalidSigner, "expected %s got %s", sdkCtx.Authority(), authority)
 	}
 	return nil
 }

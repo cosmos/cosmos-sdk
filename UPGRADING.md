@@ -66,10 +66,10 @@ func (k msgServer) UpdateParams(ctx context.Context, req *types.MsgUpdateParams)
     sdkCtx := sdk.UnwrapSDKContext(ctx)
 
     // Retrieve and validate authority from consensus params
-    if sdkCtx.ConsensusParams().Authority.Authority != req.Authority {
+    if sdkCtx.Authority() != req.Authority {
         return nil, errors.Wrapf(sdkerrors.ErrUnauthorized,
             "invalid authority: expected %s, got %s",
-            req.Authority, sdkCtx.ConsensusParams().Authority.Authority)
+            req.Authority, sdkCtx.Authority())
     }
 
     // ... rest of the handler

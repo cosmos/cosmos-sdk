@@ -698,7 +698,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "community tax is nil",
 			msg: &distrtypes.MsgUpdateParams{
-				Authority: f.sdkCtx.ConsensusParams().Authority.Authority,
+				Authority: f.sdkCtx.Authority(),
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyDec{},
 					WithdrawAddrEnabled: true,
@@ -712,7 +712,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "community tax > 1",
 			msg: &distrtypes.MsgUpdateParams{
-				Authority: f.sdkCtx.ConsensusParams().Authority.Authority,
+				Authority: f.sdkCtx.Authority(),
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyNewDecWithPrec(2, 0),
 					WithdrawAddrEnabled: true,
@@ -726,7 +726,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "negative community tax",
 			msg: &distrtypes.MsgUpdateParams{
-				Authority: f.sdkCtx.ConsensusParams().Authority.Authority,
+				Authority: f.sdkCtx.Authority(),
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyNewDecWithPrec(-2, 1),
 					WithdrawAddrEnabled: true,
@@ -740,7 +740,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "base proposer reward set",
 			msg: &distrtypes.MsgUpdateParams{
-				Authority: f.sdkCtx.ConsensusParams().Authority.Authority,
+				Authority: f.sdkCtx.Authority(),
 				Params: distrtypes.Params{
 					CommunityTax:        communityTax,
 					BaseProposerReward:  math.LegacyNewDecWithPrec(1, 2),
@@ -754,7 +754,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "bonus proposer reward set",
 			msg: &distrtypes.MsgUpdateParams{
-				Authority: f.sdkCtx.ConsensusParams().Authority.Authority,
+				Authority: f.sdkCtx.Authority(),
 				Params: distrtypes.Params{
 					CommunityTax:        communityTax,
 					BaseProposerReward:  math.LegacyZeroDec(),
@@ -768,7 +768,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "all good",
 			msg: &distrtypes.MsgUpdateParams{
-				Authority: f.sdkCtx.ConsensusParams().Authority.Authority,
+				Authority: f.sdkCtx.Authority(),
 				Params: distrtypes.Params{
 					CommunityTax:        communityTax,
 					BaseProposerReward:  math.LegacyZeroDec(),
@@ -841,7 +841,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		{
 			name: "invalid recipient",
 			msg: &distrtypes.MsgCommunityPoolSpend{
-				Authority: f.sdkCtx.ConsensusParams().Authority.Authority,
+				Authority: f.sdkCtx.Authority(),
 				Recipient: "invalid",
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 			},
@@ -851,7 +851,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		{
 			name: "valid message",
 			msg: &distrtypes.MsgCommunityPoolSpend{
-				Authority: f.sdkCtx.ConsensusParams().Authority.Authority,
+				Authority: f.sdkCtx.Authority(),
 				Recipient: recipient.String(),
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 			},

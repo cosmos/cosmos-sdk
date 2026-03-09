@@ -26,8 +26,8 @@ func NewMsgServerImpl(ak AccountKeeper) types.MsgServer {
 func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if ctx.ConsensusParams().Authority.Authority != msg.Authority {
-		return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "invalid authority: expected %s, got %s", msg.Authority, ctx.ConsensusParams().Authority.Authority)
+	if ctx.Authority() != msg.Authority {
+		return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "invalid authority: expected %s, got %s", msg.Authority, ctx.Authority())
 	}
 
 	if err := msg.Params.Validate(); err != nil {

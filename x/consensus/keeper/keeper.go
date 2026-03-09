@@ -64,8 +64,8 @@ var _ types.MsgServer = Keeper{}
 func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if sdkCtx.ConsensusParams().Authority.Authority != msg.Authority {
-		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "invalid authority: got %s, want %s", msg.Authority, sdkerrors.ErrUnauthorized)
+	if sdkCtx.Authority() != msg.Authority {
+		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "invalid authority: got %s, want %s", msg.Authority, sdkCtx.Authority())
 	}
 
 	consensusParams, err := msg.ToProtoConsensusParams()

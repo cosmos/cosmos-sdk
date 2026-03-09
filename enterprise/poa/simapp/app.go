@@ -179,8 +179,8 @@ func NewSimApp(
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(storeKeys[consensusparamtypes.StoreKey]),
-		"",
 		runtime.EventService{},
+		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 	)
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
@@ -194,7 +194,6 @@ func NewSimApp(
 		},
 		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
@@ -202,7 +201,6 @@ func NewSimApp(
 		runtime.NewKVStoreService(storeKeys[banktypes.StoreKey]),
 		app.AccountKeeper,
 		map[string]bool{},
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		logger,
 	)
 
@@ -223,7 +221,6 @@ func NewSimApp(
 		nil,
 		app.MsgServiceRouter(),
 		govConfig,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		poakeeper.NewPOACalculateVoteResultsAndVotingPowerFn(*app.POAKeeper),
 	)
 

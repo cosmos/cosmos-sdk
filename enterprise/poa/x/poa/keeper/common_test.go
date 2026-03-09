@@ -114,11 +114,10 @@ func setupTest(t *testing.T) *testFixture {
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	bankStoreService := runtime.NewKVStoreService(bankStoreKey)
-	bankKeeper := bankkeeper.NewBaseKeeper(cdc, bankStoreService, authKeeper, BlockedAddresses(maccPerms), authtypes.NewModuleAddress(govtypes.ModuleName).String(), log.NewTestLogger(t))
+	bankKeeper := bankkeeper.NewBaseKeeper(cdc, bankStoreService, authKeeper, BlockedAddresses(maccPerms), log.NewTestLogger(t))
 
 	// Setup POA keeper
 	poaStoreService := runtime.NewKVStoreService(storeKey)
@@ -139,7 +138,6 @@ func setupTest(t *testing.T) *testFixture {
 		nil,        // distribution keeper
 		msgRouter,
 		govtypes.DefaultConfig(),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		tallyFn,
 	)
 

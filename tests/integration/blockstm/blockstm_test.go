@@ -67,15 +67,13 @@ func TestBlockSTM_AccountCreationPanics(t *testing.T) {
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
-		authority.String(),
 	)
 
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
-		map[string]bool{accountKeeper.GetAuthority(): false},
-		authority.String(),
+		map[string]bool{authority.String(): false},
 		log.NewNopLogger(),
 	)
 

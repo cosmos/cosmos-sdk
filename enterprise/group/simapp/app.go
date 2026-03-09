@@ -193,12 +193,10 @@ func NewSimApp(
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(storeKeys[consensusparamtypes.StoreKey]),
-		"",
 		runtime.EventService{},
+		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 	)
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
-
-	authority := authtypes.NewModuleAddress(group.ModuleName).String()
 
 	maccPerms := map[string][]string{
 		authtypes.FeeCollectorName:     nil,
@@ -215,7 +213,6 @@ func NewSimApp(
 		maccPerms,
 		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
-		authority,
 	)
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
@@ -223,7 +220,6 @@ func NewSimApp(
 		runtime.NewKVStoreService(storeKeys[banktypes.StoreKey]),
 		app.AccountKeeper,
 		map[string]bool{},
-		authority,
 		logger,
 	)
 
@@ -232,7 +228,6 @@ func NewSimApp(
 		runtime.NewKVStoreService(storeKeys[stakingtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
-		authority,
 		authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
 		authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
 	)
@@ -244,7 +239,6 @@ func NewSimApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 		authtypes.FeeCollectorName,
-		authority,
 	)
 
 	app.DistrKeeper = distrkeeper.NewKeeper(
@@ -254,7 +248,6 @@ func NewSimApp(
 		app.BankKeeper,
 		app.StakingKeeper,
 		authtypes.FeeCollectorName,
-		authority,
 	)
 
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
@@ -262,7 +255,6 @@ func NewSimApp(
 		legacyAmino,
 		runtime.NewKVStoreService(storeKeys[slashingtypes.StoreKey]),
 		app.StakingKeeper,
-		authority,
 	)
 
 	app.StakingKeeper.SetHooks(

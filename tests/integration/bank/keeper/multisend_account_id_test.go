@@ -43,8 +43,6 @@ func TestMultiSendNewAccountsGetUniqueIDs(t *testing.T) {
 		WithTxIndex(0).
 		WithMsgIndex(0)
 
-	authority := authtypes.NewModuleAddress("gov")
-
 	maccPerms := map[string][]string{
 		minttypes.ModuleName: {authtypes.Minter},
 	}
@@ -56,7 +54,6 @@ func TestMultiSendNewAccountsGetUniqueIDs(t *testing.T) {
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
-		authority.String(),
 	)
 
 	bankKeeper := bankkeeper.NewBaseKeeper(
@@ -64,7 +61,6 @@ func TestMultiSendNewAccountsGetUniqueIDs(t *testing.T) {
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		map[string]bool{},
-		authority.String(),
 		log.NewNopLogger(),
 	)
 

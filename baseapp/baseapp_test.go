@@ -667,23 +667,22 @@ func TestAnteHandlerContextValuesPreserved(t *testing.T) {
 			"message handler must receive context values set in ante handler; got: %s", res.TxResults[0].Log)
 	})
 
-	t.Run("non_preserving_context_fails", func(t *testing.T) {
-		// Simulate the non-preserving context: baseapp would use newCtx.WithContext(ctx)
-		// instead of MergeContextForValue, so baseCtx = base (pre-ante ctx) and values
-		// set in ante (fallback) are lost.
-		key := anteContextTestKey{}
-		val := anteContextTestValue
+t.Run("non_preserving_context_fails", func(t *testing.T) {
+	// Simulate the old behaviour: newCtx.WithContext(ctx) without MergeContextForValue
+	key := anteContextTestKey{}
+	val := anteContextTestValue
 
-		base := context.Background()
-		fallback := context.WithValue(context.Background(), key, val)
+	// anteCtx is the post-ante context with ante-set values
+	anteCtx := sdk.NewContext(nil, cmtproto.Header{}, false, nil).
+		WithContext(context.WithValue(context.Background(), key, val))
 
-		require.Equal(t, val, fallback.Value(key), "fallback has the value")
-		sdkCtx := sdk.NewContext(nil, cmtproto.Header{}, false, nil)
-		sdkCtx = sdkCtx.WithContext(base) // non-preserving: no merge with fallback
+	// preAnteCtx is the pre-ante context (no values)
+	preAnteCtx := sdk.NewContext(nil, cmtproto.Header{}, false, nil)
 
-		got := sdkCtx.Value(key)
-		require.Nil(t, got, "non-preserving context must lose values; got %v", got)
-	})
+	// Old behaviour (without MergeContextForValue): overwrite baseCtx entirely
+	merged := anteCtx.WithContext(preAnteCtx.Context())
+	require.Nil(t, merged.Value(key), "old behaviour: ante values are lost after WithContext(preAnteCtx)")
+})
 }
 
 func TestBaseAppPostHandler(t *testing.T) {

@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -20,6 +21,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
+
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
@@ -569,6 +571,57 @@ func (rs *Store) WorkingHash() []byte {
 	})
 
 	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
+}
+
+func (rs *Store) StartCommit(ctx context.Context, store types.MultiStore) (types.CommitFinalizer, error) {
+	cms, ok := store.(types.CacheMultiStore)
+	if !ok {
+		return nil, fmt.Errorf("expected CacheMultiStore, got %T", store)
+	}
+	return &commitFinalizer{
+		ctx:        ctx,
+		rs:         rs,
+		cacheStore: cms,
+	}, nil
+}
+
+type commitFinalizer struct {
+	ctx        context.Context
+	rs         *Store
+	cacheStore types.CacheMultiStore
+	finalized  bool
+	hash       types.CommitID
+}
+
+func (c *commitFinalizer) PrepareFinalize() (types.CommitID, error) {
+	if err := c.ctx.Err(); err != nil {
+		// context cancelled or timed out
+		return types.CommitID{}, err
+	}
+	if c.hash.Hash != nil {
+		return c.hash, nil
+	}
+	c.finalized = true
+	// write the cache store to get the working hash
+	c.cacheStore.Write()
+	c.hash.Hash = c.rs.WorkingHash()
+	return c.hash, nil
+}
+
+func (c *commitFinalizer) Rollback() error {
+	if c.finalized {
+		return errors.New("cannot rollback after finalization has started")
+	}
+	return nil
+}
+
+func (c *commitFinalizer) Finalize() (types.CommitID, error) {
+	if c.hash.Hash == nil {
+		if _, err := c.PrepareFinalize(); err != nil {
+			return types.CommitID{}, err
+		}
+	}
+	return c.rs.Commit(), nil
 }
 
 // CacheWrap implements CacheWrapper/Store/CommitStore.
@@ -1341,4 +1394,8 @@ func flushLatestVersion(batch dbm.Batch, version int64) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (rs *Store) Close() error {
+	return nil
 }

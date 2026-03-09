@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"maps"
@@ -155,9 +156,17 @@ type CacheMultiStore interface {
 
 // CommitMultiStore is an interface for a MultiStore without cache capabilities.
 type CommitMultiStore interface {
-	Committer
 	MultiStore
 	snapshottypes.Snapshotter
+
+	StartCommit(context.Context, MultiStore) (CommitFinalizer, error)
+
+	GetCommitInfo(ver int64) (*CommitInfo, error)
+
+	LastCommitID() CommitID
+
+	SetPruning(pruningtypes.PruningOptions)
+	GetPruning() pruningtypes.PruningOptions
 
 	// EarliestVersion returns the earliest version in the store
 	EarliestVersion() int64
@@ -226,6 +235,23 @@ type CommitMultiStore interface {
 
 	// SetMetrics sets the metrics for the KVStore
 	SetMetrics(metrics metrics.StoreMetrics)
+
+	io.Closer
+}
+
+type CommitFinalizer interface {
+	// PrepareFinalize starts finalization and waits until the hash is ready,
+	// but may return before the commit has been fully finalized (i.e. fsync'd to disk).
+	// Once PrepareFinalize is called, Rollback can no longer be called and will return an error.
+	PrepareFinalize() (CommitID, error)
+	// Finalize starts the finalization process if it hasn't been started yet and
+	// waits for the commit to complete (including fsync).
+	// PrepareFinalize may be called before Finalize to start finalization early.
+	// After Finalize is called, Rollback will return an error.
+	Finalize() (CommitID, error)
+	// Rollback aborts the in-progress commit and leaves the stores in the previous state.
+	// Rollback returns an error if PrepareFinalize, or Finalize has been called.
+	Rollback() error
 }
 
 //---------subsp-------------------------------

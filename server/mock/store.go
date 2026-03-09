@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"context"
 	"io"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -177,6 +178,18 @@ func (ms multiStore) EarliestVersion() int64 {
 }
 
 func (ms multiStore) WorkingHash() []byte {
+	panic("not implemented")
+}
+
+func (ms multiStore) StartCommit(context.Context, storetypes.MultiStore) (storetypes.CommitFinalizer, error) {
+	panic("implement me")
+}
+
+func (ms multiStore) GetCommitInfo(ver int64) (*storetypes.CommitInfo, error) {
+	panic("not implemented")
+}
+
+func (ms multiStore) Close() error {
 	panic("not implemented")
 }
 

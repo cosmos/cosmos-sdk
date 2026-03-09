@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 
@@ -181,7 +182,7 @@ func (ms multiStore) WorkingHash() []byte {
 	panic("not implemented")
 }
 
-func (ms multiStore) StartCommit(context.Context, storetypes.MultiStore) (storetypes.CommitFinalizer, error) {
+func (ms multiStore) StartCommit(context.Context, storetypes.MultiStore, cmtproto.Header) (storetypes.CommitFinalizer, error) {
 	panic("implement me")
 }
 

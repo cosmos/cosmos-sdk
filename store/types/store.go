@@ -8,6 +8,7 @@ import (
 	"slices"
 
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/store/metrics"
@@ -159,7 +160,7 @@ type CommitMultiStore interface {
 	MultiStore
 	snapshottypes.Snapshotter
 
-	StartCommit(context.Context, MultiStore) (CommitFinalizer, error)
+	StartCommit(context.Context, MultiStore, cmtproto.Header) (CommitFinalizer, error)
 
 	GetCommitInfo(ver int64) (*CommitInfo, error)
 

@@ -573,7 +573,8 @@ func (rs *Store) WorkingHash() []byte {
 	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
 }
 
-func (rs *Store) StartCommit(ctx context.Context, store types.MultiStore) (types.CommitFinalizer, error) {
+func (rs *Store) StartCommit(ctx context.Context, store types.MultiStore, header cmtproto.Header) (types.CommitFinalizer, error) {
+	rs.SetCommitHeader(header)
 	cms, ok := store.(types.CacheMultiStore)
 	if !ok {
 		return nil, fmt.Errorf("expected CacheMultiStore, got %T", store)

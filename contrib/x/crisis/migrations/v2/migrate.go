@@ -2,9 +2,9 @@ package v2
 
 import (
 	storetypes "cosmossdk.io/core/store"
-	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/exported"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/exported"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )

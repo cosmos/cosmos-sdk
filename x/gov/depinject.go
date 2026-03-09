@@ -63,12 +63,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		defaultConfig.MaxMetadataLen = in.Config.MaxMetadataLen
 	}
 
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
 	// If no custom tally function is provided, use the default with staking keeper
 	tallyFn := in.CalculateVoteResultsAndVotingPowerFn
 	if tallyFn == nil {
@@ -86,7 +80,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.DistributionKeeper,
 		in.MsgServiceRouter,
 		defaultConfig,
-		authority.String(),
 		tallyFn,
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)

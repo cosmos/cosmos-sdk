@@ -138,9 +138,6 @@ func (UnimplementedQueryServer) UpgradedConsensusState(context.Context, *QueryUp
 func (UnimplementedQueryServer) ModuleVersions(context.Context, *QueryModuleVersionsRequest) (*QueryModuleVersionsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ModuleVersions not implemented")
 }
-func (UnimplementedQueryServer) Authority(context.Context, *QueryAuthorityRequest) (*QueryAuthorityResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Authority not implemented")
-}
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 func (UnimplementedQueryServer) testEmbeddedByValue()               {}
 

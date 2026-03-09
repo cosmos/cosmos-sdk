@@ -54,11 +54,6 @@ type Keeper struct {
 	VotingPeriodProposals  collections.Map[uint64, []byte]                              // TODO(tip): this could be a keyset or index.
 }
 
-// GetAuthority returns the x/gov module's authority.
-func (k Keeper) GetAuthority() string {
-	return k.authority
-}
-
 // NewKeeper returns a governance keeper. It handles:
 // - submitting governance proposals
 // - depositing funds into proposals, and activating upon sufficient funds being deposited
@@ -74,7 +69,6 @@ func NewKeeper(
 	distrKeeper types.DistributionKeeper,
 	router baseapp.MessageRouter,
 	config types.Config,
-	authority string,
 	calculateVoteResultsAndVotingPowerFn CalculateVoteResultsAndVotingPowerFn,
 ) *Keeper {
 	// ensure governance module account is set

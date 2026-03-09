@@ -21,7 +21,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
-
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
@@ -596,7 +595,7 @@ type commitFinalizer struct {
 
 func (c *commitFinalizer) PrepareFinalize() (types.CommitID, error) {
 	if err := c.ctx.Err(); err != nil {
-		// context cancelled or timed out
+		// context canceled or timed out
 		return types.CommitID{}, err
 	}
 	if c.hash.Hash != nil {

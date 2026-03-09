@@ -799,7 +799,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 // Execution flow or by the FinalizeBlock ABCI method. The context received is
 // only used to handle early cancellation, for anything related to state app.stateManager.GetState(execModeFinalize).Context()
 // must be used.
-func (app *BaseApp) internalFinalizeBlock(cancelCtx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	var events []abci.Event
 
 	if err := app.checkHalt(req.Height, req.Time); err != nil {
@@ -837,7 +837,7 @@ func (app *BaseApp) internalFinalizeBlock(cancelCtx context.Context, req *abci.R
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 		finalizeState = app.stateManager.GetState(execModeFinalize)
 	}
-	ctx := finalizeState.Context().WithContext(cancelCtx)
+	ctx := finalizeState.Context().WithContext(goCtx)
 	ctx, span := ctx.StartSpan(tracer, "internalFinalizeBlock")
 	defer span.End()
 
@@ -953,7 +953,7 @@ func (app *BaseApp) internalFinalizeBlock(cancelCtx context.Context, req *abci.R
 	cp := app.GetConsensusParams(finalizeState.Context())
 
 	// if we haven't aborted thus far, start committing the state, we can always rollback later
-	committer, err := app.cms.StartCommit(cancelCtx, finalizeState.MultiStore, header)
+	committer, err := app.cms.StartCommit(goCtx, finalizeState.MultiStore, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start commit: %w", err)
 	}

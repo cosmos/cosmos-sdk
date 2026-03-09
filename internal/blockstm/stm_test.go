@@ -207,6 +207,9 @@ func TestSTMHighContentionStress(t *testing.T) {
 						tc.blk.ExecuteTx(txn, store, nil)
 					}),
 				)
+				for _, err := range tc.blk.Results {
+					require.NoError(t, err)
+				}
 
 				crossCheck := NewMultiMemDB(stores)
 				runSequential(crossCheck, tc.blk)

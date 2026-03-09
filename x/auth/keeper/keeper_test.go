@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	cmtypes "github.com/cometbft/cometbft/types"
 	"testing"
 
 	"github.com/stretchr/testify/suite"

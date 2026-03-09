@@ -1068,7 +1068,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		{
 			name: "invalid bond denom - zero supply",
 			input: &stakingtypes.MsgUpdateParams{
-				Authority: keeper.GetAuthority(),
+				Authority: ctx.Authority(),
 				Params: stakingtypes.Params{
 					MinCommissionRate: stakingtypes.DefaultMinCommissionRate,
 					UnbondingTime:     stakingtypes.DefaultUnbondingTime,

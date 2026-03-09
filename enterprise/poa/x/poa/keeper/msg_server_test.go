@@ -1053,7 +1053,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint to allocate fees
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Get initial operator balance
@@ -1145,7 +1145,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint to allocate fees
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Withdraw fees for validator 1
@@ -1189,7 +1189,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Checkpoint to allocate fees
-		err = f.poaKeeper.CheckpointAllValidators(f.ctx)
+		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Withdraw fees

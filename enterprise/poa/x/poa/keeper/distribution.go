@@ -25,10 +25,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// CheckpointAllValidators allocates pending fees to all validators.
+// checkpointAllValidators allocates pending fees to all validators.
 // This must be called every time validator power changes or a validator
 // withdraws its fees.
-func (k *Keeper) CheckpointAllValidators(ctx sdk.Context) error {
+func (k *Keeper) checkpointAllValidators(ctx sdk.Context) error {
 	// Get unallocated fees
 	unallocated, err := k.getUnallocatedFees(ctx)
 	if err != nil {
@@ -111,7 +111,7 @@ func (k *Keeper) getUnallocatedFees(ctx sdk.Context) (unallocated sdk.DecCoins, 
 
 // calculateValidatorPendingFees calculates a validator's share of unallocated fees.
 // Formula: unallocated * validator_power / total_power.
-// This is a helper function used by both CheckpointAllValidators and WithdrawableFees query.
+// This is a helper function used by both checkpointAllValidators and WithdrawableFees query.
 // Panics if totalPower == 0, as this indicates an invalid state.
 func calculateValidatorPendingFees(validatorPower, totalPower int64, unallocated sdk.DecCoins) sdk.DecCoins {
 	if totalPower == 0 {
@@ -136,7 +136,7 @@ func (k *Keeper) WithdrawValidatorFees(ctx sdk.Context, validatorAddr sdk.AccAdd
 	}
 
 	// Checkpoint all validators to allocate pending fees before withdrawal
-	if err := k.CheckpointAllValidators(ctx); err != nil {
+	if err := k.checkpointAllValidators(ctx); err != nil {
 		return nil, err
 	}
 

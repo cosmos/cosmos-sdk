@@ -445,9 +445,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 	// No-op if OE is not enabled.
 	// Similar call to Abort() is done in `ProcessProposal`.
 	app.optimisticExec.Abort()
-	// If OE had already reached StartCommit, the committer holds a mutex and is blocked
-	// waiting for finalization. We must rollback to release the mutex before any new commit
-	// can proceed.
+	// If OE had already reached StartCommit, rollback to discard uncommitted state.
 	if app.committer != nil {
 		_ = app.committer.Rollback()
 		app.committer = nil
@@ -570,7 +568,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	if req.Height > app.initialHeight {
 		// abort any running OE
 		app.optimisticExec.Abort()
-		// If OE had already reached StartCommit, rollback to release the commit mutex.
+		// If OE had already reached StartCommit, rollback to discard uncommitted state.
 		if app.committer != nil {
 			_ = app.committer.Rollback()
 			app.committer = nil

@@ -480,6 +480,7 @@ func (v *valuePreservingContext) Value(key any) any {
 func (v *valuePreservingContext) Done() <-chan struct{}       { return v.base.Done() }
 func (v *valuePreservingContext) Err() error                  { return v.base.Err() }
 func (v *valuePreservingContext) Deadline() (time.Time, bool) { return v.base.Deadline() }
+
 // MergeContextForValue returns a context that for Value() lookups checks base first,
 // then fallback. Used when replacing a context while preserving values set during the
 // replaced segment (e.g. after ante handler, to retain gas register and similar).

@@ -92,7 +92,7 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	ctx := context.Background()
-	ctx, val.cancelFn = context.WithCancel(ctx)
+	ctx, val.cancelFn = context.WithCancel(ctx) //nolint:gosec // G118: cancelFn stored for caller to invoke on shutdown
 	val.errGroup, ctx = errgroup.WithContext(ctx)
 
 	grpcCfg := val.AppConfig.GRPC

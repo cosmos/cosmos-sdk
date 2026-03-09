@@ -127,6 +127,7 @@ func TestDefaultRunner_Run_ContextCancellation(t *testing.T) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	executionCount := atomic.Int32{}
 	deliverTx := func(tx []byte, memTx sdk.Tx, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {

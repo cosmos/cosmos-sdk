@@ -138,6 +138,7 @@ func legacyOperationAdapter(l regCommon, fx SimMsgFactoryX) operation {
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		xCtx, done := context.WithCancel(ctx)
+		defer done()
 		ctx = sdk.UnwrapSDKContext(xCtx)
 		testData := l.newChainDataSource(ctx, r, accs...)
 		reporter := l.reporter.WithScope(fx.MsgType(), SkipHookFn(func(args ...any) { done() }))

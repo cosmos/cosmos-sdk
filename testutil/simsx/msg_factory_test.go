@@ -87,6 +87,7 @@ func TestRunWithFailFast(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			ctx, done := context.WithCancel(context.Background())
+			defer done()
 			reporter := NewBasicSimulationReporter().WithScope(&testdata.TestMsg{}, SkipHookFn(func(...any) { done() }))
 			gotSigners, gotMsg := SafeRunFactoryMethod(ctx, nil, reporter, spec.factory)
 			assert.Equal(t, spec.expSigners, gotSigners)

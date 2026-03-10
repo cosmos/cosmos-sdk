@@ -1076,6 +1076,33 @@ loop:
 	return snapshotItem, rs.LoadLatestVersion()
 }
 
+type interblockCacheWrapper struct {
+	types.KVStore
+	inner storeCommitter
+}
+
+func (i interblockCacheWrapper) Commit() types.CommitID {
+	return i.inner.Commit()
+}
+
+func (i interblockCacheWrapper) LastCommitID() types.CommitID {
+	return i.inner.LastCommitID()
+}
+
+func (i interblockCacheWrapper) WorkingHash() []byte {
+	return i.inner.WorkingHash()
+}
+
+func (i interblockCacheWrapper) SetPruning(options pruningtypes.PruningOptions) {
+	i.inner.SetPruning(options)
+}
+
+func (i interblockCacheWrapper) GetPruning() pruningtypes.PruningOptions {
+	return i.inner.GetPruning()
+}
+
+var _ storeCommitter = &interblockCacheWrapper{}
+
 func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (storeCommitter, error) {
 	var db dbm.DB
 
@@ -1099,7 +1126,11 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 			// Wrap and get a CommitKVStore with inter-block caching. Note, this should
 			// only wrap the primary CommitKVStore, not any store that is already
 			// branched as that will create unexpected behavior.
-			store = rs.interBlockCache.GetStoreCache(key, store)
+			cachedStore := rs.interBlockCache.GetStoreCache(key, store)
+			return &interblockCacheWrapper{
+				KVStore: cachedStore,
+				inner:   store,
+			}, nil
 		}
 
 		return store, err

@@ -25,6 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Breaking Changes
+
+* [#26056](https://github.com/cosmos/cosmos-sdk/pull/26056) Replace `CommitMultiStore.Commit` with `CommitMultiStore.StartCommit` and `CommitFinalizer` for optimistic commit with rollback support.
+
 ### Bug Fixes
 
 * [#20425](https://github.com/cosmos/cosmos-sdk/pull/20425) Fix nil pointer panic when querying historical state where a new store does not exist.

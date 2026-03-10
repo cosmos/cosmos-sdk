@@ -1,6 +1,6 @@
 module cosmossdk.io/client/v2
 
-go 1.25.7
+go 1.25.8
 
 require (
 	cosmossdk.io/api v1.0.0
@@ -31,7 +31,7 @@ require (
 	github.com/99designs/keyring v1.2.2 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.5.7 // indirect
-	github.com/RoaringBitmap/roaring/v2 v2.14.4 // indirect
+	github.com/RoaringBitmap/roaring/v2 v2.14.5 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.2.0 // indirect

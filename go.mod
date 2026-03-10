@@ -1,4 +1,4 @@
-go 1.25.7
+go 1.25.8
 
 module github.com/cosmos/cosmos-sdk
 
@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.3.0-beta.0
 	github.com/99designs/keyring v1.2.1
-	github.com/RoaringBitmap/roaring/v2 v2.14.4
+	github.com/RoaringBitmap/roaring/v2 v2.14.5
 	github.com/bgentry/speakeasy v0.2.0
 	github.com/bits-and-blooms/bitset v1.24.4
 	github.com/chzyer/readline v1.5.1

@@ -8,27 +8,17 @@ import (
 // MemNode represents an in-memory node that has recently been created and may or may not have
 // been serialized to disk yet.
 type MemNode struct {
-	height    uint8
-	version   uint32
-	size      int64
-	key       []byte
-	value     []byte
-	left      *NodePointer
-	right     *NodePointer
-	hash      []byte
-	nodeId    NodeID // ID of this node, 0 if not yet assigned
-	keyOffset uint32
-}
-
-// newLeafNode creates a new leaf MemNode with the given key, value, and version.
-func newLeafNode(key, value []byte, version uint32) *MemNode {
-	return &MemNode{
-		height:  0,
-		size:    1,
-		version: version,
-		key:     key,
-		value:   value,
-	}
+	height         uint8
+	version        uint32
+	size           int64
+	key            []byte
+	value          []byte
+	left           *NodePointer
+	right          *NodePointer
+	hash           []byte
+	nodeId         NodeID // ID of this node, 0 if not yet assigned
+	walKeyOffset   uint64
+	walValueOffset uint64
 }
 
 var _ Node = (*MemNode)(nil)
@@ -51,6 +41,10 @@ func (node *MemNode) Size() int64 {
 // Version implements the Node interface.
 func (node *MemNode) Version() uint32 {
 	return node.version
+}
+
+func (node *MemNode) CmpKey(otherKey []byte) (int, error) {
+	return bytes.Compare(node.key, otherKey), nil
 }
 
 // Key implements the Node interface.
@@ -125,6 +119,16 @@ func (node *MemNode) Get(key []byte) (value UnsafeBytes, index int64, err error)
 	return value, index, nil
 }
 
+func (node *MemNode) Has(key []byte) (exists bool, index int64, err error) {
+	// for MemNode.Has, we can simply call MemNode.Get because value is in memory and there is no disk read overhead
+	var value UnsafeBytes
+	value, index, err = node.Get(key)
+	if err != nil {
+		return false, 0, err
+	}
+	return !value.IsNil(), index, nil
+}
+
 // IsLeaf implements the Node interface.
 func (node *MemNode) IsLeaf() bool {
 	return node.height == 0
@@ -133,8 +137,8 @@ func (node *MemNode) IsLeaf() bool {
 // String implements the fmt.Stringer interface.
 func (node *MemNode) String() string {
 	if node.IsLeaf() {
-		return fmt.Sprintf("MemNode{key:%x, version:%d, size:%d, value:%x}", node.key, node.version, node.size, node.value)
+		return fmt.Sprintf("MemNode{key:%x, layer:%d, size:%d, value:%x}", node.key, node.version, node.size, node.value)
 	} else {
-		return fmt.Sprintf("MemNode{key:%x, version:%d, size:%d, height:%d, left:%s, right:%s}", node.key, node.version, node.size, node.height, node.left, node.right)
+		return fmt.Sprintf("MemNode{key:%x, layer:%d, size:%d, height:%d, left:%s, right:%s}", node.key, node.version, node.size, node.height, node.left, node.right)
 	}
 }

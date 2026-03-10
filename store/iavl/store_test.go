@@ -14,9 +14,9 @@ import (
 
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/types"
+	"cosmossdk.io/store/types/kv"
 	"cosmossdk.io/store/wrapper"
 )
 
@@ -660,10 +660,10 @@ func TestCacheWraps(t *testing.T) {
 	store := UnsafeNewStore(tree)
 
 	cacheWrapper := store.CacheWrap()
-	require.IsType(t, &cachekv.Store{}, cacheWrapper)
+	require.IsType(t, &cachekv.GStore[[]byte]{}, cacheWrapper)
 
 	cacheWrappedWithTrace := store.CacheWrapWithTrace(nil, nil)
-	require.IsType(t, &cachekv.Store{}, cacheWrappedWithTrace)
+	require.IsType(t, &cachekv.GStore[[]byte]{}, cacheWrappedWithTrace)
 }
 
 func TestChangeSets(t *testing.T) {

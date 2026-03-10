@@ -29,10 +29,10 @@ func TestStore(t *testing.T) {
 	require.Nil(t, db.Get(key))
 
 	cacheWrapper := db.CacheWrap()
-	require.IsType(t, &cachekv.Store{}, cacheWrapper)
+	require.IsType(t, &cachekv.GStore[[]byte]{}, cacheWrapper)
 
 	cacheWrappedWithTrace := db.CacheWrapWithTrace(nil, nil)
-	require.IsType(t, &cachekv.Store{}, cacheWrappedWithTrace)
+	require.IsType(t, &cachekv.GStore[[]byte]{}, cacheWrappedWithTrace)
 }
 
 func TestCommit(t *testing.T) {

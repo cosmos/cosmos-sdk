@@ -125,7 +125,7 @@ func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.C
 	header.Time = newBlockTime
 	header.Height++
 
-	newCtx := app.BaseApp.NewUncachedContext(false, header).WithHeaderInfo(coreheader.Info{
+	newCtx := app.BaseApp.NewCachedContext(false, header).WithHeaderInfo(coreheader.Info{
 		Height: header.Height,
 		Time:   header.Time,
 	})

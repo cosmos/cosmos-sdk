@@ -1,12 +1,9 @@
 package dbadapter
 
 import (
-	"io"
-
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
 )
 
@@ -79,11 +76,6 @@ func (Store) GetStoreType() types.StoreType {
 // CacheWrap branches the underlying store.
 func (dsa Store) CacheWrap() types.CacheWrap {
 	return cachekv.NewStore(dsa)
-}
-
-// CacheWrapWithTrace implements KVStore.
-func (dsa Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return cachekv.NewStore(tracekv.NewStore(dsa, w, tc))
 }
 
 // dbm.DB implements KVStore so we can CacheKVStore it.

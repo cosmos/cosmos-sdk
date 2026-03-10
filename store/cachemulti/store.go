@@ -2,14 +2,9 @@ package cachemulti
 
 import (
 	"fmt"
-	"io"
 
 	"cosmossdk.io/store/types"
 )
-
-// storeNameCtxKey is the TraceContext metadata key that identifies
-// the store which emitted a given trace.
-const storeNameCtxKey = "store_name"
 
 //----------------------------------------
 // Store
@@ -88,11 +83,6 @@ func (cms Store) Write() {
 // CacheWrap implements CacheWrapper, returns the cache multi-store as a CacheWrap.
 func (cms Store) CacheWrap() types.CacheWrap {
 	return cms.CacheMultiStore().(types.CacheWrap)
-}
-
-// CacheWrapWithTrace implements the CacheWrapper interface.
-func (cms Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
-	return cms.CacheWrap()
 }
 
 // CacheMultiStore implements MultiStore, returns a new CacheMultiStore from the

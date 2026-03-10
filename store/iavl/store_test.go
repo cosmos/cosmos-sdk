@@ -564,8 +564,15 @@ func TestIAVLStoreQuery(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v2, qres.Value)
-	// and for the subspace
+	// subspace queries at the pinned height remain on the old version
 	qres, err = iavlStore.Query(&querySub)
+	require.NoError(t, err)
+	require.Equal(t, uint32(0), qres.Code)
+	require.Equal(t, valExpSub1, qres.Value)
+
+	// updating the height returns the latest values
+	querySubLatest := types.RequestQuery{Path: "/subspace", Data: ksub, Height: cid.Version}
+	qres, err = iavlStore.Query(&querySubLatest)
 	require.NoError(t, err)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, valExpSub2, qres.Value)

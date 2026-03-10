@@ -98,6 +98,11 @@ type AccountKeeper struct {
 	// The prototypical AccountI constructor.
 	proto func() sdk.AccountI
 
+	// the address capable of executing a MsgUpdateParams message. Typically, this
+	// should be the x/gov module account. Used as a fallback when consensus params
+	// authority is not set.
+	authority string
+
 	// State
 	Schema          collections.Schema
 	Params          collections.Item[types.Params]
@@ -125,7 +130,10 @@ var _ AccountKeeperI = &AccountKeeper{}
 // types.PermissionsForAddress and is used in keeper.ValidatePermissions. Permissions are plain strings,
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
-func NewAccountKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, proto func() sdk.AccountI, maccPerms map[string][]string, ac address.Codec, bech32Prefix string, opts ...InitOption) AccountKeeper {
+func NewAccountKeeper(
+	cdc codec.BinaryCodec, storeService store.KVStoreService, proto func() sdk.AccountI,
+	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string, opts ...InitOption,
+) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
 	for name, perms := range maccPerms {
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
@@ -140,6 +148,7 @@ func NewAccountKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, 
 		proto:           proto,
 		cdc:             cdc,
 		permAddrs:       permAddrs,
+		authority:       authority,
 		Params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		AccountNumber:   collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"), //nolint:staticcheck // kept in place for the migration
 		Accounts:        collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
@@ -159,6 +168,11 @@ func NewAccountKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, 
 
 func (ak AccountKeeper) UnorderedTransactionsEnabled() bool {
 	return ak.enableUnorderedTxs
+}
+
+// GetAuthority returns the x/auth module's authority.
+func (ak AccountKeeper) GetAuthority() string {
+	return ak.authority
 }
 
 // AddressCodec returns the x/auth account address codec.

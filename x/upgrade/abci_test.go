@@ -22,6 +22,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -119,7 +121,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 		s.encCfg.TxConfig.TxDecoder(),
 	)
 
-	s.keeper = keeper.NewKeeper(skip, storeService, s.encCfg.Codec, t.TempDir(), nil)
+	s.keeper = keeper.NewKeeper(skip, storeService, s.encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	s.keeper.SetVersionSetter(s.baseApp)
 
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: height})
@@ -456,7 +458,7 @@ func TestMissingUpgradeHandler(t *testing.T) {
 	// Use the same temp directory for both keepers to share storage
 	tempDir := t.TempDir()
 	skip := map[int64]bool{}
-	k := keeper.NewKeeper(skip, storeService, encCfg.Codec, tempDir, nil)
+	k := keeper.NewKeeper(skip, storeService, encCfg.Codec, tempDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
 
 	// Submit and execute an upgrade plan with handler
@@ -477,7 +479,7 @@ func TestMissingUpgradeHandler(t *testing.T) {
 
 	// Now simulate a restart without the upgrade handler (missing handler scenario)
 	// Use the same temp directory and store service to maintain state
-	newKeeper := keeper.NewKeeper(skip, storeService, encCfg.Codec, tempDir, nil)
+	newKeeper := keeper.NewKeeper(skip, storeService, encCfg.Codec, tempDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	newModule := upgrade.NewAppModule(newKeeper, addresscodec.NewBech32Codec("cosmos"))
 
 	// Verify that the last applied upgrade exists but no handler is present
@@ -502,7 +504,7 @@ func TestDowngradeVerification(t *testing.T) {
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: 10})
 
 	skip := map[int64]bool{}
-	k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil)
+	k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
 
 	// submit a plan.
@@ -548,7 +550,7 @@ func TestDowngradeVerification(t *testing.T) {
 		ctx, _ := ctx.CacheContext()
 
 		// downgrade. now keeper does not have the handler.
-		k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil)
+		k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 		m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
 
 		// assertions

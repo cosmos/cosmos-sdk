@@ -100,13 +100,18 @@ func NewBaseKeeper(
 	storeService store.KVStoreService,
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
+	authority string,
 	logger log.Logger,
 ) BaseKeeper {
+	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
+		panic(fmt.Errorf("invalid bank authority address: %w", err))
+	}
+
 	// add the module name to the logger
 	logger = logger.With(log.ModuleKey, "x/"+types.ModuleName)
 
 	return BaseKeeper{
-		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeService, ak, blockedAddrs, logger),
+		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeService, ak, blockedAddrs, authority, logger),
 		ak:                     ak,
 		cdc:                    cdc,
 		storeService:           storeService,

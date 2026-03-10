@@ -35,6 +35,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var (
@@ -93,7 +94,7 @@ func createGroupPolicies(ctx sdk.Context, storeKey storetypes.StoreKey, cdc code
 
 // createOldPolicyAccount re-creates the group policy account using a module account
 func createOldPolicyAccount(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec, policies []sdk.AccAddress) ([]*authtypes.ModuleAccount, group.AccountKeeper) {
-	accountKeeper := authkeeper.NewAccountKeeper(cdc, runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)), authtypes.ProtoBaseAccount, nil, addresscodec.NewBech32Codec(sdk.Bech32MainPrefix), sdk.Bech32MainPrefix)
+	accountKeeper := authkeeper.NewAccountKeeper(cdc, runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)), authtypes.ProtoBaseAccount, nil, addresscodec.NewBech32Codec(sdk.Bech32MainPrefix), sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	oldPolicyAccounts := make([]*authtypes.ModuleAccount, len(policies))
 	for i, policyAddr := range policies {

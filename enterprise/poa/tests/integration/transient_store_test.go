@@ -95,6 +95,7 @@ func initFixture(tb testing.TB) *fixture {
 		maccPerms,
 		address.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
+		authority.String(),
 	)
 
 	// Create fee collector module account
@@ -106,6 +107,7 @@ func initFixture(tb testing.TB) *fixture {
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		map[string]bool{},
+		authority.String(),
 		log.NewNopLogger(),
 	)
 

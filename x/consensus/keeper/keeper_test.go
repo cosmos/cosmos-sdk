@@ -38,7 +38,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	storeService := runtime.NewKVStoreService(key)
 	addressCodec := authcodec.NewBech32Codec(sdk.Bech32MainPrefix)
 
-	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, storeService, runtime.EventService{}, addressCodec)
+	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, storeService, "gov", runtime.EventService{}, addressCodec)
 
 	s.ctx = ctx
 	s.consensusParamsKeeper = &keeper

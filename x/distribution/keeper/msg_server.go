@@ -257,8 +257,12 @@ func (k *Keeper) validateAuthority(goCtx context.Context, authority string) erro
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if ctx.Authority() != authority {
-		return errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", ctx.Authority(), authority)
+	expected := ctx.Authority()
+	if expected == "" {
+		expected = k.authority
+	}
+	if expected != authority {
+		return errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", expected, authority)
 	}
 
 	return nil

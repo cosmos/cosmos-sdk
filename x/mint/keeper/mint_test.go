@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttestutil "github.com/cosmos/cosmos-sdk/x/mint/testutil"
@@ -61,6 +62,7 @@ func (s *MintFnTestSuite) SetupTest() {
 		accountKeeper,
 		s.bankKeeper,
 		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// Set default parameters.
@@ -172,6 +174,7 @@ func (s *MintFnTestSuite) TestCustomMintFn() {
 		accountKeeper,
 		s.bankKeeper,
 		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		keeper.WithMintFn(customMintFn),
 	)
 

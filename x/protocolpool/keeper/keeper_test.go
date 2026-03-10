@@ -21,6 +21,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	poolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
 	pooltestutil "github.com/cosmos/cosmos-sdk/x/protocolpool/testutil"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
@@ -73,6 +74,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		storeService,
 		accountKeeper,
 		bankKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	suite.ctx = ctx
 	suite.poolKeeper = poolKeeper

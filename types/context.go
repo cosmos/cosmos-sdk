@@ -8,8 +8,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/cosmos/cosmos-sdk/types/address"
-
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log/v2"
@@ -133,14 +131,14 @@ func (c Context) ConsensusParams() cmtproto.ConsensusParams {
 	return c.consParams
 }
 
-// Authority returns the authority address from consensus params. If the
-// authority is not set (empty string), it falls back to the governance
-// module account address.
+// Authority returns the authority address from consensus params.
+// Returns an empty string if no authority is configured in consensus params,
+// allowing callers to fall back to their own default.
 func (c Context) Authority() string {
 	if c.consParams.Authority != nil && c.consParams.Authority.Authority != "" {
 		return c.consParams.Authority.Authority
 	}
-	return AccAddress(address.Module("gov")).String()
+	return ""
 }
 
 func (c Context) Deadline() (deadline time.Time, ok bool) {

@@ -24,6 +24,7 @@ import (
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type DeterministicTestSuite struct {
@@ -74,6 +75,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
+		types.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
@@ -295,6 +297,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
 			"cosmos",
+			types.NewModuleAddress(govtypes.ModuleName).String(),
 		)
 		suite.setModuleAccounts(suite.ctx, ak, maccs)
 
@@ -341,6 +344,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
 			"cosmos",
+			types.NewModuleAddress(govtypes.ModuleName).String(),
 		)
 		suite.setModuleAccounts(suite.ctx, ak, []string{mName})
 

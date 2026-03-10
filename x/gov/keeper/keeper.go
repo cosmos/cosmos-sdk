@@ -42,6 +42,11 @@ type Keeper struct {
 
 	calculateVoteResultsAndVotingPowerFn CalculateVoteResultsAndVotingPowerFn
 
+	// the address capable of executing a MsgUpdateParams message. Typically, this
+	// should be the x/gov module account. Used as a fallback when consensus params
+	// authority is not set.
+	authority string
+
 	Schema                 collections.Schema
 	Constitution           collections.Item[string]
 	Params                 collections.Item[v1.Params]
@@ -52,6 +57,11 @@ type Keeper struct {
 	ActiveProposalsQueue   collections.Map[collections.Pair[time.Time, uint64], uint64] // TODO(tip): this should be simplified and go into an index.
 	InactiveProposalsQueue collections.Map[collections.Pair[time.Time, uint64], uint64] // TODO(tip): this should be simplified and go into an index.
 	VotingPeriodProposals  collections.Map[uint64, []byte]                              // TODO(tip): this could be a keyset or index.
+}
+
+// GetAuthority returns the x/gov module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
 
 // NewKeeper returns a governance keeper. It handles:
@@ -69,11 +79,16 @@ func NewKeeper(
 	distrKeeper types.DistributionKeeper,
 	router baseapp.MessageRouter,
 	config types.Config,
+	authority string,
 	calculateVoteResultsAndVotingPowerFn CalculateVoteResultsAndVotingPowerFn,
 ) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
+
+	if _, err := authKeeper.AddressCodec().StringToBytes(authority); err != nil {
+		panic(fmt.Sprintf("invalid authority address: %s", authority))
 	}
 
 	// If MaxMetadataLen not set by app developer, set to default value.
@@ -91,6 +106,7 @@ func NewKeeper(
 		router:                               router,
 		config:                               config,
 		calculateVoteResultsAndVotingPowerFn: calculateVoteResultsAndVotingPowerFn,
+		authority:                            authority,
 		Constitution:                         collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
 		Params:                               collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc)),
 		Deposits:                             collections.NewMap(sb, types.DepositsKeyPrefix, "deposits", collections.PairKeyCodec(collections.Uint64Key, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), codec.CollValue[v1.Deposit](cdc)), // nolint:staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility

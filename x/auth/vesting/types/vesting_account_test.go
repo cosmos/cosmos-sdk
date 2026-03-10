@@ -20,6 +20,7 @@ import (
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
@@ -61,6 +62,7 @@ func (s *VestingAccountTestSuite) SetupTest() {
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 }
 

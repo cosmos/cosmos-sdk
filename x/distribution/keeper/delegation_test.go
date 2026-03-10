@@ -15,10 +15,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -45,6 +47,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// reset fee pool
@@ -129,6 +132,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// reset fee pool
@@ -231,6 +235,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// reset fee pool
@@ -354,6 +359,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// reset fee pool
@@ -450,6 +456,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// reset fee pool
@@ -524,6 +531,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// reset fee pool
@@ -639,6 +647,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// reset fee pool
@@ -775,6 +784,7 @@ func TestCalculateRewardsMultiDelegatorMultiWithdraw(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// reset fee pool
@@ -973,6 +983,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// reset fee pool

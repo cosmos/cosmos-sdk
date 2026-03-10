@@ -60,6 +60,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		encCfg.Amino,
 		storeService,
 		s.stakingKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	// set test params
 	s.Require().NoError(s.slashingKeeper.SetParams(ctx, slashingtestutil.TestParams()))

@@ -20,6 +20,7 @@ import (
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 const (
@@ -72,6 +73,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		getMaccPerms(),
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
+		types.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	suite.msgServer = keeper.NewMsgServerImpl(suite.accountKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)

@@ -28,7 +28,7 @@ var (
 
 // SoftwareUpgrade implements the Msg/SoftwareUpgrade Msg service.
 func (k msgServer) SoftwareUpgrade(goCtx context.Context, msg *types.MsgSoftwareUpgrade) (*types.MsgSoftwareUpgradeResponse, error) {
-	if err := validateAuthority(goCtx, msg.Authority); err != nil {
+	if err := k.validateAuthority(goCtx, msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -43,7 +43,7 @@ func (k msgServer) SoftwareUpgrade(goCtx context.Context, msg *types.MsgSoftware
 
 // CancelUpgrade implements the Msg/CancelUpgrade Msg service.
 func (k msgServer) CancelUpgrade(ctx context.Context, msg *types.MsgCancelUpgrade) (*types.MsgCancelUpgradeResponse, error) {
-	if err := validateAuthority(ctx, msg.Authority); err != nil {
+	if err := k.validateAuthority(ctx, msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -55,10 +55,14 @@ func (k msgServer) CancelUpgrade(ctx context.Context, msg *types.MsgCancelUpgrad
 	return &types.MsgCancelUpgradeResponse{}, nil
 }
 
-func validateAuthority(ctx context.Context, authority string) error {
+func (k msgServer) validateAuthority(ctx context.Context, authority string) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if sdkCtx.Authority() != authority {
-		return errors.Wrapf(types.ErrInvalidSigner, "expected %s got %s", sdkCtx.Authority(), authority)
+	expected := sdkCtx.Authority()
+	if expected == "" {
+		expected = k.authority
+	}
+	if expected != authority {
+		return errors.Wrapf(types.ErrInvalidSigner, "expected %s got %s", expected, authority)
 	}
 	return nil
 }

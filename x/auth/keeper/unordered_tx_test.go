@@ -15,6 +15,7 @@ import (
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func TestManager(t *testing.T) {
@@ -27,7 +28,7 @@ func TestManager(t *testing.T) {
 		mockStoreKey := storetypes.NewKVStoreKey("test")
 		storeService := runtime.NewKVStoreService(mockStoreKey)
 		ctx = testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx
-		mgr = keeper.NewAccountKeeper(encCfg.Codec, storeService, types.ProtoBaseAccount, nil, authcodec.NewBech32Codec("cosmos"), "cosmos", keeper.WithUnorderedTransactions(true))
+		mgr = keeper.NewAccountKeeper(encCfg.Codec, storeService, types.ProtoBaseAccount, nil, authcodec.NewBech32Codec("cosmos"), "cosmos", types.NewModuleAddress(govtypes.ModuleName).String(), keeper.WithUnorderedTransactions(true))
 	}
 
 	type utxSequence struct {
@@ -296,7 +297,7 @@ func TestCannotAddDuplicate(t *testing.T) {
 	mockStoreKey := storetypes.NewKVStoreKey("test")
 	storeService := runtime.NewKVStoreService(mockStoreKey)
 	ctx := testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx
-	mgr := keeper.NewAccountKeeper(moduletestutil.MakeTestEncodingConfig().Codec, storeService, types.ProtoBaseAccount, nil, authcodec.NewBech32Codec("cosmos"), "cosmos", keeper.WithUnorderedTransactions(true))
+	mgr := keeper.NewAccountKeeper(moduletestutil.MakeTestEncodingConfig().Codec, storeService, types.ProtoBaseAccount, nil, authcodec.NewBech32Codec("cosmos"), "cosmos", types.NewModuleAddress(govtypes.ModuleName).String(), keeper.WithUnorderedTransactions(true))
 
 	addUser := []byte("foo")
 	timeout := time.Unix(10, 0)

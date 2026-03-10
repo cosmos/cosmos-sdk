@@ -8,73 +8,29 @@ Note, always read the **App Wiring Changes** section for more information on app
 
 For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/CHANGELOG.md).
 
-## Authority Parameter Removal
+## Centralized Authority via Consensus Params
 
-Authority management has been centralized to the `x/consensus` module. Individual module keepers no longer accept an `authority` parameter in their constructors.
+Authority management can now be centralized via the `x/consensus` module. A new `AuthorityParams` field in `ConsensusParams` stores the authority address on-chain. When set, it takes precedence over the per-keeper authority parameter.
 
-### Affected Modules
+### No Breaking Changes
 
-The following modules have removed the `authority` parameter from their keeper constructors:
-
-* `x/auth`
-* `x/bank`
-* `x/distribution`
-* `x/gov`
-* `x/mint`
-* `x/protocolpool`
-* `x/slashing`
-* `x/staking`
-* `x/upgrade`
-
-### Migration
-
-**Before:**
-
-```go
-app.BankKeeper = bankkeeper.NewBaseKeeper(
-    appCodec,
-    runtime.NewKVStoreService(keys[banktypes.StoreKey]),
-    app.AccountKeeper,
-    blockedAddresses,
-    authtypes.NewModuleAddress(govtypes.ModuleName).String(), // authority parameter - REMOVE
-    logger,
-)
-```
-
-**After:**
-
-```go
-app.BankKeeper = bankkeeper.NewBaseKeeper(
-    appCodec,
-    runtime.NewKVStoreService(keys[banktypes.StoreKey]),
-    app.AccountKeeper,
-    blockedAddresses,
-    logger, // authority parameter removed
-)
-```
-
-Apply this pattern to all affected modules listed above.
+Keeper constructors still accept the `authority` parameter. It is now used as a **fallback** when no authority is configured in consensus params. Existing code continues to work without changes.
 
 ### How It Works
 
-Modules now retrieve the authority from `ConsensusParams` via the context at runtime. The authority value is stored in consensus params and can be updated via governance proposals.
-
-**Example - Authority Validation:**
+When a module validates authority (e.g., in `UpdateParams`), it checks consensus params first. If no authority is set there, it falls back to the keeper's `authority` field:
 
 ```go
-func (k msgServer) UpdateParams(ctx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
-    sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-    // Retrieve and validate authority from consensus params
-    if sdkCtx.Authority() != req.Authority {
-        return nil, errors.Wrapf(sdkerrors.ErrUnauthorized,
-            "invalid authority: expected %s, got %s",
-            req.Authority, sdkCtx.Authority())
-    }
-
-    // ... rest of the handler
+authority := sdkCtx.Authority() // from consensus params
+if authority == "" {
+    authority = k.authority       // fallback to keeper field
+}
+if authority != msg.Authority {
+    return nil, errors.Wrapf(...)
 }
 ```
+
+To enable centralized authority, set the `AuthorityParams` in consensus params via a governance proposal targeting the `x/consensus` module's `MsgUpdateParams`.
 
 ## x/gov
 

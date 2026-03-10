@@ -14,6 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -72,6 +73,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		tallyFn = keeper.NewDefaultCalculateVoteResultsAndVotingPower(in.StakingKeeper)
 	}
 
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
@@ -80,6 +87,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.DistributionKeeper,
 		in.MsgServiceRouter,
 		defaultConfig,
+		authority.String(),
 		tallyFn,
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)

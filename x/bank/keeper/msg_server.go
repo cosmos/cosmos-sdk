@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-metrics"
-	"github.com/pkg/errors"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -135,8 +134,12 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if ctx.Authority() != req.Authority {
-		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "invalid authority: expected %s, got %s", req.Authority, ctx.Authority())
+	authority := ctx.Authority()
+	if authority == "" {
+		authority = k.GetAuthority()
+	}
+	if authority != req.Authority {
+		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", authority, req.Authority)
 	}
 
 	if err := req.Params.Validate(); err != nil {
@@ -153,8 +156,12 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 func (k msgServer) SetSendEnabled(goCtx context.Context, msg *types.MsgSetSendEnabled) (*types.MsgSetSendEnabledResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if ctx.Authority() != msg.Authority {
-		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority: expected %s, got %s", ctx.Authority(), msg.Authority)
+	authority := ctx.Authority()
+	if authority == "" {
+		authority = k.GetAuthority()
+	}
+	if authority != msg.Authority {
+		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", authority, msg.Authority)
 	}
 
 	seen := map[string]bool{}

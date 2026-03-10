@@ -28,15 +28,17 @@ type Keeper struct {
 	event        event.Service
 	addressCodec address.Codec
 
+	authority   string
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
 }
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
 
-func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, em event.Service, addressCodec address.Codec) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, authority string, em event.Service, addressCodec address.Codec) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	return Keeper{
 		storeService: storeService,
+		authority:    authority,
 		event:        em,
 		addressCodec: addressCodec,
 		ParamsStore:  collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
@@ -61,11 +63,19 @@ func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types
 
 var _ types.MsgServer = Keeper{}
 
+func (k *Keeper) GetAuthority() string {
+	return k.authority
+}
+
 func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if sdkCtx.Authority() != msg.Authority {
-		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "invalid authority: got %s, want %s", msg.Authority, sdkCtx.Authority())
+	authority := sdkCtx.Authority()
+	if authority == "" {
+		authority = k.authority
+	}
+	if authority != msg.Authority {
+		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "invalid authority: got %s, want %s", msg.Authority, authority)
 	}
 
 	consensusParams, err := msg.ToProtoConsensusParams()

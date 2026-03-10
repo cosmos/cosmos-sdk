@@ -51,6 +51,7 @@ func Example() {
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
+		authority,
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
@@ -58,7 +59,7 @@ func Example() {
 
 	// here bankkeeper and staking keeper is nil because we are not testing them
 	// subspace is nil because we don't test params (which is legacy anyway)
-	mintKeeper := mintkeeper.NewKeeper(encodingCfg.Codec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), nil, accountKeeper, nil, authtypes.FeeCollectorName)
+	mintKeeper := mintkeeper.NewKeeper(encodingCfg.Codec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), nil, accountKeeper, nil, authtypes.FeeCollectorName, authority)
 	mintModule := mint.NewAppModule(encodingCfg.Codec, mintKeeper, accountKeeper, nil, nil)
 
 	// create the application and register all the modules from the previous step
@@ -141,6 +142,7 @@ func Example_oneModule() {
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
+		authority,
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)

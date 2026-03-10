@@ -21,16 +21,27 @@ type Keeper struct {
 	cdc          codec.BinaryCodec
 	legacyAmino  *codec.LegacyAmino
 	sk           types.StakingKeeper
+
+	// the address capable of executing a MsgUpdateParams message. Typically, this
+	// should be the x/gov module account. Used as a fallback when consensus params
+	// authority is not set.
+	authority string
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, storeService storetypes.KVStoreService, sk types.StakingKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, storeService storetypes.KVStoreService, sk types.StakingKeeper, authority string) Keeper {
 	return Keeper{
 		storeService: storeService,
 		cdc:          cdc,
 		legacyAmino:  legacyAmino,
 		sk:           sk,
+		authority:    authority,
 	}
+}
+
+// GetAuthority returns the x/slashing module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
 
 // Logger returns a module-specific logger.

@@ -277,6 +277,7 @@ func NewSimApp(
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		runtime.EventService{},
 		addressCodec,
 	)
@@ -289,6 +290,7 @@ func NewSimApp(
 		maccPerms,
 		addressCodec,
 		sdk.Bech32MainPrefix,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		authkeeper.WithUnorderedTransactions(true),
 	)
 
@@ -297,6 +299,7 @@ func NewSimApp(
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		app.AccountKeeper,
 		BlockedAddresses(),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		logger,
 	)
 
@@ -320,6 +323,7 @@ func NewSimApp(
 		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
 		authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
 	)
@@ -330,6 +334,7 @@ func NewSimApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		// mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn)), custom mintFn can be added here
 	)
 
@@ -338,6 +343,7 @@ func NewSimApp(
 		runtime.NewKVStoreService(keys[protocolpooltypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	app.DistrKeeper = distrkeeper.NewKeeper(
@@ -347,6 +353,7 @@ func NewSimApp(
 		app.BankKeeper,
 		app.StakingKeeper,
 		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper),
 	)
 
@@ -355,6 +362,7 @@ func NewSimApp(
 		legacyAmino,
 		runtime.NewKVStoreService(keys[slashingtypes.StoreKey]),
 		app.StakingKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(
@@ -392,6 +400,7 @@ func NewSimApp(
 		appCodec,
 		homePath,
 		app.BaseApp,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// Register the proposal types
@@ -413,6 +422,7 @@ func NewSimApp(
 		app.DistrKeeper,
 		app.MsgServiceRouter(),
 		govConfig,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(app.StakingKeeper),
 	)
 

@@ -22,6 +22,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -47,6 +48,8 @@ func TestMultiSendNewAccountsGetUniqueIDs(t *testing.T) {
 		minttypes.ModuleName: {authtypes.Minter},
 	}
 
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
@@ -54,6 +57,7 @@ func TestMultiSendNewAccountsGetUniqueIDs(t *testing.T) {
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
+		authority,
 	)
 
 	bankKeeper := bankkeeper.NewBaseKeeper(
@@ -61,6 +65,7 @@ func TestMultiSendNewAccountsGetUniqueIDs(t *testing.T) {
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		map[string]bool{},
+		authority,
 		log.NewNopLogger(),
 	)
 

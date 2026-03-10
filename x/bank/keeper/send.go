@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
@@ -45,6 +46,8 @@ type SendKeeper interface {
 
 	BlockedAddr(addr sdk.AccAddress) bool
 	GetBlockedAddresses() map[string]bool
+
+	GetAuthority() string
 }
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
@@ -63,6 +66,11 @@ type BaseSendKeeper struct {
 	// list of addresses that are restricted from receiving transactions
 	blockedAddrs map[string]bool
 
+	// the address capable of executing a MsgUpdateParams message. Typically, this
+	// should be the x/gov module account. Used as a fallback when consensus params
+	// authority is not set.
+	authority string
+
 	sendRestriction *sendRestriction
 }
 
@@ -71,17 +79,28 @@ func NewBaseSendKeeper(
 	storeService store.KVStoreService,
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
+	authority string,
 	logger log.Logger,
 ) BaseSendKeeper {
+	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
+		panic(fmt.Errorf("invalid bank authority address: %w", err))
+	}
+
 	return BaseSendKeeper{
 		BaseViewKeeper:  NewBaseViewKeeper(cdc, storeService, ak, logger),
 		cdc:             cdc,
 		ak:              ak,
 		storeService:    storeService,
 		blockedAddrs:    blockedAddrs,
+		authority:       authority,
 		logger:          logger,
 		sendRestriction: newSendRestriction(),
 	}
+}
+
+// GetAuthority returns the x/bank module's authority.
+func (k BaseSendKeeper) GetAuthority() string {
+	return k.authority
 }
 
 // AppendSendRestriction adds the provided SendRestrictionFn to run after previously provided restrictions.

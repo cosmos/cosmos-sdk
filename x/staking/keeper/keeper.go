@@ -29,6 +29,7 @@ type Keeper struct {
 	authKeeper            types.AccountKeeper
 	bankKeeper            types.BankKeeper
 	hooks                 types.StakingHooks
+	authority             string
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
 }
@@ -39,6 +40,7 @@ func NewKeeper(
 	storeService storetypes.KVStoreService,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
+	authority string,
 	validatorAddressCodec addresscodec.Codec,
 	consensusAddressCodec addresscodec.Codec,
 ) *Keeper {
@@ -51,6 +53,11 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
 
+	// ensure that authority is a valid AccAddress
+	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
+		panic("authority is not a valid acc address")
+	}
+
 	if validatorAddressCodec == nil || consensusAddressCodec == nil {
 		panic("validator and/or consensus address codec are nil")
 	}
@@ -61,9 +68,15 @@ func NewKeeper(
 		authKeeper:            ak,
 		bankKeeper:            bk,
 		hooks:                 nil,
+		authority:             authority,
 		validatorAddressCodec: validatorAddressCodec,
 		consensusAddressCodec: consensusAddressCodec,
 	}
+}
+
+// GetAuthority returns the x/staking module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
 
 // Logger returns a module-specific logger.

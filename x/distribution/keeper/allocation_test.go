@@ -19,6 +19,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -49,6 +50,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// create validator with 50% commission
@@ -105,6 +107,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// reset fee pool & set params
@@ -237,6 +240,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// reset fee pool

@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 type contextTestSuite struct {
@@ -259,25 +258,24 @@ func (s *contextTestSuite) TestMultiStore() {
 	s.Require().Equal(objKVStore.GetStoreType(), storetypes.StoreTypeObject)
 }
 
-func (s *contextTestSuite) TestAuthorityFallback() {
+func (s *contextTestSuite) TestAuthority() {
 	key := storetypes.NewKVStoreKey(s.T().Name())
-	govAddr := types.AccAddress(address.Module("gov")).String()
 
-	// No consensus params set — authority should fall back to gov module address.
+	// No consensus params set — authority should return empty string.
 	ctx := testutil.DefaultContext(key, storetypes.NewTransientStoreKey("transient_"+s.T().Name()))
-	s.Require().Equal(govAddr, ctx.Authority())
+	s.Require().Equal("", ctx.Authority())
 
-	// Empty authority in consensus params — should also fall back.
+	// Empty authority in consensus params — should return empty string.
 	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
 		Authority: &cmtproto.AuthorityParams{Authority: ""},
 	})
-	s.Require().Equal(govAddr, ctx.Authority())
+	s.Require().Equal("", ctx.Authority())
 
-	// Nil AuthorityParams — should fall back.
+	// Nil AuthorityParams — should return empty string.
 	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
 		Authority: nil,
 	})
-	s.Require().Equal(govAddr, ctx.Authority())
+	s.Require().Equal("", ctx.Authority())
 
 	// Explicit authority set — should use it.
 	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{

@@ -59,7 +59,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	skipUpgradeHeights := make(map[int64]bool)
 
 	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
-	s.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, s.encCfg.Codec, homeDir, nil)
+	s.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, s.encCfg.Codec, homeDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	s.upgradeKeeper.SetVersionSetter(s.baseApp)
 
 	vs := s.upgradeKeeper.GetVersionSetter()
@@ -240,7 +240,7 @@ func (s *KeeperTestSuite) TestIsSkipHeight() {
 	s.Require().False(ok)
 	skip := map[int64]bool{skipOne: true}
 	storeService := runtime.NewKVStoreService(s.key)
-	upgradeKeeper := keeper.NewKeeper(skip, storeService, s.encCfg.Codec, s.T().TempDir(), nil)
+	upgradeKeeper := keeper.NewKeeper(skip, storeService, s.encCfg.Codec, s.T().TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	upgradeKeeper.SetVersionSetter(s.baseApp)
 	s.Require().True(upgradeKeeper.IsSkipHeight(9))
 	s.Require().False(upgradeKeeper.IsSkipHeight(10))

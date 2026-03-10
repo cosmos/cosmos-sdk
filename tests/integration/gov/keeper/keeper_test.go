@@ -77,6 +77,7 @@ func initFixture(tb testing.TB) *fixture {
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
+		authority.String(),
 	)
 
 	blockedAddresses := map[string]bool{
@@ -87,16 +88,17 @@ func initFixture(tb testing.TB) *fixture {
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		blockedAddresses,
+		authority.String(),
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
 	// set default staking params
 	assert.NilError(tb, stakingKeeper.SetParams(newCtx, stakingtypes.DefaultParams()))
 
 	distrKeeper := distrkeeper.NewKeeper(
-		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName,
+		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
 	)
 
 	// Create MsgServiceRouter, but don't populate it before creating the gov
@@ -114,6 +116,7 @@ func initFixture(tb testing.TB) *fixture {
 		distrKeeper,
 		router,
 		types.DefaultConfig(),
+		authority.String(),
 		tallyFn,
 	)
 	err := govKeeper.ProposalID.Set(newCtx, 1)

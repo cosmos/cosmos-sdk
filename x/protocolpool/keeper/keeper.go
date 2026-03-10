@@ -26,6 +26,8 @@ type Keeper struct {
 
 	cdc codec.BinaryCodec
 
+	authority string
+
 	// State
 	Schema          collections.Schema
 	ContinuousFunds collections.Map[sdk.AccAddress, types.ContinuousFund]
@@ -36,7 +38,7 @@ const (
 	errModuleAccountNotSet = "%s module account has not been set"
 )
 
-func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak types.AccountKeeper, bk types.BankKeeper,
+func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak types.AccountKeeper, bk types.BankKeeper, authority string,
 ) Keeper {
 	// ensure pool module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -54,6 +56,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak type
 		authKeeper:      ak,
 		bankKeeper:      bk,
 		cdc:             cdc,
+		authority:       authority,
 		ContinuousFunds: collections.NewMap(sb, types.ContinuousFundsKey, "continuous_funds", sdk.AccAddressKey, codec.CollValue[types.ContinuousFund](cdc)),
 		Params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
@@ -65,6 +68,11 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak type
 	keeper.Schema = schema
 
 	return keeper
+}
+
+// GetAuthority returns the x/protocolpool module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
 
 // GetCommunityPoolModule gets the module name that funds should be sent to for the community pool.
@@ -201,8 +209,12 @@ func (k Keeper) validateAuthority(ctx sdk.Context, authority string) error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
 	}
 
-	if ctx.Authority() != authority {
-		return errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", ctx.Authority(), authority)
+	expected := ctx.Authority()
+	if expected == "" {
+		expected = k.authority
+	}
+	if expected != authority {
+		return errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", expected, authority)
 	}
 
 	return nil

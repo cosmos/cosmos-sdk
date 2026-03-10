@@ -28,8 +28,12 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if ctx.Authority() != msg.Authority {
-		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", ctx.Authority(), msg.Authority)
+	authority := ctx.Authority()
+	if authority == "" {
+		authority = k.authority
+	}
+	if authority != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", authority, msg.Authority)
 	}
 
 	if err := msg.Params.Validate(); err != nil {

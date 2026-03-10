@@ -38,6 +38,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -152,6 +153,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		storeService,
 		suite.authKeeper,
 		map[string]bool{accAddrs[4].String(): true},
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		log.NewNopLogger(),
 	)
 	suite.bankKeeper = suite.bankKeeper.WithObjStoreKey(oKey)

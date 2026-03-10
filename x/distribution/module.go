@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/distribution/exported"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
@@ -249,6 +250,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		opts = append(opts, keeper.WithExternalCommunityPool(in.ExternalPoolKeeper))
 	}
 
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
@@ -256,6 +263,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.BankKeeper,
 		in.StakingKeeper,
 		feeCollectorName,
+		authority.String(),
 		opts...,
 	)
 

@@ -890,7 +890,7 @@ func TestABCI_AnteHandlerContextValuesReachMsgServer(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 			ctx = ctx.WithValue(sdkCtxKey{}, "sdk-value")
-			ctx = ctx.WithContext(context.WithValue(ctx.Context(), goCtxKey{}, "go-value")) //nolint:staticcheck // this is fine for testing
+			ctx = ctx.WithContext(context.WithValue(ctx.Context(), goCtxKey{}, "go-value"))
 			return ctx, nil
 		})
 	}

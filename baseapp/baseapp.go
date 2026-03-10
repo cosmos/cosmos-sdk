@@ -904,12 +904,11 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		anteCtx, anteSpan := anteCtx.StartSpan(tracer, "anteHandler")
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 		anteSpan.End()
-		// Restore the parent span without discarding values attached by the ante
-		// handler to the stdlib context.
-		if newCtx.IsZero() {
-			newCtx = newCtx.WithContext(ctx)
-		} else {
+		if !newCtx.IsZero() {
+			// Restore the parent span without discarding values attached by the
+			// ante handler to the stdlib context.
 			newCtx = newCtx.WithContext(trace.ContextWithSpan(newCtx.Context(), trace.SpanFromContext(ctx.Context())))
+
 			// At this point, newCtx.MultiStore() is a store branch, or something else
 			// replaced by the AnteHandler. We want the original multistore.
 			//

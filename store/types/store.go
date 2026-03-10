@@ -9,9 +9,9 @@ import (
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/store/metrics"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
 )
 
 type Store interface {

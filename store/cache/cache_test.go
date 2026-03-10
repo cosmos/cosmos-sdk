@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
-
 	"cosmossdk.io/store/cache"
 	"cosmossdk.io/store/cachekv"
 	iavlstore "cosmossdk.io/store/iavl"

@@ -52,7 +52,7 @@ func TestMain(m *testing.M) {
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent
 // inter-block write-through cache.
 func interBlockCacheOpt() func(*baseapp.BaseApp) {
-	return baseapp.SetInterBlockCache(store.NewKVStoreCacheManager())
+	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
 func TestFullAppSimulation(t *testing.T) {

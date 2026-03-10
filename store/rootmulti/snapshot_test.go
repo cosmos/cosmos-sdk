@@ -39,7 +39,7 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 	}
 
 	for _, key := range keys {
-		store := multiStore.GetKVStore(key).(*iavl.Store)
+		store := multiStore.GetCommitKVStore(key).(*iavl.Store)
 		for i := uint64(0); i < storeKeys; i++ {
 			k := make([]byte, 8)
 			v := make([]byte, 1024)
@@ -75,8 +75,8 @@ func newMultiStoreWithMixedMounts(db dbm.DB) *rootmulti.Store {
 
 func newMultiStoreWithMixedMountsAndBasicData(db dbm.DB) *rootmulti.Store {
 	store := newMultiStoreWithMixedMounts(db)
-	store1 := store.GetStoreByName("iavl1").(types.KVStore)
-	store2 := store.GetStoreByName("iavl2").(types.KVStore)
+	store1 := store.GetStoreByName("iavl1").(types.CommitKVStore)
+	store2 := store.GetStoreByName("iavl2").(types.CommitKVStore)
 	trans1 := store.GetStoreByName("trans1").(types.KVStore)
 
 	store1.Set([]byte("a"), []byte{1})
@@ -99,13 +99,7 @@ func newMultiStoreWithMixedMountsAndBasicData(db dbm.DB) *rootmulti.Store {
 	return store
 }
 
-// kvStoreWithCommitID is a local interface combining KVStore with commit info.
-type kvStoreWithCommitID interface {
-	types.KVStore
-	LastCommitID() types.CommitID
-}
-
-func assertStoresEqual(t *testing.T, expect, actual kvStoreWithCommitID, msgAndArgs ...interface{}) {
+func assertStoresEqual(t *testing.T, expect, actual types.CommitKVStore, msgAndArgs ...interface{}) {
 	t.Helper()
 	assert.Equal(t, expect.LastCommitID(), actual.LastCommitID())
 	expectIter := expect.Iterator(nil, nil)
@@ -225,8 +219,8 @@ func TestMultistoreSnapshotRestore(t *testing.T) {
 
 	assert.Equal(t, source.LastCommitID(), target.LastCommitID())
 	for _, key := range source.StoreKeysByName() {
-		sourceStore := source.GetStoreByName(key.Name()).(kvStoreWithCommitID)
-		targetStore := target.GetStoreByName(key.Name()).(kvStoreWithCommitID)
+		sourceStore := source.GetStoreByName(key.Name()).(types.CommitKVStore)
+		targetStore := target.GetStoreByName(key.Name()).(types.CommitKVStore)
 		switch sourceStore.GetStoreType() {
 		case types.StoreTypeTransient:
 			assert.False(t, targetStore.Iterator(nil, nil).Valid(),

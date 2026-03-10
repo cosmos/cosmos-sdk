@@ -14,6 +14,6 @@ func NewCommitMultiStore(db dbm.DB, logger log.Logger, metricGatherer metrics.St
 	return rootmulti.NewStore(db, logger, metricGatherer)
 }
 
-func NewKVStoreCacheManager() types.MultiStorePersistentCache {
-	return cache.NewKVStoreCacheManager(cache.DefaultKVStoreCacheSize)
+func NewCommitKVStoreCacheManager() types.MultiStorePersistentCache {
+	return cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 }

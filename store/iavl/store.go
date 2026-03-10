@@ -27,34 +27,35 @@ const (
 
 var (
 	_ types.KVStore                 = (*Store)(nil)
-	_ types.Committer               = (*Store)(nil)
+	_ types.CommitStore             = (*Store)(nil)
+	_ types.CommitKVStore           = (*Store)(nil)
 	_ types.Queryable               = (*Store)(nil)
 	_ types.StoreWithInitialVersion = (*Store)(nil)
 )
 
-// Store implements types.KVStore and types.Committer.
+// Store Implements types.KVStore and CommitKVStore.
 type Store struct {
 	tree    Tree
 	logger  log.Logger
 	metrics metrics.StoreMetrics
 }
 
-// LoadStore returns an IAVL Store. Internally, it will load the
+// LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load, or if called with a positive version on an empty tree.
-func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (*Store, error) {
+func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
 	return LoadStoreWithInitialVersion(db, logger, key, id, 0, cacheSize, disableFastNode, metrics)
 }
 
-// LoadStoreWithInitialVersion returns an IAVL Store setting its initialVersion
+// LoadStoreWithInitialVersion returns an IAVL Store as a CommitKVStore setting its initialVersion
 // to the one given. Internally, it will load the store's version (id) from the
 // provided DB. An error is returned if the version fails to load, or if called with a positive
 // version on an empty tree.
-func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (*Store, error) {
+func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
 	return LoadStoreWithOpts(db, logger, key, id, initialVersion, cacheSize, disableFastNode, metrics, iavl.AsyncPruningOption(true))
 }
 
-func LoadStoreWithOpts(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics, opts ...iavl.Option) (*Store, error) {
+func LoadStoreWithOpts(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics, opts ...iavl.Option) (types.CommitKVStore, error) {
 	// store/v1 and app/v1 flows never require an initial version of 0
 	if initialVersion == 0 {
 		initialVersion = 1

@@ -18,7 +18,7 @@ import (
 
 func TestGetOrSetStoreCache(t *testing.T) {
 	db := wrapper.NewDBWrapper(dbm.NewMemDB())
-	mngr := cache.NewKVStoreCacheManager(cache.DefaultKVStoreCacheSize)
+	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
 	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
@@ -31,7 +31,7 @@ func TestGetOrSetStoreCache(t *testing.T) {
 
 func TestUnwrap(t *testing.T) {
 	db := wrapper.NewDBWrapper(dbm.NewMemDB())
-	mngr := cache.NewKVStoreCacheManager(cache.DefaultKVStoreCacheSize)
+	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
 	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
@@ -44,14 +44,14 @@ func TestUnwrap(t *testing.T) {
 
 func TestStoreCache(t *testing.T) {
 	db := wrapper.NewDBWrapper(dbm.NewMemDB())
-	mngr := cache.NewKVStoreCacheManager(cache.DefaultKVStoreCacheSize)
+	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
 	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
 	store := iavlstore.UnsafeNewStore(tree)
 	kvStore := mngr.GetStoreCache(sKey, store)
 
-	for i := uint(0); i < cache.DefaultKVStoreCacheSize*2; i++ {
+	for i := uint(0); i < cache.DefaultCommitKVStoreCacheSize*2; i++ {
 		key := []byte(fmt.Sprintf("key_%d", i))
 		value := []byte(fmt.Sprintf("value_%d", i))
 
@@ -70,7 +70,7 @@ func TestStoreCache(t *testing.T) {
 
 func TestReset(t *testing.T) {
 	db := wrapper.NewDBWrapper(dbm.NewMemDB())
-	mngr := cache.NewKVStoreCacheManager(cache.DefaultKVStoreCacheSize)
+	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
 	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
@@ -90,7 +90,7 @@ func TestReset(t *testing.T) {
 
 func TestCacheWrap(t *testing.T) {
 	db := wrapper.NewDBWrapper(dbm.NewMemDB())
-	mngr := cache.NewKVStoreCacheManager(cache.DefaultKVStoreCacheSize)
+	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
 	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())

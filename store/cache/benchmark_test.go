@@ -6,19 +6,19 @@ import (
 	"cosmossdk.io/store/types"
 )
 
-func freshMgr() *KVStoreCacheManager {
-	return &KVStoreCacheManager{
-		caches: map[string]types.KVStore{
+func freshMgr() *CommitKVStoreCacheManager {
+	return &CommitKVStoreCacheManager{
+		caches: map[string]types.CommitKVStore{
 			"a1":           nil,
 			"alalalalalal": nil,
 		},
 	}
 }
 
-func populate(mgr *KVStoreCacheManager) {
-	mgr.caches["this one"] = (types.KVStore)(nil)
-	mgr.caches["those ones are the ones"] = (types.KVStore)(nil)
-	mgr.caches["very huge key right here and there are we going to ones are the ones"] = (types.KVStore)(nil)
+func populate(mgr *CommitKVStoreCacheManager) {
+	mgr.caches["this one"] = (types.CommitKVStore)(nil)
+	mgr.caches["those ones are the ones"] = (types.CommitKVStore)(nil)
+	mgr.caches["very huge key right here and there are we going to ones are the ones"] = (types.CommitKVStore)(nil)
 }
 
 func BenchmarkReset(b *testing.B) {

@@ -31,6 +31,12 @@ type Committer interface {
 	GetPruning() pruningtypes.PruningOptions
 }
 
+// Deprecated: CommitStore is an interface for Commit and Store capabilities.
+type CommitStore interface {
+	Committer
+	Store
+}
+
 // Queryable allows a Store to expose internal state to the abci.Query
 // interface. Multistore can route requests to the proper Store.
 //
@@ -304,6 +310,12 @@ type CacheKVStore interface {
 	Write()
 }
 
+// Deprecated: CommitKVStore is an interface for MultiStore.
+type CommitKVStore interface {
+	Committer
+	KVStore
+}
+
 //----------------------------------------
 // CacheWrap
 
@@ -523,14 +535,14 @@ func (tc TraceContext) Merge(newTc TraceContext) TraceContext {
 }
 
 // MultiStorePersistentCache defines an interface which provides inter-block
-// (persistent) caching capabilities for multiple KVStores based on StoreKeys.
+// (persistent) caching capabilities for multiple CommitKVStores based on StoreKeys.
 type MultiStorePersistentCache interface {
-	// Wrap and return the provided KVStore with an inter-block (persistent)
+	// Wrap and return the provided CommitKVStore with an inter-block (persistent)
 	// cache.
-	GetStoreCache(key StoreKey, store KVStore) KVStore
+	GetStoreCache(key StoreKey, store CommitKVStore) CommitKVStore
 
-	// Return the underlying KVStore for a StoreKey.
-	Unwrap(key StoreKey) KVStore
+	// Return the underlying CommitKVStore for a StoreKey.
+	Unwrap(key StoreKey) CommitKVStore
 
 	// Reset the entire set of internal caches.
 	Reset()

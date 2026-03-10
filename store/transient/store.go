@@ -58,6 +58,7 @@ func (*ObjStore) GetStoreType() types.StoreType {
 }
 
 // Commit cleans up Store.
+// Implements CommitStore
 func (ts *GStore[V]) Commit() (id types.CommitID) {
 	ts.Clear()
 	return id
@@ -71,7 +72,7 @@ func (ts *GStore[V]) GetPruning() pruningtypes.PruningOptions {
 	return pruningtypes.NewPruningOptions(pruningtypes.PruningUndefined)
 }
 
-// LastCommitID implements Committer, returns empty CommitID.
+// LastCommitID implements CommitStore, returns empty CommitID.
 func (ts *GStore[V]) LastCommitID() types.CommitID {
 	return types.CommitID{}
 }

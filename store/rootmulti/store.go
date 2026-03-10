@@ -20,7 +20,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
-
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
@@ -43,13 +42,6 @@ const (
 
 const iavlDisablefastNodeDefault = false
 
-// storeCommitter is the private sub-store type. It will be simplified further
-// when Committer is removed from the public API in a follow-up.
-type storeCommitter interface {
-	types.Store
-	types.Committer
-}
-
 // keysFromStoreKeyMap returns a slice of keys for the provided map lexically sorted by StoreKey.Name()
 func keysFromStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
 	keys := make([]types.StoreKey, 0, len(m))
@@ -63,7 +55,7 @@ func keysFromStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
 	return keys
 }
 
-// Store is composed of many sub-stores. Name contrasts with
+// Store is composed of many CommitStores. Name contrasts with
 // cacheMultiStore which is used for branching other MultiStores. It implements
 // the CommitMultiStore interface.
 type Store struct {
@@ -76,9 +68,10 @@ type Store struct {
 	// iavlSyncPruning should rarely be set to true.
 	// The Prune command will automatically set this to true.
 	// This allows the prune command to wait for the pruning to finish before returning.
-	iavlSyncPruning   bool
-	storesParams      map[types.StoreKey]storeParams
-	stores            map[types.StoreKey]storeCommitter
+	iavlSyncPruning bool
+	storesParams    map[types.StoreKey]storeParams
+	// CommitStore is a common interface to unify generic CommitKVStore of different value types
+	stores            map[types.StoreKey]types.CommitStore
 	keysByName        map[string]types.StoreKey
 	initialVersion    int64
 	removalMap        map[types.StoreKey]bool
@@ -108,7 +101,7 @@ func NewStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics)
 		iavlCacheSize:       iavl.DefaultIAVLCacheSize,
 		iavlDisableFastNode: iavlDisablefastNodeDefault,
 		storesParams:        make(map[types.StoreKey]storeParams),
-		stores:              make(map[types.StoreKey]storeCommitter),
+		stores:              make(map[types.StoreKey]types.CommitStore),
 		keysByName:          make(map[string]types.StoreKey),
 		listeners:           make(map[types.StoreKey]*types.MemoryListener),
 		removalMap:          make(map[types.StoreKey]bool),
@@ -172,9 +165,9 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db db
 	rs.keysByName[key.Name()] = key
 }
 
-// getCommitStore returns a mounted Store for a given StoreKey. If the
+// GetCommitStore returns a mounted CommitStore for a given StoreKey. If the
 // store is wrapped in an inter-block cache, it will be unwrapped before returning.
-func (rs *Store) getCommitStore(key types.StoreKey) types.Store {
+func (rs *Store) GetCommitStore(key types.StoreKey) types.CommitStore {
 	// If the Store has an inter-block cache, first attempt to lookup and unwrap
 	// the underlying CommitKVStore by StoreKey. If it does not exist, fallback to
 	// the main mapping of CommitKVStores.
@@ -187,10 +180,10 @@ func (rs *Store) getCommitStore(key types.StoreKey) types.Store {
 	return rs.stores[key]
 }
 
-// getCommitKVStore returns a mounted storeCommitter for a given StoreKey. If the
+// GetCommitKVStore returns a mounted CommitKVStore for a given StoreKey. If the
 // store is wrapped in an inter-block cache, it will be unwrapped before returning.
-func (rs *Store) getCommitKVStore(key types.StoreKey) storeCommitter {
-	store, ok := rs.getCommitStore(key).(storeCommitter)
+func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
+	store, ok := rs.GetCommitStore(key).(types.CommitKVStore)
 	if !ok {
 		panic(fmt.Sprintf("store with key %v is not CommitKVStore", key))
 	}
@@ -245,14 +238,8 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		}
 	}
 
-	// Flush the inter-block cache so stale wrappers around old store instances
-	// are not served on subsequent access.
-	if rs.interBlockCache != nil {
-		rs.interBlockCache.Reset()
-	}
-
 	// load each Store (note this doesn't panic on unmounted keys now)
-	newStores := make(map[types.StoreKey]storeCommitter)
+	newStores := make(map[types.StoreKey]types.CommitStore)
 
 	storesKeys := make([]types.StoreKey, 0, len(rs.storesParams))
 
@@ -296,7 +283,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			rs.removalMap[key] = true
 		} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
 			// handle renames specially
-			// make an unregistered key to satisfy loadCommitStoreFromParams
+			// make an unregistered key to satisfy loadCommitStore params
 			oldKey := types.NewKVStoreKey(oldName)
 			oldParams := newStoreParams(oldKey, storeParams.db, storeParams.typ, 0)
 
@@ -384,7 +371,8 @@ func (rs *Store) AnnounceSnapshotHeight(height int64) {
 }
 
 // SetInterBlockCache sets the Store's internal inter-block (persistent) cache.
-// When this is defined, KVStores are wrapped with the inter-block cache on access.
+// When this is defined, all CommitKVStores will be wrapped with their respective
+// inter-block cache.
 func (rs *Store) SetInterBlockCache(c types.MultiStorePersistentCache) {
 	rs.interBlockCache = c
 }
@@ -473,7 +461,7 @@ func (rs *Store) EarliestVersion() int64 {
 	return GetEarliestVersion(rs.db)
 }
 
-// LastCommitID implements Committer.
+// LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
 	info := rs.lastCommitInfo.Load()
 	if info == nil {
@@ -496,7 +484,7 @@ func (rs *Store) LastCommitID() types.CommitID {
 	return info.CommitID()
 }
 
-// Commit implements Committer.
+// Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
 	var previousHeight, version int64
 	if cInfo := rs.lastCommitInfo.Load(); (cInfo == nil || cInfo.Version == 0) && rs.initialVersion > 1 {
@@ -625,7 +613,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 		case types.StoreTypeIAVL:
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
-			store = rs.getCommitKVStore(key)
+			store = rs.GetCommitKVStore(key)
 
 			// Attempt to lazy-load an already saved IAVL store version. If the
 			// version does not exist or is pruned, an error should be returned.
@@ -684,7 +672,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 // TODO: This isn't used directly upstream. Consider returning the Store as-is
 // instead of unwrapping.
 func (rs *Store) GetStore(key types.StoreKey) types.Store {
-	store := rs.getCommitStore(key)
+	store := rs.GetCommitStore(key)
 	if store == nil {
 		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
 	}
@@ -757,7 +745,7 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 			continue
 		}
 
-		store = rs.getCommitKVStore(key)
+		store = rs.GetCommitKVStore(key)
 
 		err := store.(*iavl.Store).DeleteVersionsTo(pruningHeight)
 		if err == nil {
@@ -792,14 +780,15 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 
 // GetStoreByName performs a lookup of a StoreKey given a store name typically
 // provided in a path. The StoreKey is then used to perform a lookup and return
-// a Store. If the StoreKey does not exist, nil is returned.
+// a Store. If the Store is wrapped in an inter-block cache, it will be unwrapped
+// prior to being returned. If the StoreKey does not exist, nil is returned.
 func (rs *Store) GetStoreByName(name string) types.Store {
 	key := rs.keysByName[name]
 	if key == nil {
 		return nil
 	}
 
-	return rs.getCommitStore(key)
+	return rs.GetCommitStore(key)
 }
 
 // Query calls substore.Query with the same `req` where `req.Path` is
@@ -867,7 +856,7 @@ func (rs *Store) SetInitialVersion(version int64) error {
 		if store.GetStoreType() == types.StoreTypeIAVL {
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
-			store = rs.getCommitKVStore(key)
+			store = rs.GetCommitKVStore(key)
 			store.(types.StoreWithInitialVersion).SetInitialVersion(version)
 		}
 	}
@@ -913,7 +902,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	stores := []namedStore{}
 	keys := keysFromStoreKeyMap(rs.stores)
 	for _, key := range keys {
-		switch store := rs.getCommitStore(key).(type) {
+		switch store := rs.GetCommitStore(key).(type) {
 		case *iavl.Store:
 			stores = append(stores, namedStore{name: key.Name(), Store: store})
 		case *transient.Store, *mem.Store, *transient.ObjStore:
@@ -1076,34 +1065,7 @@ loop:
 	return snapshotItem, rs.LoadLatestVersion()
 }
 
-type interblockCacheWrapper struct {
-	types.KVStore
-	inner storeCommitter
-}
-
-func (i interblockCacheWrapper) Commit() types.CommitID {
-	return i.inner.Commit()
-}
-
-func (i interblockCacheWrapper) LastCommitID() types.CommitID {
-	return i.inner.LastCommitID()
-}
-
-func (i interblockCacheWrapper) WorkingHash() []byte {
-	return i.inner.WorkingHash()
-}
-
-func (i interblockCacheWrapper) SetPruning(options pruningtypes.PruningOptions) {
-	i.inner.SetPruning(options)
-}
-
-func (i interblockCacheWrapper) GetPruning() pruningtypes.PruningOptions {
-	return i.inner.GetPruning()
-}
-
-var _ storeCommitter = &interblockCacheWrapper{}
-
-func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (storeCommitter, error) {
+func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (types.CommitStore, error) {
 	var db dbm.DB
 
 	if params.db != nil {
@@ -1126,11 +1088,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 			// Wrap and get a CommitKVStore with inter-block caching. Note, this should
 			// only wrap the primary CommitKVStore, not any store that is already
 			// branched as that will create unexpected behavior.
-			cachedStore := rs.interBlockCache.GetStoreCache(key, store)
-			return &interblockCacheWrapper{
-				KVStore: cachedStore,
-				inner:   store,
-			}, nil
+			store = rs.interBlockCache.GetStoreCache(key, store)
 		}
 
 		return store, err
@@ -1194,7 +1152,7 @@ func (rs *Store) RollbackToVersion(target int64) error {
 		if store.GetStoreType() == types.StoreTypeIAVL {
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
-			store = rs.getCommitKVStore(key)
+			store = rs.GetCommitKVStore(key)
 			err := store.(*iavl.Store).LoadVersionForOverwriting(target)
 			if err != nil {
 				return err
@@ -1318,7 +1276,7 @@ func flushEarliestVersion(batch dbm.Batch, version int64) {
 }
 
 // commitStores commits each store and returns a new commitInfo.
-func commitStores(version int64, storeMap map[types.StoreKey]storeCommitter, removalMap map[types.StoreKey]bool) *types.CommitInfo {
+func commitStores(version int64, storeMap map[types.StoreKey]types.CommitStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
 	storeKeys := keysFromStoreKeyMap(storeMap)
 

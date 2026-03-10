@@ -518,7 +518,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	var cache storetypes.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(FlagInterBlockCache)) {
-		cache = store.NewKVStoreCacheManager()
+		cache = store.NewCommitKVStoreCacheManager()
 	}
 
 	pruningOpts, err := GetPruningOptionsFromFlags(appOpts)

@@ -397,15 +397,6 @@ func (app *BaseApp) SetVerifyVoteExtensionHandler(handler sdk.VerifyVoteExtensio
 	app.abciHandlers.VerifyVoteExtensionHandler = handler
 }
 
-// SetStoreMetrics sets the prepare proposal function for the BaseApp.
-func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
-	if app.sealed {
-		panic("SetStoreMetrics() on sealed BaseApp")
-	}
-
-	app.cms.SetMetrics(gatherer)
-}
-
 // SetStreamingManager sets the streaming manager for the BaseApp.
 func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
 	app.streamingManager = manager

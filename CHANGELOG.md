@@ -102,6 +102,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (baseapp) [#26047](https://github.com/cosmos/cosmos-sdk/pull/26047) Fix `StartSpan` to preserve all context values (e.g. wasmd gas register) when tracer returns a context that does not chain to its parent.
 * (baseapp) [#25331](https://github.com/cosmos/cosmos-sdk/issues/25331) Avoid noisy errors when gRPC response headers are already sent, set block height as a header when possible and fall back to a trailer.
 * (blockstm) [#25789](https://github.com/cosmos/cosmos-sdk/issues/25789) Wake up suspended executors when scheduler doesn't complete to prevent goroutine leaks.
 * (grpc) [#25647](https://github.com/cosmos/cosmos-sdk/pull/25647) Return actual `earliest_store_height` in `node.Status` gRPC endpoint instead of hardcoded `0`.

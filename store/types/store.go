@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"io"
 	"maps"
 	"slices"
 
@@ -129,19 +128,6 @@ type MultiStore interface {
 	GetStore(StoreKey) Store
 	GetKVStore(StoreKey) KVStore
 	GetObjKVStore(StoreKey) ObjKVStore
-
-	// TracingEnabled returns if tracing is enabled for the MultiStore.
-	TracingEnabled() bool
-
-	// SetTracer sets the tracer for the MultiStore that the underlying
-	// stores will utilize to trace operations. The modified MultiStore is
-	// returned.
-	SetTracer(w io.Writer) MultiStore
-
-	// SetTracingContext sets the tracing context for a MultiStore. It is
-	// implied that the caller should update the context when necessary between
-	// tracing operations. The modified MultiStore is returned.
-	SetTracingContext(TraceContext) MultiStore
 
 	// LatestVersion returns the latest version in the store
 	LatestVersion() int64
@@ -339,9 +325,6 @@ type CacheWrap interface {
 type CacheWrapper interface {
 	// CacheWrap branches a store.
 	CacheWrap() CacheWrap
-
-	// CacheWrapWithTrace branches a store with tracing enabled.
-	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
 }
 
 func (cid CommitID) IsZero() bool {

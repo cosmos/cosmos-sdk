@@ -42,7 +42,11 @@ func ScanKeyValues[K, V any, I iterator[K], Idx collections.Indexes[K, V]](
 	iter I,
 	do func(kv collections.KeyValue[K, V]) (stop bool),
 ) (err error) {
-	defer iter.Close()
+	defer func() {
+		if cerr := iter.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	for ; iter.Valid(); iter.Next() {
 		pk, err := iter.PrimaryKey()
@@ -89,8 +93,12 @@ func ScanValues[K, V any, I iterator[K], Idx collections.Indexes[K, V]](
 	indexedMap *collections.IndexedMap[K, V, Idx],
 	iter I,
 	f func(value V) (stop bool),
-) error {
-	defer iter.Close()
+) (err error) {
+	defer func() {
+		if cerr := iter.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	for ; iter.Valid(); iter.Next() {
 		key, err := iter.PrimaryKey()

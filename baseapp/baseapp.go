@@ -22,7 +22,6 @@ import (
 	protov2 "google.golang.org/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
-
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"

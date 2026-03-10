@@ -9,7 +9,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/core/appmodule"
-
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"

@@ -76,7 +76,7 @@ func (cmgr *KVStoreCacheManager) GetStoreCache(key types.StoreKey, store types.K
 // If no cache exists for the StoreKey, then nil is returned.
 func (cmgr *KVStoreCacheManager) Unwrap(key types.StoreKey) types.KVStore {
 	if ckv, ok := cmgr.caches[key.Name()]; ok {
-		return ckv
+		return ckv.(*KVStoreCache).KVStore
 	}
 
 	return nil

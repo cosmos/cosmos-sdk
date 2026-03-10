@@ -906,7 +906,7 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		anteSpan.End()
 		// Revert to the pre-ante go-context for span propagation (removes anteHandler span).
 		// MergeContextForValue preserves new values set during ante (e.g. gas register).
-		newCtx = newCtx.WithContext(sdk.MergeContextForValue(ctx, newCtx.Context()))
+		newCtx = newCtx.WithContext(sdk.MergeContextForValue(ctx.Context(), newCtx.Context()))
 
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is a store branch, or something else

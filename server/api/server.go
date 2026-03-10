@@ -205,7 +205,7 @@ func (s *Server) registerMetrics(m *telemetry.Metrics) {
 	s.metrics = m
 
 	metricsHandler := func(w http.ResponseWriter, r *http.Request) {
-		// GET /metrics uses query params only; Query().Get avoids body parsing (gosec G120)
+		// GET /metrics uses query params only; Query().Get avoids body parsing
 		format := strings.TrimSpace(r.URL.Query().Get("format"))
 
 		gr, err := s.metrics.Gather(format)

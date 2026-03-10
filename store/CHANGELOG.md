@@ -27,7 +27,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
-* [#26037](https://github.com/cosmos/cosmos-sdk/pull/26037) Remove `CommitStore` and `CommitKVStore` interfaces. Remove `GetCommitStore` and `GetCommitKVStore` from the `CommitMultiStore` interface. Change `MultiStorePersistentCache.GetStoreCache` to take `KVStore`.
+* [#26037](https://github.com/cosmos/cosmos-sdk/pull/26037) Remove `GetCommitStore` and `GetCommitKVStore` from the `CommitMultiStore` interface. Deprecate `CommitStore` and `CommitKVStore` interfaces.
 
 ### Bug Fixes
 

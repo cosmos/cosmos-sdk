@@ -895,10 +895,12 @@ func TestABCI_AnteHandlerContextValuesReachMsgServer(t *testing.T) {
 		})
 	}
 
+	executed := false
 	suite := NewBaseAppSuite(t, anteOpt)
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), mockCounterServer{
 		incrementCounterFn: func(ctx context.Context, _ *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
 			sdkCtx := sdk.UnwrapSDKContext(ctx)
+			executed = true
 			require.Equal(t, "sdk-value", sdkCtx.Value(sdkCtxKey{}))
 			require.Equal(t, "go-value", sdkCtx.Value(goCtxKey{}))
 			require.Equal(t, "sdk-value", ctx.Value(sdkCtxKey{}))
@@ -913,9 +915,12 @@ func TestABCI_AnteHandlerContextValuesReachMsgServer(t *testing.T) {
 	require.NoError(t, err)
 
 	tx := newTxCounter(t, suite.txConfig, 0, 0)
-	_, result, err := suite.baseApp.SimCheck(suite.txConfig.TxEncoder(), tx)
+	txbz, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	_, result, err := suite.baseApp.Simulate(txbz)
 	require.NoError(t, err)
 	require.NotNil(t, result)
+	require.True(t, executed)
 }
 
 func TestABCI_InvalidTransaction(t *testing.T) {

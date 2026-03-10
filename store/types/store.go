@@ -529,6 +529,9 @@ type MultiStorePersistentCache interface {
 	// cache.
 	GetStoreCache(key StoreKey, store KVStore) KVStore
 
+	// Return the underlying KVStore for a StoreKey.
+	Unwrap(key StoreKey) KVStore
+
 	// Reset the entire set of internal caches.
 	Reset()
 }

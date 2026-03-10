@@ -20,6 +20,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
+
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
@@ -169,6 +170,32 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db db
 	}
 	rs.storesParams[key] = newStoreParams(key, db, typ, 0)
 	rs.keysByName[key.Name()] = key
+}
+
+// getCommitStore returns a mounted Store for a given StoreKey. If the
+// store is wrapped in an inter-block cache, it will be unwrapped before returning.
+func (rs *Store) getCommitStore(key types.StoreKey) types.Store {
+	// If the Store has an inter-block cache, first attempt to lookup and unwrap
+	// the underlying CommitKVStore by StoreKey. If it does not exist, fallback to
+	// the main mapping of CommitKVStores.
+	if rs.interBlockCache != nil {
+		if store := rs.interBlockCache.Unwrap(key); store != nil {
+			return store
+		}
+	}
+
+	return rs.stores[key]
+}
+
+// getCommitKVStore returns a mounted storeCommitter for a given StoreKey. If the
+// store is wrapped in an inter-block cache, it will be unwrapped before returning.
+func (rs *Store) getCommitKVStore(key types.StoreKey) storeCommitter {
+	store, ok := rs.getCommitStore(key).(storeCommitter)
+	if !ok {
+		panic(fmt.Sprintf("store with key %v is not CommitKVStore", key))
+	}
+
+	return store
 }
 
 // StoreKeysByName returns mapping storeNames -> StoreKeys
@@ -556,7 +583,7 @@ func (rs *Store) WorkingHash() []byte {
 	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
 }
 
-// CacheWrap implements CacheWrapper.
+// CacheWrap implements CacheWrapper/Store/CommitStore.
 func (rs *Store) CacheWrap() types.CacheWrap {
 	return rs.CacheMultiStore().(types.CacheWrap)
 }
@@ -571,18 +598,12 @@ func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for k, v := range rs.stores {
-		var store types.CacheWrapper = v
-		if kv, ok := v.(types.KVStore); ok {
-			kvStore := kv
-			if rs.interBlockCache != nil {
-				kvStore = rs.interBlockCache.GetStoreCache(k, kv)
-			}
+		store := types.CacheWrapper(v)
+		if kv, ok := store.(types.KVStore); ok {
 			// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
 			// set same listeners on cache store will observe duplicated writes.
 			if rs.ListeningEnabled(k) {
-				store = listenkv.NewStore(kvStore, k, rs.listeners[k])
-			} else {
-				store = kvStore
+				store = listenkv.NewStore(kv, k, rs.listeners[k])
 			}
 		}
 		stores[k] = store
@@ -602,6 +623,10 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 		var cacheStore types.CacheWrapper
 		switch store.GetStoreType() {
 		case types.StoreTypeIAVL:
+			// If the store is wrapped with an inter-block cache, we must first unwrap
+			// it to get the underlying IAVL store.
+			store = rs.getCommitKVStore(key)
+
 			// Attempt to lazy-load an already saved IAVL store version. If the
 			// version does not exist or is pruned, an error should be returned.
 			var err error
@@ -653,9 +678,13 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 }
 
 // GetStore returns a mounted Store for a given StoreKey. If the StoreKey does
-// not exist, it will panic.
+// not exist, it will panic. If the Store is wrapped in an inter-block cache, it
+// will be unwrapped prior to being returned.
+//
+// TODO: This isn't used directly upstream. Consider returning the Store as-is
+// instead of unwrapping.
 func (rs *Store) GetStore(key types.StoreKey) types.Store {
-	store := rs.stores[key]
+	store := rs.getCommitStore(key)
 	if store == nil {
 		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
 	}
@@ -663,9 +692,12 @@ func (rs *Store) GetStore(key types.StoreKey) types.Store {
 	return store
 }
 
-// GetKVStore returns a mounted KVStore for a given StoreKey. If an inter-block
-// cache is set, the store is wrapped with it. If tracing or listening is
-// enabled, additional wrappers are applied.
+// GetKVStore returns a mounted KVStore for a given StoreKey. If tracing is
+// enabled on the KVStore, a wrapped TraceKVStore will be returned with the root
+// store's tracer, otherwise, the original KVStore will be returned.
+//
+// NOTE: The returned KVStore may be wrapped in an inter-block cache if it is
+// set on the root store.
 func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	s := rs.stores[key]
 	if s == nil {
@@ -676,9 +708,6 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 		panic(fmt.Sprintf("store with key %v is not KVStore", key))
 	}
 
-	if rs.interBlockCache != nil {
-		store = rs.interBlockCache.GetStoreCache(key, store)
-	}
 	if rs.TracingEnabled() {
 		store = tracekv.NewStore(store, rs.traceWriter, rs.getTracingContext())
 	}
@@ -722,9 +751,13 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 	for key, store := range rs.stores {
 		rs.logger.Debug("pruning store", "key", key) // Also log store.name (a private variable)?
 
+		// If the store is wrapped with an inter-block cache, we must first unwrap
+		// it to get the underlying IAVL store.
 		if store.GetStoreType() != types.StoreTypeIAVL {
 			continue
 		}
+
+		store = rs.getCommitKVStore(key)
 
 		err := store.(*iavl.Store).DeleteVersionsTo(pruningHeight)
 		if err == nil {
@@ -766,7 +799,7 @@ func (rs *Store) GetStoreByName(name string) types.Store {
 		return nil
 	}
 
-	return rs.stores[key]
+	return rs.getCommitStore(key)
 }
 
 // Query calls substore.Query with the same `req` where `req.Path` is
@@ -830,8 +863,11 @@ func (rs *Store) SetInitialVersion(version int64) error {
 
 	// Loop through all the stores, if it's an IAVL store, then set initial
 	// version on it.
-	for _, store := range rs.stores {
+	for key, store := range rs.stores {
 		if store.GetStoreType() == types.StoreTypeIAVL {
+			// If the store is wrapped with an inter-block cache, we must first unwrap
+			// it to get the underlying IAVL store.
+			store = rs.getCommitKVStore(key)
 			store.(types.StoreWithInitialVersion).SetInitialVersion(version)
 		}
 	}
@@ -877,7 +913,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	stores := []namedStore{}
 	keys := keysFromStoreKeyMap(rs.stores)
 	for _, key := range keys {
-		switch store := rs.stores[key].(type) {
+		switch store := rs.getCommitStore(key).(type) {
 		case *iavl.Store:
 			stores = append(stores, namedStore{name: key.Name(), Store: store})
 		case *transient.Store, *mem.Store, *transient.ObjStore:
@@ -1117,8 +1153,11 @@ func (rs *Store) RollbackToVersion(target int64) error {
 		return fmt.Errorf("invalid rollback height target: %d", target)
 	}
 
-	for _, store := range rs.stores {
+	for key, store := range rs.stores {
 		if store.GetStoreType() == types.StoreTypeIAVL {
+			// If the store is wrapped with an inter-block cache, we must first unwrap
+			// it to get the underlying IAVL store.
+			store = rs.getCommitKVStore(key)
 			err := store.(*iavl.Store).LoadVersionForOverwriting(target)
 			if err != nil {
 				return err

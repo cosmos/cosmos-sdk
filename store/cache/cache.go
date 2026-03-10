@@ -62,11 +62,24 @@ func NewKVStoreCacheManager(size uint) *KVStoreCacheManager {
 // StoreKey. If no Cache exists for the StoreKey, then one is created and set.
 // The returned Cache is meant to be used in a persistent manner.
 func (cmgr *KVStoreCacheManager) GetStoreCache(key types.StoreKey, store types.KVStore) types.KVStore {
-	if cmgr.caches[key.Name()] == nil {
-		cmgr.caches[key.Name()] = NewKVStoreCache(store, cmgr.cacheSize)
+	cached := cmgr.caches[key.Name()]
+	if cached != nil {
+		return cached
 	}
 
-	return cmgr.caches[key.Name()]
+	cached = NewKVStoreCache(store, cmgr.cacheSize)
+	cmgr.caches[key.Name()] = cached
+	return cached
+}
+
+// Unwrap returns the underlying KVStore for a given StoreKey, if one exists.
+// If no cache exists for the StoreKey, then nil is returned.
+func (cmgr *KVStoreCacheManager) Unwrap(key types.StoreKey) types.KVStore {
+	if ckv, ok := cmgr.caches[key.Name()]; ok {
+		return ckv
+	}
+
+	return nil
 }
 
 // Reset resets in the internal caches.

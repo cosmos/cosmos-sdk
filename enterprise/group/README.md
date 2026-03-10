@@ -29,8 +29,7 @@ The Group module allows any set of accounts to form a named group, attach one or
 |--------|---------|-----------|
 | **Auth** | Account management | Creates group policy accounts; provides address codec |
 | **Bank** | Balance checks | Queried for spendable coins on group policy accounts |
-| **BaseApp** | Message routing | Executes proposal messages via the message router |
-| **EndBlock** | Lifecycle management | Tallies proposals at voting period end; prunes expired proposals |
+| **BaseApp** | Message routing | Executes proposal messages via the message router; runs EndBlock tally and pruning of expired proposals |
 
 ## Quick Start
 

@@ -10,6 +10,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"cosmossdk.io/core/header"
+
 	"cosmossdk.io/log/v2"
 	storetypes "cosmossdk.io/store/types"
 
@@ -83,7 +84,7 @@ func (mgr *Manager) SetState(
 	logger log.Logger,
 	streamingManager storetypes.StreamingManager,
 ) {
-	ms := unbranchedStore.CacheMultiStore()
+	ms := unbranchedStore.CommitBranch()
 	headerInfo := header.Info{
 		Height:  h.Height,
 		Time:    h.Time,

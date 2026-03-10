@@ -90,7 +90,7 @@ func (cms Store) initStore(key types.StoreKey, store types.CacheWrapper) types.C
 
 // SetTracer sets the tracer for the MultiStore that the underlying
 // stores will utilize to trace operations. A MultiStore is returned.
-func (cms Store) SetTracer(w io.Writer) types.MultiStore {
+func (cms Store) SetTracer(w io.Writer) types.MultiStoreBase {
 	cms.traceWriter = w
 	return cms
 }
@@ -99,7 +99,7 @@ func (cms Store) SetTracer(w io.Writer) types.MultiStore {
 // the given context with the existing context by key. Any existing keys will
 // be overwritten. It is implied that the caller should update the context when
 // necessary between tracing operations. It returns a modified MultiStore.
-func (cms Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
+func (cms Store) SetTracingContext(tc types.TraceContext) types.MultiStoreBase {
 	if cms.traceContext != nil {
 		maps.Copy(cms.traceContext, tc)
 	} else {

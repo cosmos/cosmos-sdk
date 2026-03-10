@@ -664,7 +664,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		ctx, _ = app.stateManager.GetState(execModeFinalize).Context().CacheContext()
 	} else {
 		emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
-		ms := app.cms.CacheMultiStore()
+		ms := app.cms.CommitBranch()
 		ctx = sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 	}
 
@@ -742,7 +742,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		ctx, _ = app.stateManager.GetState(execModeFinalize).Context().CacheContext()
 	} else {
 		emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
-		ms := app.cms.CacheMultiStore()
+		ms := app.cms.CommitBranch()
 		ctx = sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 	}
 
@@ -914,7 +914,7 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	}
 
 	if finalizeState.MultiStore.TracingEnabled() {
-		finalizeState.MultiStore = finalizeState.MultiStore.SetTracingContext(nil).(storetypes.CacheMultiStore)
+		finalizeState.MultiStore = finalizeState.MultiStore.SetTracingContext(nil).(storetypes.CommitBranch)
 	}
 
 	var (
@@ -953,7 +953,7 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	cp := app.GetConsensusParams(finalizeState.Context())
 
 	// if we haven't aborted thus far, start committing the state, we can always rollback later
-	committer, err := app.cms.StartCommit(goCtx, finalizeState.MultiStore, header)
+	committer, err := finalizeState.MultiStore.StartCommit(goCtx, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start commit: %w", err)
 	}
@@ -1087,7 +1087,7 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	if committer == nil {
 		// during InitChain we must initialize the committer here
 		var err error
-		committer, err = app.cms.StartCommit(context.Background(), finalizeState.MultiStore, header)
+		committer, err = finalizeState.MultiStore.StartCommit(context.Background(), header)
 		if err != nil {
 			return nil, fmt.Errorf("failed to start commit: %w", err)
 		}
@@ -1359,7 +1359,7 @@ func (bapp *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, chec
 	// use custom query multi-store if provided
 	qms := bapp.qms
 	if qms == nil {
-		qms = bapp.cms.(storetypes.MultiStore)
+		qms = bapp.cms
 	}
 
 	lastBlockHeight := qms.LatestVersion()

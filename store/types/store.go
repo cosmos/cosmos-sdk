@@ -114,17 +114,8 @@ func (s *StoreUpgrades) RenamedFrom(key string) string {
 	return ""
 }
 
-type MultiStore interface {
+type MultiStoreBase interface {
 	Store
-
-	// Branches MultiStore into a cached storage object.
-	// NOTE: Caller should probably not call .Write() on each, but
-	// call CacheMultiStore.Write().
-	CacheMultiStore() CacheMultiStore
-
-	// CacheMultiStoreWithVersion branches the underlying MultiStore where
-	// each stored is loaded at a specific version (height).
-	CacheMultiStoreWithVersion(version int64) (CacheMultiStore, error)
 
 	// Convenience for fetching substores.
 	// If the store does not exist, panics.
@@ -138,15 +129,24 @@ type MultiStore interface {
 	// SetTracer sets the tracer for the MultiStore that the underlying
 	// stores will utilize to trace operations. The modified MultiStore is
 	// returned.
-	SetTracer(w io.Writer) MultiStore
+	SetTracer(w io.Writer) MultiStoreBase
 
 	// SetTracingContext sets the tracing context for a MultiStore. It is
 	// implied that the caller should update the context when necessary between
 	// tracing operations. The modified MultiStore is returned.
-	SetTracingContext(TraceContext) MultiStore
+	SetTracingContext(TraceContext) MultiStoreBase
 
 	// LatestVersion returns the latest version in the store
 	LatestVersion() int64
+}
+
+type MultiStore interface {
+	MultiStoreBase
+
+	// Branches MultiStore into a cached storage object.
+	// NOTE: Caller should probably not call .Write() on each, but
+	// call CacheMultiStore.Write().
+	CacheMultiStore() CacheMultiStore
 }
 
 // CacheMultiStore extends MultiStore with a Write() method.
@@ -155,10 +155,8 @@ type CacheMultiStore interface {
 	Write() // Writes operations to underlying KVStore
 }
 
-// CommitMultiStore is an interface for a MultiStore without cache capabilities.
-type CommitMultiStore interface {
+type CommitBranch interface {
 	MultiStore
-	snapshottypes.Snapshotter
 
 	// StartCommit starts a commit and returns a CommitFinalizer to finalize or rollback the commit.
 	// This allows for transaction isolation of the commits and allows the multi-store to
@@ -171,9 +169,29 @@ type CommitMultiStore interface {
 	// or CommitFinalizer Finalize() is called.
 	// The MultiStore that is passed to StartCommit MUST BE a MultiStore branched from
 	// a call to CommitMultiStore.CacheMultiStore().
-	// The caller MUST not call Write() on the cached multi-store, instead StartCommit will do that.
 	// The comet header argument is used to obtain the commit timestamp.
-	StartCommit(context.Context, MultiStore, cmtproto.Header) (CommitFinalizer, error)
+	StartCommit(context.Context, cmtproto.Header) (CommitFinalizer, error)
+}
+
+type RootMultiStore interface {
+	MultiStoreBase
+
+	RootCacheMultiStore() MultiStore
+
+	// CacheMultiStoreWithVersion branches the underlying MultiStore where
+	// each stored is loaded at a specific version (height).
+	CacheMultiStoreWithVersion(version int64) (MultiStore, error)
+}
+
+// CommitMultiStore is an interface for a MultiStore without cache capabilities.
+type CommitMultiStore interface {
+	RootMultiStore
+
+	snapshottypes.Snapshotter
+
+	// CacheMultiStore branches CommitMultiStore into a cached storage object.
+	// To write changes to the branched MultiStore, this multi-store must be passed to StartCommit.
+	CommitBranch() CommitBranch
 
 	GetCommitInfo(ver int64) (*CommitInfo, error)
 

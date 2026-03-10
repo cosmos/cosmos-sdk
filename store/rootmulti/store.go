@@ -21,6 +21,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
+
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
@@ -380,7 +381,7 @@ func (rs *Store) SetInterBlockCache(c types.MultiStorePersistentCache) {
 
 // SetTracer sets the tracer for the MultiStore that the underlying
 // stores will utilize to trace operations. A MultiStore is returned.
-func (rs *Store) SetTracer(w io.Writer) types.MultiStore {
+func (rs *Store) SetTracer(w io.Writer) types.MultiStoreBase {
 	rs.traceWriter = w
 	return rs
 }
@@ -389,7 +390,7 @@ func (rs *Store) SetTracer(w io.Writer) types.MultiStore {
 // the given context with the existing context by key. Any existing keys will
 // be overwritten. It is implied that the caller should update the context when
 // necessary between tracing operations. It returns a modified MultiStore.
-func (rs *Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
+func (rs *Store) SetTracingContext(tc types.TraceContext) types.MultiStoreBase {
 	rs.traceContextMutex.Lock()
 	defer rs.traceContextMutex.Unlock()
 	rs.traceContext = rs.traceContext.Merge(tc)
@@ -572,19 +573,6 @@ func (rs *Store) WorkingHash() []byte {
 	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
 }
 
-func (rs *Store) StartCommit(ctx context.Context, store types.MultiStore, header cmtproto.Header) (types.CommitFinalizer, error) {
-	rs.SetCommitHeader(header)
-	cms, ok := store.(types.CacheMultiStore)
-	if !ok {
-		return nil, fmt.Errorf("expected CacheMultiStore, got %T", store)
-	}
-	return &commitFinalizer{
-		ctx:        ctx,
-		rs:         rs,
-		cacheStore: cms,
-	}, nil
-}
-
 type commitFinalizer struct {
 	ctx        context.Context
 	rs         *Store
@@ -626,7 +614,7 @@ func (c *commitFinalizer) Finalize() (types.CommitID, error) {
 
 // CacheWrap implements CacheWrapper/Store/CommitStore.
 func (rs *Store) CacheWrap() types.CacheWrap {
-	return rs.CacheMultiStore().(types.CacheWrap)
+	return rs.RootCacheMultiStore().(types.CacheWrap)
 }
 
 // CacheWrapWithTrace implements the CacheWrapper interface.
@@ -634,9 +622,11 @@ func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 	return rs.CacheWrap()
 }
 
-// CacheMultiStore creates ephemeral branch of the multi-store and returns a CacheMultiStore.
-// It implements the MultiStore interface.
-func (rs *Store) CacheMultiStore() types.CacheMultiStore {
+func (rs *Store) RootCacheMultiStore() types.MultiStore {
+	return rs.cacheMultiStore()
+}
+
+func (rs *Store) cacheMultiStore() types.CacheMultiStore {
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for k, v := range rs.stores {
 		store := types.CacheWrapper(v)
@@ -652,11 +642,35 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	return cachemulti.NewStore(stores, rs.traceWriter, rs.getTracingContext())
 }
 
+func (rs *Store) CommitBranch() types.CommitBranch {
+	ms := rs.cacheMultiStore()
+	return &commitBranch{
+		MultiStore: ms,
+		inner:      ms,
+		rs:         rs,
+	}
+}
+
+type commitBranch struct {
+	types.MultiStore
+	inner types.CacheMultiStore
+	rs    *Store
+}
+
+func (c commitBranch) StartCommit(ctx context.Context, header cmtproto.Header) (types.CommitFinalizer, error) {
+	c.rs.SetCommitHeader(header)
+	return &commitFinalizer{
+		ctx:        ctx,
+		rs:         c.rs,
+		cacheStore: c.inner,
+	}, nil
+}
+
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
 // attempts to load stores at a given version (height). An error is returned if
 // any store cannot be loaded. This should only be used for querying and
 // iterating at past heights.
-func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
+func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.MultiStore, error) {
 	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
 	var commitInfo *types.CommitInfo
 	storeInfos := map[string]bool{}

@@ -42,7 +42,7 @@ func TestGetObjKVStore(t *testing.T) {
 	require.NotNil(t, store1)
 	require.IsType(t, &transient.ObjStore{}, store1)
 
-	store2 := ms.GetCommitStore(key)
+	store2 := ms.getCommitStore(key)
 	require.NotNil(t, store2)
 	require.IsType(t, &transient.ObjStore{}, store2)
 }
@@ -55,11 +55,11 @@ func TestGetCommitKVStore(t *testing.T) {
 
 	key := ms.keysByName["store1"]
 
-	store1 := ms.GetCommitKVStore(key)
+	store1 := ms.getCommitKVStore(key)
 	require.NotNil(t, store1)
 	require.IsType(t, &iavl.Store{}, store1)
 
-	store2 := ms.GetCommitStore(key)
+	store2 := ms.getCommitStore(key)
 	require.NotNil(t, store2)
 	require.IsType(t, &iavl.Store{}, store2)
 }
@@ -830,7 +830,7 @@ func TestSetInitialVersion(t *testing.T) {
 	multi.Commit()
 	require.Equal(t, int64(5), multi.LastCommitID().Version)
 
-	ckvs := multi.GetCommitKVStore(multi.keysByName["store1"])
+	ckvs := multi.getCommitKVStore(multi.keysByName["store1"])
 	iavlStore, ok := ckvs.(*iavl.Store)
 	require.True(t, ok)
 	require.True(t, iavlStore.VersionExists(5))

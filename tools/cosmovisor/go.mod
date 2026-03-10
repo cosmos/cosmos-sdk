@@ -4,7 +4,7 @@ go 1.25.8
 
 require (
 	cosmossdk.io/log/v2 v2.0.1
-	github.com/cometbft/cometbft v0.39.0-beta.2.0.20260224200643-e10492fb96af
+	github.com/cometbft/cometbft v0.39.0-beta.2.0.20260309202733-cd5c4370839e
 	github.com/cometbft/cometbft-db v0.14.3
 	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
 	github.com/fsnotify/fsnotify v1.9.0
@@ -13,7 +13,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
-	google.golang.org/grpc v1.79.1
+	google.golang.org/grpc v1.79.2
 )
 
 require (
@@ -179,7 +179,7 @@ require (
 	github.com/rs/cors v1.11.1 // indirect
 	github.com/rs/zerolog v1.34.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
-	github.com/sasha-s/go-deadlock v0.3.6 // indirect
+	github.com/sasha-s/go-deadlock v0.3.7 // indirect
 	github.com/shirou/gopsutil/v4 v4.26.2 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
@@ -240,7 +240,7 @@ require (
 	golang.org/x/exp v0.0.0-20260209203927-2842357ff358 // indirect
 	golang.org/x/net v0.51.0 // indirect
 	golang.org/x/oauth2 v0.35.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/term v0.40.0 // indirect
 	golang.org/x/text v0.34.0 // indirect

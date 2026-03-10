@@ -1141,9 +1141,11 @@ func (l *EventListener) Subscribe(query string, cb EventConsumer) func() {
 	eventsChan, err := l.client.Subscribe(ctx, "testing", query)
 	require.NoError(l.t, err)
 	cleanup := func() {
-		ctx, cancel := context.WithTimeout(ctx, DefaultWaitTime)
-		defer cancel()
-		go l.client.Unsubscribe(ctx, "testing", query) //nolint:errcheck // used by tests only
+		ctx, cancel := context.WithTimeout(ctx, DefaultWaitTime) // #nosec G118 // cancel called in goroutine
+		go func() {
+			defer cancel()
+			l.client.Unsubscribe(ctx, "testing", query) //nolint:errcheck // used by tests only
+		}()
 		done()
 	}
 	go func() {

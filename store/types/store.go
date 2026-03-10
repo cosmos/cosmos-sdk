@@ -160,6 +160,19 @@ type CommitMultiStore interface {
 	MultiStore
 	snapshottypes.Snapshotter
 
+	// StartCommit starts a commit and returns a CommitFinalizer to finalize or rollback the commit.
+	// This allows for transaction isolation of the commits and allows the multi-store to
+	// optimistically do the work of commiting (which involves CPU intensive tree manipulations and hashing),
+	// without actually commiting until we are sure we want to commit.
+	// This is useful for ABCI optimistic execution.
+	//
+	// If the context passed in is canceled, the commit will be rolled back
+	// as long as the cancellation signal is received before CommitFinalizer.PrepareFinalize()
+	// or CommitFinalizer Finalize() is called.
+	// The MultiStore that is passed to StartCommit MUST BE a MultiStore branched from
+	// a call to CommitMultiStore.CacheMultiStore().
+	// The caller MUST not call Write() on the cached multi-store, instead StartCommit will do that.
+	// The comet header argument is used to obtain the commit timestamp.
 	StartCommit(context.Context, MultiStore, cmtproto.Header) (CommitFinalizer, error)
 
 	GetCommitInfo(ver int64) (*CommitInfo, error)

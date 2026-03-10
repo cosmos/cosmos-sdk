@@ -277,10 +277,10 @@ func (app *BaseApp) SetNotSigverifyTx() {
 	app.sigverifyTx = false
 }
 
-// SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
-// CommitMultiStore.
+// SetCommitMultiStoreTracer sets the store tracer on the BaseApp. When set,
+// multistores will be wrapped with tracekv.NewMultiStore to trace KV operations.
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
-	app.cms.SetTracer(w)
+	app.traceWriter = w
 }
 
 // SetStoreLoader allows us to customize the rootMultiStore initialization.

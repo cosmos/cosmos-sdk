@@ -3,6 +3,7 @@ package baseapp
 // need to import telemetry before anything else for side effects
 import (
 	"fmt"
+	"io"
 	"maps"
 	"math"
 	"slices"
@@ -22,10 +23,12 @@ import (
 	protov2 "google.golang.org/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
+
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
+	"cosmossdk.io/store/tracekv"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/config"
@@ -161,6 +164,10 @@ type BaseApp struct {
 
 	// trace set will return full stack traces for errors in ABCI Log field
 	trace bool
+
+	// traceWriter is the writer for store-level KV tracing. If non-nil,
+	// multistores will be wrapped with tracekv.NewMultiStore.
+	traceWriter io.Writer
 
 	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs CometBFT what to index. If empty, all events will be indexed.
@@ -663,12 +670,10 @@ func (app *BaseApp) getContextForTx(mode sdk.ExecMode, txBytes []byte, txIndex i
 func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, storetypes.CacheMultiStore) {
 	ms := ctx.MultiStore()
 	msCache := ms.CacheMultiStore()
-	if msCache.TracingEnabled() {
-		msCache = msCache.SetTracingContext(
-			map[string]any{
-				"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
-			},
-		).(storetypes.CacheMultiStore)
+	if app.traceWriter != nil {
+		msCache = tracekv.NewMultiStore(msCache, app.traceWriter, map[string]any{
+			"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
+		})
 	}
 
 	return ctx.WithMultiStore(msCache), msCache

@@ -32,8 +32,6 @@ var (
 	key                = make([]byte, secp256k1.PubKeySize)
 	simSecp256k1Pubkey = &secp256k1.PubKey{Key: key}
 	simSecp256k1Sig    [64]byte
-
-	SigVerificationResultCacheKey = "ante:SigVerificationResult"
 )
 
 func init() {
@@ -305,10 +303,10 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	}
 }
 
-func (svd SigVerificationDecorator) anteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) error {
+func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
-		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	utx, ok := tx.(sdk.TxWithUnordered)
@@ -316,24 +314,24 @@ func (svd SigVerificationDecorator) anteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	unorderedEnabled := svd.ak.UnorderedTransactionsEnabled()
 
 	if isUnordered && !unorderedEnabled {
-		return errorsmod.Wrap(sdkerrors.ErrNotSupported, "unordered transactions are not enabled")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrNotSupported, "unordered transactions are not enabled")
 	}
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
 	sigs, err := sigTx.GetSignaturesV2()
 	if err != nil {
-		return err
+		return ctx, err
 	}
 
 	signers, err := sigTx.GetSigners()
 	if err != nil {
-		return err
+		return ctx, err
 	}
 
 	// check that signer length and signature length are the same
 	if len(sigs) != len(signers) {
-		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(sigs))
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(sigs))
 	}
 
 	// In normal transactions, each signer has a sequence value. In unordered transactions, the nonce value is at the tx body level,
@@ -341,29 +339,29 @@ func (svd SigVerificationDecorator) anteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	// Because of this, we verify the unordered nonce outside the sigs loop, to avoid verifying the same nonce multiple times.
 	if isUnordered {
 		if err := svd.verifyUnorderedNonce(ctx, utx); err != nil {
-			return err
+			return ctx, err
 		}
 	}
 
 	for i, sig := range sigs {
 		if sig.Sequence > 0 && isUnordered {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "sequence is not allowed for unordered transactions")
+			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "sequence is not allowed for unordered transactions")
 		}
 		acc, err := GetSignerAcc(ctx, svd.ak, signers[i])
 		if err != nil {
-			return err
+			return ctx, err
 		}
 
 		// retrieve pubkey
 		pubKey := acc.GetPubKey()
 		if !simulate && pubKey == nil {
-			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
+			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
 		// Check account sequence number.
 		if !isUnordered {
 			if sig.Sequence != acc.GetSequence() {
-				return errorsmod.Wrapf(
+				return ctx, errorsmod.Wrapf(
 					sdkerrors.ErrWrongSequence,
 					"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
 				)
@@ -394,7 +392,7 @@ func (svd SigVerificationDecorator) anteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			}
 			adaptableTx, ok := tx.(authsigning.V2AdaptableTx)
 			if !ok {
-				return fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
+				return ctx, fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
 			}
 			txData := adaptableTx.GetSigningTxData()
 			err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
@@ -407,28 +405,11 @@ func (svd SigVerificationDecorator) anteHandle(ctx sdk.Context, tx sdk.Tx, simul
 				} else {
 					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s): (%s)", accNum, chainID, err.Error())
 				}
-				return errorsmod.Wrap(sdkerrors.ErrUnauthorized, errMsg)
-
+				return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, errMsg)
 			}
 		}
 	}
 
-	return nil
-}
-
-func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	if v, ok := ctx.GetIncarnationCache(SigVerificationResultCacheKey); ok {
-		// can't convert `nil` to interface
-		if v != nil {
-			err = v.(error)
-		}
-	} else {
-		err = svd.anteHandle(ctx, tx, simulate)
-		ctx.SetIncarnationCache(SigVerificationResultCacheKey, err)
-	}
-	if err != nil {
-		return ctx, err
-	}
 	return next(ctx, tx, simulate)
 }
 

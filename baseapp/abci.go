@@ -447,7 +447,9 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 	app.optimisticExec.Abort()
 	// If OE had already reached StartCommit, rollback to discard uncommitted state.
 	if app.committer != nil {
-		_ = app.committer.Rollback()
+		if err := app.committer.Rollback(); err != nil {
+			app.logger.Error("failed to rollback committer in PrepareProposal", "error", err)
+		}
 		app.committer = nil
 	}
 
@@ -570,7 +572,9 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		app.optimisticExec.Abort()
 		// If OE had already reached StartCommit, rollback to discard uncommitted state.
 		if app.committer != nil {
-			_ = app.committer.Rollback()
+			if err := app.committer.Rollback(); err != nil {
+				app.logger.Error("failed to rollback committer in ProcessProposal", "error", err)
+			}
 			app.committer = nil
 		}
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)

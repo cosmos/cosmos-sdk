@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.3.0-beta.0
 	cosmossdk.io/tools/confix v0.1.2
-	github.com/cometbft/cometbft v0.39.0-beta.2.0.20260309192337-49745cc88e43
+	github.com/cometbft/cometbft v0.39.0-beta.3
 	github.com/cosmos/cosmos-db v1.1.3
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.54.0-rc.1

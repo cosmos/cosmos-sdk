@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
@@ -36,9 +35,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	ctx := testCtx.Ctx.WithBlockHeader(header).WithConsensusParams(consensusParams.ToProto())
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	storeService := runtime.NewKVStoreService(key)
-	addressCodec := authcodec.NewBech32Codec(sdk.Bech32MainPrefix)
-
-	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, storeService, "gov", runtime.EventService{}, addressCodec)
+	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, storeService, "gov", runtime.EventService{})
 
 	s.ctx = ctx
 	s.consensusParamsKeeper = &keeper

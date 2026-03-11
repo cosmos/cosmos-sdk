@@ -181,7 +181,6 @@ func NewSimApp(
 		runtime.NewKVStoreService(storeKeys[consensusparamtypes.StoreKey]),
 		"",
 		runtime.EventService{},
-		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 	)
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 

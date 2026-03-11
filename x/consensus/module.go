@@ -7,7 +7,6 @@ import (
 	"google.golang.org/grpc"
 
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"
@@ -103,7 +102,6 @@ type ModuleInputs struct {
 
 	Config       *modulev1.Module
 	Cdc          codec.Codec
-	AddressCodec address.Codec
 	StoreService storetypes.KVStoreService
 	EventManager event.Service
 }
@@ -123,7 +121,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, authority.String(), in.EventManager, in.AddressCodec)
+	k := keeper.NewKeeper(in.Cdc, in.StoreService, authority.String(), in.EventManager)
 	m := NewAppModule(in.Cdc, k)
 	baseappOpt := func(app *baseapp.BaseApp) {
 		app.SetParamStore(k.ParamsStore)

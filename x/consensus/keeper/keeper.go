@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/errors"
@@ -26,7 +25,6 @@ var StoreKey = "Consensus"
 type Keeper struct {
 	storeService storetypes.KVStoreService
 	event        event.Service
-	addressCodec address.Codec
 
 	authority   string
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
@@ -34,13 +32,12 @@ type Keeper struct {
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
 
-func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, authority string, em event.Service, addressCodec address.Codec) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, authority string, em event.Service) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	return Keeper{
 		storeService: storeService,
 		authority:    authority,
 		event:        em,
-		addressCodec: addressCodec,
 		ParamsStore:  collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
 	}
 }

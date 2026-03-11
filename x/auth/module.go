@@ -224,18 +224,18 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		maccPerms[permission.Account] = permission.Permissions
 	}
 
+	// default to governance authority if not provided
+	authority := types.NewModuleAddress(GovModuleName)
+	if in.Config.Authority != "" {
+		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
+
 	if in.RandomGenesisAccountsFn == nil {
 		in.RandomGenesisAccountsFn = simulation.RandomGenesisAccounts
 	}
 
 	if in.AccountI == nil {
 		in.AccountI = types.ProtoBaseAccount
-	}
-
-	// default to governance authority if not provided
-	authority := types.NewModuleAddress(GovModuleName)
-	if in.Config.Authority != "" {
-		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	keeperOpts := []keeper.InitOption{keeper.WithUnorderedTransactions(in.Config.EnableUnorderedTransactions)}

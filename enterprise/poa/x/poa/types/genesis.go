@@ -28,32 +28,14 @@ import (
 //   - All validators pass basic validation
 //   - No duplicate operator addresses exist across validators
 //   - All validator pubkeys are non-nil
-//   - At least one validator with non-zero power exists
+//   - At least one validator with non-zero power exists (via ValidateValidatorSet)
 //
 // Note: Duplicate consensus addresses are not checked here as they require
 // unpacking pubkeys with a codec. The keeper will enforce consensus address
 // uniqueness when importing genesis. Parameter validation happens in the
 // keeper when params are set.
 func (s *GenesisState) ValidateBasic() error {
-	// Validate the validator set
-	if err := ValidateValidatorSet(s.Validators); err != nil {
-		return err
-	}
-
-	// Ensure at least one validator with non-zero power exists
-	hasNonZeroPower := false
-	for _, validator := range s.Validators {
-		if validator.Power > 0 {
-			hasNonZeroPower = true
-			break
-		}
-	}
-
-	if !hasNonZeroPower {
-		return fmt.Errorf("genesis must contain at least one validator with non-zero power")
-	}
-
-	return nil
+	return ValidateValidatorSet(s.Validators)
 }
 
 // Validate performs full validation on the GenesisState.

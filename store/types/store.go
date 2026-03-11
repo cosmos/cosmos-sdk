@@ -31,7 +31,7 @@ type Committer interface {
 	GetPruning() pruningtypes.PruningOptions
 }
 
-// Deprecated: CommitStore is an interface for Commit and Store capabilities.
+// CommitStore is an interface for Commit and Store capabilities.
 type CommitStore interface {
 	Committer
 	Store
@@ -310,7 +310,7 @@ type CacheKVStore interface {
 	Write()
 }
 
-// Deprecated: CommitKVStore is an interface for MultiStore.
+// CommitKVStore is an interface for MultiStore.
 type CommitKVStore interface {
 	Committer
 	KVStore

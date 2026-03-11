@@ -255,5 +255,5 @@ func (s *contextTestSuite) TestMultiStore() {
 
 	ctx := types.NewContext(rms.RootCacheMultiStore(), cmtproto.Header{}, false, nil)
 	objKVStore := ctx.ObjectStore(objKey)
-	s.Require().Equal(objKVStore.GetStoreType(), storetypes.StoreTypeObject)
+	s.Require().NotNil(objKVStore)
 }

@@ -1251,7 +1251,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		require.Equal(t, int64(150), totalPower) // 50 + 100
 	})
 
-	t.Run("partial failure leaves first update applied", func(t *testing.T) {
+	t.Run("partial failure reverts all updates", func(t *testing.T) {
 		f := setupTest(t)
 		msgServer := NewMsgServer(f.poaKeeper)
 
@@ -1313,10 +1313,10 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorIs(t, err, poatypes.ErrUnknownValidator)
 
-		// First validator was updated before second failed
+		// All updates reverted - first validator unchanged
 		power1, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr1)
 		require.NoError(t, err)
-		require.Equal(t, int64(150), power1)
+		require.Equal(t, int64(100), power1)
 
 		// Second validator unchanged
 		power2, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr2)

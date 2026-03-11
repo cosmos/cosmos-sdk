@@ -74,7 +74,7 @@ func TestBlockSTM_AccountCreationPanics(t *testing.T) {
 		cdc,
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
-		map[string]bool{authority.String(): false},
+		map[string]bool{accountKeeper.GetAuthority(): false},
 		authority.String(),
 		log.NewNopLogger(),
 	)

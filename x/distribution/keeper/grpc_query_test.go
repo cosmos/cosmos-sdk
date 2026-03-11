@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -57,7 +56,7 @@ func setupValidatorQueryTest(t *testing.T, expectNonExistentValidator bool) *val
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authtypes.NewModuleAddress("gov").String(),
 	)
 
 	require.NoError(t, distrKeeper.FeePool.Set(ctx, disttypes.InitialFeePool()))

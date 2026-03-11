@@ -73,7 +73,6 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -194,11 +193,13 @@ func NewSimApp(
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(storeKeys[consensusparamtypes.StoreKey]),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		"",
 		runtime.EventService{},
 		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 	)
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
+
+	authority := authtypes.NewModuleAddress(group.ModuleName).String()
 
 	maccPerms := map[string][]string{
 		authtypes.FeeCollectorName:     nil,
@@ -215,7 +216,7 @@ func NewSimApp(
 		maccPerms,
 		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authority,
 	)
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
@@ -223,7 +224,7 @@ func NewSimApp(
 		runtime.NewKVStoreService(storeKeys[banktypes.StoreKey]),
 		app.AccountKeeper,
 		map[string]bool{},
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authority,
 		logger,
 	)
 
@@ -232,7 +233,7 @@ func NewSimApp(
 		runtime.NewKVStoreService(storeKeys[stakingtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authority,
 		authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
 		authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
 	)
@@ -244,7 +245,7 @@ func NewSimApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authority,
 	)
 
 	app.DistrKeeper = distrkeeper.NewKeeper(
@@ -254,7 +255,7 @@ func NewSimApp(
 		app.BankKeeper,
 		app.StakingKeeper,
 		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authority,
 	)
 
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
@@ -262,7 +263,7 @@ func NewSimApp(
 		legacyAmino,
 		runtime.NewKVStoreService(storeKeys[slashingtypes.StoreKey]),
 		app.StakingKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authority,
 	)
 
 	app.StakingKeeper.SetHooks(

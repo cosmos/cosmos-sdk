@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -85,7 +84,7 @@ func setupTest(t *testing.T, protocolPoolEnabled bool) testSetup {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authtypes.NewModuleAddress("gov").String(),
 		opts...,
 	)
 

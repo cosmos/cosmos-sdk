@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) TestFundCommunityPool() {
 }
 
 func (suite *KeeperTestSuite) TestCommunityPoolSpend() {
-	validAuthority := suite.ctx.Authority()
+	validAuthority := suite.poolKeeper.GetAuthority()
 	validRecipient := recipientAddr
 	validAmount := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500)))
 
@@ -166,7 +166,7 @@ func (suite *KeeperTestSuite) TestCommunityPoolSpend() {
 }
 
 func (suite *KeeperTestSuite) TestCreateContinuousFund() {
-	validAuthority := suite.ctx.Authority()
+	validAuthority := suite.poolKeeper.GetAuthority()
 	validRecipient := recipientAddr
 	validPercentage := math.LegacyMustNewDecFromStr("0.2")
 	validExpiry := suite.ctx.BlockTime().Add(24 * time.Hour)
@@ -331,7 +331,7 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 }
 
 func (suite *KeeperTestSuite) TestCancelContinuousFund() {
-	validAuthority := suite.ctx.Authority()
+	validAuthority := suite.poolKeeper.GetAuthority()
 	validRecipient := recipientAddr
 
 	testCases := []struct {
@@ -428,7 +428,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 }
 
 func (suite *KeeperTestSuite) TestUpdateParams() {
-	validAuthority := suite.ctx.Authority()
+	validAuthority := suite.poolKeeper.GetAuthority()
 
 	testCases := []struct {
 		name      string

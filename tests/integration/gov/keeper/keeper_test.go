@@ -81,7 +81,7 @@ func initFixture(tb testing.TB) *fixture {
 	)
 
 	blockedAddresses := map[string]bool{
-		authority.String(): false,
+		accountKeeper.GetAuthority(): false,
 	}
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,

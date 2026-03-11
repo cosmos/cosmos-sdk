@@ -30,7 +30,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
@@ -379,7 +378,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 101))))
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("stake", 100000))))
 	addr1Str := addr1.String()
-	govAddr := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	govAddr := s.BankKeeper.GetAuthority()
 	goodGovProp, err := govv1.NewMsgSubmitProposal(
 		[]sdk.Msg{
 			types.NewMsgSetSendEnabled(govAddr, nil, nil),

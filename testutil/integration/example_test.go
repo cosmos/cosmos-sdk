@@ -5,7 +5,6 @@ import (
 	"io"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmtypes "github.com/cometbft/cometbft/types"
 	"github.com/google/go-cmp/cmp"
 
 	"cosmossdk.io/core/appmodule"
@@ -21,7 +20,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -40,9 +38,7 @@ func Example() {
 	logger := log.NewNopLogger()
 
 	cms := integration.CreateMultiStore(keys, logger)
-	consensusParams := cmtypes.DefaultConsensusParams()
-	consensusParams.Authority.Authority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger).WithConsensusParams(consensusParams.ToProto())
+	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
@@ -131,9 +127,7 @@ func Example_oneModule() {
 	logger := log.NewLogger(io.Discard)
 
 	cms := integration.CreateMultiStore(keys, logger)
-	consensusParams := cmtypes.DefaultConsensusParams()
-	consensusParams.Authority.Authority = authority
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger).WithConsensusParams(consensusParams.ToProto())
+	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,

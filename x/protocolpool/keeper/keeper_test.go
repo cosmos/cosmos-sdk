@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	cmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -53,9 +52,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	consensusParams := cmtypes.DefaultConsensusParams()
-	consensusParams.Authority.Authority = authtypes.NewModuleAddress(types.ModuleName).String()
-	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()}).WithConsensusParams(consensusParams.ToProto())
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	// gomock initializations
@@ -69,17 +66,20 @@ func (suite *KeeperTestSuite) SetupTest() {
 	bankKeeper := pooltestutil.NewMockBankKeeper(ctrl)
 	suite.bankKeeper = bankKeeper
 
+	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
+	suite.Require().NoError(err)
+
 	poolKeeper := poolkeeper.NewKeeper(
 		encCfg.Codec,
 		storeService,
 		accountKeeper,
 		bankKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authority,
 	)
 	suite.ctx = ctx
 	suite.poolKeeper = poolKeeper
 
-	err := suite.poolKeeper.Params.Set(ctx, types.Params{
+	err = suite.poolKeeper.Params.Set(ctx, types.Params{
 		EnabledDistributionDenoms: []string{sdk.DefaultBondDenom},
 	})
 	suite.Require().NoError(err)

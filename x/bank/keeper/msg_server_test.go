@@ -31,7 +31,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 		{
 			name: "send enabled param",
 			input: &banktypes.MsgUpdateParams{
-				Authority: suite.ctx.Authority(),
+				Authority: suite.bankKeeper.GetAuthority(),
 				Params: banktypes.Params{
 					SendEnabled: []*banktypes.SendEnabled{
 						{Denom: "foo", Enabled: true},
@@ -44,7 +44,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 		{
 			name: "all good",
 			input: &banktypes.MsgUpdateParams{
-				Authority: suite.ctx.Authority(),
+				Authority: suite.bankKeeper.GetAuthority(),
 				Params:    params,
 			},
 			expErr: false,

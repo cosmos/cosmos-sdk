@@ -7,7 +7,6 @@ import (
 
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/types"
-	cmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
@@ -34,7 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -95,7 +93,7 @@ func initFixture(tb testing.TB) *fixture {
 	)
 
 	blockedAddresses := map[string]bool{
-		authority.String(): false,
+		accountKeeper.GetAuthority(): false,
 	}
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,
@@ -121,9 +119,6 @@ func initFixture(tb testing.TB) *fixture {
 	valAddr := sdk.ValAddress(addr)
 	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
 
-	consensusParams := cmtypes.DefaultConsensusParams()
-	consensusParams.Authority.Authority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
-
 	// set proposer and vote infos
 	ctx := newCtx.WithProposer(valConsAddr).WithVoteInfos([]cmtabcitypes.VoteInfo{
 		{
@@ -133,7 +128,7 @@ func initFixture(tb testing.TB) *fixture {
 			},
 			BlockIdFlag: types.BlockIDFlagCommit,
 		},
-	}).WithConsensusParams(consensusParams.ToProto())
+	})
 
 	integrationApp := integration.NewIntegrationApp(ctx, logger, keys, cdc, map[string]appmodule.AppModule{
 		authtypes.ModuleName:    authModule,
@@ -700,7 +695,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "community tax is nil",
 			msg: &distrtypes.MsgUpdateParams{
-				Authority: f.sdkCtx.Authority(),
+				Authority: f.distrKeeper.GetAuthority(),
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyDec{},
 					WithdrawAddrEnabled: true,
@@ -714,7 +709,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "community tax > 1",
 			msg: &distrtypes.MsgUpdateParams{
-				Authority: f.sdkCtx.Authority(),
+				Authority: f.distrKeeper.GetAuthority(),
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyNewDecWithPrec(2, 0),
 					WithdrawAddrEnabled: true,
@@ -728,7 +723,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "negative community tax",
 			msg: &distrtypes.MsgUpdateParams{
-				Authority: f.sdkCtx.Authority(),
+				Authority: f.distrKeeper.GetAuthority(),
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyNewDecWithPrec(-2, 1),
 					WithdrawAddrEnabled: true,
@@ -742,7 +737,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "base proposer reward set",
 			msg: &distrtypes.MsgUpdateParams{
-				Authority: f.sdkCtx.Authority(),
+				Authority: f.distrKeeper.GetAuthority(),
 				Params: distrtypes.Params{
 					CommunityTax:        communityTax,
 					BaseProposerReward:  math.LegacyNewDecWithPrec(1, 2),
@@ -756,7 +751,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "bonus proposer reward set",
 			msg: &distrtypes.MsgUpdateParams{
-				Authority: f.sdkCtx.Authority(),
+				Authority: f.distrKeeper.GetAuthority(),
 				Params: distrtypes.Params{
 					CommunityTax:        communityTax,
 					BaseProposerReward:  math.LegacyZeroDec(),
@@ -770,7 +765,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "all good",
 			msg: &distrtypes.MsgUpdateParams{
-				Authority: f.sdkCtx.Authority(),
+				Authority: f.distrKeeper.GetAuthority(),
 				Params: distrtypes.Params{
 					CommunityTax:        communityTax,
 					BaseProposerReward:  math.LegacyZeroDec(),
@@ -843,7 +838,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		{
 			name: "invalid recipient",
 			msg: &distrtypes.MsgCommunityPoolSpend{
-				Authority: f.sdkCtx.Authority(),
+				Authority: f.distrKeeper.GetAuthority(),
 				Recipient: "invalid",
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 			},
@@ -853,7 +848,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		{
 			name: "valid message",
 			msg: &distrtypes.MsgCommunityPoolSpend{
-				Authority: f.sdkCtx.Authority(),
+				Authority: f.distrKeeper.GetAuthority(),
 				Recipient: recipient.String(),
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 			},

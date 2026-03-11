@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	cmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -40,10 +39,8 @@ func (s *IntegrationTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	consensusParams := cmtypes.DefaultConsensusParams()
-	consensusParams.Authority.Authority = authtypes.NewModuleAddress(types.ModuleName).String()
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	s.ctx = testCtx.Ctx.WithConsensusParams(consensusParams.ToProto())
+	s.ctx = testCtx.Ctx
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())

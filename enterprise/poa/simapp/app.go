@@ -179,7 +179,7 @@ func NewSimApp(
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(storeKeys[consensusparamtypes.StoreKey]),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		"",
 		runtime.EventService{},
 		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 	)

@@ -14,7 +14,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmtypes "github.com/cometbft/cometbft/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -117,7 +116,7 @@ func addIBCMetadata(ctx context.Context, k keeper.BaseKeeper) {
 type KeeperTestSuite struct {
 	suite.Suite
 
-	ctx        sdk.Context
+	ctx        context.Context
 	bankKeeper keeper.BaseKeeper
 	authKeeper *banktestutil.MockAccountKeeper
 
@@ -135,9 +134,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
 	oKey := storetypes.NewObjectStoreKey(banktypes.ObjectStoreKey)
 	testCtx := testutil.DefaultContextWithObjectStore(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"), oKey)
-	consensusParams := cmtypes.DefaultConsensusParams()
-	consensusParams.Authority.Authority = authtypes.NewModuleAddress("gov").String()
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()}).WithConsensusParams(consensusParams.ToProto())
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	storeService := runtime.NewKVStoreService(key)
@@ -341,6 +338,34 @@ func (suite *KeeperTestSuite) TestPrependSendRestriction() {
 	calls = nil
 	_, _ = suite.bankKeeper.GetSendRestrictionFn()(suite.ctx, nil, nil, nil)
 	suite.Require().Equal([]int{2, 1}, calls, "restriction calls from original bank keeper")
+}
+
+func (suite *KeeperTestSuite) TestGetAuthority() {
+	storeService := runtime.NewKVStoreService(storetypes.NewKVStoreKey(banktypes.StoreKey))
+	NewKeeperWithAuthority := func(authority string) keeper.BaseKeeper {
+		return keeper.NewBaseKeeper(
+			moduletestutil.MakeTestEncodingConfig().Codec,
+			storeService,
+			suite.authKeeper,
+			nil,
+			authority,
+			log.NewNopLogger(),
+		)
+	}
+
+	tests := map[string]string{
+		"some random account":    "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+		"gov module account":     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		"another module account": authtypes.NewModuleAddress(minttypes.ModuleName).String(),
+	}
+
+	for name, expected := range tests {
+		suite.T().Run(name, func(t *testing.T) {
+			kpr := NewKeeperWithAuthority(expected)
+			actual := kpr.GetAuthority()
+			suite.Require().Equal(expected, actual)
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestSupply() {

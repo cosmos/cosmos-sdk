@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	cmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
@@ -20,7 +19,6 @@ import (
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 const (
@@ -62,9 +60,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	consensusParams := cmtypes.DefaultConsensusParams()
-	consensusParams.Authority.Authority = "authority"
-	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{}).WithConsensusParams(consensusParams.ToProto())
+	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec,
@@ -73,7 +69,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		getMaccPerms(),
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
-		types.NewModuleAddress(govtypes.ModuleName).String(),
+		types.NewModuleAddress("gov").String(),
 	)
 	suite.msgServer = keeper.NewMsgServerImpl(suite.accountKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)

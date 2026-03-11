@@ -91,7 +91,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	)
 
 	blockedAddresses := map[string]bool{
-		authority.String(): false,
+		accountKeeper.GetAuthority(): false,
 	}
 	bankKeeper := keeper.NewBaseKeeper(
 		cdc,

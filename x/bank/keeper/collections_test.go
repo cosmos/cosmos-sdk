@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func TestBankStateCompatibility(t *testing.T) {
@@ -44,7 +43,7 @@ func TestBankStateCompatibility(t *testing.T) {
 		storeService,
 		authKeeper,
 		map[string]bool{accAddrs[4].String(): true},
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authtypes.NewModuleAddress("gov").String(),
 		log.NewNopLogger(),
 	)
 	k = k.WithObjStoreKey(oKey)

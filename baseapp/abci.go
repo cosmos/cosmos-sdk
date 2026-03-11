@@ -1020,9 +1020,10 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 			if err != nil {
 				return nil, err
 			}
-			if app.committer != nil {
-				return app.finishFinalizeBlock(res)
+			if app.committer == nil {
+				return nil, fmt.Errorf("unexpected nil committer after successful optimistic execution")
 			}
+			return app.finishFinalizeBlock(res)
 		} else {
 			// if it was aborted, we need to reset the state
 			app.stateManager.ClearState(execModeFinalize)

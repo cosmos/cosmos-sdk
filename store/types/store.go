@@ -164,8 +164,8 @@ type CommitBranch interface {
 	// This is useful for ABCI optimistic execution.
 	//
 	// If the context passed in is canceled, the commit will be rolled back
-	// as long as the cancellation signal is received before CommitFinalizer.PrepareFinalize()
-	// or CommitFinalizer Finalize() is called.
+	// as long as the cancellation signal is received before CommitFinalizer.StartFinalize()
+	// or CommitFinalizer.Finalize() is called.
 	// The comet header argument is used to obtain the commit timestamp.
 	StartCommit(context.Context, cmtproto.Header) (CommitFinalizer, error)
 }
@@ -266,17 +266,17 @@ type CommitMultiStore interface {
 }
 
 type CommitFinalizer interface {
-	// PrepareFinalize starts finalization and waits until the hash is ready,
+	// StartFinalize begins finalization and waits until the hash is ready,
 	// but may return before the commit has been fully finalized (i.e. fsync'd to disk).
-	// Once PrepareFinalize is called, Rollback can no longer be called and will return an error.
-	PrepareFinalize() (CommitID, error)
-	// Finalize starts the finalization process if it hasn't been started yet and
+	// Once StartFinalize is called, Rollback can no longer be called and will return an error.
+	StartFinalize() (CommitID, error)
+	// Finalize begins finalization if it hasn't been started yet and
 	// waits for the commit to complete (including fsync).
-	// PrepareFinalize may be called before Finalize to start finalization early.
+	// StartFinalize may be called before Finalize to start finalization early.
 	// After Finalize is called, Rollback will return an error.
 	Finalize() (CommitID, error)
 	// Rollback aborts the in-progress commit and leaves the stores in the previous state.
-	// Rollback returns an error if PrepareFinalize, or Finalize has been called.
+	// Rollback returns an error if StartFinalize or Finalize has been called.
 	Rollback() error
 }
 

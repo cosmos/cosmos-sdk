@@ -1136,7 +1136,7 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 }
 
 func (app *BaseApp) finishFinalizeBlock(res *abci.ResponseFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
-	hash, err := app.committer.PrepareFinalize()
+	hash, err := app.committer.StartFinalize()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get working hash: %w", err)
 	}

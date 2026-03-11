@@ -566,14 +566,14 @@ func (rs *Store) WorkingHash() []byte {
 }
 
 type commitFinalizer struct {
-	ctx        context.Context
-	rs         *Store
-	cacheStore types.CacheMultiStore
-	finalized  bool
-	hash       types.CommitID
+	ctx                 context.Context
+	rs                  *Store
+	cacheStore          types.CacheMultiStore
+	finalizationStarted bool
+	hash                types.CommitID
 }
 
-func (c *commitFinalizer) PrepareFinalize() (types.CommitID, error) {
+func (c *commitFinalizer) StartFinalize() (types.CommitID, error) {
 	if err := c.ctx.Err(); err != nil {
 		// context canceled or timed out
 		return types.CommitID{}, err
@@ -581,7 +581,7 @@ func (c *commitFinalizer) PrepareFinalize() (types.CommitID, error) {
 	if c.hash.Hash != nil {
 		return c.hash, nil
 	}
-	c.finalized = true
+	c.finalizationStarted = true
 	// write the cache store to get the working hash
 	c.cacheStore.Write()
 	c.hash.Hash = c.rs.WorkingHash()
@@ -589,15 +589,15 @@ func (c *commitFinalizer) PrepareFinalize() (types.CommitID, error) {
 }
 
 func (c *commitFinalizer) Rollback() error {
-	if c.finalized {
+	if c.finalizationStarted {
 		return errors.New("cannot rollback after finalization has started")
 	}
 	return nil
 }
 
 func (c *commitFinalizer) Finalize() (types.CommitID, error) {
-	if c.hash.Hash == nil {
-		if _, err := c.PrepareFinalize(); err != nil {
+	if !c.finalizationStarted {
+		if _, err := c.StartFinalize(); err != nil {
 			return types.CommitID{}, err
 		}
 	}

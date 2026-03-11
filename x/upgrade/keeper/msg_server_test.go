@@ -27,7 +27,7 @@ func (s *KeeperTestSuite) TestSoftwareUpgrade() {
 				},
 			},
 			true,
-			"invalid authority",
+			"invalid authority: expected " + govAccAddr + ", got authority",
 		},
 		{
 			"unauthorized authority address",
@@ -40,7 +40,7 @@ func (s *KeeperTestSuite) TestSoftwareUpgrade() {
 				},
 			},
 			true,
-			"invalid authority",
+			"invalid authority: expected " + govAccAddr,
 		},
 		{
 			"invalid plan",
@@ -105,7 +105,7 @@ func (s *KeeperTestSuite) TestCancelUpgrade() {
 				Authority: "authority",
 			},
 			true,
-			"invalid authority",
+			"invalid authority: expected " + govAccAddr + ", got authority",
 		},
 		{
 			"unauthorized authority address",
@@ -113,7 +113,7 @@ func (s *KeeperTestSuite) TestCancelUpgrade() {
 				Authority: s.addrs[0].String(),
 			},
 			true,
-			"invalid authority",
+			"invalid authority: expected " + govAccAddr,
 		},
 		{
 			"upgrade canceled successfully",
@@ -161,7 +161,7 @@ func (s *KeeperTestSuite) TestSoftwareUpgradeAuthority() {
 			Plan:      validPlan,
 		})
 		s.Require().Error(err)
-		s.Require().Contains(err.Error(), "expected")
+		s.Require().Contains(err.Error(), "invalid authority")
 	})
 
 	s.Run("consensus params authority takes precedence", func() {
@@ -184,7 +184,7 @@ func (s *KeeperTestSuite) TestSoftwareUpgradeAuthority() {
 			Plan:      validPlan,
 		})
 		s.Require().Error(err)
-		s.Require().Contains(err.Error(), "expected")
+		s.Require().Contains(err.Error(), "invalid authority")
 	})
 }
 
@@ -205,7 +205,7 @@ func (s *KeeperTestSuite) TestCancelUpgradeAuthority() {
 			Authority: overrideAuthority,
 		})
 		s.Require().Error(err)
-		s.Require().Contains(err.Error(), "expected")
+		s.Require().Contains(err.Error(), "invalid authority")
 
 		_, err = s.msgSrvr.CancelUpgrade(s.ctx, &types.MsgCancelUpgrade{
 			Authority: keeperAuthority,
@@ -230,7 +230,7 @@ func (s *KeeperTestSuite) TestCancelUpgradeAuthority() {
 			Authority: keeperAuthority,
 		})
 		s.Require().Error(err)
-		s.Require().Contains(err.Error(), "expected")
+		s.Require().Contains(err.Error(), "invalid authority")
 
 		_, err = s.msgSrvr.CancelUpgrade(ctx, &types.MsgCancelUpgrade{
 			Authority: overrideAuthority,

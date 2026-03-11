@@ -49,6 +49,9 @@ var DefaultConsensusParams = &cmtproto.ConsensusParams{
 			cmttypes.ABCIPubKeyTypeEd25519,
 		},
 	},
+	// Authority sets the consensus-level authority that overrides per-keeper
+	// authority for module parameter updates. Tests that need a different
+	// authority should override this field or use custom consensus params.
 	Authority: &cmtproto.AuthorityParams{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	},

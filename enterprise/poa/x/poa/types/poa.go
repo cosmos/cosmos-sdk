@@ -22,9 +22,6 @@ import (
 	sdkerrors "cosmossdk.io/errors"
 )
 
-// MaxValidatorPower is the maximum allowed validator power (CometBFT uses int64 for voting power).
-const MaxValidatorPower = math.MaxInt64
-
 // MinPubKeyLength is the minimum expected pubkey serialized length (ed25519 ~34 bytes, secp256k1 ~35 bytes with proto overhead).
 const MinPubKeyLength = 30
 
@@ -33,15 +30,12 @@ const MaxPubKeyLength = 128
 
 // ValidateBasic performs basic validation on a Validator.
 // It ensures that:
-//   - Power is non-negative and does not overflow
+//   - Power is non-negative
 //   - Metadata passes validation (operator address, moniker, and description are valid)
 //   - PubKey is not nil and has valid length
 func (v *Validator) ValidateBasic() error {
 	if v.Power < 0 {
 		return ErrNegativeValidatorPower
-	}
-	if v.Power > MaxValidatorPower {
-		return ErrValidatorPowerOverflow
 	}
 
 	if err := v.Metadata.ValidateBasic(); err != nil {

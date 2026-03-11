@@ -345,6 +345,18 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 			expErr:    false,
 			expErrMsg: "",
 		},
+		{
+			name: "reject authority exceeding 255 chars",
+			input: &types.MsgUpdateParams{
+				Authority: s.ctx.Authority(),
+				Block:     defaultConsensusParams.Block,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+				Auth:      &cmtproto.AuthorityParams{Authority: string(make([]byte, 256))},
+			},
+			expErr:    true,
+			expErrMsg: "exceeds 255 characters",
+		},
 	}
 
 	for _, tc := range testCases {

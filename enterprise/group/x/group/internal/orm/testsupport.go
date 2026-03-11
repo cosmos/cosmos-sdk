@@ -22,7 +22,6 @@ import (
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/gaskv"
-	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
 )
 
@@ -36,7 +35,7 @@ func NewMockContext() *MockContext {
 	db := dbm.NewMemDB()
 	return &MockContext{
 		db:      db,
-		store:   store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics()),
+		store:   store.NewCommitMultiStore(db, log.NewNopLogger()),
 		mounted: make(map[storetypes.StoreKey]bool),
 	}
 }

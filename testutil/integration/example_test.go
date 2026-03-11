@@ -38,7 +38,7 @@ func Example() {
 	logger := log.NewNopLogger()
 
 	cms := integration.CreateMultiStore(keys, logger)
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{}, true, logger)
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,

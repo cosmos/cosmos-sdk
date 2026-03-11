@@ -21,8 +21,9 @@ var (
 	// AddressStoreKeyPrefix prefix for account-by-address store
 	AddressStoreKeyPrefix = collections.NewPrefix(1)
 
-	// GlobalAccountNumberKey identifies the prefix where the monotonically increasing
+	// Deprecated: GlobalAccountNumberKey identifies the prefix where the monotonically increasing
 	// account number is stored.
+	// This storage is deprecated as of 0.45, but left here to prevent future use of the ID
 	GlobalAccountNumberKey = collections.NewPrefix(2)
 
 	// AccountNumberStoreKeyPrefix prefix for account-by-id store

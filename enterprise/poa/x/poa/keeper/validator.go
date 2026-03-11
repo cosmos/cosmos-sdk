@@ -102,23 +102,27 @@ func (k *Keeper) UpdateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, u
 }
 
 // UpdateValidators updates multiple validators in a single operation.
+// The operation is atomic: if any validator update fails, all changes are reverted.
 func (k *Keeper) UpdateValidators(ctx sdk.Context, validators []types.Validator) error {
+	cacheCtx, writeCache := ctx.CacheContext()
+
 	for _, validator := range validators {
 		var pubKey cryptotypes.PubKey
 		if err := k.cdc.UnpackAny(validator.PubKey, &pubKey); err != nil {
 			return err
 		}
-		if err := k.validatePubkeyType(ctx, pubKey); err != nil {
+		if err := k.validatePubkeyType(cacheCtx, pubKey); err != nil {
 			return err
 		}
 
 		consAddress := sdk.GetConsAddress(pubKey)
 
-		if err := k.UpdateValidator(ctx, consAddress, validator); err != nil {
+		if err := k.UpdateValidator(cacheCtx, consAddress, validator); err != nil {
 			return err
 		}
 	}
 
+	writeCache()
 	return nil
 }
 

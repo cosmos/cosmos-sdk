@@ -269,11 +269,15 @@ type CommitFinalizer interface {
 	// StartFinalize begins finalization and waits until the hash is ready,
 	// but may return before the commit has been fully finalized (i.e. fsync'd to disk).
 	// Once StartFinalize is called, Rollback can no longer be called and will return an error.
+	// Where we would have previously called CommitMultiStore.WorkingHash(), we can now call StartFinalize
+	// to get the hash early and do work in parallel while the commit is being finalized.
 	StartFinalize() (CommitID, error)
 	// Finalize begins finalization if it hasn't been started yet and
 	// waits for the commit to complete (including fsync).
 	// StartFinalize may be called before Finalize to start finalization early.
 	// After Finalize is called, Rollback will return an error.
+	// Where we would have previously called CommitMultiStore.Commit(),
+	// we can now call Finalize() to finalize the commit and get the CommitID.
 	Finalize() (CommitID, error)
 	// Rollback aborts the in-progress commit and leaves the stores in the previous state.
 	// Rollback returns an error if StartFinalize or Finalize has been called.

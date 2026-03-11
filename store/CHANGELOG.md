@@ -25,6 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Breaking Changes
+
+* [#26060](https://github.com/cosmos/cosmos-sdk/pull/26060) Remove non-functional `StoreMetrics`. This metric interface never worked, so this simply removes dead code.
+
 ### Bug Fixes
 
 * [#20425](https://github.com/cosmos/cosmos-sdk/pull/20425) Fix nil pointer panic when querying historical state where a new store does not exist.

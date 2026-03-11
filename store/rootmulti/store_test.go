@@ -83,7 +83,7 @@ func TestCacheMultiStore(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
-	cacheMulti := ms.CacheMultiStore()
+	cacheMulti := ms.RootCacheMultiStore()
 	require.IsType(t, cachemulti.Store{}, cacheMulti)
 }
 
@@ -133,7 +133,7 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	// require we cannot commit (write) to a cache-versioned multi-store
 	require.Panics(t, func() {
 		kvStore.Set(k, []byte("newValue"))
-		cms.Write()
+		cms.(types.CacheMultiStore).Write()
 	})
 }
 
@@ -875,7 +875,7 @@ func TestTraceConcurrency(t *testing.T) {
 	multi.SetTracer(b)
 	multi.SetTracingContext(tc)
 
-	cms := multi.CacheMultiStore()
+	cms := multi.RootCacheMultiStore()
 	store1 := cms.GetKVStore(key)
 	cw := store1.CacheWrapWithTrace(b, tc)
 	_ = cw
@@ -891,7 +891,7 @@ func TestTraceConcurrency(t *testing.T) {
 				return
 			default:
 				store1.Set([]byte{1}, []byte{1})
-				cms.Write()
+				cms.(types.CacheMultiStore).Write()
 			}
 		}
 	}(stop)
@@ -1068,7 +1068,7 @@ func TestStateListeners(t *testing.T) {
 	require.Equal(t, 1, len(ms.listeners))
 
 	require.NoError(t, ms.LoadLatestVersion())
-	cacheMulti := ms.CacheMultiStore()
+	cacheMulti := ms.cacheMultiStore()
 
 	store := cacheMulti.GetKVStore(testStoreKey1)
 	store.Set([]byte{1}, []byte{1})

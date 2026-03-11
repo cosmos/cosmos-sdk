@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
@@ -28,14 +29,15 @@ type KeeperTestSuite struct {
 
 func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(consensusparamkeeper.StoreKey)
+	govAddr := authtypes.NewModuleAddress("gov").String()
 	consensusParams := cmttypes.DefaultConsensusParams()
-	consensusParams.Authority.Authority = "gov"
+	consensusParams.Authority.Authority = govAddr
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	header := cmtproto.Header{Height: 5}
 	ctx := testCtx.Ctx.WithBlockHeader(header).WithConsensusParams(consensusParams.ToProto())
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	storeService := runtime.NewKVStoreService(key)
-	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, storeService, "gov", runtime.EventService{})
+	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, storeService, govAddr, runtime.EventService{})
 
 	s.ctx = ctx
 	s.consensusParamsKeeper = &keeper
@@ -310,19 +312,19 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 			expErrMsg: "",
 		},
 		{
-			name: "update authority to governance module",
+			name: "update authority to governance module address",
 			input: &types.MsgUpdateParams{
 				Authority: s.ctx.Authority(),
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
-				Auth:      &cmtproto.AuthorityParams{Authority: "governance-module"},
+				Auth:      &cmtproto.AuthorityParams{Authority: authtypes.NewModuleAddress("governance").String()},
 			},
 			expErr:    false,
 			expErrMsg: "",
 		},
 		{
-			name: "update authority to empty string",
+			name: "update authority to empty string (clear)",
 			input: &types.MsgUpdateParams{
 				Authority: s.ctx.Authority(),
 				Block:     defaultConsensusParams.Block,
@@ -334,28 +336,16 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 			expErrMsg: "",
 		},
 		{
-			name: "update authority to long string (255 chars)",
+			name: "reject invalid authority address",
 			input: &types.MsgUpdateParams{
 				Authority: s.ctx.Authority(),
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
-				Auth:      &cmtproto.AuthorityParams{Authority: string(make([]byte, 255))},
-			},
-			expErr:    false,
-			expErrMsg: "",
-		},
-		{
-			name: "reject authority exceeding 255 chars",
-			input: &types.MsgUpdateParams{
-				Authority: s.ctx.Authority(),
-				Block:     defaultConsensusParams.Block,
-				Validator: defaultConsensusParams.Validator,
-				Evidence:  defaultConsensusParams.Evidence,
-				Auth:      &cmtproto.AuthorityParams{Authority: string(make([]byte, 256))},
+				Auth:      &cmtproto.AuthorityParams{Authority: "not-a-valid-address"},
 			},
 			expErr:    true,
-			expErrMsg: "exceeds 255 characters",
+			expErrMsg: "invalid authority address",
 		},
 	}
 

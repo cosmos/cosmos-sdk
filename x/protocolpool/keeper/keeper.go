@@ -205,10 +205,6 @@ func (k Keeper) GetAllContinuousFunds(ctx sdk.Context) ([]types.ContinuousFund, 
 }
 
 func (k Keeper) validateAuthority(ctx sdk.Context, authority string) error {
-	if _, err := k.authKeeper.AddressCodec().StringToBytes(authority); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
-	}
-
 	return ctx.ValidateAuthority(k.authority, authority)
 }
 

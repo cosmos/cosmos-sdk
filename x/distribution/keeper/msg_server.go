@@ -250,10 +250,6 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 }
 
 func (k *Keeper) validateAuthority(goCtx context.Context, authority string) error {
-	if _, err := k.authKeeper.AddressCodec().StringToBytes(authority); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
-	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	return ctx.ValidateAuthority(k.authority, authority)
 }

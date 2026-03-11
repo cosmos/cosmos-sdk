@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -39,8 +40,10 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, e
 	}
 
 	if msg.Auth != nil {
-		if len(msg.Auth.Authority) > 255 {
-			return cmtproto.ConsensusParams{}, errors.New("authority in auth params exceeds 255 characters")
+		if msg.Auth.Authority != "" {
+			if _, err := sdk.AccAddressFromBech32(msg.Auth.Authority); err != nil {
+				return cmtproto.ConsensusParams{}, fmt.Errorf("invalid authority address in auth params: %w", err)
+			}
 		}
 		cp.Authority = msg.Auth
 	}

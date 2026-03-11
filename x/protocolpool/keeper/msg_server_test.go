@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) TestCommunityPoolSpend() {
 			},
 			preRun:    nil,
 			expErr:    true,
-			expErrMsg: "invalid authority address",
+			expErrMsg: "invalid authority",
 		},
 		{
 			name: "invalid amount",
@@ -190,7 +190,7 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 			},
 			preRun:    func() {},
 			expErr:    true,
-			expErrMsg: "invalid authority address",
+			expErrMsg: "invalid authority",
 		},
 		{
 			name: "invalid recipient address",
@@ -351,7 +351,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 			},
 			preRun:    func() {},
 			expErr:    true,
-			expErrMsg: "invalid authority address",
+			expErrMsg: "invalid authority",
 		},
 		{
 			name: "invalid recipient address",
@@ -444,7 +444,7 @@ func (suite *KeeperTestSuite) TestUpdateParams() {
 				Params:    types.Params{EnabledDistributionDenoms: []string{sdk.DefaultBondDenom}},
 			},
 			expErr:    true,
-			expErrMsg: "invalid authority address",
+			expErrMsg: "invalid authority",
 		},
 		{
 			name: "error setting params (invalid params)",

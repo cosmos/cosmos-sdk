@@ -62,6 +62,10 @@ func (k *Keeper) GetAuthority() string {
 	return k.authority
 }
 
+// UpdateParams updates consensus parameters. Note that the new authority value
+// takes effect at the start of the next block, when BeginBlock loads fresh
+// consensus params from the store. Within the same block as this update,
+// ValidateAuthority still checks against the old authority.
 func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

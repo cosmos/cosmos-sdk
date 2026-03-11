@@ -7,7 +7,6 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -396,15 +395,6 @@ func (app *BaseApp) SetVerifyVoteExtensionHandler(handler sdk.VerifyVoteExtensio
 	}
 
 	app.abciHandlers.VerifyVoteExtensionHandler = handler
-}
-
-// SetStoreMetrics sets the prepare proposal function for the BaseApp.
-func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
-	if app.sealed {
-		panic("SetStoreMetrics() on sealed BaseApp")
-	}
-
-	app.cms.SetMetrics(gatherer)
 }
 
 // SetStreamingManager sets the streaming manager for the BaseApp.

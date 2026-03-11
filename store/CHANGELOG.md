@@ -28,6 +28,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Breaking Changes
 
 * [#26056](https://github.com/cosmos/cosmos-sdk/pull/26056) Replace `CommitMultiStore.Commit` with `CommitMultiStore.StartCommit` and `CommitFinalizer` for optimistic commit with rollback support.
+* [#26060](https://github.com/cosmos/cosmos-sdk/pull/26060) Remove non-functional `StoreMetrics`. This metric interface never worked, so this simply removes dead code.
 
 ### Bug Fixes
 

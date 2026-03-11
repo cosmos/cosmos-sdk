@@ -43,8 +43,11 @@ func NewExecutor(
 func (e *Executor) Run() error {
 	var kind TaskKind
 	version := InvalidTxnVersion
-	for !e.scheduler.Done() {
+	for {
 		if !version.Valid() {
+			if e.scheduler.Done() {
+				return nil
+			}
 			// check for cancellation
 			select {
 			case <-e.ctx.Done():
@@ -65,7 +68,6 @@ func (e *Executor) Run() error {
 			return fmt.Errorf("unknown task kind %v", kind)
 		}
 	}
-	return nil
 }
 
 func (e *Executor) TryExecute(version TxnVersion) (TxnVersion, TaskKind) {

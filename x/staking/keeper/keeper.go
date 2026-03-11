@@ -74,11 +74,6 @@ func NewKeeper(
 	}
 }
 
-// GetAuthority returns the x/staking module's authority.
-func (k Keeper) GetAuthority() string {
-	return k.authority
-}
-
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx context.Context) log.Logger {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -134,6 +129,11 @@ func (k Keeper) SetLastTotalPower(ctx context.Context, power math.Int) error {
 		return err
 	}
 	return store.Set(types.LastTotalPowerKey, bz)
+}
+
+// GetAuthority returns the x/staking module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
 
 // ValidatorAddressCodec returns the app validator address codec.

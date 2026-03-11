@@ -228,6 +228,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
+
 	if in.InflationCalculationFn != nil {
 		panic("inflation calculation function argument must be nil as it is no longer used.  This argument will be removed in a future release of the Cosmos SDK.  To set a custom inflation calculation function, while using depinject ")
 	}
@@ -235,12 +241,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	var opts []keeper.InitOption
 	if in.MintFn != nil {
 		opts = append(opts, keeper.WithMintFn(in.MintFn))
-	}
-
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(

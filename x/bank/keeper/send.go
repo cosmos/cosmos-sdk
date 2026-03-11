@@ -67,8 +67,7 @@ type BaseSendKeeper struct {
 	blockedAddrs map[string]bool
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
-	// should be the x/gov module account. Used as a fallback when consensus params
-	// authority is not set.
+	// should be the x/gov module account.
 	authority string
 
 	sendRestriction *sendRestriction
@@ -98,11 +97,6 @@ func NewBaseSendKeeper(
 	}
 }
 
-// GetAuthority returns the x/bank module's authority.
-func (k BaseSendKeeper) GetAuthority() string {
-	return k.authority
-}
-
 // AppendSendRestriction adds the provided SendRestrictionFn to run after previously provided restrictions.
 func (k BaseSendKeeper) AppendSendRestriction(restriction types.SendRestrictionFn) {
 	k.sendRestriction.append(restriction)
@@ -116,6 +110,11 @@ func (k BaseSendKeeper) PrependSendRestriction(restriction types.SendRestriction
 // ClearSendRestriction removes the send restriction (if there is one).
 func (k BaseSendKeeper) ClearSendRestriction() {
 	k.sendRestriction.clear()
+}
+
+// GetAuthority returns the x/bank module's authority.
+func (k BaseSendKeeper) GetAuthority() string {
+	return k.authority
 }
 
 // GetParams returns the total set of bank parameters.

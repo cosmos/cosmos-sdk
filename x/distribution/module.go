@@ -245,15 +245,15 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
-	var opts []keeper.InitOption
-	if in.ExternalPoolKeeper != nil {
-		opts = append(opts, keeper.WithExternalCommunityPool(in.ExternalPoolKeeper))
-	}
-
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
+
+	var opts []keeper.InitOption
+	if in.ExternalPoolKeeper != nil {
+		opts = append(opts, keeper.WithExternalCommunityPool(in.ExternalPoolKeeper))
 	}
 
 	k := keeper.NewKeeper(

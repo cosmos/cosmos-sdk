@@ -99,8 +99,7 @@ type AccountKeeper struct {
 	proto func() sdk.AccountI
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
-	// should be the x/gov module account. Used as a fallback when consensus params
-	// authority is not set.
+	// should be the x/gov module account.
 	authority string
 
 	// State

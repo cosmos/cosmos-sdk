@@ -19,7 +19,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/rootmulti"
 	"cosmossdk.io/store/snapshots"
@@ -301,7 +300,7 @@ func TestSetLoader(t *testing.T) {
 	initStore := func(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 		t.Helper()
 
-		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+		rs := rootmulti.NewStore(db, log.NewNopLogger())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
 		key := storetypes.NewKVStoreKey(storeKey)
@@ -323,7 +322,7 @@ func TestSetLoader(t *testing.T) {
 	checkStore := func(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
 		t.Helper()
 
-		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+		rs := rootmulti.NewStore(db, log.NewNopLogger())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 
 		key := storetypes.NewKVStoreKey(storeKey)

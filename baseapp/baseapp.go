@@ -26,7 +26,6 @@ import (
 
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store"
-	storemetrics "cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
 	"cosmossdk.io/store/tracekv"
 	storetypes "cosmossdk.io/store/types"
@@ -206,7 +205,7 @@ func NewBaseApp(
 		logger:           logger.With(log.ModuleKey, "baseapp"),
 		name:             name,
 		db:               db,
-		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default, we use a no-op metric gather in store
+		cms:              store.NewCommitMultiStore(db, logger),
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),
@@ -909,10 +908,11 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		anteCtx, anteSpan := anteCtx.StartSpan(tracer, "anteHandler")
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 		anteSpan.End()
-		// now we should back to the previous go context which didn't capture the anteHandler instrumentation span
-		newCtx = newCtx.WithContext(ctx)
-
 		if !newCtx.IsZero() {
+			// Restore the parent span without discarding values attached by the
+			// ante handler to the stdlib context.
+			newCtx = newCtx.WithContext(trace.ContextWithSpan(newCtx.Context(), trace.SpanFromContext(ctx.Context())))
+
 			// At this point, newCtx.MultiStore() is a store branch, or something else
 			// replaced by the AnteHandler. We want the original multistore.
 			//

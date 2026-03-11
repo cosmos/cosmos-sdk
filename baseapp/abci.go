@@ -1090,7 +1090,7 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	app.committer = nil
 
 	if committer == nil {
-		// during InitChain we must initialize the committer here
+		// during InitChain or simulations we must initialize the committer here
 		var err error
 		committer, err = finalizeState.MultiStore.StartCommit(context.Background(), header)
 		if err != nil {

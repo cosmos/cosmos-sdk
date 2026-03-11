@@ -1,8 +1,6 @@
 package baseapp
 
 import (
-	"context"
-
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	errorsmod "cosmossdk.io/errors"
@@ -51,19 +49,6 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 
 	gasInfo, result, _, err := app.RunTx(execModeFinalize, bz, tx, -1, nil, nil)
 	return gasInfo, result, err
-}
-
-// SimWriteState is an entrypoint for simulations only. They are not executed during the normal ABCI finalize
-// block step but later. Therefore, an extra call to the root multi-store (app.cms) is required to write the changes.
-func (app *BaseApp) SimWriteState() {
-	finalizer, err := app.stateManager.GetState(execModeFinalize).MultiStore.StartCommit(context.Background(), cmtproto.Header{})
-	if err != nil {
-		panic(err)
-	}
-	_, err = finalizer.Finalize()
-	if err != nil {
-		panic(err)
-	}
 }
 
 // NewContextLegacy returns a new sdk.Context with the provided header

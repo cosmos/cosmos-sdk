@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type contextTestSuite struct {
@@ -294,9 +296,10 @@ func (s *contextTestSuite) TestValidateAuthority() {
 	// No consensus params — falls back to keeper authority.
 	s.Require().NoError(ctx.ValidateAuthority(keeperAuth, keeperAuth))
 
-	// No consensus params — wrong msg authority fails.
+	// No consensus params — wrong msg authority fails with ErrUnauthorized.
 	err := ctx.ValidateAuthority(keeperAuth, "wrong")
 	s.Require().Error(err)
+	s.Require().True(errors.Is(err, sdkerrors.ErrUnauthorized))
 	s.Require().Contains(err.Error(), "invalid authority")
 	s.Require().Contains(err.Error(), keeperAuth)
 
@@ -309,7 +312,7 @@ func (s *contextTestSuite) TestValidateAuthority() {
 	// Consensus params authority set — keeper authority is rejected.
 	err = ctx.ValidateAuthority(keeperAuth, keeperAuth)
 	s.Require().Error(err)
-	s.Require().Contains(err.Error(), "invalid authority")
+	s.Require().True(errors.Is(err, sdkerrors.ErrUnauthorized))
 	s.Require().Contains(err.Error(), consAuth)
 
 	// Consensus params with empty authority — falls back to keeper.

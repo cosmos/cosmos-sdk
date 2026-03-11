@@ -2,7 +2,6 @@ package types
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -14,6 +13,8 @@ import (
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/gaskv"
 	storetypes "cosmossdk.io/store/types"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // ExecMode defines the execution mode which can be set on a Context.
@@ -144,14 +145,14 @@ func (c Context) Authority() string {
 
 // ValidateAuthority checks that msgAuthority matches the effective authority.
 // It first checks consensus params; if no authority is set there, it falls back
-// to keeperAuthority. Returns nil on success, or an error if mismatched.
+// to keeperAuthority. Returns nil on success, or an ErrUnauthorized error if mismatched.
 func (c Context) ValidateAuthority(keeperAuthority, msgAuthority string) error {
 	expected := c.Authority()
 	if expected == "" {
 		expected = keeperAuthority
 	}
 	if expected != msgAuthority {
-		return fmt.Errorf("invalid authority: expected %s, got %s", expected, msgAuthority)
+		return sdkerrors.ErrUnauthorized.Wrapf("invalid authority: expected %s, got %s", expected, msgAuthority)
 	}
 	return nil
 }

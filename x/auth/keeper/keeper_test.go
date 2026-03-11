@@ -1,9 +1,9 @@
 package keeper_test
 
 import (
-	cmtypes "github.com/cometbft/cometbft/types"
 	"testing"
 
+	cmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"

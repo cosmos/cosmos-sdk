@@ -91,6 +91,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Abci: &cmtproto.ABCIParams{
 						VoteExtensionsEnableHeight: 0,
 					},
+					Authority: &cmtproto.AuthorityParams{Authority: ""},
 				},
 			},
 			true,
@@ -120,6 +121,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Abci: &cmtproto.ABCIParams{
 						VoteExtensionsEnableHeight: 1234,
 					},
+					Authority: &cmtproto.AuthorityParams{Authority: ""},
 				},
 			},
 			true,

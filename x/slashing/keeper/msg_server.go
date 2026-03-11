@@ -3,11 +3,8 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -28,12 +25,8 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	authority := ctx.Authority()
-	if authority == "" {
-		authority = k.authority
-	}
-	if authority != msg.Authority {
-		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", authority, msg.Authority)
+	if err := ctx.ValidateAuthority(k.authority, msg.Authority); err != nil {
+		return nil, err
 	}
 
 	if err := msg.Params.Validate(); err != nil {

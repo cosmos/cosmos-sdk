@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -139,6 +140,20 @@ func (c Context) Authority() string {
 		return c.consParams.Authority.Authority
 	}
 	return ""
+}
+
+// ValidateAuthority checks that msgAuthority matches the effective authority.
+// It first checks consensus params; if no authority is set there, it falls back
+// to keeperAuthority. Returns nil on success, or an error if mismatched.
+func (c Context) ValidateAuthority(keeperAuthority, msgAuthority string) error {
+	expected := c.Authority()
+	if expected == "" {
+		expected = keeperAuthority
+	}
+	if expected != msgAuthority {
+		return fmt.Errorf("invalid authority: expected %s, got %s", expected, msgAuthority)
+	}
+	return nil
 }
 
 func (c Context) Deadline() (deadline time.Time, ok bool) {

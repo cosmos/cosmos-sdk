@@ -209,15 +209,7 @@ func (k Keeper) validateAuthority(ctx sdk.Context, authority string) error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
 	}
 
-	expected := ctx.Authority()
-	if expected == "" {
-		expected = k.authority
-	}
-	if expected != authority {
-		return errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", expected, authority)
-	}
-
-	return nil
+	return ctx.ValidateAuthority(k.authority, authority)
 }
 
 // PercentageCoinMul multiplies each coin in an sdk.Coins struct by the given percentage and returns the new

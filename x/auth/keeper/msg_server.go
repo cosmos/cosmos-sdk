@@ -3,10 +3,7 @@ package keeper
 import (
 	"context"
 
-	sdkerrors "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -26,12 +23,8 @@ func NewMsgServerImpl(ak AccountKeeper) types.MsgServer {
 func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	authority := ctx.Authority()
-	if authority == "" {
-		authority = ms.ak.authority
-	}
-	if authority != msg.Authority {
-		return nil, sdkerrors.Wrapf(errors.ErrUnauthorized, "invalid authority: expected %s, got %s", authority, msg.Authority)
+	if err := ctx.ValidateAuthority(ms.ak.authority, msg.Authority); err != nil {
+		return nil, err
 	}
 
 	if err := msg.Params.Validate(); err != nil {

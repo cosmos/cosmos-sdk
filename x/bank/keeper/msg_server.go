@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type msgServer struct {
@@ -134,12 +133,8 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	authority := ctx.Authority()
-	if authority == "" {
-		authority = k.GetAuthority()
-	}
-	if authority != req.Authority {
-		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", authority, req.Authority)
+	if err := ctx.ValidateAuthority(k.GetAuthority(), req.Authority); err != nil {
+		return nil, err
 	}
 
 	if err := req.Params.Validate(); err != nil {
@@ -156,12 +151,8 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 func (k msgServer) SetSendEnabled(goCtx context.Context, msg *types.MsgSetSendEnabled) (*types.MsgSetSendEnabledResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	authority := ctx.Authority()
-	if authority == "" {
-		authority = k.GetAuthority()
-	}
-	if authority != msg.Authority {
-		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", authority, msg.Authority)
+	if err := ctx.ValidateAuthority(k.GetAuthority(), msg.Authority); err != nil {
+		return nil, err
 	}
 
 	seen := map[string]bool{}

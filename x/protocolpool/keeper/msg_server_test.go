@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
@@ -476,4 +477,139 @@ func (suite *KeeperTestSuite) TestUpdateParams() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestUpdateParamsAuthority() {
+	keeperAuthority := suite.poolKeeper.GetAuthority()
+	overrideAuthority := sdk.AccAddress("override_authority___").String()
+
+	suite.Run("fallback to keeper authority", func() {
+		_, err := suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{
+			Authority: keeperAuthority,
+			Params:    types.DefaultParams(),
+		})
+		suite.Require().NoError(err)
+
+		_, err = suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{
+			Authority: overrideAuthority,
+			Params:    types.DefaultParams(),
+		})
+		suite.Require().Error(err)
+		suite.Require().Contains(err.Error(), "invalid authority")
+	})
+
+	suite.Run("consensus params authority takes precedence", func() {
+		ctx := suite.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAuthority},
+		})
+
+		_, err := suite.msgServer.UpdateParams(ctx, &types.MsgUpdateParams{
+			Authority: overrideAuthority,
+			Params:    types.DefaultParams(),
+		})
+		suite.Require().NoError(err)
+
+		_, err = suite.msgServer.UpdateParams(ctx, &types.MsgUpdateParams{
+			Authority: keeperAuthority,
+			Params:    types.DefaultParams(),
+		})
+		suite.Require().Error(err)
+		suite.Require().Contains(err.Error(), "invalid authority")
+	})
+}
+
+func (suite *KeeperTestSuite) TestCommunityPoolSpendAuthority() {
+	keeperAuthority := suite.poolKeeper.GetAuthority()
+	overrideAuthority := sdk.AccAddress("override_authority___").String()
+	validAmount := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500)))
+
+	suite.Run("fallback to keeper authority", func() {
+		suite.authKeeper.EXPECT().AddressCodec().
+			Return(address.NewBech32Codec("cosmos")).AnyTimes()
+		_, err := suite.msgServer.CommunityPoolSpend(suite.ctx, &types.MsgCommunityPoolSpend{
+			Authority: overrideAuthority,
+			Recipient: recipientAddr.String(),
+			Amount:    validAmount,
+		})
+		suite.Require().Error(err)
+		suite.Require().Contains(err.Error(), "invalid authority")
+	})
+
+	suite.Run("consensus params authority takes precedence", func() {
+		suite.authKeeper.EXPECT().AddressCodec().
+			Return(address.NewBech32Codec("cosmos")).AnyTimes()
+		ctx := suite.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAuthority},
+		})
+
+		_, err := suite.msgServer.CommunityPoolSpend(ctx, &types.MsgCommunityPoolSpend{
+			Authority: keeperAuthority,
+			Recipient: recipientAddr.String(),
+			Amount:    validAmount,
+		})
+		suite.Require().Error(err)
+		suite.Require().Contains(err.Error(), "invalid authority")
+	})
+}
+
+func (suite *KeeperTestSuite) TestCreateContinuousFundAuthority() {
+	keeperAuthority := suite.poolKeeper.GetAuthority()
+	overrideAuthority := sdk.AccAddress("override_authority___").String()
+	validPercentage := math.LegacyMustNewDecFromStr("0.2")
+	validExpiry := suite.ctx.BlockTime().Add(24 * time.Hour)
+
+	suite.Run("fallback to keeper authority", func() {
+		_, err := suite.msgServer.CreateContinuousFund(suite.ctx, &types.MsgCreateContinuousFund{
+			Authority:  overrideAuthority,
+			Recipient:  recipientAddr.String(),
+			Percentage: validPercentage,
+			Expiry:     &validExpiry,
+		})
+		suite.Require().Error(err)
+		suite.Require().Contains(err.Error(), "invalid authority")
+	})
+
+	suite.Run("consensus params authority takes precedence", func() {
+		ctx := suite.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAuthority},
+		})
+
+		_, err := suite.msgServer.CreateContinuousFund(ctx, &types.MsgCreateContinuousFund{
+			Authority:  keeperAuthority,
+			Recipient:  recipientAddr.String(),
+			Percentage: validPercentage,
+			Expiry:     &validExpiry,
+		})
+		suite.Require().Error(err)
+		suite.Require().Contains(err.Error(), "invalid authority")
+	})
+}
+
+func (suite *KeeperTestSuite) TestCancelContinuousFundAuthority() {
+	keeperAuthority := suite.poolKeeper.GetAuthority()
+	overrideAuthority := sdk.AccAddress("override_authority___").String()
+
+	suite.Run("fallback to keeper authority", func() {
+		_, err := suite.msgServer.CancelContinuousFund(suite.ctx, &types.MsgCancelContinuousFund{
+			Authority: overrideAuthority,
+			Recipient: recipientAddr.String(),
+		})
+		suite.Require().Error(err)
+		suite.Require().Contains(err.Error(), "invalid authority")
+	})
+
+	suite.Run("consensus params authority takes precedence", func() {
+		suite.authKeeper.EXPECT().AddressCodec().
+			Return(address.NewBech32Codec("cosmos")).AnyTimes()
+		ctx := suite.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAuthority},
+		})
+
+		_, err := suite.msgServer.CancelContinuousFund(ctx, &types.MsgCancelContinuousFund{
+			Authority: keeperAuthority,
+			Recipient: recipientAddr.String(),
+		})
+		suite.Require().Error(err)
+		suite.Require().Contains(err.Error(), "invalid authority")
+	})
 }

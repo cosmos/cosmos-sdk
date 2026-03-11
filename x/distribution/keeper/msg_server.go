@@ -12,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type msgServer struct {
@@ -256,16 +255,7 @@ func (k *Keeper) validateAuthority(goCtx context.Context, authority string) erro
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	expected := ctx.Authority()
-	if expected == "" {
-		expected = k.authority
-	}
-	if expected != authority {
-		return errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", expected, authority)
-	}
-
-	return nil
+	return ctx.ValidateAuthority(k.authority, authority)
 }
 
 func validateAmount(amount sdk.Coins) error {

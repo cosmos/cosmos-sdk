@@ -11,11 +11,8 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"
-	"cosmossdk.io/errors"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
@@ -67,12 +64,8 @@ func (k *Keeper) GetAuthority() string {
 func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	authority := sdkCtx.Authority()
-	if authority == "" {
-		authority = k.authority
-	}
-	if authority != msg.Authority {
-		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "invalid authority: got %s, want %s", msg.Authority, authority)
+	if err := sdkCtx.ValidateAuthority(k.authority, msg.Authority); err != nil {
+		return nil, err
 	}
 
 	consensusParams, err := msg.ToProtoConsensusParams()

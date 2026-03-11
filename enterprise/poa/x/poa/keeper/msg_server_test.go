@@ -83,6 +83,64 @@ func TestMsgServerUpdateParams(t *testing.T) {
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "invalid authority")
 	})
+
+	t.Run("fallback to keeper authority", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
+		require.NoError(t, err)
+
+		// No consensus params authority set, keeper admin works
+		msg := &poatypes.MsgUpdateParams{
+			Admin:  adminAddr,
+			Params: poatypes.Params{Admin: adminAddr},
+		}
+		resp, err := msgServer.UpdateParams(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		// Wrong address fails
+		msg = &poatypes.MsgUpdateParams{
+			Admin:  sdk.AccAddress("wrongadmin").String(),
+			Params: poatypes.Params{Admin: adminAddr},
+		}
+		_, err = msgServer.UpdateParams(f.ctx, msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid authority")
+	})
+
+	t.Run("consensus params authority takes precedence", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
+		require.NoError(t, err)
+
+		overrideAddr := sdk.AccAddress("override-authority").String()
+		f.ctx = f.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Validator: &cmtproto.ValidatorParams{
+				PubKeyTypes: []string{"ed25519"},
+			},
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAddr},
+		})
+
+		// Override address works
+		msg := &poatypes.MsgUpdateParams{
+			Admin:  overrideAddr,
+			Params: poatypes.Params{Admin: overrideAddr},
+		}
+		resp, err := msgServer.UpdateParams(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		// Original keeper admin fails
+		msg = &poatypes.MsgUpdateParams{
+			Admin:  adminAddr,
+			Params: poatypes.Params{Admin: adminAddr},
+		}
+		_, err = msgServer.UpdateParams(f.ctx, msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid authority")
+	})
 }
 
 func TestMsgServerCreateValidator(t *testing.T) {
@@ -1034,6 +1092,104 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
 		require.NoError(t, err)
 		require.Equal(t, int64(200), power)
+	})
+
+	t.Run("fallback to keeper authority", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
+		require.NoError(t, err)
+
+		// Create a validator to update
+		operatorAddr := sdk.AccAddress("operator-auth-fb")
+		pubKey := ed25519.GenPrivKey().PubKey()
+		pubKeyAny := types.UnsafePackAny(pubKey)
+		consAddr := sdk.GetConsAddress(pubKey)
+
+		validator := poatypes.Validator{
+			PubKey: pubKeyAny,
+			Power:  100,
+			Metadata: &poatypes.ValidatorMetadata{
+				Moniker:         "test-validator",
+				OperatorAddress: operatorAddr.String(),
+			},
+		}
+		err = f.poaKeeper.CreateValidator(f.ctx, consAddr, validator, true)
+		require.NoError(t, err)
+
+		// No consensus params authority set, keeper admin works
+		validator.Power = 200
+		msg := &poatypes.MsgUpdateValidators{
+			Admin:      adminAddr,
+			Validators: []poatypes.Validator{validator},
+		}
+		resp, err := msgServer.UpdateValidators(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		// Wrong address fails
+		validator.Power = 300
+		msg = &poatypes.MsgUpdateValidators{
+			Admin:      sdk.AccAddress("wrongadmin").String(),
+			Validators: []poatypes.Validator{validator},
+		}
+		_, err = msgServer.UpdateValidators(f.ctx, msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid authority")
+	})
+
+	t.Run("consensus params authority takes precedence", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
+		require.NoError(t, err)
+
+		overrideAddr := sdk.AccAddress("override-authority").String()
+		f.ctx = f.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Validator: &cmtproto.ValidatorParams{
+				PubKeyTypes: []string{"ed25519"},
+			},
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAddr},
+		})
+
+		// Create a validator to update
+		operatorAddr := sdk.AccAddress("operator-auth-cp")
+		pubKey := ed25519.GenPrivKey().PubKey()
+		pubKeyAny := types.UnsafePackAny(pubKey)
+		consAddr := sdk.GetConsAddress(pubKey)
+
+		validator := poatypes.Validator{
+			PubKey: pubKeyAny,
+			Power:  100,
+			Metadata: &poatypes.ValidatorMetadata{
+				Moniker:         "test-validator",
+				OperatorAddress: operatorAddr.String(),
+			},
+		}
+		err = f.poaKeeper.CreateValidator(f.ctx, consAddr, validator, true)
+		require.NoError(t, err)
+
+		// Override address works
+		validator.Power = 200
+		msg := &poatypes.MsgUpdateValidators{
+			Admin:      overrideAddr,
+			Validators: []poatypes.Validator{validator},
+		}
+		resp, err := msgServer.UpdateValidators(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		// Original keeper admin fails
+		validator.Power = 300
+		msg = &poatypes.MsgUpdateValidators{
+			Admin:      adminAddr,
+			Validators: []poatypes.Validator{validator},
+		}
+		_, err = msgServer.UpdateValidators(f.ctx, msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid authority")
 	})
 }
 

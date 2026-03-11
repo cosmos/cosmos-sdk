@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdkmath "cosmossdk.io/math"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -1777,4 +1778,45 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 			suite.Require().NoError(err)
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestUpdateParamsAuthority() {
+	suite.reset()
+	keeperAuthority := suite.govKeeper.GetAuthority()
+	overrideAuthority := sdk.AccAddress("override_authority___").String()
+	params := v1.DefaultParams()
+
+	suite.Run("fallback to keeper authority", func() {
+		_, err := suite.msgSrvr.UpdateParams(suite.ctx, &v1.MsgUpdateParams{
+			Authority: keeperAuthority,
+			Params:    params,
+		})
+		suite.Require().NoError(err)
+
+		_, err = suite.msgSrvr.UpdateParams(suite.ctx, &v1.MsgUpdateParams{
+			Authority: overrideAuthority,
+			Params:    params,
+		})
+		suite.Require().Error(err)
+		suite.Require().Contains(err.Error(), "invalid authority")
+	})
+
+	suite.Run("consensus params authority takes precedence", func() {
+		ctx := suite.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAuthority},
+		})
+
+		_, err := suite.msgSrvr.UpdateParams(ctx, &v1.MsgUpdateParams{
+			Authority: overrideAuthority,
+			Params:    params,
+		})
+		suite.Require().NoError(err)
+
+		_, err = suite.msgSrvr.UpdateParams(ctx, &v1.MsgUpdateParams{
+			Authority: keeperAuthority,
+			Params:    params,
+		})
+		suite.Require().Error(err)
+		suite.Require().Contains(err.Error(), "invalid authority")
+	})
 }

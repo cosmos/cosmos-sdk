@@ -3,8 +3,6 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -57,12 +55,5 @@ func (k msgServer) CancelUpgrade(ctx context.Context, msg *types.MsgCancelUpgrad
 
 func (k msgServer) validateAuthority(ctx context.Context, authority string) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	expected := sdkCtx.Authority()
-	if expected == "" {
-		expected = k.authority
-	}
-	if expected != authority {
-		return errors.Wrapf(types.ErrInvalidSigner, "expected %s got %s", expected, authority)
-	}
-	return nil
+	return sdkCtx.ValidateAuthority(k.authority, authority)
 }

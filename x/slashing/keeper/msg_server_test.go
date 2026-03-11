@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -329,4 +330,54 @@ func (s *KeeperTestSuite) TestUnjail() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestUpdateParamsAuthority() {
+	keeperAuthority := s.slashingKeeper.GetAuthority()
+	overrideAuthority := sdk.AccAddress("override_authority___").String()
+
+	minSignedPerWindow, _ := sdkmath.LegacyNewDecFromStr("0.60")
+	slashFractionDoubleSign, _ := sdkmath.LegacyNewDecFromStr("0.022")
+	slashFractionDowntime, _ := sdkmath.LegacyNewDecFromStr("0.0089")
+	validParams := slashingtypes.Params{
+		SignedBlocksWindow:      int64(750),
+		MinSignedPerWindow:      minSignedPerWindow,
+		DowntimeJailDuration:    time.Duration(34800000000000),
+		SlashFractionDoubleSign: slashFractionDoubleSign,
+		SlashFractionDowntime:   slashFractionDowntime,
+	}
+
+	s.Run("fallback to keeper authority", func() {
+		_, err := s.msgServer.UpdateParams(s.ctx, &slashingtypes.MsgUpdateParams{
+			Authority: keeperAuthority,
+			Params:    validParams,
+		})
+		s.Require().NoError(err)
+
+		_, err = s.msgServer.UpdateParams(s.ctx, &slashingtypes.MsgUpdateParams{
+			Authority: overrideAuthority,
+			Params:    validParams,
+		})
+		s.Require().Error(err)
+		s.Require().Contains(err.Error(), "invalid authority")
+	})
+
+	s.Run("consensus params authority takes precedence", func() {
+		ctx := s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAuthority},
+		})
+
+		_, err := s.msgServer.UpdateParams(ctx, &slashingtypes.MsgUpdateParams{
+			Authority: overrideAuthority,
+			Params:    validParams,
+		})
+		s.Require().NoError(err)
+
+		_, err = s.msgServer.UpdateParams(ctx, &slashingtypes.MsgUpdateParams{
+			Authority: keeperAuthority,
+			Params:    validParams,
+		})
+		s.Require().Error(err)
+		s.Require().Contains(err.Error(), "invalid authority")
+	})
 }

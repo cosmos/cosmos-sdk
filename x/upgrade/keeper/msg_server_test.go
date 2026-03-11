@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -25,7 +27,7 @@ func (s *KeeperTestSuite) TestSoftwareUpgrade() {
 				},
 			},
 			true,
-			"expected authority account as only signer for proposal message",
+			"invalid authority",
 		},
 		{
 			"unauthorized authority address",
@@ -38,7 +40,7 @@ func (s *KeeperTestSuite) TestSoftwareUpgrade() {
 				},
 			},
 			true,
-			"expected authority account as only signer for proposal message",
+			"invalid authority",
 		},
 		{
 			"invalid plan",
@@ -103,7 +105,7 @@ func (s *KeeperTestSuite) TestCancelUpgrade() {
 				Authority: "authority",
 			},
 			true,
-			"expected authority account as only signer for proposal message",
+			"invalid authority",
 		},
 		{
 			"unauthorized authority address",
@@ -111,7 +113,7 @@ func (s *KeeperTestSuite) TestCancelUpgrade() {
 				Authority: s.addrs[0].String(),
 			},
 			true,
-			"expected authority account as only signer for proposal message",
+			"invalid authority",
 		},
 		{
 			"upgrade canceled successfully",
@@ -135,4 +137,104 @@ func (s *KeeperTestSuite) TestCancelUpgrade() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestSoftwareUpgradeAuthority() {
+	keeperAuthority := sdk.AccAddress(address.Module("gov")).String()
+	overrideAuthority := sdk.AccAddress("override_authority___").String()
+
+	validPlan := types.Plan{
+		Name:   "authority-test",
+		Info:   "test info",
+		Height: 123450000,
+	}
+
+	s.Run("fallback to keeper authority", func() {
+		_, err := s.msgSrvr.SoftwareUpgrade(s.ctx, &types.MsgSoftwareUpgrade{
+			Authority: keeperAuthority,
+			Plan:      validPlan,
+		})
+		s.Require().NoError(err)
+
+		_, err = s.msgSrvr.SoftwareUpgrade(s.ctx, &types.MsgSoftwareUpgrade{
+			Authority: overrideAuthority,
+			Plan:      validPlan,
+		})
+		s.Require().Error(err)
+		s.Require().Contains(err.Error(), "expected")
+	})
+
+	s.Run("consensus params authority takes precedence", func() {
+		ctx := s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAuthority},
+		})
+
+		_, err := s.msgSrvr.SoftwareUpgrade(ctx, &types.MsgSoftwareUpgrade{
+			Authority: overrideAuthority,
+			Plan: types.Plan{
+				Name:   "authority-test-override",
+				Info:   "test info",
+				Height: 123450001,
+			},
+		})
+		s.Require().NoError(err)
+
+		_, err = s.msgSrvr.SoftwareUpgrade(ctx, &types.MsgSoftwareUpgrade{
+			Authority: keeperAuthority,
+			Plan:      validPlan,
+		})
+		s.Require().Error(err)
+		s.Require().Contains(err.Error(), "expected")
+	})
+}
+
+func (s *KeeperTestSuite) TestCancelUpgradeAuthority() {
+	keeperAuthority := sdk.AccAddress(address.Module("gov")).String()
+	overrideAuthority := sdk.AccAddress("override_authority___").String()
+
+	// Schedule an upgrade first
+	err := s.upgradeKeeper.ScheduleUpgrade(s.ctx, types.Plan{
+		Name:   "cancel-auth-test",
+		Info:   "some info",
+		Height: 123450000,
+	})
+	s.Require().NoError(err)
+
+	s.Run("fallback to keeper authority", func() {
+		_, err := s.msgSrvr.CancelUpgrade(s.ctx, &types.MsgCancelUpgrade{
+			Authority: overrideAuthority,
+		})
+		s.Require().Error(err)
+		s.Require().Contains(err.Error(), "expected")
+
+		_, err = s.msgSrvr.CancelUpgrade(s.ctx, &types.MsgCancelUpgrade{
+			Authority: keeperAuthority,
+		})
+		s.Require().NoError(err)
+	})
+
+	s.Run("consensus params authority takes precedence", func() {
+		// Re-schedule
+		err := s.upgradeKeeper.ScheduleUpgrade(s.ctx, types.Plan{
+			Name:   "cancel-auth-test-2",
+			Info:   "some info",
+			Height: 123450000,
+		})
+		s.Require().NoError(err)
+
+		ctx := s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAuthority},
+		})
+
+		_, err = s.msgSrvr.CancelUpgrade(ctx, &types.MsgCancelUpgrade{
+			Authority: keeperAuthority,
+		})
+		s.Require().Error(err)
+		s.Require().Contains(err.Error(), "expected")
+
+		_, err = s.msgSrvr.CancelUpgrade(ctx, &types.MsgCancelUpgrade{
+			Authority: overrideAuthority,
+		})
+		s.Require().NoError(err)
+	})
 }

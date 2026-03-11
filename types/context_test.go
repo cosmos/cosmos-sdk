@@ -248,11 +248,12 @@ func (s *contextTestSuite) TestUnwrapSDKContext() {
 func (s *contextTestSuite) TestMultiStore() {
 	db := dbm.NewMemDB()
 	rms := rootmulti.NewStore(db, log.NewNopLogger())
-	ctx := types.NewContext(rms.RootCacheMultiStore(), cmtproto.Header{}, false, nil)
 
 	objKey := storetypes.NewObjectStoreKey("obj")
 	rms.MountStoreWithDB(objKey, storetypes.StoreTypeObject, nil)
 	s.Require().NoError(rms.LoadLatestVersion())
+
+	ctx := types.NewContext(rms.RootCacheMultiStore(), cmtproto.Header{}, false, nil)
 	objKVStore := ctx.ObjectStore(objKey)
 	s.Require().Equal(objKVStore.GetStoreType(), storetypes.StoreTypeObject)
 }

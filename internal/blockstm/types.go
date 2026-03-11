@@ -14,8 +14,8 @@ const (
 
 	// MVData Metrics
 
-	KeyMVDataRead  = "mvdata_read"
-	KeyMVDataWrite = "mvdata_write"
+	KeyMVDataRead        = "mvdata_read"
+	KeyMVDataConsolidate = "mvdata_consolidate"
 
 	// MVView Metrics
 
@@ -95,8 +95,11 @@ type MultiStore interface {
 
 // MVStore is a value type agnostic interface for `MVData`, to keep `MVMemory` value type agnostic.
 type MVStore interface {
-	Delete(Key, TxnIndex)
-	WriteEstimate(Key, TxnIndex)
+	InitWithEstimates(TxnIndex, Locations)
+	ConvertWritesToEstimates(txn TxnIndex)
+	ClearEstimates(txn TxnIndex)
+	ConsolidateEmpty(txn TxnIndex)
+
 	ValidateReadSet(TxnIndex, *ReadSet) bool
 	SnapshotToStore(storetypes.Store)
 }
@@ -105,7 +108,7 @@ type MVStore interface {
 type MVView interface {
 	storetypes.Store
 
-	ApplyWriteSet(TxnVersion) Locations
+	ApplyWriteSet(TxnVersion) bool
 	ReadSet() *ReadSet
 	WriteCount() int
 }

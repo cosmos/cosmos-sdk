@@ -4,6 +4,7 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"

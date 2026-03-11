@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/exported"

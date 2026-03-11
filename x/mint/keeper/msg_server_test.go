@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

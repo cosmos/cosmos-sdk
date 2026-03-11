@@ -84,7 +84,7 @@ func (s *MsgServer) CreateValidator(
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	
+
 	if err := s.keeper.validatePubkeyType(sdkCtx, pubKey); err != nil {
 		return nil, err
 	}

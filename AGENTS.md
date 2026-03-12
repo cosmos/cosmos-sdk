@@ -19,6 +19,24 @@ This file provides guidance for automated agents contributing to this repository
 - Tests live throughout the repo. Unit and integration tests in `tests/`; system tests in `tests/systemtests/`; e2e tests in `tests/e2e/`.
 - Agents are **not** expected to run `test-e2e`, `test-sim-*`, or `test-system` by default — these are slow and environment-sensitive.
 
+## Documentation
+
+- **API & tutorials:** https://docs.cosmos.network/
+- **Architecture:** `docs/architecture/` — follow existing patterns when adding features
+- **Module overview:** `x/README.md` — lists all modules and their purposes
+
+## Scope
+
+- **IBC** is maintained in a separate repo ([ibc-go](https://github.com/cosmos/ibc-go)); do not add IBC logic to the Cosmos SDK
+- **Deprecated modules** in `contrib/` (circuit, crisis, nft) — avoid adding new features; prefer core `x/` modules
+- **Enterprise modules** in `enterprise/` have different licensing — see `enterprise/README.md` before use
+
+## Common Mistakes
+
+- **Do not edit `go.sum` manually** — use `make tidy-all` to manage dependencies
+- **Do not run `golangci-lint` directly** with custom paths — use `make lint` to match CI
+- **Enterprise licensing** — modules under `enterprise/` use different licenses; do not copy code without checking
+
 ## Development Workflow
 
 1. **Pre-push verification**
@@ -53,6 +71,12 @@ This file provides guidance for automated agents contributing to this repository
 
 - Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. Common types: `feat`, `fix`, `docs`, `test`, `deps`, `chore`.
 - Include the proposed commit message in the pull request description when opening a PR.
+
+## Pull Request Workflow
+
+- Add a changelog entry to `CHANGELOG.md` under `## UNRELEASED` for user-facing or notable changes
+- Ensure CI passes (build, lint, tests) before requesting review
+- Keep PRs focused — smaller changes are easier to review
 
 ## Enterprise Modules
 

@@ -451,6 +451,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 			app.logger.Error("failed to rollback committer in PrepareProposal", "error", err)
 			return nil, fmt.Errorf("failed to rollback committer in PrepareProposal: %w", err)
 		}
+		app.committer = nil
 	}
 
 	// Always reset state given that PrepareProposal can timeout and be called

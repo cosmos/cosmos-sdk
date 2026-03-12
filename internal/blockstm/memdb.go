@@ -5,7 +5,7 @@ import (
 
 	"github.com/cosmos/btree"
 
-	"cosmossdk.io/store/cachekv"
+	"cosmossdk.io/store/legacy/cachekv"
 	"cosmossdk.io/store/tracekv"
 	storetypes "cosmossdk.io/store/types"
 

@@ -576,6 +576,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 				app.logger.Error("failed to rollback committer in ProcessProposal", "error", err)
 				return nil, fmt.Errorf("failed to rollback committer in ProcessProposal: %w", err)
 			}
+			app.committer = nil
 		}
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 	}
@@ -1032,9 +1033,9 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 			if app.committer != nil {
 				err := app.committer.Rollback()
 				if err != nil {
-					return nil, fmt.Errorf("failed to rollback committer: %w", err)
+					return nil, fmt.Errorf("failed to rollback optimistic execution commit %w", err)
 				}
-				return nil, fmt.Errorf("failed to rollback optimistic execution commit %w", err)
+				app.committer = nil
 			}
 		}
 	}

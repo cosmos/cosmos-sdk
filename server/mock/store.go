@@ -1,10 +1,8 @@
 package mock
 
 import (
-	"context"
 	"io"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 

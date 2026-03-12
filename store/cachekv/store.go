@@ -5,7 +5,7 @@ import (
 	"iter"
 	"unsafe"
 
-	"github.com/tidwall/btree"
+	"github.com/cosmos/btree"
 
 	"cosmossdk.io/store/cachekv/internal"
 	"cosmossdk.io/store/tracekv"

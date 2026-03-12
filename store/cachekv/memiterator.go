@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/tidwall/btree"
+	"github.com/cosmos/btree"
 )
 
 // memIterator iterates over iterKVCache items.

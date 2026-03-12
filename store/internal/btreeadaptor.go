@@ -3,8 +3,8 @@ package internal
 import (
 	"io"
 
-	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/internal/btree"
+	"cosmossdk.io/store/legacy
 	"cosmossdk.io/store/types"
 )
 

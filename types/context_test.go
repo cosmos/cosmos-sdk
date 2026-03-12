@@ -249,11 +249,12 @@ func (s *contextTestSuite) TestMultiStore() {
 	db := dbm.NewMemDB()
 	rms := rootmulti.NewStore(db, log.NewNopLogger())
 
-	objKey := storetypes.NewObjectStoreKey("obj")
-	rms.MountStoreWithDB(objKey, storetypes.StoreTypeObject, nil)
+	memKey := storetypes.NewMemoryStoreKey("mem")
+	rms.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, nil)
 	s.Require().NoError(rms.LoadLatestVersion())
 
 	ctx := types.NewContext(rms.RootCacheMultiStore(), cmtproto.Header{}, false, nil)
-	objKVStore := ctx.ObjectStore(objKey)
-	s.Require().NotNil(objKVStore)
+	memKVStore := ctx.KVStore(memKey)
+	s.Require().Equal(storetypes.StoreTypeMemory, memKVStore.GetStoreType())
+	s.Require().NotNil(memKVStore)
 }

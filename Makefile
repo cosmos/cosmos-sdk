@@ -165,6 +165,11 @@ go.sum: go.mod
 	go mod verify
 	go mod tidy
 
+tidy-all:
+	sh ./scripts/go-mod-tidy-all.sh
+
+.PHONY: tidy-all
+
 ###############################################################################
 ###                              Documentation                              ###
 ###############################################################################
@@ -375,7 +380,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v2.10.1
+golangci_version=v2.11.2
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"

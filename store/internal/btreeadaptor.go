@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"cosmossdk.io/store/internal/btree"
-	"cosmossdk.io/store/legacy
+	"cosmossdk.io/store/legacy/cachekv"
 	"cosmossdk.io/store/types"
 )
 

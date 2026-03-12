@@ -10,7 +10,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -253,7 +253,7 @@ func TestHandleNewValidator(t *testing.T) {
 
 	val, err := f.stakingKeeper.Validator(f.ctx, addr)
 	require.NoError(t, err)
-	assert.DeepEqual(t, amt, val.GetBondedTokens())
+	assert.DeepEqual(t, amt, val.GetValidatorPower())
 
 	// Now a validator, for two blocks
 	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(f.ctx, valpubkey.Address(), 100, comet.BlockIDFlagCommit))

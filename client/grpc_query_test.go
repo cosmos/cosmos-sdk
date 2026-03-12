@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -326,6 +326,57 @@ func TestGetHeightFromMetadata(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := tt.setupContext()
 			height := client.GetHeightFromMetadata(ctx)
+			require.Equal(t, tt.expectedHeight, height)
+		})
+	}
+}
+
+func TestGetHeightFromMetadataStrict(t *testing.T) {
+	tests := []struct {
+		name           string
+		setupContext   func() context.Context
+		expectedHeight int64
+		expectError    bool
+	}{
+		{
+			name: "valid height",
+			setupContext: func() context.Context {
+				md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, "123")
+				return metadata.NewOutgoingContext(context.Background(), md)
+			},
+			expectedHeight: 123,
+		},
+		{
+			name:         "no metadata",
+			setupContext: context.Background,
+		},
+		{
+			name: "negative height errors",
+			setupContext: func() context.Context {
+				md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, "-10")
+				return metadata.NewOutgoingContext(context.Background(), md)
+			},
+			expectError: true,
+		},
+		{
+			name: "invalid height errors",
+			setupContext: func() context.Context {
+				md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, "foo")
+				return metadata.NewOutgoingContext(context.Background(), md)
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := tt.setupContext()
+			height, err := client.GetHeightFromMetadataStrict(ctx)
+			if tt.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
 			require.Equal(t, tt.expectedHeight, height)
 		})
 	}

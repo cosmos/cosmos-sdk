@@ -52,10 +52,6 @@ ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
   build_tags += libsecp256k1_sdk
 endif
 
-ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += app_v1
-endif
-
 whitespace :=
 whitespace += $(whitespace)
 comma := ,
@@ -379,7 +375,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v2.7.2
+golangci_version=v2.10.1
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
@@ -401,7 +397,7 @@ lint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.17.1
+protoVer=0.18.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
@@ -492,6 +488,21 @@ localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
 
+###############################################################################
+###                              Enterprise Modules                          ###
+###############################################################################
+#
+# Delegate to enterprise module Makefiles. Examples:
+#   make enterprise-all-lint      # Run lint in group and poa
+#   make enterprise-all-test      # Run test in group and poa
+#   make enterprise-group-build   # Run build in group only
+#   make enterprise-poa-localnet  # Run localnet in poa only
+#
+enterprise-%:
+	$(MAKE) -C enterprise $*
+
+.PHONY: enterprise-%
+
 build-system-test-current: build
 	mkdir -p ./tests/systemtests/binaries/
 	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
@@ -502,6 +513,9 @@ test-system: build-v53 build-system-test-current
 	mkdir -p ./tests/systemtests/binaries/v0.53
 	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
 	$(MAKE) -C tests/systemtests test
+	$(MAKE) -C enterprise/poa/ test-system
+	$(MAKE) -C enterprise/group/ test-system
+
 .PHONY: test-system build-system-test-current
 
 # build-v53 checks out the v0.53.x branch, builds the binary, and renames it to simdv53.

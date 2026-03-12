@@ -42,7 +42,7 @@ The following modules are deprecated.  They will no longer be maintained activel
 * [Crisis](../contrib/x/crisis/README.md) - _Deprecated_ halting the blockchain under certain circumstances (e.g. if an invariant is broken).
 * [Params](./params/README.md) - _Deprecated_ Globally available parameter store.
 * [NFT](../contrib/x/nft/README.md) - _Deprecated_ NFT module implemented based on [ADR43](https://docs.cosmos.network/main/build/architecture/adr-043-nft-module).
-* [Group](../contrib/x/group/README.md) - _Deprecated_ Allows for the creation and management of on-chain multisig accounts.  
+* [Group](../enterprise/group/README.md) - Allows for the creation and management of on-chain multisig accounts (enterprise module).  
 * [Circuit](../contrib/x/circuit/README.md) _Deprecated_ - Circuit breaker module for pausing messages.
 
 To learn more about the process of building modules, visit the [building modules reference documentation](https://docs.cosmos.network/main/building-modules/intro).
@@ -60,4 +60,16 @@ The CosmWasm module enables smart contracts, learn more by going to their [docum
 ## EVM
 
 Read more about writing smart contracts with solidity at the official [`evm` documentation page](https://evm.cosmos.network/).
+
+## Enterprise Modules
+
+In addition to these core and supplementary modules, the Cosmos SDK maintains enterprise-grade modules in the `enterprise/` directory.
+
+**Enterprise modules use different licenses than the Apache 2.0 core SDK modules.** Please review the LICENSE file in each enterprise module directory before use.
+
+### Available Enterprise Modules
+
+* [PoA (Proof of Authority)](../enterprise/poa/README.md) - Admin-controlled validator set for permissioned networks with governance integration.
+
+For complete information about enterprise modules, licensing, and documentation, see the [Enterprise Modules documentation](../enterprise/README.md).
 

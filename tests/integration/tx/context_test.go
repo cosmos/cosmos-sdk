@@ -7,13 +7,13 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-	"cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/log/v2"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/pulsar/testpb"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 func ProvideCustomGetSigners() signing.CustomGetSigner {

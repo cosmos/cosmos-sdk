@@ -12,7 +12,8 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/tx/signing/textual"
+
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual"
 )
 
 func TestCoinsJSONTestcases(t *testing.T) {

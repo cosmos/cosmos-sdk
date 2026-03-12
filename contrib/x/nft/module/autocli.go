@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	nftv1beta1 "cosmossdk.io/api/cosmos/nft/v1beta1"
 
+	nftv1beta1 "github.com/cosmos/cosmos-sdk/contrib/api/cosmos/nft/v1beta1"
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft"
 	"github.com/cosmos/cosmos-sdk/version"
 )

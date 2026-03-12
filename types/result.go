@@ -82,7 +82,7 @@ func NewResponseResultTx(res *coretypes.ResultTx, anyTx *codectypes.Any, timesta
 	}
 }
 
-// NewResponseResultBlock returns a BlockResponse given a ResultBlock from CometBFT
+// NewResponseResultBlock returns a cmtproto.Block given a ResultBlock from CometBFT
 func NewResponseResultBlock(res *coretypes.ResultBlock, timestamp string) *cmtproto.Block {
 	if res == nil {
 		return nil

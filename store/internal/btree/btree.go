@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/tidwall/btree"
+	"github.com/cosmos/btree"
 
 	"cosmossdk.io/store/types"
 )
@@ -21,7 +21,7 @@ var errKeyEmpty = errors.New("key cannot be empty")
 // we don't use MemDB here because cachekv is used extensively in sdk core path,
 // we need it to be as fast as possible, while `MemDB` is mainly used as a mocking db in unit tests.
 //
-// We choose tidwall/btree over google/btree here because it provides API to implement step iterator directly.
+// We choose cosmos/btree over google/btree here because it provides API to implement step iterator directly.
 type BTree[V any] struct {
 	tree *btree.BTreeG[item[V]]
 }

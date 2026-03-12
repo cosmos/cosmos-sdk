@@ -52,5 +52,6 @@ an error is of a particular kind via `Is`.
 ## ABCI
 
 If a module error is registered, the Cosmos SDK `errors` package allows ABCI information to be extracted
-through the `ABCIInfo` function. The package also provides `ResponseCheckTx` and `ResponseDeliverTx` as
-auxiliary functions to automatically get `CheckTx` and `DeliverTx` responses from an error.
+through the `ABCIInfo` function. In addition, the `types/errors` package provides helpers such as
+`ResponseCheckTxWithEvents` and `ResponseExecTxResultWithEvents` to construct `CheckTx` and `ExecTxResult`
+responses in the ABCI++ model, as well as `QueryResult` to build `ResponseQuery` values from an error.

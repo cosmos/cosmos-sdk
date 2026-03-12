@@ -43,7 +43,7 @@ type Keeper struct {
 	// totalAllocatedFees tracks the sum of all allocated fees across validators
 	totalAllocatedFees collections.Item[types.ValidatorFees]
 	// queuedUpdates stores pending validator updates for the block in transient store.
-	// The store gets wiped every block, so this is only used for same-block udpates.
+	// The store gets wiped every block, so this is only used for same-block updates.
 	queuedUpdates collections.Vec[abci.ValidatorUpdate]
 
 	authKeeper types.AccountKeeper

@@ -1,0 +1,676 @@
+// IMPORTANT LICENSE NOTICE
+//
+// SPDX-License-Identifier: CosmosLabs-Evaluation-Only
+//
+// This file is NOT licensed under the Apache License 2.0.
+//
+// Licensed under the Cosmos Labs Source Available Evaluation License, which forbids:
+// - commercial use,
+// - production use, and
+// - redistribution.
+//
+// See https://github.com/cosmos/cosmos-sdk/blob/main/enterprise/group/LICENSE for full terms.
+// Copyright (c) 2026 Cosmos Labs US Inc.
+
+package group_test
+
+import (
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
+
+func TestGroupInfoValidateBasic(t *testing.T) {
+	accAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+
+	testCases := []struct {
+		name    string
+		group   group.GroupInfo
+		expErr  bool
+		expMsgs []string
+	}{
+		{
+			"valid",
+			group.GroupInfo{
+				Id:          1,
+				Admin:       accAddr.String(),
+				Metadata:    "metadata",
+				Version:     1,
+				TotalWeight: "1",
+			},
+			false,
+			nil,
+		},
+		{
+			"empty group id",
+			group.GroupInfo{
+				Id:          0,
+				Admin:       accAddr.String(),
+				Metadata:    "metadata",
+				Version:     1,
+				TotalWeight: "1",
+			},
+			true,
+			[]string{"group's GroupId", "value is empty"},
+		},
+		{
+			"invalid admin",
+			group.GroupInfo{
+				Id:          1,
+				Admin:       "invalid",
+				Metadata:    "metadata",
+				Version:     1,
+				TotalWeight: "1",
+			},
+			true,
+			[]string{"admin"},
+		},
+		{
+			"invalid total weight - negative",
+			group.GroupInfo{
+				Id:          1,
+				Admin:       accAddr.String(),
+				Metadata:    "metadata",
+				Version:     1,
+				TotalWeight: "-1",
+			},
+			true,
+			[]string{"total weight"},
+		},
+		{
+			"zero total weight - group must not be empty",
+			group.GroupInfo{
+				Id:          1,
+				Admin:       accAddr.String(),
+				Metadata:    "metadata",
+				Version:     1,
+				TotalWeight: "0",
+			},
+			true,
+			[]string{"group must not be empty", "invalid"},
+		},
+		{
+			"empty version",
+			group.GroupInfo{
+				Id:          1,
+				Admin:       accAddr.String(),
+				Metadata:    "metadata",
+				Version:     0,
+				TotalWeight: "1",
+			},
+			true,
+			[]string{"version", "value is empty"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.group.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				for _, msg := range tc.expMsgs {
+					require.Contains(t, err.Error(), msg)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGroupPolicyInfoGetDecisionPolicy_MalformedPolicy(t *testing.T) {
+	// Simulate malformed policy unpacking: DecisionPolicy Any contains wrong type.
+	// GetDecisionPolicy should return ErrInvalidType instead of panicking.
+	coin := sdk.NewInt64Coin("stake", 1)
+	wrongAny, err := codectypes.NewAnyWithValue(&coin)
+	require.NoError(t, err)
+
+	policyInfo := group.GroupPolicyInfo{
+		Address:        "cosmos1abc123",
+		GroupId:        1,
+		Admin:          "cosmos1admin",
+		Version:        1,
+		DecisionPolicy: wrongAny,
+	}
+
+	_, err = policyInfo.GetDecisionPolicy()
+	require.Error(t, err)
+	require.True(t, sdkerrors.ErrInvalidType.Is(err), "expected ErrInvalidType, got %v", err)
+}
+
+func TestThresholdDecisionPolicyValidateBasic_VotingPeriodBoundaries(t *testing.T) {
+	testCases := []struct {
+		name         string
+		votingPeriod time.Duration
+		expErr       bool
+	}{
+		{"zero duration - reject", 0, true},
+		{"negative duration - reject", -time.Second, true},
+		{"positive duration - accept", time.Second, false},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			policy := group.ThresholdDecisionPolicy{
+				Threshold: "5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       tc.votingPeriod,
+					MinExecutionPeriod: time.Hour,
+				},
+			}
+			err := policy.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "voting period must be positive")
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestPercentageDecisionPolicyValidateBasic_VotingPeriodBoundaries(t *testing.T) {
+	testCases := []struct {
+		name         string
+		votingPeriod time.Duration
+		expErr       bool
+	}{
+		{"zero duration - reject", 0, true},
+		{"negative duration - reject", -time.Second, true},
+		{"positive duration - accept", time.Second, false},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			policy := group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       tc.votingPeriod,
+					MinExecutionPeriod: time.Hour,
+				},
+			}
+			err := policy.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "voting period must be positive")
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestThresholdDecisionPolicyValidate(t *testing.T) {
+	g := group.GroupInfo{
+		TotalWeight: "10",
+	}
+	config := group.DefaultConfig()
+	testCases := []struct {
+		name   string
+		policy group.ThresholdDecisionPolicy
+		expErr bool
+	}{
+		{
+			"min exec period too big",
+			group.ThresholdDecisionPolicy{
+				Threshold: "5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       time.Second,
+					MinExecutionPeriod: time.Hour * 24 * 30,
+				},
+			},
+			true,
+		},
+		{
+			"all good",
+			group.ThresholdDecisionPolicy{
+				Threshold: "5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       time.Hour,
+					MinExecutionPeriod: time.Hour * 24,
+				},
+			},
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.policy.Validate(g, config)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestPercentageDecisionPolicyValidate(t *testing.T) {
+	g := group.GroupInfo{}
+	config := group.DefaultConfig()
+	testCases := []struct {
+		name   string
+		policy group.PercentageDecisionPolicy
+		expErr bool
+	}{
+		{
+			"min exec period too big",
+			group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       time.Second,
+					MinExecutionPeriod: time.Hour * 24 * 30,
+				},
+			},
+			true,
+		},
+		{
+			"all good",
+			group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       time.Hour,
+					MinExecutionPeriod: time.Hour * 24,
+				},
+			},
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.policy.Validate(g, config)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestPercentageDecisionPolicyAllow(t *testing.T) {
+	testCases := []struct {
+		name           string
+		policy         *group.PercentageDecisionPolicy
+		tally          *group.TallyResult
+		totalPower     string
+		votingDuration time.Duration
+		result         group.DecisionPolicyResult
+		expErr         bool
+	}{
+		{
+			"YesCount percentage > decision policy percentage",
+			&group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "2",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"3",
+			time.Second * 50,
+			group.DecisionPolicyResult{Allow: true, Final: true},
+			false,
+		},
+		{
+			"YesCount percentage == decision policy percentage",
+			&group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "2",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"4",
+			time.Second * 50,
+			group.DecisionPolicyResult{Allow: true, Final: true},
+			false,
+		},
+		{
+			"YesCount percentage < decision policy percentage",
+			&group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"3",
+			time.Second * 50,
+			group.DecisionPolicyResult{Allow: false, Final: false},
+			false,
+		},
+		{
+			"sum percentage (YesCount + undecided votes percentage) < decision policy percentage",
+			&group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "2",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"3",
+			time.Second * 50,
+			group.DecisionPolicyResult{Allow: false, Final: true},
+			false,
+		},
+		{
+			"sum percentage = decision policy percentage",
+			&group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "2",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"4",
+			time.Second * 50,
+			group.DecisionPolicyResult{Allow: false, Final: false},
+			false,
+		},
+		{
+			"sum percentage > decision policy percentage",
+			&group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"3",
+			time.Second * 50,
+			group.DecisionPolicyResult{Allow: false, Final: false},
+			false,
+		},
+		{
+			"empty total power",
+			&group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"0",
+			time.Second * 50,
+			group.DecisionPolicyResult{Allow: false, Final: true},
+			false,
+		},
+		{
+			"zero total weight - proposal does not auto-pass",
+			&group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "0",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"0",
+			time.Second * 50,
+			group.DecisionPolicyResult{
+				Allow: false,
+				Final: true,
+			},
+			false,
+		},
+		{
+			"negative total power - error",
+			&group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "0",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"-1",
+			time.Second * 50,
+			group.DecisionPolicyResult{},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.result, policyResult)
+			}
+		})
+	}
+}
+
+func TestThresholdDecisionPolicyAllow(t *testing.T) {
+	testCases := []struct {
+		name           string
+		policy         *group.ThresholdDecisionPolicy
+		tally          *group.TallyResult
+		totalPower     string
+		votingDuration time.Duration
+		result         group.DecisionPolicyResult
+		expErr         bool
+	}{
+		{
+			"YesCount >= threshold decision policy",
+			&group.ThresholdDecisionPolicy{
+				Threshold: "2",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "2",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"3",
+			time.Second * 50,
+			group.DecisionPolicyResult{Allow: true, Final: true},
+			false,
+		},
+		{
+			"YesCount < threshold decision policy",
+			&group.ThresholdDecisionPolicy{
+				Threshold: "2",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"3",
+			time.Second * 50,
+			group.DecisionPolicyResult{Allow: false, Final: false},
+			false,
+		},
+		{
+			"YesCount == group total weight < threshold",
+			&group.ThresholdDecisionPolicy{
+				Threshold: "20",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "3",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"3",
+			time.Second * 50,
+			group.DecisionPolicyResult{Allow: true, Final: true},
+			false,
+		},
+		{
+			"maxYesCount < threshold decision policy",
+			&group.ThresholdDecisionPolicy{
+				Threshold: "2",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "0",
+				NoCount:         "1",
+				AbstainCount:    "1",
+				NoWithVetoCount: "0",
+			},
+			"3",
+			time.Second * 50,
+			group.DecisionPolicyResult{Allow: false, Final: true},
+			false,
+		},
+		{
+			"maxYesCount >= threshold decision policy",
+			&group.ThresholdDecisionPolicy{
+				Threshold: "2",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "0",
+				NoCount:         "1",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"3",
+			time.Second * 50,
+			group.DecisionPolicyResult{Allow: false, Final: false},
+			false,
+		},
+		{
+			"zero total weight - proposal does not auto-pass",
+			&group.ThresholdDecisionPolicy{
+				Threshold: "1",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "0",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"0",
+			time.Second * 50,
+			group.DecisionPolicyResult{
+				Allow: false,
+				Final: true,
+			},
+			false,
+		},
+		{
+			"zero total weight with yes votes - still reject",
+			&group.ThresholdDecisionPolicy{
+				Threshold: "1",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"0",
+			time.Second * 50,
+			group.DecisionPolicyResult{
+				Allow: false,
+				Final: true,
+			},
+			false,
+		},
+		{
+			"negative total power - error",
+			&group.ThresholdDecisionPolicy{
+				Threshold: "1",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "0",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"-1",
+			time.Second * 50,
+			group.DecisionPolicyResult{},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.result, policyResult)
+			}
+		})
+	}
+}

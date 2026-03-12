@@ -72,7 +72,7 @@ func TestValidateVoteExtensions(t *testing.T) {
 			ChainId:   chainID,
 		}
 
-		extSignBytes, err := mashalVoteExt(&cve)
+		extSignBytes, err := marshalVoteExt(&cve)
 		assert.NilError(t, err)
 
 		sig, err := privKeys[i].Sign(extSignBytes)
@@ -99,7 +99,7 @@ func TestValidateVoteExtensions(t *testing.T) {
 	assert.NilError(t, err)
 }
 
-func mashalVoteExt(msg proto.Message) ([]byte, error) {
+func marshalVoteExt(msg proto.Message) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {
 		return nil, err

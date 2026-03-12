@@ -1,13 +1,16 @@
 package cachekv_test
 
 import (
+	"fmt"
 	"testing"
 
+	"cosmossdk.io/math/unsafe"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
+	"cosmossdk.io/store/types"
 )
 
 func newStoreWithParent() (*cachekv.Store, dbadapter.Store) {
@@ -196,7 +199,7 @@ func TestUpdates_EmptyWhenClean(t *testing.T) {
 	require.Equal(t, 0, count)
 
 	collected := 0
-	updates(func(k []byte, v []byte) bool {
+	updates(func(cachekv.Update[[]byte]) bool {
 		collected++
 		return true
 	})
@@ -214,8 +217,8 @@ func TestUpdates_ReturnsAllChanges(t *testing.T) {
 	require.Equal(t, 3, count)
 
 	result := make(map[string][]byte)
-	updates(func(k []byte, v []byte) bool {
-		result[string(k)] = v
+	updates(func(update cachekv.Update[[]byte]) bool {
+		result[string(update.Key)] = update.Value
 		return true
 	})
 
@@ -263,16 +266,21 @@ func TestCacheWrap_IsolatesWrites(t *testing.T) {
 	require.True(t, child.Has([]byte("new")))
 }
 
+func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
+func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
+
 func TestCacheWrap_NestedWrite(t *testing.T) {
 	st, parent := newStoreWithParent()
 
 	child := st.CacheWrap().(*cachekv.Store)
-	child.Set([]byte("key"), []byte("value"))
+	k := keyFmt(0)
+	v := valFmt(0)
+	child.Set(k, v)
 
 	// write child to parent cache
 	child.Write()
-	require.Equal(t, []byte("value"), st.Get([]byte("key")))
-	require.False(t, parent.Has([]byte("key")))
+	require.Equal(t, v, st.Get(k))
+	require.False(t, parent.Has(k))
 
 	// write parent cache to underlying
 	st.Write()
@@ -281,6 +289,11 @@ func TestCacheWrap_NestedWrite(t *testing.T) {
 	// delete the other key in cache and asserts its empty
 	st.Delete(k)
 	assertIterateDomain(t, st, 0)
+}
+
+func newCacheKVStore() *cachekv.Store {
+	st, _ := newStoreWithParent()
+	return st
 }
 
 func TestCacheKVMergeIteratorDeleteLast(t *testing.T) {

@@ -3,17 +3,19 @@ package main
 import migration "github.com/cosmos/cosmos-sdk/tools/migrate"
 
 // typeReplacements defines type/struct renames between v53 and v54.
-//
-// TODO: audit v54 for type renames.
-// Known areas to investigate:
-// - any ABCI type renames that carried over from CometBFT changes
-// - store v2 type changes
-// - any renamed config structs
 var typeReplacements = []migration.TypeReplacement{
-	// Example format:
-	// {
-	// 	ImportPath: "github.com/cosmos/cosmos-sdk/store/types",
-	// 	OldType:    "CommitMultiStore",
-	// 	NewType:    "RootStore",
-	// },
+	// No simple type renames identified for v53 -> v54.
+}
+
+// fieldRemovals removes keeper fields from SimApp for deleted modules.
+var fieldRemovals = []migration.StructFieldRemoval{
+	{StructName: "SimApp", FieldName: "CircuitKeeper"},
+	{StructName: "SimApp", FieldName: "NFTKeeper"},
+	{StructName: "SimApp", FieldName: "GroupKeeper"},
+}
+
+// fieldModifications changes field types in SimApp.
+var fieldModifications = []migration.StructFieldModification{
+	// EpochsKeeper changed from value type to pointer in v54.
+	{StructName: "SimApp", FieldName: "EpochsKeeper", MakePointer: true},
 }

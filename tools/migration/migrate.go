@@ -3,6 +3,7 @@ package migration
 import (
 	"bytes"
 	"fmt"
+	"go/ast"
 	"go/format"
 	"go/parser"
 	"go/token"
@@ -10,6 +11,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"golang.org/x/mod/modfile"
@@ -30,23 +32,56 @@ type (
 	GoModRemoval  []string
 )
 
+// Warning represents a migration issue that cannot be automated and requires manual attention.
+type Warning struct {
+	// File is the file path where the warning was triggered.
+	File string
+	// Message is the human-readable warning message.
+	Message string
+}
+
+// ImportWarning defines an import path pattern that should trigger a warning.
+type ImportWarning struct {
+	// ImportPrefix is the import path prefix to detect.
+	ImportPrefix string
+	// Message is the warning message to display when the import is found.
+	Message string
+}
+
 type MigrateArgs struct {
+	// --- go.mod operations ---
 	GoModRemoval      GoModRemoval
 	GoModAddition     GoModAddition
 	GoModReplacements []GoModReplacement
-	// GoModUpdates defines the list of modules to update.
-	GoModUpdates GoModUpdate
-	// ArgUpdates defines the necessary changes where a function has reduced its arguments.
-	ArgUpdates []FunctionArgUpdate
-	// ComplexUpdates defines the rules for replacing function calls with custom replacement logic.
+	GoModUpdates      GoModUpdate
+
+	// --- AST: import rewrites ---
+	ImportUpdates  []ImportReplacement
+	ImportWarnings []ImportWarning
+
+	// --- AST: type/struct changes ---
+	TypeUpdates        []TypeReplacement
+	FieldRemovals      []StructFieldRemoval
+	FieldModifications []StructFieldModification
+
+	// --- AST: function arg changes ---
+	ArgUpdates    []FunctionArgUpdate
+	ArgSurgeries  []ArgSurgeryWithAST
+	CallArgEdits  []CallArgRemoval
 	ComplexUpdates []ComplexFunctionReplacement
-	// ImportUpdates defines the list of import replacement rules to update old import paths to new ones.
-	ImportUpdates []ImportReplacement
-	// TypeUpdates updates type names.
-	TypeUpdates []TypeReplacement
+
+	// --- AST: statement/block removal ---
+	StatementRemovals []StatementRemoval
+	MapEntryRemovals  []MapEntryRemoval
+
+	// --- Text-level replacements (post-AST) ---
+	TextReplacements []TextReplacement
+
+	// --- File operations ---
+	FileRemovals []FileRemoval
 }
 
-// Migrate migrates the all the code in the specified directory.
+// Migrate migrates all the code in the specified directory.
 func Migrate(directory string, args MigrateArgs) error {
 	// find all Go files in the directory
 	var goFiles []string
@@ -66,12 +101,57 @@ func Migrate(directory string, args MigrateArgs) error {
 	if err != nil {
 		return err
 	}
-	if err := updateFiles(goFiles, args); err != nil {
+
+	// Phase 1: File removals (before AST processing so we don't process dead files)
+	if err := applyFileRemovals(directory, args.FileRemovals); err != nil {
+		return fmt.Errorf("error removing files: %w", err)
+	}
+
+	// Rebuild file list after removals
+	goFiles = nil
+	err = filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && strings.HasSuffix(path, ".go") {
+			goFiles = append(goFiles, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	var warnings []Warning
+	var warningsMu sync.Mutex
+
+	// Phase 2: AST transformations
+	if err := updateFiles(goFiles, args, &warnings, &warningsMu); err != nil {
 		return fmt.Errorf("error updating files: %w", err)
 	}
+
+	// Phase 3: Text-level replacements (for patterns too complex for AST but reliable as text)
+	if len(args.TextReplacements) > 0 {
+		for _, filePath := range goFiles {
+			if _, err := applyTextReplacements(filePath, args.TextReplacements); err != nil {
+				return fmt.Errorf("error applying text replacements to %s: %w", filePath, err)
+			}
+		}
+	}
+
+	// Phase 4: go.mod updates
 	if err := updateGoModules(goModuleFiles, args.GoModUpdates, args.GoModRemoval, args.GoModReplacements, args.GoModAddition); err != nil {
 		return fmt.Errorf("error updating go.mod files: %w", err)
 	}
+
+	// Print warnings
+	if len(warnings) > 0 {
+		log.Warn().Msg("=== WARNINGS ===")
+		for _, w := range warnings {
+			log.Warn().Msgf("  [%s] %s", w.File, w.Message)
+		}
+	}
+
 	return nil
 }
 
@@ -95,8 +175,6 @@ func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRem
 				}
 				modified = true
 			}
-			// loop through all the modules in the go.mod file.
-			// we don't care about indirect modules, we only want to update direct dependencies.
 			for _, module := range modFile.Require {
 				if module.Indirect {
 					continue
@@ -107,7 +185,6 @@ func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRem
 					}
 					modified = true
 				}
-				// if this module is one we want to update it, we call AddRequire, which updates the version.
 				if newVersion, ok := updates[module.Mod.Path]; ok {
 					if err := modFile.AddRequire(module.Mod.Path, newVersion); err != nil {
 						return fmt.Errorf("error updating %s: %w", module.Mod.Path, err)
@@ -121,7 +198,6 @@ func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRem
 				}
 				modified = true
 			}
-			// if we modified the go mod: format, write, tidy.
 			if modified {
 				bz, err := modFile.Format()
 				if err != nil {
@@ -138,7 +214,24 @@ func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRem
 	return eg.Wait()
 }
 
-func updateFiles(goFiles []string, args MigrateArgs) error {
+// checkImportWarnings scans a file's imports for patterns that require attention.
+func checkImportWarnings(filePath string, node *ast.File, importWarnings []ImportWarning) []Warning {
+	var warnings []Warning
+	for _, imp := range node.Imports {
+		importPath := strings.Trim(imp.Path.Value, "\"")
+		for _, iw := range importWarnings {
+			if strings.HasPrefix(importPath, iw.ImportPrefix) {
+				warnings = append(warnings, Warning{
+					File:    filePath,
+					Message: fmt.Sprintf("import %q detected — %s", importPath, iw.Message),
+				})
+			}
+		}
+	}
+	return warnings
+}
+
+func updateFiles(goFiles []string, args MigrateArgs, warnings *[]Warning, warningsMu *sync.Mutex) error {
 	eg := errgroup.Group{}
 	for _, filePath := range goFiles {
 		eg.Go(func() error {
@@ -149,24 +242,88 @@ func updateFiles(goFiles []string, args MigrateArgs) error {
 				return fmt.Errorf("error parsing %s: %w", filePath, err)
 			}
 
-			structsChanged, err := updateStructs(node, args.TypeUpdates)
-			if err != nil {
-				return fmt.Errorf("error updating structs in %s: %w", filePath, err)
-			}
-			callsChanged, err := updateFunctionCalls(node, args.ArgUpdates)
-			if err != nil {
-				return fmt.Errorf("error updating function calls in %s: %w", filePath, err)
-			}
-			complexCallsChanged, err := updateComplexFunctions(fset, node, args.ComplexUpdates)
-			if err != nil {
-				return fmt.Errorf("error updating complex function calls in %s: %w", filePath, err)
-			}
-			importsChanged, err := updateImports(node, args.ImportUpdates)
-			if err != nil {
-				return fmt.Errorf("error updating imports in %s: %w", filePath, err)
+			// Check for import warnings
+			if len(args.ImportWarnings) > 0 {
+				fileWarnings := checkImportWarnings(filePath, node, args.ImportWarnings)
+				if len(fileWarnings) > 0 {
+					warningsMu.Lock()
+					*warnings = append(*warnings, fileWarnings...)
+					warningsMu.Unlock()
+				}
 			}
 
-			changed := importsChanged || structsChanged || callsChanged || complexCallsChanged
+			changed := false
+
+			// Import rewrites
+			if c, err := updateImports(node, args.ImportUpdates); err != nil {
+				return fmt.Errorf("error updating imports in %s: %w", filePath, err)
+			} else {
+				changed = changed || c
+			}
+
+			// Type renames
+			if c, err := updateStructs(node, args.TypeUpdates); err != nil {
+				return fmt.Errorf("error updating structs in %s: %w", filePath, err)
+			} else {
+				changed = changed || c
+			}
+
+			// Struct field removals
+			if c, err := updateStructFieldRemovals(node, args.FieldRemovals); err != nil {
+				return fmt.Errorf("error removing struct fields in %s: %w", filePath, err)
+			} else {
+				changed = changed || c
+			}
+
+			// Struct field modifications
+			if c, err := updateStructFieldModifications(node, args.FieldModifications); err != nil {
+				return fmt.Errorf("error modifying struct fields in %s: %w", filePath, err)
+			} else {
+				changed = changed || c
+			}
+
+			// Simple arg truncation
+			if c, err := updateFunctionCalls(node, args.ArgUpdates); err != nil {
+				return fmt.Errorf("error updating function calls in %s: %w", filePath, err)
+			} else {
+				changed = changed || c
+			}
+
+			// Arg surgery (positional remove/insert/wrap)
+			if c, err := updateArgSurgeryAST(node, args.ArgSurgeries); err != nil {
+				return fmt.Errorf("error applying arg surgery in %s: %w", filePath, err)
+			} else {
+				changed = changed || c
+			}
+
+			// Call arg edits (remove/add args from specific calls)
+			if c, err := updateCallArgRemovals(node, args.CallArgEdits); err != nil {
+				return fmt.Errorf("error editing call args in %s: %w", filePath, err)
+			} else {
+				changed = changed || c
+			}
+
+			// Complex function replacements
+			if c, err := updateComplexFunctions(fset, node, args.ComplexUpdates); err != nil {
+				return fmt.Errorf("error updating complex functions in %s: %w", filePath, err)
+			} else {
+				changed = changed || c
+			}
+
+			// Statement removals
+			if c, err := updateStatementRemovals(node, args.StatementRemovals); err != nil {
+				return fmt.Errorf("error removing statements in %s: %w", filePath, err)
+			} else {
+				changed = changed || c
+			}
+
+			// Map entry removals
+			if c, err := updateMapEntryRemovals(node, args.MapEntryRemovals); err != nil {
+				return fmt.Errorf("error removing map entries in %s: %w", filePath, err)
+			} else {
+				changed = changed || c
+			}
+
 			if changed {
 				buf := new(bytes.Buffer)
 				err = format.Node(buf, fset, node)

@@ -1,46 +1,61 @@
-# v54 Migration Tool
+# v53 → v54 Migration Tool
 
-Automated migration tool for upgrading a base Cosmos SDK chain from **v0.53 to v0.54**.
-
-> **Scope:** This tool handles base SDK migrations for chains that do not use IBC or EVM.
-> IBC and EVM migration support will be added separately.
-
-## What it migrates
-
-- **Go module updates** — bumps SDK and related dependency versions in `go.mod`
-- **Import path rewrites** — migrates `cosmossdk.io/x/*` vanity URLs to `github.com/cosmos/cosmos-sdk/x/*`
-- **Removed modules** — drops `go.mod` entries for modules folded back into the SDK monorepo
-- **Type renames** — updates any renamed types/structs between v53 and v54
-- **Function signature changes** — handles argument list changes in SDK APIs
-- **Complex rewrites** — multi-statement replacements for deprecated helper functions
-
-## Installation
-
-```shell
-cd tools/migration/v54
-go install .
-```
+Automated migration tool for upgrading Cosmos SDK applications from v0.53 to v0.54.
 
 ## Usage
 
-Run in the root of your chain's Go module:
-
-```shell
-v54 .
+```bash
+cd tools/migration/v54
+go run . /path/to/your/app
+goimports -w /path/to/your/app
+cd /path/to/your/app && go mod tidy
 ```
 
-Or specify a directory:
+## What It Does
 
-```shell
-v54 path/to/your/chain
-```
+All changes are fully automated — no manual intervention required.
 
-After running, finalize with:
+### go.mod Changes
+- Bumps `github.com/cosmos/cosmos-sdk` to v0.54 pseudo version
+- Bumps companion modules (api, client/v2, core, depinject, store, math)
+- Bumps CometBFT to v0.39.0-beta.3
+- Replaces `cosmossdk.io/log` with `cosmossdk.io/log/v2`
+- Removes `cosmossdk.io/x/*` vanity URL modules (folded into SDK monorepo)
 
-```shell
-go mod tidy
-```
+### Import Rewrites
+- `cosmossdk.io/log` → `cosmossdk.io/log/v2`
+- `cosmossdk.io/x/{feegrant,evidence,upgrade,tx}` → `github.com/cosmos/cosmos-sdk/x/*`
+- `cosmossdk.io/x/{circuit,nft}` → `github.com/cosmos/cosmos-sdk/contrib/x/*`
+- **Warning** emitted for `x/group` (moved to enterprise with commercial license)
 
-## Status
+### Module Removals (circuit, nft, group)
+- Removes struct fields from SimApp
+- Removes keeper initialization statements
+- Removes AppModule registrations from `module.NewManager`
+- Removes store keys from `NewKVStoreKeys`
+- Removes entries from genesis ordering, begin/end blocker ordering
+- Removes `nft.ModuleName` from `maccPerms`
+- Removes `app.BaseApp.SetCircuitBreaker` call
 
-🚧 **Work in progress** — migration rules are being populated. The framework is ready; version-specific rules need to be filled in based on the final v54 breaking changes.
+### Function Signature Changes
+- `govkeeper.NewKeeper`: removes StakingKeeper arg, adds `NewDefaultCalculateVoteResultsAndVotingPower` wrapper
+- `nodeservice.RegisterNodeService`: adds 4th argument (earliest version closure)
+- `SetOrderEndBlockers`: adds `banktypes.ModuleName` at front
+
+### Struct Changes
+- `EpochsKeeper` field changed from value to pointer type
+- EpochsKeeper init rewritten to use local variable + pointer assignment
+
+### Ante Handler
+- Deletes custom `ante.go` wrapper (circuit ante decorator removed)
+- Rewrites `setAnteHandler` to use `ante.NewAnteHandler(ante.HandlerOptions{...})` directly
+
+### Other Changes
+- `app.BaseApp.GRPCQueryRouter()` → `app.GRPCQueryRouter()`
+- `app.BaseApp.Simulate` → `app.Simulate`
+- `SetModuleVersionMap` error now handled
+- Duplicate `auth/tx` import consolidated to `authtx` alias
+
+## Post-Migration
+
+Run `goimports -w . && go mod tidy` to clean up unused imports and resolve dependencies.

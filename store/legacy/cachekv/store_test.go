@@ -1,280 +1,258 @@
 package cachekv_test
 
 import (
+	"fmt"
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/store/cachekv"
+	"cosmossdk.io/math/unsafe"
 	"cosmossdk.io/store/dbadapter"
+	"cosmossdk.io/store/legacy/cachekv"
+	"cosmossdk.io/store/types"
 )
 
-func newStoreWithParent() (*cachekv.Store, dbadapter.Store) {
-	parent := dbadapter.Store{DB: dbm.NewMemDB()}
-	return cachekv.NewStore(parent), parent
+func newCacheKVStore() types.CacheKVStore {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	return cachekv.NewStore(mem)
 }
 
-func TestGet_FromParentWhenClean(t *testing.T) {
-	st, parent := newStoreWithParent()
-	parent.Set([]byte("key"), []byte("parent_value"))
+func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
+func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
-	got := st.Get([]byte("key"))
-	require.Equal(t, []byte("parent_value"), got)
-}
+func TestCacheKVStore(t *testing.T) {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	st := cachekv.NewStore(mem)
 
-func TestGet_FromWriteMap(t *testing.T) {
-	st, parent := newStoreWithParent()
-	parent.Set([]byte("key"), []byte("parent_value"))
+	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 
-	st.Set([]byte("key"), []byte("cached_value"))
+	// put something in mem and in cache
+	mem.Set(keyFmt(1), valFmt(1))
+	st.Set(keyFmt(1), valFmt(1))
+	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 
-	got := st.Get([]byte("key"))
-	require.Equal(t, []byte("cached_value"), got)
-}
+	// update it in cache, shouldn't change mem
+	st.Set(keyFmt(1), valFmt(2))
+	require.Equal(t, valFmt(2), st.Get(keyFmt(1)))
+	require.Equal(t, valFmt(1), mem.Get(keyFmt(1)))
 
-func TestGet_DeletedKeyReturnsNil(t *testing.T) {
-	st, parent := newStoreWithParent()
-	parent.Set([]byte("key"), []byte("parent_value"))
-
-	st.Delete([]byte("key"))
-
-	got := st.Get([]byte("key"))
-	require.Nil(t, got)
-}
-
-func TestHas_CachedValue(t *testing.T) {
-	st, _ := newStoreWithParent()
-	st.Set([]byte("key"), []byte("value"))
-
-	require.True(t, st.Has([]byte("key")))
-}
-
-func TestHas_DeletedKey(t *testing.T) {
-	st, parent := newStoreWithParent()
-	parent.Set([]byte("key"), []byte("value"))
-
-	st.Delete([]byte("key"))
-
-	require.False(t, st.Has([]byte("key")))
-}
-
-func TestSet_MarksStoreDirty(t *testing.T) {
-	st, _ := newStoreWithParent()
-
-	_, count := st.Updates()
-	require.Equal(t, 0, count)
-
-	st.Set([]byte("key"), []byte("value"))
-
-	_, count = st.Updates()
-	require.Equal(t, 1, count)
-}
-
-func TestDelete_MarksStoreDirty(t *testing.T) {
-	st, _ := newStoreWithParent()
-
-	_, count := st.Updates()
-	require.Equal(t, 0, count)
-
-	st.Delete([]byte("key"))
-
-	_, count = st.Updates()
-	require.Equal(t, 1, count)
-}
-
-// --- Input Validation ---
-
-func TestSet_PanicsOnInvalidInput(t *testing.T) {
-	st, _ := newStoreWithParent()
-
-	require.Panics(t, func() { st.Set(nil, []byte("value")) }, "nil key")
-	require.Panics(t, func() { st.Set([]byte(""), []byte("value")) }, "empty key")
-	require.Panics(t, func() { st.Set([]byte("key"), nil) }, "nil value")
-}
-
-func TestGet_PanicsOnInvalidKey(t *testing.T) {
-	st, _ := newStoreWithParent()
-
-	require.Panics(t, func() { st.Get(nil) })
-	require.Panics(t, func() { st.Get([]byte("")) })
-}
-
-func TestHas_PanicsOnInvalidKey(t *testing.T) {
-	st, _ := newStoreWithParent()
-
-	require.Panics(t, func() { st.Has(nil) })
-	require.Panics(t, func() { st.Has([]byte("")) })
-}
-
-func TestDelete_PanicsOnInvalidKey(t *testing.T) {
-	st, _ := newStoreWithParent()
-
-	require.Panics(t, func() { st.Delete(nil) })
-	require.Panics(t, func() { st.Delete([]byte("")) })
-}
-
-// --- Write Method ---
-
-func TestWrite_FlushesToParent(t *testing.T) {
-	st, parent := newStoreWithParent()
-
-	st.Set([]byte("key"), []byte("value"))
-	require.False(t, parent.Has([]byte("key")))
-
+	// write it. should change mem
 	st.Write()
+	require.Equal(t, valFmt(2), mem.Get(keyFmt(1)))
+	require.Equal(t, valFmt(2), st.Get(keyFmt(1)))
 
-	require.Equal(t, []byte("value"), parent.Get([]byte("key")))
-}
-
-func TestWrite_DeletesPropagated(t *testing.T) {
-	st, parent := newStoreWithParent()
-	parent.Set([]byte("key"), []byte("value"))
-
-	st.Delete([]byte("key"))
-	require.True(t, parent.Has([]byte("key")))
-
+	// more writes and checks
 	st.Write()
-
-	require.False(t, parent.Has([]byte("key")))
-}
-
-func TestWrite_ClearsWriteMap(t *testing.T) {
-	st, _ := newStoreWithParent()
-
-	st.Set([]byte("key"), []byte("value"))
-	_, count := st.Updates()
-	require.Equal(t, 1, count)
-
 	st.Write()
+	require.Equal(t, valFmt(2), mem.Get(keyFmt(1)))
+	require.Equal(t, valFmt(2), st.Get(keyFmt(1)))
 
-	// after write, store is clean again (dirty=false path in Updates)
-	_, count = st.Updates()
-	require.Equal(t, 0, count)
-}
+	// make a new one, check it
+	st = cachekv.NewStore(mem)
+	require.Equal(t, valFmt(2), st.Get(keyFmt(1)))
 
-func TestWrite_Overwriting(t *testing.T) {
-	st, parent := newStoreWithParent()
+	// make a new one and delete - should not be removed from mem
+	st = cachekv.NewStore(mem)
+	st.Delete(keyFmt(1))
+	require.Empty(t, st.Get(keyFmt(1)))
+	require.Equal(t, mem.Get(keyFmt(1)), valFmt(2))
 
-	st.Set([]byte("key"), []byte("first"))
-	st.Set([]byte("key"), []byte("second"))
-	st.Set([]byte("key"), []byte("third"))
-
+	// Write. should now be removed from both
 	st.Write()
-
-	require.Equal(t, []byte("third"), parent.Get([]byte("key")))
+	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
+	require.Empty(t, mem.Get(keyFmt(1)), "Expected `key1` to be empty")
 }
 
-func TestWrite_SetThenDelete(t *testing.T) {
-	st, parent := newStoreWithParent()
+func TestCacheKVStoreNoNilSet(t *testing.T) {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	st := cachekv.NewStore(mem)
+	require.Panics(t, func() { st.Set([]byte("key"), nil) }, "setting a nil value should panic")
+	require.Panics(t, func() { st.Set(nil, []byte("value")) }, "setting a nil key should panic")
+	require.Panics(t, func() { st.Set([]byte(""), []byte("value")) }, "setting an empty key should panic")
+}
 
-	st.Set([]byte("key"), []byte("value"))
-	st.Delete([]byte("key"))
+func TestCacheKVStoreNested(t *testing.T) {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	st := cachekv.NewStore(mem)
 
+	// set. check its there on st and not on mem.
+	st.Set(keyFmt(1), valFmt(1))
+	require.Empty(t, mem.Get(keyFmt(1)))
+	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
+
+	// make a new from st and check
+	st2 := cachekv.NewStore(st)
+	require.Equal(t, valFmt(1), st2.Get(keyFmt(1)))
+
+	// update the value on st2, check it only effects st2
+	st2.Set(keyFmt(1), valFmt(3))
+	require.Equal(t, []byte(nil), mem.Get(keyFmt(1)))
+	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
+	require.Equal(t, valFmt(3), st2.Get(keyFmt(1)))
+
+	// st2 writes to its parent, st. doesn't effect mem
+	st2.Write()
+	require.Equal(t, []byte(nil), mem.Get(keyFmt(1)))
+	require.Equal(t, valFmt(3), st.Get(keyFmt(1)))
+
+	// updates mem
 	st.Write()
-
-	require.False(t, parent.Has([]byte("key")))
+	require.Equal(t, valFmt(3), mem.Get(keyFmt(1)))
 }
 
-func TestWrite_OverwritesParent(t *testing.T) {
-	st, parent := newStoreWithParent()
-	parent.Set([]byte("key"), []byte("original"))
+func TestCacheKVIteratorBounds(t *testing.T) {
+	st := newCacheKVStore()
 
-	st.Set([]byte("key"), []byte("new_value"))
+	// set some items
+	nItems := 5
+	for i := 0; i < nItems; i++ {
+		st.Set(keyFmt(i), valFmt(i))
+	}
 
+	// iterate over all of them
+	itr := st.Iterator(nil, nil)
+	i := 0
+	for ; itr.Valid(); itr.Next() {
+		k, v := itr.Key(), itr.Value()
+		require.Equal(t, keyFmt(i), k)
+		require.Equal(t, valFmt(i), v)
+		i++
+	}
+	require.Equal(t, nItems, i)
+	require.NoError(t, itr.Close())
+
+	// iterate over none
+	itr = st.Iterator(bz("money"), nil)
+	i = 0
+	for ; itr.Valid(); itr.Next() {
+		i++
+	}
+	require.Equal(t, 0, i)
+	require.NoError(t, itr.Close())
+
+	// iterate over lower
+	itr = st.Iterator(keyFmt(0), keyFmt(3))
+	i = 0
+	for ; itr.Valid(); itr.Next() {
+		k, v := itr.Key(), itr.Value()
+		require.Equal(t, keyFmt(i), k)
+		require.Equal(t, valFmt(i), v)
+		i++
+	}
+	require.Equal(t, 3, i)
+	require.NoError(t, itr.Close())
+
+	// iterate over upper
+	itr = st.Iterator(keyFmt(2), keyFmt(4))
+	i = 2
+	for ; itr.Valid(); itr.Next() {
+		k, v := itr.Key(), itr.Value()
+		require.Equal(t, keyFmt(i), k)
+		require.Equal(t, valFmt(i), v)
+		i++
+	}
+	require.Equal(t, 4, i)
+	require.NoError(t, itr.Close())
+}
+
+func TestCacheKVReverseIteratorBounds(t *testing.T) {
+	st := newCacheKVStore()
+
+	// set some items
+	nItems := 5
+	for i := 0; i < nItems; i++ {
+		st.Set(keyFmt(i), valFmt(i))
+	}
+
+	// iterate over all of them
+	itr := st.ReverseIterator(nil, nil)
+	i := 0
+	for ; itr.Valid(); itr.Next() {
+		k, v := itr.Key(), itr.Value()
+		require.Equal(t, keyFmt(nItems-1-i), k)
+		require.Equal(t, valFmt(nItems-1-i), v)
+		i++
+	}
+	require.Equal(t, nItems, i)
+	require.NoError(t, itr.Close())
+
+	// iterate over none
+	itr = st.ReverseIterator(bz("money"), nil)
+	i = 0
+	for ; itr.Valid(); itr.Next() {
+		i++
+	}
+	require.Equal(t, 0, i)
+	require.NoError(t, itr.Close())
+
+	// iterate over lower
+	end := 3
+	itr = st.ReverseIterator(keyFmt(0), keyFmt(end))
+	i = 0
+	for ; itr.Valid(); itr.Next() {
+		i++
+		k, v := itr.Key(), itr.Value()
+		require.Equal(t, keyFmt(end-i), k)
+		require.Equal(t, valFmt(end-i), v)
+	}
+	require.Equal(t, 3, i)
+	require.NoError(t, itr.Close())
+
+	// iterate over upper
+	end = 4
+	itr = st.ReverseIterator(keyFmt(2), keyFmt(end))
+	i = 0
+	for ; itr.Valid(); itr.Next() {
+		i++
+		k, v := itr.Key(), itr.Value()
+		require.Equal(t, keyFmt(end-i), k)
+		require.Equal(t, valFmt(end-i), v)
+	}
+	require.Equal(t, 2, i)
+	require.NoError(t, itr.Close())
+}
+
+func TestCacheKVMergeIteratorBasics(t *testing.T) {
+	st := newCacheKVStore()
+
+	// set and delete an item in the cache, iterator should be empty
+	k, v := keyFmt(0), valFmt(0)
+	st.Set(k, v)
+	st.Delete(k)
+	assertIterateDomain(t, st, 0)
+
+	// now set it and assert its there
+	st.Set(k, v)
+	assertIterateDomain(t, st, 1)
+
+	// write it and assert its there
 	st.Write()
+	assertIterateDomain(t, st, 1)
 
-	require.Equal(t, []byte("new_value"), parent.Get([]byte("key")))
-}
+	// remove it in cache and assert its not
+	st.Delete(k)
+	assertIterateDomain(t, st, 0)
 
-// --- Updates() Method ---
+	// write the delete and assert its not there
+	st.Write()
+	assertIterateDomain(t, st, 0)
 
-func TestUpdates_EmptyWhenClean(t *testing.T) {
-	st, _ := newStoreWithParent()
+	// add two keys and assert they're there
+	k1, v1 := keyFmt(1), valFmt(1)
+	st.Set(k, v)
+	st.Set(k1, v1)
+	assertIterateDomain(t, st, 2)
 
-	updates, count := st.Updates()
-	require.Equal(t, 0, count)
+	// write it and assert they're there
+	st.Write()
+	assertIterateDomain(t, st, 2)
 
-	collected := 0
-	updates(func(k []byte, v []byte) bool {
-		collected++
-		return true
-	})
-	require.Equal(t, 0, collected)
-}
+	// remove one in cache and assert its not
+	st.Delete(k1)
+	assertIterateDomain(t, st, 1)
 
-func TestUpdates_ReturnsAllChanges(t *testing.T) {
-	st, _ := newStoreWithParent()
-
-	st.Set([]byte("a"), []byte("1"))
-	st.Set([]byte("b"), []byte("2"))
-	st.Delete([]byte("c"))
-
-	updates, count := st.Updates()
-	require.Equal(t, 3, count)
-
-	result := make(map[string][]byte)
-	updates(func(k []byte, v []byte) bool {
-		result[string(k)] = v
-		return true
-	})
-
-	require.Equal(t, []byte("1"), result["a"])
-	require.Equal(t, []byte("2"), result["b"])
-	require.Nil(t, result["c"]) // deletion marked with nil
-}
-
-func TestUpdates_CorrectCount(t *testing.T) {
-	st, _ := newStoreWithParent()
-
-	st.Set([]byte("a"), []byte("1"))
-	st.Set([]byte("b"), []byte("2"))
-	st.Set([]byte("a"), []byte("updated")) // same key, should not increase count
-
-	_, count := st.Updates()
-	require.Equal(t, 2, count)
-}
-
-// --- CacheWrap Hierarchy ---
-
-func TestCacheWrap_ReturnsNewStore(t *testing.T) {
-	st, _ := newStoreWithParent()
-
-	wrapped := st.CacheWrap()
-
-	require.IsType(t, &cachekv.Store{}, wrapped)
-	require.NotSame(t, st, wrapped)
-}
-
-func TestCacheWrap_IsolatesWrites(t *testing.T) {
-	st, _ := newStoreWithParent()
-	st.Set([]byte("key"), []byte("original"))
-
-	child := st.CacheWrap().(*cachekv.Store)
-	child.Set([]byte("key"), []byte("modified"))
-	child.Set([]byte("new"), []byte("value"))
-
-	// parent should not see child changes
-	require.Equal(t, []byte("original"), st.Get([]byte("key")))
-	require.False(t, st.Has([]byte("new")))
-
-	// child sees its own changes
-	require.Equal(t, []byte("modified"), child.Get([]byte("key")))
-	require.True(t, child.Has([]byte("new")))
-}
-
-func TestCacheWrap_NestedWrite(t *testing.T) {
-	st, parent := newStoreWithParent()
-
-	child := st.CacheWrap().(*cachekv.Store)
-	child.Set([]byte("key"), []byte("value"))
-
-	// write child to parent cache
-	child.Write()
-	require.Equal(t, []byte("value"), st.Get([]byte("key")))
-	require.False(t, parent.Has([]byte("key")))
-
-	// write parent cache to underlying
+	// write the delete and assert its not there
 	st.Write()
 	assertIterateDomain(t, st, 1)
 

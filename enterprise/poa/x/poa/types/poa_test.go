@@ -15,6 +15,7 @@
 package types
 
 import (
+	"math"
 	"strings"
 	"testing"
 
@@ -93,6 +94,40 @@ func TestValidatorValidateBasic(t *testing.T) {
 				}
 			}(),
 			wantErr: nil,
+		},
+		{
+			name: "pubkey too short",
+			validator: func() *Validator {
+				// Create Any with Value shorter than MinPubKeyLength
+				pubKeyAny := &codectypes.Any{TypeUrl: "/cosmos.crypto.ed25519.PubKey", Value: make([]byte, 10)}
+				return &Validator{
+					PubKey: pubKeyAny,
+					Power:  100,
+					Metadata: &ValidatorMetadata{
+						OperatorAddress: "cosmos1operator",
+						Moniker:         "test-validator",
+						Description:     "Test validator description",
+					},
+				}
+			}(),
+			wantErr: ErrInvalidPubKeyLength,
+		},
+		{
+			name: "pubkey too long",
+			validator: func() *Validator {
+				// Create Any with Value longer than MaxPubKeyLength
+				pubKeyAny := &codectypes.Any{TypeUrl: "/cosmos.crypto.ed25519.PubKey", Value: make([]byte, MaxPubKeyLength+1)}
+				return &Validator{
+					PubKey: pubKeyAny,
+					Power:  100,
+					Metadata: &ValidatorMetadata{
+						OperatorAddress: "cosmos1operator",
+						Moniker:         "test-validator",
+						Description:     "Test validator description",
+					},
+				}
+			}(),
+			wantErr: ErrInvalidPubKeyLength,
 		},
 	}
 
@@ -367,7 +402,39 @@ func TestMsgUpdateValidatorsValidateBasic(t *testing.T) {
 			msg: &MsgUpdateValidators{
 				Validators: []Validator{},
 			},
-			wantErr: false,
+			wantErr: true,
+		},
+		{
+			name: "all zero power validators",
+			msg: func() *MsgUpdateValidators {
+				pubKey1 := ed25519.GenPrivKey().PubKey()
+				pubKeyAny1, _ := codectypes.NewAnyWithValue(pubKey1)
+				pubKey2 := ed25519.GenPrivKey().PubKey()
+				pubKeyAny2, _ := codectypes.NewAnyWithValue(pubKey2)
+				return &MsgUpdateValidators{
+					Validators: []Validator{
+						{
+							PubKey: pubKeyAny1,
+							Power:  0,
+							Metadata: &ValidatorMetadata{
+								OperatorAddress: "cosmos1operator1",
+								Moniker:         "validator-1",
+								Description:     "Validator 1 description",
+							},
+						},
+						{
+							PubKey: pubKeyAny2,
+							Power:  0,
+							Metadata: &ValidatorMetadata{
+								OperatorAddress: "cosmos1operator2",
+								Moniker:         "validator-2",
+								Description:     "Validator 2 description",
+							},
+						},
+					},
+				}
+			}(),
+			wantErr: true,
 		},
 		{
 			name: "invalid validator",
@@ -446,6 +513,41 @@ func TestMsgUpdateValidatorsValidateBasic(t *testing.T) {
 							Power:  50,
 							Metadata: &ValidatorMetadata{
 								OperatorAddress: "",
+								Moniker:         "validator-2",
+								Description:     "Validator 2 description",
+							},
+						},
+					},
+				}
+			}(),
+			wantErr: true,
+		},
+		{
+			name: "total power overflow",
+			msg: func() *MsgUpdateValidators {
+				pubKey1 := ed25519.GenPrivKey().PubKey()
+				pubKeyAny1, _ := codectypes.NewAnyWithValue(pubKey1)
+				pubKey2 := ed25519.GenPrivKey().PubKey()
+				pubKeyAny2, _ := codectypes.NewAnyWithValue(pubKey2)
+				// Two validators whose powers sum to > math.MaxInt64
+				power1 := int64(math.MaxInt64/2 + 1)
+				power2 := int64(math.MaxInt64/2 + 1)
+				return &MsgUpdateValidators{
+					Validators: []Validator{
+						{
+							PubKey: pubKeyAny1,
+							Power:  power1,
+							Metadata: &ValidatorMetadata{
+								OperatorAddress: "cosmos1operator1",
+								Moniker:         "validator-1",
+								Description:     "Validator 1 description",
+							},
+						},
+						{
+							PubKey: pubKeyAny2,
+							Power:  power2,
+							Metadata: &ValidatorMetadata{
+								OperatorAddress: "cosmos1operator2",
 								Moniker:         "validator-2",
 								Description:     "Validator 2 description",
 							},
@@ -573,6 +675,26 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 				}
 			}(),
 			wantErr: false,
+		},
+		{
+			name: "pubkey too short",
+			msg: &MsgCreateValidator{
+				PubKey:          &codectypes.Any{TypeUrl: "/cosmos.crypto.ed25519.PubKey", Value: make([]byte, 10)},
+				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
+				Moniker:         "test-moniker",
+				Description:     "test-description",
+			},
+			wantErr: true,
+		},
+		{
+			name: "pubkey too long",
+			msg: &MsgCreateValidator{
+				PubKey:          &codectypes.Any{TypeUrl: "/cosmos.crypto.ed25519.PubKey", Value: make([]byte, MaxPubKeyLength+1)},
+				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
+				Moniker:         "test-moniker",
+				Description:     "test-description",
+			},
+			wantErr: true,
 		},
 	}
 

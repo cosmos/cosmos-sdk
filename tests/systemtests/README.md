@@ -30,6 +30,21 @@ cp ./build/simd ./tests/systemtests/binaries/
 
 ### Manual test run
 
+From project root, build first (see above), then:
+
 ```shell
-go test -v -mod=readonly -failfast -tags='system_test' --run TestStakeUnstake    ./... --verbose
+cd tests/systemtests
+go test -v -mod=readonly -failfast -tags='system_test' -run TestStakeUnstake ./... --verbose
 ```
+
+### Running specific tests
+
+Run from `tests/systemtests` (this package has its own go.mod):
+
+| Test | Command | Notes |
+|------|---------|------|
+| TestStakeUnstake | `go test -mod=readonly -tags='system_test' -v -run TestStakeUnstake ./... --verbose` | |
+| TestHeavyLoadLight | `go test -mod=readonly -tags='system_test' -v -short=false -run TestHeavyLoadLight ./... --nodes-count=4 --verbose` | Requires `-short=false` (skipped in short mode) |
+| TestHeavyLoad | `COSMOS_RUN_HEAVY_LOAD_TEST=1 go test -mod=readonly -tags='system_test' -v -run TestHeavyLoad ./... -timeout=15m --nodes-count=4 --verbose` | Gated by env var; use `-timeout=15m` or longer |
+
+CLI flags: `-verbose`, `-nodes-count` (default 4), `-wait-time`, `-block-time`

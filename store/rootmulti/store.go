@@ -580,6 +580,7 @@ func (c *commitFinalizer) StartFinalize() (types.CommitID, error) {
 	}
 	if c.hash.Hash != nil {
 		return c.hash, nil
+	}
 	c.finalizationStarted = true
 	// write the cache store to get the working hash
 	c.cacheStore.Write()

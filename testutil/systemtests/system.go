@@ -76,7 +76,7 @@ type SystemUnderTest struct {
 	dirty             bool // requires full reset when marked dirty
 
 	pidsLock sync.RWMutex
-	pids     map[int]struct{}
+	pids     map[int]int // nodeID -> PID
 	chainID  string
 }
 
@@ -103,7 +103,7 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 		verbose:           verbose,
 		minGasPrice:       fmt.Sprintf("0.000001%s", sdk.DefaultBondDenom),
 		projectName:       nameTokens[0],
-		pids:              make(map[int]struct{}, nodesCount),
+		pids:              make(map[int]int, nodesCount),
 	}
 	if len(initer) > 0 {
 		s.testnetInitializer = initer[0]
@@ -281,7 +281,12 @@ func (s *SystemUnderTest) AwaitUpgradeInfo(t *testing.T) {
 }
 
 func (s *SystemUnderTest) AwaitChainStopped() {
+	deadline := time.Now().Add(30 * time.Second)
 	for s.anyNodeRunning() {
+		if time.Now().After(deadline) {
+			s.Log("Warning: timeout waiting for chain to stop\n")
+			return
+		}
 		time.Sleep(s.blockTime)
 	}
 }
@@ -324,6 +329,265 @@ func (s *SystemUnderTest) AwaitNodeUp(t *testing.T, rpcAddr string) {
 	}
 }
 
+// KillNodes kills the specified nodes in the chain. If graceful == true, we will gracefully shut down the nodes.
+// If graceful == false, we will force kill the nodes, simulating a sudden crash.
+func (s *SystemUnderTest) KillNodes(graceful bool, nodeIDs ...int) error {
+	if !s.ChainStarted {
+		return nil
+	}
+
+	for _, nodeID := range nodeIDs {
+		if nodeID < 0 || nodeID >= s.nodesCount {
+			return fmt.Errorf("invalid node ID %d: must be in range [0, %d)", nodeID, s.nodesCount)
+		}
+	}
+
+	s.pidsLock.RLock()
+	pidsToKill := make(map[int]int) // nodeID -> pid
+	for _, nodeID := range nodeIDs {
+		if pid, ok := s.pids[nodeID]; ok {
+			pidsToKill[nodeID] = pid
+		}
+	}
+	s.pidsLock.RUnlock()
+
+	for nodeID, pid := range pidsToKill {
+		p, err := os.FindProcess(pid)
+		if err != nil {
+			continue
+		}
+		if graceful {
+			if err := p.Signal(syscall.SIGTERM); err != nil {
+				s.Logf("failed to send SIGTERM to node %d (pid %d): %s\n", nodeID, pid, err)
+			}
+		} else {
+			if err := p.Kill(); err != nil {
+				s.Logf("failed to kill node %d (pid %d): %s\n", nodeID, pid, err)
+			}
+		}
+	}
+
+	// Wait for the nodes to actually stop (cleanup goroutine removes them from pids map)
+	deadline := time.Now().Add(10 * time.Second)
+	for time.Now().Before(deadline) {
+		allStopped := true
+		s.pidsLock.RLock()
+		for nodeID := range pidsToKill {
+			if _, running := s.pids[nodeID]; running {
+				allStopped = false
+				break
+			}
+		}
+		s.pidsLock.RUnlock()
+
+		if allStopped {
+			return nil
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
+// KillChain kills all nodes in the chain. If graceful == true, we will gracefully shut down the nodes.
+// If graceful == false, we will force kill all the nodes, simulating a sudden crash.
+func (s *SystemUnderTest) KillChain(graceful bool) {
+	if !s.ChainStarted {
+		return
+	}
+
+	s.pidsLock.RLock()
+	nodeIDs := make([]int, 0, len(s.pids))
+	for nodeID := range s.pids {
+		nodeIDs = append(nodeIDs, nodeID)
+	}
+	s.pidsLock.RUnlock()
+
+	_ = s.KillNodes(graceful, nodeIDs...) // nodeIDs are from internal state, will never be invalid
+	s.AwaitChainStopped()
+	s.ChainStarted = false
+}
+
+// StartNodes starts the specified nodes.
+func (s *SystemUnderTest) StartNodes(t *testing.T, nodeIDs ...int) error {
+	t.Helper()
+
+	for _, nodeID := range nodeIDs {
+		if nodeID < 0 || nodeID >= s.nodesCount {
+			return fmt.Errorf("invalid node ID %d: must be in range [0, %d)", nodeID, s.nodesCount)
+		}
+	}
+
+	for _, nodeID := range nodeIDs {
+		s.pidsLock.RLock()
+		_, running := s.pids[nodeID]
+		s.pidsLock.RUnlock()
+		if running {
+			continue
+		}
+
+		home := s.nodePath(nodeID)
+		args := []string{"start", "--log_level=info", "--log_no_color", "--home=" + home}
+
+		s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))
+		cmd := exec.Command( //nolint:gosec // used by tests only
+			locateExecutable(s.execBinary),
+			args...,
+		)
+		cmd.Dir = WorkDir
+		s.watchLogs(nodeID, cmd)
+		require.NoError(t, cmd.Start(), "node %d", nodeID)
+		s.Logf("Node %d started: pid %d\n", nodeID, cmd.Process.Pid)
+
+		s.awaitProcessCleanup(nodeID, cmd)
+	}
+	s.ChainStarted = true
+	return nil
+}
+
+// PauseNodes pauses the specified nodes using SIGSTOP. Paused nodes appear hung
+// but retain their state, simulating a frozen process (e.g., long GC pause, I/O stall).
+func (s *SystemUnderTest) PauseNodes(nodeIDs ...int) error {
+	for _, nodeID := range nodeIDs {
+		if nodeID < 0 || nodeID >= s.nodesCount {
+			return fmt.Errorf("invalid node ID %d: must be in range [0, %d)", nodeID, s.nodesCount)
+		}
+	}
+
+	s.pidsLock.RLock()
+	defer s.pidsLock.RUnlock()
+
+	for _, nodeID := range nodeIDs {
+		if pid, ok := s.pids[nodeID]; ok {
+			p, err := os.FindProcess(pid)
+			if err != nil {
+				continue
+			}
+			if err := p.Signal(syscall.SIGSTOP); err != nil {
+				s.Logf("failed to pause node %d (pid %d): %s\n", nodeID, pid, err)
+			} else {
+				s.Logf("Node %d paused (pid %d)\n", nodeID, pid)
+			}
+		}
+	}
+	return nil
+}
+
+// ResumeNodes resumes the specified paused nodes using SIGCONT.
+func (s *SystemUnderTest) ResumeNodes(nodeIDs ...int) error {
+	for _, nodeID := range nodeIDs {
+		if nodeID < 0 || nodeID >= s.nodesCount {
+			return fmt.Errorf("invalid node ID %d: must be in range [0, %d)", nodeID, s.nodesCount)
+		}
+	}
+
+	s.pidsLock.RLock()
+	defer s.pidsLock.RUnlock()
+
+	for _, nodeID := range nodeIDs {
+		if pid, ok := s.pids[nodeID]; ok {
+			p, err := os.FindProcess(pid)
+			if err != nil {
+				continue
+			}
+			if err := p.Signal(syscall.SIGCONT); err != nil {
+				s.Logf("failed to resume node %d (pid %d): %s\n", nodeID, pid, err)
+			} else {
+				s.Logf("Node %d resumed (pid %d)\n", nodeID, pid)
+			}
+		}
+	}
+	return nil
+}
+
+// IsNodeRunning returns true if the specified node is currently running.
+func (s *SystemUnderTest) IsNodeRunning(nodeID int) bool {
+	s.pidsLock.RLock()
+	defer s.pidsLock.RUnlock()
+	_, running := s.pids[nodeID]
+	return running
+}
+
+// RunningNodes returns a list of node IDs that are currently running.
+func (s *SystemUnderTest) RunningNodes() []int {
+	s.pidsLock.RLock()
+	defer s.pidsLock.RUnlock()
+
+	nodeIDs := make([]int, 0, len(s.pids))
+	for nodeID := range s.pids {
+		nodeIDs = append(nodeIDs, nodeID)
+	}
+	return nodeIDs
+}
+
+// AwaitNodesSynced waits for the specified nodes to catch up to the current chain height.
+// This is useful after restarting nodes to ensure they have synced before continuing tests.
+func (s *SystemUnderTest) AwaitNodesSynced(t *testing.T, nodeIDs ...int) {
+	t.Helper()
+
+	for _, nodeID := range nodeIDs {
+		if nodeID < 0 || nodeID >= s.nodesCount {
+			t.Fatalf("invalid node ID %d: must be in range [0, %d)", nodeID, s.nodesCount)
+		}
+	}
+
+	targetHeight := s.currentHeight.Load()
+	timeout := time.Duration(len(nodeIDs)+1) * s.blockTime * 5
+	deadline := time.Now().Add(timeout)
+
+	for _, nodeID := range nodeIDs {
+		rpcAddr := fmt.Sprintf("tcp://127.0.0.1:%d", DefaultRpcPort+nodeID)
+		synced := false
+
+		for time.Now().Before(deadline) && !synced {
+			// Use a channel to timeout the connection attempt
+			resultCh := make(chan int64, 1)
+			go func() {
+				con, err := client.New(rpcAddr, "/websocket")
+				if err != nil {
+					resultCh <- -1
+					return
+				}
+				if err := con.Start(); err != nil {
+					resultCh <- -1
+					return
+				}
+				defer func() {
+					require.NoError(t, con.Stop())
+				}()
+
+				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+				defer cancel()
+				result, err := con.Status(ctx)
+				if err != nil {
+					resultCh <- -1
+					return
+				}
+				resultCh <- result.SyncInfo.LatestBlockHeight
+			}()
+
+			// Wait for result with timeout
+			select {
+			case height := <-resultCh:
+				if height >= targetHeight {
+					s.Logf("Node %d synced to height %d\n", nodeID, height)
+					synced = true
+				}
+			case <-time.After(5 * time.Second):
+				// Connection attempt timed out, try again
+			}
+
+			if !synced {
+				time.Sleep(s.blockTime / 2)
+			}
+		}
+
+		if !synced {
+			t.Fatalf("timeout waiting for node %d to sync to height %d", nodeID, targetHeight)
+		}
+	}
+}
+
 // StopChain stops the system under test and executes all registered cleanup callbacks
 func (s *SystemUnderTest) StopChain() {
 	s.Log("Stop chain\n")
@@ -361,7 +625,7 @@ func (s *SystemUnderTest) StopChain() {
 
 func (s *SystemUnderTest) withEachPid(cb func(p *os.Process)) {
 	s.pidsLock.RLock()
-	pids := maps.Keys(s.pids)
+	pids := maps.Values(s.pids)
 	s.pidsLock.RUnlock()
 
 	for pid := range pids {
@@ -611,21 +875,21 @@ func (s *SystemUnderTest) startNodesAsync(t *testing.T, xargs ...string) {
 		s.Logf("Node started: %d\n", cmd.Process.Pid)
 
 		// cleanup when stopped
-		s.awaitProcessCleanup(cmd)
+		s.awaitProcessCleanup(i, cmd)
 	})
 }
 
 // tracks the PID in state with a go routine waiting for the shutdown completion to unregister
-func (s *SystemUnderTest) awaitProcessCleanup(cmd *exec.Cmd) {
+func (s *SystemUnderTest) awaitProcessCleanup(nodeID int, cmd *exec.Cmd) {
 	pid := cmd.Process.Pid
 	s.pidsLock.Lock()
-	s.pids[pid] = struct{}{}
+	s.pids[nodeID] = pid
 	s.pidsLock.Unlock()
 	go func() {
 		_ = cmd.Wait() // blocks until shutdown
-		s.Logf("Node stopped: %d\n", pid)
+		s.Logf("Node %d stopped (pid %d)\n", nodeID, pid)
 		s.pidsLock.Lock()
-		delete(s.pids, pid)
+		delete(s.pids, nodeID)
 		s.pidsLock.Unlock()
 	}()
 }
@@ -769,7 +1033,7 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 	cmd.Dir = WorkDir
 	s.watchLogs(nodeNumber, cmd)
 	require.NoError(t, cmd.Start(), "node %d", nodeNumber)
-	s.awaitProcessCleanup(cmd)
+	s.awaitProcessCleanup(nodeNumber, cmd)
 	return node
 }
 

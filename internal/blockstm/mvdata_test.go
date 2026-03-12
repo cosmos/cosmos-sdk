@@ -9,20 +9,28 @@ import (
 )
 
 func TestEmptyMVData(t *testing.T) {
-	data := NewMVData()
+	data := NewMVData(1)
 	value, _, estimate := data.Read([]byte("a"), 1)
 	require.False(t, estimate)
 	require.Nil(t, value)
 }
 
+func KV(kv ...[]byte) *MemDB {
+	db := NewMemDB()
+	for i := 0; i < len(kv); i += 2 {
+		db.OverlaySet(kv[i], kv[i+1])
+	}
+	return db
+}
+
 func TestMVData(t *testing.T) {
-	data := NewMVData()
+	data := NewMVData(10)
 
 	// read closest version
-	data.Write([]byte("a"), []byte("1"), TxnVersion{Index: 1, Incarnation: 1})
-	data.Write([]byte("a"), []byte("2"), TxnVersion{Index: 2, Incarnation: 1})
-	data.Write([]byte("a"), []byte("3"), TxnVersion{Index: 3, Incarnation: 1})
-	data.Write([]byte("b"), []byte("2"), TxnVersion{Index: 2, Incarnation: 1})
+	data.Consolidate(TxnVersion{Index: 1, Incarnation: 1}, KV([]byte("a"), []byte("1")))
+	data.Consolidate(TxnVersion{Index: 2, Incarnation: 1}, KV([]byte("a"), []byte("2")))
+	data.Consolidate(TxnVersion{Index: 3, Incarnation: 1}, KV([]byte("a"), []byte("3")))
+	data.Consolidate(TxnVersion{Index: 2, Incarnation: 1}, KV([]byte("a"), []byte("2"), []byte("b"), []byte("2")))
 
 	// read closest version
 	value, _, estimate := data.Read([]byte("a"), 1)
@@ -48,14 +56,14 @@ func TestMVData(t *testing.T) {
 	require.Equal(t, TxnVersion{Index: 2, Incarnation: 1}, version)
 
 	// new incarnation overrides old
-	data.Write([]byte("a"), []byte("3-2"), TxnVersion{Index: 3, Incarnation: 2})
+	data.Consolidate(TxnVersion{Index: 3, Incarnation: 2}, KV([]byte("a"), []byte("3-2")))
 	value, version, estimate = data.Read([]byte("a"), 4)
 	require.False(t, estimate)
 	require.Equal(t, []byte("3-2"), value)
 	require.Equal(t, TxnVersion{Index: 3, Incarnation: 2}, version)
 
 	// read estimate
-	data.WriteEstimate([]byte("a"), 3)
+	data.ConvertWritesToEstimates(3)
 	_, version, estimate = data.Read([]byte("a"), 4)
 	require.True(t, estimate)
 	require.Equal(t, TxnIndex(3), version.Index)
@@ -86,16 +94,15 @@ func TestSnapshot(t *testing.T) {
 	storage.Set([]byte("a"), []byte("0"))
 	storage.Set([]byte("d"), []byte("0"))
 
-	data := NewMVData()
+	data := NewMVData(10)
 	// read closest version
-	data.Write([]byte("a"), []byte("1"), TxnVersion{Index: 1, Incarnation: 1})
-	data.Write([]byte("a"), []byte("2"), TxnVersion{Index: 2, Incarnation: 1})
-	data.Write([]byte("a"), []byte("3"), TxnVersion{Index: 3, Incarnation: 1})
-	data.Write([]byte("b"), []byte("2"), TxnVersion{Index: 2, Incarnation: 1})
-	data.Write([]byte("d"), []byte("1"), TxnVersion{Index: 2, Incarnation: 1})
+	data.Consolidate(TxnVersion{Index: 1, Incarnation: 1}, KV([]byte("a"), []byte("1")))
+	data.Consolidate(TxnVersion{Index: 2, Incarnation: 1}, KV([]byte("a"), []byte("2")))
+	data.Consolidate(TxnVersion{Index: 3, Incarnation: 1}, KV([]byte("a"), []byte("3")))
+	data.Consolidate(TxnVersion{Index: 2, Incarnation: 1}, KV([]byte("a"), []byte("2"), []byte("b"), []byte("2"), []byte("d"), []byte("1")))
 	// delete the key "d" in tx 3
-	data.Write([]byte("d"), nil, TxnVersion{Index: 3, Incarnation: 1})
-	data.WriteEstimate([]byte("c"), 2)
+	data.Consolidate(TxnVersion{Index: 3, Incarnation: 1}, KV([]byte("a"), []byte("3"), []byte("d"), nil))
+	data.ConvertWritesToEstimates(2)
 
 	require.Equal(t, []KVPair{
 		{[]byte("a"), []byte("3")},

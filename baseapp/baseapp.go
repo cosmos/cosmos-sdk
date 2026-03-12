@@ -1,5 +1,6 @@
 package baseapp
 
+// need to import telemetry before anything else for side effects
 import (
 	"fmt"
 	"maps"
@@ -23,7 +24,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store"
-	storemetrics "cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
 	storetypes "cosmossdk.io/store/types"
 
@@ -198,7 +198,7 @@ func NewBaseApp(
 		logger:           logger.With(log.ModuleKey, "baseapp"),
 		name:             name,
 		db:               db,
-		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default, we use a no-op metric gather in store
+		cms:              store.NewCommitMultiStore(db, logger),
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),
@@ -903,8 +903,11 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		anteCtx, anteSpan := anteCtx.StartSpan(tracer, "anteHandler")
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 		anteSpan.End()
-
 		if !newCtx.IsZero() {
+			// Restore the parent span without discarding values attached by the
+			// ante handler to the stdlib context.
+			newCtx = newCtx.WithContext(trace.ContextWithSpan(newCtx.Context(), trace.SpanFromContext(ctx.Context())))
+
 			// At this point, newCtx.MultiStore() is a store branch, or something else
 			// replaced by the AnteHandler. We want the original multistore.
 			//
@@ -922,10 +925,16 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		if err != nil {
 			if mode == execModeReCheck {
 				// if the ante handler fails on recheck, we want to remove the tx from the mempool
-				if mempoolErr := app.mempool.Remove(tx); mempoolErr != nil {
-					return gInfo, nil, anteEvents, errors.Join(err, mempoolErr)
+				errMempool := mempool.RemoveWithReason(ctx, app.mempool, tx, mempool.RemoveReason{
+					Caller: mempool.CallerRunTxRecheck,
+					Error:  err,
+				})
+
+				if errMempool != nil {
+					return gInfo, nil, anteEvents, errors.Join(err, errMempool)
 				}
 			}
+
 			return gInfo, nil, nil, err
 		}
 
@@ -940,10 +949,10 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 			return gInfo, nil, anteEvents, err
 		}
 	case execModeFinalize:
-		err = app.mempool.Remove(tx)
+		reason := mempool.RemoveReason{Caller: mempool.CallerRunTxFinalize}
+		err = mempool.RemoveWithReason(ctx, app.mempool, tx, reason)
 		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-			return gInfo, nil, anteEvents,
-				fmt.Errorf("failed to remove tx from mempool: %w", err)
+			return gInfo, nil, anteEvents, fmt.Errorf("failed to remove tx from mempool: %w", err)
 		}
 	}
 
@@ -1072,7 +1081,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 			}
 			msgResponses = append(msgResponses, msgResponse)
 		}
-
 	}
 
 	data, err := makeABCIData(msgResponses)

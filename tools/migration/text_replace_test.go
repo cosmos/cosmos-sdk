@@ -76,6 +76,25 @@ func TestApplyTextReplacements(t *testing.T) {
 			wantContains: []string{"err :=", "if err != nil", "return nil, err"},
 		},
 		{
+			name:    "FileMatch applies replacement to matching filename",
+			content: "\t\"time\"\nother content",
+			replacements: []TextReplacement{
+				{Old: "\t\"time\"\n", New: "", FileMatch: "test.go"},
+			},
+			wantModified: true,
+			wantContains: []string{"other content"},
+			wantMissing:  []string{"\"time\""},
+		},
+		{
+			name:    "FileMatch skips non-matching filename",
+			content: "\t\"time\"\nother content",
+			replacements: []TextReplacement{
+				{Old: "\t\"time\"\n", New: "", FileMatch: "app_config.go"},
+			},
+			wantModified: false,
+			wantContains: []string{"\"time\"", "other content"},
+		},
+		{
 			name:    "EpochsKeeper init pattern",
 			content: "\tapp.EpochsKeeper = epochskeeper.NewKeeper(\n\t\truntime.NewKVStoreService(keys[epochstypes.StoreKey]),\n\t\tappCodec,\n\t)\n\n\tapp.EpochsKeeper.SetHooks(",
 			replacements: []TextReplacement{

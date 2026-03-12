@@ -276,6 +276,189 @@ func NewSimApp() *SimApp {
 	t.Logf("=== Transformed output ===\n%s", output)
 }
 
+// TestIntegrationV53ToV54AppConfig tests the text replacement patterns that clean up
+// app_config.go after AST transforms (import rewrites) have run.
+func TestIntegrationV53ToV54AppConfig(t *testing.T) {
+	// This is a simplified v53 app_config.go AFTER import rewriting has been applied.
+	// Circuit/nft imports have been rewritten to contrib paths; group imports are unchanged.
+	postASTContent := `package simapp
+
+import (
+	"time"
+
+	"google.golang.org/protobuf/types/known/durationpb"
+
+	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	circuitmodulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
+	groupmodulev1 "cosmossdk.io/api/cosmos/group/module/v1"
+	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
+	"cosmossdk.io/core/appconfig"
+	_ "github.com/cosmos/cosmos-sdk/contrib/x/circuit" // import for side-effects
+	circuittypes "github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
+	"github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	_ "github.com/cosmos/cosmos-sdk/contrib/x/nft/module" // import for side-effects
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	_ "github.com/cosmos/cosmos-sdk/x/group/module" // import for side-effects
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+)
+
+var (
+	moduleAccPerms = []*authmodulev1.ModuleAccountPermission{
+		{Account: authtypes.FeeCollectorName},
+		{Account: nft.ModuleName},
+		{Account: govtypes.ModuleName},
+	}
+
+	blockAccAddrs = []string{
+		authtypes.FeeCollectorName,
+		nft.ModuleName,
+		stakingtypes.BondedPoolName,
+	}
+
+	ModuleConfig = []*appv1alpha1.ModuleConfig{
+		{
+			Name: "runtime",
+			Config: appconfig.WrapAny(&runtimev1alpha1.Module{
+				EndBlockers: []string{
+					govtypes.ModuleName,
+					stakingtypes.ModuleName,
+					group.ModuleName,
+				},
+				InitGenesis: []string{
+					authtypes.ModuleName,
+					banktypes.ModuleName,
+					nft.ModuleName,
+					group.ModuleName,
+					circuittypes.ModuleName,
+				},
+				ExportGenesis: []string{
+					authtypes.ModuleName,
+					nft.ModuleName,
+					group.ModuleName,
+					circuittypes.ModuleName,
+				},
+			}),
+		},
+		{
+			Name: group.ModuleName,
+			Config: appconfig.WrapAny(&groupmodulev1.Module{
+				MaxExecutionPeriod: durationpb.New(time.Second * 1209600),
+				MaxMetadataLen:     255,
+			}),
+		},
+		{
+			Name:   nft.ModuleName,
+			Config: appconfig.WrapAny(&nftmodulev1.Module{}),
+		},
+		{
+			Name:   govtypes.ModuleName,
+			Config: appconfig.WrapAny(&authmodulev1.Module{}),
+		},
+		{
+			Name:   circuittypes.ModuleName,
+			Config: appconfig.WrapAny(&circuitmodulev1.Module{}),
+		},
+	}
+)
+`
+
+	// Text replacements scoped to app_config.go
+	appConfigReplacements := []TextReplacement{
+		// API imports
+		{Old: "\tcircuitmodulev1 \"cosmossdk.io/api/cosmos/circuit/module/v1\"\n", New: "", FileMatch: "app_config.go"},
+		{Old: "\tgroupmodulev1 \"cosmossdk.io/api/cosmos/group/module/v1\"\n", New: "", FileMatch: "app_config.go"},
+		{Old: "\tnftmodulev1 \"cosmossdk.io/api/cosmos/nft/module/v1\"\n", New: "", FileMatch: "app_config.go"},
+		// Circuit imports (post-rewrite)
+		{Old: "\t_ \"github.com/cosmos/cosmos-sdk/contrib/x/circuit\" // import for side-effects\n", New: "", FileMatch: "app_config.go"},
+		{Old: "\tcircuittypes \"github.com/cosmos/cosmos-sdk/contrib/x/circuit/types\"\n", New: "", FileMatch: "app_config.go"},
+		// NFT imports (post-rewrite)
+		{Old: "\t\"github.com/cosmos/cosmos-sdk/contrib/x/nft\"\n", New: "", FileMatch: "app_config.go"},
+		{Old: "\t_ \"github.com/cosmos/cosmos-sdk/contrib/x/nft/module\" // import for side-effects\n", New: "", FileMatch: "app_config.go"},
+		// Group imports
+		{Old: "\t\"github.com/cosmos/cosmos-sdk/x/group\"\n", New: "", FileMatch: "app_config.go"},
+		{Old: "\t_ \"github.com/cosmos/cosmos-sdk/x/group/module\" // import for side-effects\n", New: "", FileMatch: "app_config.go"},
+		// time and durationpb (only used by group)
+		{Old: "\t\"time\"\n", New: "", FileMatch: "app_config.go"},
+		{Old: "\t\"google.golang.org/protobuf/types/known/durationpb\"\n", New: "", FileMatch: "app_config.go"},
+		// moduleAccPerms
+		{Old: "\t\t{Account: nft.ModuleName},\n", New: "", FileMatch: "app_config.go"},
+		// blockAccAddrs
+		{Old: "\t\tnft.ModuleName,\n", New: "", FileMatch: "app_config.go"},
+		// String arrays (5-tab indent)
+		{Old: "\t\t\t\t\tgroup.ModuleName,\n", New: "", FileMatch: "app_config.go"},
+		{Old: "\t\t\t\t\tnft.ModuleName,\n", New: "", FileMatch: "app_config.go"},
+		{Old: "\t\t\t\t\tcircuittypes.ModuleName,\n", New: "", FileMatch: "app_config.go"},
+		// ModuleConfig entries
+		{Old: "\t\t{\n\t\t\tName: group.ModuleName,\n\t\t\tConfig: appconfig.WrapAny(&groupmodulev1.Module{\n\t\t\t\tMaxExecutionPeriod: durationpb.New(time.Second * 1209600),\n\t\t\t\tMaxMetadataLen:     255,\n\t\t\t}),\n\t\t},\n", New: "", FileMatch: "app_config.go"},
+		{Old: "\t\t{\n\t\t\tName:   nft.ModuleName,\n\t\t\tConfig: appconfig.WrapAny(&nftmodulev1.Module{}),\n\t\t},\n", New: "", FileMatch: "app_config.go"},
+		{Old: "\t\t{\n\t\t\tName:   circuittypes.ModuleName,\n\t\t\tConfig: appconfig.WrapAny(&circuitmodulev1.Module{}),\n\t\t},\n", New: "", FileMatch: "app_config.go"},
+	}
+
+	// Write to a temp file named app_config.go (so FileMatch works)
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "app_config.go")
+	if err := os.WriteFile(tmpFile, []byte(postASTContent), 0o600); err != nil {
+		t.Fatalf("write error: %v", err)
+	}
+
+	modified, err := applyTextReplacements(tmpFile, appConfigReplacements)
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	if !modified {
+		t.Error("expected modifications to app_config.go")
+	}
+
+	result, _ := os.ReadFile(tmpFile)
+	output := string(result)
+
+	// === ASSERTIONS ===
+
+	// Imports removed
+	assertMissing(t, output, "circuitmodulev1", "circuitmodulev1 API import should be removed")
+	assertMissing(t, output, "groupmodulev1", "groupmodulev1 API import should be removed")
+	assertMissing(t, output, "nftmodulev1", "nftmodulev1 API import should be removed")
+	assertMissing(t, output, "contrib/x/circuit", "circuit contrib imports should be removed")
+	assertMissing(t, output, "contrib/x/nft", "nft contrib imports should be removed")
+	assertMissing(t, output, "x/group", "group imports should be removed")
+	assertMissing(t, output, "\"time\"", "time import should be removed")
+	assertMissing(t, output, "durationpb", "durationpb import should be removed")
+
+	// Surviving imports should still be there
+	assertContains(t, output, "cosmossdk.io/core/appconfig", "appconfig import should survive")
+	assertContains(t, output, "authtypes", "authtypes import should survive")
+	assertContains(t, output, "banktypes", "banktypes import should survive")
+	assertContains(t, output, "govtypes", "govtypes import should survive")
+	assertContains(t, output, "stakingtypes", "stakingtypes import should survive")
+
+	// moduleAccPerms: nft.ModuleName removed
+	assertMissing(t, output, "nft.ModuleName", "nft.ModuleName should be removed everywhere")
+	assertContains(t, output, "authtypes.FeeCollectorName", "FeeCollectorName should survive in moduleAccPerms")
+	assertContains(t, output, "govtypes.ModuleName", "govtypes.ModuleName should survive")
+
+	// blockAccAddrs: nft.ModuleName removed
+	assertContains(t, output, "stakingtypes.BondedPoolName", "BondedPoolName should survive in blockAccAddrs")
+
+	// String arrays: group, nft, circuittypes removed
+	assertMissing(t, output, "group.ModuleName", "group.ModuleName should be removed from arrays")
+	assertMissing(t, output, "circuittypes.ModuleName", "circuittypes.ModuleName should be removed from arrays")
+
+	// ModuleConfig entries removed
+	assertMissing(t, output, "MaxExecutionPeriod", "group ModuleConfig should be removed")
+	assertMissing(t, output, "nftmodulev1.Module", "nft ModuleConfig should be removed")
+	assertMissing(t, output, "circuitmodulev1.Module", "circuit ModuleConfig should be removed")
+
+	// Surviving ModuleConfig entries
+	assertContains(t, output, "govtypes.ModuleName", "gov ModuleConfig should survive")
+
+	t.Logf("=== Transformed app_config.go ===\n%s", output)
+}
+
 func assertContains(t *testing.T, output, substr, msg string) {
 	t.Helper()
 	if !strings.Contains(output, substr) {

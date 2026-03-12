@@ -16,6 +16,9 @@ type TextReplacement struct {
 	Old string
 	// New is the replacement text.
 	New string
+	// FileMatch restricts this replacement to files whose base name matches.
+	// If empty, the replacement applies to all files.
+	FileMatch string
 }
 
 // FileRemoval defines a file to delete during migration.
@@ -42,7 +45,11 @@ func applyTextReplacements(filePath string, replacements []TextReplacement) (boo
 	original := string(content)
 	result := original
 
+	baseName := filepath.Base(filePath)
 	for _, r := range replacements {
+		if r.FileMatch != "" && r.FileMatch != baseName {
+			continue
+		}
 		result = strings.ReplaceAll(result, r.Old, r.New)
 	}
 

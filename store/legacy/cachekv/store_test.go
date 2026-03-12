@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math/unsafe"
-	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
+	"cosmossdk.io/store/legacy/cachekv"
 	"cosmossdk.io/store/types"
 )
 

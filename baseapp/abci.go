@@ -449,8 +449,8 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 	if app.committer != nil {
 		if err := app.committer.Rollback(); err != nil {
 			app.logger.Error("failed to rollback committer in PrepareProposal", "error", err)
+			return nil, fmt.Errorf("failed to rollback committer in PrepareProposal: %w", err)
 		}
-		app.committer = nil
 	}
 
 	// Always reset state given that PrepareProposal can timeout and be called
@@ -574,8 +574,8 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		if app.committer != nil {
 			if err := app.committer.Rollback(); err != nil {
 				app.logger.Error("failed to rollback committer in ProcessProposal", "error", err)
+				return nil, fmt.Errorf("failed to rollback committer in ProcessProposal: %w", err)
 			}
-			app.committer = nil
 		}
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 	}
@@ -1034,7 +1034,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 				if err != nil {
 					return nil, fmt.Errorf("failed to rollback committer: %w", err)
 				}
-				app.committer = nil
+				return nil, fmt.Errorf("failed to rollback optimistic execution commit %w", err)
 			}
 		}
 	}

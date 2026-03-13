@@ -29,6 +29,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#26069](https://github.com/cosmos/cosmos-sdk/pull/26069) Move `cachekv` to `legacy/cachekv` so that iavl/v1 stores can continue using the existing implementation while a new mutex-free cachekv is introduced for new stores.
 * [#26060](https://github.com/cosmos/cosmos-sdk/pull/26060) Remove non-functional `StoreMetrics`. This metric interface never worked, so this simply removes dead code.
+* [#26078](https://github.com/cosmos/cosmos-sdk/pull/26078) Remove `SetInterBlockCache`, `SetIAVLCacheSize`, `SetIAVLDisableFastNode`, and `SetIAVLSyncPruning` from `CommitMultiStore` interface as they are iavl/v1 specific. These methods are still available on `rootmulti.Store` via type assertion.
 
 ### Bug Fixes
 

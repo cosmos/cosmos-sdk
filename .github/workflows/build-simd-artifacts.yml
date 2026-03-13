@@ -1,0 +1,48 @@
+# Build simd binaries and upload as artifacts.
+# This workflow lives on main. For release/v0.53.x, see the workflow on that branch.
+# Artifacts are pruned by clean-action-artifacts (7 days) but skip-recent: 5 ensures at least 5 remain.
+name: Build simd Artifacts
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}-simd-artifacts
+  cancel-in-progress: true
+
+jobs:
+  build:
+    timeout-minutes: 15
+    runs-on: depot-ubuntu-22.04-4
+    strategy:
+      fail-fast: false
+      matrix:
+        goarch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.8"
+          check-latest: false
+          cache: true
+          cache-dependency-path: go.sum
+      - name: Install aarch64 cross-compiler
+        if: matrix.goarch == 'arm64'
+        run: sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
+      - name: Build simd (linux-${{ matrix.goarch }})
+        run: make build-linux-${{ matrix.goarch }}
+      - name: Generate checksum
+        run: cd build && sha256sum simd > simd.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: simd-main-linux-${{ matrix.goarch }}-${{ github.run_id }}
+          path: |
+            build/simd
+            build/simd.sha256
+          # No retention-days: clean-action-artifacts prunes artifacts older than 7 days

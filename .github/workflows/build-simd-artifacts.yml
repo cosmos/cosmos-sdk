@@ -81,8 +81,9 @@ jobs:
             # Each artifact dir is simd-main-{goos}-{goarch}-{run_id}; extract goos-goarch
             name=$(basename "${dir%/}")
             goos_goarch=$(echo "$name" | sed -n 's/^simd-main-\([^-]*-[^-]*\)-[0-9]*$/\1/p')
-            if [ -n "$goos_goarch" ] && [ -f "${dir}build/simd" ]; then
-              cp "${dir}build/simd" "release-assets/simd-${goos_goarch}"
+            # Artifact root is build/ (LCA of build/simd, build/simd.sha256), so simd is at artifact root
+            if [ -n "$goos_goarch" ] && [ -f "${dir}simd" ]; then
+              cp "${dir}simd" "release-assets/simd-${goos_goarch}"
               chmod +x "release-assets/simd-${goos_goarch}"
               (cd release-assets && sha256sum "simd-${goos_goarch}" > "simd-${goos_goarch}.sha256")
             fi

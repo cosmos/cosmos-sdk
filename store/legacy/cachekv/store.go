@@ -8,7 +8,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/math"
-
 	"cosmossdk.io/store/internal/btree"
 	"cosmossdk.io/store/internal/conv"
 	"cosmossdk.io/store/legacy/cachekv/internal"

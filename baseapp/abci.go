@@ -18,7 +18,6 @@ import (
 
 	coreheader "cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
-
 	"cosmossdk.io/store/rootmulti"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"

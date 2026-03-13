@@ -18,7 +18,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
-
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
@@ -75,7 +74,7 @@ type Store struct {
 	interBlockCache types.MultiStorePersistentCache
 	listeners       map[types.StoreKey]*types.MemoryListener
 
-	commitHeader    cmtproto.Header
+	commitHeader cmtproto.Header
 }
 
 var (

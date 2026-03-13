@@ -3,7 +3,6 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"maps"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -174,7 +173,6 @@ func init() {
 func NewSimApp(
 	logger log.Logger,
 	db dbm.DB,
-	traceStore io.Writer,
 	loadLatest bool,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),

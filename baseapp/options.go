@@ -10,6 +10,7 @@ import (
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
+	"cosmossdk.io/store/tracekv"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
@@ -276,10 +277,10 @@ func (app *BaseApp) SetNotSigverifyTx() {
 	app.sigverifyTx = false
 }
 
-// SetCommitMultiStoreTracer sets the store tracer on the BaseApp. When set,
-// multistores will be wrapped with tracekv.NewMultiStore to trace KV operations.
+// SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
+// CommitMultiStore.
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
-	app.traceWriter = w
+	app.cms = tracekv.NewCommitMultiStore(app.cms, w, nil)
 }
 
 // SetStoreLoader allows us to customize the rootMultiStore initialization.

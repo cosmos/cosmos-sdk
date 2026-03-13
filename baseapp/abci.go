@@ -802,6 +802,10 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		return nil, err
 	}
 
+	if setTraceCtx, ok := app.cms.(tracekv.SetTracingContext); ok {
+		setTraceCtx.SetTracingContext(map[string]any{"blockHeight": req.Height})
+	}
+
 	// NOTE: Header populated here is intentionally partial; it omits Version, LastBlockID,
 	// LastCommitHash, DataHash, ValidatorsHash, ConsensusHash, LastResultsHash, and EvidenceHash.
 	// As a result, the HistoricalInfo headers stored by x/staking are unreliable and cannot reproduce
@@ -852,13 +856,6 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	gasMeter := app.getBlockGasMeter(finalizeState.Context())
 	finalizeState.SetContext(finalizeState.Context().WithBlockGasMeter(gasMeter))
 
-	// Wrap the finalize state multistore with tracing if enabled.
-	if app.traceWriter != nil {
-		tracedMS := tracekv.NewMultiStore(finalizeState.MultiStore, app.traceWriter, map[string]any{"blockHeight": req.Height})
-		finalizeState.MultiStore = tracedMS
-		finalizeState.SetContext(finalizeState.Context().WithMultiStore(tracedMS))
-	}
-
 	if checkState := app.stateManager.GetState(execModeCheck); checkState != nil {
 		checkState.SetContext(checkState.Context().
 			WithBlockGasMeter(gasMeter).
@@ -904,6 +901,10 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	if err != nil {
 		// usually due to canceled
 		return nil, err
+	}
+
+	if setTraceCtx, ok := finalizeState.MultiStore.(tracekv.SetTracingContext); ok {
+		setTraceCtx.SetTracingContext(nil)
 	}
 
 	var (

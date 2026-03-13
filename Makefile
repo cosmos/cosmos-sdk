@@ -536,35 +536,8 @@ test-system: test-system-sdk
 
 .PHONY: test-system test-system-sdk build-system-test-current
 
-# build-v53 checks out the v0.53.x branch, builds the binary, and renames it to simdv53.
+# build-v53 fetches the v0.53 simd binary for system tests.
+# Tries download from v0.53.x-nightly release (non-production) first; falls back to building from source.
 build-v53:
-	@echo "Starting v53 build process..."
-	git_status=$$(git status --porcelain) && \
-	has_changes=false && \
-	if [ -n "$$git_status" ]; then \
-		echo "Stashing uncommitted changes..." && \
-		git stash push -m "Temporary stash for v53 build" && \
-		has_changes=true; \
-	else \
-		echo "No changes to stash"; \
-	fi && \
-	echo "Saving current reference..." && \
-	CURRENT_REF=$$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse HEAD) && \
-	echo "Checking out release branch..." && \
-	git checkout release/v0.53.x && \
-	echo "Building v53 binary..." && \
-	make build && \
-	mv build/simd build/simdv53 && \
-	echo "Returning to original branch..." && \
-	if [ "$$CURRENT_REF" = "HEAD" ]; then \
-		git checkout $$(git rev-parse HEAD); \
-	else \
-		git checkout $$CURRENT_REF; \
-	fi && \
-	if [ "$$has_changes" = "true" ]; then \
-		echo "Reapplying stashed changes..." && \
-		git stash pop || echo "Warning: Could not pop stash, your changes may be in the stash list"; \
-	else \
-		echo "No changes to reapply"; \
-	fi
+	BUILDDIR=$(BUILDDIR) ./scripts/build-v53.sh
 .PHONY: build-v53

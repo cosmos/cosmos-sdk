@@ -78,3 +78,56 @@ jobs:
             build/simd
             build/simd.sha256
           retention-days: 30
+
+  # Publishes v0.53.x binaries to v0.53.x-nightly release (non-production) for make build-v53 download.
+  publish-v53-nightly:
+    if: github.ref == 'refs/heads/release/v0.53.x'
+    needs: build-v053
+    runs-on: depot-ubuntu-22.04-4
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download v0.53 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: simd-v0.53.x-*
+          merge-multiple: false
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          for dir in simd-v0.53.x-*/; do
+            [ -f "${dir}build/simd" ] || continue
+            if [[ "$dir" == *"linux-amd64"* ]]; then cp "${dir}build/simd" release-assets/simd-linux-amd64; fi
+            if [[ "$dir" == *"linux-arm64"* ]]; then cp "${dir}build/simd" release-assets/simd-linux-arm64; fi
+            if [[ "$dir" == *"darwin-amd64"* ]]; then cp "${dir}build/simd" release-assets/simd-darwin-amd64; fi
+            if [[ "$dir" == *"darwin-arm64"* ]]; then cp "${dir}build/simd" release-assets/simd-darwin-arm64; fi
+          done
+          chmod +x release-assets/simd-*
+          ls -la release-assets/
+
+      - name: Update nightly tag to current commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git push origin :refs/tags/v0.53.x-nightly 2>/dev/null || true
+          git tag v0.53.x-nightly
+          git push origin v0.53.x-nightly
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish v0.53.x Nightly (non-production)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.53.x-nightly
+          name: v0.53.x Nightly (non-production)
+          prerelease: true
+          body: |
+            Nightly simd binaries for system tests. **Not for production use.**
+            Built from the latest commit on release/v0.53.x.
+          files: release-assets/simd-*
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

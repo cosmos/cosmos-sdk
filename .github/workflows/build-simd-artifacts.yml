@@ -108,4 +108,5 @@ jobs:
           gh release create v0.53.x-nightly ./release-assets/simd-* \
             --target ${{ github.sha }} \
             --title "v0.53.x nightly" \
-            --notes "Nightly simd builds from release/v0.53.x (non-production). Used by build-v53.sh for system tests."
+            --notes "Nightly simd builds from release/v0.53.x (non-production). Used by build-v53.sh for system tests." \
+            --prerelease

@@ -3,6 +3,7 @@ package config_test
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -91,6 +92,174 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 			_, err := clitestutil.ExecTestCLICmd(clientCtx, testCmd, tc.args)
 			require.Error(t, err)
 			require.Contains(t, err.Error(), tc.expNode)
+		})
+	}
+}
+
+func TestReadFromClientConfig(t *testing.T) {
+	tests := []struct {
+		name        string
+		setup       func(t *testing.T, homeDir string) error
+		chainID     string
+		wantErr     bool
+		errContains string
+		validate    func(t *testing.T, ctx client.Context)
+	}{
+		{
+			name:    "creates config file when it does not exist",
+			setup:   func(t *testing.T, homeDir string) error { t.Helper(); return nil },
+			chainID: "test-chain",
+			wantErr: false,
+			validate: func(t *testing.T, ctx client.Context) {
+				t.Helper()
+				require.Equal(t, "test-chain", ctx.ChainID)
+				require.NotNil(t, ctx.Keyring)
+				require.NotNil(t, ctx.Client)
+			},
+		},
+		{
+			name: "reads existing config file",
+			setup: func(t *testing.T, homeDir string) error {
+				t.Helper()
+				configPath := filepath.Join(homeDir, "config")
+				if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
+					return err
+				}
+				configFile := filepath.Join(configPath, "client.toml")
+				content := `chain-id = "existing-chain"
+keyring-backend = "test"
+output = "json"
+node = "tcp://localhost:26658"
+broadcast-mode = "async"
+`
+				return os.WriteFile(configFile, []byte(content), 0o600)
+			},
+			chainID: "",
+			wantErr: false,
+			validate: func(t *testing.T, ctx client.Context) {
+				t.Helper()
+				require.Equal(t, "existing-chain", ctx.ChainID)
+				require.Equal(t, "json", ctx.OutputFormat)
+			},
+		},
+		{
+			name: "handles invalid TOML",
+			setup: func(t *testing.T, homeDir string) error {
+				t.Helper()
+				configPath := filepath.Join(homeDir, "config")
+				if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
+					return err
+				}
+				configFile := filepath.Join(configPath, "client.toml")
+				content := `invalid toml content [unclosed bracket`
+				return os.WriteFile(configFile, []byte(content), 0o600)
+			},
+			chainID:     "",
+			wantErr:     true,
+			errContains: "couldn't get client config",
+		},
+		{
+			name:    "preserves chain ID from context when creating new config",
+			setup:   func(t *testing.T, homeDir string) error { t.Helper(); return nil },
+			chainID: "preserved-chain",
+			wantErr: false,
+			validate: func(t *testing.T, ctx client.Context) {
+				t.Helper()
+				require.Equal(t, "preserved-chain", ctx.ChainID)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			home := t.TempDir()
+			if tt.setup != nil {
+				require.NoError(t, tt.setup(t, home))
+			}
+
+			clientCtx := client.Context{}.
+				WithHomeDir(home).
+				WithViper("").
+				WithCodec(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()))
+
+			if tt.chainID != "" {
+				clientCtx = clientCtx.WithChainID(tt.chainID)
+			}
+
+			resultCtx, err := config.ReadFromClientConfig(clientCtx)
+
+			if tt.wantErr {
+				require.Error(t, err)
+				if tt.errContains != "" {
+					require.Contains(t, err.Error(), tt.errContains)
+				}
+			} else {
+				require.NoError(t, err)
+				if tt.validate != nil {
+					tt.validate(t, resultCtx)
+				}
+			}
+		})
+	}
+}
+
+func TestReadDefaultValuesFromDefaultClientConfig(t *testing.T) {
+	tests := []struct {
+		name        string
+		chainID     string
+		wantErr     bool
+		errContains string
+		validate    func(t *testing.T, ctx client.Context, originalHomeDir string)
+	}{
+		{
+			name:    "successfully reads default values",
+			chainID: "test-chain",
+			wantErr: false,
+			validate: func(t *testing.T, ctx client.Context, originalHomeDir string) {
+				t.Helper()
+				require.Equal(t, originalHomeDir, ctx.HomeDir, "HomeDir should be restored")
+				require.NotNil(t, ctx.Keyring)
+				require.NotNil(t, ctx.Client)
+			},
+		},
+		{
+			name:    "restores HomeDir after error",
+			chainID: "",
+			wantErr: false,
+			validate: func(t *testing.T, ctx client.Context, originalHomeDir string) {
+				t.Helper()
+				require.Equal(t, originalHomeDir, ctx.HomeDir, "HomeDir should be restored even on success")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			home := t.TempDir()
+			originalHomeDir := home
+
+			clientCtx := client.Context{}.
+				WithHomeDir(home).
+				WithViper("").
+				WithCodec(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()))
+
+			if tt.chainID != "" {
+				clientCtx = clientCtx.WithChainID(tt.chainID)
+			}
+
+			resultCtx, err := config.ReadDefaultValuesFromDefaultClientConfig(clientCtx)
+
+			if tt.wantErr {
+				require.Error(t, err)
+				if tt.errContains != "" {
+					require.Contains(t, err.Error(), tt.errContains)
+				}
+			} else {
+				require.NoError(t, err)
+				if tt.validate != nil {
+					tt.validate(t, resultCtx, originalHomeDir)
+				}
+			}
 		})
 	}
 }

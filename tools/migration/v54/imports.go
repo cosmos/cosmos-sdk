@@ -28,6 +28,9 @@ var importReplacements = []migration.ImportReplacement{
 }
 
 // importWarnings defines import paths that should trigger warnings rather than automatic rewrites.
+// AlsoRemove is set to true so the imports are stripped from the AST after warning, preventing
+// the code from trying to resolve the old module path. The warnings still inform the user that
+// x/group requires a commercial license to use in v54.
 var importWarnings = []migration.ImportWarning{
 	// group is under github.com/cosmos/cosmos-sdk/x/group (not a vanity URL)
 	{
@@ -35,6 +38,7 @@ var importWarnings = []migration.ImportWarning{
 		Message: "The x/group module has been moved to enterprise/group with a commercial license. " +
 			"You must contact Cosmos Labs to establish a commercial agreement before using this module. " +
 			"See enterprise/README.md for details. This import will NOT be automatically rewritten.",
+		AlsoRemove: true,
 	},
 	// Also catch any cosmossdk.io/x/group references (in case any exist)
 	{
@@ -42,5 +46,12 @@ var importWarnings = []migration.ImportWarning{
 		Message: "The x/group module has been moved to enterprise/group with a commercial license. " +
 			"You must contact Cosmos Labs to establish a commercial agreement before using this module. " +
 			"See enterprise/README.md for details. This import will NOT be automatically rewritten.",
+		AlsoRemove: true,
+	},
+	// Also catch cosmossdk.io/api/cosmos/group (proto API imports used in app_config.go)
+	{
+		ImportPrefix: "cosmossdk.io/api/cosmos/group",
+		Message: "The x/group module API has been moved to enterprise/group with a commercial license.",
+		AlsoRemove: true,
 	},
 }

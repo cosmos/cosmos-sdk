@@ -23,10 +23,11 @@ func main() {
 
 	args := migration.MigrateArgs{
 		// --- go.mod operations ---
-		GoModRemoval:      removals,
-		GoModAddition:     additions,
-		GoModReplacements: replacements,
-		GoModUpdates:      moduleUpdates,
+		GoModRemoval:           removals,
+		GoModAddition:          additions,
+		GoModReplacements:      replacements,
+		GoModUpdates:           moduleUpdates,
+		StripLocalPathReplaces: true, // Remove monorepo-relative replaces (../, ./, etc.)
 
 		// --- AST: import rewrites ---
 		ImportUpdates:  importReplacements,

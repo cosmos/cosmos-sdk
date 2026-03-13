@@ -41,6 +41,7 @@ jobs:
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
+          # Core Go code, go.mod, Makefile; exclude non-core (workflow passes when skipped)
           PATTERNS: |
             **/*.go
             go.mod
@@ -49,9 +50,14 @@ jobs:
             **/go.sum
             **/Makefile
             Makefile
+            !.github/**
+            !docs/**
+            !changelog/**
+            !enterprise/**
 
   test-system:
     needs: setup
+    # Skip when no core changes; skipped job does not fail the workflow
     if: needs.setup.outputs.git_diff
     runs-on: depot-ubuntu-22.04-4
     steps:
@@ -60,7 +66,7 @@ jobs:
       - name: Run system tests
         run: |
           mkdir -p ./tests/systemtests/testnet
-          make test-system
+          make test-system-sdk
 
       - name: Upload system test logs if failed
         if: failure()

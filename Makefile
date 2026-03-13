@@ -523,16 +523,18 @@ build-system-test-current: build
 	mkdir -p ./tests/systemtests/binaries/
 	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
 
-test-system: build-v53 build-system-test-current
-	mkdir -p ./tests/systemtests/binaries/
-	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
+# test-system-sdk runs only the core SDK system tests (tests/systemtests), not enterprise.
+# Used by CI to avoid redundant runs when test-poa-system and test-group-system exist.
+test-system-sdk: build-v53 build-system-test-current
 	mkdir -p ./tests/systemtests/binaries/v0.53
 	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
 	$(MAKE) -C tests/systemtests test
+
+test-system: test-system-sdk
 	$(MAKE) -C enterprise/poa/ test-system
 	$(MAKE) -C enterprise/group/ test-system
 
-.PHONY: test-system build-system-test-current
+.PHONY: test-system test-system-sdk build-system-test-current
 
 # build-v53 checks out the v0.53.x branch, builds the binary, and renames it to simdv53.
 build-v53:

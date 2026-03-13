@@ -35,6 +35,8 @@ client/lcd/keys/*
 coverage.out
 coverage.txt
 *profile.out
+pkgs*.txt
+pkgs*.part.*
 sim_log_file
 x/genutil/config
 x/genutil/data
@@ -53,6 +55,7 @@ vagrant
 *.iws
 .dir-locals.el
 .vscode
+.cursor
 
 .venv
 

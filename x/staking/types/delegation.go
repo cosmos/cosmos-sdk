@@ -326,7 +326,7 @@ func (d DelegationResponses) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
-// NewRedelegationResponse crates a new RedelegationEntryResponse instance.
+// NewRedelegationResponse creates a new RedelegationResponse instance.
 func NewRedelegationResponse(
 	delegatorAddr, validatorSrc, validatorDst string, entries []RedelegationEntryResponse,
 ) RedelegationResponse {

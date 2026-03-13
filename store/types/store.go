@@ -39,7 +39,7 @@ type CommitStore interface {
 // Queryable allows a Store to expose internal state to the abci.Query
 // interface. Multistore can route requests to the proper Store.
 //
-// This is an optional, but useful extension to any CommitStore
+// This is an optional, but useful extension to any Store
 type Queryable interface {
 	Query(*RequestQuery) (*ResponseQuery, error)
 }
@@ -165,12 +165,6 @@ type CommitMultiStore interface {
 	// If db == nil, the new store will use the CommitMultiStore db.
 	MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB)
 
-	// Panics on a nil key.
-	GetCommitStore(key StoreKey) CommitStore
-
-	// Panics on a nil key.
-	GetCommitKVStore(key StoreKey) CommitKVStore
-
 	// Load the latest persisted version. Called once after all calls to
 	// Mount*Store() are complete.
 	LoadLatestVersion() error
@@ -192,7 +186,7 @@ type CommitMultiStore interface {
 	LoadVersion(ver int64) error
 
 	// Set an inter-block (persistent) cache that maintains a mapping from
-	// StoreKeys to CommitKVStores.
+	// StoreKeys to KVStores.
 	SetInterBlockCache(MultiStorePersistentCache)
 
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when

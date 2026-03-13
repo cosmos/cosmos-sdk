@@ -77,14 +77,6 @@ func (ms multiStore) GetPruning() pruningtypes.PruningOptions {
 	panic("not implemented")
 }
 
-func (ms multiStore) GetCommitKVStore(key storetypes.StoreKey) storetypes.CommitKVStore {
-	panic("not implemented")
-}
-
-func (ms multiStore) GetCommitStore(key storetypes.StoreKey) storetypes.CommitStore {
-	panic("not implemented")
-}
-
 func (ms multiStore) MountStoreWithDB(key storetypes.StoreKey, typ storetypes.StoreType, db dbm.DB) {
 	ms.kv[key] = kvStore{store: make(map[string][]byte)}
 }

@@ -111,7 +111,7 @@ func NewPOACalculateVoteResultsAndVotingPowerFn(keeper Keeper) govkeeper.Calcula
 		}
 
 		for _, key := range votesToRemove {
-			if err := k.Votes.Remove(ctx, key); err != nil {
+			if err := k.Votes.Remove(sdkCtx, key); err != nil {
 				return math.LegacyZeroDec(), math.ZeroInt(), nil, fmt.Errorf("error while removing vote (%d/%s): %w", key.K1(), key.K2(), err)
 			}
 		}

@@ -401,9 +401,11 @@ func TestCacheKVMergeIteratorDomain(t *testing.T) {
 	require.Equal(t, keyFmt(60), end)
 	require.NoError(t, itr.Close())
 
-	start, end = st.ReverseIterator(keyFmt(0), keyFmt(80)).Domain()
+	itr = st.ReverseIterator(keyFmt(0), keyFmt(80))
+	start, end = itr.Domain()
 	require.Equal(t, keyFmt(0), start)
 	require.Equal(t, keyFmt(80), end)
+	require.NoError(t, itr.Close())
 }
 
 func TestCacheKVMergeIteratorRandom(t *testing.T) {
@@ -464,6 +466,265 @@ func TestNilEndIterator(t *testing.T) {
 			require.NoError(t, itr.Close())
 		})
 	}
+}
+
+// --- Post-Write behavior (exercises !dirty fast paths) ---
+
+func TestGet_AfterWrite_ReadsFromParent(t *testing.T) {
+	st, parent := newStoreWithParent()
+
+	st.Set([]byte("key"), []byte("value"))
+	st.Write()
+
+	// after Write, store is clean — Get should delegate to parent
+	require.Equal(t, []byte("value"), st.Get([]byte("key")))
+	require.Equal(t, []byte("value"), parent.Get([]byte("key")))
+
+	// modifying parent directly should be visible through clean cache
+	parent.Set([]byte("key"), []byte("updated"))
+	require.Equal(t, []byte("updated"), st.Get([]byte("key")))
+}
+
+func TestHas_AfterWrite_ReadsFromParent(t *testing.T) {
+	st, _ := newStoreWithParent()
+
+	st.Set([]byte("key"), []byte("value"))
+	st.Write()
+
+	require.True(t, st.Has([]byte("key")))
+	require.False(t, st.Has([]byte("nonexistent")))
+}
+
+func TestWrite_DoubleWriteIsNoop(t *testing.T) {
+	st, parent := newStoreWithParent()
+
+	st.Set([]byte("key"), []byte("value"))
+	st.Write()
+	require.Equal(t, []byte("value"), parent.Get([]byte("key")))
+
+	// second Write with no new changes should be a no-op
+	st.Write()
+	require.Equal(t, []byte("value"), parent.Get([]byte("key")))
+}
+
+// --- Iterator: cache overrides parent values ---
+
+func TestIterator_CacheOverridesParentValues(t *testing.T) {
+	st, parent := newStoreWithParent()
+
+	// set keys in parent
+	for i := 0; i < 5; i++ {
+		parent.Set(keyFmt(i), valFmt(i))
+	}
+
+	// override some in cache with different values
+	st.Set(keyFmt(1), []byte("override1"))
+	st.Set(keyFmt(3), []byte("override3"))
+
+	itr := st.Iterator(nil, nil)
+	defer itr.Close()
+
+	expected := []struct {
+		key []byte
+		val []byte
+	}{
+		{keyFmt(0), valFmt(0)},
+		{keyFmt(1), []byte("override1")},
+		{keyFmt(2), valFmt(2)},
+		{keyFmt(3), []byte("override3")},
+		{keyFmt(4), valFmt(4)},
+	}
+
+	for i, exp := range expected {
+		require.True(t, itr.Valid(), "expected entry %d", i)
+		require.Equal(t, exp.key, itr.Key())
+		require.Equal(t, exp.val, itr.Value())
+		itr.Next()
+	}
+	require.False(t, itr.Valid())
+}
+
+// --- ReverseIterator correctness ---
+
+func TestReverseIterator_CorrectOrder(t *testing.T) {
+	st := newCacheKVStore()
+
+	nItems := 10
+	for i := 0; i < nItems; i++ {
+		st.Set(keyFmt(i), valFmt(i))
+	}
+
+	itr := st.ReverseIterator(nil, nil)
+	defer itr.Close()
+
+	i := nItems - 1
+	for ; itr.Valid(); itr.Next() {
+		require.Equal(t, keyFmt(i), itr.Key())
+		require.Equal(t, valFmt(i), itr.Value())
+		i--
+	}
+	require.Equal(t, -1, i)
+}
+
+func TestReverseIterator_MixedParentAndCache(t *testing.T) {
+	st, parent := newStoreWithParent()
+
+	// put some in parent
+	for i := 0; i < 5; i++ {
+		parent.Set(keyFmt(i), valFmt(i))
+	}
+	// put some in cache only
+	for i := 5; i < 10; i++ {
+		st.Set(keyFmt(i), valFmt(i))
+	}
+
+	itr := st.ReverseIterator(nil, nil)
+	defer itr.Close()
+
+	i := 9
+	for ; itr.Valid(); itr.Next() {
+		require.Equal(t, keyFmt(i), itr.Key())
+		require.Equal(t, valFmt(i), itr.Value())
+		i--
+	}
+	require.Equal(t, -1, i)
+}
+
+func TestReverseIterator_WithDeletes(t *testing.T) {
+	st, parent := newStoreWithParent()
+
+	for i := 0; i < 5; i++ {
+		parent.Set(keyFmt(i), valFmt(i))
+	}
+
+	// delete keys 1 and 3 in cache
+	st.Delete(keyFmt(1))
+	st.Delete(keyFmt(3))
+
+	itr := st.ReverseIterator(nil, nil)
+	defer itr.Close()
+
+	expected := []int{4, 2, 0}
+	for _, idx := range expected {
+		require.True(t, itr.Valid())
+		require.Equal(t, keyFmt(idx), itr.Key())
+		require.Equal(t, valFmt(idx), itr.Value())
+		itr.Next()
+	}
+	require.False(t, itr.Valid())
+}
+
+// --- Bounded iteration with mixed parent/cache ---
+
+func TestIterator_BoundedWithMixedParentAndCache(t *testing.T) {
+	st, parent := newStoreWithParent()
+
+	// keys 0-4 in parent, 5-9 in cache
+	for i := 0; i < 5; i++ {
+		parent.Set(keyFmt(i), valFmt(i))
+	}
+	for i := 5; i < 10; i++ {
+		st.Set(keyFmt(i), valFmt(i))
+	}
+
+	// iterate over range spanning both parent and cache
+	itr := st.Iterator(keyFmt(3), keyFmt(8))
+	defer itr.Close()
+
+	i := 3
+	for ; itr.Valid(); itr.Next() {
+		require.Equal(t, keyFmt(i), itr.Key())
+		require.Equal(t, valFmt(i), itr.Value())
+		i++
+	}
+	require.Equal(t, 8, i) // end is exclusive
+}
+
+func TestReverseIterator_Bounded(t *testing.T) {
+	st := newCacheKVStore()
+
+	for i := 0; i < 10; i++ {
+		st.Set(keyFmt(i), valFmt(i))
+	}
+
+	itr := st.ReverseIterator(keyFmt(3), keyFmt(7))
+	defer itr.Close()
+
+	i := 6 // end is exclusive
+	for ; itr.Valid(); itr.Next() {
+		require.Equal(t, keyFmt(i), itr.Key())
+		require.Equal(t, valFmt(i), itr.Value())
+		i--
+	}
+	require.Equal(t, 2, i) // stopped before start
+}
+
+// --- Iterator: delete cache-only key ---
+
+func TestIterator_DeleteCacheOnlyKey(t *testing.T) {
+	st, parent := newStoreWithParent()
+
+	parent.Set(keyFmt(0), valFmt(0))
+	parent.Set(keyFmt(2), valFmt(2))
+
+	// set a cache-only key then delete it
+	st.Set(keyFmt(1), valFmt(1))
+	st.Delete(keyFmt(1))
+
+	itr := st.Iterator(nil, nil)
+	defer itr.Close()
+
+	// should only see parent keys, the cache-only key was deleted
+	require.True(t, itr.Valid())
+	require.Equal(t, keyFmt(0), itr.Key())
+	itr.Next()
+	require.True(t, itr.Valid())
+	require.Equal(t, keyFmt(2), itr.Key())
+	itr.Next()
+	require.False(t, itr.Valid())
+}
+
+// --- Updates() early stop ---
+
+func TestUpdates_EarlyStop(t *testing.T) {
+	st, _ := newStoreWithParent()
+
+	st.Set([]byte("a"), []byte("1"))
+	st.Set([]byte("b"), []byte("2"))
+	st.Set([]byte("c"), []byte("3"))
+
+	updates, count := st.Updates()
+	require.Equal(t, 3, count)
+
+	collected := 0
+	updates(func(cachekv.Update[[]byte]) bool {
+		collected++
+		return false // stop after first
+	})
+	require.Equal(t, 1, collected)
+}
+
+// --- Iterator after Write (clean store, delegates to parent) ---
+
+func TestIterator_AfterWrite_DelegatesToParent(t *testing.T) {
+	st, _ := newStoreWithParent()
+
+	for i := 0; i < 5; i++ {
+		st.Set(keyFmt(i), valFmt(i))
+	}
+	st.Write()
+
+	// store is clean now, iterator should delegate to parent
+	itr := st.Iterator(nil, nil)
+	defer itr.Close()
+
+	i := 0
+	for ; itr.Valid(); itr.Next() {
+		require.Equal(t, keyFmt(i), itr.Key())
+		require.Equal(t, valFmt(i), itr.Value())
+		i++
+	}
+	require.Equal(t, 5, i)
 }
 
 // TestIteratorDeadlock demonstrate the deadlock issue in cache store.
@@ -606,28 +867,20 @@ func assertIterateDomainCheck(t *testing.T, st types.KVStore, mem dbm.DB, r []ke
 
 func assertIterateDomainCompare(t *testing.T, st types.KVStore, mem dbm.DB) {
 	t.Helper()
-	// iterate over each and check they match the other
 	itr := st.Iterator(nil, nil)
 	itr2, err := mem.Iterator(nil, nil) // ground truth
 	require.NoError(t, err)
-	checkIterators(t, itr, itr2)
-	checkIterators(t, itr2, itr)
-	require.NoError(t, itr.Close())
-	require.NoError(t, itr2.Close())
-}
 
-func checkIterators(t *testing.T, itr, itr2 types.Iterator) {
-	t.Helper()
 	for ; itr.Valid(); itr.Next() {
-		require.True(t, itr2.Valid())
-		k, v := itr.Key(), itr.Value()
-		k2, v2 := itr2.Key(), itr2.Value()
-		require.Equal(t, k, k2)
-		require.Equal(t, v, v2)
+		require.True(t, itr2.Valid(), "store has more entries than ground truth")
+		require.Equal(t, itr.Key(), itr2.Key())
+		require.Equal(t, itr.Value(), itr2.Value())
 		itr2.Next()
 	}
-	require.False(t, itr.Valid())
-	require.False(t, itr2.Valid())
+	require.False(t, itr2.Valid(), "ground truth has more entries than store")
+
+	require.NoError(t, itr.Close())
+	require.NoError(t, itr2.Close())
 }
 
 //--------------------------------------------------------
@@ -673,16 +926,10 @@ type keyRangeCounter struct {
 }
 
 func (krc *keyRangeCounter) valid() bool {
-	maxRangeIdx := len(krc.keyRanges) - 1
-	maxRange := krc.keyRanges[maxRangeIdx]
-
-	// if we're not in the max range, we're valid
-	if krc.rangeIdx <= maxRangeIdx &&
-		krc.idx < maxRange.len() {
-		return true
+	if krc.rangeIdx >= len(krc.keyRanges) {
+		return false
 	}
-
-	return false
+	return krc.idx < krc.keyRanges[krc.rangeIdx].len()
 }
 
 func (krc *keyRangeCounter) next() {

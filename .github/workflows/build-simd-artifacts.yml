@@ -1,11 +1,12 @@
 # Build simd binaries and upload as artifacts.
+# This workflow lives on main. For release/v0.53.x, see the workflow on that branch.
+# Artifacts are pruned by clean-action-artifacts (7 days) but skip-recent: 5 ensures at least 5 remain.
 name: Build simd Artifacts
 
 on:
   push:
     branches:
       - main
-      - release/v0.53.x
   workflow_dispatch:
 
 permissions:
@@ -16,8 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-main:
-    if: github.ref == 'refs/heads/main'
+  build:
     timeout-minutes: 15
     runs-on: depot-ubuntu-22.04-4
     strategy:
@@ -41,11 +41,11 @@ jobs:
         run: sha256sum build/simd > build/simd.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: simd-main-${{ github.sha }}-linux-${{ matrix.goarch }}
+          name: simd-main-linux-${{ matrix.goarch }}
           path: |
             build/simd
             build/simd.sha256
-          retention-days: 30
+          # No retention-days: clean-action-artifacts prunes artifacts older than 7 days
 
   build-v053:
     if: github.ref == 'refs/heads/release/v0.53.x'
@@ -73,8 +73,8 @@ jobs:
         run: sha256sum build/simd > build/simd.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: simd-v0.53.x-${{ github.sha }}-linux-${{ matrix.goarch }}
+          name: simd-v0.53.x-linux-${{ matrix.goarch }}
           path: |
             build/simd
             build/simd.sha256
-          retention-days: 30
+          # No retention-days: clean-action-artifacts prunes artifacts older than 7 days

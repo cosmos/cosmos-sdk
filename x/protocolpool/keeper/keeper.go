@@ -204,16 +204,8 @@ func (k Keeper) GetAllContinuousFunds(ctx sdk.Context) ([]types.ContinuousFund, 
 	return cf, nil
 }
 
-func (k Keeper) validateAuthority(authority string) error {
-	if _, err := k.authKeeper.AddressCodec().StringToBytes(authority); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
-	}
-
-	if k.authority != authority {
-		return errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, authority)
-	}
-
-	return nil
+func (k Keeper) validateAuthority(ctx sdk.Context, authority string) error {
+	return ctx.ValidateAuthority(k.authority, authority)
 }
 
 // PercentageCoinMul multiplies each coin in an sdk.Coins struct by the given percentage and returns the new

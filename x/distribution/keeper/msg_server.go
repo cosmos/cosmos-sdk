@@ -12,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type msgServer struct {
@@ -125,7 +124,7 @@ func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 }
 
 func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
-	if err := k.validateAuthority(msg.Authority); err != nil {
+	if err := k.validateAuthority(ctx, msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -150,7 +149,7 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "external community pool is enabled - use the DistributeFromCommunityPool method exposed by the external community pool")
 	}
 
-	if err := k.validateAuthority(msg.Authority); err != nil {
+	if err := k.validateAuthority(ctx, msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -250,16 +249,9 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 	return &types.MsgDepositValidatorRewardsPoolResponse{}, nil
 }
 
-func (k *Keeper) validateAuthority(authority string) error {
-	if _, err := k.authKeeper.AddressCodec().StringToBytes(authority); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
-	}
-
-	if k.authority != authority {
-		return errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, authority)
-	}
-
-	return nil
+func (k *Keeper) validateAuthority(goCtx context.Context, authority string) error {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	return ctx.ValidateAuthority(k.authority, authority)
 }
 
 func validateAmount(amount sdk.Coins) error {

@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
@@ -1150,4 +1151,51 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestUpdateParamsAuthority() {
+	ctx, keeper, msgServer := s.ctx, s.stakingKeeper, s.msgServer
+	require := s.Require()
+
+	keeperAuthority := keeper.GetAuthority()
+	overrideAuthority := sdk.AccAddress("override_authority___").String()
+	bondDenom := stakingtypes.DefaultParams().BondDenom
+
+	s.Run("fallback to keeper authority", func() {
+		s.bankKeeper.EXPECT().GetSupply(gomock.Any(), bondDenom).Return(sdk.NewCoin(bondDenom, math.NewInt(1000000))).AnyTimes()
+
+		_, err := msgServer.UpdateParams(ctx, &stakingtypes.MsgUpdateParams{
+			Authority: keeperAuthority,
+			Params:    stakingtypes.DefaultParams(),
+		})
+		require.NoError(err)
+
+		_, err = msgServer.UpdateParams(ctx, &stakingtypes.MsgUpdateParams{
+			Authority: overrideAuthority,
+			Params:    stakingtypes.DefaultParams(),
+		})
+		require.Error(err)
+		require.Contains(err.Error(), "invalid authority")
+	})
+
+	s.Run("consensus params authority takes precedence", func() {
+		ctxOverride := ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAuthority},
+		})
+
+		s.bankKeeper.EXPECT().GetSupply(gomock.Any(), bondDenom).Return(sdk.NewCoin(bondDenom, math.NewInt(1000000))).AnyTimes()
+
+		_, err := msgServer.UpdateParams(ctxOverride, &stakingtypes.MsgUpdateParams{
+			Authority: overrideAuthority,
+			Params:    stakingtypes.DefaultParams(),
+		})
+		require.NoError(err)
+
+		_, err = msgServer.UpdateParams(ctxOverride, &stakingtypes.MsgUpdateParams{
+			Authority: keeperAuthority,
+			Params:    stakingtypes.DefaultParams(),
+		})
+		require.Error(err)
+		require.Contains(err.Error(), "invalid authority")
+	})
 }

@@ -268,15 +268,15 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 
 // UpdateParams implements the MsgServer.UpdateParams method.
 func (k msgServer) UpdateParams(goCtx context.Context, msg *v1.MsgUpdateParams) (*v1.MsgUpdateParamsResponse, error) {
-	if k.authority != msg.Authority {
-		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err := ctx.ValidateAuthority(k.authority, msg.Authority); err != nil {
+		return nil, err
 	}
 
 	if err := msg.Params.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := k.Params.Set(ctx, msg.Params); err != nil {
 		return nil, err
 	}

@@ -123,10 +123,10 @@ build-linux-arm64:
 	GOOS=linux GOARCH=arm64 LEDGER_ENABLED=false $(MAKE) build
 
 build-darwin-amd64:
-	GOOS=darwin GOARCH=amd64 LEDGER_ENABLED=false $(MAKE) build
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 LEDGER_ENABLED=false $(MAKE) build
 
 build-darwin-arm64:
-	GOOS=darwin GOARCH=arm64 LEDGER_ENABLED=false $(MAKE) build
+	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 LEDGER_ENABLED=false $(MAKE) build
 
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 	cd ${CURRENT_DIR}/simapp && go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...

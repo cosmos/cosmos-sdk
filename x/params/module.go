@@ -56,7 +56,7 @@ func (am AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistr
 	proposal.RegisterInterfaces(registry)
 }
 
-// AppModule implements an application module for the distribution module.
+// AppModule implements an application module for the params module.
 //
 // Deprecated: the params module is deprecated and will be removed in the next Cosmos SDK major release.
 type AppModule struct {

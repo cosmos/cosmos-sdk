@@ -50,7 +50,7 @@ func (k Keeper) IterateDelegatorWithdrawAddrs(ctx context.Context, handler func(
 }
 
 // GetPreviousProposerConsAddr returns the proposer consensus address for the
-// current block.
+// previous block.
 func (k Keeper) GetPreviousProposerConsAddr(ctx context.Context) (sdk.ConsAddress, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.ProposerKey)

@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -20,6 +21,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
+
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
@@ -371,7 +373,7 @@ func (rs *Store) SetInterBlockCache(c types.MultiStorePersistentCache) {
 
 // SetTracer sets the tracer for the MultiStore that the underlying
 // stores will utilize to trace operations. A MultiStore is returned.
-func (rs *Store) SetTracer(w io.Writer) types.MultiStore {
+func (rs *Store) SetTracer(w io.Writer) types.MultiStoreBase {
 	rs.traceWriter = w
 	return rs
 }
@@ -380,7 +382,7 @@ func (rs *Store) SetTracer(w io.Writer) types.MultiStore {
 // the given context with the existing context by key. Any existing keys will
 // be overwritten. It is implied that the caller should update the context when
 // necessary between tracing operations. It returns a modified MultiStore.
-func (rs *Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
+func (rs *Store) SetTracingContext(tc types.TraceContext) types.MultiStoreBase {
 	rs.traceContextMutex.Lock()
 	defer rs.traceContextMutex.Unlock()
 	rs.traceContext = rs.traceContext.Merge(tc)
@@ -563,9 +565,49 @@ func (rs *Store) WorkingHash() []byte {
 	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
 }
 
+type commitFinalizer struct {
+	ctx                 context.Context
+	rs                  *Store
+	cacheStore          types.CacheMultiStore
+	finalizationStarted bool
+	hash                types.CommitID
+}
+
+func (c *commitFinalizer) StartFinalize() (types.CommitID, error) {
+	if err := c.ctx.Err(); err != nil {
+		// context canceled or timed out
+		return types.CommitID{}, err
+	}
+	if c.hash.Hash != nil {
+		return c.hash, nil
+	}
+	c.finalizationStarted = true
+	// write the cache store to get the working hash
+	c.cacheStore.Write()
+	c.hash.Hash = c.rs.WorkingHash()
+	c.hash.Version = c.rs.LatestVersion() + 1
+	return c.hash, nil
+}
+
+func (c *commitFinalizer) Rollback() error {
+	if c.finalizationStarted {
+		return errors.New("cannot rollback after finalization has started")
+	}
+	return nil
+}
+
+func (c *commitFinalizer) Finalize() (types.CommitID, error) {
+	if !c.finalizationStarted {
+		if _, err := c.StartFinalize(); err != nil {
+			return types.CommitID{}, err
+		}
+	}
+	return c.rs.Commit(), nil
+}
+
 // CacheWrap implements CacheWrapper/Store/CommitStore.
 func (rs *Store) CacheWrap() types.CacheWrap {
-	return rs.CacheMultiStore().(types.CacheWrap)
+	return rs.RootCacheMultiStore().(types.CacheWrap)
 }
 
 // CacheWrapWithTrace implements the CacheWrapper interface.
@@ -573,9 +615,11 @@ func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 	return rs.CacheWrap()
 }
 
-// CacheMultiStore creates ephemeral branch of the multi-store and returns a CacheMultiStore.
-// It implements the MultiStore interface.
-func (rs *Store) CacheMultiStore() types.CacheMultiStore {
+func (rs *Store) RootCacheMultiStore() types.MultiStore {
+	return rs.cacheMultiStore()
+}
+
+func (rs *Store) cacheMultiStore() types.CacheMultiStore {
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for k, v := range rs.stores {
 		store := types.CacheWrapper(v)
@@ -591,11 +635,35 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	return cachemulti.NewStore(stores, rs.traceWriter, rs.getTracingContext())
 }
 
+func (rs *Store) CommitBranch() types.CommitBranch {
+	ms := rs.cacheMultiStore()
+	return &commitBranch{
+		MultiStore: ms,
+		inner:      ms,
+		rs:         rs,
+	}
+}
+
+type commitBranch struct {
+	types.MultiStore
+	inner types.CacheMultiStore
+	rs    *Store
+}
+
+func (c commitBranch) StartCommit(ctx context.Context, header cmtproto.Header) (types.CommitFinalizer, error) {
+	c.rs.SetCommitHeader(header)
+	return &commitFinalizer{
+		ctx:        ctx,
+		rs:         c.rs,
+		cacheStore: c.inner,
+	}, nil
+}
+
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
 // attempts to load stores at a given version (height). An error is returned if
 // any store cannot be loaded. This should only be used for querying and
 // iterating at past heights.
-func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
+func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.MultiStore, error) {
 	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
 	var commitInfo *types.CommitInfo
 	storeInfos := map[string]bool{}
@@ -1333,4 +1401,8 @@ func flushLatestVersion(batch dbm.Batch, version int64) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (rs *Store) Close() error {
+	return nil
 }

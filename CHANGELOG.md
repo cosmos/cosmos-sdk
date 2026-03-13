@@ -57,6 +57,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (abci) [#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) Add support for new application side mempool ABCI methods. 
 * (ABCI) [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) Add support for new ABCI methods, `InsertTx` and `ReapTxs`.
 * (baseapp) [#26060](https://github.com/cosmos/cosmos-sdk/pull/26060) Remove `BaseApp.SetStoreMetrics`. The `StoreMetrics` interface never worked, so removing dead code.
+* (baseapp) [#26056](https://github.com/cosmos/cosmos-sdk/pull/26056) Remove `BaseApp.SimWriteState()` and `BaseApp.NewUncachedContext()`. `Commit()` now handles flushing cached state internally. Use `BaseApp.NewNextBlockContext()` for test contexts between blocks.
 
 ### Features
 
@@ -100,6 +101,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [25883](https://github.com/cosmos/cosmos-sdk/pull/25883) Re-use decoded tx object in pre-estimates.
 * (blockstm) [#25788](https://github.com/cosmos/cosmos-sdk/pull/25788) Only validate transactions that's executed at lease once.
 * (blockstm) [#25767](https://github.com/cosmos/cosmos-sdk/pull/25767) Optimize block-stm MVMemory with bitmap index.
+* (baseapp) [#26056](https://github.com/cosmos/cosmos-sdk/pull/26056) Use `CommitBranch.StartCommit` and `CommitFinalizer` for two-phase commit with rollback support, enabling optimistic execution to begin commit work early. Removes `BaseApp.workingHash()`.
 
 ### Bug Fixes
 

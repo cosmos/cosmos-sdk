@@ -62,12 +62,12 @@ func (ms msWrapper) GetStoreType() storetypes.StoreType {
 }
 
 // SetTracer Implements interface MultiStore
-func (ms msWrapper) SetTracer(io.Writer) storetypes.MultiStore {
+func (ms msWrapper) SetTracer(io.Writer) storetypes.MultiStoreBase {
 	return nil
 }
 
 // SetTracingContext Implements interface MultiStore
-func (ms msWrapper) SetTracingContext(storetypes.TraceContext) storetypes.MultiStore {
+func (ms msWrapper) SetTracingContext(storetypes.TraceContext) storetypes.MultiStoreBase {
 	return nil
 }
 

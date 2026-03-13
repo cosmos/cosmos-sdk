@@ -17,11 +17,21 @@ type multiStore struct {
 	kv map[storetypes.StoreKey]kvStore
 }
 
+func (ms multiStore) RootCacheMultiStore() storetypes.MultiStore {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (ms multiStore) CommitBranch() storetypes.CommitBranch {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (ms multiStore) CacheMultiStore() storetypes.CacheMultiStore {
 	panic("not implemented")
 }
 
-func (ms multiStore) CacheMultiStoreWithVersion(_ int64) (storetypes.CacheMultiStore, error) {
+func (ms multiStore) CacheMultiStoreWithVersion(_ int64) (storetypes.MultiStore, error) {
 	panic("not implemented")
 }
 
@@ -41,11 +51,11 @@ func (ms multiStore) TracingEnabled() bool {
 	panic("not implemented")
 }
 
-func (ms multiStore) SetTracingContext(tc storetypes.TraceContext) storetypes.MultiStore {
+func (ms multiStore) SetTracingContext(tc storetypes.TraceContext) storetypes.MultiStoreBase {
 	panic("not implemented")
 }
 
-func (ms multiStore) SetTracer(w io.Writer) storetypes.MultiStore {
+func (ms multiStore) SetTracer(w io.Writer) storetypes.MultiStoreBase {
 	panic("not implemented")
 }
 
@@ -58,10 +68,6 @@ func (ms multiStore) ListeningEnabled(key storetypes.StoreKey) bool {
 }
 
 func (ms multiStore) PopStateCache() []*storetypes.StoreKVPair {
-	panic("not implemented")
-}
-
-func (ms multiStore) Commit() storetypes.CommitID {
 	panic("not implemented")
 }
 
@@ -171,7 +177,11 @@ func (ms multiStore) EarliestVersion() int64 {
 	panic("not implemented")
 }
 
-func (ms multiStore) WorkingHash() []byte {
+func (ms multiStore) GetCommitInfo(ver int64) (*storetypes.CommitInfo, error) {
+	panic("not implemented")
+}
+
+func (ms multiStore) Close() error {
 	panic("not implemented")
 }
 

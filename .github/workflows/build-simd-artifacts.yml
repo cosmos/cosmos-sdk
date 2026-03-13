@@ -69,7 +69,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download all build artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           pattern: simd-v0.53.x-*
 
@@ -84,11 +84,12 @@ jobs:
             if [ -n "$goos_goarch" ] && [ -f "${dir}build/simd" ]; then
               cp "${dir}build/simd" "release-assets/simd-${goos_goarch}"
               chmod +x "release-assets/simd-${goos_goarch}"
+              (cd release-assets && sha256sum "simd-${goos_goarch}" > "simd-${goos_goarch}.sha256")
             fi
           done
           count=$(ls release-assets/simd-* 2>/dev/null | wc -l)
-          if [ "$count" -ne 4 ]; then
-            echo "Expected 4 assets, got $count"
+          if [ "$count" -ne 8 ]; then
+            echo "Expected 8 assets (4 binaries + 4 sha256), got $count"
             ls -la release-assets/
             exit 1
           fi
@@ -101,8 +102,9 @@ jobs:
           gh release delete v0.53.x-nightly --yes 2>/dev/null || true
           git push origin :refs/tags/v0.53.x-nightly 2>/dev/null || true
           git tag v0.53.x-nightly ${{ github.sha }}
-          git push origin v0.53.x-nightly
+          git push origin v0.53.x-nightly --force
           gh release create v0.53.x-nightly ./release-assets/simd-* \
             --target ${{ github.sha }} \
             --title "v0.53.x nightly" \
-            --notes "Nightly simd builds from release/v0.53.x (non-production). Used by build-v53.sh for system tests."
+            --notes "Nightly simd builds from release/v0.53.x (non-production). Used by build-v53.sh for system tests." \
+            --prerelease

@@ -189,7 +189,7 @@ func (k Keeper) revokeAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 }
 
 // GetAllowance returns the allowance between the granter and grantee.
-// If there is none, it returns nil, nil.
+// If there is none, it returns nil and an error.
 // Returns an error on parsing issues
 func (k Keeper) GetAllowance(ctx context.Context, granter, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error) {
 	grant, err := k.FeeAllowance.Get(ctx, collections.Join(grantee, granter))

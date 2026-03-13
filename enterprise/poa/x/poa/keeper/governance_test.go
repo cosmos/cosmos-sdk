@@ -293,6 +293,47 @@ func TestPOAMultipleProposalsVoteRemoval(t *testing.T) {
 	}
 }
 
+func TestPOADepoweredValidatorVoteRemoval(t *testing.T) {
+	f := setupTest(t)
+
+	addr1, consAddr1 := createValidator(t, f, 1, 100)
+	addr2, _ := createValidator(t, f, 2, 200)
+
+	proposerAddr, err := sdk.AccAddressFromBech32(addr1)
+	require.NoError(t, err)
+	proposalID := createProposal(t, f, proposerAddr)
+
+	// Both validators vote
+	submitVoteDirectly(t, f, proposalID, addr1, govv1.WeightedVoteOptions{{Option: govv1.OptionYes, Weight: "1.0"}})
+	submitVoteDirectly(t, f, proposalID, addr2, govv1.WeightedVoteOptions{{Option: govv1.OptionNo, Weight: "1.0"}})
+
+	// De-power validator1 before tally
+	err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr1, 0)
+	require.NoError(t, err)
+
+	proposal, err := f.govKeeper.Proposals.Get(f.ctx, proposalID)
+	require.NoError(t, err)
+
+	tallyFn := NewPOACalculateVoteResultsAndVotingPowerFn(*f.poaKeeper)
+	totalVoterPower, totalValPower, results, err := tallyFn(f.ctx, *f.govKeeper, proposal)
+	require.NoError(t, err)
+
+	// Only validator2's vote should be tallied
+	require.Equal(t, math.LegacyNewDec(200), totalVoterPower)
+	require.Equal(t, math.NewInt(200), totalValPower)
+	require.Equal(t, math.LegacyZeroDec(), results[govv1.OptionYes])
+	require.Equal(t, math.LegacyNewDec(200), results[govv1.OptionNo])
+
+	// Both votes should be removed, including the de-powered validator's vote
+	for _, addr := range []string{addr1, addr2} {
+		voterAddr, err := sdk.AccAddressFromBech32(addr)
+		require.NoError(t, err)
+		_, err = f.govKeeper.Votes.Get(f.ctx, collections.Join(proposalID, voterAddr))
+		require.Error(t, err, "vote should be removed after tally even for de-powered validator")
+		require.ErrorIs(t, err, collections.ErrNotFound)
+	}
+}
+
 func TestPOACalculateVoteResultsAndVotingPower_EdgeCases(t *testing.T) {
 	t.Run("cannot set last validator to zero power", func(t *testing.T) {
 		f := setupTest(t)

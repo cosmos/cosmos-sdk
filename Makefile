@@ -28,6 +28,11 @@ SH := $(shell command -v sh 2>/dev/null || true)
 ifeq ($(SH),)
 $(error sh not found. Required for build-v53 and other scripts. Install a POSIX shell.)
 endif
+# build-v53.sh uses bash-specific features (BASH_SOURCE, local)
+BASH := $(shell command -v bash 2>/dev/null || true)
+ifeq ($(BASH),)
+$(error bash not found. Required for build-v53. Install bash.)
+endif
 
 # process build tags
 build_tags = netgo

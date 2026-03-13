@@ -22,7 +22,7 @@ detect_goos_goarch() {
 		Linux)  GOOS=linux ;;
 		Darwin) GOOS=darwin ;;
 		*)
-			echo "Unsupported OS: $u"
+			echo "Unsupported OS: $u" >&2
 			return 1
 			;;
 	esac
@@ -31,7 +31,7 @@ detect_goos_goarch() {
 		x86_64|amd64)  GOARCH=amd64 ;;
 		arm64|aarch64) GOARCH=arm64 ;;
 		*)
-			echo "Unsupported arch: $m"
+			echo "Unsupported arch: $m" >&2
 			return 1
 			;;
 	esac
@@ -85,11 +85,7 @@ build_from_source() {
 		mkdir -p "$(dirname "$OUTPUT")"
 		mv build/simd "$OUTPUT"
 		echo "Returning to original branch..."
-		if [ "$CURRENT_REF" = "HEAD" ]; then
-			git checkout "$(git rev-parse HEAD)"
-		else
-			git checkout "$CURRENT_REF"
-		fi
+		git checkout "$CURRENT_REF"
 
 		if [ "$has_changes" = "true" ]; then
 			echo "Reapplying stashed changes..."

@@ -40,7 +40,7 @@ jobs:
       - name: Build simd (linux-${{ matrix.goarch }})
         run: make build-linux-${{ matrix.goarch }}
       - name: Generate checksum
-        run: sha256sum build/simd > build/simd.sha256
+        run: cd build && sha256sum simd > simd.sha256
       - uses: actions/upload-artifact@v4
         with:
           name: simd-v0.53.x-linux-${{ matrix.goarch }}

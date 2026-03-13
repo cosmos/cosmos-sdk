@@ -72,14 +72,16 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           pattern: simd-v0.53.x-*
+          path: artifacts
+          merge-multiple: false
 
       - name: Prepare release assets
         run: |
           mkdir -p release-assets
-          for dir in simd-v0.53.x-*/; do
+          for dir in artifacts/simd-v0.53.x-*/; do
             [ ! -d "$dir" ] && continue
             # Each artifact dir is simd-v0.53.x-{goos}-{goarch}-{run_id}; extract goos-goarch
-            name="${dir%/}"
+            name=$(basename "${dir%/}")
             goos_goarch=$(echo "$name" | sed -n 's/^simd-v0\.53\.x-\([^-]*-[^-]*\)-[0-9]*$/\1/p')
             if [ -n "$goos_goarch" ] && [ -f "${dir}build/simd" ]; then
               cp "${dir}build/simd" "release-assets/simd-${goos_goarch}"
@@ -90,6 +92,7 @@ jobs:
           count=$(ls release-assets/simd-* 2>/dev/null | wc -l)
           if [ "$count" -ne 8 ]; then
             echo "Expected 8 assets (4 binaries + 4 sha256), got $count"
+            echo "Debug: artifacts dir:"; ls -la artifacts/ 2>/dev/null || echo "artifacts/ not found"
             ls -la release-assets/
             exit 1
           fi

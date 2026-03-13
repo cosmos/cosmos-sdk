@@ -23,6 +23,12 @@ HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 
+# Required for scripts (e.g. build-v53.sh)
+SH := $(shell command -v sh 2>/dev/null || true)
+ifeq ($(SH),)
+$(error sh not found. Required for build-v53 and other scripts. Install a POSIX shell.)
+endif
+
 # process build tags
 build_tags = netgo
 ifeq ($(LEDGER_ENABLED),true)
@@ -545,5 +551,5 @@ test-system: test-system-sdk
 # build-v53 fetches the v0.53 simd binary for system tests.
 # Tries download from v0.53.x-nightly release (non-production) first; falls back to building from source.
 build-v53:
-	BUILDDIR=$(BUILDDIR) ./scripts/build-v53.sh
+	BUILDDIR=$(BUILDDIR) $(SH) scripts/build-v53.sh
 .PHONY: build-v53

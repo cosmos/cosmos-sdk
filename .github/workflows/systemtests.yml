@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - main
-      - release/v0.53.x
       - feat/krakatoa
 
 permissions:
@@ -57,7 +56,6 @@ jobs:
 
   test-system:
     needs: setup
-    # Skip when no core changes; skipped job does not fail the workflow
     if: needs.setup.outputs.git_diff
     runs-on: depot-ubuntu-22.04-4
     steps:
@@ -67,19 +65,13 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          # Go 1.23 required: build-v53 fallback builds release/v0.53.x (sonic needs 1.23)
-          go-version: "1.23"
+          go-version: "1.25.8"
           check-latest: true
           cache: true
           cache-dependency-path: go.sum
 
-      - name: Fetch release branch for build-v53 fallback
-        run: git fetch origin release/v0.53.x
-
       - name: Run system tests
-        run: |
-          mkdir -p ./tests/systemtests/testnet
-          make test-system-sdk
+        run: make test-system-sdk
 
       - name: Upload system test logs if failed
         if: failure()

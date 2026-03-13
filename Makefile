@@ -538,7 +538,7 @@ build-system-test-current: build
 # test-system-sdk runs only the core SDK system tests (tests/systemtests), not enterprise.
 # Used by CI to avoid redundant runs when test-poa-system and test-group-system exist.
 test-system-sdk: build-v53 build-system-test-current
-	mkdir -p ./tests/systemtests/binaries/v0.53
+	mkdir -p ./tests/systemtests/binaries/v0.53 ./tests/systemtests/testnet
 	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
 	$(MAKE) -C tests/systemtests test
 
@@ -549,7 +549,9 @@ test-system: test-system-sdk
 .PHONY: test-system test-system-sdk build-system-test-current
 
 # build-v53 fetches the v0.53 simd binary for system tests.
-# Tries download from v0.53.x-nightly release (non-production) first; falls back to building from source.
+# Tries download from v0.53.x-nightly first; falls back to building from source (Go 1.23).
+# Skips if $(BUILDDIR)/simdv53 exists (e.g. local dev reuse).
 build-v53:
-	BUILDDIR=$(BUILDDIR) $(SH) scripts/build-v53.sh
+	@if [ -f $(BUILDDIR)/simdv53 ]; then echo "build/simdv53 exists, skipping"; else \
+		BUILDDIR=$(BUILDDIR) bash scripts/build-v53.sh; fi
 .PHONY: build-v53

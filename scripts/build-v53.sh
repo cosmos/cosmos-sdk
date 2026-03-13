@@ -7,6 +7,9 @@ set -euo pipefail
 REPO="cosmos/cosmos-sdk"
 RELEASE_TAG="v0.53.x-nightly"
 OUTPUT="${BUILDDIR:-./build}/simdv53"
+# Go version for v0.53 build (release/v0.53.x requires 1.23). Update when new 1.23.x patches are released.
+GO_V53_VERSION="1.23.8"
+GO_V53_CMD="go${GO_V53_VERSION}"
 
 # Map uname to Go-style GOOS/GOARCH
 detect_goos_goarch() {
@@ -69,8 +72,14 @@ build_from_source() {
 		fi
 
 		CURRENT_REF=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse HEAD)
+		echo "Fetching release branch..."
+		git fetch origin release/v0.53.x
 		echo "Checking out release branch..."
 		git checkout release/v0.53.x
+		echo "Setting up Go ${GO_V53_VERSION} for v0.53 build..."
+		go install "golang.org/dl/${GO_V53_CMD}@latest"
+		"${GO_V53_CMD}" download
+		export PATH="$("${GO_V53_CMD}" env GOROOT)/bin:$PATH"
 		echo "Building v53 binary..."
 		make build
 		mkdir -p "$(dirname "$OUTPUT")"

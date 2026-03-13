@@ -255,7 +255,7 @@ func (k Keeper) GetGroupPolicySeq(ctx sdk.Context) uint64 {
 	return k.groupPolicySeq.CurVal(ctx.KVStore(k.key))
 }
 
-// proposalsByVPEnd returns all proposals whose voting_period_end is after the `endTime` time argument.
+// proposalsByVPEnd returns all proposals whose voting_period_end is before the `endTime` time argument.
 func (k Keeper) proposalsByVPEnd(ctx sdk.Context, endTime time.Time) (proposals []group.Proposal, err error) {
 	timeBytes := sdk.FormatTimeBytes(endTime)
 	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(ctx.KVStore(k.key), nil, timeBytes)

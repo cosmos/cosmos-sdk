@@ -9,7 +9,7 @@ const (
 	//
 	// The module account associated with this name is the x/protocolpool community pool module account.
 	// Funded by:
-	// - direct funding from users using MsgFundProtocolPool
+	// - direct funding from users using MsgFundCommunityPool
 	// - all leftover funds that are not allocated to continuous funds in the BeginBlocker from ProtocolPoolEscrowAccount
 	// Distributes to:
 	// - users on MsgCommunityPoolSpend

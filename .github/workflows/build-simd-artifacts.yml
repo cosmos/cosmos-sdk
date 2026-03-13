@@ -57,3 +57,52 @@ jobs:
             build/simd.sha256
           if-no-files-found: error
           # No retention-days: clean-action-artifacts prunes artifacts older than 7 days
+
+  # Publishes built binaries to the v0.53.x-nightly release for build-v53.sh downloads.
+  publish-v53-nightly:
+    needs: build
+    name: Publish v0.53.x-nightly
+    runs-on: depot-ubuntu-22.04-4
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v6
+        with:
+          pattern: simd-v0.53.x-*
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          for dir in simd-v0.53.x-*/; do
+            [ ! -d "$dir" ] && continue
+            # Each artifact dir is simd-v0.53.x-{goos}-{goarch}-{run_id}; extract goos-goarch
+            name="${dir%/}"
+            goos_goarch=$(echo "$name" | sed -n 's/^simd-v0\.53\.x-\([^-]*-[^-]*\)-[0-9]*$/\1/p')
+            if [ -n "$goos_goarch" ] && [ -f "${dir}build/simd" ]; then
+              cp "${dir}build/simd" "release-assets/simd-${goos_goarch}"
+              chmod +x "release-assets/simd-${goos_goarch}"
+            fi
+          done
+          count=$(ls release-assets/simd-* 2>/dev/null | wc -l)
+          if [ "$count" -ne 4 ]; then
+            echo "Expected 4 assets, got $count"
+            ls -la release-assets/
+            exit 1
+          fi
+          ls -la release-assets/
+
+      - name: Create v0.53.x-nightly release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete v0.53.x-nightly --yes 2>/dev/null || true
+          git push origin :refs/tags/v0.53.x-nightly 2>/dev/null || true
+          git tag v0.53.x-nightly ${{ github.sha }}
+          git push origin v0.53.x-nightly
+          gh release create v0.53.x-nightly ./release-assets/simd-* \
+            --target ${{ github.sha }} \
+            --title "v0.53.x nightly" \
+            --notes "Nightly simd builds from release/v0.53.x (non-production). Used by build-v53.sh for system tests."

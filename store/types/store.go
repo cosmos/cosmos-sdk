@@ -191,25 +191,9 @@ type CommitMultiStore interface {
 	// undefined.
 	LoadVersion(ver int64) error
 
-	// Set an inter-block (persistent) cache that maintains a mapping from
-	// StoreKeys to CommitKVStores.
-	SetInterBlockCache(MultiStorePersistentCache)
-
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
 	// starting a new chain at an arbitrary height.
 	SetInitialVersion(version int64) error
-
-	// SetIAVLCacheSize sets the cache size of the IAVL tree.
-	SetIAVLCacheSize(size int)
-
-	// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
-	SetIAVLDisableFastNode(disable bool)
-
-	// SetIAVLSyncPruning set sync/async pruning on iavl.
-	// It is not recommended to use this option.
-	// It is here to enable the prune command to force this to true, allowing the command to wait
-	// for the pruning to finish before returning.
-	SetIAVLSyncPruning(sync bool)
 
 	// RollbackToVersion rollback the db to specific version(height).
 	RollbackToVersion(version int64) error

@@ -24,6 +24,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store"
+	"cosmossdk.io/store/rootmulti"
 	"cosmossdk.io/store/snapshots"
 	storetypes "cosmossdk.io/store/types"
 
@@ -231,7 +232,9 @@ func NewBaseApp(
 		app.SetVerifyVoteExtensionHandler(NoOpVerifyVoteExtensionHandler())
 	}
 	if app.interBlockCache != nil {
-		app.cms.SetInterBlockCache(app.interBlockCache)
+		if rms, ok := app.cms.(*rootmulti.Store); ok {
+			rms.SetInterBlockCache(app.interBlockCache)
+		}
 	}
 
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()

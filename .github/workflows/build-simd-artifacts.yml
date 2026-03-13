@@ -82,9 +82,7 @@ jobs:
             if [ -n "$goos_goarch" ] && [ -f "${dir}build/simd" ]; then
               cp "${dir}build/simd" "release-assets/simd-${goos_goarch}"
               chmod +x "release-assets/simd-${goos_goarch}"
-              if [ -f "${dir}build/simd.sha256" ]; then
-                cp "${dir}build/simd.sha256" "release-assets/simd-${goos_goarch}.sha256"
-              fi
+              (cd release-assets && sha256sum "simd-${goos_goarch}" > "simd-${goos_goarch}.sha256")
             fi
           done
           count=$(ls release-assets/simd-* 2>/dev/null | wc -l)

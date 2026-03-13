@@ -63,6 +63,9 @@ jobs:
     needs: build
     name: Publish v0.53.x-nightly
     runs-on: depot-ubuntu-22.04-4
+    concurrency:
+      group: publish-v53-nightly
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
@@ -72,17 +75,20 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           pattern: simd-v0.53.x-*
+          path: artifacts
+          merge-multiple: false
 
       - name: Prepare release assets
         run: |
           mkdir -p release-assets
-          for dir in simd-v0.53.x-*/; do
+          for dir in artifacts/simd-v0.53.x-*/; do
             [ ! -d "$dir" ] && continue
             # Each artifact dir is simd-v0.53.x-{goos}-{goarch}-{run_id}; extract goos-goarch
-            name="${dir%/}"
+            name=$(basename "${dir%/}")
             goos_goarch=$(echo "$name" | sed -n 's/^simd-v0\.53\.x-\([^-]*-[^-]*\)-[0-9]*$/\1/p')
-            if [ -n "$goos_goarch" ] && [ -f "${dir}build/simd" ]; then
-              cp "${dir}build/simd" "release-assets/simd-${goos_goarch}"
+            # Artifact root is build/ (LCA of build/simd, build/simd.sha256), so simd is at artifact root
+            if [ -n "$goos_goarch" ] && [ -f "${dir}simd" ]; then
+              cp "${dir}simd" "release-assets/simd-${goos_goarch}"
               chmod +x "release-assets/simd-${goos_goarch}"
               (cd release-assets && sha256sum "simd-${goos_goarch}" > "simd-${goos_goarch}.sha256")
             fi
@@ -90,6 +96,7 @@ jobs:
           count=$(ls release-assets/simd-* 2>/dev/null | wc -l)
           if [ "$count" -ne 8 ]; then
             echo "Expected 8 assets (4 binaries + 4 sha256), got $count"
+            echo "Debug: artifacts dir:"; ls -la artifacts/ 2>/dev/null || echo "artifacts/ not found"
             ls -la release-assets/
             exit 1
           fi
@@ -101,7 +108,7 @@ jobs:
         run: |
           gh release delete v0.53.x-nightly --yes 2>/dev/null || true
           git push origin :refs/tags/v0.53.x-nightly 2>/dev/null || true
-          git tag v0.53.x-nightly ${{ github.sha }}
+          git tag -f v0.53.x-nightly ${{ github.sha }}
           git push origin v0.53.x-nightly --force
           gh release create v0.53.x-nightly ./release-assets/simd-* \
             --target ${{ github.sha }} \

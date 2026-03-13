@@ -149,9 +149,9 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	}
 
 	if startupConfig.BaseAppOption != nil {
-		app = appBuilder.Build(startupConfig.DB, nil, startupConfig.BaseAppOption)
+		app = appBuilder.Build(startupConfig.DB, startupConfig.BaseAppOption)
 	} else {
-		app = appBuilder.Build(startupConfig.DB, nil)
+		app = appBuilder.Build(startupConfig.DB)
 	}
 	if err := app.Load(true); err != nil {
 		return nil, fmt.Errorf("failed to load app: %w", err)

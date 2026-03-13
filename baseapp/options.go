@@ -2,7 +2,6 @@ package baseapp
 
 import (
 	"fmt"
-	"io"
 	"math"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -10,7 +9,6 @@ import (
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
-	"cosmossdk.io/store/tracekv"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
@@ -275,12 +273,6 @@ func (app *BaseApp) SetFauxMerkleMode() {
 // SetNotSigverifyTx during simulation testing, transaction signature verification needs to be ignored.
 func (app *BaseApp) SetNotSigverifyTx() {
 	app.sigverifyTx = false
-}
-
-// SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
-// CommitMultiStore.
-func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
-	app.cms = tracekv.NewCommitMultiStore(app.cms, w, nil)
 }
 
 // SetStoreLoader allows us to customize the rootMultiStore initialization.

@@ -109,7 +109,7 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 	return nil
 }
 
-// Jail attempts to jail a validator. The slash is delegated to the staking module
+// Jail attempts to jail a validator. The jailing is delegated to the staking module
 // to make the necessary validator changes.
 func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

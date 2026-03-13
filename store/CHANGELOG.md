@@ -29,6 +29,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#26069](https://github.com/cosmos/cosmos-sdk/pull/26069) Move `cachekv` to `legacy/cachekv` so that iavl/v1 stores can continue using the existing implementation while a new mutex-free cachekv is introduced for new stores.
 * [#26060](https://github.com/cosmos/cosmos-sdk/pull/26060) Remove non-functional `StoreMetrics`. This metric interface never worked, so this simply removes dead code.
+* [#26061](https://github.com/cosmos/cosmos-sdk/pull/26061) Remove tracing from store interfaces and implementations:
+    * Remove `SetTracer`, `SetTracingContext`, and `TracingEnabled` from `MultiStore` interface.
+    * Remove `CacheWrapWithTrace` from `CacheWrapper` interface.
+    * Remove `tracekv` integration from `rootmulti.Store`, `cachemulti.Store`, and all `CacheWrapper` implementations.
+    * Remove `traceWriter` and `traceContext` parameters from `cachemulti.NewStore`, `cachemulti.NewFromKVStore`, and `cachemulti.NewFromParent`.
 
 ### Bug Fixes
 

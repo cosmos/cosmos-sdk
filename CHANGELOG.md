@@ -57,6 +57,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (abci) [#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) Add support for new application side mempool ABCI methods. 
 * (ABCI) [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) Add support for new ABCI methods, `InsertTx` and `ReapTxs`.
 * (baseapp) [#26060](https://github.com/cosmos/cosmos-sdk/pull/26060) Remove `BaseApp.SetStoreMetrics`. The `StoreMetrics` interface never worked, so removing dead code.
+* (store) [#26061](https://github.com/cosmos/cosmos-sdk/pull/26061) Remove `BaseApp.SetCommitMultiStoreTracer` and tracing logic from `BaseApp` generally.
 
 ### Features
 

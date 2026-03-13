@@ -61,6 +61,9 @@ jobs:
     needs: build
     name: Publish main-nightly
     runs-on: depot-ubuntu-22.04-4
+    concurrency:
+      group: publish-main-nightly
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
@@ -103,7 +106,7 @@ jobs:
         run: |
           gh release delete main-nightly --yes 2>/dev/null || true
           git push origin :refs/tags/main-nightly 2>/dev/null || true
-          git tag main-nightly ${{ github.sha }}
+          git tag -f main-nightly ${{ github.sha }}
           git push origin main-nightly --force
           gh release create main-nightly ./release-assets/simd-* \
             --target ${{ github.sha }} \

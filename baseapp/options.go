@@ -79,6 +79,8 @@ func SetIAVLCacheSize(size int) func(*BaseApp) {
 	return func(bapp *BaseApp) {
 		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
 			rms.SetIAVLCacheSize(size)
+		} else {
+			bapp.logger.Warn("SetIAVLCacheSize: CommitMultiStore is not rootmulti.Store, option ignored")
 		}
 	}
 }
@@ -88,6 +90,8 @@ func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
 	return func(bapp *BaseApp) {
 		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
 			rms.SetIAVLDisableFastNode(disable)
+		} else {
+			bapp.logger.Warn("SetIAVLDisableFastNode: CommitMultiStore is not rootmulti.Store, option ignored")
 		}
 	}
 }
@@ -99,6 +103,8 @@ func SetIAVLSyncPruning(syncPruning bool) func(*BaseApp) {
 	return func(bapp *BaseApp) {
 		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
 			rms.SetIAVLSyncPruning(syncPruning)
+		} else {
+			bapp.logger.Warn("SetIAVLSyncPruning: CommitMultiStore is not rootmulti.Store, option ignored")
 		}
 	}
 }

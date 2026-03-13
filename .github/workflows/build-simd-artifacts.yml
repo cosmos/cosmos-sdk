@@ -47,4 +47,5 @@ jobs:
           path: |
             build/simd
             build/simd.sha256
+          if-no-files-found: error
           # No retention-days: clean-action-artifacts prunes artifacts older than 7 days

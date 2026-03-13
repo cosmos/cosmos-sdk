@@ -102,7 +102,7 @@ jobs:
           gh release delete main-nightly --yes 2>/dev/null || true
           git push origin :refs/tags/main-nightly 2>/dev/null || true
           git tag main-nightly ${{ github.sha }}
-          git push origin main-nightly
+          git push origin main-nightly --force
           gh release create main-nightly ./release-assets/simd-* \
             --target ${{ github.sha }} \
             --title "main nightly" \

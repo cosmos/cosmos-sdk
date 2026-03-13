@@ -24,11 +24,11 @@ type TransitionMatrix struct {
 // Example:
 //
 //	weights := [][]int{
-//	  // From state 0 to states 0,1,2
+//	  // To state 0 from states 0,1,2
 //	  {90, 10, 0},
-//	  // From state 1 to states 0,1,2
+//	  // To state 1 from states 0,1,2
 //	  {20, 70, 10},
-//	  // From state 2 to states 0,1,2
+//	  // To state 2 from states 0,1,2
 //	  {5,  15, 80},
 //	}
 //	tm, err := CreateTransitionMatrix(weights)

@@ -20,6 +20,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
@@ -205,6 +206,90 @@ func TestPOACalculateVoteResultsAndVotingPower(t *testing.T) {
 				require.Equal(t, expectedValue, actualValue, "vote tally mismatch for option %v", option)
 			}
 		})
+	}
+}
+
+func TestPOAVoteRemovalAfterTally(t *testing.T) {
+	f := setupTest(t)
+
+	addr1, _ := createValidator(t, f, 1, 100)
+	addr2, _ := createValidator(t, f, 2, 200)
+	addr3, _ := createValidator(t, f, 3, 300)
+
+	proposerAddr, err := sdk.AccAddressFromBech32(addr1)
+	require.NoError(t, err)
+	proposalID := createProposal(t, f, proposerAddr)
+
+	submitVoteDirectly(t, f, proposalID, addr1, govv1.WeightedVoteOptions{{Option: govv1.OptionYes, Weight: "1.0"}})
+	submitVoteDirectly(t, f, proposalID, addr2, govv1.WeightedVoteOptions{{Option: govv1.OptionNo, Weight: "1.0"}})
+	submitVoteDirectly(t, f, proposalID, addr3, govv1.WeightedVoteOptions{{Option: govv1.OptionAbstain, Weight: "1.0"}})
+
+	// Verify votes exist before tally
+	for _, addr := range []string{addr1, addr2, addr3} {
+		voterAddr, err := sdk.AccAddressFromBech32(addr)
+		require.NoError(t, err)
+		_, err = f.govKeeper.Votes.Get(f.ctx, collections.Join(proposalID, voterAddr))
+		require.NoError(t, err, "vote should exist before tally")
+	}
+
+	proposal, err := f.govKeeper.Proposals.Get(f.ctx, proposalID)
+	require.NoError(t, err)
+
+	tallyFn := NewPOACalculateVoteResultsAndVotingPowerFn(*f.poaKeeper)
+	_, _, _, err = tallyFn(f.ctx, *f.govKeeper, proposal)
+	require.NoError(t, err)
+
+	// Votes should be removed after tally
+	for _, addr := range []string{addr1, addr2, addr3} {
+		voterAddr, err := sdk.AccAddressFromBech32(addr)
+		require.NoError(t, err)
+		_, err = f.govKeeper.Votes.Get(f.ctx, collections.Join(proposalID, voterAddr))
+		require.Error(t, err, "vote should be removed after tally")
+		require.ErrorIs(t, err, collections.ErrNotFound)
+	}
+}
+
+func TestPOAMultipleProposalsVoteRemoval(t *testing.T) {
+	f := setupTest(t)
+
+	addr1, _ := createValidator(t, f, 1, 100)
+	addr2, _ := createValidator(t, f, 2, 200)
+
+	proposerAddr, err := sdk.AccAddressFromBech32(addr1)
+	require.NoError(t, err)
+
+	proposalID1 := createProposal(t, f, proposerAddr)
+	proposalID2 := createProposal(t, f, proposerAddr)
+
+	// Vote on both proposals
+	submitVoteDirectly(t, f, proposalID1, addr1, govv1.WeightedVoteOptions{{Option: govv1.OptionYes, Weight: "1.0"}})
+	submitVoteDirectly(t, f, proposalID1, addr2, govv1.WeightedVoteOptions{{Option: govv1.OptionNo, Weight: "1.0"}})
+	submitVoteDirectly(t, f, proposalID2, addr1, govv1.WeightedVoteOptions{{Option: govv1.OptionNo, Weight: "1.0"}})
+	submitVoteDirectly(t, f, proposalID2, addr2, govv1.WeightedVoteOptions{{Option: govv1.OptionYes, Weight: "1.0"}})
+
+	// Only tally proposal1
+	proposal1, err := f.govKeeper.Proposals.Get(f.ctx, proposalID1)
+	require.NoError(t, err)
+
+	tallyFn := NewPOACalculateVoteResultsAndVotingPowerFn(*f.poaKeeper)
+	_, _, _, err = tallyFn(f.ctx, *f.govKeeper, proposal1)
+	require.NoError(t, err)
+
+	// Proposal1 votes should be removed
+	for _, addr := range []string{addr1, addr2} {
+		voterAddr, err := sdk.AccAddressFromBech32(addr)
+		require.NoError(t, err)
+		_, err = f.govKeeper.Votes.Get(f.ctx, collections.Join(proposalID1, voterAddr))
+		require.Error(t, err)
+		require.ErrorIs(t, err, collections.ErrNotFound)
+	}
+
+	// Proposal2 votes should still exist
+	for _, addr := range []string{addr1, addr2} {
+		voterAddr, err := sdk.AccAddressFromBech32(addr)
+		require.NoError(t, err)
+		_, err = f.govKeeper.Votes.Get(f.ctx, collections.Join(proposalID2, voterAddr))
+		require.NoError(t, err, "proposal2 votes should still exist")
 	}
 }
 

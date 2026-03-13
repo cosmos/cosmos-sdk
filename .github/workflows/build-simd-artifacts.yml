@@ -55,3 +55,53 @@ jobs:
             build/simd.sha256
           if-no-files-found: error
           # No retention-days: clean-action-artifacts prunes artifacts older than 7 days
+
+  # Publishes built binaries to the main-nightly release.
+  publish-main-nightly:
+    needs: build
+    name: Publish main-nightly
+    runs-on: depot-ubuntu-22.04-4
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v6
+        with:
+          pattern: simd-main-*
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          for dir in simd-main-*/; do
+            [ ! -d "$dir" ] && continue
+            # Each artifact dir is simd-main-{goos}-{goarch}-{run_id}; extract goos-goarch
+            name="${dir%/}"
+            goos_goarch=$(echo "$name" | sed -n 's/^simd-main-\([^-]*-[^-]*\)-[0-9]*$/\1/p')
+            if [ -n "$goos_goarch" ] && [ -f "${dir}build/simd" ]; then
+              cp "${dir}build/simd" "release-assets/simd-${goos_goarch}"
+              chmod +x "release-assets/simd-${goos_goarch}"
+            fi
+          done
+          count=$(ls release-assets/simd-* 2>/dev/null | wc -l)
+          if [ "$count" -ne 4 ]; then
+            echo "Expected 4 assets, got $count"
+            ls -la release-assets/
+            exit 1
+          fi
+          ls -la release-assets/
+
+      - name: Create main-nightly release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete main-nightly --yes 2>/dev/null || true
+          git push origin :refs/tags/main-nightly 2>/dev/null || true
+          git tag main-nightly ${{ github.sha }}
+          git push origin main-nightly
+          gh release create main-nightly ./release-assets/simd-* \
+            --target ${{ github.sha }} \
+            --title "main nightly" \
+            --notes "Nightly simd builds from main (non-production)." \
+            --prerelease

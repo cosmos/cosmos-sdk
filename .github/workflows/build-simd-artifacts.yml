@@ -46,35 +46,3 @@ jobs:
             build/simd
             build/simd.sha256
           # No retention-days: clean-action-artifacts prunes artifacts older than 7 days
-
-  build-v053:
-    if: github.ref == 'refs/heads/release/v0.53.x'
-    timeout-minutes: 15
-    runs-on: depot-ubuntu-22.04-4
-    strategy:
-      fail-fast: false
-      matrix:
-        goarch: [amd64, arm64]
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
-        with:
-          # Go 1.23 required: release/v0.53.x uses sonic v1.14.x which fails with Go 1.24+ (GoMapIterator)
-          go-version: "1.23"
-          check-latest: false
-          cache: true
-          cache-dependency-path: go.sum
-      - name: Install aarch64 cross-compiler
-        if: matrix.goarch == 'arm64'
-        run: sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
-      - name: Build simd (linux-${{ matrix.goarch }})
-        run: make build-linux-${{ matrix.goarch }}
-      - name: Generate checksum
-        run: sha256sum build/simd > build/simd.sha256
-      - uses: actions/upload-artifact@v4
-        with:
-          name: simd-v0.53.x-linux-${{ matrix.goarch }}
-          path: |
-            build/simd
-            build/simd.sha256
-          # No retention-days: clean-action-artifacts prunes artifacts older than 7 days

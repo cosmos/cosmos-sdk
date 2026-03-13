@@ -104,7 +104,6 @@ func TestRunMigrations(t *testing.T) {
 
 	// Create a new baseapp and configurator for the purpose of this test.
 	bApp := baseapp.NewBaseApp(app.Name(), logger.With("instance", "baseapp"), db, app.TxConfig().TxDecoder())
-	bApp.SetCommitMultiStoreTracer(nil)
 	bApp.SetInterfaceRegistry(app.InterfaceRegistry())
 	app.BaseApp = bApp
 	configurator := module.NewConfigurator(app.appCodec, bApp.MsgServiceRouter(), app.GRPCQueryRouter())

@@ -41,8 +41,37 @@ func ExecuteBlockWithEstimates(
 		return fmt.Errorf("block size overflows uint32: %d", blockSize)
 	}
 
+	executed, validated, decreaseCount, err := executeBlockWithEstimatesImpl(
+		ctx,
+		blockSize,
+		stores,
+		storage,
+		executors,
+		estimates,
+		txExecutor,
+	)
+	if err != nil {
+		return err
+	}
+
+	telemetry.SetGauge(float32(executed), TelemetrySubsystem, KeyExecutedTxs)                       //nolint:staticcheck // TODO: switch to OpenTelemetry
+	telemetry.SetGauge(float32(validated), TelemetrySubsystem, KeyValidatedTxs)                     //nolint:staticcheck // TODO: switch to OpenTelemetry
+	telemetry.IncrCounter(float32(decreaseCount), TelemetrySubsystem, KeyDecreaseCount)             //nolint:staticcheck // TODO: switch to OpenTelemetry
+	telemetry.SetGauge(float32(executed)/float32(blockSize), TelemetrySubsystem, KeyExecutionRatio) //nolint:staticcheck // TODO: switch to OpenTelemetry
+	return err
+}
+
+func executeBlockWithEstimatesImpl(
+	ctx context.Context,
+	blockSize int,
+	stores map[storetypes.StoreKey]int,
+	parent MultiStore,
+	executors int,
+	estimates []MultiLocations, // txn -> multi-locations
+	txExecutor TxExecutor,
+) (executed, validated, decreaseCount uint64, err error) {
 	if executors < 0 {
-		return fmt.Errorf("invalid number of executors: %d", executors)
+		return 0, 0, 0, fmt.Errorf("invalid number of executors: %d", executors)
 	}
 	if executors == 0 {
 		executors = maxParallelism()
@@ -50,6 +79,10 @@ func ExecuteBlockWithEstimates(
 
 	// Create a new scheduler
 	scheduler := NewScheduler(blockSize)
+
+	// wrap parent storage with read cache
+	storage := MultiStoreToCachedStorage(parent, stores)
+
 	mvMemory := NewMVMemoryWithEstimates(blockSize, stores, storage, scheduler, estimates)
 
 	// var wg sync.WaitGroup
@@ -73,27 +106,26 @@ func ExecuteBlockWithEstimates(
 		}
 	}()
 
-	err := wg.Wait()
+	err = wg.Wait()
 	close(cancelDone)
 	if err != nil {
-		return err
+		return 0, 0, 0, err
 	}
 
 	if !scheduler.Done() {
 		if ctx.Err() != nil {
-			return ctx.Err()
+			return 0, 0, 0, ctx.Err()
 		}
-		return errors.New("scheduler did not complete")
+		return 0, 0, 0, errors.New("scheduler did not complete")
 	}
 
-	telemetry.IncrCounter(float32(scheduler.executedTxns.Load()), TelemetrySubsystem, KeyExecutedTxs)                    //nolint:staticcheck // TODO: switch to OpenTelemetry
-	telemetry.IncrCounter(float32(scheduler.validatedTxns.Load()), TelemetrySubsystem, KeyValidatedTxs)                  //nolint:staticcheck // TODO: switch to OpenTelemetry
-	telemetry.IncrCounter(float32(scheduler.decreaseCnt.Load()), TelemetrySubsystem, KeyDecreaseCount)                   //nolint:staticcheck // TODO: switch to OpenTelemetry
-	telemetry.SetGauge(float32(scheduler.executedTxns.Load())/float32(blockSize), TelemetrySubsystem, KeyExecutionRatio) //nolint:staticcheck // TODO: switch to OpenTelemetry
+	executed = uint64(scheduler.executedTxns.Load())
+	validated = uint64(scheduler.validatedTxns.Load())
+	decreaseCount = scheduler.decreaseCnt.Load()
 
 	// Write the snapshot into the storage
-	mvMemory.WriteSnapshot(storage)
-	return nil
+	mvMemory.WriteSnapshot(parent)
+	return executed, validated, decreaseCount, nil
 }
 
 func maxParallelism() int {

@@ -14,7 +14,7 @@ func TestMVMemoryViewDelete(t *testing.T) {
 		StoreKeyAuth: 0,
 	}
 	storage := NewMultiMemDB(stores)
-	mv := NewMVMemory(16, stores, storage, nil)
+	mv := NewMVMemory(16, stores, MultiStoreToCachedStorage(storage, stores), nil)
 
 	mview := mv.View(0)
 	view := mview.GetKVStore(StoreKeyAuth)
@@ -38,7 +38,7 @@ func TestMVMemoryViewDelete(t *testing.T) {
 func TestMVMemoryViewIteration(t *testing.T) {
 	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
 	storage := NewMultiMemDB(stores)
-	mv := NewMVMemory(16, stores, storage, nil)
+	mv := NewMVMemory(16, stores, MultiStoreToCachedStorage(storage, stores), nil)
 	{
 		parentState := []KVPair{
 			{Key("a"), []byte("1")},

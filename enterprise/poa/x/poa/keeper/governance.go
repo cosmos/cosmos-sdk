@@ -76,7 +76,7 @@ func NewPOACalculateVoteResultsAndVotingPowerFn(keeper Keeper) govkeeper.Calcula
 		if err != nil {
 			return math.LegacyZeroDec(), math.ZeroInt(), nil, err
 		}
-		
+
 		votesToRemove := []collections.Pair[uint64, sdk.AccAddress]{}
 
 		// Iterate through all votes for this proposal
@@ -102,18 +102,20 @@ func NewPOACalculateVoteResultsAndVotingPowerFn(keeper Keeper) govkeeper.Calcula
 
 			// Add to total voter power
 			totalVoterPower = totalVoterPower.Add(votingPower)
-			
+
 			votesToRemove = append(votesToRemove, key)
-			
+
 			return false, nil
 		})
 		if err != nil {
 			return math.LegacyZeroDec(), math.ZeroInt(), nil, err
 		}
-		
-		for _ int, key collections.Pair[uint64 sdk.AccAddress] := range votesToRemove {
-			k.Votes.
-		}	
+
+		for _, key := range votesToRemove {
+			if err := k.Votes.Remove(ctx, key); err != nil {
+				return math.LegacyZeroDec(), math.ZeroInt(), nil, fmt.Errorf("error while removing vote (%d/%s): %w", key.K1(), key.K2(), err)
+			}
+		}
 
 		return totalVoterPower, totalValPower, results, nil
 	}

@@ -8,7 +8,6 @@ import (
 
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store"
-	storemetrics "cosmossdk.io/store/metrics"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/config"
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
@@ -33,7 +32,7 @@ func TestNilCmsCheckBeforeSeal(t *testing.T) {
 	// and we should be able to set the commit multistore then reinvoke app.Init successfully!
 	db := dbm.NewMemDB()
 	logger := log.NewTestLogger(t)
-	app.cms = store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics())
+	app.cms = store.NewCommitMultiStore(db, logger)
 	err := app.Init()
 	require.Nil(t, err, "app.Init MUST now succeed")
 	require.True(t, app.IsSealed(), "the app must now be sealed")

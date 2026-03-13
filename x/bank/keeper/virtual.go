@@ -25,7 +25,7 @@ func (k BaseSendKeeper) SendCoinsFromAccountToModuleVirtual(
 	return k.SendCoinsToVirtual(ctx, senderAddr, recipientAcc.GetAddress(), amt)
 }
 
-// SendCoinsFromModuleToAccountVirtual sends coins from account to a virtual module account.
+// SendCoinsFromModuleToAccountVirtual sends coins from a virtual module account to an account.
 func (k BaseSendKeeper) SendCoinsFromModuleToAccountVirtual(
 	ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {

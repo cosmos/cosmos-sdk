@@ -63,6 +63,9 @@ jobs:
     needs: build
     name: Publish v0.53.x-nightly
     runs-on: depot-ubuntu-22.04-4
+    concurrency:
+      group: publish-v53-nightly
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
@@ -105,7 +108,7 @@ jobs:
         run: |
           gh release delete v0.53.x-nightly --yes 2>/dev/null || true
           git push origin :refs/tags/v0.53.x-nightly 2>/dev/null || true
-          git tag v0.53.x-nightly ${{ github.sha }}
+          git tag -f v0.53.x-nightly ${{ github.sha }}
           git push origin v0.53.x-nightly --force
           gh release create v0.53.x-nightly ./release-assets/simd-* \
             --target ${{ github.sha }} \

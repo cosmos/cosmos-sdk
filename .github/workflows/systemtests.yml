@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - main
-      - release/v0.53.x
       - feat/krakatoa
 
 permissions:
@@ -41,6 +40,7 @@ jobs:
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
+          # Core Go code, go.mod, Makefile; exclude non-core (workflow passes when skipped)
           PATTERNS: |
             **/*.go
             go.mod
@@ -49,6 +49,10 @@ jobs:
             **/go.sum
             **/Makefile
             Makefile
+            !.github/**
+            !docs/**
+            !changelog/**
+            !enterprise/**
 
   test-system:
     needs: setup
@@ -56,11 +60,18 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.8"
+          check-latest: true
+          cache: true
+          cache-dependency-path: go.sum
 
       - name: Run system tests
-        run: |
-          mkdir -p ./tests/systemtests/testnet
-          make test-system
+        run: make test-system-sdk
 
       - name: Upload system test logs if failed
         if: failure()
@@ -68,6 +79,7 @@ jobs:
         with:
           name: system-test-logs
           path: ./tests/systemtests/testnet/*.out
+          if-no-files-found: ignore
 
   test-poa-system:
     runs-on: depot-ubuntu-22.04-4

@@ -88,8 +88,8 @@ jobs:
             fi
           done
           count=$(ls release-assets/simd-* 2>/dev/null | wc -l)
-          if [ "$count" -ne 4 ]; then
-            echo "Expected 4 assets, got $count"
+          if [ "$count" -ne 8 ]; then
+            echo "Expected 8 assets (4 binaries + 4 sha256), got $count"
             ls -la release-assets/
             exit 1
           fi

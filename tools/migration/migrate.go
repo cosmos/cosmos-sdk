@@ -16,6 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/sync/errgroup"
+	"golang.org/x/tools/go/ast/astutil"
 )
 
 type GoModReplacement struct {
@@ -40,20 +41,26 @@ type Warning struct {
 	Message string
 }
 
-// ImportWarning defines an import path pattern that should trigger a warning.
+// ImportWarning defines an import path pattern that should trigger a warning
+// and optionally remove the import from the AST.
 type ImportWarning struct {
 	// ImportPrefix is the import path prefix to detect.
 	ImportPrefix string
 	// Message is the warning message to display when the import is found.
 	Message string
+	// AlsoRemove, if true, removes the matching import from the AST after warning.
+	// This is useful for imports that cannot be auto-rewritten but should be stripped
+	// to allow the code to compile (e.g., x/group under commercial license).
+	AlsoRemove bool
 }
 
 type MigrateArgs struct {
 	// --- go.mod operations ---
-	GoModRemoval      GoModRemoval
-	GoModAddition     GoModAddition
-	GoModReplacements []GoModReplacement
-	GoModUpdates      GoModUpdate
+	GoModRemoval            GoModRemoval
+	GoModAddition           GoModAddition
+	GoModReplacements       []GoModReplacement
+	GoModUpdates            GoModUpdate
+	StripLocalPathReplaces  bool // If true, drop all replace directives with local-path targets (../, ./, etc.)
 
 	// --- AST: import rewrites ---
 	ImportUpdates  []ImportReplacement
@@ -140,7 +147,7 @@ func Migrate(directory string, args MigrateArgs) error {
 	}
 
 	// Phase 4: go.mod updates
-	if err := updateGoModules(goModuleFiles, args.GoModUpdates, args.GoModRemoval, args.GoModReplacements, args.GoModAddition); err != nil {
+	if err := updateGoModules(goModuleFiles, args.GoModUpdates, args.GoModRemoval, args.GoModReplacements, args.GoModAddition, args.StripLocalPathReplaces); err != nil {
 		return fmt.Errorf("error updating go.mod files: %w", err)
 	}
 
@@ -155,7 +162,7 @@ func Migrate(directory string, args MigrateArgs) error {
 	return nil
 }
 
-func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRemoval, replacements []GoModReplacement, additions GoModAddition) error {
+func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRemoval, replacements []GoModReplacement, additions GoModAddition, stripLocalReplaces bool) error {
 	eg := errgroup.Group{}
 	for _, filePath := range goModFiles {
 		eg.Go(func() error {
@@ -169,6 +176,24 @@ func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRem
 				return fmt.Errorf("error parsing %s: %w", filePath, err)
 			}
 			modified := false
+
+			// Strip local-path replace directives (../, ./, etc.)
+			// These exist because the module normally lives inside a monorepo.
+			// When migrating a standalone copy, they must be removed so that
+			// go mod tidy resolves modules from the registry.
+			if stripLocalReplaces && modFile.Replace != nil {
+				for _, rep := range modFile.Replace {
+					newPath := rep.New.Path
+					if strings.HasPrefix(newPath, "../") || strings.HasPrefix(newPath, "./") || newPath == ".." || newPath == "." {
+						log.Debug().Msgf("stripping local replace: %s => %s", rep.Old.Path, newPath)
+						if err := modFile.DropReplace(rep.Old.Path, rep.Old.Version); err != nil {
+							return fmt.Errorf("error dropping replace for %s: %w", rep.Old.Path, err)
+						}
+						modified = true
+					}
+				}
+			}
+
 			for mod, ver := range additions {
 				if err := modFile.AddRequire(mod, ver); err != nil {
 					return fmt.Errorf("error adding %s requirement: %w", mod, err)
@@ -215,8 +240,15 @@ func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRem
 }
 
 // checkImportWarnings scans a file's imports for patterns that require attention.
-func checkImportWarnings(filePath string, node *ast.File, importWarnings []ImportWarning) []Warning {
+// If AlsoRemove is set on a warning, the matching import is removed from the AST.
+// Returns warnings and whether any imports were removed (changed).
+func checkImportWarnings(filePath string, fset *token.FileSet, node *ast.File, importWarnings []ImportWarning) ([]Warning, bool) {
+	type importToRemove struct {
+		name string // alias/blank ("_") or "" for unaliased
+		path string
+	}
 	var warnings []Warning
+	var toRemove []importToRemove
 	for _, imp := range node.Imports {
 		importPath := strings.Trim(imp.Path.Value, "\"")
 		for _, iw := range importWarnings {
@@ -225,10 +257,29 @@ func checkImportWarnings(filePath string, node *ast.File, importWarnings []Impor
 					File:    filePath,
 					Message: fmt.Sprintf("import %q detected — %s", importPath, iw.Message),
 				})
+				if iw.AlsoRemove {
+					name := ""
+					if imp.Name != nil {
+						name = imp.Name.Name
+					}
+					toRemove = append(toRemove, importToRemove{name: name, path: importPath})
+				}
 			}
 		}
 	}
-	return warnings
+	changed := false
+	for _, ir := range toRemove {
+		if astutil.DeleteNamedImport(fset, node, ir.name, ir.path) {
+			changed = true
+			log.Debug().Msgf("removed import %s %q (AlsoRemove)", ir.name, ir.path)
+		} else {
+			log.Warn().Msgf("failed to remove import %s %q — not found in AST", ir.name, ir.path)
+		}
+	}
+	if changed {
+		ast.SortImports(fset, node)
+	}
+	return warnings, changed
 }
 
 func updateFiles(goFiles []string, args MigrateArgs, warnings *[]Warning, warningsMu *sync.Mutex) error {
@@ -242,17 +293,18 @@ func updateFiles(goFiles []string, args MigrateArgs, warnings *[]Warning, warnin
 				return fmt.Errorf("error parsing %s: %w", filePath, err)
 			}
 
-			// Check for import warnings
+			changed := false
+
+			// Check for import warnings (and optionally remove matching imports)
 			if len(args.ImportWarnings) > 0 {
-				fileWarnings := checkImportWarnings(filePath, node, args.ImportWarnings)
+				fileWarnings, c := checkImportWarnings(filePath, fset, node, args.ImportWarnings)
 				if len(fileWarnings) > 0 {
 					warningsMu.Lock()
 					*warnings = append(*warnings, fileWarnings...)
 					warningsMu.Unlock()
 				}
+				changed = changed || c
 			}
-
-			changed := false
 
 			// Import rewrites
 			if c, err := updateImports(node, args.ImportUpdates); err != nil {

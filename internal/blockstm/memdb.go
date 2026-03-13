@@ -3,7 +3,7 @@ package blockstm
 import (
 	"github.com/cosmos/btree"
 
-	"cosmossdk.io/store/cachekv"
+	"cosmossdk.io/store/legacy/cachekv"
 	storetypes "cosmossdk.io/store/types"
 
 	tree2 "github.com/cosmos/cosmos-sdk/internal/blockstm/tree"

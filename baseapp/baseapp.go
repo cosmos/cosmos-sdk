@@ -3,7 +3,6 @@ package baseapp
 // need to import telemetry before anything else for side effects
 import (
 	"fmt"
-	"io"
 	"maps"
 	"math"
 	"slices"
@@ -161,10 +160,6 @@ type BaseApp struct {
 
 	// trace set will return full stack traces for errors in ABCI Log field
 	trace bool
-
-	// traceWriter is the writer for store-level KV tracing. If non-nil,
-	// multistores will be wrapped with tracekv.NewMultiStore.
-	traceWriter io.Writer
 
 	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs CometBFT what to index. If empty, all events will be indexed.

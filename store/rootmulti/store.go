@@ -625,9 +625,7 @@ func (rs *Store) GetStore(key types.StoreKey) types.Store {
 	return store
 }
 
-// GetKVStore returns a mounted KVStore for a given StoreKey. If tracing is
-// enabled on the KVStore, a wrapped TraceKVStore will be returned with the root
-// store's tracer, otherwise, the original KVStore will be returned.
+// GetKVStore returns a mounted KVStore for a given StoreKey.
 //
 // NOTE: The returned KVStore may be wrapped in an inter-block cache if it is
 // set on the root store.

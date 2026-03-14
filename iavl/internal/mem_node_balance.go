@@ -90,7 +90,7 @@ package internal
 //
 // IMPORTANT: This method must only be called on newly created or copied nodes.
 // Code reviewers should check that the node is new or copied by doing a find usages check on this method.
-func (node *MemNode) reBalance(ctx *mutationContext) (*MemNode, error) {
+func (node *MemNode) reBalance(ctx *MutationContext) (*MemNode, error) {
 	balance, err := calcBalance(node)
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (node *MemNode) reBalance(ctx *mutationContext) (*MemNode, error) {
 		}
 
 		// Left-Right (LR) case, needs left rotation on left-child then right rotation on root
-		newLeft, err := ctx.mutateBranch(left)
+		newLeft, err := ctx.mutateBranch(left, node.left)
 		if err != nil {
 			return nil, err
 		}
@@ -145,7 +145,7 @@ func (node *MemNode) reBalance(ctx *mutationContext) (*MemNode, error) {
 		}
 
 		// Right-Left (RL) case, needs right rotation on right-child then left rotation on root
-		newRight, err := ctx.mutateBranch(right)
+		newRight, err := ctx.mutateBranch(right, node.right)
 		if err != nil {
 			return nil, err
 		}
@@ -239,13 +239,13 @@ func maxUint8(a, b uint8) uint8 {
 //
 // IMPORTANT: This method must only be called on newly created or copied nodes.
 // Code reviewers should check that the node is new or copied by doing a find usages check on this method.
-func (node *MemNode) rotateRight(ctx *mutationContext) (*MemNode, error) {
+func (node *MemNode) rotateRight(ctx *MutationContext) (*MemNode, error) {
 	left, leftPin, err := node.left.Resolve()
 	defer leftPin.Unpin()
 	if err != nil {
 		return nil, err
 	}
-	newRoot, err := ctx.mutateBranch(left)
+	newRoot, err := ctx.mutateBranch(left, node.left)
 	if err != nil {
 		return nil, err
 	}
@@ -284,14 +284,14 @@ func (node *MemNode) rotateRight(ctx *mutationContext) (*MemNode, error) {
 //
 // IMPORTANT: This method must only be called on newly created or copied nodes.
 // Code reviewers should check that the node is new or copied by doing a find usages check on this method.
-func (node *MemNode) rotateLeft(ctx *mutationContext) (*MemNode, error) {
+func (node *MemNode) rotateLeft(ctx *MutationContext) (*MemNode, error) {
 	right, rightPin, err := node.right.Resolve()
 	defer rightPin.Unpin()
 	if err != nil {
 		return nil, err
 	}
 
-	newRoot, err := ctx.mutateBranch(right)
+	newRoot, err := ctx.mutateBranch(right, node.right)
 	if err != nil {
 		return nil, err
 	}

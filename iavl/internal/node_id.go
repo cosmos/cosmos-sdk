@@ -1,18 +1,15 @@
 package internal
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // NodeID is a stable identifier for a node in the IAVL tree.
-// A NodeID allows for a 32-bit version and a 31-bit index within that version,
-// with 1 bit used to indicate whether the node is a leaf or branch.
-// A 32-bit version should allow for 136 years of 1-second blocks.
-// If block production significantly speeds up, we can increase the width of the version field in the future.
-// This sort of change can be done without any major on-disk migration because we can simply create a "wide changeset"
-// format that lives alongside the existing "compact" format.
-// Because the cost of migration is low, we have decided to keep things simple and compact for now.
 type NodeID struct {
-	// version is the version of the tree at which this node was created.
-	version uint32
+	// checkpoint is the version at which this node was checkpointed (persisted to disk).
+	// This is NOT the node's logical creation version, but rather identifies which checkpoint
+	// batch the node belongs to for lookup and eviction purposes.
+	checkpoint uint32
 
 	// flagIndex indicates whether this is a branch or leaf node and stores its index in the tree.
 	flagIndex nodeFlagIndex
@@ -25,10 +22,10 @@ type NodeID struct {
 type nodeFlagIndex uint32
 
 // NewNodeID creates a new NodeID.
-func NewNodeID(isLeaf bool, version, index uint32) NodeID {
+func NewNodeID(isLeaf bool, checkpoint, index uint32) NodeID {
 	return NodeID{
-		version:   version,
-		flagIndex: newNodeFlagIndex(isLeaf, index),
+		checkpoint: checkpoint,
+		flagIndex:  newNodeFlagIndex(isLeaf, index),
 	}
 }
 
@@ -39,12 +36,36 @@ func (id NodeID) IsLeaf() bool {
 
 // IsEmpty returns true if the NodeID is the zero value.
 func (id NodeID) IsEmpty() bool {
-	return id.version == 0 && id.flagIndex == 0
+	return id.checkpoint == 0 && id.flagIndex == 0
 }
 
-// Version is the version of the tree at which this node was created.
-func (id NodeID) Version() uint32 {
-	return id.version
+// NewEmptyTreeNodeID creates a new NodeID representing an empty tree at the given checkpoint.
+// It is important to distinguish an empty tree from the absence of any information
+// about a tree in checkpoints.
+// A checkpoint which represents a valid empty tree should use this type of NodeID.
+// A checkpoint which simply has no root information at all should use the zero-value NodeID,
+// which will be treated as "no information about the tree" rather than "the tree is empty".
+func NewEmptyTreeNodeID(checkpoint uint32) NodeID {
+	if checkpoint == 0 {
+		panic("NewEmptyTreeNodeID: checkpoint must be non-zero")
+	}
+	return NodeID{
+		checkpoint: checkpoint,
+		flagIndex:  0,
+	}
+}
+
+// IsEmptyTree returns true if this NodeID represents an empty tree.
+// Note that an empty tree is different from a zero-value NodeID,
+// which represents the absence of any information about the tree.
+func (id NodeID) IsEmptyTree() bool {
+	return id.checkpoint != 0 && id.flagIndex == 0
+}
+
+// Checkpoint returns the checkpoint number at which this node was persisted.
+// Note: checkpoint numbers and version numbers are separate counters and are NOT the same.
+func (id NodeID) Checkpoint() uint32 {
+	return id.checkpoint
 }
 
 // Index returns the index of the node in the tree.
@@ -56,12 +77,54 @@ func (id NodeID) Index() uint32 {
 
 // Equal returns true if the two NodeIDs are equal.
 func (id NodeID) Equal(other NodeID) bool {
-	return id.version == other.version && id.flagIndex == other.flagIndex
+	return id.checkpoint == other.checkpoint && id.flagIndex == other.flagIndex
 }
 
 // String returns a string representation of the NodeID.
 func (id NodeID) String() string {
-	return fmt.Sprintf("NodeID{leaf:%t, version:%d, index:%d}", id.IsLeaf(), id.version, id.flagIndex.Index())
+	if id.IsEmpty() {
+		return ""
+	}
+	if id.IsEmptyTree() {
+		return fmt.Sprintf("empty:%d", id.checkpoint)
+	}
+	prefix := 'B'
+	if id.IsLeaf() {
+		prefix = 'L'
+	}
+	return fmt.Sprintf("%c:%d:%d", prefix, id.checkpoint, id.flagIndex.Index())
+}
+
+func (id NodeID) MarshalText() ([]byte, error) {
+	return []byte(id.String()), nil
+}
+
+func (id *NodeID) UnmarshalText(b []byte) error {
+	if len(b) == 0 {
+		*id = NodeID{}
+		return nil
+	}
+	s := string(b)
+	var checkpoint uint32
+	if _, err := fmt.Sscanf(s, "empty:%d", &checkpoint); err == nil {
+		*id = NewEmptyTreeNodeID(checkpoint)
+		return nil
+	}
+	var prefix rune
+	var index uint32
+	_, err := fmt.Sscanf(s, "%c:%d:%d", &prefix, &checkpoint, &index)
+	if err != nil {
+		return fmt.Errorf("invalid NodeID: %q: %w", b, err)
+	}
+	switch prefix {
+	case 'B':
+		*id = NewNodeID(false, checkpoint, index)
+	case 'L':
+		*id = NewNodeID(true, checkpoint, index)
+	default:
+		return fmt.Errorf("invalid NodeID prefix: %c", prefix)
+	}
+	return nil
 }
 
 // NewNodeFlagIndex creates a new nodeFlagIndex.

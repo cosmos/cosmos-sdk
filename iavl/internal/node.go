@@ -11,6 +11,16 @@ type Node interface {
 	// IsLeaf indicates whether this node is a leaf node.
 	IsLeaf() bool
 
+	// CmpKey compares the given key with the key of this node.
+	// It returns:
+	//   - a negative integer if this node's key is less than otherKey,
+	//   - zero if they are equal,
+	//   - a positive integer if this node's key is greater than otherKey.
+	// Prefer this method over Key() for comparisons to avoid unnecessary disk reads,
+	// because in many cases we can determine the ordering by just comparing key prefixes stored inline
+	// in branch nodes.
+	CmpKey(otherKey []byte) (int, error)
+
 	// Key returns the key of this node.
 	Key() (UnsafeBytes, error)
 
@@ -40,11 +50,17 @@ type Node interface {
 
 	// Get traverses this subtree to find the value associated with the given key.
 	// If the key is found, value contains the associated value.
-	// If the key is not found, value is nil (not an error).
+	// If the key is not found, value.IsNil() will return true (not an error).
 	// The index is the 0-based position where the key exists or would be inserted
 	// in sorted order among all leaf keys in this subtree. This is useful for
 	// range queries and determining a key's position even when it doesn't exist.
 	Get(key []byte) (value UnsafeBytes, index int64, err error)
+
+	// Has traverses this subtree to check if the given key exists.
+	// If the key exists, exists is true and index is the 0-based position of the key among all leaf keys in this subtree.
+	// If the key does not exist, exists is false and index is the 0-based position where the key would be inserted in sorted order among all leaf keys in this subtree.
+	// This method is more efficient than Get when we only need to check for existence and position of the key without needing the value,
+	Has(key []byte) (exists bool, index int64, err error)
 
 	// MutateBranch creates a mutable copy of this branch node created at the specified version.
 	// Since this is an immutable tree, whenever we need to modify a branch node, we should call this method

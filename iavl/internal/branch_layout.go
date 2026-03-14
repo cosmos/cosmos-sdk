@@ -6,13 +6,13 @@ import (
 )
 
 const (
-	sizeBranch = 76
+	SizeBranch = 88
 )
 
 func init() {
 	// Verify the size of BranchLayout is what we expect it to be at runtime.
-	if unsafe.Sizeof(BranchLayout{}) != sizeBranch {
-		panic(fmt.Sprintf("invalid BranchLayout size: got %d, want %d", unsafe.Sizeof(BranchLayout{}), sizeBranch))
+	if unsafe.Sizeof(BranchLayout{}) != SizeBranch {
+		panic(fmt.Sprintf("invalid BranchLayout size: got %d, want %d", unsafe.Sizeof(BranchLayout{}), SizeBranch))
 	}
 }
 
@@ -21,6 +21,8 @@ func init() {
 type BranchLayout struct {
 	// ID is the NodeID of this branch node.
 	ID NodeID
+
+	Version uint32
 
 	// Left is the NodeID of the left child node.
 	Left NodeID
@@ -44,21 +46,77 @@ type BranchLayout struct {
 	RightOffset uint32
 
 	// KeyOffset is the offset the key data for this node in the key value data file.
-	// NOTE: that a 32-bit offset means that the key data file can be at most 4GB in size.
 	// This doesn't limit the size of the overall tree, it just limits the size of individual key/value data files.
-	// If we want to support larger key/value data files in the future, we can change this to a 40-bit offset,
-	// and an additional byte of padding is already reserved below for this purpose.
-	KeyOffset uint32
+	KeyOffset Uint40
 
 	// Height is the height of the subtree rooted at this branch node.
 	Height uint8
 
-	// NOTE: there are two bytes of padding here that could be used for something else in the future if needed
-	// such as an extra byte to allow for 40-bit key offsets.
+	flags uint8
 
 	// Size is the number of leaf nodes in the subtree rooted at this branch node.
 	Size Uint40
 
+	// InlineKeyPrefix is the first 8 bytes of the key for this branch node, used for fast comparisons.
+	InlineKeyPrefix [8]byte
+
 	// Hash is the hash of this branch node.
 	Hash [32]byte
 }
+
+func (b BranchLayout) GetNodeID() NodeID {
+	return b.ID
+}
+
+// KeyInKVData returns true if the key for this branch node is stored in kv.dat, false if it's stored in wal.log.
+func (b BranchLayout) KeyInKVData() bool {
+	return b.flags&branchFlagKeyInKVData != 0
+}
+
+// SetKeyInKVData sets whether the key for this branch node is stored in kv.dat or wal.log.
+func (b *BranchLayout) SetKeyInKVData(inKVData bool) {
+	if inKVData {
+		b.flags |= branchFlagKeyInKVData
+	} else {
+		b.flags &^= branchFlagKeyInKVData
+	}
+}
+
+// SetInlineKeyPrefixLen sets the length of the inline key prefix for this branch node.
+// The actual length of the inline key prefix is min(keyLen, MaxInlineKeyCopyLen) since we only store the first 8 bytes of the key.
+// But we can store a length of up to 31 inline in the flags to indicate the actual key length for comparison purposes,
+// since some keys may be shorter than 8 bytes and we want to be able to distinguish them.
+func (b *BranchLayout) SetInlineKeyPrefixLen(keyLen int) {
+	if keyLen > MaxInlineKeyLen {
+		keyLen = MaxInlineKeyLen
+	}
+	b.flags = (b.flags & ^branchInlineKeyLenMask) | // clear existing len and keep other flags
+		(uint8(keyLen) & branchInlineKeyLenMask) // mask and set new len
+}
+
+// InlineKeyPrefixLen returns the length of the inline key prefix for this branch node,
+// which is stored in the lower 5 bits of the flags.
+func (b BranchLayout) InlineKeyPrefixLen() uint8 {
+	return b.flags & branchInlineKeyLenMask
+}
+
+// InlineKeyCopyLen returns the number of bytes of the key that are actually stored in the InlineKeyPrefix field,
+// which is the min of the actual key length and MaxInlineKeyCopyLen (8 bytes).
+func (b BranchLayout) InlineKeyCopyLen() int {
+	keyLen := b.InlineKeyPrefixLen()
+	if keyLen > MaxInlineKeyCopyLen {
+		return MaxInlineKeyCopyLen
+	}
+	return int(keyLen)
+}
+
+// MaxInlineKeyLen is the maximum key length that can be indicated as inline in the flags (5 bits for length).
+const MaxInlineKeyLen = 31
+
+// MaxInlineKeyCopyLen is the maximum number of bytes of the key that are actually stored in the InlineKeyPrefix field.
+const MaxInlineKeyCopyLen = 8
+
+const (
+	branchFlagKeyInKVData  uint8 = 0x80
+	branchInlineKeyLenMask uint8 = 0x1F
+)

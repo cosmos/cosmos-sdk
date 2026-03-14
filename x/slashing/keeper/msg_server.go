@@ -35,6 +35,20 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// Get old params before updating to detect SignedBlocksWindow changes
+	oldParams, err := k.GetParams(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// If SignedBlocksWindow changed, migrate validator signing info and bitmaps
+	if oldParams.SignedBlocksWindow != msg.Params.SignedBlocksWindow {
+		if err := k.MigrateSignedBlocksWindow(ctx, oldParams.SignedBlocksWindow, msg.Params.SignedBlocksWindow); err != nil {
+			return nil, errors.Wrap(err, "failed to migrate signed blocks window")
+		}
+	}
+
 	if err := k.SetParams(ctx, msg.Params); err != nil {
 		return nil, err
 	}

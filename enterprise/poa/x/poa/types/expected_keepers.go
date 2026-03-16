@@ -17,9 +17,9 @@ package types
 import (
 	"context"
 
-	"cosmossdk.io/core/address"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"cosmossdk.io/core/address"
 )
 
 // AccountKeeper defines the expected interface for the auth module

@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/gaskv"
 	storetypes "cosmossdk.io/store/types"
-
 )
 
 // ExecMode defines the execution mode which can be set on a Context.
@@ -131,7 +130,6 @@ func (c Context) HeaderHash() []byte {
 func (c Context) ConsensusParams() cmtproto.ConsensusParams {
 	return c.consParams
 }
-
 
 func (c Context) Deadline() (deadline time.Time, ok bool) {
 	return c.baseCtx.Deadline()

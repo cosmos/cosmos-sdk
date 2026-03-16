@@ -267,10 +267,10 @@ func (s *contextTestSuite) TestValidateAuthority() {
 	consAuth := "consensus-authority"
 
 	// No consensus params — falls back to keeper authority.
-	s.Require().NoError(types.ValidateAuthority(ctx,keeperAuth, keeperAuth))
+	s.Require().NoError(types.ValidateAuthority(ctx, keeperAuth, keeperAuth))
 
 	// No consensus params — wrong msg authority fails with ErrUnauthorized.
-	err := types.ValidateAuthority(ctx,keeperAuth, "wrong")
+	err := types.ValidateAuthority(ctx, keeperAuth, "wrong")
 	s.Require().Error(err)
 	s.Require().True(errors.Is(err, sdkerrors.ErrUnauthorized))
 	s.Require().Contains(err.Error(), "invalid authority")
@@ -280,10 +280,10 @@ func (s *contextTestSuite) TestValidateAuthority() {
 	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
 		Authority: &cmtproto.AuthorityParams{Authority: consAuth},
 	})
-	s.Require().NoError(types.ValidateAuthority(ctx,keeperAuth, consAuth))
+	s.Require().NoError(types.ValidateAuthority(ctx, keeperAuth, consAuth))
 
 	// Consensus params authority set — keeper authority is rejected.
-	err = types.ValidateAuthority(ctx,keeperAuth, keeperAuth)
+	err = types.ValidateAuthority(ctx, keeperAuth, keeperAuth)
 	s.Require().Error(err)
 	s.Require().True(errors.Is(err, sdkerrors.ErrUnauthorized))
 	s.Require().Contains(err.Error(), consAuth)
@@ -292,11 +292,11 @@ func (s *contextTestSuite) TestValidateAuthority() {
 	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
 		Authority: &cmtproto.AuthorityParams{Authority: ""},
 	})
-	s.Require().NoError(types.ValidateAuthority(ctx,keeperAuth, keeperAuth))
+	s.Require().NoError(types.ValidateAuthority(ctx, keeperAuth, keeperAuth))
 
 	// Consensus params with nil AuthorityParams — falls back to keeper.
 	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
 		Authority: nil,
 	})
-	s.Require().NoError(types.ValidateAuthority(ctx,keeperAuth, keeperAuth))
+	s.Require().NoError(types.ValidateAuthority(ctx, keeperAuth, keeperAuth))
 }

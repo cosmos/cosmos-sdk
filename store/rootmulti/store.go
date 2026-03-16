@@ -9,6 +9,7 @@ import (
 	"math"
 	"sort"
 	"strings"
+	"sync"
 	"sync/atomic"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"

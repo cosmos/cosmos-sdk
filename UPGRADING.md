@@ -38,9 +38,6 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
 - [Experimental Features](#experimental-features)
     - [libp2p](#libp2p)
     - [BlockSTM](#blockstm)
-- [Upcoming Features](#upcoming-features)
-    - [IAVLX](#iavlx)
-        - [Wiring up IAVLX (DO NOT RUN IN PRODUCTION)](#wiring-up-iavlx-do-not-run-in-production)
 
 ## Upgrade Checklist
 
@@ -367,9 +364,9 @@ func (app SimApp) RegisterUpgradeHandlers() {
 
 ## Experimental Features
 
-For Q1 of 2026, Cosmos Labs has been focusing on greatly improving performance of Cosmos SDK applications. v0.54 of Cosmos SDK introduces support for several performance-related features accross the stack, including BLockSTM in the SDK and Libp2p support for CometBFT. 
+For Q1 of 2026, Cosmos Labs has been focusing on greatly improving performance of Cosmos SDK applications. v0.54 of Cosmos SDK introduces support for several performance-related features across the stack, including BlockSTM in the SDK and Libp2p support for CometBFT. 
 
-NOTE: It is important to emphasize that the following are **experimental** features. We DO NOT recommend running chains with this these features enabled in production. The inclusion in this release is for experimentation purposes only.
+NOTE: It is important to emphasize that the following are **experimental** features. We DO NOT recommend running chains with these features enabled in production. The inclusion in this release is for experimentation purposes only.
 
 ### libp2p
 
@@ -386,9 +383,7 @@ Developers interested in experimenting with BlockSTM should read the [documentat
 
 Below is an example of setting up BlockSTM:
 
-:::warning
-BlockSTM is experimental. Ensure thorough testing before enabling in production.
-:::
+> **⚠️ Warning:** BlockSTM is experimental. Ensure thorough testing before enabling in production.
 
 ```go
 import (

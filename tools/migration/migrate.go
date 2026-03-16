@@ -97,13 +97,9 @@ func Migrate(directory string, args MigrateArgs) error {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() && strings.HasSuffix(path, ".go") {
-			goFiles = append(goFiles, path)
-		}
-		if !info.IsDir() && strings.HasSuffix(path, "go.mod") {
+		if !info.IsDir() && filepath.Base(path) == "go.mod" {
 			goModuleFiles = append(goModuleFiles, path)
 		}
-		return nil
 	})
 	if err != nil {
 		return err

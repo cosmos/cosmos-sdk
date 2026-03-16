@@ -16,8 +16,8 @@ type Store struct {
 	parentStoreKey types.StoreKey
 }
 
-// NewStore returns a reference to a new traceKVStore given a parent
-// KVStore implementation and a buffered writer.
+// NewStore returns a reference to a new listenKVStore given a parent
+// KVStore implementation and a memory listener.
 func NewStore(parent types.KVStore, parentStoreKey types.StoreKey, listener *types.MemoryListener) *Store {
 	return &Store{parent: parent, listener: listener, parentStoreKey: parentStoreKey}
 }

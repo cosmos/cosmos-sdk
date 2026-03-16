@@ -64,7 +64,7 @@ func TestApplyTextReplacements(t *testing.T) {
 			wantContains: []string{"some content"},
 		},
 		{
-			name: "multi-line replacement (SetModuleVersionMap)",
+			name:    "multi-line replacement (SetModuleVersionMap)",
 			content: "\tapp.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())\n\treturn app.ModuleManager.InitGenesis(",
 			replacements: []TextReplacement{
 				{
@@ -150,11 +150,11 @@ func TestApplyTextReplacements(t *testing.T) {
 
 func TestApplyFileRemovals(t *testing.T) {
 	tests := []struct {
-		name           string
-		files          map[string]string // filename -> content
-		removals       []FileRemoval
-		wantRemoved    []string
-		wantRemaining  []string
+		name          string
+		files         map[string]string // filename -> content
+		removals      []FileRemoval
+		wantRemoved   []string
+		wantRemaining []string
 	}{
 		{
 			name: "remove file matching content check",

@@ -56,11 +56,11 @@ type ImportWarning struct {
 
 type MigrateArgs struct {
 	// --- go.mod operations ---
-	GoModRemoval            GoModRemoval
-	GoModAddition           GoModAddition
-	GoModReplacements       []GoModReplacement
-	GoModUpdates            GoModUpdate
-	StripLocalPathReplaces  bool // If true, drop all replace directives with local-path targets (../, ./, etc.)
+	GoModRemoval           GoModRemoval
+	GoModAddition          GoModAddition
+	GoModReplacements      []GoModReplacement
+	GoModUpdates           GoModUpdate
+	StripLocalPathReplaces bool // If true, drop all replace directives with local-path targets (../, ./, etc.)
 
 	// --- AST: import rewrites ---
 	ImportUpdates  []ImportReplacement
@@ -72,9 +72,9 @@ type MigrateArgs struct {
 	FieldModifications []StructFieldModification
 
 	// --- AST: function arg changes ---
-	ArgUpdates    []FunctionArgUpdate
-	ArgSurgeries  []ArgSurgeryWithAST
-	CallArgEdits  []CallArgRemoval
+	ArgUpdates     []FunctionArgUpdate
+	ArgSurgeries   []ArgSurgeryWithAST
+	CallArgEdits   []CallArgRemoval
 	ComplexUpdates []ComplexFunctionReplacement
 
 	// --- AST: statement/block removal ---

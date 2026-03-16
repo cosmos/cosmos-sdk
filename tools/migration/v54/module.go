@@ -15,7 +15,7 @@ var moduleUpdates = migration.GoModUpdate{
 	"cosmossdk.io/api":       "v1.0.0",
 	"cosmossdk.io/client/v2": "v2.0.0-beta.11",
 	"cosmossdk.io/core":      "v1.1.0",
-	"cosmossdk.io/depinject":  "v1.2.1",
+	"cosmossdk.io/depinject": "v1.2.1",
 	"cosmossdk.io/store":     "v1.3.0-beta.0",
 	"cosmossdk.io/math":      "v1.5.3",
 

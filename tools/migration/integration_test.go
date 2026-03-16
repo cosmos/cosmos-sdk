@@ -192,13 +192,27 @@ func NewSimApp() *SimApp {
 	}
 
 	// --- Apply all AST transformations ---
-	updateImports(node, importReplacements)
-	updateStructFieldRemovals(node, fieldRemovals)
-	updateStructFieldModifications(node, fieldMods)
-	updateStatementRemovals(node, stmtRemovals)
-	updateMapEntryRemovals(node, mapRemovals)
-	updateCallArgRemovals(node, callEdits)
-	updateArgSurgeryAST(node, argSurgeries)
+	if _, err := updateImports(node, importReplacements); err != nil {
+		t.Fatalf("updateImports error: %v", err)
+	}
+	if _, err := updateStructFieldRemovals(node, fieldRemovals); err != nil {
+		t.Fatalf("updateStructFieldRemovals error: %v", err)
+	}
+	if _, err := updateStructFieldModifications(node, fieldMods); err != nil {
+		t.Fatalf("updateStructFieldModifications error: %v", err)
+	}
+	if _, err := updateStatementRemovals(node, stmtRemovals); err != nil {
+		t.Fatalf("updateStatementRemovals error: %v", err)
+	}
+	if _, err := updateMapEntryRemovals(node, mapRemovals); err != nil {
+		t.Fatalf("updateMapEntryRemovals error: %v", err)
+	}
+	if _, err := updateCallArgRemovals(node, callEdits); err != nil {
+		t.Fatalf("updateCallArgRemovals error: %v", err)
+	}
+	if _, err := updateArgSurgeryAST(node, argSurgeries); err != nil {
+		t.Fatalf("updateArgSurgeryAST error: %v", err)
+	}
 
 	// --- Render ---
 	var buf bytes.Buffer
@@ -218,7 +232,9 @@ func NewSimApp() *SimApp {
 	if err := os.WriteFile(tmpFile, []byte(output), 0o600); err != nil {
 		t.Fatalf("write error: %v", err)
 	}
-	applyTextReplacements(tmpFile, textReplacements)
+	if _, err := applyTextReplacements(tmpFile, textReplacements); err != nil {
+		t.Fatalf("applyTextReplacements error: %v", err)
+	}
 
 	result, _ := os.ReadFile(tmpFile)
 	output = string(result)

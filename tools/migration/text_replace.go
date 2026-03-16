@@ -78,7 +78,7 @@ func applyFileRemovals(directory string, removals []FileRemoval) error {
 
 			// If a must-match pattern is specified, check file content
 			if removal.ContainsMustMatch != "" {
-				content, err := os.ReadFile(path)
+				content, err := os.ReadFile(path) //nolint:gosec // path is safe; migration runs on trusted local project files
 				if err != nil {
 					return nil // skip files we can't read
 				}
@@ -88,7 +88,7 @@ func applyFileRemovals(directory string, removals []FileRemoval) error {
 			}
 
 			log.Info().Msgf("Removing file: %s", path)
-			return os.Remove(path)
+			return os.Remove(path) //nolint:gosec // path is safe; migration runs on trusted local project files
 		})
 		if err != nil {
 			return err

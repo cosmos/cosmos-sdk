@@ -51,7 +51,7 @@ var importWarnings = []migration.ImportWarning{
 	// Also catch cosmossdk.io/api/cosmos/group (proto API imports used in app_config.go)
 	{
 		ImportPrefix: "cosmossdk.io/api/cosmos/group",
-		Message: "The x/group module API has been moved to enterprise/group with a commercial license.",
-		AlsoRemove: true,
+		Message:      "The x/group module API has been moved to enterprise/group with a commercial license.",
+		AlsoRemove:   true,
 	},
 }

@@ -54,7 +54,7 @@ func (s *MsgServer) UpdateParams(
 		return nil, err
 	}
 
-	if err := sdkCtx.ValidateAuthority(admin, req.Admin); err != nil {
+	if err := sdk.ValidateAuthority(sdkCtx, admin, req.Admin); err != nil {
 		return nil, err
 	}
 
@@ -139,7 +139,7 @@ func (s *MsgServer) UpdateValidators(
 		return nil, err
 	}
 
-	if err := sdkCtx.ValidateAuthority(admin, req.Admin); err != nil {
+	if err := sdk.ValidateAuthority(sdkCtx, admin, req.Admin); err != nil {
 		return nil, err
 	}
 

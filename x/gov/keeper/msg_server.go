@@ -269,7 +269,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 // UpdateParams implements the MsgServer.UpdateParams method.
 func (k msgServer) UpdateParams(goCtx context.Context, msg *v1.MsgUpdateParams) (*v1.MsgUpdateParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := ctx.ValidateAuthority(k.authority, msg.Authority); err != nil {
+	if err := sdk.ValidateAuthority(ctx, k.authority, msg.Authority); err != nil {
 		return nil, err
 	}
 

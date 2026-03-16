@@ -259,32 +259,6 @@ func (s *contextTestSuite) TestMultiStore() {
 	s.Require().Equal(objKVStore.GetStoreType(), storetypes.StoreTypeObject)
 }
 
-func (s *contextTestSuite) TestAuthority() {
-	key := storetypes.NewKVStoreKey(s.T().Name())
-
-	// No consensus params set — authority should return empty string.
-	ctx := testutil.DefaultContext(key, storetypes.NewTransientStoreKey("transient_"+s.T().Name()))
-	s.Require().Equal("", ctx.Authority())
-
-	// Empty authority in consensus params — should return empty string.
-	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
-		Authority: &cmtproto.AuthorityParams{Authority: ""},
-	})
-	s.Require().Equal("", ctx.Authority())
-
-	// Nil AuthorityParams — should return empty string.
-	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
-		Authority: nil,
-	})
-	s.Require().Equal("", ctx.Authority())
-
-	// Explicit authority set — should use it.
-	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
-		Authority: &cmtproto.AuthorityParams{Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"},
-	})
-	s.Require().Equal("cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", ctx.Authority())
-}
-
 func (s *contextTestSuite) TestValidateAuthority() {
 	key := storetypes.NewKVStoreKey(s.T().Name())
 	ctx := testutil.DefaultContext(key, storetypes.NewTransientStoreKey("transient_"+s.T().Name()))
@@ -293,10 +267,10 @@ func (s *contextTestSuite) TestValidateAuthority() {
 	consAuth := "consensus-authority"
 
 	// No consensus params — falls back to keeper authority.
-	s.Require().NoError(ctx.ValidateAuthority(keeperAuth, keeperAuth))
+	s.Require().NoError(types.ValidateAuthority(ctx,keeperAuth, keeperAuth))
 
 	// No consensus params — wrong msg authority fails with ErrUnauthorized.
-	err := ctx.ValidateAuthority(keeperAuth, "wrong")
+	err := types.ValidateAuthority(ctx,keeperAuth, "wrong")
 	s.Require().Error(err)
 	s.Require().True(errors.Is(err, sdkerrors.ErrUnauthorized))
 	s.Require().Contains(err.Error(), "invalid authority")
@@ -306,10 +280,10 @@ func (s *contextTestSuite) TestValidateAuthority() {
 	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
 		Authority: &cmtproto.AuthorityParams{Authority: consAuth},
 	})
-	s.Require().NoError(ctx.ValidateAuthority(keeperAuth, consAuth))
+	s.Require().NoError(types.ValidateAuthority(ctx,keeperAuth, consAuth))
 
 	// Consensus params authority set — keeper authority is rejected.
-	err = ctx.ValidateAuthority(keeperAuth, keeperAuth)
+	err = types.ValidateAuthority(ctx,keeperAuth, keeperAuth)
 	s.Require().Error(err)
 	s.Require().True(errors.Is(err, sdkerrors.ErrUnauthorized))
 	s.Require().Contains(err.Error(), consAuth)
@@ -318,11 +292,11 @@ func (s *contextTestSuite) TestValidateAuthority() {
 	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
 		Authority: &cmtproto.AuthorityParams{Authority: ""},
 	})
-	s.Require().NoError(ctx.ValidateAuthority(keeperAuth, keeperAuth))
+	s.Require().NoError(types.ValidateAuthority(ctx,keeperAuth, keeperAuth))
 
 	// Consensus params with nil AuthorityParams — falls back to keeper.
 	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
 		Authority: nil,
 	})
-	s.Require().NoError(ctx.ValidateAuthority(keeperAuth, keeperAuth))
+	s.Require().NoError(types.ValidateAuthority(ctx,keeperAuth, keeperAuth))
 }

@@ -69,7 +69,7 @@ func (k *Keeper) GetAuthority() string {
 func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if err := sdkCtx.ValidateAuthority(k.authority, msg.Authority); err != nil {
+	if err := sdk.ValidateAuthority(sdkCtx, k.authority, msg.Authority); err != nil {
 		return nil, err
 	}
 

@@ -133,7 +133,7 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := ctx.ValidateAuthority(k.GetAuthority(), req.Authority); err != nil {
+	if err := sdk.ValidateAuthority(ctx, k.GetAuthority(), req.Authority); err != nil {
 		return nil, err
 	}
 
@@ -151,7 +151,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 func (k msgServer) SetSendEnabled(goCtx context.Context, msg *types.MsgSetSendEnabled) (*types.MsgSetSendEnabledResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := ctx.ValidateAuthority(k.GetAuthority(), msg.Authority); err != nil {
+	if err := sdk.ValidateAuthority(ctx, k.GetAuthority(), msg.Authority); err != nil {
 		return nil, err
 	}
 

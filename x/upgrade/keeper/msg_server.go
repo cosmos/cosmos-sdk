@@ -27,7 +27,7 @@ var (
 // SoftwareUpgrade implements the Msg/SoftwareUpgrade Msg service.
 func (k msgServer) SoftwareUpgrade(goCtx context.Context, msg *types.MsgSoftwareUpgrade) (*types.MsgSoftwareUpgradeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := ctx.ValidateAuthority(k.authority, msg.Authority); err != nil {
+	if err := sdk.ValidateAuthority(ctx, k.authority, msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -42,7 +42,7 @@ func (k msgServer) SoftwareUpgrade(goCtx context.Context, msg *types.MsgSoftware
 // CancelUpgrade implements the Msg/CancelUpgrade Msg service.
 func (k msgServer) CancelUpgrade(goCtx context.Context, msg *types.MsgCancelUpgrade) (*types.MsgCancelUpgradeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := ctx.ValidateAuthority(k.authority, msg.Authority); err != nil {
+	if err := sdk.ValidateAuthority(ctx, k.authority, msg.Authority); err != nil {
 		return nil, err
 	}
 

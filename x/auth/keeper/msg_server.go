@@ -23,7 +23,7 @@ func NewMsgServerImpl(ak AccountKeeper) types.MsgServer {
 func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := ctx.ValidateAuthority(ms.ak.authority, msg.Authority); err != nil {
+	if err := sdk.ValidateAuthority(ctx, ms.ak.authority, msg.Authority); err != nil {
 		return nil, err
 	}
 

@@ -25,7 +25,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := ctx.ValidateAuthority(k.authority, msg.Authority); err != nil {
+	if err := sdk.ValidateAuthority(ctx, k.authority, msg.Authority); err != nil {
 		return nil, err
 	}
 

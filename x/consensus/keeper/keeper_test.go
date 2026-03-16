@@ -76,11 +76,11 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 			types.QueryParamsRequest{},
 			func() {
 				input := &types.MsgUpdateParams{
-					Authority: s.ctx.Authority(),
+					Authority: s.ctx.ConsensusParams().Authority.Authority,
 					Block:     modifiedConsensusParams.Block,
 					Validator: modifiedConsensusParams.Validator,
 					Evidence:  modifiedConsensusParams.Evidence,
-					Auth:      &cmtproto.AuthorityParams{Authority: s.ctx.Authority()},
+					Auth:      &cmtproto.AuthorityParams{Authority: s.ctx.ConsensusParams().Authority.Authority},
 				}
 				_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, input)
 				s.Require().NoError(err)
@@ -95,7 +95,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 						VoteExtensionsEnableHeight: 0,
 					},
 					Authority: &cmtproto.AuthorityParams{
-						Authority: s.ctx.Authority(),
+						Authority: s.ctx.ConsensusParams().Authority.Authority,
 					},
 				},
 			},
@@ -106,14 +106,14 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 			types.QueryParamsRequest{},
 			func() {
 				input := &types.MsgUpdateParams{
-					Authority: s.ctx.Authority(),
+					Authority: s.ctx.ConsensusParams().Authority.Authority,
 					Block:     modifiedConsensusParams.Block,
 					Validator: modifiedConsensusParams.Validator,
 					Evidence:  modifiedConsensusParams.Evidence,
 					Abci: &cmtproto.ABCIParams{
 						VoteExtensionsEnableHeight: 1234,
 					},
-					Auth: &cmtproto.AuthorityParams{Authority: s.ctx.Authority()},
+					Auth: &cmtproto.AuthorityParams{Authority: s.ctx.ConsensusParams().Authority.Authority},
 				}
 				_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, input)
 				s.Require().NoError(err)
@@ -128,7 +128,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 						VoteExtensionsEnableHeight: 1234,
 					},
 					Authority: &cmtproto.AuthorityParams{
-						Authority: s.ctx.Authority(),
+						Authority: s.ctx.ConsensusParams().Authority.Authority,
 					},
 				},
 			},
@@ -166,7 +166,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "valid params",
 			input: &types.MsgUpdateParams{
-				Authority: s.ctx.Authority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
@@ -177,7 +177,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "invalid params",
 			input: &types.MsgUpdateParams{
-				Authority: s.ctx.Authority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Block:     &cmtproto.BlockParams{MaxGas: -10, MaxBytes: -10},
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
@@ -199,7 +199,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "nil evidence params",
 			input: &types.MsgUpdateParams{
-				Authority: s.ctx.Authority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  nil,
@@ -210,7 +210,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "nil block params",
 			input: &types.MsgUpdateParams{
-				Authority: s.ctx.Authority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Block:     nil,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
@@ -221,7 +221,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "nil validator params",
 			input: &types.MsgUpdateParams{
-				Authority: s.ctx.Authority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Block:     defaultConsensusParams.Block,
 				Validator: nil,
 				Evidence:  defaultConsensusParams.Evidence,
@@ -232,7 +232,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "valid ABCI update",
 			input: &types.MsgUpdateParams{
-				Authority: s.ctx.Authority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
@@ -246,7 +246,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "noop ABCI update",
 			input: &types.MsgUpdateParams{
-				Authority: s.ctx.Authority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
@@ -260,7 +260,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "valid ABCI clear",
 			input: &types.MsgUpdateParams{
-				Authority: s.ctx.Authority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
@@ -274,7 +274,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "invalid ABCI update - current height",
 			input: &types.MsgUpdateParams{
-				Authority: s.ctx.Authority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
@@ -288,7 +288,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "invalid ABCI update - past height",
 			input: &types.MsgUpdateParams{
-				Authority: s.ctx.Authority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
@@ -302,7 +302,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "update authority to new address",
 			input: &types.MsgUpdateParams{
-				Authority: s.ctx.Authority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
@@ -314,7 +314,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "update authority to governance module address",
 			input: &types.MsgUpdateParams{
-				Authority: s.ctx.Authority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
@@ -326,7 +326,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "update authority to empty string (clear)",
 			input: &types.MsgUpdateParams{
-				Authority: s.ctx.Authority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
@@ -338,7 +338,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "reject invalid authority address",
 			input: &types.MsgUpdateParams{
-				Authority: s.ctx.Authority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Block:     defaultConsensusParams.Block,
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,

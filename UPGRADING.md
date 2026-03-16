@@ -30,6 +30,8 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
 - [Telemetry](#telemetry)
     - [OpenTelemetry](#adoption-of-opentelemetry-and-deprecation-of-githubcomhashicorpgo-metrics)
 - [Experimental Packages](#experimental-packages)
+    - [Krakatoa Mempool](#krakatoa-mempool)
+    - [libp2p](#libp2p)
     - [BlockSTM](#blockstm)
 - [Upgrade Handler](#upgrade-handler)
 - [Upcoming Features](#upcoming-features)
@@ -38,7 +40,22 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
 
 ## Summary
 
-The release of Cosmos SDK v0.54.0 brings exciting new feature previews, an enhanced observability stack, bug fixes, and developer QoL improvements.
+Cosmos SDK v0.54.0 ships an enhanced observability stack, experimental performance packages, and developer QoL improvements. There are several breaking changes in this release, each motivated by a specific long-term goal:
+
+| Breaking change | Why |
+|---|---|
+| [`x/gov` `keeper.NewKeeper` signature changed](#keeper-initialization) | `x/gov` is now decoupled from `x/staking`; pass `CalculateVoteResultsAndVotingPowerFn` instead of `StakingKeeper` |
+| [`x/gov` `AfterProposalSubmission` hook signature changed](#govhooks-interface) | Hook now receives `proposerAddr sdk.AccAddress` as a third parameter |
+| [`x/epochs` `NewAppModule` takes keeper by pointer](#xepochs) | Fixes a depinject bug where hooks set on a value copy were silently dropped |
+| [`x/bank` must be first in `SetOrderEndBlockers`](#xbank) | `x/bank`'s `EndBlock` now handles object store finalization for BlockSTM support. All applications must make this change whether enabling BlockSTM or not. |
+| [`NodeService` registration updated](#nodeservice) | `RegisterNodeService` now requires a callback returning `EarliestVersion()` from the store; depends on Store v2 |
+| [`x/circuit`, `x/nft`, `x/crisis` moved to `contrib/`](#module-deprecations) | No longer actively maintained by Cosmos Labs; import paths change |
+| [`x/group` moved to Cosmos Enterprise](#groups-module) | Ongoing maintenance is now under the Cosmos Enterprise offering; users will need a code migration and a Cosmos Enterprise license to continue using it |
+| [Store v2 (`cosmossdk.io/store/v2`) required](#store-v2) | New async/deferred commit model underpins BlockSTM and the upcoming IAVLX engine |
+| [`cosmossdk.io/log` → `cosmossdk.io/log/v2`](#log-v2) | Adds context-aware logging tied to OpenTelemetry traces. See [Log v2 documentation](https://docs.cosmos.network/sdk/next/learn/advanced/log). |
+| [`cosmossdk.io` vanity URLs removed for most `x/` modules](#moved-go-modules) | Eliminates dependency version complexity; a migration tool ships alongside this release to automate the import path updates |
+| [`github.com/hashicorp/go-metrics` telemetry deprecated](#telemetry) | Replaced by [OpenTelemetry](https://docs.cosmos.network/sdk/next/learn/advanced/telemetry) for unified metrics, traces, and logs |
+| [libp2p requires network-wide opt-in](#libp2p) | CometBFT's legacy `comet-p2p` and libp2p are fundamentally incompatible; every validator in a network must choose one or the other. This is an opt-in feature. |
 
 ## App Wiring Changes
 
@@ -104,7 +121,7 @@ The epochs module's `NewAppModule` function now requires the epoch keeper by poi
 
 ### x/bank
 
-The bank module now contains an `EndBlock` method to support the new BlockSTM experimental package. All applications, whether using BlockSTM or not, must add `x/bank`'s `ModuleName` to the `ModuleManager`'s `SetOrderEndBlockers` method as the first entry.
+The bank module now contains an `EndBlock` method to support the new BlockSTM experimental package. BlockSTM requires coordinating object store access across parallel execution workers, and `x/bank`'s `EndBlock` handles the finalization step for that. **All applications must make this change**, whether or not they enable BlockSTM, because the `EndBlock` registration is now part of the module's standard lifecycle.
 
 ```go
 	app.ModuleManager.SetOrderEndBlockers(
@@ -148,7 +165,7 @@ The crisis module is no longer being actively maintained by Cosmos Labs and was 
 
 ### Groups Module
 
-The groups module is now being maintained under the Cosmos Enterprise offering. Please see [Cosmos Enterprise](https://docs.cosmos.network/enterprise/overview) to learn more about using the groups module in applications going forward.
+The groups module is now maintained under the Cosmos Enterprise offering. If your application uses `x/group`, you will need to migrate your code to the Enterprise-distributed package and obtain a Cosmos Enterprise license to continue using it. Please see [Cosmos Enterprise](https://docs.cosmos.network/enterprise/overview) to learn more.
 
 ### PoA Module
 
@@ -162,7 +179,9 @@ Cosmos SDK v0.54 includes a Proof of Authority (POA) module under the Cosmos Ent
 
 ## Moved Go Modules
 
-To improve maintainability and standardize import paths across Cosmos SDK modules and libraries, some packages have been consolidated under the github.com/cosmos/cosmos-sdk Go module. The following import paths must be updated:
+Most `cosmossdk.io` vanity URLs for modules under `x/` have been removed. These separate Go modules caused dependency version management to be unpredictable — different modules could be pinned to different SDK versions, leading to subtle compatibility issues. Consolidating everything under `github.com/cosmos/cosmos-sdk` gives developers a single, versioned dependency to manage.
+
+A migration tool ships alongside this release to automate updating these import paths. The following must be updated manually or via the tool:
 
 - `cosmossdk.io/x/evidence` -> `github.com/cosmos/cosmos-sdk/x/evidence`
 - `cosmossdk.io/x/feegrant` -> `github.com/cosmos/cosmos-sdk/x/feegrant` 
@@ -174,11 +193,11 @@ To improve maintainability and standardize import paths across Cosmos SDK module
 
 The log package has been updated to `v2`. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/log/v2`. Usage of the logger itself does not need to be updated.
 The v2 release of log adds contextual methods to the logger interface (InfoContext, DebugContext, etc.), allowing logs to be correlated with OpenTelemetry traces.
-To learn more about the new features offered in `log/v2`, as well as setting up log correlation, see the log package's [README](log/README.md).
+To learn more about the new features offered in `log/v2`, as well as setting up log correlation, see the [log package documentation](https://docs.cosmos.network/sdk/next/learn/advanced/log).
 
 ## Store v2
 
-The store package has been updated to `v2`. Store v2 enables support for the new experimental package: BlockSTM, and the upcoming IAVL upgrade, IAVLX. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/store/v2`.
+The store package has been updated to `v2`. Store v2 introduces a new async, deferred commit model that is the foundation for both BlockSTM parallel execution and the upcoming IAVLX storage engine — the deferred commit path is what makes concurrent transaction execution safe and allows the WAL-based design in IAVLX. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/store/v2`.
 
 ## Telemetry
 
@@ -190,7 +209,7 @@ Previously, Cosmos SDK telemetry support was provided by `github.com/hashicorp/g
 OpenTelemetry provides an integrated solution for metrics, traces, and logging which is widely adopted and actively maintained.
 The existing wrapper functions in the `telemetry` package required acquiring mutex locks and map lookups for every metric operation which is suboptimal. OpenTelemetry's API uses atomic concurrency wherever possible and should introduce less performance overhead during metric collection.
 
-See the [README.md](./telemetry/README.md) in the `telemetry` package to learn how to set up OpenTelemetry with Cosmos SDK v0.54.0+.
+See the [telemetry documentation](https://docs.cosmos.network/sdk/next/learn/advanced/telemetry) to learn how to set up OpenTelemetry with Cosmos SDK v0.54.0+.
 
 Below is a quick reference on setting up and using meters and traces with OpenTelemetry:
 
@@ -279,14 +298,27 @@ func ExampleWithSDKContext(ctx sdk.Context) error {
 
 ## Experimental Packages
 
-For Q1 of 2026, Cosmos Labs has been focusing on greatly improving performance of Cosmos SDK applications. v0.54 of Cosmos SDK introduces a performance related experimental package: BlockSTM.
+For Q1 of 2026, Cosmos Labs has been focusing on greatly improving performance of Cosmos SDK applications. v0.54 of Cosmos SDK introduces support for several performance-related features accross the stack, including BLockSTM in the SDK, and Libp2p and the Krakatoa mempool for CometBFT. 
 
-NOTE: It is important to emphasize that this is an **experimental** package. We DO NOT recommend running chains with this package enabled in production. The inclusion in this release is for experimentation purposes only.
+NOTE: It is important to emphasize that the following are **experimental** feature. We DO NOT recommend running chains with this these features enabled in production. The inclusion in this release is for experimentation purposes only.
+
+### Krakatoa Mempool
+
+Krakatoa delegates transaction storage, validation, and rechecking from CometBFT to the application. Enabling it requires coordinated changes across CometBFT and `evmd`. Visit the links below for more information and quick-start installation guides:
+
+- [CometBFT Krakatoa](https://docs.cosmos.network/cometbft/next/docs/experimental/krakatoa-mempool) — `AppMempool`, `AppReactor`, new ABCI methods, and quick-start installation
+- [Cosmos EVM Krakatoa](https://docs.cosmos.network/evm/next/documentation/concepts/experimental/krakatoa-mempool) — `ExperimentalEVMMempool`, insert queues, reap list, and application-side rechecking
+
+### libp2p
+
+libp2p replaces CometBFT's legacy `comet-p2p` transport layer with [go-libp2p](https://libp2p.io/). Unlike other opt-in features, **to opt-in to libp2p, every validator in the network must upgrade together**. CometBFT p2p and libp2p are fundamentally incompatible and cannot interoperate. Because of this, a coordinated network-wide migration at a specific upgrade height is required. Mixed deployments are not supported.
+
+See the [libp2p documentation](https://docs.cosmos.network/cometbft/next/docs/experimental/lib-p2p) for details.
 
 ### BlockSTM
 
 BlockSTM enables deterministic, concurrent execution of transactions, improving block execution speeds by up to X%. // TODO: REAL NUMBER
-Developers interested in experimenting with BlockSTM should read the documentation [here](link/to/docs).
+Developers interested in experimenting with BlockSTM should read the [documentation](https://docs.cosmos.network/sdk/next/experimental/blockstm).
 
 Below is an example of setting up BlockSTM:
 
@@ -365,7 +397,7 @@ The following packages are being actively developed and will be released at a fu
 ### IAVLX
 
 IAVLX is an upcoming WAL-based, ACID storage engine for Cosmos applications. It is inspired by [MEMIAVL](https://github.com/crypto-org-chain/cronos-store/tree/703ea3d46c70b3f8b2fb0371dbdd87e763dc39b2/memiavl), and the unreleased [IAVL v2](https://github.com/cosmos/iavl/tree/master/v2).
-Developers interested in experimenting with IAVLX should read the documentation [here](link/to/docs). You can follow along the development of IAVLX and try the code yourself with the [feat/iavlx](todo feat branch) branch.
+Developers interested in experimenting with IAVLX should read the documentation [here](https://github.com/cosmos/cosmos-sdk/tree/feat/iavlx). You can follow along the development of IAVLX and try the code yourself with the [feat/iavlx](todo feat branch) branch.
 
 #### Wiring up IAVLX (DO NOT RUN IN PRODUCTION)
 

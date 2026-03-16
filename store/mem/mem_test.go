@@ -30,9 +30,6 @@ func TestStore(t *testing.T) {
 
 	cacheWrapper := db.CacheWrap()
 	require.IsType(t, &cachekv.Store{}, cacheWrapper)
-
-	cacheWrappedWithTrace := db.CacheWrapWithTrace(nil, nil)
-	require.IsType(t, &cachekv.Store{}, cacheWrappedWithTrace)
 }
 
 func TestCommit(t *testing.T) {

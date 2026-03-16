@@ -2,7 +2,6 @@ package cachekv
 
 import (
 	"bytes"
-	"io"
 	"sort"
 	"sync"
 
@@ -12,7 +11,6 @@ import (
 	"cosmossdk.io/store/internal/btree"
 	"cosmossdk.io/store/internal/conv"
 	"cosmossdk.io/store/legacy/cachekv/internal"
-	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
 )
 
@@ -188,15 +186,6 @@ func (store *GStore[V]) Write() {
 // CacheWrap implements CacheWrapper.
 func (store *GStore[V]) CacheWrap() types.CacheWrap {
 	return NewGStore(store, store.isZero, store.valueLen)
-}
-
-// CacheWrapWithTrace implements the CacheWrapper interface.
-func (store *GStore[V]) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	// We need to make a type assertion here as the tracekv store requires bytes value types for serialization.
-	if store, ok := any(store).(*GStore[[]byte]); ok {
-		return NewStore(tracekv.NewStore(store, w, tc))
-	}
-	return store.CacheWrap()
 }
 
 //----------------------------------------

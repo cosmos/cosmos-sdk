@@ -75,7 +75,6 @@ func Run[T SimulationApp](
 	appFactory func(
 		logger log.Logger,
 		db dbm.DB,
-		traceStore io.Writer,
 		loadLatest bool,
 		appOpts servertypes.AppOptions,
 		baseAppOptions ...func(*baseapp.BaseApp),
@@ -101,7 +100,6 @@ func RunWithSeeds[T SimulationApp](
 	appFactory func(
 		logger log.Logger,
 		db dbm.DB,
-		traceStore io.Writer,
 		loadLatest bool,
 		appOpts servertypes.AppOptions,
 		baseAppOptions ...func(*baseapp.BaseApp),
@@ -121,7 +119,6 @@ func RunWithSeedsAndRandAcc[T SimulationApp](
 	appFactory func(
 		logger log.Logger,
 		db dbm.DB,
-		traceStore io.Writer,
 		loadLatest bool,
 		appOpts servertypes.AppOptions,
 		baseAppOptions ...func(*baseapp.BaseApp),
@@ -157,7 +154,7 @@ func RunWithSeedsAndRandAcc[T SimulationApp](
 func RunWithSeed[T SimulationApp](
 	tb testing.TB,
 	cfg simtypes.Config,
-	appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db dbm.DB, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seed int64,
 	fuzzSeed []byte,
@@ -171,7 +168,7 @@ func RunWithSeed[T SimulationApp](
 func RunWithSeedAndRandAcc[T SimulationApp](
 	tb testing.TB,
 	cfg simtypes.Config,
-	appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db dbm.DB, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seed int64,
 	fuzzSeed []byte,
@@ -356,7 +353,7 @@ func safeUint(p int) uint32 {
 func NewSimulationAppInstance[T SimulationApp](
 	tb testing.TB,
 	tCfg simtypes.Config,
-	appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db dbm.DB, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
 ) TestInstance[T] {
 	tb.Helper()
 	workDir := tb.TempDir()
@@ -380,7 +377,7 @@ func NewSimulationAppInstance[T SimulationApp](
 	if tCfg.FauxMerkle {
 		opts = append(opts, FauxMerkleModeOpt)
 	}
-	app := appFactory(logger, db, nil, true, appOptions, opts...)
+	app := appFactory(logger, db, true, appOptions, opts...)
 	if !cli.FlagSigverifyTxValue {
 		app.SetNotSigverifyTx()
 	}

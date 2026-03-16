@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 	"fmt"
+	"io"
 	"slices"
 
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
@@ -139,6 +140,10 @@ type CacheMultiStore interface {
 	Write() // Writes operations to underlying KVStore
 }
 
+// CommitBranch is a cached MultiStore that is the branch right on top of the root MultiStore and which
+// we use to initialize commits. Writers should write any changes to this multistore and then call
+// StartCommit when they are ready to commit.
+// Callers must not call StartCommit more than once on a CommitBranch.
 type CommitBranch interface {
 	MultiStore
 
@@ -152,12 +157,17 @@ type CommitBranch interface {
 	// as long as the cancellation signal is received before CommitFinalizer.StartFinalize()
 	// or CommitFinalizer.Finalize() is called.
 	// The comet header argument is used to obtain the commit timestamp.
+	//
+	// Callers must not call StartCommit more than once on a CommitBranch.
 	StartCommit(context.Context, cmtproto.Header) (CommitFinalizer, error)
 }
 
+// RootMultiStore is the root uncached multistore layer in a multistore db.
 type RootMultiStore interface {
 	MultiStoreBase
 
+	// RootCacheMultiStore is a readonly version of the latest version of the RootMultiStore
+	// to which any changes will be written to a cache layer and discarded.
 	RootCacheMultiStore() MultiStore
 
 	// CacheMultiStoreWithVersion branches the underlying MultiStore where
@@ -165,14 +175,14 @@ type RootMultiStore interface {
 	CacheMultiStoreWithVersion(version int64) (MultiStore, error)
 }
 
-// CommitMultiStore is an interface for a MultiStore without cache capabilities.
+// CommitMultiStore is the root multistore in a multistore db which can be commited to via CommitBranch.
 type CommitMultiStore interface {
 	RootMultiStore
 
 	snapshottypes.Snapshotter
 
-	// CacheMultiStore branches CommitMultiStore into a cached storage object.
-	// To write changes to the branched MultiStore, this multi-store must be passed to StartCommit.
+	// CommitBranch branches CommitMultiStore into a cached storage object.
+	// To write changes back to the CommitMultiStore from the CommitBranch,
 	CommitBranch() CommitBranch
 
 	GetCommitInfo(ver int64) (*CommitInfo, error)

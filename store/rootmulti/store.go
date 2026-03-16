@@ -655,9 +655,12 @@ func (rs *Store) CommitBranch() types.CommitBranch {
 }
 
 type commitBranch struct {
+	// we embed MultiStore so that CommitBranch implements MultiStore methods directly
 	types.MultiStore
+	// inner is the same as the embedded MultiStore but is the type that we want to call Write against (we don't want to expose Write via embedding)
 	inner types.CacheMultiStore
-	rs    *Store
+	// rs is the Store that we are commiting the changes in the CacheMultiStore against
+	rs *Store
 }
 
 func (c *commitBranch) StartCommit(ctx context.Context, header cmtproto.Header) (types.CommitFinalizer, error) {

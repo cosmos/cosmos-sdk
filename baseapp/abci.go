@@ -983,10 +983,6 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	if app.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
-		if aborted {
-			//nolint:staticcheck // todo: refactor
-			telemetry.IncrCounter(1, TelemetrySubsystem, MetricOEAborted)
-		}
 		// Wait for the OE to finish, regardless of whether it was aborted or not
 		res, err = app.optimisticExec.WaitResult()
 
@@ -1001,6 +997,9 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 			}
 			return app.finishFinalizeBlock(res)
 		} else {
+			//nolint:staticcheck // todo: refactor
+			telemetry.IncrCounter(1, TelemetrySubsystem, MetricOEAborted)
+
 			// if it was aborted, we need to reset the state
 			app.stateManager.ClearState(execModeFinalize)
 			app.optimisticExec.Reset()

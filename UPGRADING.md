@@ -18,6 +18,7 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
         - [x/bank](#xbank)
         - [NodeService](#nodeservice)
     - [Moved Go Modules](#moved-go-modules)
+    - [Module Version Updates](#module-version-updates)
     - [Log v2](#log-v2)
     - [Store v2](#store-v2)
 - [Conditional Changes](#conditional-changes)
@@ -29,10 +30,10 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
         - [Groups Module](#groups-module)
         - [PoA Module](#poa-module)
 - [New Features and Non-Breaking Changes](#new-features-and-non-breaking-changes)
-    - [Module Version Updates](#module-version-updates)
     - [Telemetry](#telemetry)
         - [OpenTelemetry](#opentelemetry)
     - [Centralized Authority via Consensus Params](#centralized-authority-via-consensus-params)
+        - [How AuthorityParams Works](#how-authorityparams-works)
 - [Upgrade Handler](#upgrade-handler)
 - [Experimental Features](#experimental-features)
     - [libp2p](#libp2p)
@@ -45,21 +46,25 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
 
 Use this checklist first, then read the linked sections for the exact code or wiring changes.
 
-- Update `x/gov` keeper wiring if your app constructs the keeper manually. See [Keeper Initialization](#keeper-initialization).
-- Update your governance hooks if you implement `AfterProposalSubmission`. See [GovHooks Interface](#govhooks-interface).
-- Update `x/epochs.NewAppModule` if your app includes `x/epochs`. See [x/epochs](#xepochs).
-- Put `x/bank` first in `SetOrderEndBlockers`. See [x/bank](#xbank).
-- Update your node service registration if your app exposes `NodeService`. See [NodeService](#nodeservice).
-- Migrate imports for moved `x/` Go modules. See [Moved Go Modules](#moved-go-modules).
-- Migrate to `contrib/` imports if you use `x/circuit`, `x/nft`, or `x/crisis`. See [Module Deprecations](#module-deprecations).
-- Migrate to Cosmos Enterprise if you use `x/group`. See [Groups Module](#groups-module).
-- Update imports to `cosmossdk.io/log/v2` if your app imports the log package directly. See [Log v2](#log-v2).
-- Review Store v2 changes if this release requires your app to adopt `cosmossdk.io/store/v2`. See [Store v2](#store-v2).
-- No upgrade action is required to keep using per-keeper authorities. See [Centralized Authority via Consensus Params](#centralized-authority-via-consensus-params).
-- No upgrade action is required to keep existing telemetry wiring, but OpenTelemetry is now available. See [Telemetry](#telemetry).
-- `libp2p` and `BlockSTM` are optional experimental features. See [Experimental Features](#experimental-features).
+- [ ] Update `x/gov` keeper wiring, as the `x/gov` module has been decoupled from `x/staking`. See [Keeper Initialization](#keeper-initialization).
+- [ ] Update your governance hooks if you implement `AfterProposalSubmission`. See [GovHooks Interface](#govhooks-interface).
+- [ ] Update `x/epochs.NewAppModule` if your app includes `x/epochs`. See [x/epochs](#xepochs).
+- [ ] Put `x/bank` first in `SetOrderEndBlockers`. See [x/bank](#xbank).
+- [ ] Update your node service registration if your app exposes `NodeService`. See [NodeService](#nodeservice).
+- [ ] Migrate imports for moved `x/` Go modules. See [Moved Go Modules](#moved-go-modules).
+- [ ] Update required Cosmos SDK Go module dependencies. See [Module Version Updates](#module-version-updates).
+- [ ] Migrate to `contrib/` imports if you use `x/circuit`, `x/nft`, or `x/crisis`. See [Module Deprecations](#module-deprecations).
+- [ ] Migrate to Cosmos Enterprise if you use the `x/group` module. See [Groups Module](#groups-module).
+- [ ] Update imports to `cosmossdk.io/log/v2` if your app imports the log package directly. See [Log v2](#log-v2).
+- [ ] Review Store v2 changes if this release requires your app to adopt `cosmossdk.io/store/v2`. See [Store v2](#store-v2).
+- [ ] Review [Centralized Authority via Consensus Params](#centralized-authority-via-consensus-params). No upgrade action is required to keep using per-keeper authorities.
+- [ ] Review [Telemetry](#telemetry). No upgrade action is required to keep existing telemetry wiring, but upgrading to OpenTelemetry is strongly encouraged.
+- [ ] Review [PoA Module](#poa-module) if you are interested in adopting the new Cosmos Enterprise Proof of Authority module.
+- [ ] Review [Experimental Features](#experimental-features) if you are interested in enabling `libp2p` or `BlockSTM`.
 
 ## Required Changes
+
+All chains upgrading to `v0.54.x` should review and apply the changes in this section.
 
 ### App Wiring Changes
 
@@ -148,7 +153,7 @@ func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Conf
 
 ### Moved Go Modules
 
-Most `cosmossdk.io` vanity URLs for modules under `x/` have been removed. These separate Go modules caused dependency version management to be unpredictable — different modules could be pinned to different SDK versions, leading to subtle compatibility issues. Consolidating everything under `github.com/cosmos/cosmos-sdk` gives developers a single, versioned dependency to manage.
+Most `cosmossdk.io` vanity URLs for modules under `x/` have been removed. These separate Go modules caused dependency version management to be unpredictable; different modules could be pinned to different SDK versions, leading to compatibility issues. Consolidating everything under `github.com/cosmos/cosmos-sdk` gives developers a single, versioned dependency to manage.
 
 A migration tool ships alongside this release to automate updating these import paths. The following must be updated manually or via the tool:
 
@@ -163,7 +168,6 @@ A migration tool ships alongside this release to automate updating these import 
 - `cosmossdk.io/client/v2` has been updated to v2.x.x ?? // TODO: Finalize this.
 - `cosmossdk.io/api` has been updated to vx.x.x // TODO: Finalize this.
 
-
 ### Log v2
 
 The log package has been updated to `v2`. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/log/v2`. Usage of the logger itself does not need to be updated.
@@ -175,6 +179,8 @@ To learn more about the new features offered in `log/v2`, as well as setting up 
 The store package has been updated to `v2`. Store v2 introduces a new async, deferred commit model that is the foundation for both BlockSTM parallel execution and the upcoming IAVLX storage engine — the deferred commit path is what makes concurrent transaction execution safe and allows the WAL-based design in IAVLX. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/store/v2`.
 
 ## Conditional Changes
+
+These changes apply if your chain uses the affected modules, packages, or integrations.
 
 ### Module Deprecations
 
@@ -207,6 +213,8 @@ Cosmos SDK v0.54 includes a Proof of Authority (POA) module under the Cosmos Ent
 
 ## New Features and Non-Breaking Changes
 
+These changes are informational and optional to adopt during the upgrade, but they are not required for a successful migration.
+
 ### Telemetry
 
 The telemetry package has been deprecated and users are encouraged to switch to OpenTelemetry.
@@ -219,7 +227,8 @@ OpenTelemetry provides an integrated solution for metrics, traces, and logging w
 
 The existing wrapper functions in the `telemetry` package required acquiring mutex locks and map lookups for every metric operation which is suboptimal. OpenTelemetry's API uses atomic concurrency wherever possible and should introduce less performance overhead during metric collection.
 
-See the [telemetry documentation](https://docs.cosmos.network/sdk/next/learn/advanced/telemetry<!-- Todo: update with corrects docs versin path -->) to learn how to set up OpenTelemetry with Cosmos SDK v0.54.0+. 
+See the [telemetry documentation](https://docs.cosmos.network/sdk/next/learn/advanced/telemetry) to learn how to set up OpenTelemetry with Cosmos SDK v0.54.0+. 
+<!-- todo: update link with correct docs version tag -->
 
 
 Below is a quick reference on setting up and using meters and traces with OpenTelemetry:
@@ -331,6 +340,8 @@ To enable centralized authority, set the `AuthorityParams` in consensus params v
 
 ## Upgrade Handler
 
+This section provides a reference example for implementing the on-chain upgrade itself.
+
 The following is an example upgrade handler for upgrading from **v0.53.6** to **v0.54.0**.
 
 ```go
@@ -356,7 +367,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 
 ## Experimental Features
 
-For Q1 of 2026, Cosmos Labs has been focusing on greatly improving performance of Cosmos SDK applications. v0.54 of Cosmos SDK introduces support for several performance-related features accross the stack, including BLockSTM in the SDK, and Libp2p support for CometBFT. 
+For Q1 of 2026, Cosmos Labs has been focusing on greatly improving performance of Cosmos SDK applications. v0.54 of Cosmos SDK introduces support for several performance-related features accross the stack, including BLockSTM in the SDK and Libp2p support for CometBFT. 
 
 NOTE: It is important to emphasize that the following are **experimental** features. We DO NOT recommend running chains with this these features enabled in production. The inclusion in this release is for experimentation purposes only.
 
@@ -365,11 +376,13 @@ NOTE: It is important to emphasize that the following are **experimental** featu
 libp2p replaces CometBFT's legacy `comet-p2p` transport layer with [go-libp2p](https://libp2p.io/). Unlike other opt-in features, **to opt-in to libp2p, every validator in the network must upgrade together**. CometBFT p2p and libp2p are fundamentally incompatible and cannot interoperate. Because of this, a coordinated network-wide migration at a specific upgrade height is required. Mixed deployments are not supported.
 
 See the [libp2p documentation](https://docs.cosmos.network/cometbft/next/docs/experimental/lib-p2p) for details.
+<!-- todo: update link with correct docs version tag -->
 
 ### BlockSTM
 
 BlockSTM enables deterministic, concurrent execution of transactions, improving block execution speeds by up to X%. // TODO: REAL NUMBER
-Developers interested in experimenting with BlockSTM should read the [documentation](https://docs.cosmos.network/sdk/next/experimental/blockstm).
+Developers interested in experimenting with BlockSTM should read the [documentation](https://docs.cosmos.network/sdk/next/experimental/blockstm). 
+<!-- todo: update link with correct docs version tag -->
 
 Below is an example of setting up BlockSTM:
 
@@ -417,6 +430,8 @@ app.BankKeeper = app.BankKeeper.WithObjStoreKey(oKeys[banktypes.ObjectStoreKey])
 ```
 
 ## Upcoming Features
+
+These items are not part of the required `v0.54.x` upgrade path and are included for forward-looking reference only.
 
 The following packages are being actively developed and will be released at a future time.
 

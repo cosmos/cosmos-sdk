@@ -17,7 +17,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: cosmos/proto-builder
+  IMAGE_NAME: agoric-labs/proto-builder
 
 # Allow one concurrent deployment
 concurrency:
@@ -65,7 +65,6 @@ jobs:
       - name: Publish to GHCR
         uses: depot/build-push-action@v1
         with:
-          project: gnm1jqptpw
           context: ./contrib/devtools
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}

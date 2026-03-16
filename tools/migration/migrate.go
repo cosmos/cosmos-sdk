@@ -100,6 +100,7 @@ func Migrate(directory string, args MigrateArgs) error {
 		if !info.IsDir() && filepath.Base(path) == "go.mod" {
 			goModuleFiles = append(goModuleFiles, path)
 		}
+		return nil
 	})
 	if err != nil {
 		return err
@@ -196,20 +197,20 @@ func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRem
 				}
 				modified = true
 			}
-		for _, module := range modFile.Require {
-			if slices.Contains(removals, module.Mod.Path) {
-				if err := modFile.DropRequire(module.Mod.Path); err != nil {
-					return fmt.Errorf("error removing %s: %w", module.Mod.Path, err)
+			for _, module := range modFile.Require {
+				if slices.Contains(removals, module.Mod.Path) {
+					if err := modFile.DropRequire(module.Mod.Path); err != nil {
+						return fmt.Errorf("error removing %s: %w", module.Mod.Path, err)
+					}
+					modified = true
 				}
-				modified = true
-			}
-			if newVersion, ok := updates[module.Mod.Path]; ok {
-				if err := modFile.AddRequire(module.Mod.Path, newVersion); err != nil {
-					return fmt.Errorf("error updating %s: %w", module.Mod.Path, err)
+				if newVersion, ok := updates[module.Mod.Path]; ok {
+					if err := modFile.AddRequire(module.Mod.Path, newVersion); err != nil {
+						return fmt.Errorf("error updating %s: %w", module.Mod.Path, err)
+					}
+					modified = true
 				}
-				modified = true
 			}
-		}
 			for _, replacement := range replacements {
 				if err := modFile.AddReplace(replacement.Module, "", replacement.Replacement, replacement.Version); err != nil {
 					return fmt.Errorf("error adding replace for %s: %w", replacement.Module, err)

@@ -28,6 +28,8 @@ func updateImports(node *ast.File, replacements []ImportReplacement) (bool, erro
 	for _, imp := range node.Imports {
 		importPath := strings.Trim(imp.Path.Value, "\"")
 		for _, replacement := range replacements {
+			// Check if this import matches an exception (exact segment match, not substring).
+			hasException := false
 			for _, exception := range replacement.Except {
 				if importPath == replacement.Old+"/"+exception ||
 					strings.HasPrefix(importPath, replacement.Old+"/"+exception+"/") {
@@ -35,6 +37,17 @@ func updateImports(node *ast.File, replacements []ImportReplacement) (bool, erro
 					break
 				}
 			}
+			if hasException {
+				continue
+			}
+
+			if replacement.AllPackages {
+				// Prevent appending duplicate replacements on multiple migration runs.
+				if strings.HasPrefix(importPath, replacement.Old) && !strings.HasPrefix(importPath, replacement.New) {
+					subPackage := strings.TrimPrefix(importPath, replacement.Old)
+					imp.Path.Value = fmt.Sprintf(`"%s%s"`, replacement.New, subPackage)
+					modified = true
+				}
 			} else if importPath == replacement.Old {
 				log.Debug().Msgf("updated import %s to %s", importPath, replacement.New)
 				imp.Path.Value = fmt.Sprintf(`"%s"`, replacement.New)

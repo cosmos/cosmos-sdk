@@ -49,6 +49,7 @@ func applyTextReplacements(filePath string, replacements []TextReplacement) (boo
 		if r.FileMatch != "" && !strings.HasSuffix(filepath.ToSlash(filePath), "/"+r.FileMatch) {
 			continue
 		}
+		result = strings.ReplaceAll(result, r.Old, r.New)
 	}
 
 	if result != original {

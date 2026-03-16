@@ -259,19 +259,22 @@ type CommitMultiStore interface {
 type CommitFinalizer interface {
 	// StartFinalize begins finalization and waits until the hash is ready,
 	// but may return before the commit has been fully finalized (i.e. fsync'd to disk).
-	// Once StartFinalize is called, Rollback can no longer be called and will return an error.
-	// Where we would have previously called CommitMultiStore.WorkingHash(), we can now call StartFinalize
-	// to get the hash early and do work in parallel while the commit is being finalized.
+	// Once a successful StartFinalize is called, Rollback can no longer be called and will return an error.
+	// If StartFinalize fails due to context cancellation, the finalizer is automatically
+	// rolled back and a subsequent Rollback() will return nil.
+	// StartFinalize is idempotent: repeated calls return the same CommitID.
 	StartFinalize() (CommitID, error)
 	// Finalize begins finalization if it hasn't been started yet and
 	// waits for the commit to complete (including fsync).
 	// StartFinalize may be called before Finalize to start finalization early.
-	// After Finalize is called, Rollback can no longer be called and will return an error.
-	// Where we would have previously called CommitMultiStore.Commit(),
-	// we can now call Finalize() to finalize the commit and get the CommitID.
+	// After a successful Finalize, Rollback can no longer be called and will return an error.
+	// Finalize is idempotent: repeated calls return the same CommitID.
 	Finalize() (CommitID, error)
 	// Rollback aborts the in-progress commit and leaves the stores in the previous state.
-	// Rollback returns an error if StartFinalize or Finalize has been called.
+	// Rollback returns an error if a successful StartFinalize or Finalize has already been called.
+	// Rollback is idempotent: repeated calls return nil.
+	// If the context was cancelled before finalization, the finalizer is already in a rolled-back
+	// state and Rollback will return nil.
 	Rollback() error
 }
 

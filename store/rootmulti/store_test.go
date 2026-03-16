@@ -1218,7 +1218,7 @@ func TestCommitFinalizerIdempotency(t *testing.T) {
 	// finalize completes
 	cid3, err := cf.Finalize()
 	require.NoError(t, err)
-	require.Equal(t, cid.Hash, cid3.Hash)
+	require.Equal(t, cid, cid3)
 
 	// idempotent
 	cid4, err := cf.Finalize()

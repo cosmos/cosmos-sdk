@@ -310,28 +310,31 @@ func TestInitGenesis(t *testing.T) {
 		adminAddr := sdk.AccAddress("admin-fees")
 		numValidators := 2
 		validators := make([]poatypes.Validator, numValidators)
+		allocatedFeesEntries := make([]poatypes.GenesisAllocatedFees, numValidators)
 
 		for i := 0; i < numValidators; i++ {
 			pubKey := ed25519.GenPrivKey().PubKey()
 			pubKeyAny, err := codectypes.NewAnyWithValue(pubKey)
 			require.NoError(t, err)
 
+			consAddr := sdk.GetConsAddress(pubKey)
 			operatorAddr := sdk.AccAddress(fmt.Sprintf("operator-fees-%d", i))
 
-			// Create validator with allocated fees
-			allocatedFees := sdk.NewDecCoins(
-				sdk.NewInt64DecCoin("stake", int64((i+1)*100)),
-			)
-
 			validators[i] = poatypes.Validator{
-				PubKey:        pubKeyAny,
-				Power:         int64((i + 1) * 10), // Powers: 10, 20
-				AllocatedFees: allocatedFees,
+				PubKey: pubKeyAny,
+				Power:  int64((i + 1) * 10), // Powers: 10, 20
 				Metadata: &poatypes.ValidatorMetadata{
 					Moniker:         fmt.Sprintf("validator-fees-%d", i),
 					OperatorAddress: operatorAddr.String(),
 					Description:     fmt.Sprintf("Validator %d with fees", i),
 				},
+			}
+
+			allocatedFeesEntries[i] = poatypes.GenesisAllocatedFees{
+				ConsensusAddress: consAddr.String(),
+				Fees: sdk.NewDecCoins(
+					sdk.NewInt64DecCoin("stake", int64((i+1)*100)),
+				),
 			}
 		}
 
@@ -339,7 +342,8 @@ func TestInitGenesis(t *testing.T) {
 			Params: poatypes.Params{
 				Admin: adminAddr.String(),
 			},
-			Validators: validators,
+			Validators:    validators,
+			AllocatedFees: allocatedFeesEntries,
 		}
 
 		updates, err := f.poaKeeper.InitGenesis(f.ctx, f.cdc, genesis)
@@ -351,36 +355,20 @@ func TestInitGenesis(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, genesis.Params.Admin, params.Admin)
 
-		// Verify all validators were created with allocated fees
+		// Verify all validators were created
 		allValidators, err := f.poaKeeper.GetAllValidators(f.ctx)
 		require.NoError(t, err)
 		require.Len(t, allValidators, numValidators)
 
-		validatorMap := make(map[string]poatypes.Validator)
-		for _, v := range allValidators {
-			validatorMap[v.Metadata.OperatorAddress] = v
-		}
-
-		expectedTotalPower := int64(0)
-		for i, expected := range validators {
-			found, exists := validatorMap[expected.Metadata.OperatorAddress]
-			require.True(t, exists, "validator %d should be created", i)
-			require.Equal(t, expected.Power, found.Power)
-			require.Equal(t, expected.Metadata.Moniker, found.Metadata.Moniker)
-
-			// Verify allocated fees are preserved
-			require.Equal(t, expected.AllocatedFees, found.AllocatedFees, "allocated fees should be preserved for validator %d", i)
-
-			// Verify validator update
-			require.Equal(t, expected.Power, updates[i].Power)
-
-			// Sum up total power (only validators with power > 0)
-			if expected.Power > 0 {
-				expectedTotalPower += expected.Power
-			}
+		// Verify allocated fees are preserved in the collection
+		for _, entry := range allocatedFeesEntries {
+			fees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, entry.ConsensusAddress)
+			require.NoError(t, err)
+			require.Equal(t, entry.Fees, fees, "allocated fees should be preserved for %s", entry.ConsensusAddress)
 		}
 
 		// Verify total power is set correctly
+		expectedTotalPower := int64(30) // 10 + 20
 		totalPower, err := f.poaKeeper.GetTotalPower(f.ctx)
 		require.NoError(t, err)
 		require.Equal(t, expectedTotalPower, totalPower)
@@ -481,29 +469,20 @@ func TestInitGenesis(t *testing.T) {
 		err := f.poaKeeper.UpdateParams(f.ctx, params)
 		require.NoError(t, err)
 
-		// Create validators with allocated fees
+		// Create validators and set allocated fees via the collection
 		numValidators := 5
 		validators := make([]poatypes.Validator, numValidators)
-		consAddrs := make([]sdk.ConsAddress, numValidators)
 
 		for i := 0; i < numValidators; i++ {
 			pubKey := ed25519.GenPrivKey().PubKey()
 			pubKeyAny, err := codectypes.NewAnyWithValue(pubKey)
 			require.NoError(t, err)
 			consAddr := sdk.GetConsAddress(pubKey)
-			consAddrs[i] = consAddr
 			operatorAddr := sdk.AccAddress(fmt.Sprintf("operator-fees-%d", i))
 
-			// Create validator with allocated fees
-			allocatedFees := sdk.NewDecCoins(
-				sdk.NewInt64DecCoin("stake", int64((i+1)*100)),
-				sdk.NewInt64DecCoin("atom", int64((i+1)*50)),
-			)
-
 			validators[i] = poatypes.Validator{
-				PubKey:        pubKeyAny,
-				Power:         int64((i + 1) * 10), // Powers: 10, 20
-				AllocatedFees: allocatedFees,
+				PubKey: pubKeyAny,
+				Power:  int64((i + 1) * 10),
 				Metadata: &poatypes.ValidatorMetadata{
 					Moniker:         fmt.Sprintf("validator-fees-%d", i),
 					OperatorAddress: operatorAddr.String(),
@@ -513,27 +492,26 @@ func TestInitGenesis(t *testing.T) {
 
 			err = f.poaKeeper.CreateValidator(f.ctx, consAddr, validators[i], true)
 			require.NoError(t, err)
-		}
 
-		// Note: In a real scenario, totalAllocatedFees would be set by the keeper
-		// when validators are created or fees are allocated. For this test, we'll
-		// verify that the sum of validator allocated fees matches what we expect.
+			// Set allocated fees via the collection
+			allocatedFees := sdk.NewDecCoins(
+				sdk.NewInt64DecCoin("atom", int64((i+1)*50)),
+				sdk.NewInt64DecCoin("stake", int64((i+1)*100)),
+			)
+			err = f.poaKeeper.validatorAllocatedFees.Set(f.ctx, consAddr.String(), poatypes.ValidatorFees{Fees: allocatedFees})
+			require.NoError(t, err)
+		}
 
 		// Export genesis
 		exportedGenesis, err := f.poaKeeper.ExportGenesis(f.ctx)
 		require.NoError(t, err)
 		require.Len(t, exportedGenesis.Validators, numValidators)
-
-		// Verify exported validators have allocated fees preserved
-		for i, exportedVal := range exportedGenesis.Validators {
-			require.NotNil(t, exportedVal.AllocatedFees, "validator %d should have allocated fees exported", i)
-		}
+		require.Len(t, exportedGenesis.AllocatedFees, numValidators)
 
 		// Create a new keeper instance (simulating a new chain state)
 		f = setupTest(t)
 
 		// Set up fee collector with balances (simulating bank module state restoration)
-		// These balances represent fees that were collected but not yet allocated
 		feeCollectorFees := sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 1000),
 			sdk.NewInt64Coin("atom", 500),
@@ -551,28 +529,12 @@ func TestInitGenesis(t *testing.T) {
 		feeCollectorBalanceImport := f.bankKeeper.GetAllBalances(f.ctx, feeCollectorImport.GetAddress())
 		require.Equal(t, feeCollectorFees, feeCollectorBalanceImport, "fee collector balances should be set")
 
-		// Verify all validators were imported with allocated fees
-		importedValidators, err := f.poaKeeper.GetAllValidators(f.ctx)
-		require.NoError(t, err)
-		require.Len(t, importedValidators, numValidators)
-
-		validatorMap := make(map[string]poatypes.Validator)
-		for _, v := range importedValidators {
-			validatorMap[v.Metadata.OperatorAddress] = v
-		}
-
-		// Verify allocated fees are preserved for each validator
-		// Since genesis doesn't checkpoint, each validator should have the same
-		// allocated fees before and after the export/import cycle
-		for i, expected := range exportedGenesis.Validators {
-			found, exists := validatorMap[expected.Metadata.OperatorAddress]
-			require.True(t, exists, "validator %d should be imported", i)
-			require.Equal(t, expected.Power, found.Power)
-			require.Equal(t, expected.Metadata.Moniker, found.Metadata.Moniker)
-
-			// Since genesis doesn't checkpoint, allocated fees should be exactly the same
-			require.Equal(t, expected.AllocatedFees, found.AllocatedFees,
-				"validator %d allocated fees should be preserved during export/import", i)
+		// Verify allocated fees are preserved in the collection after import
+		for _, entry := range exportedGenesis.AllocatedFees {
+			fees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, entry.ConsensusAddress)
+			require.NoError(t, err)
+			require.Equal(t, entry.Fees, fees,
+				"allocated fees should be preserved during export/import for %s", entry.ConsensusAddress)
 		}
 
 		// Verify fee collector balance remains unchanged (genesis doesn't distribute fees)

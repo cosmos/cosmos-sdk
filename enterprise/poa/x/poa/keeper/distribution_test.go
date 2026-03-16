@@ -259,7 +259,7 @@ func TestProportionalDistribution(t *testing.T) {
 		require.Equal(t, int64(3), balance.Amount.Int64())
 
 		// Check remainder is preserved (exact decimal remainder)
-		accFeesAfter, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFeesAfter, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		expectedRemainder, err := math.LegacyNewDecFromStr("0.333333333333333333")
 		require.NoError(t, err)
@@ -285,7 +285,7 @@ func TestProportionalDistribution(t *testing.T) {
 		require.Equal(t, int64(6), balanceAfterSecond.Amount.Int64())
 
 		// Check new remainder is preserved (exact value)
-		accFeesAfterSecondWithdraw, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFeesAfterSecondWithdraw, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		expectedSecondRemainder := expectedTotal.Sub(math.LegacyNewDec(3))
 		require.Equal(t, expectedSecondRemainder, accFeesAfterSecondWithdraw.AmountOf("stake"))
@@ -341,7 +341,7 @@ func TestProportionalDistribution(t *testing.T) {
 		require.Equal(t, int64(15), balance.Amount.Int64())
 
 		// Check remainder is preserved
-		accFeesAfter, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFeesAfter, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		// This is rounded slightly because of the constant checkpointing at every distribution
 		// If we don't checkpoint every time, we end up with 0.714285714285714286.
@@ -380,7 +380,7 @@ func TestProportionalDistribution(t *testing.T) {
 		require.Equal(t, int64(31), balanceSecond.Amount.Int64()) // 15 + 16
 
 		// Final remainder check
-		accFeesFinal, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFeesFinal, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		// This is rounded slightly because of the constant checkpointing at every distribution
 		// If we don't checkpoint every time, we end up with 0.428571428571428572.
@@ -391,7 +391,7 @@ func TestProportionalDistribution(t *testing.T) {
 
 		// PROOF: Total distributed = Total withdrawn + Current remainder
 		// Total distributed over 20 blocks = sum of actual validator allocations
-		validator1CurrentFees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		validator1CurrentFees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		totalWithdrawn := math.LegacyNewDec(31)
 		totalEverDistributed := validator1CurrentFees.AmountOf("stake").Add(totalWithdrawn)
@@ -419,7 +419,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Before checkpoint, validators should have zero accumulated fees
-		accFees1Before, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1Before, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		require.True(t, accFees1Before.IsZero())
 
@@ -428,12 +428,12 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// After checkpoint, validator 1 should have 25% (250 stake)
-		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(250))}, accFees1)
 
 		// Validator 2 should have 75% (750 stake)
-		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2.String())
 		require.NoError(t, err)
 		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(750))}, accFees2)
 
@@ -460,11 +460,11 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// All validators should have no fees
-		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		require.True(t, accFees1.IsZero())
 
-		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2.String())
 		require.NoError(t, err)
 		require.True(t, accFees2.IsZero())
 
@@ -491,12 +491,12 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Validator 1 should get 100% (all fees)
-		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees1)
 
 		// Validator 2 should have no fees
-		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2.String())
 		require.NoError(t, err)
 		require.True(t, accFees2.IsZero())
 	})
@@ -517,7 +517,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Each should have 100
-		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees1)
 
@@ -530,11 +530,11 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Each should now have 200
-		accFees1After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(200))}, accFees1After)
 
-		accFees2After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2.String())
 		require.NoError(t, err)
 		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(200))}, accFees2After)
 
@@ -564,7 +564,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Validator 1: 25% of each
-		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		expectedFees1 := sdk.DecCoins{
 			sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(100)),
@@ -573,7 +573,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.Equal(t, expectedFees1, accFees1)
 
 		// Validator 2: 75% of each
-		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2.String())
 		require.NoError(t, err)
 		expectedFees2 := sdk.DecCoins{
 			sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(300)),
@@ -599,11 +599,11 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Both validators should have received 100 stake (before power change)
-		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees1)
 
-		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2.String())
 		require.NoError(t, err)
 		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees2)
 
@@ -618,12 +618,12 @@ func TestCheckpointAllValidators(t *testing.T) {
 
 		// Now validator 1 has 200 power out of 300 total = 2/3 of new fees
 		// Validator 1: 100 (old) + 200 (2/3 of 300) = 300
-		accFees1After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		require.Equal(t, math.LegacyNewDec(300), accFees1After.AmountOf("stake"))
 
 		// Validator 2: 100 (old) + 100 (1/3 of 300) = 200
-		accFees2After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2.String())
 		require.NoError(t, err)
 		require.Equal(t, math.LegacyNewDec(200), accFees2After.AmountOf("stake"))
 	})
@@ -675,7 +675,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Validator fees should remain the same
-		accFees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees)
 	})
@@ -696,16 +696,16 @@ func TestCheckpointAllValidators(t *testing.T) {
 		_, consAddr3 := createValidator(t, f, 3, 100)
 
 		// Existing validators should have received 100 stake each (before new validator joined)
-		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees1)
 
-		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2.String())
 		require.NoError(t, err)
 		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees2)
 
 		// New validator should have no fees yet
-		accFees3, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr3)
+		accFees3, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr3.String())
 		require.NoError(t, err)
 		require.True(t, accFees3.IsZero())
 
@@ -719,16 +719,16 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Validators 1 and 2: 100 (before) + 100 (new share) each
-		accFees1After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		require.Equal(t, math.LegacyNewDec(200), accFees1After.AmountOf("stake"))
 
-		accFees2After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2.String())
 		require.NoError(t, err)
 		require.Equal(t, math.LegacyNewDec(200), accFees2After.AmountOf("stake"))
 
 		// Validator 3: 0 (before) + 100 (new share)
-		accFees3After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr3)
+		accFees3After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr3.String())
 		require.NoError(t, err)
 		require.Equal(t, math.LegacyNewDec(100), accFees3After.AmountOf("stake"))
 	})
@@ -772,7 +772,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Validator should have 0.25 stake (25% of 1)
-		accFees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		accFees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr.String())
 		require.NoError(t, err)
 		expectedAmount, err := math.LegacyNewDecFromStr("0.25")
 		require.NoError(t, err)
@@ -788,7 +788,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.Equal(t, int64(0), balance.Amount.Int64())
 
 		// Accumulated fees should still have the decimal remainder
-		accFeesAfter, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		accFeesAfter, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr.String())
 		require.NoError(t, err)
 		require.Equal(t, expectedAmount, accFeesAfter.AmountOf("stake"))
 	})
@@ -858,7 +858,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify allocated fees for all denominations
-		allocatedFees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		allocatedFees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr.String())
 		require.NoError(t, err)
 		require.Equal(t, math.LegacyNewDec(150), allocatedFees.AmountOf("stake"))
 		require.Equal(t, math.LegacyNewDec(75), allocatedFees.AmountOf("atom"))
@@ -885,7 +885,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.Equal(t, int64(200), osmoBalance.Amount.Int64())
 
 		// Verify allocated fees are now zero for all denominations
-		allocatedFeesAfter, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		allocatedFeesAfter, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr.String())
 		require.NoError(t, err)
 		require.True(t, allocatedFeesAfter.IsZero())
 
@@ -923,7 +923,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify allocated fees
-		allocatedFees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		allocatedFees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr.String())
 		require.NoError(t, err)
 		require.Equal(t, expectedStake, allocatedFees.AmountOf("stake"))
 		require.Equal(t, expectedAtom, allocatedFees.AmountOf("atom"))
@@ -945,7 +945,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.Equal(t, int64(1), atomBalance.Amount.Int64()) // 1.75 -> 1
 
 		// Verify decimal remainders are preserved
-		allocatedFeesAfter, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		allocatedFeesAfter, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr.String())
 		require.NoError(t, err)
 
 		stakeRemainder := expectedStake.Sub(math.LegacyNewDec(2)) // 0.5
@@ -967,7 +967,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify remainders accumulate with new fees
-		allocatedFeesSecond, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		allocatedFeesSecond, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr.String())
 		require.NoError(t, err)
 
 		expectedStakeTotal := stakeRemainder.Add(expectedStake) // 0.5 + 2.5 = 3.0
@@ -993,7 +993,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.Equal(t, int64(3), atomBalanceSecond.Amount.Int64()) // 1 + 2
 
 		// Verify new remainders
-		allocatedFeesFinal, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		allocatedFeesFinal, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr.String())
 		require.NoError(t, err)
 
 		// Stake: 3.0 - 3 = 0.0 (exactly zero, no remainder)
@@ -1006,13 +1006,14 @@ func TestWithdrawValidatorFees(t *testing.T) {
 }
 
 func TestGetValidatorAllocatedFees(t *testing.T) {
-	t.Run("get fees for non-existent validator returns error", func(t *testing.T) {
+	t.Run("get fees for non-existent validator returns empty", func(t *testing.T) {
 		f := setupTest(t)
 
-		// Try to get fees for non-existent validator
+		// Get fees for non-existent validator - should return empty, not error
 		nonExistentConsAddr := sdk.ConsAddress("nonexistent")
-		_, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, nonExistentConsAddr)
-		require.Error(t, err)
+		fees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, nonExistentConsAddr.String())
+		require.NoError(t, err)
+		require.True(t, fees.IsZero())
 	})
 
 	t.Run("get fees for existing validator with no fees", func(t *testing.T) {
@@ -1022,7 +1023,7 @@ func TestGetValidatorAllocatedFees(t *testing.T) {
 		_, consAddr := createValidator(t, f, 1, 100)
 
 		// Get fees - should be zero
-		fees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		fees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr.String())
 		require.NoError(t, err)
 		require.True(t, fees.IsZero())
 	})
@@ -1043,7 +1044,7 @@ func TestGetValidatorAllocatedFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Get fees - should be 100
-		fees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		fees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr.String())
 		require.NoError(t, err)
 		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, fees)
 	})

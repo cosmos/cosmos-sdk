@@ -30,63 +30,11 @@ import (
 	sync "sync"
 )
 
-var _ protoreflect.List = (*_Validator_4_list)(nil)
-
-type _Validator_4_list struct {
-	list *[]*v1beta1.DecCoin
-}
-
-func (x *_Validator_4_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_Validator_4_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_Validator_4_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.DecCoin)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_Validator_4_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.DecCoin)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_Validator_4_list) AppendMutable() protoreflect.Value {
-	v := new(v1beta1.DecCoin)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_Validator_4_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_Validator_4_list) NewElement() protoreflect.Value {
-	v := new(v1beta1.DecCoin)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_Validator_4_list) IsValid() bool {
-	return x.list != nil
-}
-
 var (
-	md_Validator                protoreflect.MessageDescriptor
-	fd_Validator_pub_key        protoreflect.FieldDescriptor
-	fd_Validator_power          protoreflect.FieldDescriptor
-	fd_Validator_metadata       protoreflect.FieldDescriptor
-	fd_Validator_allocated_fees protoreflect.FieldDescriptor
+	md_Validator          protoreflect.MessageDescriptor
+	fd_Validator_pub_key  protoreflect.FieldDescriptor
+	fd_Validator_power    protoreflect.FieldDescriptor
+	fd_Validator_metadata protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -95,7 +43,6 @@ func init() {
 	fd_Validator_pub_key = md_Validator.Fields().ByName("pub_key")
 	fd_Validator_power = md_Validator.Fields().ByName("power")
 	fd_Validator_metadata = md_Validator.Fields().ByName("metadata")
-	fd_Validator_allocated_fees = md_Validator.Fields().ByName("allocated_fees")
 }
 
 var _ protoreflect.Message = (*fastReflection_Validator)(nil)
@@ -181,12 +128,6 @@ func (x *fastReflection_Validator) Range(f func(protoreflect.FieldDescriptor, pr
 			return
 		}
 	}
-	if len(x.AllocatedFees) != 0 {
-		value := protoreflect.ValueOfList(&_Validator_4_list{list: &x.AllocatedFees})
-		if !f(fd_Validator_allocated_fees, value) {
-			return
-		}
-	}
 }
 
 // Has reports whether a field is populated.
@@ -208,8 +149,6 @@ func (x *fastReflection_Validator) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.Power != int64(0)
 	case "cosmos.poa.v1.Validator.metadata":
 		return x.Metadata != nil
-	case "cosmos.poa.v1.Validator.allocated_fees":
-		return len(x.AllocatedFees) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.Validator"))
@@ -232,8 +171,6 @@ func (x *fastReflection_Validator) Clear(fd protoreflect.FieldDescriptor) {
 		x.Power = int64(0)
 	case "cosmos.poa.v1.Validator.metadata":
 		x.Metadata = nil
-	case "cosmos.poa.v1.Validator.allocated_fees":
-		x.AllocatedFees = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.Validator"))
@@ -259,12 +196,6 @@ func (x *fastReflection_Validator) Get(descriptor protoreflect.FieldDescriptor) 
 	case "cosmos.poa.v1.Validator.metadata":
 		value := x.Metadata
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.poa.v1.Validator.allocated_fees":
-		if len(x.AllocatedFees) == 0 {
-			return protoreflect.ValueOfList(&_Validator_4_list{})
-		}
-		listValue := &_Validator_4_list{list: &x.AllocatedFees}
-		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.Validator"))
@@ -291,10 +222,6 @@ func (x *fastReflection_Validator) Set(fd protoreflect.FieldDescriptor, value pr
 		x.Power = value.Int()
 	case "cosmos.poa.v1.Validator.metadata":
 		x.Metadata = value.Message().Interface().(*ValidatorMetadata)
-	case "cosmos.poa.v1.Validator.allocated_fees":
-		lv := value.List()
-		clv := lv.(*_Validator_4_list)
-		x.AllocatedFees = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.Validator"))
@@ -325,12 +252,6 @@ func (x *fastReflection_Validator) Mutable(fd protoreflect.FieldDescriptor) prot
 			x.Metadata = new(ValidatorMetadata)
 		}
 		return protoreflect.ValueOfMessage(x.Metadata.ProtoReflect())
-	case "cosmos.poa.v1.Validator.allocated_fees":
-		if x.AllocatedFees == nil {
-			x.AllocatedFees = []*v1beta1.DecCoin{}
-		}
-		value := &_Validator_4_list{list: &x.AllocatedFees}
-		return protoreflect.ValueOfList(value)
 	case "cosmos.poa.v1.Validator.power":
 		panic(fmt.Errorf("field power of message cosmos.poa.v1.Validator is not mutable"))
 	default:
@@ -354,9 +275,6 @@ func (x *fastReflection_Validator) NewField(fd protoreflect.FieldDescriptor) pro
 	case "cosmos.poa.v1.Validator.metadata":
 		m := new(ValidatorMetadata)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.poa.v1.Validator.allocated_fees":
-		list := []*v1beta1.DecCoin{}
-		return protoreflect.ValueOfList(&_Validator_4_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.Validator"))
@@ -437,12 +355,6 @@ func (x *fastReflection_Validator) ProtoMethods() *protoiface.Methods {
 			l = options.Size(x.Metadata)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if len(x.AllocatedFees) > 0 {
-			for _, e := range x.AllocatedFees {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -471,22 +383,6 @@ func (x *fastReflection_Validator) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.AllocatedFees) > 0 {
-			for iNdEx := len(x.AllocatedFees) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.AllocatedFees[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0x22
-			}
 		}
 		if x.Metadata != nil {
 			encoded, err := options.Marshal(x.Metadata)
@@ -658,40 +554,6 @@ func (x *fastReflection_Validator) ProtoMethods() *protoiface.Methods {
 					x.Metadata = &ValidatorMetadata{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Metadata); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 4:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AllocatedFees", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.AllocatedFees = append(x.AllocatedFees, &v1beta1.DecCoin{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.AllocatedFees[len(x.AllocatedFees)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -2192,6 +2054,564 @@ func (x *fastReflection_ValidatorFees) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var _ protoreflect.List = (*_GenesisAllocatedFees_2_list)(nil)
+
+type _GenesisAllocatedFees_2_list struct {
+	list *[]*v1beta1.DecCoin
+}
+
+func (x *_GenesisAllocatedFees_2_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisAllocatedFees_2_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisAllocatedFees_2_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.DecCoin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisAllocatedFees_2_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.DecCoin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisAllocatedFees_2_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.DecCoin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisAllocatedFees_2_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisAllocatedFees_2_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.DecCoin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisAllocatedFees_2_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_GenesisAllocatedFees                   protoreflect.MessageDescriptor
+	fd_GenesisAllocatedFees_consensus_address protoreflect.FieldDescriptor
+	fd_GenesisAllocatedFees_fees              protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_poa_v1_poa_proto_init()
+	md_GenesisAllocatedFees = File_cosmos_poa_v1_poa_proto.Messages().ByName("GenesisAllocatedFees")
+	fd_GenesisAllocatedFees_consensus_address = md_GenesisAllocatedFees.Fields().ByName("consensus_address")
+	fd_GenesisAllocatedFees_fees = md_GenesisAllocatedFees.Fields().ByName("fees")
+}
+
+var _ protoreflect.Message = (*fastReflection_GenesisAllocatedFees)(nil)
+
+type fastReflection_GenesisAllocatedFees GenesisAllocatedFees
+
+func (x *GenesisAllocatedFees) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_GenesisAllocatedFees)(x)
+}
+
+func (x *GenesisAllocatedFees) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_poa_v1_poa_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_GenesisAllocatedFees_messageType fastReflection_GenesisAllocatedFees_messageType
+var _ protoreflect.MessageType = fastReflection_GenesisAllocatedFees_messageType{}
+
+type fastReflection_GenesisAllocatedFees_messageType struct{}
+
+func (x fastReflection_GenesisAllocatedFees_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_GenesisAllocatedFees)(nil)
+}
+func (x fastReflection_GenesisAllocatedFees_messageType) New() protoreflect.Message {
+	return new(fastReflection_GenesisAllocatedFees)
+}
+func (x fastReflection_GenesisAllocatedFees_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_GenesisAllocatedFees
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_GenesisAllocatedFees) Descriptor() protoreflect.MessageDescriptor {
+	return md_GenesisAllocatedFees
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_GenesisAllocatedFees) Type() protoreflect.MessageType {
+	return _fastReflection_GenesisAllocatedFees_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_GenesisAllocatedFees) New() protoreflect.Message {
+	return new(fastReflection_GenesisAllocatedFees)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_GenesisAllocatedFees) Interface() protoreflect.ProtoMessage {
+	return (*GenesisAllocatedFees)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_GenesisAllocatedFees) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.ConsensusAddress != "" {
+		value := protoreflect.ValueOfString(x.ConsensusAddress)
+		if !f(fd_GenesisAllocatedFees_consensus_address, value) {
+			return
+		}
+	}
+	if len(x.Fees) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisAllocatedFees_2_list{list: &x.Fees})
+		if !f(fd_GenesisAllocatedFees_fees, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_GenesisAllocatedFees) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.poa.v1.GenesisAllocatedFees.consensus_address":
+		return x.ConsensusAddress != ""
+	case "cosmos.poa.v1.GenesisAllocatedFees.fees":
+		return len(x.Fees) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.GenesisAllocatedFees"))
+		}
+		panic(fmt.Errorf("message cosmos.poa.v1.GenesisAllocatedFees does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_GenesisAllocatedFees) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.poa.v1.GenesisAllocatedFees.consensus_address":
+		x.ConsensusAddress = ""
+	case "cosmos.poa.v1.GenesisAllocatedFees.fees":
+		x.Fees = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.GenesisAllocatedFees"))
+		}
+		panic(fmt.Errorf("message cosmos.poa.v1.GenesisAllocatedFees does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_GenesisAllocatedFees) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.poa.v1.GenesisAllocatedFees.consensus_address":
+		value := x.ConsensusAddress
+		return protoreflect.ValueOfString(value)
+	case "cosmos.poa.v1.GenesisAllocatedFees.fees":
+		if len(x.Fees) == 0 {
+			return protoreflect.ValueOfList(&_GenesisAllocatedFees_2_list{})
+		}
+		listValue := &_GenesisAllocatedFees_2_list{list: &x.Fees}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.GenesisAllocatedFees"))
+		}
+		panic(fmt.Errorf("message cosmos.poa.v1.GenesisAllocatedFees does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_GenesisAllocatedFees) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.poa.v1.GenesisAllocatedFees.consensus_address":
+		x.ConsensusAddress = value.Interface().(string)
+	case "cosmos.poa.v1.GenesisAllocatedFees.fees":
+		lv := value.List()
+		clv := lv.(*_GenesisAllocatedFees_2_list)
+		x.Fees = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.GenesisAllocatedFees"))
+		}
+		panic(fmt.Errorf("message cosmos.poa.v1.GenesisAllocatedFees does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_GenesisAllocatedFees) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.poa.v1.GenesisAllocatedFees.fees":
+		if x.Fees == nil {
+			x.Fees = []*v1beta1.DecCoin{}
+		}
+		value := &_GenesisAllocatedFees_2_list{list: &x.Fees}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.poa.v1.GenesisAllocatedFees.consensus_address":
+		panic(fmt.Errorf("field consensus_address of message cosmos.poa.v1.GenesisAllocatedFees is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.GenesisAllocatedFees"))
+		}
+		panic(fmt.Errorf("message cosmos.poa.v1.GenesisAllocatedFees does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_GenesisAllocatedFees) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.poa.v1.GenesisAllocatedFees.consensus_address":
+		return protoreflect.ValueOfString("")
+	case "cosmos.poa.v1.GenesisAllocatedFees.fees":
+		list := []*v1beta1.DecCoin{}
+		return protoreflect.ValueOfList(&_GenesisAllocatedFees_2_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.GenesisAllocatedFees"))
+		}
+		panic(fmt.Errorf("message cosmos.poa.v1.GenesisAllocatedFees does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_GenesisAllocatedFees) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.poa.v1.GenesisAllocatedFees", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_GenesisAllocatedFees) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_GenesisAllocatedFees) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_GenesisAllocatedFees) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_GenesisAllocatedFees) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*GenesisAllocatedFees)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.ConsensusAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if len(x.Fees) > 0 {
+			for _, e := range x.Fees {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*GenesisAllocatedFees)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Fees) > 0 {
+			for iNdEx := len(x.Fees) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Fees[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x12
+			}
+		}
+		if len(x.ConsensusAddress) > 0 {
+			i -= len(x.ConsensusAddress)
+			copy(dAtA[i:], x.ConsensusAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ConsensusAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*GenesisAllocatedFees)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: GenesisAllocatedFees: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: GenesisAllocatedFees: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ConsensusAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ConsensusAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Fees", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Fees = append(x.Fees, &v1beta1.DecCoin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Fees[len(x.Fees)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 var _ protoreflect.List = (*_GenesisState_2_list)(nil)
 
 type _GenesisState_2_list struct {
@@ -2243,10 +2663,62 @@ func (x *_GenesisState_2_list) IsValid() bool {
 	return x.list != nil
 }
 
+var _ protoreflect.List = (*_GenesisState_3_list)(nil)
+
+type _GenesisState_3_list struct {
+	list *[]*GenesisAllocatedFees
+}
+
+func (x *_GenesisState_3_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_3_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_3_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*GenesisAllocatedFees)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_3_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*GenesisAllocatedFees)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_3_list) AppendMutable() protoreflect.Value {
+	v := new(GenesisAllocatedFees)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_3_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_3_list) NewElement() protoreflect.Value {
+	v := new(GenesisAllocatedFees)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_3_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_GenesisState            protoreflect.MessageDescriptor
-	fd_GenesisState_params     protoreflect.FieldDescriptor
-	fd_GenesisState_validators protoreflect.FieldDescriptor
+	md_GenesisState                protoreflect.MessageDescriptor
+	fd_GenesisState_params         protoreflect.FieldDescriptor
+	fd_GenesisState_validators     protoreflect.FieldDescriptor
+	fd_GenesisState_allocated_fees protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -2254,6 +2726,7 @@ func init() {
 	md_GenesisState = File_cosmos_poa_v1_poa_proto.Messages().ByName("GenesisState")
 	fd_GenesisState_params = md_GenesisState.Fields().ByName("params")
 	fd_GenesisState_validators = md_GenesisState.Fields().ByName("validators")
+	fd_GenesisState_allocated_fees = md_GenesisState.Fields().ByName("allocated_fees")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -2265,7 +2738,7 @@ func (x *GenesisState) ProtoReflect() protoreflect.Message {
 }
 
 func (x *GenesisState) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_poa_v1_poa_proto_msgTypes[4]
+	mi := &file_cosmos_poa_v1_poa_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2333,6 +2806,12 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
+	if len(x.AllocatedFees) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_3_list{list: &x.AllocatedFees})
+		if !f(fd_GenesisState_allocated_fees, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -2352,6 +2831,8 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return x.Params != nil
 	case "cosmos.poa.v1.GenesisState.validators":
 		return len(x.Validators) != 0
+	case "cosmos.poa.v1.GenesisState.allocated_fees":
+		return len(x.AllocatedFees) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.GenesisState"))
@@ -2372,6 +2853,8 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.Params = nil
 	case "cosmos.poa.v1.GenesisState.validators":
 		x.Validators = nil
+	case "cosmos.poa.v1.GenesisState.allocated_fees":
+		x.AllocatedFees = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.GenesisState"))
@@ -2396,6 +2879,12 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 			return protoreflect.ValueOfList(&_GenesisState_2_list{})
 		}
 		listValue := &_GenesisState_2_list{list: &x.Validators}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.poa.v1.GenesisState.allocated_fees":
+		if len(x.AllocatedFees) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_3_list{})
+		}
+		listValue := &_GenesisState_3_list{list: &x.AllocatedFees}
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
@@ -2423,6 +2912,10 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		lv := value.List()
 		clv := lv.(*_GenesisState_2_list)
 		x.Validators = *clv.list
+	case "cosmos.poa.v1.GenesisState.allocated_fees":
+		lv := value.List()
+		clv := lv.(*_GenesisState_3_list)
+		x.AllocatedFees = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.GenesisState"))
@@ -2454,6 +2947,12 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		}
 		value := &_GenesisState_2_list{list: &x.Validators}
 		return protoreflect.ValueOfList(value)
+	case "cosmos.poa.v1.GenesisState.allocated_fees":
+		if x.AllocatedFees == nil {
+			x.AllocatedFees = []*GenesisAllocatedFees{}
+		}
+		value := &_GenesisState_3_list{list: &x.AllocatedFees}
+		return protoreflect.ValueOfList(value)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.GenesisState"))
@@ -2473,6 +2972,9 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "cosmos.poa.v1.GenesisState.validators":
 		list := []*Validator{}
 		return protoreflect.ValueOfList(&_GenesisState_2_list{list: &list})
+	case "cosmos.poa.v1.GenesisState.allocated_fees":
+		list := []*GenesisAllocatedFees{}
+		return protoreflect.ValueOfList(&_GenesisState_3_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.poa.v1.GenesisState"))
@@ -2552,6 +3054,12 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
+		if len(x.AllocatedFees) > 0 {
+			for _, e := range x.AllocatedFees {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -2580,6 +3088,22 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.AllocatedFees) > 0 {
+			for iNdEx := len(x.AllocatedFees) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.AllocatedFees[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x1a
+			}
 		}
 		if len(x.Validators) > 0 {
 			for iNdEx := len(x.Validators) - 1; iNdEx >= 0; iNdEx-- {
@@ -2730,6 +3254,40 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AllocatedFees", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.AllocatedFees = append(x.AllocatedFees, &GenesisAllocatedFees{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.AllocatedFees[len(x.AllocatedFees)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2784,10 +3342,9 @@ type Validator struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	PubKey        *anypb.Any         `protobuf:"bytes,1,opt,name=pub_key,json=pubKey,proto3" json:"pub_key,omitempty"`
-	Power         int64              `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`
-	Metadata      *ValidatorMetadata `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
-	AllocatedFees []*v1beta1.DecCoin `protobuf:"bytes,4,rep,name=allocated_fees,json=allocatedFees,proto3" json:"allocated_fees,omitempty"`
+	PubKey   *anypb.Any         `protobuf:"bytes,1,opt,name=pub_key,json=pubKey,proto3" json:"pub_key,omitempty"`
+	Power    int64              `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`
+	Metadata *ValidatorMetadata `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
 func (x *Validator) Reset() {
@@ -2827,13 +3384,6 @@ func (x *Validator) GetPower() int64 {
 func (x *Validator) GetMetadata() *ValidatorMetadata {
 	if x != nil {
 		return x.Metadata
-	}
-	return nil
-}
-
-func (x *Validator) GetAllocatedFees() []*v1beta1.DecCoin {
-	if x != nil {
-		return x.AllocatedFees
 	}
 	return nil
 }
@@ -2961,19 +3511,64 @@ func (x *ValidatorFees) GetFees() []*v1beta1.DecCoin {
 	return nil
 }
 
+// GenesisAllocatedFees stores per-validator allocated fees for genesis export/import.
+type GenesisAllocatedFees struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ConsensusAddress string             `protobuf:"bytes,1,opt,name=consensus_address,json=consensusAddress,proto3" json:"consensus_address,omitempty"`
+	Fees             []*v1beta1.DecCoin `protobuf:"bytes,2,rep,name=fees,proto3" json:"fees,omitempty"`
+}
+
+func (x *GenesisAllocatedFees) Reset() {
+	*x = GenesisAllocatedFees{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_poa_v1_poa_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GenesisAllocatedFees) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GenesisAllocatedFees) ProtoMessage() {}
+
+// Deprecated: Use GenesisAllocatedFees.ProtoReflect.Descriptor instead.
+func (*GenesisAllocatedFees) Descriptor() ([]byte, []int) {
+	return file_cosmos_poa_v1_poa_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GenesisAllocatedFees) GetConsensusAddress() string {
+	if x != nil {
+		return x.ConsensusAddress
+	}
+	return ""
+}
+
+func (x *GenesisAllocatedFees) GetFees() []*v1beta1.DecCoin {
+	if x != nil {
+		return x.Fees
+	}
+	return nil
+}
+
 type GenesisState struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Params     *Params      `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
-	Validators []*Validator `protobuf:"bytes,2,rep,name=validators,proto3" json:"validators,omitempty"`
+	Params        *Params                 `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
+	Validators    []*Validator            `protobuf:"bytes,2,rep,name=validators,proto3" json:"validators,omitempty"`
+	AllocatedFees []*GenesisAllocatedFees `protobuf:"bytes,3,rep,name=allocated_fees,json=allocatedFees,proto3" json:"allocated_fees,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
 	*x = GenesisState{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_poa_v1_poa_proto_msgTypes[4]
+		mi := &file_cosmos_poa_v1_poa_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2987,7 +3582,7 @@ func (*GenesisState) ProtoMessage() {}
 
 // Deprecated: Use GenesisState.ProtoReflect.Descriptor instead.
 func (*GenesisState) Descriptor() ([]byte, []int) {
-	return file_cosmos_poa_v1_poa_proto_rawDescGZIP(), []int{4}
+	return file_cosmos_poa_v1_poa_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GenesisState) GetParams() *Params {
@@ -3004,6 +3599,13 @@ func (x *GenesisState) GetValidators() []*Validator {
 	return nil
 }
 
+func (x *GenesisState) GetAllocatedFees() []*GenesisAllocatedFees {
+	if x != nil {
+		return x.AllocatedFees
+	}
+	return nil
+}
+
 var File_cosmos_poa_v1_poa_proto protoreflect.FileDescriptor
 
 var file_cosmos_poa_v1_poa_proto_rawDesc = []byte{
@@ -3015,7 +3617,7 @@ var file_cosmos_poa_v1_poa_proto_rawDesc = []byte{
 	0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67,
 	0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x1a, 0x19, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
-	0x75, 0x66, 0x2f, 0x61, 0x6e, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x8d, 0x02, 0x0a,
+	0x75, 0x66, 0x2f, 0x61, 0x6e, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x94, 0x01, 0x0a,
 	0x09, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x2d, 0x0a, 0x07, 0x70, 0x75,
 	0x62, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f,
 	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e,
@@ -3024,52 +3626,61 @@ var file_cosmos_poa_v1_poa_proto_rawDesc = []byte{
 	0x3c, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28,
 	0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x6f, 0x61, 0x2e, 0x76,
 	0x31, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x4d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x7d, 0x0a,
-	0x0e, 0x61, 0x6c, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x66, 0x65, 0x65, 0x73, 0x18,
-	0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
-	0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x43,
-	0x6f, 0x69, 0x6e, 0x42, 0x38, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x2b, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e,
-	0x44, 0x65, 0x63, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x0d, 0x61,
-	0x6c, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x65, 0x64, 0x46, 0x65, 0x65, 0x73, 0x22, 0x7a, 0x0a, 0x11,
-	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x6f, 0x6e, 0x69, 0x6b, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x07, 0x6d, 0x6f, 0x6e, 0x69, 0x6b, 0x65, 0x72, 0x12, 0x20, 0x0a, 0x0b, 0x64,
-	0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x29, 0x0a,
-	0x10, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f,
-	0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x1e, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x7b, 0x0a, 0x0d, 0x56, 0x61, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x6f, 0x72, 0x46, 0x65, 0x65, 0x73, 0x12, 0x6a, 0x0a, 0x04, 0x66, 0x65, 0x65,
-	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x44, 0x65,
-	0x63, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x38, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x2b, 0x67,
-	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65,
-	0x73, 0x2e, 0x44, 0x65, 0x63, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52,
-	0x04, 0x66, 0x65, 0x65, 0x73, 0x22, 0x83, 0x01, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69,
-	0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x33, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x70, 0x6f, 0x61, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x04, 0xc8,
-	0xde, 0x1f, 0x00, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x3e, 0x0a, 0x0a, 0x76,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32,
-	0x18, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x6f, 0x61, 0x2e, 0x76, 0x31, 0x2e,
-	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52,
-	0x0a, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x42, 0xa9, 0x01, 0x0a, 0x11,
-	0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x6f, 0x61, 0x2e, 0x76,
-	0x31, 0x42, 0x08, 0x50, 0x6f, 0x61, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x34, 0x67,
-	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2f, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x70, 0x72, 0x69, 0x73, 0x65, 0x2f, 0x70, 0x6f, 0x61, 0x2f,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x6f, 0x61, 0x2f, 0x76, 0x31, 0x3b, 0x70, 0x6f,
-	0x61, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x50, 0x58, 0xaa, 0x02, 0x0d, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x50, 0x6f, 0x61, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x0d, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x5c, 0x50, 0x6f, 0x61, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x19, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x5c, 0x50, 0x6f, 0x61, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a,
-	0x50, 0x6f, 0x61, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x61, 0x74, 0x61, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x4a, 0x04, 0x08,
+	0x04, 0x10, 0x05, 0x22, 0x7a, 0x0a, 0x11, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x6f, 0x6e, 0x69,
+	0x6b, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x6f, 0x6e, 0x69, 0x6b,
+	0x65, 0x72, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f,
+	0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70,
+	0x74, 0x69, 0x6f, 0x6e, 0x12, 0x29, 0x0a, 0x10, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72,
+	0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f,
+	0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22,
+	0x1e, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x64, 0x6d,
+	0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22,
+	0x7b, 0x0a, 0x0d, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x46, 0x65, 0x65, 0x73,
+	0x12, 0x6a, 0x0a, 0x04, 0x66, 0x65, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1c,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x38, 0xc8, 0xde,
+	0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73,
+	0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x43, 0x6f, 0x69, 0x6e,
+	0x73, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x04, 0x66, 0x65, 0x65, 0x73, 0x22, 0xaf, 0x01, 0x0a,
+	0x14, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x41, 0x6c, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x65,
+	0x64, 0x46, 0x65, 0x65, 0x73, 0x12, 0x2b, 0x0a, 0x11, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73,
+	0x75, 0x73, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x10, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x12, 0x6a, 0x0a, 0x04, 0x66, 0x65, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x38,
+	0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
+	0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x43, 0x6f,
+	0x69, 0x6e, 0x73, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x04, 0x66, 0x65, 0x65, 0x73, 0x22, 0xd5,
+	0x01, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12,
+	0x33, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x15, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x6f, 0x61, 0x2e, 0x76, 0x31, 0x2e,
+	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x70, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x12, 0x3e, 0x0a, 0x0a, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x70, 0x6f, 0x61, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
+	0x6f, 0x72, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0a, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x6f, 0x72, 0x73, 0x12, 0x50, 0x0a, 0x0e, 0x61, 0x6c, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x65,
+	0x64, 0x5f, 0x66, 0x65, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x6f, 0x61, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x6e,
+	0x65, 0x73, 0x69, 0x73, 0x41, 0x6c, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x65, 0x64, 0x46, 0x65, 0x65,
+	0x73, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0d, 0x61, 0x6c, 0x6c, 0x6f, 0x63, 0x61, 0x74,
+	0x65, 0x64, 0x46, 0x65, 0x65, 0x73, 0x42, 0xa9, 0x01, 0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x6f, 0x61, 0x2e, 0x76, 0x31, 0x42, 0x08, 0x50, 0x6f,
+	0x61, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x34, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
+	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x65, 0x6e, 0x74, 0x65,
+	0x72, 0x70, 0x72, 0x69, 0x73, 0x65, 0x2f, 0x70, 0x6f, 0x61, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2f, 0x70, 0x6f, 0x61, 0x2f, 0x76, 0x31, 0x3b, 0x70, 0x6f, 0x61, 0x76, 0x31, 0xa2, 0x02,
+	0x03, 0x43, 0x50, 0x58, 0xaa, 0x02, 0x0d, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x50, 0x6f,
+	0x61, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x0d, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x6f,
+	0x61, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x19, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x6f,
+	0x61, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0xea, 0x02, 0x0f, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x50, 0x6f, 0x61, 0x3a, 0x3a,
+	0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3084,28 +3695,30 @@ func file_cosmos_poa_v1_poa_proto_rawDescGZIP() []byte {
 	return file_cosmos_poa_v1_poa_proto_rawDescData
 }
 
-var file_cosmos_poa_v1_poa_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_cosmos_poa_v1_poa_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_cosmos_poa_v1_poa_proto_goTypes = []interface{}{
-	(*Validator)(nil),         // 0: cosmos.poa.v1.Validator
-	(*ValidatorMetadata)(nil), // 1: cosmos.poa.v1.ValidatorMetadata
-	(*Params)(nil),            // 2: cosmos.poa.v1.Params
-	(*ValidatorFees)(nil),     // 3: cosmos.poa.v1.ValidatorFees
-	(*GenesisState)(nil),      // 4: cosmos.poa.v1.GenesisState
-	(*anypb.Any)(nil),         // 5: google.protobuf.Any
-	(*v1beta1.DecCoin)(nil),   // 6: cosmos.base.v1beta1.DecCoin
+	(*Validator)(nil),            // 0: cosmos.poa.v1.Validator
+	(*ValidatorMetadata)(nil),    // 1: cosmos.poa.v1.ValidatorMetadata
+	(*Params)(nil),               // 2: cosmos.poa.v1.Params
+	(*ValidatorFees)(nil),        // 3: cosmos.poa.v1.ValidatorFees
+	(*GenesisAllocatedFees)(nil), // 4: cosmos.poa.v1.GenesisAllocatedFees
+	(*GenesisState)(nil),         // 5: cosmos.poa.v1.GenesisState
+	(*anypb.Any)(nil),            // 6: google.protobuf.Any
+	(*v1beta1.DecCoin)(nil),      // 7: cosmos.base.v1beta1.DecCoin
 }
 var file_cosmos_poa_v1_poa_proto_depIdxs = []int32{
-	5, // 0: cosmos.poa.v1.Validator.pub_key:type_name -> google.protobuf.Any
+	6, // 0: cosmos.poa.v1.Validator.pub_key:type_name -> google.protobuf.Any
 	1, // 1: cosmos.poa.v1.Validator.metadata:type_name -> cosmos.poa.v1.ValidatorMetadata
-	6, // 2: cosmos.poa.v1.Validator.allocated_fees:type_name -> cosmos.base.v1beta1.DecCoin
-	6, // 3: cosmos.poa.v1.ValidatorFees.fees:type_name -> cosmos.base.v1beta1.DecCoin
+	7, // 2: cosmos.poa.v1.ValidatorFees.fees:type_name -> cosmos.base.v1beta1.DecCoin
+	7, // 3: cosmos.poa.v1.GenesisAllocatedFees.fees:type_name -> cosmos.base.v1beta1.DecCoin
 	2, // 4: cosmos.poa.v1.GenesisState.params:type_name -> cosmos.poa.v1.Params
 	0, // 5: cosmos.poa.v1.GenesisState.validators:type_name -> cosmos.poa.v1.Validator
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	4, // 6: cosmos.poa.v1.GenesisState.allocated_fees:type_name -> cosmos.poa.v1.GenesisAllocatedFees
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_poa_v1_poa_proto_init() }
@@ -3163,6 +3776,18 @@ func file_cosmos_poa_v1_poa_proto_init() {
 			}
 		}
 		file_cosmos_poa_v1_poa_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GenesisAllocatedFees); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_poa_v1_poa_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GenesisState); i {
 			case 0:
 				return &v.state
@@ -3181,7 +3806,7 @@ func file_cosmos_poa_v1_poa_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_poa_v1_poa_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

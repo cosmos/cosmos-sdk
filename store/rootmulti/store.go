@@ -158,9 +158,9 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db db
 	rs.keysByName[key.Name()] = key
 }
 
-// GetCommitStore returns a mounted CommitStore for a given StoreKey. If the
+// getCommitStore returns a mounted CommitStore for a given StoreKey. If the
 // store is wrapped in an inter-block cache, it will be unwrapped before returning.
-func (rs *Store) GetCommitStore(key types.StoreKey) types.CommitStore {
+func (rs *Store) getCommitStore(key types.StoreKey) types.CommitStore {
 	// If the Store has an inter-block cache, first attempt to lookup and unwrap
 	// the underlying CommitKVStore by StoreKey. If it does not exist, fallback to
 	// the main mapping of CommitKVStores.
@@ -173,10 +173,10 @@ func (rs *Store) GetCommitStore(key types.StoreKey) types.CommitStore {
 	return rs.stores[key]
 }
 
-// GetCommitKVStore returns a mounted CommitKVStore for a given StoreKey. If the
+// getCommitKVStore returns a mounted CommitKVStore for a given StoreKey. If the
 // store is wrapped in an inter-block cache, it will be unwrapped before returning.
-func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
-	store, ok := rs.GetCommitStore(key).(types.CommitKVStore)
+func (rs *Store) getCommitKVStore(key types.StoreKey) types.CommitKVStore {
+	store, ok := rs.getCommitStore(key).(types.CommitKVStore)
 	if !ok {
 		panic(fmt.Sprintf("store with key %v is not CommitKVStore", key))
 	}
@@ -563,7 +563,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 		case types.StoreTypeIAVL:
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
-			store = rs.GetCommitKVStore(key)
+			store = rs.getCommitKVStore(key)
 
 			// Attempt to lazy-load an already saved IAVL store version. If the
 			// version does not exist or is pruned, an error should be returned.
@@ -622,7 +622,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 // TODO: This isn't used directly upstream. Consider returning the Store as-is
 // instead of unwrapping.
 func (rs *Store) GetStore(key types.StoreKey) types.Store {
-	store := rs.GetCommitStore(key)
+	store := rs.getCommitStore(key)
 	if store == nil {
 		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
 	}
@@ -690,7 +690,7 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 			continue
 		}
 
-		store = rs.GetCommitKVStore(key)
+		store = rs.getCommitKVStore(key)
 
 		err := store.(*iavl.Store).DeleteVersionsTo(pruningHeight)
 		if err == nil {
@@ -733,7 +733,7 @@ func (rs *Store) GetStoreByName(name string) types.Store {
 		return nil
 	}
 
-	return rs.GetCommitStore(key)
+	return rs.getCommitStore(key)
 }
 
 // Query calls substore.Query with the same `req` where `req.Path` is
@@ -801,7 +801,7 @@ func (rs *Store) SetInitialVersion(version int64) error {
 		if store.GetStoreType() == types.StoreTypeIAVL {
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
-			store = rs.GetCommitKVStore(key)
+			store = rs.getCommitKVStore(key)
 			store.(types.StoreWithInitialVersion).SetInitialVersion(version)
 		}
 	}
@@ -847,7 +847,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	stores := []namedStore{}
 	keys := keysFromStoreKeyMap(rs.stores)
 	for _, key := range keys {
-		switch store := rs.GetCommitStore(key).(type) {
+		switch store := rs.getCommitStore(key).(type) {
 		case *iavl.Store:
 			stores = append(stores, namedStore{name: key.Name(), Store: store})
 		case *transient.Store, *mem.Store, *transient.ObjStore:
@@ -1097,7 +1097,7 @@ func (rs *Store) RollbackToVersion(target int64) error {
 		if store.GetStoreType() == types.StoreTypeIAVL {
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
-			store = rs.GetCommitKVStore(key)
+			store = rs.getCommitKVStore(key)
 			err := store.(*iavl.Store).LoadVersionForOverwriting(target)
 			if err != nil {
 				return err

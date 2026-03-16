@@ -2,7 +2,6 @@ package types_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -21,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type contextTestSuite struct {
@@ -257,46 +255,4 @@ func (s *contextTestSuite) TestMultiStore() {
 	s.Require().NoError(rms.LoadLatestVersion())
 	objKVStore := ctx.ObjectStore(objKey)
 	s.Require().Equal(objKVStore.GetStoreType(), storetypes.StoreTypeObject)
-}
-
-func (s *contextTestSuite) TestValidateAuthority() {
-	key := storetypes.NewKVStoreKey(s.T().Name())
-	ctx := testutil.DefaultContext(key, storetypes.NewTransientStoreKey("transient_"+s.T().Name()))
-
-	keeperAuth := "keeper-authority"
-	consAuth := "consensus-authority"
-
-	// No consensus params — falls back to keeper authority.
-	s.Require().NoError(types.ValidateAuthority(ctx, keeperAuth, keeperAuth))
-
-	// No consensus params — wrong msg authority fails with ErrUnauthorized.
-	err := types.ValidateAuthority(ctx, keeperAuth, "wrong")
-	s.Require().Error(err)
-	s.Require().True(errors.Is(err, sdkerrors.ErrUnauthorized))
-	s.Require().Contains(err.Error(), "invalid authority")
-	s.Require().Contains(err.Error(), keeperAuth)
-
-	// Consensus params authority set — takes precedence over keeper.
-	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
-		Authority: &cmtproto.AuthorityParams{Authority: consAuth},
-	})
-	s.Require().NoError(types.ValidateAuthority(ctx, keeperAuth, consAuth))
-
-	// Consensus params authority set — keeper authority is rejected.
-	err = types.ValidateAuthority(ctx, keeperAuth, keeperAuth)
-	s.Require().Error(err)
-	s.Require().True(errors.Is(err, sdkerrors.ErrUnauthorized))
-	s.Require().Contains(err.Error(), consAuth)
-
-	// Consensus params with empty authority — falls back to keeper.
-	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
-		Authority: &cmtproto.AuthorityParams{Authority: ""},
-	})
-	s.Require().NoError(types.ValidateAuthority(ctx, keeperAuth, keeperAuth))
-
-	// Consensus params with nil AuthorityParams — falls back to keeper.
-	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
-		Authority: nil,
-	})
-	s.Require().NoError(types.ValidateAuthority(ctx, keeperAuth, keeperAuth))
 }

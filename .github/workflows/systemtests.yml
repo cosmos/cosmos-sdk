@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - main
-      - feat/krakatoa
 
 permissions:
   contents: read
@@ -54,7 +53,7 @@ jobs:
             !changelog/**
             !enterprise/**
 
-  test-system:
+  test-sdk-system:
     needs: setup
     if: needs.setup.outputs.git_diff
     runs-on: depot-ubuntu-22.04-4
@@ -70,8 +69,8 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
-      - name: Run system tests
-        run: make test-system-sdk
+      - name: Run SDK system tests
+        run: make test-sdk-system
 
       - name: Upload system test logs if failed
         if: failure()

@@ -45,12 +45,10 @@ func applyTextReplacements(filePath string, replacements []TextReplacement) (boo
 	original := string(content)
 	result := original
 
-	baseName := filepath.Base(filePath)
 	for _, r := range replacements {
-		if r.FileMatch != "" && r.FileMatch != baseName {
+		if r.FileMatch != "" && !strings.HasSuffix(filepath.ToSlash(filePath), "/"+r.FileMatch) {
 			continue
 		}
-		result = strings.ReplaceAll(result, r.Old, r.New)
 	}
 
 	if result != original {

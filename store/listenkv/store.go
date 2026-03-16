@@ -3,7 +3,7 @@ package listenkv
 import (
 	"io"
 
-	"cosmossdk.io/store/legacy/cachekv"
+	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/types"
 )
 

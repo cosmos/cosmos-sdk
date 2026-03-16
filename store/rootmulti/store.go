@@ -557,10 +557,6 @@ func (c *commitFinalizer) StartFinalize() (types.CommitID, error) {
 
 // doStartFinalize performs the finalization start logic. Caller must hold c.mu.
 func (c *commitFinalizer) doStartFinalize() (types.CommitID, error) {
-	if err := c.ctx.Err(); err != nil {
-		return types.CommitID{}, err
-	}
-
 	switch c.state {
 	case commitPrepared, commitFinalized:
 		// already done
@@ -569,6 +565,11 @@ func (c *commitFinalizer) doStartFinalize() (types.CommitID, error) {
 		return types.CommitID{}, errors.New("cannot finalize after rollback")
 	case commitPending:
 		// compute the hash work now
+	}
+
+	if err := c.ctx.Err(); err != nil {
+		c.state = commitRolledBack
+		return types.CommitID{}, fmt.Errorf("rolled back: %w", err)
 	}
 
 	c.cacheStore.Write()

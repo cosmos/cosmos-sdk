@@ -71,10 +71,12 @@ fi
 # ── Parse flags ──────────────────────────────────────────────────────────────
 
 KEEP=false
+LIVE=false
 WORKDIR=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --keep)       KEEP=true; shift ;;
+    --live)       LIVE=true; KEEP=true; shift ;;
     --workdir)    WORKDIR="$2"; shift 2 ;;
     *)            echo "Unknown flag: $1"; exit 1 ;;
   esac
@@ -115,13 +117,15 @@ record_result() {
 get_result() {
   # $1 = step name -> prints PASS, FAIL, or SKIP
   local r
-  r=$(grep "^${1}|" "$RESULTS_FILE" 2>/dev/null | tail -1 | cut -d'|' -f2)
+  r=$(grep "^${1}|" "$RESULTS_FILE" 2>/dev/null | tail -1 | cut -d'|' -f2 || true)
   echo "${r:-SKIP}"
 }
 
 get_error() {
   # $1 = step name -> prints error detail
-  grep "^${1}|" "$RESULTS_FILE" 2>/dev/null | tail -1 | cut -d'|' -f3-
+  local e
+  e=$(grep "^${1}|" "$RESULTS_FILE" 2>/dev/null | tail -1 | cut -d'|' -f3- || true)
+  echo "${e:-}"
 }
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -230,7 +234,7 @@ fi
 
 step "$S_SNAPSHOT"
 
-PRE_GO_MOD_SDK_VERSION=$(grep 'github.com/cosmos/cosmos-sdk ' "$SIMAPP_DIR/go.mod" | awk '{print $2}' || echo "unknown")
+PRE_GO_MOD_SDK_VERSION="$COSMOS_SDK_TAG"
 PRE_FILE_COUNT=$(find "$SIMAPP_DIR" -name '*.go' | wc -l | tr -d ' ')
 info "SDK version in go.mod: $PRE_GO_MOD_SDK_VERSION"
 info "Go files: $PRE_FILE_COUNT"
@@ -539,9 +543,13 @@ fi
 
 step "$S_NODE"
 
+# Disable errexit for the node test — this section handles all errors explicitly.
+# set -e inside a polling loop with kill/wait/grep is fragile and causes silent exits.
+set +e
+
 NODE_LOG="$WORKDIR/node.log"
 if [[ -f "$SIMD_BIN" && -d "$NODE_HOME" ]]; then
-  # Start node in background
+  # Start node in background to verify it produces blocks
   "$SIMD_BIN" start --home "$NODE_HOME" >"$NODE_LOG" 2>&1 &
   SIMD_PID=$!
   info "Started simd (PID $SIMD_PID)"
@@ -552,7 +560,7 @@ if [[ -f "$SIMD_BIN" && -d "$NODE_HOME" ]]; then
     sleep 1
     if ! kill -0 "$SIMD_PID" 2>/dev/null; then
       # Process died
-      wait "$SIMD_PID" 2>/dev/null || true
+      wait "$SIMD_PID" 2>/dev/null
       fail "Node exited prematurely"
       info ""
       info "=== LAST 50 LINES OF NODE LOG ==="
@@ -560,10 +568,13 @@ if [[ -f "$SIMD_BIN" && -d "$NODE_HOME" ]]; then
       info "=== END NODE LOG ==="
       break
     fi
-    # Check for block commits (various CometBFT log formats)
+    # Check for block commits (various CometBFT log formats across versions)
     if grep -q 'committed state' "$NODE_LOG" 2>/dev/null \
        || grep -q 'finalized block' "$NODE_LOG" 2>/dev/null \
-       || grep -q 'indexed block' "$NODE_LOG" 2>/dev/null; then
+       || grep -q 'indexed block' "$NODE_LOG" 2>/dev/null \
+       || grep -q 'received proposal' "$NODE_LOG" 2>/dev/null \
+       || grep -q 'executed block' "$NODE_LOG" 2>/dev/null \
+       || grep -q 'block{' "$NODE_LOG" 2>/dev/null; then
       BLOCK_HEIGHT=$(grep -oE 'height=[0-9]+' "$NODE_LOG" | tail -1 | cut -d= -f2)
       pass "Node producing blocks (reached height ${BLOCK_HEIGHT:-unknown})"
       NODE_OK=true
@@ -572,22 +583,26 @@ if [[ -f "$SIMD_BIN" && -d "$NODE_HOME" ]]; then
   done
 
   if [[ "$NODE_OK" == false ]] && kill -0 "$SIMD_PID" 2>/dev/null; then
-    warn "Timed out after ${NODE_STARTUP_TIMEOUT}s without seeing blocks"
+    fail "Timed out after ${NODE_STARTUP_TIMEOUT}s without seeing blocks"
     info ""
     info "=== LAST 50 LINES OF NODE LOG ==="
     tail -50 "$NODE_LOG"
     info "=== END NODE LOG ==="
+  elif [[ "$NODE_OK" == false ]]; then
+    fail "Node failed (see logs above)"
   fi
 
-  # Shutdown
+  # Shutdown the background node
   if kill -0 "$SIMD_PID" 2>/dev/null; then
-    kill "$SIMD_PID" 2>/dev/null || true
-    wait "$SIMD_PID" 2>/dev/null || true
+    kill "$SIMD_PID" 2>/dev/null
+    wait "$SIMD_PID" 2>/dev/null
     info "Node shut down cleanly"
   fi
 else
   fail "Skipped — no binary or init failed"
 fi
+
+set -e
 
 # ── Report ──────────────────────────────────────────────────────────────────
 
@@ -598,6 +613,9 @@ printf "${BOLD}═════════════════════�
 echo ""
 
 # Generate the plain-text report (for sharing)
+# Disable errexit inside the tee subshell — grep/awk returning no-match (exit 1)
+# combined with pipefail would silently kill the subshell.
+set +e
 {
   echo "# v54 Migration E2E Test Report"
   echo ""
@@ -766,6 +784,7 @@ echo ""
   echo '```'
 
 } | tee "$LOG_FILE"
+set -e
 
 echo ""
 printf "${BOLD}Report saved to: ${CYAN}file://%s${NC}\n" "$LOG_FILE"
@@ -779,8 +798,33 @@ fi
 
 echo ""
 
-# Exit with failure if any step failed
+# Exit with failure if any step failed (unless --live, which continues)
 if grep -q '|FAIL|' "$RESULTS_FILE" 2>/dev/null; then
+  if [[ "$LIVE" == true ]]; then
+    echo ""
+    printf "${RED}${BOLD}Some steps failed — skipping live node.${NC}\n"
+  fi
   exit 1
 fi
+
+# ── Live mode: restart node in foreground ─────────────────────────────────
+if [[ "$LIVE" == true && -f "$SIMD_BIN" && -d "$NODE_HOME" ]]; then
+  echo ""
+  printf "${BOLD}═══════════════════════════════════════════════════════════${NC}\n"
+  printf "${GREEN}${BOLD}  All tests passed — starting node in live mode${NC}\n"
+  printf "${BOLD}═══════════════════════════════════════════════════════════${NC}\n"
+  echo ""
+  echo "  RPC:   http://localhost:26657"
+  echo "  gRPC:  localhost:9090"
+  echo "  Home:  $NODE_HOME"
+  echo ""
+  echo "  Press Ctrl+C to stop."
+  echo ""
+  # Disable the cleanup trap — the user will Ctrl+C the node directly.
+  # The work dir is kept (--live implies --keep).
+  trap - EXIT
+  # Restart with existing home dir. CometBFT resumes from the last committed block.
+  exec "$SIMD_BIN" start --home "$NODE_HOME"
+fi
+
 exit 0

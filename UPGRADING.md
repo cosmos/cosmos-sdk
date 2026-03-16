@@ -53,7 +53,7 @@ Use this checklist first, then read the linked sections for the exact code or wi
 - [ ] Migrate to `contrib/` imports if you use `x/circuit`, `x/nft`, or `x/crisis`. See [Module Deprecations](#module-deprecations).
 - [ ] Migrate to Cosmos Enterprise if you use the `x/group` module. See [Groups Module](#groups-module).
 - [ ] Update imports to `cosmossdk.io/log/v2` if your app imports the log package directly. See [Log v2](#log-v2).
-- [ ] Review Store v2 changes if this release requires your app to adopt `cosmossdk.io/store/v2`. See [Store v2](#store-v2).
+- [ ] Migrate imports to `cosmossdk.io/store/v2`. See [Store v2](#store-v2).
 - [ ] Review [Centralized Authority via Consensus Params](#centralized-authority-via-consensus-params). No upgrade action is required to keep using per-keeper authorities.
 - [ ] Review [Telemetry](#telemetry). No upgrade action is required to keep existing telemetry wiring, but upgrading to OpenTelemetry is strongly encouraged.
 - [ ] Review [PoA Module](#poa-module) if you are interested in adopting the new Cosmos Enterprise Proof of Authority module.

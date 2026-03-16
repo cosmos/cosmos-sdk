@@ -8,14 +8,13 @@ import (
 
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/iavl"
-	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/types"
 )
 
 func newMemTestKVStore(t *testing.T) types.KVStore {
 	t.Helper()
 	db := dbm.NewMemDB()
-	store, err := iavl.LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), types.CommitID{}, iavl.DefaultIAVLCacheSize, false, metrics.NewNoOpMetrics())
+	store, err := iavl.LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), types.CommitID{}, iavl.DefaultIAVLCacheSize, false)
 	require.NoError(t, err)
 	return store
 }

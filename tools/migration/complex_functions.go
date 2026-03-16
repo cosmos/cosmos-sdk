@@ -94,18 +94,19 @@ func updateComplexFunctions(fset *token.FileSet, node *ast.File, complexReplacem
 
 			return true
 		})
-	}
 
-	// clean up old imports that are no longer needed
-	for _, imp := range node.Imports {
-		importPath := strings.Trim(imp.Path.Value, "\"")
-		if slices.ContainsFunc(complexReplacements, func(c ComplexFunctionReplacement) bool {
-			return importPath == c.ImportPath
-		}) {
-			if imp.Name != nil {
-				astutil.DeleteNamedImport(fset, node, imp.Name.Name, importPath)
-			} else {
-				astutil.DeleteImport(fset, node, importPath)
+		// clean up old imports that are no longer needed
+		// (only when we actually replaced calls — otherwise the import may still be in use)
+		for _, imp := range node.Imports {
+			importPath := strings.Trim(imp.Path.Value, "\"")
+			if slices.ContainsFunc(complexReplacements, func(c ComplexFunctionReplacement) bool {
+				return importPath == c.ImportPath
+			}) {
+				if imp.Name != nil {
+					astutil.DeleteNamedImport(fset, node, imp.Name.Name, importPath)
+				} else {
+					astutil.DeleteImport(fset, node, importPath)
+				}
 			}
 		}
 	}

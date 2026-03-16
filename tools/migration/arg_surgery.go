@@ -105,8 +105,14 @@ func updateArgSurgery(node *ast.File, surgeries []ArgSurgery) (bool, error) {
 			}
 
 			callExpr.Args = newArgs
-			// Clear the ellipsis if the function was variadic and we're replacing all args
-			callExpr.Ellipsis = 0
+			// Only clear the ellipsis if the original call had one and the last arg changed.
+			// If a surgery preserves a ...args spread, the ellipsis must be kept.
+			if callExpr.Ellipsis != 0 {
+				origLast := originalLastArg(surgery, callExpr)
+				if origLast == nil || len(newArgs) == 0 || newArgs[len(newArgs)-1] != origLast {
+					callExpr.Ellipsis = 0
+				}
+			}
 			modified = true
 			break
 		}
@@ -115,6 +121,32 @@ func updateArgSurgery(node *ast.File, surgeries []ArgSurgery) (bool, error) {
 	})
 
 	return modified, nil
+}
+
+// originalLastArg returns the last arg from the original call if it was a spread arg.
+// For ArgSurgery, we check whether the last original position was NOT removed.
+func originalLastArg(surgery ArgSurgery, callExpr *ast.CallExpr) ast.Expr {
+	removeSet := make(map[int]bool)
+	for _, pos := range surgery.RemoveArgPositions {
+		removeSet[pos] = true
+	}
+	// The original arg count is known from the surgery; check if the last arg survived.
+	lastIdx := surgery.OldArgCount - 1
+	if lastIdx >= 0 && !removeSet[lastIdx] {
+		// The last original arg wasn't removed — find it in the new arg list.
+		// Since we build newArgs by iterating originals in order, the surviving last arg
+		// will be at the end (before any AppendArgs).
+		surviving := 0
+		for i := 0; i < surgery.OldArgCount; i++ {
+			if !removeSet[i] {
+				surviving++
+			}
+		}
+		if surviving > 0 && surviving <= len(callExpr.Args) {
+			return callExpr.Args[surviving-1]
+		}
+	}
+	return nil
 }
 
 // argPlaceholderRe matches $ARG{N} tokens in AppendArgs strings.
@@ -259,9 +291,16 @@ func updateArgSurgeryAST(node *ast.File, surgeries []ArgSurgeryWithAST) (bool, e
 
 			log.Debug().Msgf("Applying AST arg surgery to %s.%s()", pkgIdent.Name, surgery.FuncName)
 
-			newArgs := surgery.Transform(callExpr.Args)
+			origArgs := callExpr.Args
+			newArgs := surgery.Transform(origArgs)
 			callExpr.Args = newArgs
-			callExpr.Ellipsis = 0
+			// Only clear the ellipsis if the original call had one and the last arg changed.
+			if callExpr.Ellipsis != 0 && len(origArgs) > 0 {
+				origLast := origArgs[len(origArgs)-1]
+				if len(newArgs) == 0 || newArgs[len(newArgs)-1] != origLast {
+					callExpr.Ellipsis = 0
+				}
+			}
 			modified = true
 			break
 		}

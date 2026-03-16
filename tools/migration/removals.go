@@ -1,6 +1,7 @@
 package migration
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -410,7 +411,7 @@ func parseExprSafe(expr string) (ast.Expr, error) {
 		}
 	}
 
-	return nil, nil
+	return nil, fmt.Errorf("failed to extract expression from parsed source: %s", expr)
 }
 
 // setExprPos recursively sets position info on an AST expression so that

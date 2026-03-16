@@ -1,8 +1,11 @@
 package migration
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
+	"regexp"
+	"strconv"
 
 	"github.com/rs/zerolog/log"
 )
@@ -96,6 +99,8 @@ func updateArgSurgery(node *ast.File, surgeries []ArgSurgery) (bool, error) {
 					log.Error().Err(err).Msgf("Failed to parse synthesized arg: %s", resolved)
 					continue
 				}
+				// Swap the temp identifiers back to the real removed-arg AST nodes
+				expr = replaceArgPlaceholderIdents(expr, removedArgs)
 				newArgs = append(newArgs, expr)
 			}
 
@@ -112,20 +117,91 @@ func updateArgSurgery(node *ast.File, surgeries []ArgSurgery) (bool, error) {
 	return modified, nil
 }
 
-// resolveArgPlaceholders replaces $ARG{N} in the expression string with a placeholder
-// identifier _removed_argN_. The real AST substitution happens after parsing.
-//
-// For simplicity, we use a two-pass approach:
-// 1. Replace $ARG{N} with a temp identifier
-// 2. After parsing, walk the parsed expr and replace the temp idents with the real exprs
-//
-// However, since the removed args can be complex expressions (like `app.StakingKeeper`),
-// we actually need to do direct AST surgery. So we just handle the common case where
-// the append arg wraps a single removed arg in a function call.
+// argPlaceholderRe matches $ARG{N} tokens in AppendArgs strings.
+var argPlaceholderRe = regexp.MustCompile(`\$ARG\{(\d+)\}`)
+
+// resolveArgPlaceholders replaces $ARG{N} tokens in expr with temporary identifiers
+// (_removedArg0_, _removedArg1_, etc.) so the string can be parsed as valid Go.
+// After parsing, replaceArgPlaceholderIdents must be called on the resulting AST
+// to swap those identifiers with the real removed-arg expressions.
 func resolveArgPlaceholders(expr string, removedArgs map[int]ast.Expr) string {
-	// For now, we handle the simple case: no placeholders means return as-is.
-	// Placeholder-based substitution is handled in the AST after parsing.
+	return argPlaceholderRe.ReplaceAllStringFunc(expr, func(match string) string {
+		sub := argPlaceholderRe.FindStringSubmatch(match)
+		if len(sub) < 2 {
+			return match
+		}
+		idx, err := strconv.Atoi(sub[1])
+		if err != nil {
+			return match
+		}
+		if _, ok := removedArgs[idx]; !ok {
+			log.Warn().Msgf("$ARG{%d} referenced but arg at position %d was not removed", idx, idx)
+			return match
+		}
+		return fmt.Sprintf("_removedArg%d_", idx)
+	})
+}
+
+// replaceArgPlaceholderIdents walks a parsed AST expression and replaces temporary
+// _removedArgN_ identifiers (produced by resolveArgPlaceholders) with the actual
+// AST expressions that were removed from the original call.
+func replaceArgPlaceholderIdents(expr ast.Expr, removedArgs map[int]ast.Expr) ast.Expr {
+	ast.Inspect(expr, func(n ast.Node) bool {
+		switch node := n.(type) {
+		case *ast.CallExpr:
+			for i, arg := range node.Args {
+				if ident, ok := arg.(*ast.Ident); ok {
+					if replaced := matchPlaceholderIdent(ident.Name, removedArgs); replaced != nil {
+						node.Args[i] = replaced
+					}
+				}
+			}
+		case *ast.CompositeLit:
+			for i, elt := range node.Elts {
+				if ident, ok := elt.(*ast.Ident); ok {
+					if replaced := matchPlaceholderIdent(ident.Name, removedArgs); replaced != nil {
+						node.Elts[i] = replaced
+					}
+				}
+				// Also handle key-value expressions inside composite literals
+				if kv, ok := elt.(*ast.KeyValueExpr); ok {
+					if ident, ok := kv.Value.(*ast.Ident); ok {
+						if replaced := matchPlaceholderIdent(ident.Name, removedArgs); replaced != nil {
+							kv.Value = replaced
+						}
+					}
+				}
+			}
+		}
+		return true
+	})
+	// Top-level expression might itself be a placeholder
+	if ident, ok := expr.(*ast.Ident); ok {
+		if replaced := matchPlaceholderIdent(ident.Name, removedArgs); replaced != nil {
+			return replaced
+		}
+	}
 	return expr
+}
+
+// placeholderIdentRe matches the temporary identifiers produced by resolveArgPlaceholders.
+var placeholderIdentRe = regexp.MustCompile(`^_removedArg(\d+)_$`)
+
+// matchPlaceholderIdent checks whether name is a _removedArgN_ placeholder and returns
+// the corresponding removed-arg AST expression, or nil if it doesn't match.
+func matchPlaceholderIdent(name string, removedArgs map[int]ast.Expr) ast.Expr {
+	sub := placeholderIdentRe.FindStringSubmatch(name)
+	if len(sub) < 2 {
+		return nil
+	}
+	idx, err := strconv.Atoi(sub[1])
+	if err != nil {
+		return nil
+	}
+	if expr, ok := removedArgs[idx]; ok {
+		return expr
+	}
+	return nil
 }
 
 // ArgSurgeryWithAST is a more powerful version that uses a callback to construct

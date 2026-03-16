@@ -180,6 +180,70 @@ func f() {
 			wantContains: []string{"a, c, d"},
 			wantMissing:  []string{"a, b, c"},
 		},
+		{
+			name: "$ARG{N} placeholder — bare reference to removed arg",
+			input: `package main
+import keeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+func f() {
+	keeper.NewKeeper(a, b, c, d)
+}`,
+			surgeries: []ArgSurgery{
+				{
+					ImportPath:         "github.com/cosmos/cosmos-sdk/x/bank/keeper",
+					FuncName:           "NewKeeper",
+					OldArgCount:        4,
+					RemoveArgPositions: []int{2}, // remove c
+					AppendArgs:         []string{"$ARG{2}"},
+				},
+			},
+			wantModified: true,
+			// c should be removed from its original position and appended at the end
+			wantContains: []string{"a, b, d, c"},
+			wantMissing:  []string{"a, b, c, d"},
+		},
+		{
+			name: "$ARG{N} placeholder — wrap removed arg in function call",
+			input: `package main
+import govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+func f() {
+	govkeeper.NewKeeper(cdc, storeService, acctKeeper, bankKeeper, stakingKeeper, distrKeeper, router, config, authority)
+}`,
+			surgeries: []ArgSurgery{
+				{
+					ImportPath:         "github.com/cosmos/cosmos-sdk/x/gov/keeper",
+					FuncName:           "NewKeeper",
+					OldArgCount:        9,
+					RemoveArgPositions: []int{4}, // remove stakingKeeper
+					AppendArgs:         []string{"govkeeper.NewDefaultCalculateVoteResultsAndVotingPower($ARG{4})"},
+				},
+			},
+			wantModified: true,
+			wantContains: []string{
+				"NewDefaultCalculateVoteResultsAndVotingPower(stakingKeeper)",
+				"bankKeeper, distrKeeper", // stakingKeeper removed from middle
+			},
+			wantMissing: []string{"bankKeeper, stakingKeeper"},
+		},
+		{
+			name: "$ARG{N} placeholder — no placeholders behaves as before",
+			input: `package main
+import keeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+func f() {
+	keeper.NewKeeper(a, b, c)
+}`,
+			surgeries: []ArgSurgery{
+				{
+					ImportPath:         "github.com/cosmos/cosmos-sdk/x/bank/keeper",
+					FuncName:           "NewKeeper",
+					OldArgCount:        3,
+					RemoveArgPositions: []int{2}, // remove c
+					AppendArgs:         []string{"nil"},
+				},
+			},
+			wantModified: true,
+			wantContains: []string{"a, b, nil"},
+			wantMissing:  []string{"a, b, c"},
+		},
 	}
 
 	for _, tt := range tests {

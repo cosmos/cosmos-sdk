@@ -21,6 +21,7 @@ import (
 	protov2 "google.golang.org/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
+
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/rootmulti"
@@ -233,6 +234,8 @@ func NewBaseApp(
 	if app.interBlockCache != nil {
 		if rms, ok := app.cms.(*rootmulti.Store); ok {
 			rms.SetInterBlockCache(app.interBlockCache)
+		} else {
+			logger.Warn("SetInterBlockCache: CommitMultiStore is not rootmulti.Store, option ignored")
 		}
 	}
 

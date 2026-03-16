@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/contrib/propagators/b3"
 	"go.opentelemetry.io/contrib/propagators/jaeger"
 	"go.opentelemetry.io/otel"
+	otellog "go.opentelemetry.io/otel/log"
 	logglobal "go.opentelemetry.io/otel/log/global"
 	lognoop "go.opentelemetry.io/otel/log/noop"
 	metricnoop "go.opentelemetry.io/otel/metric/noop"
@@ -34,6 +35,20 @@ var (
 	shutdownFuncs    []func(context.Context) error
 )
 
+// IsOtelLoggerEnabled reports whether the global OTel log pipeline has active exporters.
+// It returns false for the noop provider or any real provider with no log processors configured.
+func IsOtelLoggerEnabled() bool {
+	l := logglobal.GetLoggerProvider().Logger("")
+	// check if loggers are enabled at SeverityFatal4, which is the most severe level.
+	// If this returns false, it means either the provider is a noop or there are no processors configured to handle logs at any severity level.
+	// NOTE: there are some edge cases in the future where maybe a real logger
+	// could be filtering out our messages, based on logger name or event name
+	// but for now this filtering doesn't exist and this check should be sufficient
+	return l.Enabled(context.Background(), otellog.EnabledParameters{
+		Severity: otellog.SeverityFatal4,
+	})
+}
+
 func init() {
 	if otelFilePath := os.Getenv(otelConfigEnvVar); otelFilePath != "" {
 		if err := InitializeOpenTelemetry(otelFilePath); err != nil {
@@ -56,7 +71,6 @@ func InitializeOpenTelemetry(filePath string) error {
 	if openTelemetrySDK != nil {
 		return nil
 	}
-	var err error
 
 	var opts []otelconf.ConfigurationOption
 
@@ -84,28 +98,27 @@ func InitializeOpenTelemetry(filePath string) error {
 
 	opts = append(opts, otelconf.WithOpenTelemetryConfiguration(*cfg))
 
-	// parse cosmos extra config
-	var extraCfg extraConfig
-	err = yaml.Unmarshal(bz, &extraCfg)
-	if err == nil {
-		if extraCfg.CosmosExtra != nil {
-			extra := *extraCfg.CosmosExtra
-			for name, cfg := range extra.Instruments {
-				inst := registry.Get(name)
-				if inst == nil {
-					return fmt.Errorf("unknown instrument: %s", name)
-				}
-				fmt.Printf("Initializing %s instrumentation\n", name)
-				if err := inst.Start(cfg); err != nil {
-					return fmt.Errorf("failed to start %s instrumentation: %w", name, err)
-				}
+	// parse extensions config (features not yet supported by otelconf)
+	var supplemental struct {
+		Extensions *ExtensionOptions `yaml:"extensions"`
+	}
+	if err := yaml.Unmarshal(bz, &supplemental); err == nil && supplemental.Extensions != nil {
+		extra := *supplemental.Extensions
+		for name, cfg := range extra.Instruments {
+			inst := registry.Get(name)
+			if inst == nil {
+				return fmt.Errorf("unknown instrument: %s", name)
 			}
+			fmt.Printf("Initializing %s instrumentation\n", name)
+			if err := inst.Start(cfg); err != nil {
+				return fmt.Errorf("failed to start %s instrumentation: %w", name, err)
+			}
+		}
 
-			// TODO: this code should be removed once propagation is properly supported by otelconf.
-			if len(extra.Propagators) > 0 {
-				propagator := initPropagator(extra.Propagators)
-				otel.SetTextMapPropagator(propagator)
-			}
+		// TODO: this code should be removed once propagation is properly supported by otelconf.
+		if len(extra.Propagators) > 0 {
+			propagator := initPropagator(extra.Propagators)
+			otel.SetTextMapPropagator(propagator)
 		}
 	}
 
@@ -118,7 +131,8 @@ func InitializeOpenTelemetry(filePath string) error {
 	// setup otel global providers
 	otel.SetTracerProvider(openTelemetrySDK.TracerProvider())
 	otel.SetMeterProvider(openTelemetrySDK.MeterProvider())
-	logglobal.SetLoggerProvider(openTelemetrySDK.LoggerProvider())
+	loggerProvider := openTelemetrySDK.LoggerProvider()
+	logglobal.SetLoggerProvider(loggerProvider)
 
 	return nil
 }
@@ -159,19 +173,16 @@ func setNoop() {
 	logglobal.SetLoggerProvider(lognoop.NewLoggerProvider())
 }
 
-type extraConfig struct {
-	CosmosExtra *cosmosExtra `json:"cosmos_extra" yaml:"cosmos_extra" mapstructure:"cosmos_extra"`
-}
-
-// cosmosExtra provides extensions to the OpenTelemetry declarative configuration.
-// These options allow features not yet supported by otelconf, such as writing traces/metrics/logs to local
-// files, enabling additional host/runtime instrumentation, and configuring custom propagators.
+// ExtensionOptions provides configuration for OpenTelemetry features not yet
+// supported by [otelconf], such as writing traces/metrics/logs to local files,
+// enabling additional host/runtime instrumentation, and configuring custom
+// propagators.
 //
-// When present in otel.yaml under the `cosmos_extra` key, these fields
+// When present in otel.yaml under the `extensions` key, these fields
 // augment/override portions of the OpenTelemetry SDK initialization.
 //
 // For an example configuration, see the README in this package.
-type cosmosExtra struct {
+type ExtensionOptions struct {
 	// TraceFile is an optional path to a file where spans should be exported
 	// using the stdouttrace exporter. If empty, no file-based trace export is
 	// configured.

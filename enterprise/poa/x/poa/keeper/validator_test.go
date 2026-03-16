@@ -720,6 +720,40 @@ func TestUpdateValidators(t *testing.T) {
 		validatorUpdates := f.poaKeeper.ReapValidatorUpdates(f.ctx)
 		require.Len(t, validatorUpdates, 0)
 	})
+
+	t.Run("nil metadata preserves existing metadata", func(t *testing.T) {
+		f := setupTest(t)
+
+		validatorWithMeta := types.Validator{
+			PubKey: pubKeyAny,
+			Power:  100,
+			Metadata: &types.ValidatorMetadata{
+				Moniker:         "original-moniker",
+				Description:     "original-description",
+				OperatorAddress: operatorAddr.String(),
+			},
+		}
+		err := f.poaKeeper.CreateValidator(f.ctx, consAddr, validatorWithMeta, true)
+		require.NoError(t, err)
+
+		// Update power only, nil metadata - keeper preserves existing metadata
+		updateWithNilMeta := types.Validator{
+			PubKey:   pubKeyAny,
+			Power:    200,
+			Metadata: nil,
+		}
+		err = f.poaKeeper.UpdateValidators(f.ctx, []types.Validator{updateWithNilMeta})
+		require.NoError(t, err)
+
+		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
+		require.NoError(t, err)
+		require.Equal(t, int64(200), power)
+
+		retrieved, err := f.poaKeeper.GetValidator(f.ctx, consAddr)
+		require.NoError(t, err)
+		require.Equal(t, "original-moniker", retrieved.Metadata.Moniker)
+		require.Equal(t, "original-description", retrieved.Metadata.Description)
+	})
 }
 
 func TestCompositeKeyUniqueness(t *testing.T) {

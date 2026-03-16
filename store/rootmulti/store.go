@@ -25,7 +25,6 @@ import (
 	"cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/listenkv"
 	"cosmossdk.io/store/mem"
-	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/pruning"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -35,8 +34,9 @@ import (
 )
 
 const (
-	latestVersionKey = "s/latest"
-	commitInfoKeyFmt = "s/%d" // s/<version>
+	latestVersionKey   = "s/latest"
+	earliestVersionKey = "s/earliest"
+	commitInfoKeyFmt   = "s/%d" // s/<version>
 )
 
 const iavlDisablefastNodeDefault = false
@@ -79,7 +79,6 @@ type Store struct {
 	traceContextMutex sync.Mutex
 	interBlockCache   types.MultiStorePersistentCache
 	listeners         map[types.StoreKey]*types.MemoryListener
-	metrics           metrics.StoreMetrics
 	commitHeader      cmtproto.Header
 }
 
@@ -93,7 +92,7 @@ var (
 // store will be created with a PruneNothing pruning strategy by default. After
 // a store is created, KVStores must be mounted and finally LoadLatestVersion or
 // LoadVersion must be called.
-func NewStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics) *Store {
+func NewStore(db dbm.DB, logger log.Logger) *Store {
 	return &Store{
 		db:                  db,
 		logger:              logger,
@@ -105,7 +104,6 @@ func NewStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics)
 		listeners:           make(map[types.StoreKey]*types.MemoryListener),
 		removalMap:          make(map[types.StoreKey]bool),
 		pruningManager:      pruning.NewManager(db, logger),
-		metrics:             metricGatherer,
 	}
 }
 
@@ -119,11 +117,6 @@ func (rs *Store) GetPruning() pruningtypes.PruningOptions {
 // LoadLatestVersion performs a no-op as the stores aren't mounted yet.
 func (rs *Store) SetPruning(pruningOpts pruningtypes.PruningOptions) {
 	rs.pruningManager.SetOptions(pruningOpts)
-}
-
-// SetMetrics sets the metrics gatherer for the store package
-func (rs *Store) SetMetrics(metrics metrics.StoreMetrics) {
-	rs.metrics = metrics
 }
 
 // SetSnapshotInterval sets the interval at which the snapshots are taken.
@@ -455,6 +448,11 @@ func (rs *Store) LatestVersion() int64 {
 	return rs.LastCommitID().Version
 }
 
+// EarliestVersion returns the earliest version in the store
+func (rs *Store) EarliestVersion() int64 {
+	return GetEarliestVersion(rs.db)
+}
+
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
 	info := rs.lastCommitInfo.Load()
@@ -752,6 +750,23 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 
 		rs.logger.Error("failed to prune store", "key", key, "err", err)
 	}
+
+	// Update earliest version after successful pruning.
+	// The new earliest available version is pruningHeight + 1.
+	// Only persist if newer than current earliest - this handles state sync
+	// scenarios and avoids issues if pruning config changes result in a
+	// lower pruning height than previously persisted.
+	newEarliest := pruningHeight + 1
+	currentEarliest := GetEarliestVersion(rs.db)
+	if newEarliest > currentEarliest {
+		batch := rs.db.NewBatch()
+		defer batch.Close()
+		flushEarliestVersion(batch, newEarliest)
+		if err := batch.WriteSync(); err != nil {
+			rs.logger.Error("failed to persist earliest version", "err", err)
+		}
+	}
+
 	return nil
 }
 
@@ -1057,7 +1072,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		panic("recursive MultiStores not yet supported")
 
 	case types.StoreTypeIAVL:
-		store, err := iavl.LoadStoreWithOpts(db, rs.logger, key, id, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.metrics, iavltree.AsyncPruningOption(!rs.iavlSyncPruning))
+		store, err := iavl.LoadStoreWithOpts(db, rs.logger, key, id, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode, iavltree.AsyncPruningOption(!rs.iavlSyncPruning))
 		if err != nil {
 			return nil, err
 		}
@@ -1220,6 +1235,36 @@ func GetLatestVersion(db dbm.DB) int64 {
 	}
 
 	return latestVersion
+}
+
+// GetEarliestVersion returns the earliest version stored in the database.
+// Returns 1 if no earliest version has been explicitly set (unpruned chain).
+func GetEarliestVersion(db dbm.DB) int64 {
+	bz, err := db.Get([]byte(earliestVersionKey))
+	if err != nil {
+		panic(err)
+	} else if bz == nil {
+		return 1 // default to 1 for unpruned chains
+	}
+
+	var earliestVersion int64
+
+	if err := gogotypes.StdInt64Unmarshal(&earliestVersion, bz); err != nil {
+		panic(err)
+	}
+
+	return earliestVersion
+}
+
+func flushEarliestVersion(batch dbm.Batch, version int64) {
+	bz, err := gogotypes.StdInt64Marshal(version)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := batch.Set([]byte(earliestVersionKey), bz); err != nil {
+		panic(err)
+	}
 }
 
 // commitStores commits each store and returns a new commitInfo.

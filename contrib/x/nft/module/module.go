@@ -16,7 +16,7 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	modulev1 "github.com/cosmos/cosmos-sdk/contrib/api/nft/module/v1"
+	modulev1 "github.com/cosmos/cosmos-sdk/contrib/api/cosmos/nft/module/v1"
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft"
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
 	simulation2 "github.com/cosmos/cosmos-sdk/contrib/x/nft/simulation"

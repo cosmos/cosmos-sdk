@@ -15,20 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-type EventManagerI interface {
-	Events() Events
-	ABCIEvents() []abci.Event
-	EmitTypedEvent(tev proto.Message) error
-	EmitTypedEvents(tevs ...proto.Message) error
-	EmitEvent(event Event)
-	EmitEvents(events Events)
-}
-
 // ----------------------------------------------------------------------------
 // Event Manager
 // ----------------------------------------------------------------------------
-
-var _ EventManagerI = (*EventManager)(nil)
 
 // EventManager implements a simple wrapper around a slice of Event objects that
 // can be emitted from.
@@ -50,6 +39,13 @@ func (em *EventManager) EmitEvent(event Event) {
 // EmitEvents stores a series of Event objects.
 func (em *EventManager) EmitEvents(events Events) {
 	em.events = em.events.AppendEvents(events)
+}
+
+// OverrideEvents removes all previous events and sets a
+// completely new series of Event objects. Should only be used
+// in cases where existing events should be modified.
+func (em *EventManager) OverrideEvents(events Events) {
+	em.events = events
 }
 
 // ABCIEvents returns all stored Event objects as abci.Event objects.

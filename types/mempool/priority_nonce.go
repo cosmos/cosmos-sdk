@@ -183,12 +183,17 @@ func DefaultPriorityMempool() *PriorityNonceMempool[int64] {
 // i.e. the next valid transaction for the sender. If no such transaction exists,
 // nil will be returned.
 func (mp *PriorityNonceMempool[C]) NextSenderTx(sender string) sdk.Tx {
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
 	senderIndex, ok := mp.senderIndices[sender]
 	if !ok {
 		return nil
 	}
 
 	cursor := senderIndex.Front()
+	if cursor == nil {
+		return nil
+	}
 	return cursor.Value.(sdk.Tx)
 }
 
@@ -484,6 +489,11 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 	mp.priorityCounts[score.priority]--
 
 	return nil
+}
+
+// RemoveWithReason is a proxy to Remove for this mempool.
+func (mp *PriorityNonceMempool[C]) RemoveWithReason(_ context.Context, tx sdk.Tx, _ RemoveReason) error {
+	return mp.Remove(tx)
 }
 
 func IsEmpty[C comparable](mempool Mempool) error {

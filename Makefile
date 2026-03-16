@@ -52,10 +52,6 @@ ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
   build_tags += libsecp256k1_sdk
 endif
 
-ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += app_v1
-endif
-
 whitespace :=
 whitespace += $(whitespace)
 comma := ,
@@ -122,6 +118,12 @@ build-linux-amd64:
 build-linux-arm64:
 	GOOS=linux GOARCH=arm64 LEDGER_ENABLED=false $(MAKE) build
 
+build-darwin-amd64:
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 LEDGER_ENABLED=false $(MAKE) build
+
+build-darwin-arm64:
+	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 LEDGER_ENABLED=false $(MAKE) build
+
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 	cd ${CURRENT_DIR}/simapp && go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
 
@@ -134,11 +136,11 @@ cosmovisor:
 confix:
 	$(MAKE) -C tools/confix confix
 
-.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor confix
+.PHONY: build build-linux-amd64 build-linux-arm64 build-darwin-amd64 build-darwin-arm64 cosmovisor confix
 
 #? mocks: Generate mock file
 mocks: $(MOCKS_DIR)
-	@go install go.uber.org/mock/mockgen@v0.6.0
+	@go install go.uber.org/mock/mockgen@latest
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
 
@@ -168,6 +170,11 @@ go.sum: go.mod
 	echo "Ensure dependencies have not been modified ..." >&2
 	go mod verify
 	go mod tidy
+
+tidy-all:
+	sh ./scripts/go-mod-tidy-all.sh
+
+.PHONY: tidy-all
 
 ###############################################################################
 ###                              Documentation                              ###
@@ -379,7 +386,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v2.8.0
+golangci_version=v2.11.2
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
@@ -401,7 +408,7 @@ lint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.18.0
+protoVer=0.18.1
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
@@ -425,6 +432,17 @@ proto-lint:
 
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
+
+# Build and push proto-builder image for amd64 and arm64 to ghcr.io.
+# Usage: make proto-docker-build [protoVer=0.18.1]
+# Requires: docker buildx, ghcr.io login (echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin)
+proto-docker-build:
+	docker buildx build \
+		--platform linux/amd64,linux/arm64 \
+		--push \
+		-f contrib/devtools/Dockerfile \
+		-t ghcr.io/cosmos/proto-builder:$(protoVer) \
+		contrib/devtools
 
 CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.38.0/proto/tendermint
 
@@ -463,7 +481,7 @@ proto-update-deps:
 
 	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) buf mod update
 
-.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps
+.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-docker-build proto-update-deps
 
 ###############################################################################
 ###                                Localnet                                 ###
@@ -492,9 +510,26 @@ localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
 
-# build-system-test-current builds the binaries necessary for running system tests, but only those on the current branch
-# this is useful if you are iterating on tests which rely on changes to the current branch only (which is most common in development)
-build-system-test-current: build cosmovisor
+###############################################################################
+###                              Enterprise Modules                          ###
+###############################################################################
+#
+# Delegate to enterprise module Makefiles. Examples:
+#   make enterprise-all-lint      # Run lint in group and poa
+#   make enterprise-all-test      # Run test in group and poa
+#   make enterprise-group-build   # Run build in group only
+#   make enterprise-poa-localnet  # Run localnet in poa only
+#
+enterprise-%:
+	$(MAKE) -C enterprise $*
+
+.PHONY: enterprise-%
+
+build-system-test-current: build
+	mkdir -p ./tests/systemtests/binaries/
+	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
+
+test-system: build-v53 build-system-test-current
 	mkdir -p ./tests/systemtests/binaries/
 	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
 	cp tools/cosmovisor/cosmovisor ./tests/systemtests/binaries/
@@ -507,7 +542,9 @@ build-system-test: build-system-test-current build-v53
 test-system: build-system-test
 	$(MAKE) -C tests/systemtests test
 	$(MAKE) -C enterprise/poa/ test-system
-.PHONY: build-system-test-current build-system-test test-system
+	$(MAKE) -C enterprise/group/ test-system
+
+.PHONY: build-system-test-current build-system-test test-system build-system-test-current
 
 # build-v53 checks out the v0.53.x branch, builds the binary, and renames it to simdv53.
 build-v53:

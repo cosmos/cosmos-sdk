@@ -9,7 +9,6 @@ import (
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 )
@@ -159,6 +158,9 @@ type CommitMultiStore interface {
 	MultiStore
 	snapshottypes.Snapshotter
 
+	// EarliestVersion returns the earliest version in the store
+	EarliestVersion() int64
+
 	// Mount a store of type using the given db.
 	// If db == nil, the new store will use the CommitMultiStore db.
 	MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB)
@@ -220,9 +222,6 @@ type CommitMultiStore interface {
 
 	// PopStateCache returns the accumulated state change messages from the CommitMultiStore
 	PopStateCache() []*StoreKVPair
-
-	// SetMetrics sets the metrics for the KVStore
-	SetMetrics(metrics metrics.StoreMetrics)
 }
 
 //---------subsp-------------------------------

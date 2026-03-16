@@ -6,7 +6,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 
-	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
@@ -51,10 +50,6 @@ func (ms multiStore) SetTracer(w io.Writer) storetypes.MultiStore {
 }
 
 func (ms multiStore) AddListeners(keys []storetypes.StoreKey) {
-	panic("not implemented")
-}
-
-func (ms multiStore) SetMetrics(metrics.StoreMetrics) {
 	panic("not implemented")
 }
 
@@ -169,6 +164,10 @@ func (ms multiStore) RollbackToVersion(version int64) error {
 }
 
 func (ms multiStore) LatestVersion() int64 {
+	panic("not implemented")
+}
+
+func (ms multiStore) EarliestVersion() int64 {
 	panic("not implemented")
 }
 

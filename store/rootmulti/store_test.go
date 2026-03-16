@@ -18,7 +18,6 @@ import (
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/iavl"
 	sdkmaps "cosmossdk.io/store/internal/maps"
-	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/transient"
 	"cosmossdk.io/store/types"
@@ -26,7 +25,7 @@ import (
 
 func TestStoreType(t *testing.T) {
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, db)
 }
 
@@ -66,7 +65,7 @@ func TestGetCommitKVStore(t *testing.T) {
 
 func TestStoreMount(t *testing.T) {
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 
 	key1 := types.NewKVStoreKey("store1")
 	key2 := types.NewKVStoreKey("store2")
@@ -961,7 +960,7 @@ var (
 )
 
 func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) *Store {
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 	store.SetPruning(pruningOpts)
 
 	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
@@ -973,7 +972,7 @@ func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions)
 }
 
 func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) (*Store, *types.StoreUpgrades) {
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 	store.SetPruning(pruningOpts)
 
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
@@ -1102,7 +1101,7 @@ func (stub *commitStoreStub) Commit() types.CommitID {
 
 func prepareStoreMap() (map[types.StoreKey]types.CommitStore, error) {
 	var db dbm.DB = dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
@@ -1168,4 +1167,78 @@ func TestCommitStores(t *testing.T) {
 			require.Equal(t, tc.exptectCommit, store.Committed)
 		})
 	}
+}
+
+func TestEarliestVersion(t *testing.T) {
+	db := dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	require.NoError(t, ms.LoadLatestVersion())
+
+	// Initially, earliest version should be 1 (default for unpruned chains)
+	require.Equal(t, int64(1), ms.EarliestVersion())
+
+	// Commit some versions
+	for i := 0; i < 5; i++ {
+		ms.Commit()
+	}
+
+	// Earliest version should still be 1
+	require.Equal(t, int64(1), ms.EarliestVersion())
+	require.Equal(t, int64(5), ms.LatestVersion())
+}
+
+func TestEarliestVersionWithPruning(t *testing.T) {
+	db := dbm.NewMemDB()
+	// keepRecent=2, interval=1 means prune aggressively
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 1))
+	require.NoError(t, ms.LoadLatestVersion())
+
+	// Initially, earliest version should be 1
+	require.Equal(t, int64(1), ms.EarliestVersion())
+
+	// Commit enough versions to trigger pruning
+	for i := 0; i < 10; i++ {
+		ms.Commit()
+	}
+
+	// Wait for async pruning to complete and check earliest version is updated
+	checkEarliest := func() bool {
+		return ms.EarliestVersion() > 1
+	}
+	require.Eventually(t, checkEarliest, 1*time.Second, 10*time.Millisecond,
+		"expected earliest version to be updated after pruning")
+
+	// Earliest version should now be greater than 1 (pruned heights + 1)
+	earliest := ms.EarliestVersion()
+	require.Greater(t, earliest, int64(1), "earliest version should be updated after pruning")
+
+	// Latest should still be 10
+	require.Equal(t, int64(10), ms.LatestVersion())
+}
+
+func TestEarliestVersionPersistence(t *testing.T) {
+	db := dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 1))
+	require.NoError(t, ms.LoadLatestVersion())
+
+	// Commit and prune
+	for i := 0; i < 10; i++ {
+		ms.Commit()
+	}
+
+	// Wait for pruning
+	checkEarliest := func() bool {
+		return ms.EarliestVersion() > 1
+	}
+	require.Eventually(t, checkEarliest, 1*time.Second, 10*time.Millisecond)
+
+	earliestBeforeRestart := ms.EarliestVersion()
+
+	// "Restart" by creating new store with same db
+	ms2 := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 1))
+	require.NoError(t, ms2.LoadLatestVersion())
+
+	// Earliest version should be persisted and restored
+	require.Equal(t, earliestBeforeRestart, ms2.EarliestVersion(),
+		"earliest version should persist across restarts")
 }

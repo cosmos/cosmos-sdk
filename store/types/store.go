@@ -170,10 +170,6 @@ type CommitMultiStore interface {
 	// undefined.
 	LoadVersion(ver int64) error
 
-	// Set an inter-block (persistent) cache that maintains a mapping from
-	// StoreKeys to KVStores.
-	SetInterBlockCache(MultiStorePersistentCache)
-
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
 	// starting a new chain at an arbitrary height.
 	SetInitialVersion(version int64) error

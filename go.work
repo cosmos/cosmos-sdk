@@ -1,6 +1,4 @@
-go 1.23.5
-
-toolchain go1.24.13
+go 1.24.1
 
 use (
 	.
@@ -26,6 +24,23 @@ use (
 	./x/nft
 	./x/tx
 	./x/upgrade
+)
+
+replace (
+	cosmossdk.io/auth => ./x/auth
+	cosmossdk.io/authz => ./x/authz
+	cosmossdk.io/bank => ./x/bank
+	cosmossdk.io/consensus => ./x/consensus
+	cosmossdk.io/crisis => ./x/crisis
+	cosmossdk.io/crypto => ./crypto
+	cosmossdk.io/distribution => ./x/distribution
+	cosmossdk.io/gov => ./x/gov
+	cosmossdk.io/group => ./x/group
+	cosmossdk.io/mint => ./x/mint
+	cosmossdk.io/params => ./x/params
+	cosmossdk.io/protocolpool => ./x/protocolpool
+	cosmossdk.io/slashing => ./x/slashing
+	cosmossdk.io/staking => ./x/staking
 )
 
 // go/pkg/mod/cloud.google.com/go/storage@v1.53.0/grpc_metrics.go:34:2: cannot

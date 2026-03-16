@@ -72,10 +72,11 @@ type MigrateArgs struct {
 	FieldModifications []StructFieldModification
 
 	// --- AST: function arg changes ---
-	ArgUpdates     []FunctionArgUpdate
-	ArgSurgeries   []ArgSurgeryWithAST
-	CallArgEdits   []CallArgRemoval
-	ComplexUpdates []ComplexFunctionReplacement
+	ArgUpdates        []FunctionArgUpdate
+	ArgSurgeries      []ArgSurgeryWithAST
+	PlainArgSurgeries []ArgSurgery
+	CallArgEdits      []CallArgRemoval
+	ComplexUpdates    []ComplexFunctionReplacement
 
 	// --- AST: statement/block removal ---
 	StatementRemovals []StatementRemoval
@@ -335,9 +336,16 @@ func updateFiles(goFiles []string, args MigrateArgs, warnings *[]Warning, warnin
 				changed = changed || c
 			}
 
-			// Arg surgery (positional remove/insert/wrap)
+			// Arg surgery (positional remove/insert/wrap) — AST callback variant
 			if c, err := updateArgSurgeryAST(node, args.ArgSurgeries); err != nil {
 				return fmt.Errorf("error applying arg surgery in %s: %w", filePath, err)
+			} else {
+				changed = changed || c
+			}
+
+			// Arg surgery — declarative variant (with $ARG{N} placeholders)
+			if c, err := updateArgSurgery(node, args.PlainArgSurgeries); err != nil {
+				return fmt.Errorf("error applying plain arg surgery in %s: %w", filePath, err)
 			} else {
 				changed = changed || c
 			}

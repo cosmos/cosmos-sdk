@@ -587,7 +587,7 @@ func TestPOAGovernance(t *testing.T) {
 	sut := systemtests.Sut
 	sut.ResetChain(t)
 
-	votingPeriod := 10 * time.Second
+	votingPeriod := 30 * time.Second
 	sut.ModifyGenesisJSON(t, systemtests.SetGovVotingPeriod(t, votingPeriod))
 
 	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)

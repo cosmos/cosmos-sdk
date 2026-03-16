@@ -28,4 +28,6 @@ var (
 	ErrValidatorAlreadyExists         = errors.Register(ModuleName, 6, "validator already exists, cannot create duplicate validator with same consensus address")
 	ErrSameKeyForOperatorAndConsensus = errors.Register(ModuleName, 7, "operator address and consensus pubkey must use different keys to prevent accidental key reuse")
 	ErrInvalidAdminAddress            = errors.Register(ModuleName, 8, "invalid admin address")
+	ErrTotalPowerOverflow             = errors.Register(ModuleName, 9, "total validator power would overflow")
+	ErrInvalidPubKeyLength            = errors.Register(ModuleName, 10, "invalid pubkey length")
 )

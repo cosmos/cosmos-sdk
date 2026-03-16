@@ -5,11 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"maps"
 	"math"
 	"sort"
 	"strings"
-	"sync"
 	"sync/atomic"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -28,7 +26,6 @@ import (
 	"cosmossdk.io/store/pruning"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
-	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/transient"
 	"cosmossdk.io/store/types"
 )
@@ -70,16 +67,14 @@ type Store struct {
 	iavlSyncPruning bool
 	storesParams    map[types.StoreKey]storeParams
 	// CommitStore is a common interface to unify generic CommitKVStore of different value types
-	stores            map[types.StoreKey]types.CommitStore
-	keysByName        map[string]types.StoreKey
-	initialVersion    int64
-	removalMap        map[types.StoreKey]bool
-	traceWriter       io.Writer
-	traceContext      types.TraceContext
-	traceContextMutex sync.Mutex
-	interBlockCache   types.MultiStorePersistentCache
-	listeners         map[types.StoreKey]*types.MemoryListener
-	commitHeader      cmtproto.Header
+	stores          map[types.StoreKey]types.CommitStore
+	keysByName      map[string]types.StoreKey
+	initialVersion  int64
+	removalMap      map[types.StoreKey]bool
+	interBlockCache types.MultiStorePersistentCache
+	listeners       map[types.StoreKey]*types.MemoryListener
+
+	commitHeader cmtproto.Header
 }
 
 var (
@@ -369,44 +364,6 @@ func (rs *Store) SetInterBlockCache(c types.MultiStorePersistentCache) {
 	rs.interBlockCache = c
 }
 
-// SetTracer sets the tracer for the MultiStore that the underlying
-// stores will utilize to trace operations. A MultiStore is returned.
-func (rs *Store) SetTracer(w io.Writer) types.MultiStore {
-	rs.traceWriter = w
-	return rs
-}
-
-// SetTracingContext updates the tracing context for the MultiStore by merging
-// the given context with the existing context by key. Any existing keys will
-// be overwritten. It is implied that the caller should update the context when
-// necessary between tracing operations. It returns a modified MultiStore.
-func (rs *Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
-	rs.traceContextMutex.Lock()
-	defer rs.traceContextMutex.Unlock()
-	rs.traceContext = rs.traceContext.Merge(tc)
-
-	return rs
-}
-
-func (rs *Store) getTracingContext() types.TraceContext {
-	rs.traceContextMutex.Lock()
-	defer rs.traceContextMutex.Unlock()
-
-	if rs.traceContext == nil {
-		return nil
-	}
-
-	ctx := types.TraceContext{}
-	maps.Copy(ctx, rs.traceContext)
-
-	return ctx
-}
-
-// TracingEnabled returns if tracing is enabled for the MultiStore.
-func (rs *Store) TracingEnabled() bool {
-	return rs.traceWriter != nil
-}
-
 // AddListeners adds a listener for the KVStore belonging to the provided StoreKey
 func (rs *Store) AddListeners(keys []types.StoreKey) {
 	for i := range keys {
@@ -568,11 +525,6 @@ func (rs *Store) CacheWrap() types.CacheWrap {
 	return rs.CacheMultiStore().(types.CacheWrap)
 }
 
-// CacheWrapWithTrace implements the CacheWrapper interface.
-func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
-	return rs.CacheWrap()
-}
-
 // CacheMultiStore creates ephemeral branch of the multi-store and returns a CacheMultiStore.
 // It implements the MultiStore interface.
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
@@ -588,7 +540,7 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 		}
 		stores[k] = store
 	}
-	return cachemulti.NewStore(stores, rs.traceWriter, rs.getTracingContext())
+	return cachemulti.NewStore(stores)
 }
 
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
@@ -654,7 +606,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 		cachedStores[key] = cacheStore
 	}
 
-	return cachemulti.NewStore(cachedStores, rs.traceWriter, rs.getTracingContext()), nil
+	return cachemulti.NewStore(cachedStores), nil
 }
 
 // GetStore returns a mounted Store for a given StoreKey. If the StoreKey does
@@ -672,9 +624,7 @@ func (rs *Store) GetStore(key types.StoreKey) types.Store {
 	return store
 }
 
-// GetKVStore returns a mounted KVStore for a given StoreKey. If tracing is
-// enabled on the KVStore, a wrapped TraceKVStore will be returned with the root
-// store's tracer, otherwise, the original KVStore will be returned.
+// GetKVStore returns a mounted KVStore for a given StoreKey.
 //
 // NOTE: The returned KVStore may be wrapped in an inter-block cache if it is
 // set on the root store.
@@ -688,9 +638,6 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 		panic(fmt.Sprintf("store with key %v is not KVStore", key))
 	}
 
-	if rs.TracingEnabled() {
-		store = tracekv.NewStore(store, rs.traceWriter, rs.getTracingContext())
-	}
 	if rs.ListeningEnabled(key) {
 		store = listenkv.NewStore(store, key, rs.listeners[key])
 	}

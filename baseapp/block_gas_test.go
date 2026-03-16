@@ -99,7 +99,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			&appBuilder)
 		require.NoError(t, err)
 
-		bapp := appBuilder.Build(dbm.NewMemDB(), nil)
+		bapp := appBuilder.Build(dbm.NewMemDB())
 		err = bapp.Load(true)
 		require.NoError(t, err)
 

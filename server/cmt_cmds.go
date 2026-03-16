@@ -381,7 +381,7 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 					return err
 				}
 
-				app := appCreator(logger, db, nil, serverCtx.Viper)
+				app := appCreator(logger, db, serverCtx.Viper)
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
 

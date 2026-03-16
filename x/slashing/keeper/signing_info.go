@@ -268,3 +268,119 @@ func (k Keeper) GetValidatorMissedBlocks(ctx context.Context, addr sdk.ConsAddre
 
 	return missedBlocks, err
 }
+
+// MigrateSignedBlocksWindow migrates validator signing info and missed block bitmaps
+// when the SignedBlocksWindow parameter changes. This function:
+// 1. Truncates bitmaps to the new window size
+// 2. Adjusts the bitmap to match the proportionally scaled counter
+// 3. Updates IndexOffset to wrap within the new window
+//
+// The proportional approach ensures validators maintain their relative miss rate
+// while preventing counter drift and immediate unfair slashing.
+func (k Keeper) MigrateSignedBlocksWindow(ctx context.Context, oldWindow, newWindow int64) error {
+	// Collect all validators first, then migrate in a loop where errors
+	// propagate properly. IterateValidatorSigningInfos' handler only returns
+	// a stop boolean — errors inside it would be silently swallowed.
+	type valInfo struct {
+		addr     sdk.ConsAddress
+		signInfo types.ValidatorSigningInfo
+	}
+
+	var validators []valInfo
+	if err := k.IterateValidatorSigningInfos(ctx, func(addr sdk.ConsAddress, signInfo types.ValidatorSigningInfo) (stop bool) {
+		validators = append(validators, valInfo{addr: addr, signInfo: signInfo})
+		return false
+	}); err != nil {
+		return err
+	}
+
+	for _, val := range validators {
+		if err := k.migrateValidatorSignedBlocksWindow(ctx, val.addr, val.signInfo, oldWindow, newWindow); err != nil {
+			return errors.Wrapf(err, "failed to migrate validator %s", val.addr)
+		}
+	}
+
+	return nil
+}
+
+// migrateValidatorSignedBlocksWindow migrates a single validator's signing info
+// and missed block bitmap when the SignedBlocksWindow parameter changes.
+func (k Keeper) migrateValidatorSignedBlocksWindow(
+	ctx context.Context,
+	addr sdk.ConsAddress,
+	signInfo types.ValidatorSigningInfo,
+	oldWindow, newWindow int64,
+) error {
+	// Guard against corrupted state: counter should not exceed old window
+	missedCounter := signInfo.MissedBlocksCounter
+	if missedCounter > oldWindow {
+		missedCounter = oldWindow
+	}
+
+	// Calculate proportional counter (floor division for leniency)
+	proportionalCounter := (missedCounter * newWindow) / oldWindow
+
+	// Read missed blocks from the old bitmap within the new window range
+	missedPositions := []int64{}
+	if err := k.IterateMissedBlockBitmap(ctx, addr, func(index int64, missed bool) (stop bool) {
+		if missed && index < newWindow {
+			missedPositions = append(missedPositions, index)
+		}
+		return false
+	}); err != nil {
+		return errors.Wrap(err, "failed to iterate missed block bitmap")
+	}
+
+	actualMissedCount := int64(len(missedPositions))
+
+	// Delete the entire old bitmap
+	if err := k.DeleteMissedBlockBitmap(ctx, addr); err != nil {
+		return errors.Wrap(err, "failed to delete missed block bitmap")
+	}
+
+	// Adjust bitmap to match proportional counter
+	if actualMissedCount > proportionalCounter {
+		// Too many misses — remove excess from the earliest positions
+		toRemove := actualMissedCount - proportionalCounter
+		missedPositions = missedPositions[toRemove:]
+	} else if actualMissedCount < proportionalCounter {
+		// Too few misses — add fabricated misses at positions visited last.
+		// These positions are furthest from the current IndexOffset, giving
+		// validators maximum time before they are revisited.
+		toAdd := proportionalCounter - actualMissedCount
+		currentIndex := signInfo.IndexOffset % newWindow
+
+		added := int64(0)
+		for i := int64(1); added < toAdd && i <= newWindow; i++ {
+			fabricatedPos := (currentIndex - i + newWindow) % newWindow
+			alreadyExists := false
+			for _, pos := range missedPositions {
+				if pos == fabricatedPos {
+					alreadyExists = true
+					break
+				}
+			}
+			if !alreadyExists {
+				missedPositions = append(missedPositions, fabricatedPos)
+				added++
+			}
+		}
+	}
+
+	// Write the adjusted bitmap
+	for _, pos := range missedPositions {
+		if err := k.SetMissedBlockBitmapValue(ctx, addr, pos, true); err != nil {
+			return errors.Wrapf(err, "failed to set missed block bitmap at position %d", pos)
+		}
+	}
+
+	// Update signing info
+	signInfo.MissedBlocksCounter = proportionalCounter
+	signInfo.IndexOffset = signInfo.IndexOffset % newWindow
+
+	if err := k.SetValidatorSigningInfo(ctx, addr, signInfo); err != nil {
+		return errors.Wrap(err, "failed to set validator signing info")
+	}
+
+	return nil
+}

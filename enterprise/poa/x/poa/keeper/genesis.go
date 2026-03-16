@@ -81,9 +81,16 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, cdc codec.BinaryCodec, genesis *ty
 		}
 	}
 
-	// Restore per-validator allocated fees
+	// Restore per-validator allocated fees and recompute totalAllocatedFees
+	var totalAllocated sdk.DecCoins
 	for _, entry := range genesis.AllocatedFees {
 		if err := k.validatorAllocatedFees.Set(ctx, entry.ConsensusAddress, types.ValidatorFees{Fees: entry.Fees}); err != nil {
+			return nil, err
+		}
+		totalAllocated = totalAllocated.Add(entry.Fees...)
+	}
+	if !totalAllocated.IsZero() {
+		if err := k.totalAllocatedFees.Set(ctx, types.ValidatorFees{Fees: totalAllocated}); err != nil {
 			return nil, err
 		}
 	}

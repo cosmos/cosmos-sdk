@@ -1,7 +1,6 @@
 package rootmulti
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"fmt"

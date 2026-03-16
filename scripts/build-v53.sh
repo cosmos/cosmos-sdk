@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
 # build-v53 fetches the v0.53 simd binary for system tests.
-# Tries to download from the v0.53.x-nightly release (non-production) first.
-# Falls back to building from source if download fails.
+# Downloads from the v0.53.x-nightly release (non-production).
+# If download fails, errors with instructions to build manually.
 set -euo pipefail
 
 REPO="cosmos/cosmos-sdk"
 RELEASE_TAG="v0.53.x-nightly"
 OUTPUT="${BUILDDIR:-./build}/simdv53"
-# Go version for v0.53 build (release/v0.53.x requires 1.23). Update when new 1.23.x patches are released.
-GO_V53_VERSION="1.23.8"
-GO_V53_CMD="go${GO_V53_VERSION}"
 
 # Map uname to Go-style GOOS/GOARCH
 detect_goos_goarch() {
@@ -54,54 +51,22 @@ try_download() {
 	return 1
 }
 
-build_from_source() {
-	echo "Download failed, building from source..."
-	local script_dir
-	script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-	local root_dir
-	root_dir="$(cd "${script_dir}/.." && pwd)"
-
-	(
-		cd "$root_dir"
-		git_status=$(git status --porcelain)
-		has_changes=false
-		if [ -n "$git_status" ]; then
-			echo "Stashing uncommitted changes..."
-			git stash push -m "Temporary stash for v53 build" || true
-			has_changes=true
-		fi
-
-		CURRENT_REF=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse HEAD)
-		echo "Fetching release branch..."
-		git fetch origin release/v0.53.x
-		echo "Checking out release branch..."
-		git checkout release/v0.53.x
-		echo "Setting up Go ${GO_V53_VERSION} for v0.53 build..."
-		go install "golang.org/dl/${GO_V53_CMD}@latest"
-		"${GO_V53_CMD}" download
-		export PATH="$("${GO_V53_CMD}" env GOROOT)/bin:$PATH"
-		echo "Building v53 binary..."
-		make build
-		mkdir -p "$(dirname "$OUTPUT")"
-		mv build/simd "$OUTPUT"
-		echo "Returning to original branch..."
-		git checkout "$CURRENT_REF"
-
-		if [ "$has_changes" = "true" ]; then
-			echo "Reapplying stashed changes..."
-			git stash pop || echo "Warning: Could not pop stash, your changes may be in the stash list"
-		fi
-	)
-
-	echo "Built simdv53 at ${OUTPUT}"
-}
-
 main() {
 	mkdir -p "$(dirname "$OUTPUT")"
 	if try_download; then
 		exit 0
 	fi
-	build_from_source
+
+	local root_dir
+	root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+	echo "" >&2
+	echo "Download failed. To build manually:" >&2
+	echo "  cd ${root_dir}" >&2
+	echo "  git checkout release/v0.53.x" >&2
+	echo "  make build" >&2
+	echo "  cp build/simd \"${OUTPUT}\"" >&2
+	echo "" >&2
+	exit 1
 }
 
 main "$@"

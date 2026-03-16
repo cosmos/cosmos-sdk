@@ -553,8 +553,7 @@ test-system: test-system-sdk
 
 .PHONY: test-system test-system-sdk build-system-test-current
 
-# build-v53 fetches the v0.53 simd binary for system tests.
-# Tries download from v0.53.x-nightly first; falls back to building from source (Go 1.23).
+# build-v53 fetches the v0.53 simd binary for system tests from v0.53.x-nightly.
 # Skips if $(BUILDDIR)/simdv53 exists (e.g. local dev reuse).
 build-v53:
 	@if [ -f $(BUILDDIR)/simdv53 ]; then echo "build/simdv53 exists, skipping"; else \

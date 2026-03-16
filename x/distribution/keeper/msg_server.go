@@ -123,8 +123,9 @@ func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 	return &types.MsgFundCommunityPoolResponse{}, nil
 }
 
-func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
-	if err := k.validateAuthority(ctx, msg.Authority); err != nil {
+func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err := ctx.ValidateAuthority(k.authority, msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -144,12 +145,13 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
-func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
+func (k msgServer) CommunityPoolSpend(goCtx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
 	if k.HasExternalCommunityPool() {
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "external community pool is enabled - use the DistributeFromCommunityPool method exposed by the external community pool")
 	}
 
-	if err := k.validateAuthority(ctx, msg.Authority); err != nil {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err := ctx.ValidateAuthority(k.authority, msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -247,11 +249,6 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 	)
 
 	return &types.MsgDepositValidatorRewardsPoolResponse{}, nil
-}
-
-func (k *Keeper) validateAuthority(goCtx context.Context, authority string) error {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	return ctx.ValidateAuthority(k.authority, authority)
 }
 
 func validateAmount(amount sdk.Coins) error {

@@ -204,10 +204,6 @@ func (k Keeper) GetAllContinuousFunds(ctx sdk.Context) ([]types.ContinuousFund, 
 	return cf, nil
 }
 
-func (k Keeper) validateAuthority(ctx sdk.Context, authority string) error {
-	return ctx.ValidateAuthority(k.authority, authority)
-}
-
 // PercentageCoinMul multiplies each coin in an sdk.Coins struct by the given percentage and returns the new
 // value.
 //

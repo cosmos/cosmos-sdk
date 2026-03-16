@@ -26,11 +26,11 @@ var (
 
 // SoftwareUpgrade implements the Msg/SoftwareUpgrade Msg service.
 func (k msgServer) SoftwareUpgrade(goCtx context.Context, msg *types.MsgSoftwareUpgrade) (*types.MsgSoftwareUpgradeResponse, error) {
-	if err := k.validateAuthority(goCtx, msg.Authority); err != nil {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err := ctx.ValidateAuthority(k.authority, msg.Authority); err != nil {
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	err := k.ScheduleUpgrade(ctx, msg.Plan)
 	if err != nil {
 		return nil, err
@@ -40,8 +40,9 @@ func (k msgServer) SoftwareUpgrade(goCtx context.Context, msg *types.MsgSoftware
 }
 
 // CancelUpgrade implements the Msg/CancelUpgrade Msg service.
-func (k msgServer) CancelUpgrade(ctx context.Context, msg *types.MsgCancelUpgrade) (*types.MsgCancelUpgradeResponse, error) {
-	if err := k.validateAuthority(ctx, msg.Authority); err != nil {
+func (k msgServer) CancelUpgrade(goCtx context.Context, msg *types.MsgCancelUpgrade) (*types.MsgCancelUpgradeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err := ctx.ValidateAuthority(k.authority, msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -51,9 +52,4 @@ func (k msgServer) CancelUpgrade(ctx context.Context, msg *types.MsgCancelUpgrad
 	}
 
 	return &types.MsgCancelUpgradeResponse{}, nil
-}
-
-func (k msgServer) validateAuthority(ctx context.Context, authority string) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return sdkCtx.ValidateAuthority(k.authority, authority)
 }

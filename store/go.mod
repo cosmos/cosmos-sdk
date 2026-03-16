@@ -1,12 +1,12 @@
 module cosmossdk.io/store
 
-go 1.24.0
+go 1.25.0
 
 require (
 	cosmossdk.io/errors v1.1.0
 	cosmossdk.io/log/v2 v2.0.1
 	cosmossdk.io/math v1.5.3
-	github.com/cometbft/cometbft v0.39.0-beta.2
+	github.com/cometbft/cometbft v0.39.0-beta.4
 	github.com/cosmos/btree v1.0.0
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -18,7 +18,7 @@ require (
 	github.com/hashicorp/golang-lru v1.0.2
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/mock v0.6.0
-	google.golang.org/grpc v1.79.1
+	google.golang.org/grpc v1.79.2
 	google.golang.org/protobuf v1.36.11
 	gotest.tools/v3 v3.5.2
 )
@@ -38,7 +38,7 @@ require (
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
 	github.com/emicklei/dot v1.8.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/getsentry/sentry-go v0.33.0 // indirect
@@ -67,7 +67,7 @@ require (
 	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/rs/zerolog v1.34.0 // indirect
-	github.com/sasha-s/go-deadlock v0.3.6 // indirect
+	github.com/sasha-s/go-deadlock v0.3.7 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/supranational/blst v0.3.16 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
@@ -76,11 +76,11 @@ require (
 	go.opentelemetry.io/otel/trace v1.40.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	golang.org/x/arch v0.22.0 // indirect
-	golang.org/x/crypto v0.46.0 // indirect
+	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
-	golang.org/x/net v0.48.0 // indirect; indirectg
+	golang.org/x/net v0.51.0 // indirect; indirectg
 	golang.org/x/sys v0.41.0 // indirect
-	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/text v0.34.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260114163908-3f89685c29c3 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

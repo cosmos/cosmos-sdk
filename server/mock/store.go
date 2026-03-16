@@ -1,8 +1,6 @@
 package mock
 
 import (
-	"io"
-
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 
@@ -29,23 +27,7 @@ func (ms multiStore) CacheWrap() storetypes.CacheWrap {
 	panic("not implemented")
 }
 
-func (ms multiStore) CacheWrapWithTrace(_ io.Writer, _ storetypes.TraceContext) storetypes.CacheWrap {
-	panic("not implemented")
-}
-
 func (ms multiStore) CacheWrapWithListeners(_ storetypes.StoreKey, _ []storetypes.MemoryListener) storetypes.CacheWrap {
-	panic("not implemented")
-}
-
-func (ms multiStore) TracingEnabled() bool {
-	panic("not implemented")
-}
-
-func (ms multiStore) SetTracingContext(tc storetypes.TraceContext) storetypes.MultiStore {
-	panic("not implemented")
-}
-
-func (ms multiStore) SetTracer(w io.Writer) storetypes.MultiStore {
 	panic("not implemented")
 }
 
@@ -174,10 +156,6 @@ type kvStore struct {
 }
 
 func (kv kvStore) CacheWrap() storetypes.CacheWrap {
-	panic("not implemented")
-}
-
-func (kv kvStore) CacheWrapWithTrace(_ io.Writer, _ storetypes.TraceContext) storetypes.CacheWrap {
 	panic("not implemented")
 }
 

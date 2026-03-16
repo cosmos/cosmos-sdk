@@ -1,12 +1,9 @@
 package blockstm
 
 import (
-	"io"
-
 	"github.com/cosmos/btree"
 
 	"cosmossdk.io/store/legacy/cachekv"
-	"cosmossdk.io/store/tracekv"
 	storetypes "cosmossdk.io/store/types"
 
 	tree2 "github.com/cosmos/cosmos-sdk/internal/blockstm/tree"
@@ -133,14 +130,6 @@ func (db *GMemDB[V]) GetStoreType() storetypes.StoreType {
 // CacheWrap implements types.KVStore.
 func (db *GMemDB[V]) CacheWrap() storetypes.CacheWrap {
 	return cachekv.NewGStore(db, db.isZero, db.valueLen)
-}
-
-// CacheWrapWithTrace implements types.KVStore.
-func (db *GMemDB[V]) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	if store, ok := any(db).(*GMemDB[[]byte]); ok {
-		return cachekv.NewGStore(tracekv.NewStore(store, w, tc), store.isZero, store.valueLen)
-	}
-	return db.CacheWrap()
 }
 
 // MemDBIterator wraps a generic BTreeIteratorG over a memdbItem.

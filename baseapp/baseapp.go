@@ -89,7 +89,11 @@ type BaseApp struct {
 	name              string                      // application name from abci.BlockInfo
 	db                dbm.DB                      // common DB backend
 	cms               storetypes.CommitMultiStore // Main (uncached) state
-	committer         storetypes.CommitFinalizer
+	// committer is the in-progress CommitFinalizer for the current block, created by StartCommit
+	// during internalFinalizeBlock. It must be set to nil after Finalize() or Rollback() to
+	// release the reference. The CommitFinalizer's state machine guards against misuse
+	// (double-finalize, post-rollback finalize), but callers should still nil the field promptly.
+	committer storetypes.CommitFinalizer
 	qms               storetypes.RootMultiStore // Optional alternative multistore for querying only.
 	storeLoader       StoreLoader               // function to handle store loading, may be overridden with SetStoreLoader()
 	grpcQueryRouter   *GRPCQueryRouter          // router for redirecting gRPC query calls

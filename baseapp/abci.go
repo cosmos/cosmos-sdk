@@ -430,12 +430,8 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 	// Similar call to Abort() is done in `ProcessProposal`.
 	app.optimisticExec.Abort()
 	// If OE had already reached StartCommit, rollback to discard uncommitted state.
-	if app.committer != nil {
-		if err := app.committer.Rollback(); err != nil {
-			app.logger.Error("failed to rollback committer in PrepareProposal", "error", err)
-			return nil, fmt.Errorf("failed to rollback committer in PrepareProposal: %w", err)
-		}
-		app.committer = nil
+	if err := app.rollbackCommitter(); err != nil {
+		return nil, fmt.Errorf("failed to rollback committer in PrepareProposal: %w", err)
 	}
 
 	// Always reset state given that PrepareProposal can timeout and be called
@@ -556,12 +552,8 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		// abort any running OE
 		app.optimisticExec.Abort()
 		// If OE had already reached StartCommit, rollback to discard uncommitted state.
-		if app.committer != nil {
-			if err := app.committer.Rollback(); err != nil {
-				app.logger.Error("failed to rollback committer in ProcessProposal", "error", err)
-				return nil, fmt.Errorf("failed to rollback committer in ProcessProposal: %w", err)
-			}
-			app.committer = nil
+		if err := app.rollbackCommitter(); err != nil {
+			return nil, fmt.Errorf("failed to rollback committer in ProcessProposal: %w", err)
 		}
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 	}
@@ -1004,12 +996,8 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 			app.stateManager.ClearState(execModeFinalize)
 			app.optimisticExec.Reset()
 			// rollback the committer if it was started
-			if app.committer != nil {
-				err := app.committer.Rollback()
-				if err != nil {
-					return nil, fmt.Errorf("failed to rollback optimistic execution commit %w", err)
-				}
-				app.committer = nil
+			if err := app.rollbackCommitter(); err != nil {
+				return nil, fmt.Errorf("failed to rollback optimistic execution commit: %w", err)
 			}
 		}
 	}
@@ -1113,6 +1101,16 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	blockCounter.Add(ctx, 1)
 
 	return resp, nil
+}
+
+// rollbackCommitter rolls back and nils the in-progress committer, if any.
+func (app *BaseApp) rollbackCommitter() error {
+	if app.committer == nil {
+		return nil
+	}
+	err := app.committer.Rollback()
+	app.committer = nil
+	return err
 }
 
 func (app *BaseApp) finishFinalizeBlock(res *abci.ResponseFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {

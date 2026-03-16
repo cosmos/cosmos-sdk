@@ -502,17 +502,6 @@ func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 	return dbm.NewDB("application", backendType, dataDir)
 }
 
-func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
-	if traceWriterFile == "" {
-		return w, err
-	}
-	return os.OpenFile(
-		traceWriterFile,
-		os.O_WRONLY|os.O_APPEND|os.O_CREATE,
-		0o666,
-	)
-}
-
 // DefaultBaseappOptions returns the default baseapp options provided by the Cosmos SDK
 func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	var cache storetypes.MultiStorePersistentCache

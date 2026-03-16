@@ -265,6 +265,8 @@ type CommitMultiStore interface {
 	io.Closer
 }
 
+// CommitFinalizer defines the type that will be used for commiting transactions against the CommitMultiStore.
+// It is designed to allow optimistic commit and rollback if the underlying store supports it.
 type CommitFinalizer interface {
 	// StartFinalize begins finalization and waits until the hash is ready,
 	// but may return before the commit has been fully finalized (i.e. fsync'd to disk).
@@ -275,7 +277,7 @@ type CommitFinalizer interface {
 	// Finalize begins finalization if it hasn't been started yet and
 	// waits for the commit to complete (including fsync).
 	// StartFinalize may be called before Finalize to start finalization early.
-	// After Finalize is called, Rollback will return an error.
+	// After Finalize is called, Rollback can no longer be called and will return an error.
 	// Where we would have previously called CommitMultiStore.Commit(),
 	// we can now call Finalize() to finalize the commit and get the CommitID.
 	Finalize() (CommitID, error)

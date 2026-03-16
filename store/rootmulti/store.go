@@ -565,44 +565,102 @@ func (rs *Store) WorkingHash() []byte {
 	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
 }
 
+type commitState int
+
+const (
+	commitPending commitState = iota
+	commitPrepared
+	commitFinalized
+	commitRolledBack
+)
+
 type commitFinalizer struct {
-	ctx                 context.Context
-	rs                  *Store
-	cacheStore          types.CacheMultiStore
-	finalizationStarted bool
-	hash                types.CommitID
+	ctx        context.Context
+	rs         *Store
+	cacheStore types.CacheMultiStore
+	mu         sync.Mutex
+	state      commitState
+	hash       types.CommitID
+}
+
+func newCommitFinalizer(ctx context.Context, rs *Store, cacheStore types.CacheMultiStore) *commitFinalizer {
+	return &commitFinalizer{
+		ctx:        ctx,
+		rs:         rs,
+		cacheStore: cacheStore,
+	}
 }
 
 func (c *commitFinalizer) StartFinalize() (types.CommitID, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.doStartFinalize()
+}
+
+// doStartFinalize performs the finalization start logic. Caller must hold c.mu.
+func (c *commitFinalizer) doStartFinalize() (types.CommitID, error) {
 	if err := c.ctx.Err(); err != nil {
-		// context canceled or timed out
 		return types.CommitID{}, err
 	}
-	if c.hash.Hash != nil {
+
+	switch c.state {
+	case commitPrepared, commitFinalized:
+		// already done
 		return c.hash, nil
+	case commitRolledBack:
+		return types.CommitID{}, errors.New("cannot finalize after rollback")
+	case commitPending:
+		// compute the hash work now
 	}
-	c.finalizationStarted = true
-	// write the cache store to get the working hash
+
 	c.cacheStore.Write()
 	c.hash.Hash = c.rs.WorkingHash()
 	c.hash.Version = c.rs.LatestVersion() + 1
+	c.state = commitPrepared
 	return c.hash, nil
 }
 
 func (c *commitFinalizer) Rollback() error {
-	if c.finalizationStarted {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	switch c.state {
+	case commitPending:
+		// can roll back
+		c.state = commitRolledBack
+		return nil
+	case commitRolledBack:
+		// already rolled back
+		return nil
+	default:
+		// cannot rollback
 		return errors.New("cannot rollback after finalization has started")
 	}
-	return nil
 }
 
 func (c *commitFinalizer) Finalize() (types.CommitID, error) {
-	if !c.finalizationStarted {
-		if _, err := c.StartFinalize(); err != nil {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	switch c.state {
+	case commitFinalized:
+		// already done
+		return c.hash, nil
+	case commitRolledBack:
+		return types.CommitID{}, errors.New("cannot finalize after rollback")
+	case commitPending:
+		// need to write store changes and compute working hash
+		if _, err := c.doStartFinalize(); err != nil {
 			return types.CommitID{}, err
 		}
+		// fall through to commit
+	case commitPrepared:
+		// store changes written, have hash computed, now commit
 	}
-	return c.rs.Commit(), nil
+
+	c.hash = c.rs.Commit()
+	c.state = commitFinalized
+	return c.hash, nil
 }
 
 // CacheWrap implements CacheWrapper/Store/CommitStore.
@@ -650,13 +708,9 @@ type commitBranch struct {
 	rs    *Store
 }
 
-func (c commitBranch) StartCommit(ctx context.Context, header cmtproto.Header) (types.CommitFinalizer, error) {
+func (c *commitBranch) StartCommit(ctx context.Context, header cmtproto.Header) (types.CommitFinalizer, error) {
 	c.rs.SetCommitHeader(header)
-	return &commitFinalizer{
-		ctx:        ctx,
-		rs:         c.rs,
-		cacheStore: c.inner,
-	}, nil
+	return newCommitFinalizer(ctx, c.rs, c.inner), nil
 }
 
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it

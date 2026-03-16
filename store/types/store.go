@@ -494,30 +494,6 @@ func (key *MemoryStoreKey) String() string {
 	return fmt.Sprintf("MemoryStoreKey{%p, %s}", key, key.name)
 }
 
-//----------------------------------------
-
-// TraceContext contains trace context data.
-type TraceContext map[string]interface{}
-
-// Clone clones tc into another instance of TraceContext.
-func (tc TraceContext) Clone() TraceContext {
-	ret := TraceContext{}
-	maps.Copy(ret, tc)
-
-	return ret
-}
-
-// Merge merges value of newTc into tc.
-func (tc TraceContext) Merge(newTc TraceContext) TraceContext {
-	if tc == nil {
-		tc = TraceContext{}
-	}
-
-	maps.Copy(tc, newTc)
-
-	return tc
-}
-
 // MultiStorePersistentCache defines an interface which provides inter-block
 // (persistent) caching capabilities for multiple CommitKVStores based on StoreKeys.
 type MultiStorePersistentCache interface {

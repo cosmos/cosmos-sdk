@@ -32,8 +32,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#26061](https://github.com/cosmos/cosmos-sdk/pull/26061) Remove tracing from store interfaces and implementations:
     * Remove `SetTracer`, `SetTracingContext`, and `TracingEnabled` from `MultiStore` interface.
     * Remove `CacheWrapWithTrace` from `CacheWrapper` interface.
-    * Remove `tracekv` integration from `rootmulti.Store`, `cachemulti.Store`, and all `CacheWrapper` implementations.
     * Remove `traceWriter` and `traceContext` parameters from `cachemulti.NewStore`, `cachemulti.NewFromKVStore`, and `cachemulti.NewFromParent`.
+    * Remove `store/tracekv` package entirely.
+    * Remove `TraceContext` type `store/types`.
 
 ### Bug Fixes
 

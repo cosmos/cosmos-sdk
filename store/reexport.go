@@ -7,14 +7,12 @@ import (
 type (
 	Store            = types.Store
 	Committer        = types.Committer
-	CommitStore      = types.CommitStore
 	MultiStore       = types.MultiStore
 	CacheMultiStore  = types.CacheMultiStore
 	CommitMultiStore = types.CommitMultiStore
 	KVStore          = types.KVStore
 	Iterator         = types.Iterator
 	CacheKVStore     = types.CacheKVStore
-	CommitKVStore    = types.CommitKVStore
 	CacheWrapper     = types.CacheWrapper
 	CacheWrap        = types.CacheWrap
 	CommitID         = types.CommitID

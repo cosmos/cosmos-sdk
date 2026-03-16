@@ -2,7 +2,6 @@ package baseapp
 
 import (
 	"fmt"
-	"io"
 	"math"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -276,12 +275,6 @@ func (app *BaseApp) SetNotSigverifyTx() {
 	app.sigverifyTx = false
 }
 
-// SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
-// CommitMultiStore.
-func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
-	app.cms.SetTracer(w)
-}
-
 // SetStoreLoader allows us to customize the rootMultiStore initialization.
 func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
 	if app.sealed {
@@ -361,24 +354,6 @@ func (app *BaseApp) SetCheckTxHandler(handler sdk.CheckTxHandler) {
 	}
 
 	app.abciHandlers.CheckTxHandler = handler
-}
-
-// SetInsertTxHandler sets the InsertTx function for the BaseApp.
-func (app *BaseApp) SetInsertTxHandler(handler sdk.InsertTxHandler) {
-	if app.sealed {
-		panic("SetInsertTxHandler() on sealed BaseApp")
-	}
-
-	app.abciHandlers.InsertTxHandler = handler
-}
-
-// SetReapTxsHandler sets the ReapTxs function for the BaseApp.
-func (app *BaseApp) SetReapTxsHandler(handler sdk.ReapTxsHandler) {
-	if app.sealed {
-		panic("SetReapTxsHandler() on sealed BaseApp")
-	}
-
-	app.abciHandlers.ReapTxsHandler = handler
 }
 
 func (app *BaseApp) SetExtendVoteHandler(handler sdk.ExtendVoteHandler) {

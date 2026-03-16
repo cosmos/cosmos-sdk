@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.3.0-beta.0
 	cosmossdk.io/tools/confix v0.1.2
-	github.com/cometbft/cometbft v0.39.0-beta.3
+	github.com/cometbft/cometbft v0.39.0-beta.4
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-sdk v0.54.0-rc.1.0.20251127205138-44ca1c39b279
 	github.com/cosmos/cosmos-sdk/enterprise/poa v0.0.1
@@ -263,11 +263,11 @@ require (
 	golang.org/x/mod v0.33.0 // indirect
 	golang.org/x/net v0.51.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260209163413-e7419c687ee4 // indirect
 	golang.org/x/term v0.40.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
-	golang.org/x/time v0.14.0 // indirect
+	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.42.0 // indirect
 	google.golang.org/genproto v0.0.0-20260128011058-8636f8732409 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260226221140-a57be14db171 // indirect

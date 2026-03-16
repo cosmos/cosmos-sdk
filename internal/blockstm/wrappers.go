@@ -1,8 +1,6 @@
 package blockstm
 
 import (
-	"io"
-
 	"cosmossdk.io/store/cachemulti"
 	storetypes "cosmossdk.io/store/types"
 )
@@ -14,11 +12,6 @@ var (
 
 type msWrapper struct {
 	MultiStore
-}
-
-func (ms msWrapper) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	// TODO implement me
-	panic("implement me")
 }
 
 func (ms msWrapper) CacheMultiStoreWithVersion(version int64) (storetypes.CacheMultiStore, error) {
@@ -48,7 +41,7 @@ func (ms msWrapper) GetObjKVStore(key storetypes.StoreKey) storetypes.ObjKVStore
 }
 
 func (ms msWrapper) CacheMultiStore() storetypes.CacheMultiStore {
-	return cachemulti.NewFromParent(ms.getCacheWrapper, nil, nil)
+	return cachemulti.NewFromParent(ms.getCacheWrapper)
 }
 
 // CacheWrap Implements CacheWrapper.
@@ -59,21 +52,6 @@ func (ms msWrapper) CacheWrap() storetypes.CacheWrap {
 // GetStoreType returns the type of the store.
 func (ms msWrapper) GetStoreType() storetypes.StoreType {
 	return storetypes.StoreTypeMulti
-}
-
-// SetTracer Implements interface MultiStore
-func (ms msWrapper) SetTracer(io.Writer) storetypes.MultiStoreBase {
-	return nil
-}
-
-// SetTracingContext Implements interface MultiStore
-func (ms msWrapper) SetTracingContext(storetypes.TraceContext) storetypes.MultiStoreBase {
-	return nil
-}
-
-// TracingEnabled Implements interface MultiStore
-func (ms msWrapper) TracingEnabled() bool {
-	return false
 }
 
 type stmMultiStoreWrapper struct {

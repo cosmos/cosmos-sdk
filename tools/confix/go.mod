@@ -45,7 +45,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.5 // indirect
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
-	github.com/cometbft/cometbft v0.39.0-beta.3 // indirect
+	github.com/cometbft/cometbft v0.39.0-beta.4 // indirect
 	github.com/cometbft/cometbft-db v0.14.3 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/btree v1.0.0 // indirect
@@ -258,11 +258,11 @@ require (
 	golang.org/x/mod v0.33.0 // indirect
 	golang.org/x/net v0.51.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260209163413-e7419c687ee4 // indirect
 	golang.org/x/term v0.40.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
-	golang.org/x/time v0.14.0 // indirect
+	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.42.0 // indirect
 	google.golang.org/genproto v0.0.0-20260128011058-8636f8732409 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260226221140-a57be14db171 // indirect

@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"maps"
 	"slices"
 
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"

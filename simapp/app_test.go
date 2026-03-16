@@ -92,7 +92,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	require.NoError(t, err)
 
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := NewSimApp(logger.With("instance", "second"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	app2 := NewSimApp(logger.With("instance", "second"), db, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 	_, err = app2.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
@@ -100,11 +100,10 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 func TestRunMigrations(t *testing.T) {
 	db := dbm.NewMemDB()
 	logger := log.NewTestLogger(t)
-	app := NewSimApp(logger.With("instance", "simapp"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	app := NewSimApp(logger.With("instance", "simapp"), db, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 
 	// Create a new baseapp and configurator for the purpose of this test.
 	bApp := baseapp.NewBaseApp(app.Name(), logger.With("instance", "baseapp"), db, app.TxConfig().TxDecoder())
-	bApp.SetCommitMultiStoreTracer(nil)
 	bApp.SetInterfaceRegistry(app.InterfaceRegistry())
 	app.BaseApp = bApp
 	configurator := module.NewConfigurator(app.appCodec, bApp.MsgServiceRouter(), app.GRPCQueryRouter())
@@ -240,7 +239,7 @@ func TestRunMigrations(t *testing.T) {
 
 func TestInitGenesisOnMigration(t *testing.T) {
 	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewTestLogger(t), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	app := NewSimApp(log.NewTestLogger(t), db, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 	ctx := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 
 	// Create a mock module. This module will serve as the new module we're

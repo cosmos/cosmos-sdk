@@ -784,12 +784,6 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		return nil, err
 	}
 
-	if app.cms.TracingEnabled() {
-		app.cms.SetTracingContext(storetypes.TraceContext(
-			map[string]any{"blockHeight": req.Height},
-		))
-	}
-
 	// NOTE: Header populated here is intentionally partial; it omits Version, LastBlockID,
 	// LastCommitHash, DataHash, ValidatorsHash, ConsensusHash, LastResultsHash, and EvidenceHash.
 	// As a result, the HistoricalInfo headers stored by x/staking are unreliable and cannot reproduce
@@ -885,10 +879,6 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	if err != nil {
 		// usually due to canceled
 		return nil, err
-	}
-
-	if finalizeState.MultiStore.TracingEnabled() {
-		finalizeState.MultiStore = finalizeState.MultiStore.SetTracingContext(nil).(storetypes.CacheMultiStore)
 	}
 
 	var (

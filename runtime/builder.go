@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"encoding/json"
-	"io"
 
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -24,7 +23,7 @@ func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
 }
 
 // Build builds an *App instance.
-func (a *AppBuilder) Build(db dbm.DB, traceStore io.Writer, baseAppOptions ...func(*baseapp.BaseApp)) *App {
+func (a *AppBuilder) Build(db dbm.DB, baseAppOptions ...func(*baseapp.BaseApp)) *App {
 	for _, option := range a.app.baseAppOptions {
 		baseAppOptions = append(baseAppOptions, option)
 	}
@@ -41,7 +40,6 @@ func (a *AppBuilder) Build(db dbm.DB, traceStore io.Writer, baseAppOptions ...fu
 	)
 
 	bApp := baseapp.NewBaseApp(a.app.config.AppName, a.app.logger, db, nil, baseAppOptions...)
-	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(a.app.interfaceRegistry)
 	bApp.MountStores(a.app.storeKeys...)

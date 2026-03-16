@@ -34,7 +34,6 @@ Setting a custom `CheckTxHandler` is optional. It can be done from your `app.go`
 func NewSimApp(
 	logger log.Logger,
 	db corestore.KVStoreWithBatch,
-	traceStore io.Writer,
 	loadLatest bool,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),

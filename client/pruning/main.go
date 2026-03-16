@@ -78,7 +78,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			defer db.Close()
 
 			logger := log.NewLogger(cmd.OutOrStdout())
-			app := appCreator(logger, db, nil, vp)
+			app := appCreator(logger, db, vp)
 			cms := app.CommitMultiStore()
 
 			rootMultiStore, ok := cms.(*rootmulti.Store)

@@ -15,6 +15,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -61,11 +62,15 @@ func (k *Keeper) checkpointAllValidators(ctx sdk.Context) error {
 		validatorPendingFees := calculateValidatorPendingFees(power, totalPower, unallocated)
 
 		// Update per-validator allocated fees
-		current, err := k.getValidatorAllocatedFees(ctx, consAddr)
+		current, err := k.validatorAllocatedFees.Get(ctx, consAddr)
 		if err != nil {
-			return true, err
+			if errors.Is(err, collections.ErrNotFound) {
+				current = types.ValidatorFees{Fees: sdk.DecCoins{}}
+			} else {
+				return true, err
+			}
 		}
-		if err := k.validatorAllocatedFees.Set(ctx, consAddr, types.ValidatorFees{Fees: current.Add(validatorPendingFees...)}); err != nil {
+		if err := k.validatorAllocatedFees.Set(ctx, consAddr, types.ValidatorFees{Fees: current.Fees.Add(validatorPendingFees...)}); err != nil {
 			return true, err
 		}
 
@@ -149,14 +154,18 @@ func (k *Keeper) WithdrawValidatorFees(ctx sdk.Context, validatorAddr sdk.AccAdd
 
 	consAddr := compositeKey.K2()
 
-	// Get allocated fees for this validator
-	allocated, err := k.getValidatorAllocatedFees(ctx, consAddr)
+	// Get allocated fees for this validator (not found = zero value)
+	allocated, err := k.validatorAllocatedFees.Get(ctx, consAddr)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, collections.ErrNotFound) {
+			allocated = types.ValidatorFees{Fees: sdk.DecCoins{}}
+		} else {
+			return nil, err
+		}
 	}
 
 	// Truncate DecCoins to Coins, preserving the decimal remainder
-	coins, remainder := allocated.TruncateDecimal()
+	coins, remainder := allocated.Fees.TruncateDecimal()
 
 	// If no fees to withdraw, return early
 	if coins.IsZero() {
@@ -181,16 +190,6 @@ func (k *Keeper) WithdrawValidatorFees(ctx sdk.Context, validatorAddr sdk.AccAdd
 	}
 
 	return coins, nil
-}
-
-// getValidatorAllocatedFees returns the accumulated fees for a validator by consensus address string.
-func (k *Keeper) getValidatorAllocatedFees(ctx sdk.Context, consAddr string) (sdk.DecCoins, error) {
-	fees, err := k.validatorAllocatedFees.Get(ctx, consAddr)
-	if err != nil {
-		// Not found means no fees allocated yet
-		return sdk.DecCoins{}, nil
-	}
-	return fees.Fees, nil
 }
 
 // getTotalAllocated returns the total allocated fees across all validators

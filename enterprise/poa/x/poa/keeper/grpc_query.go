@@ -16,6 +16,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -129,11 +130,16 @@ func (k *Keeper) WithdrawableFees(
 	consAddr := compositeKey.K2()
 	power := compositeKey.K1()
 
-	// Get allocated fees from the separate collection
-	totalFees, err := k.getValidatorAllocatedFees(sdkCtx, consAddr)
+	// Get allocated fees from the separate collection (not found = zero value)
+	allocated, err := k.validatorAllocatedFees.Get(sdkCtx, consAddr)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, collections.ErrNotFound) {
+			allocated = types.ValidatorFees{Fees: sdk.DecCoins{}}
+		} else {
+			return nil, err
+		}
 	}
+	totalFees := allocated.Fees
 
 	// Get total power
 	totalPower, err := k.GetTotalPower(sdkCtx)

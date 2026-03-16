@@ -362,8 +362,8 @@ func TestInitGenesis(t *testing.T) {
 
 		// Verify allocated fees are preserved in the collection
 		for _, entry := range allocatedFeesEntries {
-			fees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, entry.ConsensusAddress)
-			require.NoError(t, err)
+			feesVal, _ := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, entry.ConsensusAddress)
+			fees := feesVal.Fees
 			require.Equal(t, entry.Fees, fees, "allocated fees should be preserved for %s", entry.ConsensusAddress)
 		}
 
@@ -531,8 +531,8 @@ func TestInitGenesis(t *testing.T) {
 
 		// Verify allocated fees are preserved in the collection after import
 		for _, entry := range exportedGenesis.AllocatedFees {
-			fees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, entry.ConsensusAddress)
-			require.NoError(t, err)
+			feesVal, _ := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, entry.ConsensusAddress)
+			fees := feesVal.Fees
 			require.Equal(t, entry.Fees, fees,
 				"allocated fees should be preserved during export/import for %s", entry.ConsensusAddress)
 		}

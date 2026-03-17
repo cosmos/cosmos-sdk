@@ -48,10 +48,6 @@ jobs:
             **/go.sum
             **/Makefile
             Makefile
-            !.github/**
-            !docs/**
-            !changelog/**
-            !enterprise/**
 
   # Default: short suite (~5 min), runs on PRs and merge_group
   test-sdk-system:

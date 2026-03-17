@@ -7,7 +7,33 @@ import (
 const (
 	TelemetrySubsystem = "blockstm"
 	KeyExecutedTxs     = "executed_txs"
+	KeyTryExecuteTime  = "try_execute_time"
 	KeyValidatedTxs    = "validated_txs"
+	KeyDecreaseCount   = "decrease_count"
+	KeyExecutionRatio  = "execution_ratio"
+
+	// MVData Metrics
+
+	KeyMVDataRead        = "mvdata_read"
+	KeyMVDataConsolidate = "mvdata_consolidate"
+
+	// MVView Metrics
+
+	KeyMVViewReadWriteSet    = "mvview_read_writeset"
+	KeyMVViewReadMVData      = "mvview_read_mvdata"
+	KeyMVViewReadStorage     = "mvview_read_storage"
+	KeyMVViewWrite           = "mvview_write"
+	KeyMVViewDelete          = "mvview_delete"
+	KeyMVViewApplyWriteSet   = "mvview_apply_writeset"
+	KeyMVViewIteratorKeys    = "mvview_iterator_keys_read"
+	KeyMVViewIteratorKeysCnt = "mvview_iterator_keys_read_count"
+	KeyMVViewEstimateWait    = "mvview_estimate_wait"
+
+	// Executor/Transaction Metrics
+
+	KeyTxReadCount        = "tx_read_count"
+	KeyTxWriteCount       = "tx_write_count"
+	KeyTxNewLocationWrite = "tx_new_location_write"
 )
 
 type (
@@ -69,8 +95,11 @@ type MultiStore interface {
 
 // MVStore is a value type agnostic interface for `MVData`, to keep `MVMemory` value type agnostic.
 type MVStore interface {
-	Delete(Key, TxnIndex)
-	WriteEstimate(Key, TxnIndex)
+	InitWithEstimates(TxnIndex, Locations)
+	ConvertWritesToEstimates(txn TxnIndex)
+	ClearEstimates(txn TxnIndex)
+	ConsolidateEmpty(txn TxnIndex)
+
 	ValidateReadSet(TxnIndex, *ReadSet) bool
 	SnapshotToStore(storetypes.Store)
 }
@@ -79,6 +108,7 @@ type MVStore interface {
 type MVView interface {
 	storetypes.Store
 
-	ApplyWriteSet(TxnVersion) Locations
+	ApplyWriteSet(TxnVersion) bool
 	ReadSet() *ReadSet
+	WriteCount() int
 }

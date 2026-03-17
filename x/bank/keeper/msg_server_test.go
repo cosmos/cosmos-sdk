@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -356,4 +358,88 @@ func (suite *KeeperTestSuite) TestMsgSetSendEnabled() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestUpdateParamsAuthority() {
+	keeperAuthority := suite.bankKeeper.GetAuthority()
+	overrideAuthority := sdk.AccAddress("override_authority___").String()
+	sdkCtx := sdk.UnwrapSDKContext(suite.ctx)
+
+	suite.Run("fallback to keeper authority", func() {
+		_, err := suite.msgServer.UpdateParams(suite.ctx, &banktypes.MsgUpdateParams{
+			Authority: keeperAuthority,
+			Params:    banktypes.DefaultParams(),
+		})
+		suite.Require().NoError(err)
+
+		_, err = suite.msgServer.UpdateParams(suite.ctx, &banktypes.MsgUpdateParams{
+			Authority: overrideAuthority,
+			Params:    banktypes.DefaultParams(),
+		})
+		suite.Require().Error(err)
+		suite.Require().Contains(err.Error(), "invalid authority")
+	})
+
+	suite.Run("consensus params authority takes precedence", func() {
+		ctx := sdkCtx.WithConsensusParams(cmtproto.ConsensusParams{
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAuthority},
+		})
+
+		_, err := suite.msgServer.UpdateParams(ctx, &banktypes.MsgUpdateParams{
+			Authority: overrideAuthority,
+			Params:    banktypes.DefaultParams(),
+		})
+		suite.Require().NoError(err)
+
+		_, err = suite.msgServer.UpdateParams(ctx, &banktypes.MsgUpdateParams{
+			Authority: keeperAuthority,
+			Params:    banktypes.DefaultParams(),
+		})
+		suite.Require().Error(err)
+		suite.Require().Contains(err.Error(), "invalid authority")
+	})
+}
+
+func (suite *KeeperTestSuite) TestSetSendEnabledAuthority() {
+	keeperAuthority := suite.bankKeeper.GetAuthority()
+	overrideAuthority := sdk.AccAddress("override_authority___").String()
+	sdkCtx := sdk.UnwrapSDKContext(suite.ctx)
+
+	suite.Run("fallback to keeper authority", func() {
+		_, err := suite.msgServer.SetSendEnabled(suite.ctx, banktypes.NewMsgSetSendEnabled(
+			keeperAuthority,
+			[]*banktypes.SendEnabled{banktypes.NewSendEnabled("atom", true)},
+			[]string{},
+		))
+		suite.Require().NoError(err)
+
+		_, err = suite.msgServer.SetSendEnabled(suite.ctx, banktypes.NewMsgSetSendEnabled(
+			overrideAuthority,
+			[]*banktypes.SendEnabled{banktypes.NewSendEnabled("atom", true)},
+			[]string{},
+		))
+		suite.Require().Error(err)
+		suite.Require().Contains(err.Error(), "invalid authority")
+	})
+
+	suite.Run("consensus params authority takes precedence", func() {
+		ctx := sdkCtx.WithConsensusParams(cmtproto.ConsensusParams{
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAuthority},
+		})
+
+		_, err := suite.msgServer.SetSendEnabled(ctx, banktypes.NewMsgSetSendEnabled(
+			overrideAuthority,
+			[]*banktypes.SendEnabled{banktypes.NewSendEnabled("atom", true)},
+			[]string{},
+		))
+		suite.Require().NoError(err)
+
+		_, err = suite.msgServer.SetSendEnabled(ctx, banktypes.NewMsgSetSendEnabled(
+			keeperAuthority,
+			[]*banktypes.SendEnabled{banktypes.NewSendEnabled("atom", true)},
+			[]string{},
+		))
+		suite.Require().Error(err)
+		suite.Require().Contains(err.Error(), "invalid authority")
+	})
 }

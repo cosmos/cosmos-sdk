@@ -2,14 +2,11 @@ package types
 
 import (
 	"fmt"
-	"io"
-	"maps"
 	"slices"
 
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 )
@@ -40,7 +37,7 @@ type CommitStore interface {
 // Queryable allows a Store to expose internal state to the abci.Query
 // interface. Multistore can route requests to the proper Store.
 //
-// This is an optional, but useful extension to any CommitStore
+// This is an optional, but useful extension to any Store
 type Queryable interface {
 	Query(*RequestQuery) (*ResponseQuery, error)
 }
@@ -130,19 +127,6 @@ type MultiStore interface {
 	GetKVStore(StoreKey) KVStore
 	GetObjKVStore(StoreKey) ObjKVStore
 
-	// TracingEnabled returns if tracing is enabled for the MultiStore.
-	TracingEnabled() bool
-
-	// SetTracer sets the tracer for the MultiStore that the underlying
-	// stores will utilize to trace operations. The modified MultiStore is
-	// returned.
-	SetTracer(w io.Writer) MultiStore
-
-	// SetTracingContext sets the tracing context for a MultiStore. It is
-	// implied that the caller should update the context when necessary between
-	// tracing operations. The modified MultiStore is returned.
-	SetTracingContext(TraceContext) MultiStore
-
 	// LatestVersion returns the latest version in the store
 	LatestVersion() int64
 }
@@ -166,12 +150,6 @@ type CommitMultiStore interface {
 	// If db == nil, the new store will use the CommitMultiStore db.
 	MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB)
 
-	// Panics on a nil key.
-	GetCommitStore(key StoreKey) CommitStore
-
-	// Panics on a nil key.
-	GetCommitKVStore(key StoreKey) CommitKVStore
-
 	// Load the latest persisted version. Called once after all calls to
 	// Mount*Store() are complete.
 	LoadLatestVersion() error
@@ -192,25 +170,9 @@ type CommitMultiStore interface {
 	// undefined.
 	LoadVersion(ver int64) error
 
-	// Set an inter-block (persistent) cache that maintains a mapping from
-	// StoreKeys to CommitKVStores.
-	SetInterBlockCache(MultiStorePersistentCache)
-
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
 	// starting a new chain at an arbitrary height.
 	SetInitialVersion(version int64) error
-
-	// SetIAVLCacheSize sets the cache size of the IAVL tree.
-	SetIAVLCacheSize(size int)
-
-	// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
-	SetIAVLDisableFastNode(disable bool)
-
-	// SetIAVLSyncPruning set sync/async pruning on iavl.
-	// It is not recommended to use this option.
-	// It is here to enable the prune command to force this to true, allowing the command to wait
-	// for the pruning to finish before returning.
-	SetIAVLSyncPruning(sync bool)
 
 	// RollbackToVersion rollback the db to specific version(height).
 	RollbackToVersion(version int64) error
@@ -223,9 +185,6 @@ type CommitMultiStore interface {
 
 	// PopStateCache returns the accumulated state change messages from the CommitMultiStore
 	PopStateCache() []*StoreKVPair
-
-	// SetMetrics sets the metrics for the KVStore
-	SetMetrics(metrics metrics.StoreMetrics)
 }
 
 //---------subsp-------------------------------
@@ -339,9 +298,6 @@ type CacheWrap interface {
 type CacheWrapper interface {
 	// CacheWrap branches a store.
 	CacheWrap() CacheWrap
-
-	// CacheWrapWithTrace branches a store with tracing enabled.
-	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
 }
 
 func (cid CommitID) IsZero() bool {
@@ -513,31 +469,6 @@ func (key *MemoryStoreKey) Name() string {
 // String returns a stringified representation of the MemoryStoreKey.
 func (key *MemoryStoreKey) String() string {
 	return fmt.Sprintf("MemoryStoreKey{%p, %s}", key, key.name)
-}
-
-//----------------------------------------
-
-// TraceContext contains TraceKVStore context data. It will be written with
-// every trace operation.
-type TraceContext map[string]interface{}
-
-// Clone clones tc into another instance of TraceContext.
-func (tc TraceContext) Clone() TraceContext {
-	ret := TraceContext{}
-	maps.Copy(ret, tc)
-
-	return ret
-}
-
-// Merge merges value of newTc into tc.
-func (tc TraceContext) Merge(newTc TraceContext) TraceContext {
-	if tc == nil {
-		tc = TraceContext{}
-	}
-
-	maps.Copy(tc, newTc)
-
-	return tc
 }
 
 // MultiStorePersistentCache defines an interface which provides inter-block

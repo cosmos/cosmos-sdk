@@ -230,7 +230,6 @@ func DefaultConfigWithAppConfigWithQueryGasLimit(appConfig depinject.Config, que
 		}
 		app := appBuilder.Build(
 			dbm.NewMemDB(),
-			nil,
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
 			baseapp.SetChainID(cfg.ChainID),

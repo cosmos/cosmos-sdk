@@ -38,6 +38,16 @@ const (
 	QueryPathStore  = "store"
 
 	QueryPathBroadcastTx = "/cosmos.tx.v1beta1.Service/BroadcastTx"
+
+	TelemetrySubsystem            = "abci"
+	MetricOETime                  = "oe_time"
+	MetricInternalFinalizeTime    = "internal_finalize_time"
+	MetricExecuteWithExecutorTime = "execute_with_executor_time"
+	MetricGetFinalizeStateTime    = "get_finalize_state_time"
+	MetricPreBlockTime            = "pre_block_time"
+	MetricBeginBlockTime          = "begin_block_time"
+	MetricEndBlockTime            = "end_block_time"
+	MetricOEAborted               = "oe_aborted"
 )
 
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
@@ -774,12 +784,6 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		return nil, err
 	}
 
-	if app.cms.TracingEnabled() {
-		app.cms.SetTracingContext(storetypes.TraceContext(
-			map[string]any{"blockHeight": req.Height},
-		))
-	}
-
 	// NOTE: Header populated here is intentionally partial; it omits Version, LastBlockID,
 	// LastCommitHash, DataHash, ValidatorsHash, ConsensusHash, LastResultsHash, and EvidenceHash.
 	// As a result, the HistoricalInfo headers stored by x/staking are unreliable and cannot reproduce
@@ -877,10 +881,6 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		return nil, err
 	}
 
-	if finalizeState.MultiStore.TracingEnabled() {
-		finalizeState.MultiStore = finalizeState.MultiStore.SetTracingContext(nil).(storetypes.CacheMultiStore)
-	}
-
 	var (
 		blockGasUsed   uint64
 		blockGasWanted uint64
@@ -960,6 +960,10 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	if app.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
+		if aborted {
+			//nolint:staticcheck // todo: refactor
+			telemetry.IncrCounter(1, TelemetrySubsystem, MetricOEAborted)
+		}
 		// Wait for the OE to finish, regardless of whether it was aborted or not
 		res, err = app.optimisticExec.WaitResult()
 

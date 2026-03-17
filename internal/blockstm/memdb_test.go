@@ -5,7 +5,7 @@ import (
 
 	"github.com/test-go/testify/require"
 
-	"cosmossdk.io/store/cachekv"
+	"cosmossdk.io/store/legacy/cachekv"
 	storetypes "cosmossdk.io/store/types"
 )
 
@@ -57,7 +57,4 @@ func TestCacheWraps(t *testing.T) {
 	// attempt to cachewrap
 	cacheWrapper := storage.CacheWrap()
 	require.IsType(t, &cachekv.GStore[any]{}, cacheWrapper)
-
-	cacheWrappedWithTrace := storage.CacheWrapWithTrace(nil, nil)
-	require.IsType(t, &cachekv.GStore[any]{}, cacheWrappedWithTrace)
 }

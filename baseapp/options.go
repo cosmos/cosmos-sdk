@@ -2,13 +2,12 @@ package baseapp
 
 import (
 	"fmt"
-	"io"
 	"math"
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/rootmulti"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
@@ -76,19 +75,37 @@ func SetIndexEvents(ie []string) func(*BaseApp) {
 
 // SetIAVLCacheSize provides a BaseApp option function that sets the size of IAVL cache.
 func SetIAVLCacheSize(size int) func(*BaseApp) {
-	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
+	return func(bapp *BaseApp) {
+		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
+			rms.SetIAVLCacheSize(size)
+		} else {
+			bapp.logger.Warn("SetIAVLCacheSize: CommitMultiStore is not rootmulti.Store, option ignored")
+		}
+	}
 }
 
 // SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
 func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
-	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
+	return func(bapp *BaseApp) {
+		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
+			rms.SetIAVLDisableFastNode(disable)
+		} else {
+			bapp.logger.Warn("SetIAVLDisableFastNode: CommitMultiStore is not rootmulti.Store, option ignored")
+		}
+	}
 }
 
 // SetIAVLSyncPruning set sync/async pruning in the IAVL store. Developers should rarely use this.
 // This option was added to allow the `Prune` command to force synchronous pruning, which is needed to allow the
 // command to wait before returning.
 func SetIAVLSyncPruning(syncPruning bool) func(*BaseApp) {
-	return func(bapp *BaseApp) { bapp.cms.SetIAVLSyncPruning(syncPruning) }
+	return func(bapp *BaseApp) {
+		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
+			rms.SetIAVLSyncPruning(syncPruning)
+		} else {
+			bapp.logger.Warn("SetIAVLSyncPruning: CommitMultiStore is not rootmulti.Store, option ignored")
+		}
+	}
 }
 
 // SetInterBlockCache provides a BaseApp option function that sets the
@@ -277,12 +294,6 @@ func (app *BaseApp) SetNotSigverifyTx() {
 	app.sigverifyTx = false
 }
 
-// SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
-// CommitMultiStore.
-func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
-	app.cms.SetTracer(w)
-}
-
 // SetStoreLoader allows us to customize the rootMultiStore initialization.
 func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
 	if app.sealed {
@@ -378,15 +389,6 @@ func (app *BaseApp) SetVerifyVoteExtensionHandler(handler sdk.VerifyVoteExtensio
 	}
 
 	app.abciHandlers.VerifyVoteExtensionHandler = handler
-}
-
-// SetStoreMetrics sets the prepare proposal function for the BaseApp.
-func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
-	if app.sealed {
-		panic("SetStoreMetrics() on sealed BaseApp")
-	}
-
-	app.cms.SetMetrics(gatherer)
 }
 
 // SetStreamingManager sets the streaming manager for the BaseApp.

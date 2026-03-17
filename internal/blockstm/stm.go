@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"runtime"
 
 	"golang.org/x/sync/errgroup"
@@ -36,6 +37,10 @@ func ExecuteBlockWithEstimates(
 	estimates []MultiLocations, // txn -> multi-locations
 	txExecutor TxExecutor,
 ) error {
+	if blockSize > math.MaxUint32 {
+		return fmt.Errorf("block size overflows uint32: %d", blockSize)
+	}
+
 	if executors < 0 {
 		return fmt.Errorf("invalid number of executors: %d", executors)
 	}
@@ -81,8 +86,10 @@ func ExecuteBlockWithEstimates(
 		return errors.New("scheduler did not complete")
 	}
 
-	telemetry.SetGauge(float32(scheduler.executedTxns.Load()), TelemetrySubsystem, KeyExecutedTxs)   //nolint:staticcheck // TODO: switch to OpenTelemetry
-	telemetry.SetGauge(float32(scheduler.validatedTxns.Load()), TelemetrySubsystem, KeyValidatedTxs) //nolint:staticcheck // TODO: switch to OpenTelemetry
+	telemetry.IncrCounter(float32(scheduler.executedTxns.Load()), TelemetrySubsystem, KeyExecutedTxs)                    //nolint:staticcheck // TODO: switch to OpenTelemetry
+	telemetry.IncrCounter(float32(scheduler.validatedTxns.Load()), TelemetrySubsystem, KeyValidatedTxs)                  //nolint:staticcheck // TODO: switch to OpenTelemetry
+	telemetry.IncrCounter(float32(scheduler.decreaseCnt.Load()), TelemetrySubsystem, KeyDecreaseCount)                   //nolint:staticcheck // TODO: switch to OpenTelemetry
+	telemetry.SetGauge(float32(scheduler.executedTxns.Load())/float32(blockSize), TelemetrySubsystem, KeyExecutionRatio) //nolint:staticcheck // TODO: switch to OpenTelemetry
 
 	// Write the snapshot into the storage
 	mvMemory.WriteSnapshot(storage)

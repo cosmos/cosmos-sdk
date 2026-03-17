@@ -5,13 +5,12 @@ import (
 
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cache"
-	"cosmossdk.io/store/metrics"
-	"cosmossdk.io/store/rootmulti"
+	"cosmossdk.io/store/legacy/rootmulti"
 	"cosmossdk.io/store/types"
 )
 
-func NewCommitMultiStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics) types.CommitMultiStore {
-	return rootmulti.NewStore(db, logger, metricGatherer)
+func NewCommitMultiStore(db dbm.DB, logger log.Logger) types.CommitMultiStore {
+	return rootmulti.NewStore(db, logger)
 }
 
 func NewCommitKVStoreCacheManager() types.MultiStorePersistentCache {

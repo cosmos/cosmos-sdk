@@ -102,23 +102,27 @@ func (k *Keeper) UpdateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, u
 }
 
 // UpdateValidators updates multiple validators in a single operation.
+// The operation is atomic: if any validator update fails, all changes are reverted.
 func (k *Keeper) UpdateValidators(ctx sdk.Context, validators []types.Validator) error {
+	cacheCtx, writeCache := ctx.CacheContext()
+
 	for _, validator := range validators {
 		var pubKey cryptotypes.PubKey
 		if err := k.cdc.UnpackAny(validator.PubKey, &pubKey); err != nil {
 			return err
 		}
-		if err := k.validatePubkeyType(ctx, pubKey); err != nil {
+		if err := k.validatePubkeyType(cacheCtx, pubKey); err != nil {
 			return err
 		}
 
 		consAddress := sdk.GetConsAddress(pubKey)
 
-		if err := k.UpdateValidator(ctx, consAddress, validator); err != nil {
+		if err := k.UpdateValidator(cacheCtx, consAddress, validator); err != nil {
 			return err
 		}
 	}
 
+	writeCache()
 	return nil
 }
 
@@ -148,7 +152,7 @@ func (k *Keeper) CreateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, v
 		// Checkpoint all validators if requested. The only time we don't want to do this is
 		// during ImportGenesis, where we re-add all the validators one by one.
 		if checkpoint {
-			if err := k.CheckpointAllValidators(ctx); err != nil {
+			if err := k.checkpointAllValidators(ctx); err != nil {
 				return err
 			}
 		}
@@ -216,7 +220,7 @@ func (k *Keeper) createABCIValidatorUpdate(pubKeyAny *codectypes.Any, power int6
 // This checkpoints all validators before making the change to ensure accurate fee distribution.
 func (k *Keeper) SetValidatorPower(ctx sdk.Context, consAddress sdk.ConsAddress, power int64) error {
 	// Checkpoint all validators before any power change
-	if err := k.CheckpointAllValidators(ctx); err != nil {
+	if err := k.checkpointAllValidators(ctx); err != nil {
 		return err
 	}
 

@@ -33,7 +33,7 @@ func TestRegisterMsgService(t *testing.T) {
 			depinject.Supply(log.NewTestLogger(t)),
 		), &appBuilder, &registry)
 	require.NoError(t, err)
-	app := appBuilder.Build(dbm.NewMemDB(), nil)
+	app := appBuilder.Build(dbm.NewMemDB())
 
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
@@ -66,7 +66,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 		), &appBuilder, &registry)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	app := appBuilder.Build(db, nil)
+	app := appBuilder.Build(db)
 	testdata.RegisterInterfaces(registry)
 
 	// First time registering service shouldn't panic.
@@ -99,7 +99,7 @@ func TestHybridHandlerByMsgName(t *testing.T) {
 		), &appBuilder, &registry)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	app := appBuilder.Build(db, nil)
+	app := appBuilder.Build(db)
 	testdata.RegisterInterfaces(registry)
 
 	testdata.RegisterMsgServer(
@@ -135,7 +135,7 @@ func TestMsgService(t *testing.T) {
 			depinject.Supply(log.NewNopLogger()),
 		), &appBuilder, &cdc, &interfaceRegistry)
 	require.NoError(t, err)
-	app := appBuilder.Build(dbm.NewMemDB(), nil)
+	app := appBuilder.Build(dbm.NewMemDB())
 
 	// patch in TxConfig instead of using an output from x/auth/tx
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)

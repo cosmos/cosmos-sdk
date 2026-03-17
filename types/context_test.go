@@ -13,8 +13,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/metrics"
-	"cosmossdk.io/store/rootmulti"
+	"cosmossdk.io/store/legacy/rootmulti"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -248,12 +247,14 @@ func (s *contextTestSuite) TestUnwrapSDKContext() {
 
 func (s *contextTestSuite) TestMultiStore() {
 	db := dbm.NewMemDB()
-	rms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-	ctx := types.NewContext(rms, cmtproto.Header{}, false, nil)
+	rms := rootmulti.NewStore(db, log.NewNopLogger())
 
-	objKey := storetypes.NewObjectStoreKey("obj")
-	rms.MountStoreWithDB(objKey, storetypes.StoreTypeObject, nil)
+	memKey := storetypes.NewMemoryStoreKey("mem")
+	rms.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, nil)
 	s.Require().NoError(rms.LoadLatestVersion())
-	objKVStore := ctx.ObjectStore(objKey)
-	s.Require().Equal(objKVStore.GetStoreType(), storetypes.StoreTypeObject)
+
+	ctx := types.NewContext(rms.RootCacheMultiStore(), cmtproto.Header{}, false, nil)
+	memKVStore := ctx.KVStore(memKey)
+	s.Require().Equal(storetypes.StoreTypeMemory, memKVStore.GetStoreType())
+	s.Require().NotNil(memKVStore)
 }

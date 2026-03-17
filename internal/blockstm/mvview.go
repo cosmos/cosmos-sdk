@@ -1,11 +1,9 @@
 package blockstm
 
 import (
-	"io"
 	"time"
 
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/tracekv"
+	"cosmossdk.io/store/legacy/cachekv"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -54,7 +52,7 @@ func NewGMVMemoryView[V any](store int, storage storetypes.GKVStore[V], mvData *
 
 func (s *GMVMemoryView[V]) init() {
 	if s.writeSet == nil {
-		s.writeSet = NewGMemDBNonConcurrent(s.mvData.isZero, s.mvData.valueLen)
+		s.writeSet = NewWriteSet(s.mvData.isZero, s.mvData.valueLen)
 	}
 }
 
@@ -65,20 +63,8 @@ func (s *GMVMemoryView[V]) waitFor(txn TxnIndex) {
 	}
 }
 
-func (s *GMVMemoryView[V]) ApplyWriteSet(version TxnVersion) Locations {
-	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVViewApplyWriteSet) //nolint:staticcheck // TODO: switch to OpenTelemetry
-	if s.writeSet == nil || s.writeSet.Len() == 0 {
-		return nil
-	}
-
-	newLocations := make([]Key, 0, s.writeSet.Len())
-	s.writeSet.Scan(func(key Key, value V) bool {
-		s.mvData.Write(key, value, version)
-		newLocations = append(newLocations, key)
-		return true
-	})
-
-	return newLocations
+func (s *GMVMemoryView[V]) ApplyWriteSet(version TxnVersion) bool {
+	return s.mvData.Consolidate(version, s.writeSet)
 }
 
 func (s *GMVMemoryView[V]) ReadSet() *ReadSet {
@@ -213,14 +199,6 @@ func (s *GMVMemoryView[V]) iterator(opts IteratorOptions) storetypes.GIterator[V
 // CacheWrap implements types.Store.
 func (s *GMVMemoryView[V]) CacheWrap() storetypes.CacheWrap {
 	return cachekv.NewGStore(s, s.mvData.isZero, s.mvData.valueLen)
-}
-
-// CacheWrapWithTrace implements types.Store.
-func (s *GMVMemoryView[V]) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	if store, ok := any(s).(*GMVMemoryView[[]byte]); ok {
-		return cachekv.NewGStore(tracekv.NewStore(store, w, tc), store.mvData.isZero, store.mvData.valueLen)
-	}
-	return s.CacheWrap()
 }
 
 // GetStoreType implements types.Store.

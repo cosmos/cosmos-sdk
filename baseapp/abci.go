@@ -429,6 +429,10 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 	// No-op if OE is not enabled.
 	// Similar call to Abort() is done in `ProcessProposal`.
 	app.optimisticExec.Abort()
+	// If OE had already reached StartCommit, rollback to discard uncommitted state.
+	if err := app.rollbackCommitter(); err != nil {
+		return nil, fmt.Errorf("failed to rollback committer in PrepareProposal: %w", err)
+	}
 
 	// Always reset state given that PrepareProposal can timeout and be called
 	// again in a subsequent round.
@@ -547,6 +551,10 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	if req.Height > app.initialHeight {
 		// abort any running OE
 		app.optimisticExec.Abort()
+		// If OE had already reached StartCommit, rollback to discard uncommitted state.
+		if err := app.rollbackCommitter(); err != nil {
+			return nil, fmt.Errorf("failed to rollback committer in ProcessProposal: %w", err)
+		}
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 	}
 
@@ -638,7 +646,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		ctx, _ = app.stateManager.GetState(execModeFinalize).Context().CacheContext()
 	} else {
 		emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
-		ms := app.cms.CacheMultiStore()
+		ms := app.cms.CommitBranch()
 		ctx = sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 	}
 
@@ -716,7 +724,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		ctx, _ = app.stateManager.GetState(execModeFinalize).Context().CacheContext()
 	} else {
 		emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
-		ms := app.cms.CacheMultiStore()
+		ms := app.cms.CommitBranch()
 		ctx = sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 	}
 
@@ -916,6 +924,13 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	events = append(events, endBlock.Events...)
 	cp := app.GetConsensusParams(finalizeState.Context())
 
+	// if we haven't aborted thus far, start committing the state, we can always rollback later
+	committer, err := finalizeState.MultiStore.StartCommit(goCtx, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start commit: %w", err)
+	}
+	app.committer = committer
+
 	return &abci.ResponseFinalizeBlock{
 		Events:                events,
 		TxResults:             txResults,
@@ -960,34 +975,40 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	if app.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
-		if aborted {
-			//nolint:staticcheck // todo: refactor
-			telemetry.IncrCounter(1, TelemetrySubsystem, MetricOEAborted)
-		}
 		// Wait for the OE to finish, regardless of whether it was aborted or not
 		res, err = app.optimisticExec.WaitResult()
 
 		// only return if we are not aborting
 		if !aborted {
-			if res != nil {
-				res.AppHash = app.workingHash()
+			// only check errors here because if we abort we don't care about the error
+			if err != nil {
+				return nil, err
 			}
+			if app.committer == nil {
+				return nil, fmt.Errorf("unexpected nil committer after successful optimistic execution")
+			}
+			return app.finishFinalizeBlock(res)
+		} else {
+			//nolint:staticcheck // todo: refactor
+			telemetry.IncrCounter(1, TelemetrySubsystem, MetricOEAborted)
 
-			return res, err
+			// if it was aborted, we need to reset the state
+			app.stateManager.ClearState(execModeFinalize)
+			app.optimisticExec.Reset()
+			// rollback the committer if it was started
+			if err := app.rollbackCommitter(); err != nil {
+				return nil, fmt.Errorf("failed to rollback optimistic execution commit: %w", err)
+			}
 		}
-
-		// if it was aborted, we need to reset the state
-		app.stateManager.ClearState(execModeFinalize)
-		app.optimisticExec.Reset()
 	}
 
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
 	res, err = app.internalFinalizeBlock(context.Background(), req)
-	if res != nil {
-		res.AppHash = app.workingHash()
+	if err != nil {
+		return nil, err
 	}
 
-	return res, err
+	return app.finishFinalizeBlock(res)
 }
 
 // checkHalt checks if height or time exceeds halt-height or halt-time respectively.
@@ -1028,12 +1049,22 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 		app.abciHandlers.Precommiter(finalizeState.Context())
 	}
 
-	rms, ok := app.cms.(*rootmulti.Store)
-	if ok {
-		rms.SetCommitHeader(header)
+	committer := app.committer
+	app.committer = nil
+
+	if committer == nil {
+		// during InitChain or simulations we must initialize the committer here
+		var err error
+		committer, err = finalizeState.MultiStore.StartCommit(context.Background(), header)
+		if err != nil {
+			return nil, fmt.Errorf("failed to start commit: %w", err)
+		}
 	}
 
-	app.cms.Commit()
+	_, err := committer.Finalize()
+	if err != nil {
+		return nil, fmt.Errorf("failed to finalize commit: %w", err)
+	}
 
 	resp := &abci.ResponseCommit{
 		RetainHeight: retainHeight,
@@ -1072,22 +1103,23 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	return resp, nil
 }
 
-// workingHash gets the apphash that will be finalized in commit.
-// These writes will be persisted to the root multi-store (app.cms) and flushed to
-// disk in the Commit phase. This means when the ABCI client requests Commit(), the application
-// state transitions will be flushed to disk and as a result, but we already have
-// an application Merkle root.
-func (app *BaseApp) workingHash() []byte {
-	// Write the FinalizeBlock state into branched storage and commit the MultiStore.
-	// The write to the FinalizeBlock state writes all state transitions to the root
-	// MultiStore (app.cms) so when Commit() is called it persists those values.
-	app.stateManager.GetState(execModeFinalize).MultiStore.Write()
+// rollbackCommitter rolls back and nils the in-progress committer, if any.
+func (app *BaseApp) rollbackCommitter() error {
+	if app.committer == nil {
+		return nil
+	}
+	err := app.committer.Rollback()
+	app.committer = nil
+	return err
+}
 
-	// Get the hash of all writes in order to return the apphash to the comet in finalizeBlock.
-	commitHash := app.cms.WorkingHash()
-	app.logger.Debug("hash of all writes", "workingHash", fmt.Sprintf("%X", commitHash))
-
-	return commitHash
+func (app *BaseApp) finishFinalizeBlock(res *abci.ResponseFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	hash, err := app.committer.StartFinalize()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get working hash: %w", err)
+	}
+	res.AppHash = hash.Hash
+	return res, nil
 }
 
 func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.ResponseQuery {
@@ -1305,7 +1337,7 @@ func (bapp *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, chec
 	// use custom query multi-store if provided
 	qms := bapp.qms
 	if qms == nil {
-		qms = bapp.cms.(storetypes.MultiStore)
+		qms = bapp.cms
 	}
 
 	lastBlockHeight := qms.LatestVersion()
@@ -1378,12 +1410,9 @@ func (bapp *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, chec
 		WithBlockHeight(height)
 
 	if !isLatest {
-		rms, ok := bapp.cms.(*rootmulti.Store)
-		if ok {
-			cInfo, err := rms.GetCommitInfo(height)
-			if cInfo != nil && err == nil {
-				ctx = ctx.WithBlockHeight(height).WithBlockTime(cInfo.Timestamp)
-			}
+		cInfo, err := bapp.cms.GetCommitInfo(height)
+		if cInfo != nil && err == nil {
+			ctx = ctx.WithBlockHeight(height).WithBlockTime(cInfo.Timestamp)
 		}
 	}
 	return ctx, nil

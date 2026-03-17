@@ -32,6 +32,11 @@ const (
 	loadTestLightTxCount     = 10000
 	loadTestLightWorkers     = 50 // limit concurrent simd processes to avoid thrashing
 
+	// Mini load test: runs in short mode on PRs (~1-2 min)
+	loadTestMiniSenderCount = 5
+	loadTestMiniTxCount    = 1000
+	loadTestMiniWorkers    = 10
+
 	loadTestReceiverCount = 50
 
 	loadTestSenderPrefix      = "sender"
@@ -253,15 +258,26 @@ func TestHeavyLoad(t *testing.T) {
 	}
 }
 
-// TestHeavyLoadLight is a lighter variant that runs without env gate for CI.
-// Uses multiple senders and parallel txs to introduce moderate load.
+// TestHeavyLoadMini runs in short mode on PRs. Small load (~200 txs) to validate broadcaster and chain under load.
+func TestHeavyLoadMini(t *testing.T) {
+	runProgrammaticLoadTest(t, loadTestMiniSenderCount, loadTestMiniTxCount, loadTestMiniWorkers, loadTestInitialBalance)
+}
+
+// TestHeavyLoadLight is a lighter variant for the extended suite. Uses 10k txs; skipped in short mode.
 func TestHeavyLoadLight(t *testing.T) {
-	// Skip in short mode to keep default `go test ./...` fast
 	if testing.Short() {
 		t.Skip("skipping light load test in short mode")
 	}
+	runProgrammaticLoadTest(t, loadTestLightSenderCount, loadTestLightTxCount, loadTestLightWorkers, loadTestInitialBalance)
+}
 
-	sut, setup := setupLoadTestChain(t, loadTestLightSenderCount, loadTestReceiverCount, loadTestInitialBalance)
+func runProgrammaticLoadTest(t *testing.T, senderCount, txCount, workers int, fundAmount string) {
+	t.Helper()
+	receiverCount := loadTestReceiverCount
+	if senderCount < receiverCount {
+		receiverCount = senderCount
+	}
+	sut, setup := setupLoadTestChain(t, senderCount, receiverCount, fundAmount)
 	cli := systest.NewCLIWrapper(t, sut, false)
 	senderNames, receiverAddrs, nodeEndpoints := setup.senderNames, setup.receiverAddrs, setup.nodeEndpoints
 
@@ -279,7 +295,7 @@ func TestHeavyLoadLight(t *testing.T) {
 
 	var sent, failed atomic.Int64
 	var txHashesMu sync.Mutex
-	txHashesWithTime := make([]txHashWithTime, 0, loadTestLightTxCount)
+	txHashesWithTime := make([]txHashWithTime, 0, txCount)
 
 	heightBeforeBroadcast := sut.CurrentHeight()
 	type job struct {
@@ -288,11 +304,11 @@ func TestHeavyLoadLight(t *testing.T) {
 		receiverAddr string
 		nodeAddr     string
 	}
-	jobs := make(chan job, loadTestLightTxCount)
-	for i := 0; i < loadTestLightTxCount; i++ {
+	jobs := make(chan job, txCount)
+	for i := 0; i < txCount; i++ {
 		jobs <- job{
 			idx:          i,
-			senderName:   senderNames[i%loadTestLightSenderCount],
+			senderName:   senderNames[i%senderCount],
 			receiverAddr: receiverAddrs[i%len(receiverAddrs)],
 			nodeAddr:     nodeEndpoints[i%len(nodeEndpoints)].RPC,
 		}
@@ -309,14 +325,14 @@ func TestHeavyLoadLight(t *testing.T) {
 				return
 			case <-ticker.C:
 				s, f := sent.Load(), failed.Load()
-				pct := 100 * float64(s+f) / float64(loadTestLightTxCount)
-				t.Logf("load progress: %d/%d txs (%.0f%%) — %d sent, %d failed", s+f, loadTestLightTxCount, pct, s, f)
+				pct := 100 * float64(s+f) / float64(txCount)
+				t.Logf("load progress: %d/%d txs (%.0f%%) — %d sent, %d failed", s+f, txCount, pct, s, f)
 			}
 		}
 	}()
 
 	var wg sync.WaitGroup
-	for w := 0; w < loadTestLightWorkers; w++ {
+	for w := 0; w < workers; w++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

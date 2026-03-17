@@ -27,7 +27,7 @@ make test-system
 | `make test-sdk-system` | ~5–7 min | Default; CI on PRs; quick local smoke test |
 | `make test-sdk-system-extended` | ~30 min | Local full run; CI on merges to main |
 
-Short suite skips: load tests, chain upgrade, stability (crash recovery, pause/resume), protocolpool continuous-funds, node pruning, block retention tests.
+Short suite includes: TestHeavyLoadMini (~1k txs). Skips: TestHeavyLoadLight (10k txs), chain upgrade, stability (crash recovery, pause/resume), protocolpool continuous-funds, node pruning, block retention tests.
 
 Or via manual steps
 
@@ -53,6 +53,7 @@ Run from `tests/systemtests` (this package has its own go.mod):
 | Test | Command | Notes |
 |------|---------|------|
 | TestStakeUnstake | `go test -mod=readonly -tags='system_test' -v -run TestStakeUnstake ./... --verbose` | |
+| TestHeavyLoadMini | `go test -mod=readonly -tags='system_test' -v -short -run TestHeavyLoadMini ./... --verbose` | Mini load (~1k txs); runs in short suite on PRs |
 | TestHeavyLoadLight | `go test -mod=readonly -tags='system_test' -v -short=false -run TestHeavyLoadLight ./... --nodes-count=4 --verbose` | Requires `-short=false` (skipped in short mode) |
 | TestHeavyLoad | `COSMOS_RUN_HEAVY_LOAD_TEST=1 go test -mod=readonly -tags='system_test' -v -run TestHeavyLoad ./... -timeout=15m --nodes-count=4 --verbose` | Gated by env var; use `-timeout=15m` or longer |
 

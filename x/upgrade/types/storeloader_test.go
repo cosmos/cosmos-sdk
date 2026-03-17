@@ -14,7 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/prun
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 

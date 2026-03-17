@@ -14,10 +14,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/v2/internal/kv"
 	"github.com/cosmos/cosmos-sdk/store/v2/legacy/cachekv"
-	pruningtyp
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
-
+	"github.com/cosmos/cosmos-sdk/store/v2/wrapper"
 )
 
 const (

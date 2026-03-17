@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
-	
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 )
 
 const FlagAppDBBackend = "app-db-backend"

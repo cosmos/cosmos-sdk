@@ -46,6 +46,12 @@ type txHashWithTime struct {
 	bcast time.Time
 }
 
+// nodeEndpoint holds the RPC and gRPC addresses for a node.
+type nodeEndpoint struct {
+	RPC  string
+	GRPC string
+}
+
 // loadTestSetup holds the common chain setup for load tests.
 type loadTestSetup struct {
 	cli           *systest.CLIWrapper
@@ -90,8 +96,8 @@ func setupLoadTestChain(t *testing.T, senderCount, receiverCount int, fundAmount
 	nodeEndpoints := make([]nodeEndpoint, sut.NodesCount())
 	for i := 0; i < sut.NodesCount(); i++ {
 		nodeEndpoints[i] = nodeEndpoint{
-			RPC:  fmt.Sprintf("tcp://127.0.0.1:%d", 26657+i),
-			GRPC: fmt.Sprintf("127.0.0.1:%d", 9090+i),
+			RPC:  fmt.Sprintf("tcp://127.0.0.1:%d", systest.DefaultRpcPort+i),
+			GRPC: fmt.Sprintf("127.0.0.1:%d", systest.DefaultGrpcPort+i),
 		}
 	}
 
@@ -127,15 +133,16 @@ func gatherLoadTestStats(t *testing.T, sut *systest.SystemUnderTest, committed, 
 	}
 	first, last := withTxs[0], withTxs[len(withTxs)-1]
 	activeDuration := last.time.Sub(first.time)
-	var tps float64
-	if activeDuration > 0 {
-		tps = float64(committed) / activeDuration.Seconds()
-	}
 	var withTxsStr []string
 	for _, b := range withTxs {
 		withTxsStr = append(withTxsStr, fmt.Sprintf("h%d(%d)", b.height, b.txCnt))
 	}
-	t.Logf("load stats (active window h%d–h%d): committed=%d, avg TPS=%.1f (over %s)", first.height, last.height, committed, tps, activeDuration.Round(time.Millisecond))
+	if activeDuration > 0 {
+		tps := float64(committed) / activeDuration.Seconds()
+		t.Logf("load stats (active window h%d–h%d): committed=%d, avg TPS=%.1f (over %s)", first.height, last.height, committed, tps, activeDuration.Round(time.Millisecond))
+	} else {
+		t.Logf("load stats: all txs in a single block (h%d); TPS undefined", first.height)
+	}
 	t.Logf("block utilization: %d blocks %v", len(withTxs), withTxsStr)
 
 	const maxSample = 50

@@ -116,7 +116,9 @@ func (b *LoadTestBroadcaster) broadcastBankSend(fromKey, toAddr, amount, fees st
 	txBuilder.SetMemo("load-test")
 	if unordered {
 		txBuilder.SetUnordered(true)
-		txBuilder.SetTimeoutTimestamp(time.Now().Add(5 * time.Minute).Add(time.Duration(uniqueIdx) * time.Nanosecond))
+		// Fixed base + ms-scale offset guarantees unique timeouts across concurrent goroutines.
+		base := time.Now().Add(5 * time.Minute)
+		txBuilder.SetTimeoutTimestamp(base.Add(time.Duration(uniqueIdx) * time.Millisecond))
 	}
 
 	txFactory := clienttx.Factory{}.

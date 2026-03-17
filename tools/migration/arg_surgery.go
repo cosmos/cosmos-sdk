@@ -149,16 +149,16 @@ func originalLastArg(surgery ArgSurgery, callExpr *ast.CallExpr) ast.Expr {
 	return nil
 }
 
-// argPlaceholderRe matches $ARG{N} tokens in AppendArgs strings.
-var argPlaceholderRe = regexp.MustCompile(`\$ARG\{(\d+)\}`)
+// argPlaceholderRegex matches $ARG{N} tokens in AppendArgs strings.
+var argPlaceholderRegex = regexp.MustCompile(`\$ARG\{(\d+)\}`)
 
 // resolveArgPlaceholders replaces $ARG{N} tokens in expr with temporary identifiers
 // (_removedArg0_, _removedArg1_, etc.) so the string can be parsed as valid Go.
 // After parsing, replaceArgPlaceholderIdents must be called on the resulting AST
 // to swap those identifiers with the real removed-arg expressions.
 func resolveArgPlaceholders(expr string, removedArgs map[int]ast.Expr) string {
-	return argPlaceholderRe.ReplaceAllStringFunc(expr, func(match string) string {
-		sub := argPlaceholderRe.FindStringSubmatch(match)
+	return argPlaceholderRegex.ReplaceAllStringFunc(expr, func(match string) string {
+		sub := argPlaceholderRegex.FindStringSubmatch(match)
 		if len(sub) < 2 {
 			return match
 		}
@@ -216,13 +216,13 @@ func replaceArgPlaceholderIdents(expr ast.Expr, removedArgs map[int]ast.Expr) as
 	return expr
 }
 
-// placeholderIdentRe matches the temporary identifiers produced by resolveArgPlaceholders.
-var placeholderIdentRe = regexp.MustCompile(`^_removedArg(\d+)_$`)
+// placeholderIdentRegex matches the temporary identifiers produced by resolveArgPlaceholders.
+var placeholderIdentRegex = regexp.MustCompile(`^_removedArg(\d+)_$`)
 
 // matchPlaceholderIdent checks whether name is a _removedArgN_ placeholder and returns
 // the corresponding removed-arg AST expression, or nil if it doesn't match.
 func matchPlaceholderIdent(name string, removedArgs map[int]ast.Expr) ast.Expr {
-	sub := placeholderIdentRe.FindStringSubmatch(name)
+	sub := placeholderIdentRegex.FindStringSubmatch(name)
 	if len(sub) < 2 {
 		return nil
 	}
@@ -249,7 +249,7 @@ type ArgSurgeryWithAST struct {
 	// Transform takes the resolved package alias and the original arguments,
 	// and returns the new arguments. The alias is the identifier actually used
 	// in the file for the matched import (e.g. "govkeeper", "keeper", etc.),
-	// so synthesised AST nodes can reference the correct package name.
+	// so synthesized AST nodes can reference the correct package name.
 	Transform func(pkgAlias string, originalArgs []ast.Expr) []ast.Expr
 }
 

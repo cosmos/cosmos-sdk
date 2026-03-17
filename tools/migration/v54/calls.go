@@ -26,6 +26,9 @@ var argSurgeries = []migration.ArgSurgeryWithAST{
 			if len(args) < 9 {
 				return args // unexpected arg count, leave unchanged
 			}
+			if hasDefaultGovVoteCalculator(args[len(args)-1], pkgAlias) {
+				return args // already migrated
+			}
 
 			// args[4] is stakingKeeper — save it
 			stakingKeeper := args[4]
@@ -49,51 +52,32 @@ var argSurgeries = []migration.ArgSurgeryWithAST{
 	},
 }
 
+func hasDefaultGovVoteCalculator(expr ast.Expr, pkgAlias string) bool {
+	call, ok := expr.(*ast.CallExpr)
+	if !ok {
+		return false
+	}
+
+	sel, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok {
+		return false
+	}
+
+	pkgIdent, ok := sel.X.(*ast.Ident)
+	if !ok {
+		return false
+	}
+
+	return pkgIdent.Name == pkgAlias && sel.Sel.Name == "NewDefaultCalculateVoteResultsAndVotingPower"
+}
+
 // callArgEdits defines removal/addition of specific arguments from calls matched by pattern.
 var callArgEdits = []migration.CallArgRemoval{
-	// --- Store key removals: remove circuit, nft, group from NewKVStoreKeys ---
+	// --- SetOrderEndBlockers: add bank at front ---
 	{
-		FuncPattern:  "storetypes.NewKVStoreKeys",
-		ArgsToRemove: []string{"circuittypes.StoreKey", "nftkeeper.StoreKey", "group.StoreKey"},
-	},
-
-	// --- module.NewManager: remove circuit, nft, group AppModule registrations ---
-	// exprToString renders CallExpr as "pkg.Func(...)"
-	{
-		FuncPattern:  "module.NewManager",
-		ArgsToRemove: []string{"circuit.NewAppModule(...)", "nftmodule.NewAppModule(...)", "groupmodule.NewAppModule(...)"},
-	},
-
-	// --- SetOrderBeginBlockers: remove circuit, nft, group ---
-	{
-		MethodName:   "SetOrderBeginBlockers",
-		ArgsToRemove: []string{"circuittypes.ModuleName", "nft.ModuleName", "group.ModuleName"},
-	},
-
-	// --- SetOrderEndBlockers: remove group, circuit, nft; add bank at front ---
-	{
-		MethodName:   "SetOrderEndBlockers",
-		ArgsToRemove: []string{"group.ModuleName", "circuittypes.ModuleName", "nft.ModuleName"},
+		MethodName: "SetOrderEndBlockers",
 		ArgsToAdd: []migration.ArgAddition{
 			{Position: 0, Expr: "banktypes.ModuleName"},
 		},
-	},
-
-	// --- SetOrderInitGenesis: remove circuit, nft, group ---
-	{
-		MethodName:   "SetOrderInitGenesis",
-		ArgsToRemove: []string{"circuittypes.ModuleName", "nft.ModuleName", "group.ModuleName"},
-	},
-
-	// --- SetOrderExportGenesis: remove circuit, nft, group ---
-	{
-		MethodName:   "SetOrderExportGenesis",
-		ArgsToRemove: []string{"circuittypes.ModuleName", "nft.ModuleName", "group.ModuleName"},
-	},
-
-	// --- SetOrderMigrations: remove circuit, nft, group ---
-	{
-		MethodName:   "SetOrderMigrations",
-		ArgsToRemove: []string{"circuittypes.ModuleName", "nft.ModuleName", "group.ModuleName"},
 	},
 }

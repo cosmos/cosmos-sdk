@@ -48,6 +48,8 @@ type ImportWarning struct {
 	ImportPrefix string
 	// Message is the warning message to display when the import is found.
 	Message string
+	// Fatal, if true, aborts the migration after warnings are reported.
+	Fatal bool
 	// AlsoRemove, if true, removes the matching import from the AST after warning.
 	// This is useful for imports that cannot be auto-rewritten but should be stripped
 	// to allow the code to compile (e.g., x/group under commercial license).
@@ -127,6 +129,20 @@ func Migrate(directory string, args MigrateArgs) error {
 		return err
 	}
 
+	if len(args.ImportWarnings) > 0 {
+		fatalWarnings, err := collectFatalImportWarnings(goFiles, args.ImportWarnings)
+		if err != nil {
+			return fmt.Errorf("error checking fatal import warnings: %w", err)
+		}
+		if len(fatalWarnings) > 0 {
+			log.Warn().Msg("=== WARNINGS ===")
+			for _, w := range fatalWarnings {
+				log.Warn().Msgf("  [%s] %s", w.File, w.Message)
+			}
+			return fmt.Errorf("migration aborted due to fatal import warnings")
+		}
+	}
+
 	var warnings []Warning
 	var warningsMu sync.Mutex
 
@@ -158,6 +174,24 @@ func Migrate(directory string, args MigrateArgs) error {
 	}
 
 	return nil
+}
+
+func collectFatalImportWarnings(goFiles []string, importWarnings []ImportWarning) ([]Warning, error) {
+	var warnings []Warning
+	for _, filePath := range goFiles {
+		fset := token.NewFileSet()
+		node, err := parser.ParseFile(fset, filePath, nil, parser.ParseComments)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing %s: %w", filePath, err)
+		}
+
+		fileWarnings, _, hasFatal := checkImportWarnings(filePath, fset, node, importWarnings)
+		if hasFatal {
+			warnings = append(warnings, fileWarnings...)
+		}
+	}
+
+	return warnings, nil
 }
 
 func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRemoval, replacements []GoModReplacement, additions GoModAddition, stripLocalReplaces bool) error {
@@ -237,13 +271,14 @@ func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRem
 // checkImportWarnings scans a file's imports for patterns that require attention.
 // If AlsoRemove is set on a warning, the matching import is removed from the AST.
 // Returns warnings and whether any imports were removed (changed).
-func checkImportWarnings(filePath string, fset *token.FileSet, node *ast.File, importWarnings []ImportWarning) ([]Warning, bool) {
+func checkImportWarnings(filePath string, fset *token.FileSet, node *ast.File, importWarnings []ImportWarning) ([]Warning, bool, bool) {
 	type importToRemove struct {
 		name string // alias/blank ("_") or "" for unaliased
 		path string
 	}
 	var warnings []Warning
 	var toRemove []importToRemove
+	hasFatal := false
 	for _, imp := range node.Imports {
 		importPath := strings.Trim(imp.Path.Value, "\"")
 		for _, iw := range importWarnings {
@@ -252,6 +287,9 @@ func checkImportWarnings(filePath string, fset *token.FileSet, node *ast.File, i
 					File:    filePath,
 					Message: fmt.Sprintf("import %q detected — %s", importPath, iw.Message),
 				})
+				if iw.Fatal {
+					hasFatal = true
+				}
 				if iw.AlsoRemove {
 					name := ""
 					if imp.Name != nil {
@@ -274,7 +312,7 @@ func checkImportWarnings(filePath string, fset *token.FileSet, node *ast.File, i
 	if changed {
 		ast.SortImports(fset, node)
 	}
-	return warnings, changed
+	return warnings, changed, hasFatal
 }
 
 func updateFiles(goFiles []string, args MigrateArgs, warnings *[]Warning, warningsMu *sync.Mutex) error {
@@ -292,7 +330,7 @@ func updateFiles(goFiles []string, args MigrateArgs, warnings *[]Warning, warnin
 
 			// Check for import warnings (and optionally remove matching imports)
 			if len(args.ImportWarnings) > 0 {
-				fileWarnings, c := checkImportWarnings(filePath, fset, node, args.ImportWarnings)
+				fileWarnings, c, _ := checkImportWarnings(filePath, fset, node, args.ImportWarnings)
 				if len(fileWarnings) > 0 {
 					warningsMu.Lock()
 					*warnings = append(*warnings, fileWarnings...)

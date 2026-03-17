@@ -8,7 +8,6 @@ import migration "github.com/cosmos/cosmos-sdk/tools/migrate"
 // 1. cosmossdk.io/x/* vanity URLs were removed — modules now live under github.com/cosmos/cosmos-sdk/x/*
 // 2. cosmossdk.io/log was upgraded to cosmossdk.io/log/v2
 // 3. circuit and nft moved to contrib/ (deprecated, not actively maintained)
-// 4. group moved to enterprise/ (different license — handled via warning, not auto-rewrite)
 var importReplacements = []migration.ImportReplacement{
 	// --- log/v2 migration ---
 	// cosmossdk.io/log -> cosmossdk.io/log/v2
@@ -27,31 +26,39 @@ var importReplacements = []migration.ImportReplacement{
 	{Old: "cosmossdk.io/x/nft", New: "github.com/cosmos/cosmos-sdk/contrib/x/nft", AllPackages: true},
 }
 
-// importWarnings defines import paths that should trigger warnings rather than automatic rewrites.
-// AlsoRemove is set to true so the imports are stripped from the AST after warning, preventing
-// the code from trying to resolve the old module path. The warnings still inform the user that
-// x/group requires a commercial license to use in v54.
+// importWarnings defines import paths that should trigger warnings.
 var importWarnings = []migration.ImportWarning{
-	// group is under github.com/cosmos/cosmos-sdk/x/group (not a vanity URL)
+	{
+		ImportPrefix: "cosmossdk.io/x/circuit",
+		Message:      "this module has been moved to contrib and will not be maintained by the Cosmos SDK team.",
+	},
+	{
+		ImportPrefix: "github.com/cosmos/cosmos-sdk/contrib/x/circuit",
+		Message:      "this module has been moved to contrib and will not be maintained by the Cosmos SDK team.",
+	},
+	{
+		ImportPrefix: "cosmossdk.io/x/nft",
+		Message:      "this module has been moved to contrib and will not be maintained by the Cosmos SDK team.",
+	},
+	{
+		ImportPrefix: "github.com/cosmos/cosmos-sdk/contrib/x/nft",
+		Message:      "this module has been moved to contrib and will not be maintained by the Cosmos SDK team.",
+	},
 	{
 		ImportPrefix: "github.com/cosmos/cosmos-sdk/x/group",
-		Message: "The x/group module has been moved to enterprise/group with a commercial license. " +
-			"You must contact Cosmos Labs to establish a commercial agreement before using this module. " +
-			"See enterprise/README.md for details. This import will NOT be automatically rewritten.",
-		AlsoRemove: true,
+		Message: "the group module is not supported by the v54 migration tool. " +
+			"It requires a manual move to enterprise/group.",
+		Fatal: true,
 	},
-	// Also catch any cosmossdk.io/x/group references (in case any exist)
 	{
 		ImportPrefix: "cosmossdk.io/x/group",
-		Message: "The x/group module has been moved to enterprise/group with a commercial license. " +
-			"You must contact Cosmos Labs to establish a commercial agreement before using this module. " +
-			"See enterprise/README.md for details. This import will NOT be automatically rewritten.",
-		AlsoRemove: true,
+		Message: "the group module is not supported by the v54 migration tool. " +
+			"It requires a manual move to enterprise/group.",
+		Fatal: true,
 	},
-	// Also catch cosmossdk.io/api/cosmos/group (proto API imports used in app_config.go)
 	{
 		ImportPrefix: "cosmossdk.io/api/cosmos/group",
-		Message:      "The x/group module API has been moved to enterprise/group with a commercial license.",
-		AlsoRemove:   true,
+		Message:      "the group module is not supported by the v54 migration tool. It requires a manual move to enterprise/group.",
+		Fatal:        true,
 	},
 }

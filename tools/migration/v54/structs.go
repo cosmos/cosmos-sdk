@@ -8,11 +8,7 @@ var typeReplacements = []migration.TypeReplacement{
 }
 
 // fieldRemovals removes keeper fields from SimApp for deleted modules.
-var fieldRemovals = []migration.StructFieldRemoval{
-	{StructName: "SimApp", FieldName: "CircuitKeeper"},
-	{StructName: "SimApp", FieldName: "NFTKeeper"},
-	{StructName: "SimApp", FieldName: "GroupKeeper"},
-}
+var fieldRemovals = []migration.StructFieldRemoval{}
 
 // fieldModifications changes field types in SimApp.
 var fieldModifications = []migration.StructFieldModification{

@@ -196,6 +196,23 @@ func f() {
 			wantMissing:  []string{"group.ModuleName"},
 		},
 		{
+			name: "skip duplicate arg additions",
+			input: `package main
+func f() {
+	app.ModuleManager.SetOrderEndBlockers(banktypes.ModuleName, a.ModuleName)
+}`,
+			removals: []CallArgRemoval{
+				{
+					MethodName: "SetOrderEndBlockers",
+					ArgsToAdd: []ArgAddition{
+						{Position: 0, Expr: "banktypes.ModuleName"},
+					},
+				},
+			},
+			wantModified: false,
+			wantContains: []string{"banktypes.ModuleName, a.ModuleName"},
+		},
+		{
 			name: "no match leaves code unchanged",
 			input: `package main
 func f() {

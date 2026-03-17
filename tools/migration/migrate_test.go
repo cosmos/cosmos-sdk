@@ -17,6 +17,7 @@ func TestCheckImportWarnings(t *testing.T) {
 		warnings     []ImportWarning
 		wantWarnings int
 		wantChanged  bool
+		wantFatal    bool
 		// wantImport verifies the import is still present after warning (no removal)
 		wantImport string
 		// wantMissingImport verifies the import was removed (AlsoRemove)
@@ -32,7 +33,21 @@ import "cosmossdk.io/x/circuit"
 			},
 			wantWarnings: 1,
 			wantChanged:  false,
+			wantFatal:    false,
 			wantImport:   "cosmossdk.io/x/circuit",
+		},
+		{
+			name: "warning without removal on contrib import",
+			input: `package main
+import "github.com/cosmos/cosmos-sdk/contrib/x/nft/module"
+`,
+			warnings: []ImportWarning{
+				{ImportPrefix: "github.com/cosmos/cosmos-sdk/contrib/x/nft", Message: "nft module moved to contrib"},
+			},
+			wantWarnings: 1,
+			wantChanged:  false,
+			wantFatal:    false,
+			wantImport:   "github.com/cosmos/cosmos-sdk/contrib/x/nft/module",
 		},
 		{
 			name: "warning with AlsoRemove",
@@ -40,10 +55,11 @@ import "cosmossdk.io/x/circuit"
 import "cosmossdk.io/x/group"
 `,
 			warnings: []ImportWarning{
-				{ImportPrefix: "cosmossdk.io/x/group", Message: "group module removed", AlsoRemove: true},
+				{ImportPrefix: "cosmossdk.io/x/group", Message: "group module removed", AlsoRemove: true, Fatal: true},
 			},
 			wantWarnings:      1,
 			wantChanged:       true,
+			wantFatal:         true,
 			wantMissingImport: "cosmossdk.io/x/group",
 		},
 		{
@@ -56,6 +72,7 @@ import "cosmossdk.io/x/nft/keeper"
 			},
 			wantWarnings:      1,
 			wantChanged:       true,
+			wantFatal:         false,
 			wantMissingImport: "cosmossdk.io/x/nft/keeper",
 		},
 		{
@@ -68,6 +85,7 @@ import "fmt"
 			},
 			wantWarnings: 0,
 			wantChanged:  false,
+			wantFatal:    false,
 		},
 		{
 			name: "multiple warnings on same file",
@@ -78,11 +96,12 @@ import (
 )
 `,
 			warnings: []ImportWarning{
-				{ImportPrefix: "cosmossdk.io/x/group", Message: "group removed", AlsoRemove: true},
+				{ImportPrefix: "cosmossdk.io/x/group", Message: "group removed", AlsoRemove: true, Fatal: true},
 				{ImportPrefix: "cosmossdk.io/x/nft", Message: "nft removed", AlsoRemove: true},
 			},
 			wantWarnings: 2,
 			wantChanged:  true,
+			wantFatal:    true,
 		},
 		{
 			name: "named import with AlsoRemove",
@@ -90,10 +109,11 @@ import (
 import groupkeeper "cosmossdk.io/x/group/keeper"
 `,
 			warnings: []ImportWarning{
-				{ImportPrefix: "cosmossdk.io/x/group", Message: "group removed", AlsoRemove: true},
+				{ImportPrefix: "cosmossdk.io/x/group", Message: "group removed", AlsoRemove: true, Fatal: true},
 			},
 			wantWarnings:      1,
 			wantChanged:       true,
+			wantFatal:         true,
 			wantMissingImport: "cosmossdk.io/x/group/keeper",
 		},
 	}
@@ -106,12 +126,15 @@ import groupkeeper "cosmossdk.io/x/group/keeper"
 				t.Fatalf("parse error: %v", err)
 			}
 
-			warnings, changed := checkImportWarnings("test.go", fset, node, tt.warnings)
+			warnings, changed, fatal := checkImportWarnings("test.go", fset, node, tt.warnings)
 			if len(warnings) != tt.wantWarnings {
 				t.Errorf("got %d warnings, want %d", len(warnings), tt.wantWarnings)
 			}
 			if changed != tt.wantChanged {
 				t.Errorf("changed = %v, want %v", changed, tt.wantChanged)
+			}
+			if fatal != tt.wantFatal {
+				t.Errorf("fatal = %v, want %v", fatal, tt.wantFatal)
 			}
 
 			if tt.wantImport != "" {
@@ -428,12 +451,15 @@ func TestCheckImportWarningsEmpty(t *testing.T) {
 	}
 
 	// Empty warnings list should return nothing
-	warnings, changed := checkImportWarnings("test.go", fset, node, nil)
+	warnings, changed, fatal := checkImportWarnings("test.go", fset, node, nil)
 	if len(warnings) != 0 {
 		t.Errorf("expected 0 warnings, got %d", len(warnings))
 	}
 	if changed {
 		t.Error("expected changed=false for empty warnings list")
+	}
+	if fatal {
+		t.Error("expected fatal=false for empty warnings list")
 	}
 }
 

@@ -17,11 +17,10 @@ set -euo pipefail
 
 # ── Configuration ────────────────────────────────────────────────────────────
 
-COSMOS_SDK_TAG="v0.53.6"
-COSMOS_SDK_REPO="https://github.com/cosmos/cosmos-sdk.git"
 # The commit on main that the migration tool targets (from module.go pseudo-version).
 # This is used to clone the SDK source for local replace directives until v0.54.0 is tagged.
 SDK_TARGET_COMMIT="2c527014f3ee"
+COSMOS_SDK_TAG="${COSMOS_SDK_TAG:-main@${SDK_TARGET_COMMIT}}"
 CHAIN_ID="migration-test-1"
 MONIKER="test-node"
 KEY_NAME="validator"
@@ -86,6 +85,11 @@ done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MIGRATION_TOOL_DIR="$SCRIPT_DIR"
+CURATED_SIMAPP_FIXTURE="$(cd "$SCRIPT_DIR/../../../../simapp-v53/simapp" && pwd)"
+COSMOS_SDK_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+# Allow callers to override the clone source, but default to the current repo so
+# the harness works under `set -u` without extra environment.
+COSMOS_SDK_REPO="${COSMOS_SDK_REPO:-$COSMOS_SDK_ROOT}"
 
 if [[ -z "$WORKDIR" ]]; then
   WORKDIR="$(mktemp -d -t v54-migration-e2e.XXXXXX)"
@@ -180,7 +184,7 @@ trap cleanup EXIT
 
 # ── Step names (define upfront for report iteration) ─────────────────────────
 
-S_CLONE="Clone cosmos-sdk @ $COSMOS_SDK_TAG (simapp only)"
+S_CLONE="Copy curated v53 simapp fixture"
 S_SNAPSHOT="Snapshot pre-migration state"
 S_CLONE_MAIN="Clone SDK main for local replace"
 S_MIGRATE="Run v54 migration tool"
@@ -209,24 +213,23 @@ printf "${BOLD}═════════════════════�
 printf "${BOLD}  v53 → v54 Migration Tool — End-to-End Test${NC}\n"
 printf "${BOLD}═══════════════════════════════════════════════════════════${NC}\n"
 echo ""
-info "Source tag:      $COSMOS_SDK_TAG"
+info "Source fixture:  $CURATED_SIMAPP_FIXTURE"
 info "Migration tool:  $MIGRATION_TOOL_DIR"
+info "SDK clone src:   $COSMOS_SDK_REPO"
 info "Work directory:  $WORKDIR"
 info "Build tags:      $BUILD_TAGS"
 info "Timestamp:       $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 echo ""
 
-# ── Step 1: Clone source ────────────────────────────────────────────────────
+# ── Step 1: Copy supported fixture ──────────────────────────────────────────
 
 step "$S_CLONE"
 
-if git clone --depth 1 --branch "$COSMOS_SDK_TAG" "$COSMOS_SDK_REPO" "$WORKDIR/cosmos-sdk-src" 2>"$WORKDIR/clone.log"; then
-  cp -r "$WORKDIR/cosmos-sdk-src/simapp" "$SIMAPP_DIR"
-  rm -rf "$WORKDIR/cosmos-sdk-src"
-  pass "Cloned and extracted simapp ($(find "$SIMAPP_DIR" -name '*.go' | wc -l | tr -d ' ') Go files)"
+if [[ -d "$CURATED_SIMAPP_FIXTURE" ]]; then
+  cp -r "$CURATED_SIMAPP_FIXTURE" "$SIMAPP_DIR"
+  pass "Copied fixture simapp ($(find "$SIMAPP_DIR" -name '*.go' | wc -l | tr -d ' ') Go files)"
 else
-  fail "git clone failed — see $WORKDIR/clone.log"
-  cat "$WORKDIR/clone.log" >&2
+  fail "fixture not found: $CURATED_SIMAPP_FIXTURE"
   exit 1
 fi
 
@@ -234,7 +237,7 @@ fi
 
 step "$S_SNAPSHOT"
 
-PRE_GO_MOD_SDK_VERSION="$COSMOS_SDK_TAG"
+PRE_GO_MOD_SDK_VERSION="$(grep -E 'github.com/cosmos/cosmos-sdk ' "$SIMAPP_DIR/go.mod" | awk '{print $2}' | head -1)"
 PRE_FILE_COUNT=$(find "$SIMAPP_DIR" -name '*.go' | wc -l | tr -d ' ')
 info "SDK version in go.mod: $PRE_GO_MOD_SDK_VERSION"
 info "Go files: $PRE_FILE_COUNT"

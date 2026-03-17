@@ -225,6 +225,21 @@ func updateCallArgRemovals(node *ast.File, removals []CallArgRemoval) (bool, err
 					continue
 				}
 
+				// Skip duplicate additions so migrations stay idempotent when a fixture
+				// or app has already adopted the new argument.
+				exprStr := exprToString(expr)
+				alreadyPresent := false
+				for _, existing := range newArgs {
+					if exprToString(existing) == exprStr {
+						alreadyPresent = true
+						break
+					}
+				}
+				if alreadyPresent {
+					log.Debug().Msgf("Skipping duplicate arg addition %q", addition.Expr)
+					continue
+				}
+
 				// Copy position info from existing args so the printer
 				// doesn't split the new SelectorExpr across lines.
 				if len(newArgs) > 0 {

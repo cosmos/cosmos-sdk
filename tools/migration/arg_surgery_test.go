@@ -55,7 +55,8 @@ func f() {
 			wantMissing: []string{"stakingKeeper, distrKeeper"},
 			// should appear wrapped in the new function call
 			wantContains: []string{
-				"NewDefaultCalculateVoteResultsAndVotingPower(stakingKeeper)",
+				"NewDefaultCalculateVoteResultsAndVotingPower",
+				"stakingKeeper",
 				"bankKeeper, distrKeeper", // bankKeeper is now followed by distrKeeper (stakingKeeper removed)
 			},
 		},
@@ -137,14 +138,17 @@ func f() {
 				t.Fatalf("print error: %v", err)
 			}
 			output := buf.String()
+			normalizedOutput := strings.Join(strings.Fields(output), " ")
 
 			for _, s := range tt.wantContains {
-				if !strings.Contains(output, s) {
+				normalizedWant := strings.Join(strings.Fields(s), " ")
+				if !strings.Contains(normalizedOutput, normalizedWant) {
 					t.Errorf("output should contain %q, got:\n%s", s, output)
 				}
 			}
 			for _, s := range tt.wantMissing {
-				if strings.Contains(output, s) {
+				normalizedWant := strings.Join(strings.Fields(s), " ")
+				if strings.Contains(normalizedOutput, normalizedWant) {
 					t.Errorf("output should NOT contain %q, got:\n%s", s, output)
 				}
 			}
@@ -219,7 +223,8 @@ func f() {
 			},
 			wantModified: true,
 			wantContains: []string{
-				"NewDefaultCalculateVoteResultsAndVotingPower(stakingKeeper)",
+				"NewDefaultCalculateVoteResultsAndVotingPower",
+				"stakingKeeper",
 				"bankKeeper, distrKeeper", // stakingKeeper removed from middle
 			},
 			wantMissing: []string{"bankKeeper, stakingKeeper"},

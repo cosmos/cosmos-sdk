@@ -550,6 +550,7 @@ type commitFinalizer struct {
 
 func newCommitFinalizer(ctx context.Context, header cmtproto.Header, rs *Store, cacheStore types.CacheMultiStore) *commitFinalizer {
 	return &commitFinalizer{
+		state:      commitPending,
 		ctx:        ctx,
 		header:     header,
 		rs:         rs,

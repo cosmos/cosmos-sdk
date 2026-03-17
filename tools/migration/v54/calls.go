@@ -22,7 +22,7 @@ var argSurgeries = []migration.ArgSurgeryWithAST{
 		ImportPath:  "github.com/cosmos/cosmos-sdk/x/gov/keeper",
 		FuncName:    "NewKeeper",
 		OldArgCount: -1, // variadic, match any count >= 9
-		Transform: func(args []ast.Expr) []ast.Expr {
+		Transform: func(pkgAlias string, args []ast.Expr) []ast.Expr {
 			if len(args) < 9 {
 				return args // unexpected arg count, leave unchanged
 			}
@@ -35,10 +35,10 @@ var argSurgeries = []migration.ArgSurgeryWithAST{
 			newArgs = append(newArgs, args[0:4]...) // cdc, storeService, acctKeeper, bankKeeper
 			newArgs = append(newArgs, args[5:9]...) // distrKeeper, router, config, authority
 
-			// Append: govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(stakingKeeper)
+			// Append: <pkgAlias>.NewDefaultCalculateVoteResultsAndVotingPower(stakingKeeper)
 			newArgs = append(newArgs, &ast.CallExpr{
 				Fun: &ast.SelectorExpr{
-					X:   &ast.Ident{Name: "govkeeper"},
+					X:   &ast.Ident{Name: pkgAlias},
 					Sel: &ast.Ident{Name: "NewDefaultCalculateVoteResultsAndVotingPower"},
 				},
 				Args: []ast.Expr{stakingKeeper},

@@ -164,7 +164,7 @@ func NewSimApp() *SimApp {
 			ImportPath:  "github.com/cosmos/cosmos-sdk/x/gov/keeper",
 			FuncName:    "NewKeeper",
 			OldArgCount: -1,
-			Transform: func(args []ast.Expr) []ast.Expr {
+			Transform: func(pkgAlias string, args []ast.Expr) []ast.Expr {
 				if len(args) < 9 {
 					return args
 				}
@@ -174,7 +174,7 @@ func NewSimApp() *SimApp {
 				newArgs = append(newArgs, args[5:9]...)
 				newArgs = append(newArgs, &ast.CallExpr{
 					Fun: &ast.SelectorExpr{
-						X:   &ast.Ident{Name: "govkeeper"},
+						X:   &ast.Ident{Name: pkgAlias},
 						Sel: &ast.Ident{Name: "NewDefaultCalculateVoteResultsAndVotingPower"},
 					},
 					Args: []ast.Expr{stakingKeeper},

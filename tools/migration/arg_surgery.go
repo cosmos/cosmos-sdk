@@ -246,8 +246,11 @@ type ArgSurgeryWithAST struct {
 	// OldArgCount is the expected number of arguments before transformation.
 	// Use -1 to match any count.
 	OldArgCount int
-	// Transform takes the original arguments and returns the new arguments.
-	Transform func(originalArgs []ast.Expr) []ast.Expr
+	// Transform takes the resolved package alias and the original arguments,
+	// and returns the new arguments. The alias is the identifier actually used
+	// in the file for the matched import (e.g. "govkeeper", "keeper", etc.),
+	// so synthesised AST nodes can reference the correct package name.
+	Transform func(pkgAlias string, originalArgs []ast.Expr) []ast.Expr
 }
 
 // updateArgSurgeryAST walks the AST and applies AST-level argument transformations.
@@ -292,7 +295,7 @@ func updateArgSurgeryAST(node *ast.File, surgeries []ArgSurgeryWithAST) (bool, e
 			log.Debug().Msgf("Applying AST arg surgery to %s.%s()", pkgIdent.Name, surgery.FuncName)
 
 			origArgs := callExpr.Args
-			newArgs := surgery.Transform(origArgs)
+			newArgs := surgery.Transform(alias, origArgs)
 			callExpr.Args = newArgs
 			// Only clear the ellipsis if the original call had one and the last arg changed.
 			if callExpr.Ellipsis != 0 && len(origArgs) > 0 {

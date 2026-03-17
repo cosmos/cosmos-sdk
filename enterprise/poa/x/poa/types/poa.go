@@ -201,6 +201,64 @@ func (m *MsgCreateValidator) Validate(ac address.Codec) error {
 	return nil
 }
 
+// ValidateBasic performs basic validation on ValidatorFees.
+// It ensures that no fee coin has a negative amount.
+func (f *ValidatorFees) ValidateBasic() error {
+	for _, fee := range f.Fees {
+		if fee.Amount.IsNegative() {
+			return sdkerrors.Wrapf(ErrInvalidAllocatedFees, "negative fee amount for denom %s: %s", fee.Denom, fee.Amount)
+		}
+	}
+	return nil
+}
+
+// ValidateBasic performs basic validation on GenesisAllocatedFees.
+// It ensures that:
+//   - ConsensusAddress is not empty
+//   - Fees are not negative
+func (g *GenesisAllocatedFees) ValidateBasic() error {
+	if g.ConsensusAddress == "" {
+		return sdkerrors.Wrap(ErrInvalidAllocatedFees, "consensus address cannot be empty")
+	}
+	for _, fee := range g.Fees {
+		if fee.Amount.IsNegative() {
+			return sdkerrors.Wrapf(ErrInvalidAllocatedFees, "negative fee amount for denom %s: %s", fee.Denom, fee.Amount)
+		}
+	}
+	return nil
+}
+
+// Validate performs full validation on GenesisAllocatedFees.
+// In addition to basic validation, it verifies that the consensus address
+// is a valid address format according to the provided address codec.
+func (g *GenesisAllocatedFees) Validate(ac address.Codec) error {
+	if err := g.ValidateBasic(); err != nil {
+		return err
+	}
+	if _, err := ac.StringToBytes(g.ConsensusAddress); err != nil {
+		return sdkerrors.Wrapf(ErrInvalidAllocatedFees, "invalid consensus address: %s", err)
+	}
+	return nil
+}
+
+// ValidateAllocatedFees validates a slice of GenesisAllocatedFees.
+// It ensures that:
+//   - Each entry passes basic validation
+//   - No duplicate consensus addresses exist
+func ValidateAllocatedFees(fees []GenesisAllocatedFees) error {
+	seen := make(map[string]struct{})
+	for i, entry := range fees {
+		if err := entry.ValidateBasic(); err != nil {
+			return fmt.Errorf("allocated fees at index %d: %w", i, err)
+		}
+		if _, found := seen[entry.ConsensusAddress]; found {
+			return sdkerrors.Wrapf(ErrInvalidAllocatedFees, "duplicate consensus address %s at index %d", entry.ConsensusAddress, i)
+		}
+		seen[entry.ConsensusAddress] = struct{}{}
+	}
+	return nil
+}
+
 // ValidateBasic performs basic validation on MsgWithdrawFees.
 // It ensures that the Operator field is not empty.
 func (m *MsgWithdrawFees) ValidateBasic() error {

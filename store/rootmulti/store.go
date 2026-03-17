@@ -120,14 +120,20 @@ func (rs *Store) SetSnapshotInterval(snapshotInterval uint64) {
 	rs.pruningManager.SetSnapshotInterval(snapshotInterval)
 }
 
+// SetIAVLCacheSize sets the cache size of the IAVL tree.
 func (rs *Store) SetIAVLCacheSize(cacheSize int) {
 	rs.iavlCacheSize = cacheSize
 }
 
+// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
 func (rs *Store) SetIAVLDisableFastNode(disableFastNode bool) {
 	rs.iavlDisableFastNode = disableFastNode
 }
 
+// SetIAVLSyncPruning set sync/async pruning on iavl.
+// It is not recommended to use this option.
+// It is here to enable the prune command to force this to true, allowing the command to wait
+// for the pruning to finish before returning.
 func (rs *Store) SetIAVLSyncPruning(syncPruning bool) {
 	rs.iavlSyncPruning = syncPruning
 }

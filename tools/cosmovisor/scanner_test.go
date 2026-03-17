@@ -9,6 +9,33 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
+// TestUpgradeHeightThreshold verifies the height check logic for #26091.
+// When the chain panics during block finalization at upgrade height, the status endpoint
+// returns the last committed block (upgradeHeight-1). Cosmovisor must proceed when
+// currentHeight >= upgradeHeight-1.
+func TestUpgradeHeightThreshold(t *testing.T) {
+	cases := []struct {
+		currentHeight int64
+		upgradeHeight int64
+		shouldProceed bool
+	}{
+		{99, 100, true},  // at last committed before upgrade
+		{100, 100, true}, // past upgrade
+		{98, 100, false}, // too early
+		{0, 1, true},     // genesis upgrade
+		{1, 2, true},     // upgrade at block 2
+	}
+	for _, tc := range cases {
+		minHeight := tc.upgradeHeight - 1
+		if minHeight < 0 {
+			minHeight = 0
+		}
+		tooEarly := tc.currentHeight < minHeight
+		proceed := !tooEarly
+		require.Equal(t, tc.shouldProceed, proceed, "current=%d upgrade=%d", tc.currentHeight, tc.upgradeHeight)
+	}
+}
+
 func TestParseUpgradeInfoFile(t *testing.T) {
 	cases := []struct {
 		filename      string

@@ -16,6 +16,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -126,15 +127,19 @@ func (k *Keeper) WithdrawableFees(
 		return nil, err
 	}
 
-	// Get the validator
-	validator, err := k.validators.Get(sdkCtx, compositeKey)
-	if err != nil {
-		return nil, err
-	}
+	consAddr := compositeKey.K2()
+	power := compositeKey.K1()
 
-	// Calculate pending fees using lazy distribution formula:
-	// allocated + validator_power * (fee_collector - total_allocated) / total_power
-	totalFees := validator.AllocatedFees
+	// Get allocated fees from the separate collection (not found = zero value)
+	allocated, err := k.validatorAllocatedFees.Get(sdkCtx, consAddr)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			allocated = types.ValidatorFees{Fees: sdk.DecCoins{}}
+		} else {
+			return nil, err
+		}
+	}
+	totalFees := allocated.Fees
 
 	// Get total power
 	totalPower, err := k.GetTotalPower(sdkCtx)
@@ -150,8 +155,7 @@ func (k *Keeper) WithdrawableFees(
 
 	// If there are unallocated fees, calculate this validator's pending share
 	if !unallocated.IsZero() {
-		// Calculate pending fees using the shared helper
-		pendingFees := calculateValidatorPendingFees(validator.Power, totalPower, unallocated)
+		pendingFees := calculateValidatorPendingFees(power, totalPower, unallocated)
 		totalFees = totalFees.Add(pendingFees...)
 	}
 

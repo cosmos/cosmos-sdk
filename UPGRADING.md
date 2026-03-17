@@ -198,7 +198,9 @@ The crisis module is no longer being actively maintained by Cosmos Labs and was 
 
 ### Cosmos Enterprise
 
-[Cosmos Enterprise](https://docs.cosmos.network/enterprise/overview) is Cosmos Labs' new enterprise offering, designed for teams operating production-grade Cosmos-based blockchain networks. It combines hardened protocol modules, on-premises and managed infrastructure components, and direct access to the engineers building the Cosmos technology stack.
+[Cosmos Enterprise](https://docs.cosmos.network/enterprise/overview) is a comprehensive suite of blockchain services and technologies to future-proof your organization's digital ledger capabilities. It combines hardened protocol modules, infrastructure components, and proactive support and enablement from the engineers building the Cosmos technology stack.
+
+Cosmos Enterprise is built for organizations that require reliability, security, and operational confidence as they scale critical blockchain infrastructure in enterprise production environments.
 
 #### Groups Module
 

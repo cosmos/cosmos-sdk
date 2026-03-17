@@ -199,7 +199,7 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, msg.ValidatorAddress)
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, "%s", msg.ValidatorAddress)
 	}
 
 	// Allocate tokens from the distribution module to the validator, which are

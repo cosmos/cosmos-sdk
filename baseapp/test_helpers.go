@@ -51,6 +51,11 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 	return gasInfo, result, err
 }
 
+// Deprecated: SimWriteState is no longer needed because any state changes made before Commit
+// will automatically get flushed in Commit.
+// There is no need for a separate Write operation when simulations write state outside of FinalizeBlock.
+func (app *BaseApp) SimWriteState() {}
+
 // NewContextLegacy returns a new sdk.Context with the provided header
 func (app *BaseApp) NewContextLegacy(isCheckTx bool, header cmtproto.Header) sdk.Context {
 	if isCheckTx {

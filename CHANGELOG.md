@@ -65,7 +65,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * Remove `io.Writer` parameter from `servertypes.AppCreator` and `traceWriter io.Writer` from `servertypes.AppExporter`.
     * Remove `traceStore io.Writer` parameter from `simapp.NewSimApp` and all enterprise simapp constructors.
     * Remove `traceStore io.Writer` from all `testutil/simsx` app factory signatures.
-* (baseapp) [#26056](https://github.com/cosmos/cosmos-sdk/pull/26056) Remove `BaseApp.SimWriteState()` and `BaseApp.NewUncachedContext()`. `Commit()` now handles flushing cached state internally. Use `BaseApp.NewNextBlockContext()` for test contexts between blocks.
+* (baseapp) [#26056](https://github.com/cosmos/cosmos-sdk/pull/26056) Remove `BaseApp.NewUncachedContext()`. Use `BaseApp.NewNextBlockContext()` for test contexts between blocks.
 
 ### Features
 

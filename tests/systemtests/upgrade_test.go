@@ -23,6 +23,9 @@ const (
 )
 
 func TestChainUpgrade(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping chain upgrade test in short mode")
+	}
 	// Scenario:
 	// start a legacy chain with some state
 	// when a chain upgrade proposal is executed

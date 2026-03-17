@@ -20,6 +20,15 @@ In project root:
 make test-system
 ```
 
+### Short vs extended suite
+
+| Target | Duration | Use case |
+|--------|----------|----------|
+| `make test-sdk-system` | ~5–7 min | Default; CI on PRs; quick local smoke test |
+| `make test-sdk-system-extended` | ~30 min | Local full run; CI on merges to main |
+
+Short suite skips: load tests, chain upgrade, stability (crash recovery, pause/resume), protocolpool continuous-funds, node pruning, block retention tests.
+
 Or via manual steps
 
 ```shell

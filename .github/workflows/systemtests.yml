@@ -53,10 +53,12 @@ jobs:
             !changelog/**
             !enterprise/**
 
+  # Default: short suite (~5 min), runs on PRs and merge_group
   test-sdk-system:
     needs: setup
-    if: needs.setup.outputs.git_diff
+    if: needs.setup.outputs.git_diff && (github.event_name == 'pull_request' || github.event_name == 'merge_group')
     runs-on: depot-ubuntu-22.04-4
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v6
         with:
@@ -77,6 +79,35 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: system-test-logs
+          path: ./tests/systemtests/testnet/*.out
+          if-no-files-found: ignore
+
+  # Extended suite (~30 min): runs on push to main
+  test-sdk-system-extended:
+    needs: setup
+    if: needs.setup.outputs.git_diff && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: depot-ubuntu-22.04-4
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.8"
+          check-latest: true
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Run SDK system tests (extended)
+        run: make test-sdk-system-extended
+
+      - name: Upload system test logs if failed
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: system-test-logs-extended
           path: ./tests/systemtests/testnet/*.out
           if-no-files-found: ignore
 

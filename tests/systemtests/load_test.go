@@ -30,6 +30,7 @@ const (
 
 	loadTestLightSenderCount = 50
 	loadTestLightTxCount     = 10000
+	loadTestLightWorkers     = 50 // limit concurrent simd processes to avoid thrashing
 
 	loadTestReceiverCount = 50
 
@@ -45,13 +46,19 @@ type txHashWithTime struct {
 	bcast time.Time
 }
 
+// nodeEndpoint groups RPC and gRPC addresses for a single node.
+type nodeEndpoint struct {
+	RPC  string
+	GRPC string
+}
+
 // loadTestSetup holds the common chain setup for load tests.
 type loadTestSetup struct {
 	cli           *systest.CLIWrapper
 	senderNames   []string
 	senderAddrs   []string
 	receiverAddrs []string
-	rpcNodes      []string
+	nodeEndpoints []nodeEndpoint
 }
 
 // setupLoadTestChain resets the chain, creates senders and receivers, funds them in genesis, starts the chain, and returns the setup.
@@ -86,12 +93,15 @@ func setupLoadTestChain(t *testing.T, senderCount, receiverCount int, fundAmount
 	sut.StartChain(t)
 	sut.AwaitNBlocks(t, 2)
 
-	rpcNodes := make([]string, sut.NodesCount())
+	nodeEndpoints := make([]nodeEndpoint, sut.NodesCount())
 	for i := 0; i < sut.NodesCount(); i++ {
-		rpcNodes[i] = fmt.Sprintf("tcp://127.0.0.1:%d", 26657+i)
+		nodeEndpoints[i] = nodeEndpoint{
+			RPC:  fmt.Sprintf("tcp://127.0.0.1:%d", 26657+i),
+			GRPC: fmt.Sprintf("127.0.0.1:%d", 9090+i),
+		}
 	}
 
-	return sut, &loadTestSetup{cli, senderNames, senderAddrs, receiverAddrs, rpcNodes}
+	return sut, &loadTestSetup{cli, senderNames, senderAddrs, receiverAddrs, nodeEndpoints}
 }
 
 // gatherLoadTestStats scans blocks for the active window (first-to-last with txs),
@@ -177,7 +187,7 @@ func TestHeavyLoad(t *testing.T) {
 	}
 
 	sut, setup := setupLoadTestChain(t, loadTestSenderCount, loadTestReceiverCount, loadTestFundAmount)
-	senderNames, receiverAddrs, rpcNodes := setup.senderNames, setup.receiverAddrs, setup.rpcNodes
+	senderNames, receiverAddrs, nodeEndpoints := setup.senderNames, setup.receiverAddrs, setup.nodeEndpoints
 
 	// Wait for chain to stabilize
 	time.Sleep(2 * sut.BlockTime())
@@ -208,7 +218,7 @@ func TestHeavyLoad(t *testing.T) {
 					} else {
 						totalSkipped.Add(1)
 					}
-				}(senderName, toAddr, rpcNodes[si%len(rpcNodes)])
+				}(senderName, toAddr, nodeEndpoints[si%len(nodeEndpoints)].RPC)
 			}
 		}
 		wg.Wait()
@@ -247,40 +257,81 @@ func TestHeavyLoadLight(t *testing.T) {
 	}
 
 	sut, setup := setupLoadTestChain(t, loadTestLightSenderCount, loadTestReceiverCount, loadTestInitialBalance)
-	cli, senderNames, receiverAddrs, rpcNodes := setup.cli, setup.senderNames, setup.receiverAddrs, setup.rpcNodes
+	cli := systest.NewCLIWrapper(t, sut, false)
+	senderNames, receiverAddrs, nodeEndpoints := setup.senderNames, setup.receiverAddrs, setup.nodeEndpoints
 
-	// Use unordered txs so multiple txs from the same sender can be in flight without sequence conflicts.
-	// Distribute sends across multiple receivers to reduce account contention.
-	// Each unordered tx needs a unique timeout timestamp; stagger by 1ns per tx to ensure uniqueness.
-	// Use RunOnly (no wait for commit) since 400 txs won't all fit in 3 blocks.
+	// Use programmatic broadcast (no simd spawn per tx) for speed. One broadcaster per node.
+	keyringDir := systest.KeyringDir(systest.WorkDir, sut.OutputDir())
+	broadcasters := make(map[string]*systest.LoadTestBroadcaster)
+	for _, ep := range nodeEndpoints {
+		bc, err := systest.NewLoadTestBroadcaster(keyringDir, sut.ChainID(), ep.RPC, ep.GRPC)
+		if err != nil {
+			t.Fatalf("load test broadcaster for %s: %v", ep.RPC, err)
+		}
+		broadcasters[ep.RPC] = bc
+	}
+
 	var sent, failed atomic.Int64
 	var txHashesMu sync.Mutex
 	txHashesWithTime := make([]txHashWithTime, 0, loadTestLightTxCount)
 
 	heightBeforeBroadcast := sut.CurrentHeight()
-	var wg sync.WaitGroup
+	type job struct {
+		idx          int
+		senderName   string
+		receiverAddr string
+		nodeAddr     string
+	}
+	jobs := make(chan job, loadTestLightTxCount)
 	for i := 0; i < loadTestLightTxCount; i++ {
-		wg.Add(1)
-		go func(idx int) {
-			defer wg.Done()
-			senderName := senderNames[idx%loadTestLightSenderCount]
-			receiverAddr := receiverAddrs[idx%len(receiverAddrs)]
-			nodeAddr := rpcNodes[idx%len(rpcNodes)]
-			c := cli.WithNodeAddress(nodeAddr).WithRunErrorsIgnored()
-			rsp, _ := c.RunOnly("tx", "bank", "send", senderName, receiverAddr, "10stake", "--from="+senderName, "--fees=1stake", "--unordered", "--timeout-duration=5m")
-			if gjson.Get(rsp, "code").Int() == 0 {
-				sent.Add(1)
-				if h := gjson.Get(rsp, "txhash"); h.Exists() {
-					txHashesMu.Lock()
-					txHashesWithTime = append(txHashesWithTime, txHashWithTime{h.String(), time.Now()})
-					txHashesMu.Unlock()
-				}
-			} else {
-				failed.Add(1)
+		jobs <- job{
+			idx:          i,
+			senderName:   senderNames[i%loadTestLightSenderCount],
+			receiverAddr: receiverAddrs[i%len(receiverAddrs)],
+			nodeAddr:     nodeEndpoints[i%len(nodeEndpoints)].RPC,
+		}
+	}
+	close(jobs)
+
+	done := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				s, f := sent.Load(), failed.Load()
+				pct := 100 * float64(s+f) / float64(loadTestLightTxCount)
+				t.Logf("load progress: %d/%d txs (%.0f%%) — %d sent, %d failed", s+f, loadTestLightTxCount, pct, s, f)
 			}
-		}(i)
+		}
+	}()
+
+	var wg sync.WaitGroup
+	for w := 0; w < loadTestLightWorkers; w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := range jobs {
+				bc := broadcasters[j.nodeAddr]
+				txHash, code, err := bc.BroadcastBankSendUnordered(j.senderName, j.receiverAddr, "10stake", "1stake", j.idx)
+				if err == nil && code == 0 {
+					sent.Add(1)
+					if txHash != "" {
+						txHashesMu.Lock()
+						txHashesWithTime = append(txHashesWithTime, txHashWithTime{txHash, time.Now()})
+						txHashesMu.Unlock()
+					}
+				} else {
+					failed.Add(1)
+				}
+			}
+		}()
 	}
 	wg.Wait()
+	close(done)
 
 	t.Logf("broadcast complete: %d accepted, %d rejected", sent.Load(), failed.Load())
 	require.Greater(t, sent.Load(), int64(0), "at least some txs should be accepted")

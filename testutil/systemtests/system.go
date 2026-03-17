@@ -123,6 +123,16 @@ func (s *SystemUnderTest) ExecBinary() string {
 	return s.execBinary
 }
 
+// OutputDir returns the testnet output directory (e.g. "./testnet").
+func (s *SystemUnderTest) OutputDir() string {
+	return s.outputDir
+}
+
+// ChainID returns the chain ID.
+func (s *SystemUnderTest) ChainID() string {
+	return s.chainID
+}
+
 // SetTestnetInitializer sets the initializer for the testnet configuration.
 func (s *SystemUnderTest) SetTestnetInitializer(testnetInitializer TestnetInitializer) {
 	s.testnetInitializer = testnetInitializer

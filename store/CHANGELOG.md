@@ -37,6 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * Remove `traceWriter` and `traceContext` parameters from `cachemulti.NewStore`, `cachemulti.NewFromKVStore`, and `cachemulti.NewFromParent`.
     * Remove `store/tracekv` package entirely.
     * Remove `TraceContext` type `store/types`.
+* [#26078](https://github.com/cosmos/cosmos-sdk/pull/26078) Remove `SetInterBlockCache`, `SetIAVLCacheSize`, `SetIAVLDisableFastNode`, and `SetIAVLSyncPruning` from `CommitMultiStore` interface as they are iavl/v1 specific. These methods are still available on `rootmulti.Store` via type assertion.
 
 ### Bug Fixes
 

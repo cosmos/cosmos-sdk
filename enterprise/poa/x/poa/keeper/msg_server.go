@@ -55,8 +55,8 @@ func (s *MsgServer) UpdateParams(
 		return nil, err
 	}
 
-	if req.Admin != admin {
-		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", admin, req.Admin)
+	if err := sdk.ValidateAuthority(sdkCtx, admin, req.Admin); err != nil {
+		return nil, err
 	}
 
 	if err := s.keeper.UpdateParams(sdkCtx, req.Params); err != nil {
@@ -140,8 +140,8 @@ func (s *MsgServer) UpdateValidators(
 		return nil, err
 	}
 
-	if req.Admin != admin {
-		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", admin, req.Admin)
+	if err := sdk.ValidateAuthority(sdkCtx, admin, req.Admin); err != nil {
+		return nil, err
 	}
 
 	if err := s.keeper.UpdateValidators(sdkCtx, req.Validators); err != nil {

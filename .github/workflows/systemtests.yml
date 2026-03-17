@@ -48,10 +48,6 @@ jobs:
             **/go.sum
             **/Makefile
             Makefile
-            !.github/**
-            !docs/**
-            !changelog/**
-            !enterprise/**
 
   test-sdk-system:
     needs: setup

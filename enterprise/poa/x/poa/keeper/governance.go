@@ -78,14 +78,17 @@ func NewPOACalculateVoteResultsAndVotingPowerFn(keeper Keeper) govkeeper.Calcula
 			return math.LegacyZeroDec(), math.ZeroInt(), nil, err
 		}
 
+		votesToRemove := []collections.Pair[uint64, sdk.AccAddress]{}
+
 		// Iterate through all votes for this proposal
 		rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposal.Id)
 		err = k.Votes.Walk(sdkCtx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote govv1.Vote) (bool, error) {
-			// Check if the voter is a POA validator
-			power, isValidator := validators[vote.Voter]
-			if !isValidator {
-				// Skip non-validator votes in POA
-				// Note that this should never happen if POA governance is set up properly
+			votesToRemove = append(votesToRemove, key)
+
+			// Check if the voter is an active POA validator
+			power, isActive := validators[vote.Voter]
+			if !isActive {
+				// Skip votes from de-powered or non-validator addresses
 				return false, nil
 			}
 
@@ -106,6 +109,12 @@ func NewPOACalculateVoteResultsAndVotingPowerFn(keeper Keeper) govkeeper.Calcula
 		})
 		if err != nil {
 			return math.LegacyZeroDec(), math.ZeroInt(), nil, err
+		}
+
+		for _, key := range votesToRemove {
+			if err := k.Votes.Remove(sdkCtx, key); err != nil {
+				return math.LegacyZeroDec(), math.ZeroInt(), nil, fmt.Errorf("error while removing vote (%d/%s): %w", key.K1(), key.K2(), err)
+			}
 		}
 
 		return totalVoterPower, totalValPower, results, nil

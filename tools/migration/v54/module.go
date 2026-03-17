@@ -20,7 +20,7 @@ var moduleUpdates = migration.GoModUpdate{
 	"cosmossdk.io/math":      "v1.5.3",
 
 	// CometBFT
-	"github.com/cometbft/cometbft": "v0.39.0-beta.3",
+	"github.com/cometbft/cometbft": "v0.39.0-beta.4",
 
 	// Other direct dependencies commonly bumped
 	"github.com/cosmos/cosmos-db": "v1.1.3",

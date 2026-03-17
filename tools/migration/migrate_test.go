@@ -178,8 +178,8 @@ require (
 	github.com/cosmos/cosmos-sdk v0.53.0
 )
 `,
-			removals: GoModRemoval{"cosmossdk.io/x/circuit"},
-			wantMissing: []string{"cosmossdk.io/x/circuit"},
+			removals:     GoModRemoval{"cosmossdk.io/x/circuit"},
+			wantMissing:  []string{"cosmossdk.io/x/circuit"},
 			wantContains: []string{"github.com/cosmos/cosmos-sdk"},
 		},
 		{

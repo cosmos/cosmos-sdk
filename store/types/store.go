@@ -183,6 +183,7 @@ type CommitMultiStore interface {
 
 	// CommitBranch branches CommitMultiStore into a cached storage object.
 	// To write changes back to the CommitMultiStore from the CommitBranch,
+	// use CommitBranch.StartCommit().
 	CommitBranch() CommitBranch
 
 	GetCommitInfo(ver int64) (*CommitInfo, error)

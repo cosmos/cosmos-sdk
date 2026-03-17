@@ -114,6 +114,9 @@ func TestCometBFTGetSyncingGRPC(t *testing.T) {
 // increases when block retention (min-retain-blocks) is configured.
 // This test configures aggressive pruning settings to verify the feature works.
 func TestCometBFTGetSyncingWithBlockRetention(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping block retention test in short mode")
+	}
 	const minRetainBlocks = 5
 
 	sut := systemtests.Sut

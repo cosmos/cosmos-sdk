@@ -541,8 +541,14 @@ build-system-test-current: build
 	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
 
 # test-sdk-system runs only the core SDK system tests (tests/systemtests), not enterprise.
-# Used by CI to avoid redundant runs when test-poa-system and test-group-system exist.
+# Default: short suite (~5–7 min). Used by CI on PRs.
 test-sdk-system: build-v53 build-system-test-current
+	mkdir -p ./tests/systemtests/binaries/v0.53 ./tests/systemtests/testnet
+	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
+	$(MAKE) -C tests/systemtests test-short
+
+# test-sdk-system-extended: full suite (~30 min). For local runs and CI on merges to main.
+test-sdk-system-extended: build-v53 build-system-test-current
 	mkdir -p ./tests/systemtests/binaries/v0.53 ./tests/systemtests/testnet
 	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
 	$(MAKE) -C tests/systemtests test
@@ -551,7 +557,7 @@ test-system: test-sdk-system
 	$(MAKE) -C enterprise/poa/ test-system
 	$(MAKE) -C enterprise/group/ test-system
 
-.PHONY: test-system test-sdk-system build-system-test-current
+.PHONY: test-system test-sdk-system test-sdk-system-extended build-system-test-current
 
 # build-v53 fetches the v0.53 simd binary for system tests from v0.53.x-nightly.
 # Skips if $(BUILDDIR)/simdv53 exists (e.g. local dev reuse).

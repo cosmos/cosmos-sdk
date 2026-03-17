@@ -59,6 +59,9 @@ func TestNodeStatusGRPC(t *testing.T) {
 
 // TestNodeStatusWithStatePruning tests earliest_store_height increases with state pruning.
 func TestNodeStatusWithStatePruning(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping state pruning test in short mode")
+	}
 	const pruningKeepRecent = 5
 	const pruningInterval = 10
 

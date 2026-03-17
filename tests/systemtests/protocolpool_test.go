@@ -263,6 +263,9 @@ func TestQueryProtocolPool(t *testing.T) {
 // - submit prop and vote until passed
 // Check that funds are distributed and continuous fund is cleaned up once expired
 func TestContinuousFunds(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping continuous funds test in short mode")
+	}
 	systemtests.Sut.ResetChain(t)
 	cli := systemtests.NewCLIWrapper(t, systemtests.Sut, systemtests.Verbose)
 
@@ -366,6 +369,9 @@ func TestContinuousFunds(t *testing.T) {
 //
 // Check that some funds have been distributed and that the fund is canceled.
 func TestCancelContinuousFunds(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping cancel continuous funds test in short mode")
+	}
 	systemtests.Sut.ResetChain(t)
 	cli := systemtests.NewCLIWrapper(t, systemtests.Sut, systemtests.Verbose)
 

@@ -13,6 +13,9 @@ import (
 )
 
 func TestEntireChainNonGracefulCrashRecovery(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping crash recovery test in short mode")
+	}
 	// Scenario:
 	// 1. Start network with multiple validators
 	// 2. Send transactions (sanity check)
@@ -23,6 +26,9 @@ func TestEntireChainNonGracefulCrashRecovery(t *testing.T) {
 }
 
 func TestEntireChainGracefulCrashRecovery(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping crash recovery test in short mode")
+	}
 	// Scenario:
 	// 1. Start network with multiple validators
 	// 2. Send transactions (sanity check)
@@ -111,6 +117,9 @@ func doCrashTest(t *testing.T, graceful bool) {
 }
 
 func TestNodeCrashRecovery(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping crash recovery test in short mode")
+	}
 	// Scenario:
 	// 1. Start network with multiple validators
 	// 2. Send transactions (sanity check)
@@ -191,6 +200,9 @@ func TestNodeCrashRecovery(t *testing.T) {
 }
 
 func TestNodePauseResume(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping pause/resume test in short mode")
+	}
 	// Scenario:
 	// Test node pause (SIGSTOP) and resume (SIGCONT)
 	// This simulates a frozen process (long GC, I/O stall)
@@ -242,6 +254,9 @@ func TestNodePauseResume(t *testing.T) {
 }
 
 func TestMultipleNodeFailures(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping multi-node failure test in short mode")
+	}
 	// Scenario:
 	// Test network resilience with multiple node failures
 	// Kill nodes one at a time and verify network stays healthy

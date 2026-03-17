@@ -2,6 +2,7 @@ package systemtests
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"reflect"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	client "github.com/cometbft/cometbft/rpc/client/http"
+	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	cmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -42,6 +44,23 @@ func (r RPCClient) Validators() []*cmtypes.Validator {
 	v, err := r.client.Validators(context.Background(), nil, nil, nil)
 	require.NoError(r.t, err)
 	return v.Validators
+}
+
+// Block returns block at the given height. Pass nil for latest.
+func (r RPCClient) Block(ctx context.Context, height *int64) (*ctypes.ResultBlock, error) {
+	return r.client.Block(ctx, height)
+}
+
+// TxByHash returns a tx by hash (hex string). Uses CometBFT tx index directly.
+func (r RPCClient) TxByHash(ctx context.Context, hashHex string) (*ctypes.ResultTx, error) {
+	if len(hashHex) >= 2 && hashHex[0:2] == "0x" {
+		hashHex = hashHex[2:]
+	}
+	hash, err := hex.DecodeString(hashHex)
+	if err != nil {
+		return nil, err
+	}
+	return r.client.Tx(ctx, hash, false)
 }
 
 func (r RPCClient) Invoke(ctx context.Context, method string, req, reply interface{}, opts ...grpc.CallOption) error {

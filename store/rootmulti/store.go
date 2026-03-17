@@ -442,23 +442,26 @@ func (rs *Store) LastCommitID() types.CommitID {
 	return info.CommitID()
 }
 
-// stagedVersion returns the version that the next Commit will write to.
-func (rs *Store) stagedVersion() int64 {
-	cInfo := rs.lastCommitInfo.Load()
-	if (cInfo == nil || cInfo.Version == 0) && rs.initialVersion > 1 {
-		// if we don't have any commit info or commit info version, but we do have an initial version set, use that
-		return rs.initialVersion
-	} else if cInfo != nil {
-		// if we do have a commit info, the next version must be last version + 1
-		return cInfo.Version + 1
-	}
-	// default to 1 as the first commit version
-	return 1
-}
-
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
-	version := rs.stagedVersion()
+	var previousHeight, version int64
+	if cInfo := rs.lastCommitInfo.Load(); (cInfo == nil || cInfo.Version == 0) && rs.initialVersion > 1 {
+		// This case means that no commit has been made in the store, we
+		// start from initialVersion.
+		version = rs.initialVersion
+	} else {
+		// This case can means two things:
+		// - either there was already a previous commit in the store, in which
+		// case we increment the version from there,
+		// - or there was no previous commit, and initial version was not set,
+		// in which case we start at version 1.
+		if cInfo != nil {
+			previousHeight = cInfo.Version
+		} else {
+			previousHeight = 0
+		}
+		version = previousHeight + 1
+	}
 
 	if rs.commitHeader.Height != version {
 		rs.logger.Debug("commit header and version mismatch", "header_height", rs.commitHeader.Height, "version", version)
@@ -578,14 +581,10 @@ func (c *commitFinalizer) doStartFinalize() (types.CommitID, error) {
 		return types.CommitID{}, fmt.Errorf("rolled back: %w", err)
 	}
 
-	stagedVersion := c.rs.stagedVersion()
-	if c.header.Height != stagedVersion {
-		return types.CommitID{}, fmt.Errorf("header height %d does not match staged version %d", c.header.Height, stagedVersion)
-	}
 	c.rs.SetCommitHeader(c.header)
 	c.cacheStore.Write()
 	c.hash.Hash = c.rs.WorkingHash()
-	c.hash.Version = stagedVersion
+	c.hash.Version = c.rs.LatestVersion() + 1
 	c.state = commitPrepared
 	return c.hash, nil
 }

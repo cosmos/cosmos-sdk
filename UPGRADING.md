@@ -210,7 +210,7 @@ Cosmos SDK v0.54 includes a Proof of Authority (POA) module under the Cosmos Ent
 
 ## New Features and Non-Breaking Changes
 
-These changes are informational and optional to adopt during the upgrade, but they are not required for a successful migration.
+These changes are informational and optional to adopt during the upgrade; they are not required for a successful migration.
 
 ### Telemetry
 

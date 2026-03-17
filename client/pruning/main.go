@@ -10,7 +10,7 @@ import (
 
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/legacy/rootmulti"
-
+	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"

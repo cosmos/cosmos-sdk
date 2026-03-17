@@ -9,10 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
+
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/gaskv"
 	"cosmossdk.io/store/legacy/cachekv"
-	"cosmossdk.io/store/legacy/iav
+	"cosmossdk.io/store/legacy/iavl"
 	"cosmossdk.io/store/transient"
 	"cosmossdk.io/store/types"
 	"cosmossdk.io/store/wrapper"

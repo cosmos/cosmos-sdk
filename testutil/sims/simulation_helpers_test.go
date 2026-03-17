@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/log/v2"
 
+
 	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
 	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
@@ -105,7 +106,7 @@ func initTestStores(t *testing.T) (storetypes.KVStore, storetypes.KVStore) {
 	t.Helper()
 
 	db := dbm.NewMemDB()
-	ms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	ms := rootmulti.NewStore(db, log.NewNopLogger())
 
 	key1 := storetypes.NewKVStoreKey("store1")
 	key2 := storetypes.NewKVStoreKey("store2")

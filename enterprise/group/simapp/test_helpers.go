@@ -60,7 +60,7 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = DefaultNodeHome
 
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, appOptions)
+	app := NewSimApp(log.NewNopLogger(), db, true, appOptions)
 	if withGenesis {
 		return app, app.DefaultGenesis()
 	}
@@ -129,11 +129,11 @@ func NewTestNetworkFixture() network.TestFixture {
 	}
 	defer os.RemoveAll(dir)
 
-	app := NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
+	app := NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), true, simtestutil.NewAppOptionsWithFlagHome(dir))
 
 	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return NewSimApp(
-			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
+			val.GetCtx().Logger, dbm.NewMemDB(), true,
 			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),
 			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),

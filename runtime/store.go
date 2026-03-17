@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-	"io"
 
 	"cosmossdk.io/core/store"
 
@@ -107,10 +106,6 @@ type kvStoreAdapter struct {
 }
 
 func (kvStoreAdapter) CacheWrap() storetypes.CacheWrap {
-	panic("unimplemented")
-}
-
-func (kvStoreAdapter) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
 	panic("unimplemented")
 }
 

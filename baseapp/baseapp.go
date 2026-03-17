@@ -11,7 +11,6 @@ import (
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/crypto/tmhash"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
@@ -23,6 +22,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
+
 
 	"github.com/cosmos/cosmos-sdk/baseapp/config"
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
@@ -85,15 +85,20 @@ func init() {
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
-	mu                sync.Mutex // mu protects the fields below.
-	logger            log.Logger
-	name              string                      // application name from abci.BlockInfo
-	db                dbm.DB                      // common DB backend
-	cms               storetypes.CommitMultiStore // Main (uncached) state
-	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
-	storeLoader       StoreLoader                 // function to handle store loading, may be overridden with SetStoreLoader()
-	grpcQueryRouter   *GRPCQueryRouter            // router for redirecting gRPC query calls
-	msgServiceRouter  *MsgServiceRouter           // router for redirecting Msg service messages
+	mu     sync.Mutex // mu protects the fields below.
+	logger log.Logger
+	name   string                      // application name from abci.BlockInfo
+	db     dbm.DB                      // common DB backend
+	cms    storetypes.CommitMultiStore // Main (uncached) state
+	// committer is the in-progress CommitFinalizer for the current block, created by StartCommit
+	// during internalFinalizeBlock. It must be set to nil after Finalize() or Rollback() to
+	// release the reference. The CommitFinalizer's state machine guards against misuse
+	// (double-finalize, post-rollback finalize), but callers should still nil the field promptly.
+	committer         storetypes.CommitFinalizer
+	qms               storetypes.RootMultiStore // Optional alternative multistore for querying only.
+	storeLoader       StoreLoader               // function to handle store loading, may be overridden with SetStoreLoader()
+	grpcQueryRouter   *GRPCQueryRouter          // router for redirecting gRPC query calls
+	msgServiceRouter  *MsgServiceRouter         // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
@@ -199,7 +204,7 @@ func NewBaseApp(
 		logger:           logger.With(log.ModuleKey, "baseapp"),
 		name:             name,
 		db:               db,
-		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default, we use a no-op metric gather in store
+		cms:              store.NewCommitMultiStore(db, logger),
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),
@@ -232,7 +237,11 @@ func NewBaseApp(
 		app.SetVerifyVoteExtensionHandler(NoOpVerifyVoteExtensionHandler())
 	}
 	if app.interBlockCache != nil {
-		app.cms.SetInterBlockCache(app.interBlockCache)
+		if rms, ok := app.cms.(*rootmulti.Store); ok {
+			rms.SetInterBlockCache(app.interBlockCache)
+		} else {
+			logger.Warn("SetInterBlockCache: CommitMultiStore is not rootmulti.Store, option ignored")
+		}
 	}
 
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
@@ -660,17 +669,9 @@ func (app *BaseApp) getContextForTx(mode sdk.ExecMode, txBytes []byte, txIndex i
 
 // cacheTxContext returns a new context based off of the provided context with
 // a branched multi-store.
-func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, storetypes.CacheMultiStore) {
+func (app *BaseApp) cacheTxContext(ctx sdk.Context) (sdk.Context, storetypes.CacheMultiStore) {
 	ms := ctx.MultiStore()
 	msCache := ms.CacheMultiStore()
-	if msCache.TracingEnabled() {
-		msCache = msCache.SetTracingContext(
-			map[string]any{
-				"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
-			},
-		).(storetypes.CacheMultiStore)
-	}
-
 	return ctx.WithMultiStore(msCache), msCache
 }
 
@@ -899,15 +900,16 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		// NOTE: Alternatively, we could require that AnteHandler ensures that
 		// writes do not happen if aborted/failed.  This may have some
 		// performance benefits, but it'll be more difficult to get right.
-		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
+		anteCtx, msCache = app.cacheTxContext(ctx)
 		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
 		anteCtx, anteSpan := anteCtx.StartSpan(tracer, "anteHandler")
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 		anteSpan.End()
-		// now we should back to the previous go context which didn't capture the anteHandler instrumentation span
-		newCtx = newCtx.WithContext(ctx)
-
 		if !newCtx.IsZero() {
+			// Restore the parent span without discarding values attached by the
+			// ante handler to the stdlib context.
+			newCtx = newCtx.WithContext(trace.ContextWithSpan(newCtx.Context(), trace.SpanFromContext(ctx.Context())))
+
 			// At this point, newCtx.MultiStore() is a store branch, or something else
 			// replaced by the AnteHandler. We want the original multistore.
 			//
@@ -959,7 +961,7 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 	// Create a new Context based off of the existing Context with a MultiStore branch
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.
-	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
+	runMsgCtx, msCache := app.cacheTxContext(ctx)
 
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a

@@ -184,6 +184,45 @@ func TestSTM(t *testing.T) {
 	}
 }
 
+// TestSTMHighContentionStress runs high-contention blocks many times.
+// With count=1, TestSTM passes because the bug is probabilistic.
+// With 200 iterations, the scheduler non-determinism triggers reliably.
+func TestSTMHighContentionStress(t *testing.T) {
+	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0, StoreKeyBank: 1}
+	testCases := []struct {
+		name      string
+		blk       *MockBlock
+		executors int
+	}{
+		{"worstCaseBlock(100),5", worstCaseBlock(100), 5},
+		{"testBlock(100,3),10", testBlock(100, 3), 10},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			for i := 0; i < 200; i++ {
+				storage := NewMultiMemDB(stores)
+				require.NoError(t,
+					ExecuteBlock(context.Background(), tc.blk.Size(), stores, storage, tc.executors, func(txn TxnIndex, store MultiStore) {
+						tc.blk.ExecuteTx(txn, store, nil)
+					}),
+				)
+				for _, err := range tc.blk.Results {
+					require.NoError(t, err)
+				}
+
+				crossCheck := NewMultiMemDB(stores)
+				runSequential(crossCheck, tc.blk)
+
+				for store := range stores {
+					require.True(t, StoreEqual(crossCheck.GetKVStore(store), storage.GetKVStore(store)),
+						"iteration %d: parallel != sequential for store %s", i, store.Name())
+				}
+			}
+		})
+	}
+}
+
 func StoreEqual(a, b storetypes.KVStore) bool {
 	// compare with iterators
 	iter1 := a.Iterator(nil, nil)

@@ -12,6 +12,7 @@ import (
 
 	"cosmossdk.io/log/v2"
 
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
@@ -28,7 +29,7 @@ func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*ba
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	t.Helper()
 
-	rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	rs := rootmulti.NewStore(db, log.NewNopLogger())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := storetypes.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
@@ -46,7 +47,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
 	t.Helper()
-	rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	rs := rootmulti.NewStore(db, log.NewNopLogger())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := storetypes.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)

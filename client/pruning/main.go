@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/log/v2"
 
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -78,7 +79,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			defer db.Close()
 
 			logger := log.NewLogger(cmd.OutOrStdout())
-			app := appCreator(logger, db, nil, vp)
+			app := appCreator(logger, db, vp)
 			cms := app.CommitMultiStore()
 
 			rootMultiStore, ok := cms.(*rootmulti.Store)

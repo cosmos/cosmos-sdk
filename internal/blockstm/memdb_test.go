@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+
 )
 
 type (
@@ -57,7 +58,4 @@ func TestCacheWraps(t *testing.T) {
 	// attempt to cachewrap
 	cacheWrapper := storage.CacheWrap()
 	require.IsType(t, &cachekv.GStore[any]{}, cacheWrapper)
-
-	cacheWrappedWithTrace := storage.CacheWrapWithTrace(nil, nil)
-	require.IsType(t, &cachekv.GStore[any]{}, cacheWrappedWithTrace)
 }

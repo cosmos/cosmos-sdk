@@ -2,16 +2,11 @@ package cachemulti
 
 import (
 	"fmt"
-	"io"
-	"maps"
 
 	"github.com/cosmos/cosmos-sdk/store/v2/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
-)
 
-// storeNameCtxKey is the TraceContext metadata key that identifies
-// the store which emitted a given trace.
-const storeNameCtxKey = "store_name"
+)
 
 //----------------------------------------
 // Store
@@ -23,9 +18,7 @@ const storeNameCtxKey = "store_name"
 type Store struct {
 	stores map[types.StoreKey]types.CacheWrap
 
-	traceWriter  io.Writer
-	traceContext types.TraceContext
-	parentStore  func(types.StoreKey) types.CacheWrapper
+	parentStore func(types.StoreKey) types.CacheWrapper
 }
 
 var _ types.CacheMultiStore = Store{}
@@ -35,12 +28,9 @@ var _ types.CacheMultiStore = Store{}
 // is a branched store.
 func NewFromKVStore(
 	stores map[types.StoreKey]types.CacheWrapper,
-	traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
 	cms := Store{
-		stores:       make(map[types.StoreKey]types.CacheWrap, len(stores)),
-		traceWriter:  traceWriter,
-		traceContext: traceContext,
+		stores: make(map[types.StoreKey]types.CacheWrap, len(stores)),
 	}
 
 	for key, store := range stores {
@@ -54,64 +44,25 @@ func NewFromKVStore(
 // CacheWrapper objects. Each CacheWrapper store is a branched store.
 func NewStore(
 	stores map[types.StoreKey]types.CacheWrapper,
-	traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
-	return NewFromKVStore(stores, traceWriter, traceContext)
+	return NewFromKVStore(stores)
 }
 
 // NewFromParent constructs a cache multistore with a parent store lazily,
 // the parent is usually another cache multistore or the block-stm multiversion store.
 func NewFromParent(
 	parentStore func(types.StoreKey) types.CacheWrapper,
-	traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
 	return Store{
-		stores:       make(map[types.StoreKey]types.CacheWrap),
-		traceWriter:  traceWriter,
-		traceContext: traceContext,
-		parentStore:  parentStore,
+		stores:      make(map[types.StoreKey]types.CacheWrap),
+		parentStore: parentStore,
 	}
 }
 
 func (cms Store) initStore(key types.StoreKey, store types.CacheWrapper) types.CacheWrap {
-	if cms.TracingEnabled() {
-		// only support tracing on KVStore.
-		if kvstore, ok := store.(types.KVStore); ok {
-			tctx := cms.traceContext.Clone().Merge(types.TraceContext{
-				storeNameCtxKey: key.Name(),
-			})
-			store = tracekv.NewStore(kvstore, cms.traceWriter, tctx)
-		}
-	}
 	cache := store.CacheWrap()
 	cms.stores[key] = cache
 	return cache
-}
-
-// SetTracer sets the tracer for the MultiStore that the underlying
-// stores will utilize to trace operations. A MultiStore is returned.
-func (cms Store) SetTracer(w io.Writer) types.MultiStore {
-	cms.traceWriter = w
-	return cms
-}
-
-// SetTracingContext updates the tracing context for the MultiStore by merging
-// the given context with the existing context by key. Any existing keys will
-// be overwritten. It is implied that the caller should update the context when
-// necessary between tracing operations. It returns a modified MultiStore.
-func (cms Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
-	if cms.traceContext != nil {
-		maps.Copy(cms.traceContext, tc)
-	} else {
-		cms.traceContext = tc
-	}
-
-	return cms
-}
-
-// TracingEnabled returns if tracing is enabled for the MultiStore.
-func (cms Store) TracingEnabled() bool {
-	return cms.traceWriter != nil
 }
 
 // LatestVersion returns the branch version of the store
@@ -136,15 +87,10 @@ func (cms Store) CacheWrap() types.CacheWrap {
 	return cms.CacheMultiStore().(types.CacheWrap)
 }
 
-// CacheWrapWithTrace implements the CacheWrapper interface.
-func (cms Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
-	return cms.CacheWrap()
-}
-
 // CacheMultiStore implements MultiStore, returns a new CacheMultiStore from the
 // underlying CacheMultiStore.
 func (cms Store) CacheMultiStore() types.CacheMultiStore {
-	return NewFromParent(cms.getCacheWrapper, cms.traceWriter, cms.traceContext)
+	return NewFromParent(cms.getCacheWrapper)
 }
 
 // CacheMultiStoreWithVersion implements the MultiStore interface. It will panic

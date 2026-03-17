@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2/transient"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/wrapper"
+
 )
 
 // copied from iavl/store_test.go
@@ -519,7 +520,4 @@ func TestCacheWraps(t *testing.T) {
 
 	cacheWrapper := store.CacheWrap()
 	require.IsType(t, &cachekv.Store{}, cacheWrapper)
-
-	cacheWrappedWithTrace := store.CacheWrapWithTrace(nil, nil)
-	require.IsType(t, &cachekv.Store{}, cacheWrappedWithTrace)
 }

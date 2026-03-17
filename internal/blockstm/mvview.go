@@ -1,12 +1,12 @@
 package blockstm
 
 import (
-	"io"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/v2/tracekv"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
@@ -200,14 +200,6 @@ func (s *GMVMemoryView[V]) iterator(opts IteratorOptions) storetypes.GIterator[V
 // CacheWrap implements types.Store.
 func (s *GMVMemoryView[V]) CacheWrap() storetypes.CacheWrap {
 	return cachekv.NewGStore(s, s.mvData.isZero, s.mvData.valueLen)
-}
-
-// CacheWrapWithTrace implements types.Store.
-func (s *GMVMemoryView[V]) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	if store, ok := any(s).(*GMVMemoryView[[]byte]); ok {
-		return cachekv.NewGStore(tracekv.NewStore(store, w, tc), store.mvData.isZero, store.mvData.valueLen)
-	}
-	return s.CacheWrap()
 }
 
 // GetStoreType implements types.Store.

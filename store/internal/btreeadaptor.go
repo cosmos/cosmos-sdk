@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/v2/internal/btree"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
+
 )
 
 var _ types.KVStore = (*BTreeStore[[]byte])(nil)
@@ -50,10 +51,5 @@ func (ts *BTreeStore[V]) GetStoreType() types.StoreType {
 
 // CacheWrap branches the underlying store.
 func (ts *BTreeStore[V]) CacheWrap() types.CacheWrap {
-	return cachekv.NewGStore(ts, ts.isZero, ts.valueLen)
-}
-
-// CacheWrapWithTrace branches the underlying store.
-func (ts *BTreeStore[V]) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
 	return cachekv.NewGStore(ts, ts.isZero, ts.valueLen)
 }

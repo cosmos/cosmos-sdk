@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/v2/mock"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
+
 )
 
 var errFoo = errors.New("dummy")
@@ -80,7 +81,4 @@ func TestCacheWraps(t *testing.T) {
 
 	cacheWrapper := store.CacheWrap()
 	require.IsType(t, &cachekv.Store{}, cacheWrapper)
-
-	cacheWrappedWithTrace := store.CacheWrapWithTrace(nil, nil)
-	require.IsType(t, &cachekv.Store{}, cacheWrappedWithTrace)
 }

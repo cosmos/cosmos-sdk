@@ -883,6 +883,46 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	}
 }
 
+func TestABCI_AnteHandlerContextValuesReachMsgServer(t *testing.T) {
+	type sdkCtxKey struct{}
+	type goCtxKey struct{}
+
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
+			ctx = ctx.WithValue(sdkCtxKey{}, "sdk-value")
+			ctx = ctx.WithContext(context.WithValue(ctx.Context(), goCtxKey{}, "go-value"))
+			return ctx, nil
+		})
+	}
+
+	executed := false
+	suite := NewBaseAppSuite(t, anteOpt)
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), mockCounterServer{
+		incrementCounterFn: func(ctx context.Context, _ *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
+			sdkCtx := sdk.UnwrapSDKContext(ctx)
+			executed = true
+			require.Equal(t, "sdk-value", sdkCtx.Value(sdkCtxKey{}))
+			require.Equal(t, "go-value", sdkCtx.Value(goCtxKey{}))
+			require.Equal(t, "sdk-value", ctx.Value(sdkCtxKey{}))
+			require.Equal(t, "go-value", ctx.Value(goCtxKey{}))
+			return &baseapptestutil.MsgCreateCounterResponse{}, nil
+		},
+	})
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	txbz, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	_, result, err := suite.baseApp.Simulate(txbz)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	require.True(t, executed)
+}
+
 func TestABCI_InvalidTransaction(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {

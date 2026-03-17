@@ -11,12 +11,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
 	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
+
 )
 
 func TestVerifyIAVLStoreQueryProof(t *testing.T) {
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
-	iStore, err := iavl.LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), types.CommitID{}, iavl.DefaultIAVLCacheSize, false, metrics.NewNoOpMetrics())
+	iStore, err := iavl.LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), types.CommitID{}, iavl.DefaultIAVLCacheSize, false)
 	store := iStore.(*iavl.Store)
 	require.Nil(t, err)
 	store.Set([]byte("MYKEY"), []byte("MYVALUE"))
@@ -60,13 +61,13 @@ func TestVerifyIAVLStoreQueryProof(t *testing.T) {
 func TestVerifyMultiStoreQueryProof(t *testing.T) {
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 	iavlStoreKey := types.NewKVStoreKey("iavlStoreKey")
 
 	store.MountStoreWithDB(iavlStoreKey, types.StoreTypeIAVL, nil)
 	require.NoError(t, store.LoadVersion(0))
 
-	iavlStore := store.GetCommitStore(iavlStoreKey).(*iavl.Store)
+	iavlStore := store.stores[iavlStoreKey].(*iavl.Store)
 	iavlStore.Set([]byte("MYKEY"), []byte("MYVALUE"))
 	cid := store.Commit()
 
@@ -116,14 +117,14 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 func TestVerifyMultiStoreQueryProofAbsence(t *testing.T) {
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 	iavlStoreKey := types.NewKVStoreKey("iavlStoreKey")
 
 	store.MountStoreWithDB(iavlStoreKey, types.StoreTypeIAVL, nil)
 	err := store.LoadVersion(0)
 	require.NoError(t, err)
 
-	iavlStore := store.GetCommitStore(iavlStoreKey).(*iavl.Store)
+	iavlStore := store.stores[iavlStoreKey].(*iavl.Store)
 	iavlStore.Set([]byte("MYKEY"), []byte("MYVALUE"))
 	cid := store.Commit() // Commit with empty iavl store.
 

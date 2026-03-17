@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2/mem"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
+
 )
 
 func TestStore(t *testing.T) {
@@ -30,9 +31,6 @@ func TestStore(t *testing.T) {
 
 	cacheWrapper := db.CacheWrap()
 	require.IsType(t, &cachekv.Store{}, cacheWrapper)
-
-	cacheWrappedWithTrace := db.CacheWrapWithTrace(nil, nil)
-	require.IsType(t, &cachekv.Store{}, cacheWrappedWithTrace)
 }
 
 func TestCommit(t *testing.T) {

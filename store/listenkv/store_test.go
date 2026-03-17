@@ -274,8 +274,3 @@ func TestListenKVStoreCacheWrap(t *testing.T) {
 	store := newEmptyListenKVStore(nil)
 	store.CacheWrap()
 }
-
-func TestListenKVStoreCacheWrapWithTrace(t *testing.T) {
-	store := newEmptyListenKVStore(nil)
-	require.Panics(t, func() { store.CacheWrapWithTrace(nil, nil) })
-}

@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"flag"
-	"io"
 	"math/rand"
 	"strings"
 	"sync"
@@ -179,7 +178,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		}
 	}
 	// overwrite default app config
-	interBlockCachingAppFactory := func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) *SimApp {
+	interBlockCachingAppFactory := func(logger log.Logger, db dbm.DB, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) *SimApp {
 		if FlagEnableStreamingValue {
 			m := map[string]any{
 				"streaming.abci.keys":             []string{"*"},
@@ -194,7 +193,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				return others.Get(k)
 			})
 		}
-		return NewSimApp(logger, db, nil, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
+		return NewSimApp(logger, db, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
 	}
 	var mx sync.Mutex
 	appHashResults := make(map[int64][][]byte)

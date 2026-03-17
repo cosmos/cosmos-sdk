@@ -25,30 +25,34 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2/gaskv"
 	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+
 )
 
 type MockContext struct {
-	db    *dbm.MemDB
-	store storetypes.CommitMultiStore
+	db      *dbm.MemDB
+	store   storetypes.CommitMultiStore
+	mounted map[storetypes.StoreKey]bool
 }
 
 func NewMockContext() *MockContext {
 	db := dbm.NewMemDB()
 	return &MockContext{
-		db:    dbm.NewMemDB(),
-		store: store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics()),
+		db:      db,
+		store:   store.NewCommitMultiStore(db, log.NewNopLogger()),
+		mounted: make(map[storetypes.StoreKey]bool),
 	}
 }
 
-func (m MockContext) KVStore(key storetypes.StoreKey) storetypes.KVStore {
-	if s := m.store.GetCommitStore(key); s != nil {
-		return s.(storetypes.KVStore)
+func (m *MockContext) KVStore(key storetypes.StoreKey) storetypes.KVStore {
+	if !m.mounted[key] {
+		m.store.MountStoreWithDB(key, storetypes.StoreTypeIAVL, m.db)
+		if err := m.store.LoadLatestVersion(); err != nil {
+			panic(err)
+		}
+		m.mounted[key] = true
 	}
-	m.store.MountStoreWithDB(key, storetypes.StoreTypeIAVL, m.db)
-	if err := m.store.LoadLatestVersion(); err != nil {
-		panic(err)
-	}
-	return m.store.GetCommitKVStore(key)
+	// GetKVStore will panic if the store isn't mounted yet
+	return m.store.GetKVStore(key)
 }
 
 type debuggingGasMeter struct {

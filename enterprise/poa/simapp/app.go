@@ -17,7 +17,6 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -115,7 +114,6 @@ func init() {
 func NewSimApp(
 	logger log.Logger,
 	db dbm.DB,
-	traceStore io.Writer,
 	loadLatest bool,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
@@ -145,7 +143,6 @@ func NewSimApp(
 	baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
-	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetTxEncoder(txConfig.TxEncoder())

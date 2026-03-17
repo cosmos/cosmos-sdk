@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/log/v2"
 
+
 	"github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
@@ -19,14 +20,14 @@ import (
 // DefaultContext creates a sdk.Context with a fresh MemDB that can be used in tests.
 func DefaultContext(key, tkey storetypes.StoreKey) sdk.Context {
 	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	cms := store.NewCommitMultiStore(db, log.NewNopLogger())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	cms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
 	err := cms.LoadLatestVersion()
 	if err != nil {
 		panic(err)
 	}
-	ctx := sdk.NewContext(cms, cmtproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{}, false, log.NewNopLogger())
 
 	return ctx
 }
@@ -39,7 +40,7 @@ func DefaultContextWithKeys(
 	memKeys map[string]*storetypes.MemoryStoreKey,
 ) sdk.Context {
 	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	cms := store.NewCommitMultiStore(db, log.NewNopLogger())
 
 	for _, key := range keys {
 		cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
@@ -58,7 +59,7 @@ func DefaultContextWithKeys(
 		panic(err)
 	}
 
-	return sdk.NewContext(cms, cmtproto.Header{}, false, log.NewNopLogger())
+	return sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{}, false, log.NewNopLogger())
 }
 
 type TestContext struct {
@@ -70,13 +71,13 @@ type TestContext struct {
 func DefaultContextWithDB(tb testing.TB, key, tkey storetypes.StoreKey) TestContext {
 	tb.Helper()
 	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	cms := store.NewCommitMultiStore(db, log.NewNopLogger())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	cms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
 	err := cms.LoadLatestVersion()
 	assert.NoError(tb, err)
 
-	ctx := sdk.NewContext(cms, cmtproto.Header{Time: time.Now()}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{Time: time.Now()}, false, log.NewNopLogger())
 
 	return TestContext{ctx, db, cms}
 }
@@ -84,14 +85,14 @@ func DefaultContextWithDB(tb testing.TB, key, tkey storetypes.StoreKey) TestCont
 func DefaultContextWithObjectStore(tb testing.TB, key, tkey, okey storetypes.StoreKey) TestContext {
 	tb.Helper()
 	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	cms := store.NewCommitMultiStore(db, log.NewNopLogger())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	cms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
 	cms.MountStoreWithDB(okey, storetypes.StoreTypeObject, db)
 	err := cms.LoadLatestVersion()
 	assert.NoError(tb, err)
 
-	ctx := sdk.NewContext(cms, cmtproto.Header{Time: time.Now()}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{Time: time.Now()}, false, log.NewNopLogger())
 
 	return TestContext{ctx, db, cms}
 }

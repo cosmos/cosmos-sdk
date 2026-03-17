@@ -88,7 +88,7 @@ func initFixture(tb testing.TB) *fixture {
 	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
 
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{}, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 

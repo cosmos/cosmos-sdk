@@ -1198,7 +1198,7 @@ func newCommitFinalizerForTest(t *testing.T) *commitFinalizer {
 	store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptionsFromString("nothing"))
 	require.NoError(t, store.LoadLatestVersion())
 	branch := store.CommitBranch()
-	finalizer, err := branch.StartCommit(context.Background(), cmtproto.Header{})
+	finalizer, err := branch.StartCommit(context.Background(), cmtproto.Header{Height: 1})
 	require.NoError(t, err)
 	return finalizer.(*commitFinalizer)
 }

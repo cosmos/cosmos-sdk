@@ -2,7 +2,6 @@ package simapp
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -78,7 +77,8 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		require.True(
 			t,
 			app.BankKeeper.BlockedAddr(addr),
-			fmt.Sprintf("ensure that blocked addresses are properly set in bank keeper: %s should be blocked", acc),
+			"ensure that blocked addresses are properly set in bank keeper: %s should be blocked",
+			acc,
 		)
 	}
 

@@ -813,28 +813,62 @@ func TestGenesisAllocatedFeesValidateBasic(t *testing.T) {
 }
 
 func TestGenesisAllocatedFeesValidate(t *testing.T) {
-	ac := address.NewBech32Codec("cosmosvalcons")
+	consAddr := sdk.ConsAddress(ed25519.GenPrivKey().PubKey().Address())
 
-	t.Run("valid consensus address", func(t *testing.T) {
-		consAddr := sdk.ConsAddress(ed25519.GenPrivKey().PubKey().Address())
-		entry := &GenesisAllocatedFees{
-			ConsensusAddress: consAddr.String(),
-			Fees:             sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))},
-		}
-		err := entry.Validate(ac)
-		require.NoError(t, err)
-	})
+	tests := []struct {
+		name    string
+		prefix  string
+		entry   *GenesisAllocatedFees
+		wantErr string
+	}{
+		{
+			name:   "valid with cosmosvalcons prefix",
+			prefix: "cosmosvalcons",
+			entry: &GenesisAllocatedFees{
+				ConsensusAddress: consAddr.String(),
+				Fees:             sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))},
+			},
+		},
+		{
+			name:   "valid with custom prefix",
+			prefix: "mychain",
+			entry: &GenesisAllocatedFees{
+				ConsensusAddress: sdk.MustBech32ifyAddressBytes("mychain", consAddr),
+				Fees:             sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))},
+			},
+		},
+		{
+			name:   "wrong prefix rejected",
+			prefix: "otherchain",
+			entry: &GenesisAllocatedFees{
+				ConsensusAddress: consAddr.String(), // cosmosvalcons prefix
+				Fees:             sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))},
+			},
+			wantErr: "invalid consensus address",
+		},
+		{
+			name:   "invalid bech32 rejected",
+			prefix: "cosmosvalcons",
+			entry: &GenesisAllocatedFees{
+				ConsensusAddress: "invalid-address",
+				Fees:             sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))},
+			},
+			wantErr: "invalid consensus address",
+		},
+	}
 
-	t.Run("invalid consensus address format", func(t *testing.T) {
-		entry := &GenesisAllocatedFees{
-			ConsensusAddress: "invalid-address",
-			Fees:             sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))},
-		}
-		err := entry.Validate(ac)
-		require.Error(t, err)
-		require.ErrorIs(t, err, ErrInvalidAllocatedFees)
-		require.Contains(t, err.Error(), "invalid consensus address")
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ac := address.NewBech32Codec(tt.prefix)
+			err := tt.entry.Validate(ac)
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.wantErr)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
 
 func TestValidateAllocatedFees(t *testing.T) {

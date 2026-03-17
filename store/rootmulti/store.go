@@ -539,11 +539,13 @@ type commitFinalizer struct {
 	mu         sync.Mutex
 	state      commitState
 	hash       types.CommitID
+	header     cmtproto.Header
 }
 
-func newCommitFinalizer(ctx context.Context, rs *Store, cacheStore types.CacheMultiStore) *commitFinalizer {
+func newCommitFinalizer(ctx context.Context, header cmtproto.Header, rs *Store, cacheStore types.CacheMultiStore) *commitFinalizer {
 	return &commitFinalizer{
 		ctx:        ctx,
+		header:     header,
 		rs:         rs,
 		cacheStore: cacheStore,
 	}
@@ -572,9 +574,14 @@ func (c *commitFinalizer) doStartFinalize() (types.CommitID, error) {
 		return types.CommitID{}, fmt.Errorf("rolled back: %w", err)
 	}
 
+	stagedVersion := c.rs.LatestVersion() + 1
+	if c.header.Height != stagedVersion {
+		return types.CommitID{}, fmt.Errorf("header height %d does not match staged version %d", c.header.Height, stagedVersion)
+	}
+	c.rs.SetCommitHeader(c.header)
 	c.cacheStore.Write()
 	c.hash.Hash = c.rs.WorkingHash()
-	c.hash.Version = c.rs.LatestVersion() + 1
+	c.hash.Version = stagedVersion
 	c.state = commitPrepared
 	return c.hash, nil
 }
@@ -666,8 +673,7 @@ type commitBranch struct {
 }
 
 func (c *commitBranch) StartCommit(ctx context.Context, header cmtproto.Header) (types.CommitFinalizer, error) {
-	c.rs.SetCommitHeader(header)
-	return newCommitFinalizer(ctx, c.rs, c.inner), nil
+	return newCommitFinalizer(ctx, header, c.rs, c.inner), nil
 }
 
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it

@@ -227,6 +227,9 @@ step "$S_CLONE"
 
 if [[ -d "$CURATED_SIMAPP_FIXTURE" ]]; then
   cp -r "$CURATED_SIMAPP_FIXTURE" "$SIMAPP_DIR"
+  # The curated fixture tracks main in-repo, but this e2e case is meant to
+  # exercise a real v0.53.6 -> v0.54 migration.
+  (cd "$SIMAPP_DIR" && go mod edit -require=github.com/cosmos/cosmos-sdk@v0.53.6)
   pass "Copied fixture simapp ($(find "$SIMAPP_DIR" -name '*.go' | wc -l | tr -d ' ') Go files)"
 else
   fail "fixture not found: $CURATED_SIMAPP_FIXTURE"

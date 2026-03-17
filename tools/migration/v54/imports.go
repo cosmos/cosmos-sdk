@@ -18,6 +18,7 @@ var importReplacements = []migration.ImportReplacement{
 	{Old: "cosmossdk.io/x/evidence", New: "github.com/cosmos/cosmos-sdk/x/evidence", AllPackages: true},
 	{Old: "cosmossdk.io/x/upgrade", New: "github.com/cosmos/cosmos-sdk/x/upgrade", AllPackages: true},
 	{Old: "cosmossdk.io/x/tx", New: "github.com/cosmos/cosmos-sdk/x/tx", AllPackages: true},
+	{Old: "cosmossdk.io/systemtests", New: "github.com/cosmos/cosmos-sdk/testutil/systemtests", AllPackages: true},
 
 	// --- Modules moved to contrib/ (deprecated) ---
 	// Circuit and NFT now live at github.com/cosmos/cosmos-sdk/contrib/x/{circuit,nft}.

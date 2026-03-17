@@ -11,6 +11,7 @@ func TestUpdateImports(t *testing.T) {
 		{Old: "cosmossdk.io/x/upgrade", New: "github.com/cosmos/cosmos-sdk/x/upgrade", AllPackages: true},
 		{Old: "cosmossdk.io/x/feegrant", New: "github.com/cosmos/cosmos-sdk/x/feegrant", AllPackages: true},
 		{Old: "cosmossdk.io/x/evidence", New: "github.com/cosmos/cosmos-sdk/x/evidence", AllPackages: true},
+		{Old: "cosmossdk.io/systemtests", New: "github.com/cosmos/cosmos-sdk/testutil/systemtests", AllPackages: true},
 	}
 
 	tests := []struct {
@@ -54,6 +55,14 @@ func TestUpdateImports(t *testing.T) {
 					import "github.com/cosmos/cosmos-sdk/x/evidence/types"`,
 			wantImport: `"github.com/cosmos/cosmos-sdk/x/evidence/types"`,
 			wantMod:    false,
+		},
+		{
+			name: "vanity systemtests package is updated",
+			input: `package main
+					import "cosmossdk.io/systemtests/assert"`,
+			doNotWantImport: `"cosmossdk.io/systemtests/assert"`,
+			wantImport:      `"github.com/cosmos/cosmos-sdk/testutil/systemtests/assert"`,
+			wantMod:         true,
 		},
 	}
 

@@ -57,8 +57,8 @@ var textReplacements = []migration.TextReplacement{
 
 	// --- params/proto.go: normalize tx import/use for curated v53 fixture ---
 	{
-		Old: "import (\n\t\"github.com/cosmos/cosmos-sdk/codec\"\n\t\"github.com/cosmos/cosmos-sdk/codec/types\"\n)\n",
-		New: "import (\n\t\"github.com/cosmos/cosmos-sdk/codec\"\n\t\"github.com/cosmos/cosmos-sdk/codec/types\"\n\t\"github.com/cosmos/cosmos-sdk/x/auth/tx\"\n)\n",
+		Old:       "import (\n\t\"github.com/cosmos/cosmos-sdk/codec\"\n\t\"github.com/cosmos/cosmos-sdk/codec/types\"\n)\n",
+		New:       "import (\n\t\"github.com/cosmos/cosmos-sdk/codec\"\n\t\"github.com/cosmos/cosmos-sdk/codec/types\"\n\t\"github.com/cosmos/cosmos-sdk/x/auth/tx\"\n)\n",
 		FileMatch: "params/proto.go",
 	},
 	{Old: "authtx.NewTxConfig(", New: "tx.NewTxConfig(", FileMatch: "params/proto.go"},
@@ -66,8 +66,8 @@ var textReplacements = []migration.TextReplacement{
 
 	// --- simd/cmd/root.go: normalize tx import/use for curated v53 fixture ---
 	{
-		Old: "\t\"github.com/cosmos/cosmos-sdk/types/tx/signing\"\n\tauthtxconfig \"github.com/cosmos/cosmos-sdk/x/auth/tx/config\"\n",
-		New: "\t\"github.com/cosmos/cosmos-sdk/types/tx/signing\"\n\t\"github.com/cosmos/cosmos-sdk/x/auth/tx\"\n\tauthtxconfig \"github.com/cosmos/cosmos-sdk/x/auth/tx/config\"\n",
+		Old:       "\t\"github.com/cosmos/cosmos-sdk/types/tx/signing\"\n\tauthtxconfig \"github.com/cosmos/cosmos-sdk/x/auth/tx/config\"\n",
+		New:       "\t\"github.com/cosmos/cosmos-sdk/types/tx/signing\"\n\t\"github.com/cosmos/cosmos-sdk/x/auth/tx\"\n\tauthtxconfig \"github.com/cosmos/cosmos-sdk/x/auth/tx/config\"\n",
 		FileMatch: "simd/cmd/root.go",
 	},
 	{Old: "authtx.DefaultSignModes", New: "tx.DefaultSignModes", FileMatch: "simd/cmd/root.go"},
@@ -77,13 +77,13 @@ var textReplacements = []migration.TextReplacement{
 	// --- app.go: rewrite custom ante wrapper to direct SDK ante handler ---
 	{Old: "anteHandler, err := NewAnteHandler(", New: "anteHandler, err := ante.NewAnteHandler(", FileMatch: "app.go"},
 	{
-		Old: "HandlerOptions{\n\t\t\tante.HandlerOptions{\n",
-		New: "ante.HandlerOptions{\n",
+		Old:       "HandlerOptions{\n\t\t\tante.HandlerOptions{\n",
+		New:       "ante.HandlerOptions{\n",
 		FileMatch: "app.go",
 	},
 	{
-		Old: "\t\t\t},\n\t\t\t&app.CircuitKeeper,\n\t\t},\n\t)\n",
-		New: "\t\t\t},\n\t)\n",
+		Old:       "\t\t\t},\n\t\t\t&app.CircuitKeeper,\n\t\t},\n\t)\n",
+		New:       "\t\t\t},\n\t)\n",
 		FileMatch: "app.go",
 	},
 

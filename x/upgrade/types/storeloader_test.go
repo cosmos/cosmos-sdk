@@ -12,7 +12,7 @@ import (
 
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/legacy/rootmulti"
-	pruningtypes "cosmossdk.io/store/pruning"
+	pruningtypes "cosmossdk.io/store/pruning/types"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

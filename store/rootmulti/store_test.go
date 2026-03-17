@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"context"
 	"crypto/sha256"
 	"fmt"
 	"math/rand"
@@ -8,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -82,7 +84,7 @@ func TestCacheMultiStore(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
-	cacheMulti := ms.CacheMultiStore()
+	cacheMulti := ms.RootCacheMultiStore()
 	require.IsType(t, cachemulti.Store{}, cacheMulti)
 }
 
@@ -132,7 +134,7 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	// require we cannot commit (write) to a cache-versioned multi-store
 	require.Panics(t, func() {
 		kvStore.Set(k, []byte("newValue"))
-		cms.Write()
+		cms.(types.CacheMultiStore).Write()
 	})
 }
 
@@ -1014,7 +1016,7 @@ func TestStateListeners(t *testing.T) {
 	require.Equal(t, 1, len(ms.listeners))
 
 	require.NoError(t, ms.LoadLatestVersion())
-	cacheMulti := ms.CacheMultiStore()
+	cacheMulti := ms.cacheMultiStore()
 
 	store := cacheMulti.GetKVStore(testStoreKey1)
 	store.Set([]byte{1}, []byte{1})
@@ -1187,4 +1189,98 @@ func TestEarliestVersionPersistence(t *testing.T) {
 	// Earliest version should be persisted and restored
 	require.Equal(t, earliestBeforeRestart, ms2.EarliestVersion(),
 		"earliest version should persist across restarts")
+}
+
+func newCommitFinalizerForTest(t *testing.T) *commitFinalizer {
+	t.Helper()
+	db := dbm.NewMemDB()
+	store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptionsFromString("nothing"))
+	require.NoError(t, store.LoadLatestVersion())
+	branch := store.CommitBranch()
+	finalizer, err := branch.StartCommit(context.Background(), cmtproto.Header{Height: 1})
+	require.NoError(t, err)
+	return finalizer.(*commitFinalizer)
+}
+
+func TestCommitFinalizerIdempotency(t *testing.T) {
+	cf := newCommitFinalizerForTest(t)
+
+	cid, err := cf.StartFinalize()
+	require.NoError(t, err)
+	require.NotEmpty(t, cid.Hash)
+
+	// idempotent
+	cid2, err := cf.StartFinalize()
+	require.NoError(t, err)
+	require.Equal(t, cid, cid2)
+
+	// finalize completes
+	cid3, err := cf.Finalize()
+	require.NoError(t, err)
+	require.Equal(t, cid, cid3)
+
+	// idempotent
+	cid4, err := cf.Finalize()
+	require.NoError(t, err)
+	require.Equal(t, cid3, cid4)
+}
+
+func TestCommitFinalizerFinalizeDirectly(t *testing.T) {
+	cf := newCommitFinalizerForTest(t)
+
+	// no call to StartFinalize first
+	cid, err := cf.Finalize()
+	require.NoError(t, err)
+	require.NotEmpty(t, cid.Hash)
+
+	// idempotent
+	cid2, err := cf.Finalize()
+	require.NoError(t, err)
+	require.Equal(t, cid, cid2)
+}
+
+func TestCommitFinalizerRollback(t *testing.T) {
+	cf := newCommitFinalizerForTest(t)
+
+	require.NoError(t, cf.Rollback())
+
+	// idempotent
+	require.NoError(t, cf.Rollback())
+
+	// cannot finalize after rollback
+	_, err := cf.StartFinalize()
+	require.Error(t, err)
+
+	_, err = cf.Finalize()
+	require.Error(t, err)
+}
+
+func TestCommitFinalizerCannotRollbackAfterFinalize(t *testing.T) {
+	cf := newCommitFinalizerForTest(t)
+
+	_, err := cf.StartFinalize()
+	require.NoError(t, err)
+
+	require.Error(t, cf.Rollback())
+}
+
+func TestCommitFinalizerContextCanceled(t *testing.T) {
+	db := dbm.NewMemDB()
+	store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptionsFromString("nothing"))
+	require.NoError(t, store.LoadLatestVersion())
+	branch := store.CommitBranch()
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	finalizer, err := branch.StartCommit(ctx, cmtproto.Header{})
+	require.NoError(t, err)
+
+	// cancel before finalize
+	cancel()
+
+	_, err = finalizer.StartFinalize()
+	require.Error(t, err)
+
+	// rollback should return no error
+	require.NoError(t, finalizer.Rollback())
 }

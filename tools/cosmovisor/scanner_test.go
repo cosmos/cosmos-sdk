@@ -10,11 +10,15 @@ import (
 )
 
 // TestUpgradeHeightThreshold verifies the height check logic for #26091.
-// When the chain panics during block finalization at upgrade height, the status endpoint
-// returns the last committed block (upgradeHeight-1). Cosmovisor must proceed when
-// currentHeight >= upgradeHeight-1.
+// CheckUpdate cannot be tested directly because checkHeight returns errUntestAble in the
+// test environment, so we validate the minHeight formula for both code paths here.
+//
+// Live-polling path (fw.IsStop() false): minHeight = upgradeHeight — proceed when currentHeight >= upgradeHeight.
+// Post-crash path (fw.IsStop() true): minHeight = upgradeHeight-1 — when the chain panics during
+// block finalization, the last committed block is upgradeHeight-1; cosmovisor must proceed from that point.
 func TestUpgradeHeightThreshold(t *testing.T) {
-	cases := []struct {
+	// Post-crash path: relaxed threshold (minHeight = upgradeHeight - 1)
+	postCrashCases := []struct {
 		currentHeight int64
 		upgradeHeight int64
 		shouldProceed bool
@@ -22,17 +26,34 @@ func TestUpgradeHeightThreshold(t *testing.T) {
 		{99, 100, true},  // at last committed before upgrade
 		{100, 100, true}, // past upgrade
 		{98, 100, false}, // too early
-		{0, 1, true},     // genesis upgrade
+		{0, 1, true},     // genesis upgrade (minHeight floor 0)
 		{1, 2, true},     // upgrade at block 2
 	}
-	for _, tc := range cases {
+	for _, tc := range postCrashCases {
 		minHeight := tc.upgradeHeight - 1
 		if minHeight < 0 {
 			minHeight = 0
 		}
-		tooEarly := tc.currentHeight < minHeight
-		proceed := !tooEarly
-		require.Equal(t, tc.shouldProceed, proceed, "current=%d upgrade=%d", tc.currentHeight, tc.upgradeHeight)
+		proceed := tc.currentHeight >= minHeight
+		require.Equal(t, tc.shouldProceed, proceed, "post-crash: current=%d upgrade=%d", tc.currentHeight, tc.upgradeHeight)
+	}
+
+	// Live-polling path: strict threshold (minHeight = upgradeHeight)
+	liveCases := []struct {
+		currentHeight int64
+		upgradeHeight int64
+		shouldProceed bool
+	}{
+		{99, 100, false}, // one block early — must NOT proceed in live path
+		{100, 100, true}, // exactly at upgrade
+		{101, 100, true},  // past upgrade
+		{0, 1, false},     // genesis: too early for live path
+		{1, 1, true},      // upgrade at block 1
+	}
+	for _, tc := range liveCases {
+		minHeight := tc.upgradeHeight
+		proceed := tc.currentHeight >= minHeight
+		require.Equal(t, tc.shouldProceed, proceed, "live: current=%d upgrade=%d", tc.currentHeight, tc.upgradeHeight)
 	}
 }
 

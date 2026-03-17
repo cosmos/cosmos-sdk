@@ -163,14 +163,16 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 	}
 
 	// file exist but too early in height
-	// Per #26091: when the chain panics during block finalization at upgrade height, the status
-	// endpoint returns the last committed block (info.Height-1). We must proceed when
-	// currentHeight >= info.Height-1 so cosmovisor can trigger the upgrade.
-	currentHeight, err := fw.checkHeight()
-	minHeight := info.Height - 1
-	if minHeight < 0 {
-		minHeight = 0
+	minHeight := info.Height
+	if fw.IsStop() {
+		// Per #26091: After a panic the last committed block is info.Height-1; allow the upgrade
+		// to proceed from that point so cosmovisor can trigger the upgrade.
+		minHeight = info.Height - 1
+		if minHeight < 0 {
+			minHeight = 0
+		}
 	}
+	currentHeight, err := fw.checkHeight()
 	if (err != nil || currentHeight < minHeight) && !errors.Is(err, errUntestAble) { // ignore this check for tests
 		return false
 	}

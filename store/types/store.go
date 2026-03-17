@@ -175,7 +175,7 @@ type RootMultiStore interface {
 	CacheMultiStoreWithVersion(version int64) (MultiStore, error)
 }
 
-// CommitMultiStore is the root multistore in a multistore db which can be commited to via CommitBranch.
+// CommitMultiStore is the root multistore in a multistore db which can be committed to via CommitBranch.
 type CommitMultiStore interface {
 	RootMultiStore
 
@@ -239,7 +239,7 @@ type CommitMultiStore interface {
 	io.Closer
 }
 
-// CommitFinalizer defines the type that will be used for commiting transactions against the CommitMultiStore.
+// CommitFinalizer defines the type that will be used for committing transactions against the CommitMultiStore.
 // It is designed to allow optimistic commit and rollback if the underlying store supports it.
 type CommitFinalizer interface {
 	// StartFinalize begins finalization and waits until the hash is ready,
@@ -258,7 +258,7 @@ type CommitFinalizer interface {
 	// Rollback aborts the in-progress commit and leaves the stores in the previous state.
 	// Rollback returns an error if a successful StartFinalize or Finalize has already been called.
 	// Rollback is idempotent: repeated calls return nil.
-	// If the context was cancelled before finalization, the finalizer is already in a rolled-back
+	// If the context was canceled before finalization, the finalizer is already in a rolled-back
 	// state and Rollback will return nil.
 	Rollback() error
 }

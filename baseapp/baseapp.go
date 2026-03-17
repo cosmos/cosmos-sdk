@@ -21,7 +21,6 @@ import (
 	protov2 "google.golang.org/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
-
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/rootmulti"
@@ -85,16 +84,16 @@ func init() {
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
-	mu                sync.Mutex // mu protects the fields below.
-	logger            log.Logger
-	name              string                      // application name from abci.BlockInfo
-	db                dbm.DB                      // common DB backend
-	cms               storetypes.CommitMultiStore // Main (uncached) state
+	mu     sync.Mutex // mu protects the fields below.
+	logger log.Logger
+	name   string                      // application name from abci.BlockInfo
+	db     dbm.DB                      // common DB backend
+	cms    storetypes.CommitMultiStore // Main (uncached) state
 	// committer is the in-progress CommitFinalizer for the current block, created by StartCommit
 	// during internalFinalizeBlock. It must be set to nil after Finalize() or Rollback() to
 	// release the reference. The CommitFinalizer's state machine guards against misuse
 	// (double-finalize, post-rollback finalize), but callers should still nil the field promptly.
-	committer storetypes.CommitFinalizer
+	committer         storetypes.CommitFinalizer
 	qms               storetypes.RootMultiStore // Optional alternative multistore for querying only.
 	storeLoader       StoreLoader               // function to handle store loading, may be overridden with SetStoreLoader()
 	grpcQueryRouter   *GRPCQueryRouter          // router for redirecting gRPC query calls

@@ -20,7 +20,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
-
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
@@ -671,7 +670,7 @@ type commitBranch struct {
 	types.MultiStore
 	// inner is the same as the embedded MultiStore but is the type that we want to call Write against (we don't want to expose Write via embedding)
 	inner types.CacheMultiStore
-	// rs is the Store that we are commiting the changes in the CacheMultiStore against
+	// rs is the Store that we are committing the changes in the CacheMultiStore against
 	rs *Store
 }
 

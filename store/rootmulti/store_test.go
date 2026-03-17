@@ -16,7 +16,6 @@ import (
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
-
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/iavl"
 	sdkmaps "cosmossdk.io/store/internal/maps"

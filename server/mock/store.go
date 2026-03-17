@@ -16,12 +16,12 @@ type multiStore struct {
 }
 
 func (ms multiStore) RootCacheMultiStore() storetypes.MultiStore {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (ms multiStore) CommitBranch() storetypes.CommitBranch {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 

@@ -10,7 +10,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"cosmossdk.io/core/header"
-
 	"cosmossdk.io/log/v2"
 	storetypes "cosmossdk.io/store/types"
 

@@ -8,6 +8,30 @@ Note, always read the **App Wiring Changes** section for more information on app
 
 For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/CHANGELOG.md).
 
+## Centralized Authority via Consensus Params
+
+Authority management can now be centralized via the `x/consensus` module. A new `AuthorityParams` field in `ConsensusParams` stores the authority address on-chain. When set, it takes precedence over the per-keeper authority parameter.
+
+### No Breaking Changes
+
+Keeper constructors still accept the `authority` parameter. It is now used as a **fallback** when no authority is configured in consensus params. Existing code continues to work without changes.
+
+### How It Works
+
+When a module validates authority (e.g., in `UpdateParams`), it checks consensus params first. If no authority is set there, it falls back to the keeper's `authority` field:
+
+```go
+authority := sdkCtx.Authority() // from consensus params
+if authority == "" {
+    authority = k.authority       // fallback to keeper field
+}
+if authority != msg.Authority {
+    return nil, errors.Wrapf(...)
+}
+```
+
+To enable centralized authority, set the `AuthorityParams` in consensus params via a governance proposal targeting the `x/consensus` module's `MsgUpdateParams`.
+
 ## x/gov
 
 ### Keeper Initialization

@@ -838,40 +838,55 @@ func TestGenesisAllocatedFeesValidate(t *testing.T) {
 }
 
 func TestValidateAllocatedFees(t *testing.T) {
-	t.Run("empty list is valid", func(t *testing.T) {
-		err := ValidateAllocatedFees(nil)
-		require.NoError(t, err)
-	})
+	tests := []struct {
+		name    string
+		fees    []GenesisAllocatedFees
+		wantErr string
+	}{
+		{
+			name: "nil list is valid",
+			fees: nil,
+		},
+		{
+			name: "empty list is valid",
+			fees: []GenesisAllocatedFees{},
+		},
+		{
+			name: "valid entries",
+			fees: []GenesisAllocatedFees{
+				{ConsensusAddress: "addr1", Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))}},
+				{ConsensusAddress: "addr2", Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(200))}},
+			},
+		},
+		{
+			name: "duplicate consensus addresses",
+			fees: []GenesisAllocatedFees{
+				{ConsensusAddress: "addr1", Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))}},
+				{ConsensusAddress: "addr1", Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(200))}},
+			},
+			wantErr: "duplicate consensus address",
+		},
+		{
+			name: "empty consensus address",
+			fees: []GenesisAllocatedFees{
+				{ConsensusAddress: "addr1", Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))}},
+				{ConsensusAddress: "", Fees: sdk.DecCoins{}},
+			},
+			wantErr: "allocated fees at index 1",
+		},
+	}
 
-	t.Run("valid entries", func(t *testing.T) {
-		fees := []GenesisAllocatedFees{
-			{ConsensusAddress: "addr1", Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))}},
-			{ConsensusAddress: "addr2", Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(200))}},
-		}
-		err := ValidateAllocatedFees(fees)
-		require.NoError(t, err)
-	})
-
-	t.Run("duplicate consensus addresses", func(t *testing.T) {
-		fees := []GenesisAllocatedFees{
-			{ConsensusAddress: "addr1", Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))}},
-			{ConsensusAddress: "addr1", Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(200))}},
-		}
-		err := ValidateAllocatedFees(fees)
-		require.Error(t, err)
-		require.ErrorIs(t, err, ErrInvalidAllocatedFees)
-		require.Contains(t, err.Error(), "duplicate consensus address")
-	})
-
-	t.Run("invalid entry in list", func(t *testing.T) {
-		fees := []GenesisAllocatedFees{
-			{ConsensusAddress: "addr1", Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))}},
-			{ConsensusAddress: "", Fees: sdk.DecCoins{}},
-		}
-		err := ValidateAllocatedFees(fees)
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "allocated fees at index 1")
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateAllocatedFees(tt.fees)
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.wantErr)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
 
 func TestMsgWithdrawFeesValidateBasic(t *testing.T) {

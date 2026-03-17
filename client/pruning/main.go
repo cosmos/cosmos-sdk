@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/log/v2"
+	"cosmossdk.io/store/legacy/rootmulti"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/rootmulti"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"

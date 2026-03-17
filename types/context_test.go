@@ -13,7 +13,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/rootmulti"
+	"cosmossdk.io/store/legacy/rootmulti"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

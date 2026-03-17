@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/iavl"
+	"cosmossdk.io/store/legacy/iavl"
 	"cosmossdk.io/store/types"
 )
 

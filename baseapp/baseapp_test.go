@@ -20,16 +20,14 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
 
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"

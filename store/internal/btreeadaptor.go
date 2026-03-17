@@ -1,12 +1,9 @@
 package internal
 
 import (
-	"io"
-
-	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/v2/internal/btree"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
-
 )
 
 var _ types.KVStore = (*BTreeStore[[]byte])(nil)

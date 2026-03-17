@@ -10,10 +10,8 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
-
 )
 
 type Store interface {

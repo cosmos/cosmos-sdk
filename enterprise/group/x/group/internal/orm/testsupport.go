@@ -23,9 +23,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/store/v2/gaskv"
-	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
-
 )
 
 type MockContext struct {

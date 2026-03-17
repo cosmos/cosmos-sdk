@@ -10,9 +10,7 @@ import (
 
 	"cosmossdk.io/log/v2"
 
-
 	"github.com/cosmos/cosmos-sdk/store/v2"
-	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

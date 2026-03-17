@@ -10,14 +10,13 @@ import (
 
 	"cosmossdk.io/log/v2"
 
-	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/v2/gaskv"
-	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/iavl"
 	"github.com/cosmos/cosmos-sdk/store/v2/transient"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/wrapper"
-
 )
 
 // copied from iavl/store_test.go

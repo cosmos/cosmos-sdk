@@ -6,11 +6,10 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
-
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"

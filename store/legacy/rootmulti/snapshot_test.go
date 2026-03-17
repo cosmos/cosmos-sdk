@@ -16,13 +16,11 @@ import (
 
 	"cosmossdk.io/log/v2"
 
-	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
-	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
-	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/iavl"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
-
 )
 
 func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *rootmulti.Store {

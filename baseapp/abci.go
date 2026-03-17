@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -26,7 +25,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
-
 )
 
 // Supported ABCI Query prefixes and paths

@@ -23,17 +23,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/v2/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/iavl"
 	"github.com/cosmos/cosmos-sdk/store/v2/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/v2/mem"
-	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
 	"github.com/cosmos/cosmos-sdk/store/v2/pruning"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/v2/transient"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
-
 )
 
 const (

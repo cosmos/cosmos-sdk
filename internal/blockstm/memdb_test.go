@@ -5,9 +5,8 @@ import (
 
 	"github.com/test-go/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/cachekv"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
-
 )
 
 type (

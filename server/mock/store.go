@@ -4,11 +4,9 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 
-	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
-
 )
 
 var _ storetypes.MultiStore = multiStore{}

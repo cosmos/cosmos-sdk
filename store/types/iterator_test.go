@@ -8,10 +8,8 @@ import (
 
 	"cosmossdk.io/log/v2"
 
-	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
-	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/iavl"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
-
 )
 
 func newMemTestKVStore(t *testing.T) types.KVStore {

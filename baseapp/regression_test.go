@@ -8,11 +8,9 @@ import (
 
 	"cosmossdk.io/log/v2"
 
-
 	"github.com/cosmos/cosmos-sdk/baseapp/config"
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"github.com/cosmos/cosmos-sdk/store/v2"
-	storemetrics "github.com/cosmos/cosmos-sdk/store/v2/metrics"
 )
 
 // Ensures that error checks are performed before sealing the app.

@@ -3,10 +3,8 @@ package blockstm
 import (
 	"github.com/cosmos/btree"
 
-
 	tree2 "github.com/cosmos/cosmos-sdk/internal/blockstm/tree"
-	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/v2/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/cachekv"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 

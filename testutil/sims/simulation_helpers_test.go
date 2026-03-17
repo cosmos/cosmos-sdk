@@ -10,9 +10,7 @@ import (
 
 	"cosmossdk.io/log/v2"
 
-
-	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
-	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/simulation"

@@ -17,7 +17,8 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
         - [x/epochs](#xepochs)
         - [x/bank](#xbank)
         - [NodeService](#nodeservice)
-    - [Moved Go Modules](#moved-go-modules)
+    - [Removed Go Modules](#removed-go-modules)
+    - [Renamed Go Modules](#renamed-go-modules)
     - [Module Version Updates](#module-version-updates)
     - [Log v2](#log-v2)
     - [Store v2](#store-v2)
@@ -55,6 +56,7 @@ Use this checklist first, then read the linked sections for the exact code or wi
 - [ ] Update imports to `cosmossdk.io/log/v2` if your app imports the log package directly. See [Log v2](#log-v2).
 - [ ] Migrate imports to `cosmossdk.io/store/v2`. See [Store v2](#store-v2).
 - [ ] Migrate any remaining `BaseApp.NewUncachedContext()` or `BaseApp.SimWriteState()` usage. See [Store v2](#store-v2).
+- [ ] If using `systemtests` update import to `github.com/cosmos/cosmos-sdk/tools/systemtests`.
 - [ ] Review [Centralized Authority via Consensus Params](#centralized-authority-via-consensus-params). No upgrade action is required to keep using per-keeper authorities.
 - [ ] Review [Telemetry](#telemetry). No upgrade action is required to keep existing telemetry wiring, but upgrading to OpenTelemetry is strongly encouraged.
 - [ ] Review [PoA Module](#poa-module) if you are interested in adopting the new Cosmos Enterprise Proof of Authority module.
@@ -149,7 +151,7 @@ func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Conf
 }
 ```
 
-### Moved Go Modules
+### Removed Go Modules
 
 Most `cosmossdk.io` vanity URLs for modules under `x/` have been removed. These separate Go modules caused dependency version management to be unpredictable; different modules could be pinned to different SDK versions, leading to compatibility issues. Consolidating everything under `github.com/cosmos/cosmos-sdk` gives developers a single, versioned dependency to manage.
 
@@ -159,7 +161,11 @@ A migration tool ships alongside this release to automate updating these import 
 - `cosmossdk.io/x/feegrant` -> `github.com/cosmos/cosmos-sdk/x/feegrant` 
 - `cosmossdk.io/x/upgrade` -> `github.com/cosmos/cosmos-sdk/x/upgrade`
 - `cosmossdk.io/x/tx` -> `github.com/cosmos/cosmos-sdk/x/tx`
-- `cosmossdk.io/systemtests` -> `github.com/cosmos/cosmos-sdk/testutil/systemtests`
+
+### Renamed Go Modules
+
+The `cosmossdk.io/systemtests` go module is now named `github.com/cosmos/cosmos-sdk/tools/systemtests`.
+
 
 ### Module Version Updates
 

@@ -189,23 +189,30 @@ If you previously used `BaseApp.SimWriteState()`, delete the call. `Commit()` no
 
 Below is an example of migrating away from `NewUncachedContext`.
 ```go
-if loadLatest {
-	if err := app.LoadLatestVersion(); err != nil {
-		tmos.Exit(err.Error())
-	}
+func TestApp(t *testing.T) {
+	db := dbm.NewMemDB()
+	logger := log.NewTestLogger(t)
+	app := NewSimappWithCustomOptions(t, false, SetupOptions{
+		Logger:  logger.With("instance", "first"),
+		DB:      db,
+		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
+	})
 
-    // previously was `ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})`
-	ctx := app.BaseApp.NewContext(true)
-
-	// Rebuild wasmvm's in-memory pinned-code cache from committed state.
-	// This context does not persist SDK store writes.
-	if err := app.WasmKeeper.InitializePinnedCodes(ctx); err != nil {
-		tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
-	}
-
-	if err := ibcwasmkeeper.InitializePinnedCodes(ctx); err != nil {
-		tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
-	}
+	ctx := app.BaseApp.NewNextBlockContext(cmtproto.Header{}) // gets finalize block state
+	app.BankKeeper.SetSendEnabled(ctx, "foobar", true)
+	_, err := app.Commit() // commit the out-of-band changes.
+    require.NoError(t, err)
+	
+	// since we committed, we can now read the out-of-band changes via checkTx state.
+	// If we didn't commit above, we could read this value by passing `false` to NewContext, which would give us a handle
+	// on the finalize block state. However, if you DID commit like we did above, you MUST use `true` here.
+	res, err := app.BankKeeper.SendEnabled(app.BaseApp.NewContext(true), &banktypes.QuerySendEnabledRequest{
+		Denoms:     []string{"foobar"},
+		Pagination: nil,
+	})
+	require.NoError(t, err)
+	require.Len(t, res.SendEnabled, 1)
+	require.Equal(t, "foobar", res.SendEnabled[0].Denom)
 }
 ```
 

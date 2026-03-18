@@ -10,12 +10,12 @@ require (
 	cosmossdk.io/log/v2 v2.0.1
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
-	cosmossdk.io/store v1.3.0-beta.0
 	github.com/cometbft/cometbft v0.39.0-beta.4
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.54.0-rc.1.0.20251127205138-44ca1c39b279
+	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-beta.0
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/spf13/cobra v1.10.2
@@ -336,8 +336,8 @@ require (
 // Replace here are pending PRs, or version to be tagged
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/store => ../store
 	github.com/cosmos/cosmos-sdk/enterprise/group => ../enterprise/group
+	github.com/cosmos/cosmos-sdk/store/v2 => ../store
 )
 
 // Below are the long-lived replace for tests.

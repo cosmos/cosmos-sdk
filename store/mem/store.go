@@ -3,10 +3,10 @@ package mem
 import (
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/legacy/cachekv"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/cachekv"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 var (

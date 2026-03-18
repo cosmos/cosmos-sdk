@@ -7,8 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/legacy/iavl"
-	"cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/iavl"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func newMemTestKVStore(t *testing.T) types.KVStore {

@@ -1,4 +1,4 @@
-# Migration Helper v3
+# Migration Helper
 
 This directory contains the new migration-helper layout for Cosmos SDK `v0.54`
 upgrades.
@@ -7,24 +7,18 @@ It is intentionally split into three parts:
 
 1. `migration-spec/`
    Structured YAML rules for each migration concern and version jump.
-2. `agents.md`
+2. `AGENTS.md`
    An orchestration guide for AI-assisted migrations.
 3. `cmd/migrate-to-v54`
    A fresh CLI that scans a chain repo, selects the relevant specs, generates a
    migration plan, and runs verification.
-
-## What this does not include
-
-This branch does not carry forward the old AST mutation engine or the older
-compiled migration binary. The CLI here is a planner and verifier only. It is
-built around the specs instead of embedding a second source of truth in code.
 
 ## Layout
 
 ```text
 tools/migration/
   README.md
-  agents.md
+  AGENTS.md
   go.mod
   migration-spec/
     v50-to-v54/

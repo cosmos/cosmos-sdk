@@ -138,6 +138,24 @@ linters:
       - linters:
           - staticcheck
         text: 'QF1008:'
+      - linters:
+          - staticcheck
+        text: 'QF1001:'
+      - linters:
+          - staticcheck
+        text: 'QF1002:'
+      - linters:
+          - staticcheck
+        text: 'QF1003:'
+      - linters:
+          - staticcheck
+        text: 'QF1012:'
+      - linters:
+          - nakedret
+        text: naked return
+      - linters:
+          - gci
+        text: 'File is not properly formatted'
     paths:
       - third_party$
       - builtin$

@@ -1,0 +1,59 @@
+id: nft-contrib-migration
+title: x/nft moved to contrib
+version: v50+ -> v54
+description: |
+  The x/nft module has been moved to contrib/x/nft. Like x/circuit, it remains
+  available but will not be actively maintained by the core Cosmos SDK team.
+
+  What this spec does:
+  - Rewrites import paths: cosmossdk.io/x/nft → contrib/x/nft
+  - Emits an end-of-run warning about the contrib move
+  - Keeps all keeper wiring, store keys, and module registrations in place
+
+  What this spec does NOT do:
+  - Remove the NFTKeeper from your app
+  - Remove nft from module ordering
+
+  If you want to fully remove nft, remove app.NFTKeeper and all nft.*
+  module ordering references manually.
+
+detection:
+  imports:
+    - cosmossdk.io/x/nft
+    - github.com/cosmos/cosmos-sdk/contrib/x/nft  # post-rewrite path
+  patterns:
+    - app.NFTKeeper
+    - nftkeeper.NewKeeper
+    - nft.ModuleName
+
+changes:
+  # ── imports ──────────────────────────────────────────────────────────────
+  imports:
+    rewrites:
+      - old: cosmossdk.io/x/nft
+        new: github.com/cosmos/cosmos-sdk/contrib/x/nft
+        all_packages: true
+
+    warnings:
+      - prefix: cosmossdk.io/x/nft
+        message: >
+          this module has been moved to contrib and will not be maintained
+          by the Cosmos SDK team.
+        fatal: false
+      - prefix: github.com/cosmos/cosmos-sdk/contrib/x/nft
+        message: >
+          this module has been moved to contrib and will not be maintained
+          by the Cosmos SDK team.
+        fatal: false
+
+  # ── text replacements ─────────────────────────────────────────────────
+  text_replacements:
+    # app.go: remove leftover nft module order entries
+    - old: "\t\tnft.ModuleName,\n"
+      new: ""
+      file_match: app.go
+
+# ── verification ────────────────────────────────────────────────────────────
+verification:
+  must_not_import:
+    - cosmossdk.io/x/nft  # old path must be gone

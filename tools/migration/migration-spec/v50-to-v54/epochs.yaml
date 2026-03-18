@@ -1,0 +1,46 @@
+id: epochs-keeper-pointer
+title: EpochsKeeper value → pointer
+version: v50+ -> v54
+description: |
+  The EpochsKeeper field on the app struct changed from a value type to a
+  pointer type in v54. The initialisation pattern must also change: the
+  keeper is first created as a local variable, then assigned via pointer
+  before any hooks are set.
+
+  v53 pattern:
+    app.EpochsKeeper = epochskeeper.NewKeeper(...)
+    app.EpochsKeeper.SetHooks(...)
+
+  v54 pattern:
+    epochsKeeper := epochskeeper.NewKeeper(...)
+    app.EpochsKeeper = &epochsKeeper
+    app.EpochsKeeper.SetHooks(...)
+
+  This is handled as two text replacements:
+  1. Rewrite the assignment to a local variable declaration.
+  2. Insert the pointer assignment before the SetHooks call.
+
+detection:
+  imports:
+    - github.com/cosmos/cosmos-sdk/x/epochs/keeper
+  patterns:
+    - app.EpochsKeeper = epochskeeper.NewKeeper(
+    - EpochsKeeper epochskeeper.Keeper  # value field in struct
+
+changes:
+  # ── text replacements ─────────────────────────────────────────────────
+  text_replacements:
+    # Step 1: Convert field assignment to local variable
+    - old: "app.EpochsKeeper = epochskeeper.NewKeeper("
+      new: "epochsKeeper := epochskeeper.NewKeeper("
+
+    # Step 2: Insert pointer assignment before SetHooks
+    - old: "\tapp.EpochsKeeper.SetHooks("
+      new: "\tapp.EpochsKeeper = &epochsKeeper\n\n\tapp.EpochsKeeper.SetHooks("
+
+# ── verification ────────────────────────────────────────────────────────────
+verification:
+  must_not_contain:
+    - pattern: app.EpochsKeeper = epochskeeper.NewKeeper(
+  must_contain:
+    - pattern: "app.EpochsKeeper = &epochsKeeper"

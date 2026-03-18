@@ -1,0 +1,86 @@
+id: app-structure-cleanup
+title: App wiring, DI files, and module ordering cleanup
+version: v50+ -> v54
+description: |
+  Miscellaneous structural changes to app wiring in v54:
+
+  1. DI-variant files (app_di.go, root_di.go) are removed. v54 simapp supports
+     only the non-DI variant. These files import removed modules (x/group, etc.)
+     and would cause goimports to re-add stripped imports.
+
+  2. params tx import deduplication is fixed in specific files (params/proto.go,
+     simd/cmd/root.go) where the auth/tx alias pattern differs from app.go.
+
+  3. Stale MsgSetProposers references are removed from AllTypeMessages and
+     internal_msgs_test.go.
+
+detection:
+  patterns:
+    - "//go:build !app_v1"
+    - "app_di.go"
+    - "root_di.go"
+    - "MsgSetProposers"
+
+changes:
+  # ── file removals ──────────────────────────────────────────────────────
+  file_removals:
+    - file_name: app_di.go
+      contains_must_match: "!app_v1"
+
+    - file_name: root_di.go
+      contains_must_match: "!app_v1"
+
+  # ── map entry removals ────────────────────────────────────────────────
+  map_entry_removals:
+    - map_var: AllTypeMessages
+      keys:
+        - '"/cosmos.staking.v1beta1.MsgSetProposers"'
+        - '"/cosmos.staking.v1beta1.MsgSetProposersResponse"'
+
+  # ── text replacements ─────────────────────────────────────────────────
+  text_replacements:
+    # params/proto.go: add the tx import that app.go deduplication stripped.
+    - old: "import (\n\t\"github.com/cosmos/cosmos-sdk/codec\"\n\t\"github.com/cosmos/cosmos-sdk/codec/types\"\n)\n"
+      new: "import (\n\t\"github.com/cosmos/cosmos-sdk/codec\"\n\t\"github.com/cosmos/cosmos-sdk/codec/types\"\n\t\"github.com/cosmos/cosmos-sdk/x/auth/tx\"\n)\n"
+      file_match: params/proto.go
+
+    - old: authtx.NewTxConfig(
+      new: tx.NewTxConfig(
+      file_match: params/proto.go
+
+    - old: authtx.DefaultSignModes
+      new: tx.DefaultSignModes
+      file_match: params/proto.go
+
+    # simd/cmd/root.go: add tx import and normalize usages.
+    - old: "\t\"github.com/cosmos/cosmos-sdk/types/tx/signing\"\n\tauthtxconfig \"github.com/cosmos/cosmos-sdk/x/auth/tx/config\"\n"
+      new: "\t\"github.com/cosmos/cosmos-sdk/types/tx/signing\"\n\t\"github.com/cosmos/cosmos-sdk/x/auth/tx\"\n\tauthtxconfig \"github.com/cosmos/cosmos-sdk/x/auth/tx/config\"\n"
+      file_match: simd/cmd/root.go
+
+    - old: authtx.DefaultSignModes
+      new: tx.DefaultSignModes
+      file_match: simd/cmd/root.go
+
+    - old: authtx.ConfigOptions
+      new: tx.ConfigOptions
+      file_match: simd/cmd/root.go
+
+    - old: authtx.NewTxConfigWithOptions(
+      new: tx.NewTxConfigWithOptions(
+      file_match: simd/cmd/root.go
+
+    # app/msgs/internal_msgs_test.go: remove stale staking entries
+    - old: "\t\t\"/cosmos.staking.v1beta1.MsgSetProposers\",\n"
+      new: ""
+      file_match: app/msgs/internal_msgs_test.go
+
+    - old: "\t\t\"/cosmos.staking.v1beta1.MsgSetProposersResponse\",\n"
+      new: ""
+      file_match: app/msgs/internal_msgs_test.go
+
+# ── verification ────────────────────────────────────────────────────────────
+verification:
+  must_not_contain:
+    - pattern: MsgSetProposers
+    - pattern: "//go:build !app_v1"
+      file_match: app_di.go

@@ -1,0 +1,80 @@
+id: gov-keeper-migration
+title: x/gov NewKeeper signature change
+version: v50+ -> v54
+description: |
+  The signature of govkeeper.NewKeeper changed in v54:
+
+    v53: govkeeper.NewKeeper(cdc, storeService, acctKeeper, bankKeeper,
+           stakingKeeper, distrKeeper, router, config, authority, ...initOptions)
+
+    v54: govkeeper.NewKeeper(cdc, storeService, acctKeeper, bankKeeper,
+           distrKeeper, router, config, authority,
+           govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(stakingKeeper))
+
+  Changes:
+  - StakingKeeper (pos 4) is removed from the direct arg list.
+  - Variadic InitOption args are removed.
+  - A new final arg wraps the staking keeper:
+      govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(stakingKeeper)
+
+  This transformation is not a safe single-line text replacement because the
+  package alias for govkeeper varies by chain (some use "govkeeper", others
+  "keeper", etc.). Treat this as a guided manual edit driven by the steps
+  below.
+
+detection:
+  imports:
+    - github.com/cosmos/cosmos-sdk/x/gov/keeper
+  patterns:
+    - govkeeper.NewKeeper(
+
+changes:
+  # No declarative rewrites are listed here because the edit depends on the
+  # local package alias and the exact keeper wiring used by the target chain.
+
+manual_steps:
+  - id: gov-keeper-new-keeper
+    description: |
+      Find all calls to govkeeper.NewKeeper (or whatever alias your project uses
+      for "github.com/cosmos/cosmos-sdk/x/gov/keeper") and rewrite them.
+
+      Before:
+        app.GovKeeper = govkeeper.NewKeeper(
+            appCodec,
+            runtime.NewKVStoreService(keys[govtypes.StoreKey]),
+            app.AccountKeeper,
+            app.BankKeeper,
+            app.StakingKeeper,    // <-- remove this
+            app.DistrKeeper,
+            app.MsgServiceRouter(),
+            govConfig,
+            authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+            // any ...initOptions  <-- remove these
+        )
+
+      After:
+        app.GovKeeper = govkeeper.NewKeeper(
+            appCodec,
+            runtime.NewKVStoreService(keys[govtypes.StoreKey]),
+            app.AccountKeeper,
+            app.BankKeeper,
+            app.DistrKeeper,
+            app.MsgServiceRouter(),
+            govConfig,
+            authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+            govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(app.StakingKeeper),
+        )
+
+      Key rules:
+      - Save the StakingKeeper argument (originally at position 4, 0-indexed).
+      - Drop all variadic InitOption arguments at the end.
+      - Append govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(<saved_staking_keeper>).
+      - Use whatever alias your file uses for the gov/keeper package — do NOT
+        hardcode "govkeeper".
+
+# ── verification ────────────────────────────────────────────────────────────
+verification:
+  # We want NewDefaultCalculateVoteResultsAndVotingPower to be PRESENT after
+  # migration — its appearance confirms the surgery succeeded.
+  must_contain:
+    - pattern: NewDefaultCalculateVoteResultsAndVotingPower

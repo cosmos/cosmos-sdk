@@ -247,7 +247,7 @@ func RelativePow(x, n, b Uint) (z Uint) {
 			return z
 		}
 		z = ZeroUint() // otherwise 0^a = 0
-		return
+		return z
 	}
 
 	z = x

@@ -3,6 +3,7 @@ package distribution_test
 import (
 	"testing"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/depinject"
@@ -26,7 +27,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 		&accountKeeper)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false)
+	ctx := app.NewUncachedContext(false, cmtproto.Header{})
 	acc := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
 	assert.Assert(t, acc != nil)
 }

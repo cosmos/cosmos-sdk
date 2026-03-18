@@ -47,7 +47,7 @@ func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Cach
 }
 
 // Commit performs a no-op as entries are persistent between commitments.
-func (s *Store) Commit() (id types.CommitID) { return }
+func (s *Store) Commit() (id types.CommitID) { return id }
 
 func (s *Store) SetPruning(pruning pruningtypes.PruningOptions) {}
 
@@ -57,6 +57,6 @@ func (s *Store) GetPruning() pruningtypes.PruningOptions {
 	return pruningtypes.NewPruningOptions(pruningtypes.PruningUndefined)
 }
 
-func (s Store) LastCommitID() (id types.CommitID) { return }
+func (s Store) LastCommitID() (id types.CommitID) { return id }
 
-func (s Store) WorkingHash() (hash []byte) { return }
+func (s Store) WorkingHash() (hash []byte) { return hash }

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
 
@@ -72,7 +73,7 @@ func TestImportExportQueues(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := s1.app.BaseApp.NewContext(false)
+	ctx := s1.app.NewUncachedContext(false, cmtproto.Header{})
 	addrs := simtestutil.AddTestAddrs(s1.BankKeeper, s1.StakingKeeper, ctx, 1, valTokens)
 
 	_, err = s1.app.FinalizeBlock(&abci.RequestFinalizeBlock{
@@ -80,7 +81,7 @@ func TestImportExportQueues(t *testing.T) {
 	})
 	assert.NilError(t, err)
 
-	ctx = s1.app.BaseApp.NewContext(false)
+	ctx = s1.app.NewUncachedContext(false, cmtproto.Header{})
 	// Create two proposals, put the second into the voting period
 	proposal1, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0], false)
 	assert.NilError(t, err)
@@ -158,9 +159,8 @@ func TestImportExportQueues(t *testing.T) {
 	})
 	assert.NilError(t, err)
 
-	ctx2 := s2.app.BaseApp.NewContext(false)
-
-	params, err = s2.GovKeeper.Params.Get(ctx2)
+	ctx2 := s2.app.NewUncachedContext(false, cmtproto.Header{})
+	_, err = s2.GovKeeper.Params.Get(ctx2)
 	assert.NilError(t, err)
 	// Jump the time forward past the DepositPeriod and VotingPeriod
 	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod))

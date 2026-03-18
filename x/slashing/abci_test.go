@@ -43,7 +43,7 @@ func TestBeginBlocker(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	ctx := app.BaseApp.NewContext(false)
+	ctx := app.NewContext(false)
 
 	pks := simtestutil.CreateTestPubKeys(1)
 	simtestutil.AddTestAddrsFromPubKeys(bankKeeper, stakingKeeper, ctx, pks, stakingKeeper.TokensFromConsensusPower(ctx, 200))

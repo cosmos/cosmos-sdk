@@ -9,7 +9,7 @@ import (
 	"github.com/cometbft/cometbft/crypto"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/chacha20poly1305"
-	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck //TODO: remove this dependency
+	"golang.org/x/crypto/openpgp/armor"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -127,15 +127,15 @@ func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]string, err error) {
 	bType, header, bz, err := DecodeArmor(armorStr)
 	if err != nil {
-		return
+		return bz, header, err
 	}
 
 	if bType != blockType {
 		err = fmt.Errorf("unrecognized armor type %q, expected: %q", bType, blockType)
-		return
+		return bz, header, err
 	}
 
-	return
+	return bz, header, err
 }
 
 //-----------------------------------------------------------------

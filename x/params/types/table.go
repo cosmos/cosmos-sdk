@@ -79,5 +79,5 @@ func (t KeyTable) maxKeyLength() (res int) {
 		}
 	}
 
-	return
+	return res
 }

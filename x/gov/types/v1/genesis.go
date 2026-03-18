@@ -54,7 +54,7 @@ func ValidateGenesis(data *GenesisState) error {
 	// weed out duplicate deposits
 	errGroup.Go(func() error {
 		type depositKey struct {
-			ProposalId uint64 //nolint:revive // staying consistent with main and v0.47
+			ProposalId uint64
 			Depositor  string
 		}
 		depositIds := make(map[depositKey]struct{})
@@ -77,7 +77,7 @@ func ValidateGenesis(data *GenesisState) error {
 	// weed out duplicate votes
 	errGroup.Go(func() error {
 		type voteKey struct {
-			ProposalId uint64 //nolint:revive // staying consistent with main and v0.47
+			ProposalId uint64
 			Voter      string
 		}
 		voteIds := make(map[voteKey]struct{})

@@ -99,7 +99,7 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.Require().NoError(err)
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false)
+	suite.ctx = app.NewContext(false)
 
 	// remove genesis validator account
 	suite.accounts = accounts[1:]

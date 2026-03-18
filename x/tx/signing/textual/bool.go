@@ -28,10 +28,5 @@ func (sr boolValueRenderer) Parse(_ context.Context, screens []Screen) (protoref
 		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
 	}
 
-	res := false
-	if screens[0].Content == "True" {
-		res = true
-	}
-
-	return protoreflect.ValueOfBool(res), nil
+	return protoreflect.ValueOfBool(screens[0].Content == "True"), nil
 }

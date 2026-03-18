@@ -96,7 +96,7 @@ func (s *SimTestSuite) SetupTest() {
 	app, err := simtestutil.SetupWithConfiguration(cfg, startupCfg, &s.txConfig, &bankKeeper, &accountKeeper, &mintKeeper, &distrKeeper, &stakingKeeper)
 	require.NoError(s.T(), err)
 
-	ctx := app.BaseApp.NewContext(false)
+	ctx := app.NewContext(false)
 	s.Require().NoError(mintKeeper.Params.Set(ctx, minttypes.DefaultParams()))
 	s.Require().NoError(mintKeeper.Minter.Set(ctx, minttypes.DefaultInitialMinter()))
 

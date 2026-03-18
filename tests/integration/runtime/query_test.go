@@ -3,6 +3,7 @@ package runtime
 import (
 	"testing"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -56,9 +57,9 @@ func initFixture(t assert.TestingT) *fixture {
 	)
 	assert.NilError(t, err)
 
-	f.ctx = app.BaseApp.NewContext(false)
+	f.ctx = app.NewUncachedContext(false, cmtproto.Header{})
 	queryHelper := &baseapp.QueryServiceTestHelper{
-		GRPCQueryRouter: app.BaseApp.GRPCQueryRouter(),
+		GRPCQueryRouter: app.GRPCQueryRouter(),
 		Ctx:             f.ctx,
 	}
 	f.appQueryClient = appv1alpha1.NewQueryClient(queryHelper)

@@ -79,7 +79,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 		}
 		parsedTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
 		if err != nil {
-			return
+			return err
 		}
 
 		txFactory, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
@@ -385,7 +385,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 func unmarshalSignatureJSON(clientCtx client.Context, filename string) (sigs []signingtypes.SignatureV2, err error) {
 	var bytes []byte
 	if bytes, err = os.ReadFile(filename); err != nil {
-		return
+		return sigs, err
 	}
 	return clientCtx.TxConfig.UnmarshalSignatureJSON(bytes)
 }

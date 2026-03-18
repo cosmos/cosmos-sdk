@@ -27,7 +27,7 @@ func NewStore() *Store {
 // Commit cleans up Store.
 func (ts *Store) Commit() (id types.CommitID) {
 	ts.Store = dbadapter.Store{DB: dbm.NewMemDB()}
-	return
+	return id
 }
 
 func (ts *Store) SetPruning(_ pruningtypes.PruningOptions) {}

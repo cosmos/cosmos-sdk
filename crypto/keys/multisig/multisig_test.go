@@ -271,7 +271,7 @@ func TestMultiSigMigration(t *testing.T) {
 	require.NoError(t, multisig.AddSignatureFromPubKey(multisignature, sigs[0], pkSet[0], pkSet))
 
 	// create a StdSignature for msg, and convert it to sigV2
-	sig := legacytx.StdSignature{PubKey: pkSet[1], Signature: sigs[1].(*signing.SingleSignatureData).Signature} //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated: use Tx.Msgs, Signatures and Memo instead.
+	sig := legacytx.StdSignature{PubKey: pkSet[1], Signature: sigs[1].(*signing.SingleSignatureData).Signature}
 	sigV2, err := legacytx.StdSignatureToSignatureV2(cdc, sig)
 	require.NoError(t, multisig.AddSignatureV2(multisignature, sigV2, pkSet))
 
@@ -315,7 +315,7 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []cryptotypes.PubK
 		sig, _ := privkey.Sign(msg)
 		signatures[i] = &signing.SingleSignatureData{Signature: sig}
 	}
-	return
+	return pubKeys, signatures
 }
 
 func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.MultiSignatureData) {
@@ -348,7 +348,7 @@ func reorderPubKey(pk *kmultisig.LegacyAminoPubKey) (other *kmultisig.LegacyAmin
 	pubkeysCpy[0] = pk.PubKeys[1]
 	pubkeysCpy[1] = pk.PubKeys[0]
 	other = &kmultisig.LegacyAminoPubKey{Threshold: 2, PubKeys: pubkeysCpy}
-	return
+	return other
 }
 
 func TestDisplay(t *testing.T) {

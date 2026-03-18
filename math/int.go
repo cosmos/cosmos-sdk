@@ -120,12 +120,12 @@ func NewIntFromBigInt(i *big.Int) Int {
 func NewIntFromString(s string) (res Int, ok bool) {
 	i, ok := newIntegerFromString(s)
 	if !ok {
-		return
+		return res, ok
 	}
 	// Check overflow
 	if i.BitLen() > MaxBitLen {
 		ok = false
-		return
+		return res, ok
 	}
 	return Int{i}, true
 }
@@ -234,7 +234,7 @@ func (i Int) Add(i2 Int) (res Int) {
 	if res.i.BitLen() > MaxBitLen {
 		panic("Int overflow")
 	}
-	return
+	return res
 }
 
 // AddRaw adds int64 to Int
@@ -249,7 +249,7 @@ func (i Int) Sub(i2 Int) (res Int) {
 	if res.i.BitLen() > MaxBitLen {
 		panic("Int overflow")
 	}
-	return
+	return res
 }
 
 // SubRaw subtracts int64 from Int
@@ -268,7 +268,7 @@ func (i Int) Mul(i2 Int) (res Int) {
 	if res.i.BitLen() > MaxBitLen {
 		panic("Int overflow")
 	}
-	return
+	return res
 }
 
 // MulRaw multipies Int and int64

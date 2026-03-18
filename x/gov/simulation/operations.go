@@ -51,7 +51,7 @@ func WeightedOperations(
 	bk types.BankKeeper,
 	k *keeper.Keeper,
 	wMsgs []simtypes.WeightedProposalMsg,
-	wContents []simtypes.WeightedProposalContent, //nolint:staticcheck // used for legacy testing
+	wContents []simtypes.WeightedProposalContent,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgDeposit        int
@@ -172,7 +172,7 @@ func SimulateMsgSubmitLegacyProposal(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k *keeper.Keeper,
-	contentSim simtypes.ContentSimulatorFn, //nolint:staticcheck // used for legacy testing
+	contentSim simtypes.ContentSimulatorFn,
 ) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {

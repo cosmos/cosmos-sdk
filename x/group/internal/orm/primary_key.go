@@ -106,7 +106,7 @@ func (a PrimaryKeyTable) Has(store storetypes.KVStore, primaryKey RowID) bool {
 
 // Contains returns true when an object with same type and primary key is persisted in this table.
 func (a PrimaryKeyTable) Contains(store storetypes.KVStore, obj PrimaryKeyed) bool {
-	if err := assertCorrectType(a.table.model, obj); err != nil {
+	if err := assertCorrectType(a.model, obj); err != nil {
 		return false
 	}
 	return a.table.Has(store, PrimaryKey(obj))

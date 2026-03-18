@@ -107,7 +107,7 @@ func depsFromBuildInfo() (deps []buildDep) {
 		deps = append(deps, buildDep{dep})
 	}
 
-	return
+	return deps
 }
 
 type buildDep struct {

@@ -293,8 +293,8 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 		}},
 	})
 
-	assert.NilError(t, f.app.BaseApp.StoreConsensusParams(ctx, *simtestutil.DefaultConsensusParams))
-	cp := f.app.BaseApp.GetConsensusParams(ctx)
+	assert.NilError(t, f.app.StoreConsensusParams(ctx, *simtestutil.DefaultConsensusParams))
+	cp := f.app.GetConsensusParams(ctx)
 
 	ctx = ctx.WithCometInfo(nci)
 	ctx = ctx.WithConsensusParams(cp)

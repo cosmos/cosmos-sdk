@@ -285,19 +285,12 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs(ctx)}, nil
 		}
 
-		type invalidTx struct {
-			tx  sdk.Tx
-			err error
-		}
-
+		selectedTxsSignersSeqs := make(map[string]uint64)
 		var (
-			// invalid txs to be removed out of the loop to avoid dead lock
-			invalidTxs             []invalidTx
-			resError               error
-			selectedTxsNums        int
-			selectedTxsSignersSeqs = make(map[string]uint64)
+			resError        error
+			selectedTxsNums int
+			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid dead lock
 		)
-
 		mempool.SelectBy(ctx, h.mempool, req.Txs, func(memTx sdk.Tx) bool {
 			unorderedTx, ok := memTx.(sdk.TxWithUnordered)
 			isUnordered := ok && unorderedTx.GetUnordered()
@@ -342,7 +335,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			// check again.
 			txBz, err := h.txVerifier.PrepareProposalVerifyTx(memTx)
 			if err != nil {
-				invalidTxs = append(invalidTxs, invalidTx{tx: memTx, err: err})
+				invalidTxs = append(invalidTxs, memTx)
 			} else {
 				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, memTx, txBz)
 				if stop {
@@ -377,13 +370,8 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			return nil, resError
 		}
 
-		for _, invalidTx := range invalidTxs {
-			reason := mempool.RemoveReason{
-				Caller: mempool.CallerPrepareProposalRemoveInvalid,
-				Error:  invalidTx.err,
-			}
-
-			err := mempool.RemoveWithReason(ctx, h.mempool, invalidTx.tx, reason)
+		for _, tx := range invalidTxs {
+			err := h.mempool.Remove(tx)
 			if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 				return nil, err
 			}

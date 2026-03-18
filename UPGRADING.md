@@ -354,6 +354,11 @@ func (app SimApp) RegisterUpgradeHandlers() {
         },
     )
 
+    upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+    if err != nil {
+        panic(err)
+    }
+
     if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
       storeUpgrades := storetypes.StoreUpgrades{
         Added: []string{},

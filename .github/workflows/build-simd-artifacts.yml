@@ -101,15 +101,14 @@ jobs:
           ls -la release-assets/
 
       - name: Create main-nightly release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release delete main-nightly --yes 2>/dev/null || true
-          git push origin :refs/tags/main-nightly 2>/dev/null || true
-          git tag -f main-nightly ${{ github.sha }}
-          git push origin main-nightly --force
-          gh release create main-nightly ./release-assets/simd-* \
-            --target ${{ github.sha }} \
-            --title "main nightly" \
-            --notes "Nightly simd builds from main (non-production)." \
-            --prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: main-nightly
+          name: main nightly
+          body: "Nightly simd builds from main (non-production)."
+          prerelease: true
+          target_commitish: ${{ github.sha }}
+          files: |
+            release-assets/simd-*
+          overwrite_files: true
+          fail_on_unmatched_files: true

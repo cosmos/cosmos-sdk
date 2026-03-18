@@ -69,11 +69,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup gh CLI
-        uses: actions4gh/setup-gh@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Download all build artifacts
         uses: actions/download-artifact@v7
         with:
@@ -90,15 +85,8 @@ jobs:
             name=$(basename "${dir%/}")
             goos_goarch=$(echo "$name" | sed -n 's/^simd-main-\([^-]*-[^-]*\)-[0-9]*$/\1/p')
             # Artifact root is build/ (LCA of build/simd, build/simd.sha256), so simd is at artifact root
-            # Fallback: some upload-artifact versions may preserve full path (build/simd)
-            simd_path=""
-            if [ -f "${dir}simd" ]; then
-              simd_path="${dir}simd"
-            elif [ -f "${dir}build/simd" ]; then
-              simd_path="${dir}build/simd"
-            fi
-            if [ -n "$goos_goarch" ] && [ -n "$simd_path" ]; then
-              cp "$simd_path" "release-assets/simd-${goos_goarch}"
+            if [ -n "$goos_goarch" ] && [ -f "${dir}simd" ]; then
+              cp "${dir}simd" "release-assets/simd-${goos_goarch}"
               chmod +x "release-assets/simd-${goos_goarch}"
               (cd release-assets && sha256sum "simd-${goos_goarch}" > "simd-${goos_goarch}.sha256")
             fi
@@ -115,12 +103,7 @@ jobs:
       - name: Create main-nightly release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Configure git for authenticated push (required for Depot/self-hosted-style runners)
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           gh release delete main-nightly --yes 2>/dev/null || true
           git push origin :refs/tags/main-nightly 2>/dev/null || true
           git tag -f main-nightly ${{ github.sha }}

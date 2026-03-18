@@ -33,7 +33,7 @@ tools/migration/
       verify.go
 ```
 
-The migration-specific agent guide lives at `tools/migration/agents.md`.
+The migration-specific agent guide lives at `tools/migration/AGENTS.md`.
 
 ## Usage
 
@@ -56,3 +56,12 @@ go run ./cmd/migrate-to-v54 --repo /path/to/chain verify --go-mod-tidy --go-buil
 - `plan` reports the ordered spec list and what each spec requires.
 - `verify` runs each selected spec's verification checks and can optionally run
   `go mod tidy`, `go build ./...`, and `go test ./...` inside the target repo.
+
+## Expected Manual Review
+
+- Preserve non-local `replace` directives. Only strip local path replaces.
+- Do not force the ante spec onto chains with project-local `HandlerOptions` or
+  extra ante decorators.
+- Review historical upgrade code and non-simapp keeper wiring manually.
+- Expect some target repos to require a newer Go toolchain once v54
+  dependencies are introduced.

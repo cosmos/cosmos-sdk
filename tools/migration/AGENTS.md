@@ -33,6 +33,7 @@ Then inspect the target chain repo:
 - `app/app.go`, `app.go`, `app_config.go`, `app_di.go`, `root_di.go`
 - custom `ante.go` files
 - module wiring, keeper construction, and imports
+- forked `replace` directives and historical upgrade code under `app/upgrades`
 
 ## How to reason about the migration
 
@@ -58,6 +59,10 @@ Key rules:
 - Chain-specific modules stay in place unless a spec explicitly says otherwise.
 - If a spec describes a manual step, make the smallest edit that satisfies the
   spec and preserves existing chain wiring.
+- Only strip local-path `replace` directives. Preserve remote fork replaces
+  until you confirm the fork has a compatible v54 target.
+- Do not force the ante simplification onto chains with project-local
+  `HandlerOptions` fields or extra ante decorators.
 
 ## What commands to run
 
@@ -84,6 +89,8 @@ find . -name go.mod
 rg "github.com/cosmos/cosmos-sdk" -g'go.mod'
 rg "x/crisis|x/group|x/circuit|x/nft|x/gov|x/epochs" -g'*.go'
 rg "NewKeeper|NewAnteHandler|app_di.go|root_di.go" -g'*.go'
+rg "replace .*=>" -g'go.mod'
+rg "app/upgrades|UpgradeKeeper|epochsmodulekeeper" -g'*.go'
 ```
 
 ## How to stage edits

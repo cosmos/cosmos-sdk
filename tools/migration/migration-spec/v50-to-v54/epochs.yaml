@@ -25,7 +25,9 @@ detection:
     - github.com/cosmos/cosmos-sdk/x/epochs/keeper
   patterns:
     - app.EpochsKeeper = epochskeeper.NewKeeper(
+    - app.EpochsKeeper = *epochsmodulekeeper.NewKeeper(
     - EpochsKeeper epochskeeper.Keeper  # value field in struct
+    - EpochsKeeper epochsmodulekeeper.Keeper
 
 changes:
   # ── text replacements ─────────────────────────────────────────────────
@@ -37,6 +39,12 @@ changes:
     # Step 2: Insert pointer assignment before SetHooks
     - old: "\tapp.EpochsKeeper.SetHooks("
       new: "\tapp.EpochsKeeper = &epochsKeeper\n\n\tapp.EpochsKeeper.SetHooks("
+
+    # Some chains use a chain-local epochs keeper constructor that already
+    # returns *Keeper. After the field type changes to a pointer, only the
+    # explicit dereference needs to be removed.
+    - old: "app.EpochsKeeper = *epochsmodulekeeper.NewKeeper("
+      new: "app.EpochsKeeper = epochsmodulekeeper.NewKeeper("
 
 # ── verification ────────────────────────────────────────────────────────────
 verification:

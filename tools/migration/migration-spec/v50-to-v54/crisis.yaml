@@ -60,6 +60,12 @@ changes:
       keys:
         - '"/cosmos.crisis.v1beta1.MsgVerifyInvariant"'
         - '"/cosmos.crisis.v1beta1.MsgVerifyInvariantResponse"'
+    - map_var: AllTypeMessages
+      keys:
+        - '"/cosmos.crisis.v1beta1.MsgUpdateParams"'
+        - '"/cosmos.crisis.v1beta1.MsgUpdateParamsResponse"'
+        - '"/cosmos.crisis.v1beta1.MsgVerifyInvariant"'
+        - '"/cosmos.crisis.v1beta1.MsgVerifyInvariantResponse"'
 
   # ── call arg edits ───────────────────────────────────────────────────────
   # Remove crisis entries from store key wiring and module ordering calls.
@@ -161,6 +167,22 @@ changes:
     - old: "\t\t\"/cosmos.staking.v1beta1.MsgSetProposersResponse\",\n"
       new: ""
       file_match: app/msgs/internal_msgs_test.go
+
+    - old: "\t\t\"/cosmos.crisis.v1beta1.MsgUpdateParams\",\n"
+      new: ""
+      file_match: app/msgs/internal_msgs_test.go
+
+    - old: "\t\t\"/cosmos.crisis.v1beta1.MsgUpdateParamsResponse\",\n"
+      new: ""
+      file_match: app/msgs/internal_msgs_test.go
+
+    - old: "\t\t\"/cosmos.crisis.v1beta1.MsgVerifyInvariant\",\n"
+      new: ""
+      file_match: app/msgs/unsupported_msgs_test.go
+
+    - old: "\t\t\"/cosmos.crisis.v1beta1.MsgVerifyInvariantResponse\",\n"
+      new: ""
+      file_match: app/msgs/unsupported_msgs_test.go
 
 # ── verification ────────────────────────────────────────────────────────────
 verification:

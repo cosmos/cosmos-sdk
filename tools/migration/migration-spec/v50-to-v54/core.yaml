@@ -21,12 +21,12 @@ changes:
     update:
       github.com/cosmos/cosmos-sdk: v0.54.0
       cosmossdk.io/log: v2.0.0
+      cosmossdk.io/x/tx: v1.1.0
 
     remove:
       - cosmossdk.io/x/feegrant
       - cosmossdk.io/x/evidence
       - cosmossdk.io/x/upgrade
-      - cosmossdk.io/x/tx
       - cosmossdk.io/x/circuit
       - cosmossdk.io/x/nft
       - cosmossdk.io/systemtests
@@ -57,10 +57,6 @@ changes:
 
       - old: cosmossdk.io/x/upgrade
         new: github.com/cosmos/cosmos-sdk/x/upgrade
-        all_packages: true
-
-      - old: cosmossdk.io/x/tx
-        new: github.com/cosmos/cosmos-sdk/x/tx
         all_packages: true
 
       - old: cosmossdk.io/systemtests
@@ -213,7 +209,6 @@ verification:
     - cosmossdk.io/x/feegrant
     - cosmossdk.io/x/evidence
     - cosmossdk.io/x/upgrade
-    - cosmossdk.io/x/tx
     - cosmossdk.io/log      # must use cosmossdk.io/log/v2 (not the bare path)
     - github.com/golang/mock/gomock
   must_not_contain:

@@ -19,11 +19,10 @@ description: |
   custom logic into the SDK HandlerOptions pattern.
 
 detection:
-  # ante.go file exists AND contains circuitante import
+  # Only auto-select the simapp-style wrapper that still threads CircuitKeeper
+  # through app.go. More customised ante wrappers should be reviewed manually.
   patterns:
-    - circuitante "cosmossdk.io/x/circuit/ante"
-    - circuitante "github.com/cosmos/cosmos-sdk/contrib/x/circuit/ante"
-    - NewAnteHandler(\n\t\tHandlerOptions{
+    - "&app.CircuitKeeper"
 
 changes:
   # ── file removals ──────────────────────────────────────────────────────
@@ -33,7 +32,9 @@ changes:
 
   # ── text replacements ─────────────────────────────────────────────────
   text_replacements:
-    # Rewrite the call site in app.go.
+    # Rewrite the call site in app.go, but only for the simapp-style wrapper
+    # that passes CircuitKeeper explicitly. Chains with custom HandlerOptions
+    # fields should be handled manually.
     # Before:
     #   anteHandler, err := NewAnteHandler(
     #       HandlerOptions{

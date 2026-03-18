@@ -181,7 +181,7 @@ func (l *Launcher) doPreUpgrade() error {
 		if err := l.executePreUpgradeCmd(); err != nil {
 			counter++
 
-			switch err.(*exec.ExitError).ExitCode() {
+			switch err.(*exec.ExitError).ProcessState.ExitCode() {
 			case 1:
 				l.logger.Info().Msg("pre-upgrade command does not exist. continuing the upgrade.")
 				return nil

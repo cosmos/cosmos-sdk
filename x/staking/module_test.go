@@ -24,7 +24,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 		), &accountKeeper)
 	require.NoError(t, err)
 
-	ctx := app.NewContext(false)
+	ctx := app.BaseApp.NewContext(false)
 	acc := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.BondedPoolName))
 	require.NotNil(t, acc)
 

@@ -368,7 +368,11 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 		return errorsmod.Wrap(err, "multistore restore")
 	}
 
-	for nextItem.Item != nil {
+	for {
+		if nextItem.Item == nil {
+			// end of stream
+			break
+		}
 		metadata := nextItem.GetExtension()
 		if metadata == nil {
 			return errorsmod.Wrapf(storetypes.ErrLogic, "unknown snapshot item %T", nextItem.Item)

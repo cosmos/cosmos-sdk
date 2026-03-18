@@ -87,7 +87,7 @@ func parseNftOfClassByOwnerStoreKey(key []byte) (classID, nftID string) {
 	}
 	classID = conv.UnsafeBytesToStr(ret[0])
 	nftID = string(ret[1])
-	return classID, nftID
+	return
 }
 
 // ownerStoreKey returns the byte representation of the nft owner

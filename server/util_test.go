@@ -439,7 +439,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	// Modify app.toml.
 	appCfgTempFilePath := filepath.Join(tempDir, "config", "app.toml")
 	appConf := config.DefaultConfig()
-	appConf.MinGasPrices = ""
+	appConf.BaseConfig.MinGasPrices = ""
 	config.WriteConfigFile(appCfgTempFilePath, appConf)
 
 	// Run StartCmd.

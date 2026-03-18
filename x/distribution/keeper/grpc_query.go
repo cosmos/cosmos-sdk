@@ -331,6 +331,7 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 			return false
 		},
 	)
+
 	if err != nil {
 		return nil, err
 	}

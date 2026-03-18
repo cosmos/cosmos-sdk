@@ -285,6 +285,7 @@ func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) 
 		return err
 	}
 
+	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointer on &proposalInfo)"
 	for _, proposalInfo := range proposals {
 		// Mark all proposals still in the voting phase as aborted.
 		if proposalInfo.Status == group.PROPOSAL_STATUS_SUBMITTED {
@@ -329,6 +330,7 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 		return err
 	}
 
+	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointer on &v)"
 	for _, v := range votes {
 		err = k.voteTable.Delete(ctx.KVStore(k.key), &v)
 		if err != nil {
@@ -397,7 +399,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 	if err != nil {
 		return nil
 	}
-
+	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointers in the loop)"
 	for _, proposal := range proposals {
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
 		if err != nil {
@@ -410,8 +412,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 		}
 
 		proposalID := proposal.Id
-		switch proposal.Status {
-		case group.PROPOSAL_STATUS_ABORTED, group.PROPOSAL_STATUS_WITHDRAWN:
+		if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN {
 			if err := k.pruneProposal(ctx, proposalID); err != nil {
 				return err
 			}
@@ -426,7 +427,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				}); err != nil {
 				return err
 			}
-		case group.PROPOSAL_STATUS_SUBMITTED:
+		} else if proposal.Status == group.PROPOSAL_STATUS_SUBMITTED {
 			if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
 				return errorsmod.Wrap(err, "doTallyAndUpdate")
 			}

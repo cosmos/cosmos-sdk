@@ -26,7 +26,7 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 	)
 	require.NoError(b, err)
 
-	ctx := app.NewContext(false)
+	ctx := app.BaseApp.NewContext(false)
 
 	// assumes b.N < 2**24
 	for i := 0; i < b.N; i++ {
@@ -53,7 +53,7 @@ func BenchmarkAccountMapperSetAccount(b *testing.B) {
 		), &accountKeeper)
 	require.NoError(b, err)
 
-	ctx := app.NewContext(false)
+	ctx := app.BaseApp.NewContext(false)
 
 	b.ResetTimer()
 

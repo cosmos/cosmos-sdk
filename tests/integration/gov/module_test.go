@@ -36,7 +36,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.NewContext(false)
+	ctx := app.BaseApp.NewContext(false)
 	acc := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
 	assert.Assert(t, acc != nil)
 }

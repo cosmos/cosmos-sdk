@@ -147,6 +147,6 @@ func (vo VoteOption) Format(s fmt.State, verb rune) {
 	case 's':
 		s.Write([]byte(vo.String()))
 	default:
-		fmt.Fprintf(s, "%v", byte(vo))
+		s.Write([]byte(fmt.Sprintf("%v", byte(vo))))
 	}
 }

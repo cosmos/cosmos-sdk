@@ -753,12 +753,11 @@ var ctxTypes = []ctxType{QueryCtx, CheckTxCtx}
 
 func (c ctxType) GetCtx(t *testing.T, bapp *baseapp.BaseApp) sdk.Context {
 	t.Helper()
-	switch c {
-	case QueryCtx:
+	if c == QueryCtx {
 		ctx, err := bapp.CreateQueryContext(1, false)
 		require.NoError(t, err)
 		return ctx
-	case CheckTxCtx:
+	} else if c == CheckTxCtx {
 		return getCheckStateCtx(bapp)
 	}
 	// TODO: Not supported yet

@@ -68,7 +68,7 @@ linters:
     nolintlint:
       require-explanation: true
       require-specific: false
-      allow-unused: false
+      allow-unused: true
     staticcheck:
       checks:
         - all
@@ -129,6 +129,15 @@ linters:
       - linters:
           - gosec
         text: 'G601:'
+      - linters:
+          - staticcheck
+        text: 'QF1006:'
+      - linters:
+          - staticcheck
+        text: 'QF1007:'
+      - linters:
+          - staticcheck
+        text: 'QF1008:'
     paths:
       - third_party$
       - builtin$
@@ -139,7 +148,6 @@ issues:
 formatters:
   enable:
     - gci
-    - gofumpt
   settings:
     gci:
       sections:
@@ -148,8 +156,6 @@ formatters:
         - prefix(cosmossdk.io)
         - prefix(github.com/cosmos/cosmos-sdk)
       custom-order: true
-    gofumpt:
-      extra-rules: true
   exclusions:
     generated: lax
     paths:

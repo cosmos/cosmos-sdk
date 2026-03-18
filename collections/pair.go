@@ -18,7 +18,7 @@ type Pair[K1, K2 any] struct {
 // If not present the zero value is returned.
 func (p Pair[K1, K2]) K1() (k1 K1) {
 	if p.key1 == nil {
-		return k1
+		return
 	}
 	return *p.key1
 }
@@ -27,7 +27,7 @@ func (p Pair[K1, K2]) K1() (k1 K1) {
 // If not present the zero value is returned.
 func (p Pair[K1, K2]) K2() (k2 K2) {
 	if p.key2 == nil {
-		return k2
+		return
 	}
 	return *p.key2
 }

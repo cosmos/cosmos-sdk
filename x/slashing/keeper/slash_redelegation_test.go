@@ -38,7 +38,7 @@ func TestSlashRedelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	// get sdk context, staking msg server and bond denom
-	ctx := app.NewContext(false)
+	ctx := app.BaseApp.NewContext(false)
 	stakingMsgServer := stakingkeeper.NewMsgServerImpl(stakingKeeper)
 	bondDenom, err := stakingKeeper.BondDenom(ctx)
 	require.NoError(t, err)

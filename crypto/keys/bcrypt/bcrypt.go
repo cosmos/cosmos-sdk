@@ -15,7 +15,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"golang.org/x/crypto/blowfish"
+	"golang.org/x/crypto/blowfish" //nolint:staticcheck // used in original https://cs.opensource.google/go/x/crypto/+/master:bcrypt/bcrypt.go
 )
 
 const (

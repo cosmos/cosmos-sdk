@@ -749,7 +749,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasConsumed))
-			return newCtx, err
+			return
 		})
 	}
 	suite := NewBaseAppSuite(t, anteOpt)
@@ -809,7 +809,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 func TestABCI_InvalidTransaction(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			return newCtx, err
+			return
 		})
 	}
 
@@ -1047,7 +1047,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 			count, _ := parseTxMemo(t, tx)
 			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
 
-			return newCtx, err
+			return
 		})
 	}
 
@@ -1148,7 +1148,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 				return newCtx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 			}
 
-			return newCtx, err
+			return
 		})
 	}
 
@@ -1187,7 +1187,7 @@ func TestABCI_Query(t *testing.T) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			store := ctx.KVStore(capKey1)
 			store.Set(key, value)
-			return newCtx, err
+			return
 		})
 	}
 

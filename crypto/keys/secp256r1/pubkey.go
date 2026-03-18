@@ -67,12 +67,12 @@ type ecdsaPK struct {
 
 // Marshal implements customProtobufType.
 func (pk ecdsaPK) Marshal() ([]byte, error) {
-	return pk.Bytes(), nil
+	return pk.PubKey.Bytes(), nil
 }
 
 // MarshalJSON implements customProtobufType.
 func (pk ecdsaPK) MarshalJSON() ([]byte, error) {
-	b64 := base64.StdEncoding.EncodeToString(pk.Bytes())
+	b64 := base64.StdEncoding.EncodeToString(pk.PubKey.Bytes())
 	return []byte("\"" + b64 + "\""), nil
 }
 

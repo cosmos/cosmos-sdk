@@ -139,13 +139,12 @@ func RandomRequestFinalizeBlock(
 		mVal.livenessState = params.LivenessTransitionMatrix().NextState(r, mVal.livenessState)
 		signed := true
 
-		switch mVal.livenessState {
-		case 1:
+		if mVal.livenessState == 1 {
 			// spotty connection, 50% probability of success
 			// See https://github.com/golang/go/issues/23804#issuecomment-365370418
 			// for reasoning behind computing like this
 			signed = r.Int63()%2 == 0
-		case 2:
+		} else if mVal.livenessState == 2 {
 			// offline
 			signed = false
 		}

@@ -377,10 +377,9 @@ func TestChargeDeposit(t *testing.T) {
 	for _, tc := range testCases {
 		for i := 0; i < 3; i++ {
 			testName := func(i int) string {
-				switch i {
-				case 0:
+				if i == 0 {
 					return fmt.Sprintf("%s and dest address is %s", tc.name, "nil")
-				case 1:
+				} else if i == 1 {
 					return fmt.Sprintf("%s and dest address is normal address", tc.name)
 				}
 				return fmt.Sprintf("%s and dest address is community address", tc.name)

@@ -30,7 +30,7 @@ func CollectKeyValues[K, V any, I iterator[K], Idx collections.Indexes[K, V]](
 		kvs = append(kvs, kv)
 		return false
 	})
-	return kvs, err
+	return
 }
 
 // ScanKeyValues calls the do function on every record found, in the indexed map
@@ -79,7 +79,7 @@ func CollectValues[K, V any, I iterator[K], Idx collections.Indexes[K, V]](
 		values = append(values, value)
 		return false
 	})
-	return values, err
+	return
 }
 
 // ScanValues collects all the values from an Index iterator and the IndexedMap in a lazy way.

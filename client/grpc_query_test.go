@@ -98,7 +98,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// end of app init
 
-	s.ctx = app.NewContext(false)
+	s.ctx = app.BaseApp.NewContext(false)
 	s.cdc = cdc
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, bankKeeper)

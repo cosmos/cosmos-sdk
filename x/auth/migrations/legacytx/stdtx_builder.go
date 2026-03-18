@@ -38,11 +38,11 @@ func (s *StdTxBuilder) SetSignatures(signatures ...signing.SignatureV2) error {
 }
 
 func (s *StdTxBuilder) SetFeeAmount(amount sdk.Coins) {
-	s.Fee.Amount = amount
+	s.StdTx.Fee.Amount = amount
 }
 
 func (s *StdTxBuilder) SetGasLimit(limit uint64) {
-	s.Fee.Gas = limit
+	s.StdTx.Fee.Gas = limit
 }
 
 // SetMemo implements TxBuilder.SetMemo

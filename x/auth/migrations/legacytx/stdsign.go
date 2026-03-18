@@ -112,7 +112,7 @@ func (ss StdSignature) GetPubKey() cryptotypes.PubKey {
 func (ss StdSignature) MarshalYAML() (interface{}, error) {
 	pk := ""
 	if ss.PubKey != nil {
-		pk = ss.String()
+		pk = ss.PubKey.String()
 	}
 
 	bz, err := yaml.Marshal(struct {

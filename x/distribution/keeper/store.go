@@ -83,7 +83,7 @@ func (k Keeper) GetDelegatorStartingInfo(ctx context.Context, val sdk.ValAddress
 	store := k.storeService.OpenKVStore(ctx)
 	b, err := store.Get(types.GetDelegatorStartingInfoKey(val, del))
 	if err != nil {
-		return period, err
+		return
 	}
 
 	err = k.cdc.Unmarshal(b, &period)
@@ -133,11 +133,11 @@ func (k Keeper) GetValidatorHistoricalRewards(ctx context.Context, val sdk.ValAd
 	store := k.storeService.OpenKVStore(ctx)
 	b, err := store.Get(types.GetValidatorHistoricalRewardsKey(val, period))
 	if err != nil {
-		return rewards, err
+		return
 	}
 
 	err = k.cdc.Unmarshal(b, &rewards)
-	return rewards, err
+	return
 }
 
 // set historical rewards for a particular period
@@ -202,7 +202,7 @@ func (k Keeper) GetValidatorHistoricalReferenceCount(ctx context.Context) (count
 		k.cdc.MustUnmarshal(iter.Value(), &rewards)
 		count += uint64(rewards.ReferenceCount)
 	}
-	return count
+	return
 }
 
 // get current rewards for a validator
@@ -210,11 +210,11 @@ func (k Keeper) GetValidatorCurrentRewards(ctx context.Context, val sdk.ValAddre
 	store := k.storeService.OpenKVStore(ctx)
 	b, err := store.Get(types.GetValidatorCurrentRewardsKey(val))
 	if err != nil {
-		return rewards, err
+		return
 	}
 
 	err = k.cdc.Unmarshal(b, &rewards)
-	return rewards, err
+	return
 }
 
 // set current rewards for a validator
@@ -265,7 +265,7 @@ func (k Keeper) GetValidatorAccumulatedCommission(ctx context.Context, val sdk.V
 	if err != nil {
 		return types.ValidatorAccumulatedCommission{}, err
 	}
-	return commission, err
+	return
 }
 
 // set accumulated commission for a validator
@@ -315,10 +315,10 @@ func (k Keeper) GetValidatorOutstandingRewards(ctx context.Context, val sdk.ValA
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.GetValidatorOutstandingRewardsKey(val))
 	if err != nil {
-		return rewards, err
+		return
 	}
 	err = k.cdc.Unmarshal(bz, &rewards)
-	return rewards, err
+	return
 }
 
 // set validator outstanding rewards

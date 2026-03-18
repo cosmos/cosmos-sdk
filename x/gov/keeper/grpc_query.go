@@ -166,6 +166,7 @@ func (q queryServer) Params(ctx context.Context, req *v1.QueryParamsRequest) (*v
 	}
 	response := &v1.QueryParamsResponse{}
 
+	//nolint:staticcheck // needed for legacy parameters
 	switch req.ParamsType {
 	case v1.ParamDeposit:
 		depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
@@ -255,11 +256,11 @@ func (q queryServer) TallyResult(ctx context.Context, req *v1.QueryTallyResultRe
 
 	var tallyResult v1.TallyResult
 
-	switch proposal.Status {
-	case v1.StatusDepositPeriod:
+	switch {
+	case proposal.Status == v1.StatusDepositPeriod:
 		tallyResult = v1.EmptyTallyResult()
 
-	case v1.StatusPassed, v1.StatusRejected, v1.StatusFailed:
+	case proposal.Status == v1.StatusPassed || proposal.Status == v1.StatusRejected || proposal.Status == v1.StatusFailed:
 		tallyResult = *proposal.FinalTallyResult
 
 	default:
@@ -364,6 +365,7 @@ func (q legacyQueryServer) Votes(ctx context.Context, req *v1beta1.QueryVotesReq
 	}, nil
 }
 
+//nolint:staticcheck // this is needed for legacy param support
 func (q legacyQueryServer) Params(ctx context.Context, req *v1beta1.QueryParamsRequest) (*v1beta1.QueryParamsResponse, error) {
 	resp, err := q.qs.Params(ctx, &v1.QueryParamsRequest{
 		ParamsType: req.ParamsType,

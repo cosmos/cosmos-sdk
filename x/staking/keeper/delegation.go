@@ -1068,12 +1068,12 @@ func (k Keeper) getBeginInfo(
 ) (completionTime time.Time, height int64, completeNow bool, err error) {
 	validator, err := k.GetValidator(ctx, valSrcAddr)
 	if err != nil && errors.Is(err, types.ErrNoValidatorFound) {
-		return completionTime, height, completeNow, err
+		return
 	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	unbondingTime, err := k.UnbondingTime(ctx)
 	if err != nil {
-		return completionTime, height, completeNow, err
+		return
 	}
 
 	// TODO: When would the validator not be found?

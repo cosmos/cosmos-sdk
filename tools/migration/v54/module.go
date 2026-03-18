@@ -4,12 +4,9 @@ import migration "github.com/cosmos/cosmos-sdk/tools/migrate"
 
 // moduleUpdates defines go.mod dependency version bumps for v53 -> v54.
 // These are pinned to the versions used by simapp on the main branch.
-//
-// NOTE: github.com/cosmos/cosmos-sdk itself uses a pseudo version derived from main.
-// Once v0.54.0 is tagged, this should be updated to the stable release tag.
 var moduleUpdates = migration.GoModUpdate{
-	// Core SDK — pseudo version from main (commit 2c527014f3ee, 2026-03-11)
-	"github.com/cosmos/cosmos-sdk": "v0.54.0-rc.0.20260311165803-2c527014f3ee",
+	// Core SDK
+	"github.com/cosmos/cosmos-sdk": "v0.54.0-rc.1",
 
 	// SDK companion modules
 	"cosmossdk.io/api":       "v1.0.0",
@@ -39,6 +36,7 @@ var additions = migration.GoModAddition{
 var removals = migration.GoModRemoval{
 	// Vanity URL modules folded into SDK monorepo
 	"cosmossdk.io/x/circuit",
+	"cosmossdk.io/x/crisis",
 	"cosmossdk.io/x/evidence",
 	"cosmossdk.io/x/upgrade",
 	"cosmossdk.io/x/nft",

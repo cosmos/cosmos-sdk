@@ -145,6 +145,411 @@ func f(initClientCtx client.Context) {
 	}
 }
 
+func TestPrepareTargetSDKVersion(t *testing.T) {
+	t.Run("accepts v0.53 input", func(t *testing.T) {
+		dir := writeTestFiles(t, map[string]string{
+			"go.mod": `module example.com/app
+
+go 1.25.0
+
+require github.com/cosmos/cosmos-sdk v0.53.6
+`,
+		})
+
+		if err := prepareTargetSDKVersion(dir); err != nil {
+			t.Fatalf("expected v0.53 input to pass validation: %v", err)
+		}
+	})
+
+	t.Run("bridges pre v0.53 input to v0.53.6", func(t *testing.T) {
+		dir := writeTestFiles(t, map[string]string{
+			"go.mod": `module example.com/app
+
+go 1.25.0
+
+require github.com/cosmos/cosmos-sdk v0.50.11
+
+replace github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.6
+replace github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6
+replace github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1
+replace github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.18.0
+replace cosmossdk.io/x/evidence => cosmossdk.io/x/evidence v0.1.0
+`,
+		})
+
+		if err := prepareTargetSDKVersion(dir); err != nil {
+			t.Fatalf("expected v0.50 input to be bridged: %v", err)
+		}
+
+		goMod := readTestFile(t, filepath.Join(dir, "go.mod"))
+		if !strings.Contains(goMod, "github.com/cosmos/cosmos-sdk v0.53.6") {
+			t.Fatalf("expected go.mod to be bridged to v0.53.6, got:\n%s", goMod)
+		}
+		if strings.Contains(goMod, "replace github.com/cosmos/cosmos-sdk =>") {
+			t.Fatalf("expected stale cosmos-sdk replace to be removed, got:\n%s", goMod)
+		}
+		if strings.Contains(goMod, "replace github.com/cometbft/cometbft =>") {
+			t.Fatalf("expected stale cometbft replace to be removed, got:\n%s", goMod)
+		}
+		if strings.Contains(goMod, "replace github.com/cosmos/iavl =>") {
+			t.Fatalf("expected stale iavl replace to be removed, got:\n%s", goMod)
+		}
+		if strings.Contains(goMod, "replace github.com/prometheus/client_golang =>") {
+			t.Fatalf("expected stale prometheus/client_golang replace to be removed, got:\n%s", goMod)
+		}
+		if strings.Contains(goMod, "replace cosmossdk.io/x/evidence =>") {
+			t.Fatalf("expected stale evidence replace to be removed, got:\n%s", goMod)
+		}
+	})
+
+	t.Run("drops stale sdk replace for v0.53 input", func(t *testing.T) {
+		dir := writeTestFiles(t, map[string]string{
+			"go.mod": `module example.com/app
+
+go 1.25.0
+
+require github.com/cosmos/cosmos-sdk v0.53.6
+
+replace github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.6
+replace github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6
+replace github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1
+replace github.com/prometheus/common => github.com/prometheus/common v0.47.0
+replace cosmossdk.io/x/upgrade => cosmossdk.io/x/upgrade v0.1.1
+`,
+		})
+
+		if err := prepareTargetSDKVersion(dir); err != nil {
+			t.Fatalf("expected v0.53 input with stale replace to pass validation: %v", err)
+		}
+
+		goMod := readTestFile(t, filepath.Join(dir, "go.mod"))
+		if strings.Contains(goMod, "replace github.com/cosmos/cosmos-sdk =>") {
+			t.Fatalf("expected stale cosmos-sdk replace to be removed, got:\n%s", goMod)
+		}
+		if strings.Contains(goMod, "replace github.com/cometbft/cometbft =>") {
+			t.Fatalf("expected stale cometbft replace to be removed, got:\n%s", goMod)
+		}
+		if strings.Contains(goMod, "replace github.com/cosmos/iavl =>") {
+			t.Fatalf("expected stale iavl replace to be removed, got:\n%s", goMod)
+		}
+		if strings.Contains(goMod, "replace github.com/prometheus/common =>") {
+			t.Fatalf("expected stale prometheus/common replace to be removed, got:\n%s", goMod)
+		}
+		if strings.Contains(goMod, "replace cosmossdk.io/x/upgrade =>") {
+			t.Fatalf("expected stale upgrade replace to be removed, got:\n%s", goMod)
+		}
+	})
+
+	t.Run("rejects pre v0.50 input", func(t *testing.T) {
+		dir := writeTestFiles(t, map[string]string{
+			"go.mod": `module example.com/app
+
+go 1.25.0
+
+require github.com/cosmos/cosmos-sdk v0.49.8
+`,
+		})
+
+		err := prepareTargetSDKVersion(dir)
+		if err == nil {
+			t.Fatal("expected validation error for v0.49 input")
+		}
+		if !strings.Contains(err.Error(), "supports v0.50.x through v0.53.x inputs") {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("rejects already migrated input", func(t *testing.T) {
+		dir := writeTestFiles(t, map[string]string{
+			"go.mod": `module example.com/app
+
+go 1.25.0
+
+require github.com/cosmos/cosmos-sdk v0.54.0-rc.1
+`,
+		})
+
+		err := prepareTargetSDKVersion(dir)
+		if err == nil {
+			t.Fatal("expected validation error for v0.54 input")
+		}
+		if !strings.Contains(err.Error(), "already-migrated targets") {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+}
+
+func TestV54MigrationRemovesCrisisWiring(t *testing.T) {
+	dir := writeTestFiles(t, map[string]string{
+		"app/app.go": `package app
+
+import (
+	"github.com/spf13/cast"
+	crisis "github.com/cosmos/cosmos-sdk/x/crisis"
+	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+)
+
+type App struct {
+	CrisisKeeper *crisiskeeper.Keeper
+	ModuleManager interface{
+		RegisterInvariants(any)
+	}
+}
+
+func f(app *App) {
+	keys := storetypes.NewKVStoreKeys(crisistypes.StoreKey)
+	_ = keys
+	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
+	app.ModuleManager = module.NewManager(crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)))
+	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
+	paramsKeeper.Subspace(crisistypes.ModuleName)
+}
+`,
+		"app/basic_manager/basic_manager.go": `package basic_manager
+
+import (
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	crisis "github.com/cosmos/cosmos-sdk/x/crisis"
+)
+
+var ModuleBasics = module.NewBasicManager(
+	auth.AppModuleBasic{},
+	crisis.AppModuleBasic{},
+)
+`,
+		"cmd/root.go": `package cmd
+
+import (
+	"github.com/spf13/cobra"
+	crisis "github.com/cosmos/cosmos-sdk/x/crisis"
+)
+
+func addModuleInitFlags(startCmd *cobra.Command) {
+	crisis.AddModuleInitFlags(startCmd)
+}
+`,
+		"app/msgs/internal_msgs.go": `package msgs
+
+import (
+	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var InternalMsgSamplesDefault = map[string]sdk.Msg{
+	"/cosmos.crisis.v1beta1.MsgUpdateParams":         &crisis.MsgUpdateParams{},
+	"/cosmos.crisis.v1beta1.MsgUpdateParamsResponse": nil,
+}
+`,
+		"app/msgs/unsupported_msgs.go": `package msgs
+
+import (
+	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var UnsupportedMsgSamples = map[string]sdk.Msg{
+	"/cosmos.crisis.v1beta1.MsgVerifyInvariant":         &crisis.MsgVerifyInvariant{},
+	"/cosmos.crisis.v1beta1.MsgVerifyInvariantResponse": nil,
+}
+`,
+		"lib/ante/internal_msg.go": `package ante
+
+import crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
+
+func IsInternalMsg(msg any) bool {
+	switch msg.(type) {
+	case
+		*crisis.MsgUpdateParams:
+		return true
+	}
+	return false
+}
+`,
+		"lib/ante/unsupported_msgs.go": `package ante
+
+import crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
+
+func IsUnsupportedMsg(msg any) bool {
+	switch msg.(type) {
+	case
+		*crisis.MsgVerifyInvariant:
+		return true
+	}
+	return false
+}
+`,
+		"go.mod": `module example.com/app
+
+go 1.25.0
+
+require github.com/cosmos/cosmos-sdk v0.53.6
+`,
+	})
+
+	runV54Migration(t, dir)
+
+	appGo := readTestFile(t, filepath.Join(dir, "app/app.go"))
+	if strings.Contains(appGo, "CrisisKeeper") {
+		t.Fatalf("expected crisis keeper field/usage to be removed, got:\n%s", appGo)
+	}
+	if strings.Contains(appGo, "crisistypes.StoreKey") {
+		t.Fatalf("expected crisis store key to be removed, got:\n%s", appGo)
+	}
+	if strings.Contains(appGo, "crisis.NewAppModule") {
+		t.Fatalf("expected crisis app module wiring to be removed, got:\n%s", appGo)
+	}
+	if strings.Contains(appGo, "crisis.FlagSkipGenesisInvariants") {
+		t.Fatalf("expected crisis init flag wiring to be removed, got:\n%s", appGo)
+	}
+
+	basicManager := readTestFile(t, filepath.Join(dir, "app/basic_manager/basic_manager.go"))
+	if strings.Contains(basicManager, "crisis.AppModuleBasic") {
+		t.Fatalf("expected crisis basic module registration to be removed, got:\n%s", basicManager)
+	}
+
+	rootGo := readTestFile(t, filepath.Join(dir, "cmd/root.go"))
+	if strings.Contains(rootGo, "crisis.AddModuleInitFlags") {
+		t.Fatalf("expected crisis init flag registration to be removed, got:\n%s", rootGo)
+	}
+
+	internalMsgs := readTestFile(t, filepath.Join(dir, "app/msgs/internal_msgs.go"))
+	if strings.Contains(internalMsgs, "/cosmos.crisis.v1beta1.MsgUpdateParams") {
+		t.Fatalf("expected crisis internal msg entries to be removed, got:\n%s", internalMsgs)
+	}
+
+	unsupportedMsgs := readTestFile(t, filepath.Join(dir, "app/msgs/unsupported_msgs.go"))
+	if strings.Contains(unsupportedMsgs, "/cosmos.crisis.v1beta1.MsgVerifyInvariant") {
+		t.Fatalf("expected crisis unsupported msg entries to be removed, got:\n%s", unsupportedMsgs)
+	}
+
+	anteInternal := readTestFile(t, filepath.Join(dir, "lib/ante/internal_msg.go"))
+	if strings.Contains(anteInternal, "crisis.MsgUpdateParams") {
+		t.Fatalf("expected crisis ante internal msg case to be removed, got:\n%s", anteInternal)
+	}
+
+	anteUnsupported := readTestFile(t, filepath.Join(dir, "lib/ante/unsupported_msgs.go"))
+	if strings.Contains(anteUnsupported, "crisis.MsgVerifyInvariant") {
+		t.Fatalf("expected crisis ante unsupported msg case to be removed, got:\n%s", anteUnsupported)
+	}
+}
+
+func TestV54MigrationRewritesCompatibilityHotspots(t *testing.T) {
+	dir := writeTestFiles(t, map[string]string{
+		"app/msgs/internal_msgs.go": `package msgs
+
+import (
+	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var InternalMsgSamplesDefault = map[string]sdk.Msg{
+	"/cosmos.staking.v1beta1.MsgSetProposers":         &staking.MsgSetProposers{},
+	"/cosmos.staking.v1beta1.MsgSetProposersResponse": nil,
+}
+`,
+		"app/msgs/all_msgs.go": `package msgs
+
+var AllTypeMessages = map[string]struct{}{
+	"/cosmos.staking.v1beta1.MsgSetProposers":         {},
+	"/cosmos.staking.v1beta1.MsgSetProposersResponse": {},
+}
+`,
+		"lib/ante/internal_msg.go": `package ante
+
+import staking "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+func IsInternalMsg(msg any) bool {
+	switch msg.(type) {
+	case
+		*staking.MsgSetProposers,
+		*staking.MsgDelegate:
+		return true
+	}
+	return false
+}
+`,
+		"x/foo/client/cli/tx.go": `package cli
+
+import "github.com/cosmos/cosmos-sdk/client/tx"
+
+func f(txf tx.Factory, value any) tx.Factory {
+	return txf.WithNonCriticalExtensionOptions(value)
+}
+`,
+		"x/foo/module.go": `package foo
+
+import (
+	"context"
+	"time"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
+)
+
+func f(ctx context.Context) {
+	defer telemetry.ModuleMeasureSince("foo", time.Now(), telemetry.MetricKeyPrecommiter)
+	defer telemetry.ModuleMeasureSince("foo", time.Now(), telemetry.MetricKeyPrepareCheckStater)
+}
+`,
+		"testutil/ante/testutil.go": `package ante
+
+import "github.com/golang/mock/gomock"
+
+func f(ctrl *gomock.Controller) {}
+`,
+		"go.mod": `module example.com/app
+
+go 1.25.0
+
+require github.com/cosmos/cosmos-sdk v0.53.6
+`,
+	})
+
+	runV54Migration(t, dir)
+
+	internalMsgs := readTestFile(t, filepath.Join(dir, "app/msgs/internal_msgs.go"))
+	if strings.Contains(internalMsgs, "MsgSetProposers") {
+		t.Fatalf("expected staking MsgSetProposers entries to be removed, got:\n%s", internalMsgs)
+	}
+
+	allMsgs := readTestFile(t, filepath.Join(dir, "app/msgs/all_msgs.go"))
+	if strings.Contains(allMsgs, "MsgSetProposers") {
+		t.Fatalf("expected all-msg registry entries to be removed, got:\n%s", allMsgs)
+	}
+
+	anteInternal := readTestFile(t, filepath.Join(dir, "lib/ante/internal_msg.go"))
+	if strings.Contains(anteInternal, "MsgSetProposers") {
+		t.Fatalf("expected staking MsgSetProposers switch cases to be removed, got:\n%s", anteInternal)
+	}
+
+	cliTx := readTestFile(t, filepath.Join(dir, "x/foo/client/cli/tx.go"))
+	if strings.Contains(cliTx, "WithNonCriticalExtensionOptions") {
+		t.Fatalf("expected old tx factory helper to be rewritten, got:\n%s", cliTx)
+	}
+	if !strings.Contains(cliTx, "WithExtensionOptions") {
+		t.Fatalf("expected tx factory helper rewrite, got:\n%s", cliTx)
+	}
+
+	moduleGo := readTestFile(t, filepath.Join(dir, "x/foo/module.go"))
+	if strings.Contains(moduleGo, "MetricKeyPrecommiter") || strings.Contains(moduleGo, "MetricKeyPrepareCheckStater") {
+		t.Fatalf("expected stale telemetry constants to be removed, got:\n%s", moduleGo)
+	}
+	if !strings.Contains(moduleGo, `"precommitter"`) || !strings.Contains(moduleGo, `"prepare_check_stater"`) {
+		t.Fatalf("expected telemetry constants to be rewritten to string keys, got:\n%s", moduleGo)
+	}
+
+	testutil := readTestFile(t, filepath.Join(dir, "testutil/ante/testutil.go"))
+	if strings.Contains(testutil, "github.com/golang/mock/gomock") {
+		t.Fatalf("expected gomock import to be rewritten, got:\n%s", testutil)
+	}
+	if !strings.Contains(testutil, "go.uber.org/mock/gomock") {
+		t.Fatalf("expected gomock import rewrite, got:\n%s", testutil)
+	}
+}
+
 func runV54Migration(t *testing.T, dir string) {
 	t.Helper()
 

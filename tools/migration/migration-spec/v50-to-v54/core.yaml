@@ -1,0 +1,225 @@
+id: core-sdk-migration
+title: Core SDK v53 → v54 upgrades
+version: v50+ -> v54
+description: |
+  Baseline changes that apply to every chain upgrading from cosmos-sdk v0.53.x
+  to v0.54.x. Covers go.mod version bumps, vanity-URL import rewrites, log/v2
+  migration, mock package migration, BaseApp API simplifications, and module
+  ordering changes common to all apps.
+
+detection:
+  imports:
+    - github.com/cosmos/cosmos-sdk
+  patterns:
+    - cosmossdk.io/x/feegrant
+    - cosmossdk.io/x/upgrade
+    - cosmossdk.io/log
+
+changes:
+  # ── go.mod ──────────────────────────────────────────────────────────────
+  go_mod:
+    update:
+      github.com/cosmos/cosmos-sdk: v0.54.0
+      cosmossdk.io/log: v2.0.0
+
+    remove:
+      - cosmossdk.io/x/feegrant
+      - cosmossdk.io/x/evidence
+      - cosmossdk.io/x/upgrade
+      - cosmossdk.io/x/tx
+      - cosmossdk.io/x/circuit
+      - cosmossdk.io/x/nft
+      - cosmossdk.io/systemtests
+
+    strip_local_replaces: true
+
+  # ── imports ──────────────────────────────────────────────────────────────
+  imports:
+    rewrites:
+      # log/v2
+      - old: cosmossdk.io/log
+        new: cosmossdk.io/log/v2
+        all_packages: false
+
+      # Mock package migration
+      - old: github.com/golang/mock/gomock
+        new: go.uber.org/mock/gomock
+        all_packages: true
+
+      # Vanity URL → github.com/cosmos/cosmos-sdk
+      - old: cosmossdk.io/x/feegrant
+        new: github.com/cosmos/cosmos-sdk/x/feegrant
+        all_packages: true
+
+      - old: cosmossdk.io/x/evidence
+        new: github.com/cosmos/cosmos-sdk/x/evidence
+        all_packages: true
+
+      - old: cosmossdk.io/x/upgrade
+        new: github.com/cosmos/cosmos-sdk/x/upgrade
+        all_packages: true
+
+      - old: cosmossdk.io/x/tx
+        new: github.com/cosmos/cosmos-sdk/x/tx
+        all_packages: true
+
+      - old: cosmossdk.io/systemtests
+        new: github.com/cosmos/cosmos-sdk/testutil/systemtests
+        all_packages: true
+
+      # Modules moved to contrib (import rewrite only; keepers/modules kept)
+      - old: cosmossdk.io/x/circuit
+        new: github.com/cosmos/cosmos-sdk/contrib/x/circuit
+        all_packages: true
+
+      - old: cosmossdk.io/x/nft
+        new: github.com/cosmos/cosmos-sdk/contrib/x/nft
+        all_packages: true
+
+  # ── text replacements ─────────────────────────────────────────────────
+  text_replacements:
+    # BaseApp method aliases — the indirection was removed in v54.
+    - old: app.BaseApp.GRPCQueryRouter()
+      new: app.GRPCQueryRouter()
+
+    - old: app.BaseApp.Simulate
+      new: app.Simulate
+
+    # tx.Factory: non-critical extension options folded into WithExtensionOptions.
+    - old: .WithNonCriticalExtensionOptions(
+      new: .WithExtensionOptions(
+
+    # Telemetry metric key constants removed; use string literals instead.
+    - old: telemetry.MetricKeyPrecommiter
+      new: '"precommitter"'
+
+    - old: telemetry.MetricKeyPrepareCheckStater
+      new: '"prepare_check_stater"'
+
+    # nodeservice: new 4th argument for earliest version.
+    - old: nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
+      new: "nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg, func() int64 { return app.CommitMultiStore().EarliestVersion() })"
+
+    # SetModuleVersionMap: error return added in v54.
+    - old: "\tapp.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())\n\treturn app.ModuleManager.InitGenesis("
+      new: "\terr := app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\treturn app.ModuleManager.InitGenesis("
+
+    # auth/tx import dedup in app.go (two imports for same package — remove unaliased).
+    - old: "\t\"github.com/cosmos/cosmos-sdk/x/auth/tx\"\n"
+      new: ""
+      file_match: app.go
+
+    - old: tx.NewTxConfig(
+      new: authtx.NewTxConfig(
+      file_match: app.go
+
+    - old: tx.DefaultSignModes
+      new: authtx.DefaultSignModes
+      file_match: app.go
+
+    - old: tx.ConfigOptions
+      new: authtx.ConfigOptions
+      file_match: app.go
+
+    - old: tx.NewTxConfigWithOptions(
+      new: authtx.NewTxConfigWithOptions(
+      file_match: app.go
+
+    # Repair double-prefix if authtx was already aliased.
+    - old: authauthtx.
+      new: authtx.
+      file_match: app.go
+
+    # traceStore parameter removed from NewSimApp and related helpers.
+    - old: "\tdb dbm.DB,\n\ttraceStore io.Writer,\n\tloadLatest bool,\n"
+      new: "\tdb dbm.DB,\n\tloadLatest bool,\n"
+      file_match: app.go
+
+    - old: "\tbApp.SetCommitMultiStoreTracer(traceStore)\n"
+      new: ""
+      file_match: app.go
+
+    - old: "\tbApp.SetCommitMultiStoreTracer(nil)\n"
+      new: ""
+      file_match: app_test.go
+
+    - old: "\tlogger log.Logger,\n\tdb dbm.DB,\n\ttraceStore io.Writer,\n\tappOpts servertypes.AppOptions,\n"
+      new: "\tlogger log.Logger,\n\tdb dbm.DB,\n\tappOpts servertypes.AppOptions,\n"
+      file_match: simd/cmd/commands.go
+
+    - old: "\t\tlogger, db, traceStore, true,\n"
+      new: "\t\tlogger, db, true,\n"
+      file_match: simd/cmd/commands.go
+
+    - old: "\tlogger log.Logger,\n\tdb dbm.DB,\n\ttraceStore io.Writer,\n\theight int64,\n"
+      new: "\tlogger log.Logger,\n\tdb dbm.DB,\n\theight int64,\n"
+      file_match: simd/cmd/commands.go
+
+    - old: "\t\tsimApp = simapp.NewSimApp(logger, db, traceStore, false, appOpts)\n"
+      new: "\t\tsimApp = simapp.NewSimApp(logger, db, false, appOpts)\n"
+      file_match: simd/cmd/commands.go
+
+    - old: "\t\tsimApp = simapp.NewSimApp(logger, db, traceStore, true, appOpts)\n"
+      new: "\t\tsimApp = simapp.NewSimApp(logger, db, true, appOpts)\n"
+      file_match: simd/cmd/commands.go
+
+    - old: NewSimApp(log.NewNopLogger(), db, nil, true, appOptions)
+      new: NewSimApp(log.NewNopLogger(), db, true, appOptions)
+      file_match: test_helpers.go
+
+    - old: NewSimApp(options.Logger, options.DB, nil, true, options.AppOpts)
+      new: NewSimApp(options.Logger, options.DB, true, options.AppOpts)
+      file_match: test_helpers.go
+
+    - old: NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
+      new: NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), true, simtestutil.NewAppOptionsWithFlagHome(dir))
+      file_match: test_helpers.go
+
+    - old: "NewSimApp(\n\t\t\tlog.NewNopLogger(), dbm.NewMemDB(), nil, true,"
+      new: "NewSimApp(\n\t\t\tlog.NewNopLogger(), dbm.NewMemDB(), true,"
+      file_match: test_helpers.go
+
+    - old: "return NewSimApp(\n\t\t\tval.GetCtx().Logger, dbm.NewMemDB(), nil, true,\n"
+      new: "return NewSimApp(\n\t\t\tval.GetCtx().Logger, dbm.NewMemDB(), true,\n"
+      file_match: test_helpers.go
+
+    - old: NewSimApp(logger, db, nil, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
+      new: NewSimApp(logger, db, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
+      file_match: sim_test.go
+
+    - old: NewSimApp(logger.With("instance", "second"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+      new: NewSimApp(logger.With("instance", "second"), db, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+      file_match: app_test.go
+
+    - old: NewSimApp(logger.With("instance", "simapp"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+      new: NewSimApp(logger.With("instance", "simapp"), db, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+      file_match: app_test.go
+
+    - old: NewSimApp(log.NewTestLogger(t), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+      new: NewSimApp(log.NewTestLogger(t), db, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+      file_match: app_test.go
+
+    - old: NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(simsx.SimAppChainID))
+      new: NewSimApp(logger, db, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(simsx.SimAppChainID))
+      file_match: sim_bench_test.go
+
+    - old: simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
+      new: simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), true, simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
+      file_match: simd/cmd/root.go
+
+# ── verification ────────────────────────────────────────────────────────────
+verification:
+  must_not_import:
+    - cosmossdk.io/x/feegrant
+    - cosmossdk.io/x/evidence
+    - cosmossdk.io/x/upgrade
+    - cosmossdk.io/x/tx
+    - cosmossdk.io/log      # must use cosmossdk.io/log/v2 (not the bare path)
+    - github.com/golang/mock/gomock
+  must_not_contain:
+    - pattern: '"cosmossdk.io/log"'    # the quoted import line (bare, not /v2)
+    - pattern: app.BaseApp.GRPCQueryRouter()
+    - pattern: traceStore io.Writer
+    - pattern: .WithNonCriticalExtensionOptions(
+    - pattern: telemetry.MetricKeyPrecommiter
+    - pattern: telemetry.MetricKeyPrepareCheckStater

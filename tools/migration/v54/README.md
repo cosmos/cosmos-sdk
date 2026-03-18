@@ -1,6 +1,6 @@
-# v53 → v54 Migration Tool
+# v50+ → v54 Migration Tool
 
-Automated migration tool for upgrading Cosmos SDK applications from v0.53 to v0.54.
+Automated migration tool for upgrading Cosmos SDK applications from v0.50.x through v0.53.x to v0.54.
 
 ## Usage
 
@@ -14,6 +14,11 @@ cd /path/to/your/app && go mod tidy
 ## What It Does
 
 All changes are fully automated — no manual intervention required.
+
+### Version Handling
+- `v0.50.x` to `v0.52.x`: the tool first performs a minimal bridge by updating the main `github.com/cosmos/cosmos-sdk` requirement to `v0.53.6`
+- `v0.53.x`: the tool applies the full v53 -> v54 rewrite set directly
+- `v0.54+`: rejected as already migrated
 
 ### go.mod Changes
 - Bumps `github.com/cosmos/cosmos-sdk` to v0.54 pseudo version

@@ -4,10 +4,38 @@ import migration "github.com/cosmos/cosmos-sdk/tools/migrate"
 
 // statementRemovals removes entire statements (assignments and expression statements)
 // that reference deleted modules or deprecated patterns.
-var statementRemovals = []migration.StatementRemoval{}
+var statementRemovals = []migration.StatementRemoval{
+	{AssignTarget: "app.CrisisKeeper"},
+	{CallPattern: "crisis.AddModuleInitFlags"},
+	{CallPattern: "app.ModuleManager.RegisterInvariants"},
+}
 
 // mapEntryRemovals removes entries from map literals.
-var mapEntryRemovals = []migration.MapEntryRemoval{}
+var mapEntryRemovals = []migration.MapEntryRemoval{
+	{
+		MapVarName: "InternalMsgSamplesDefault",
+		KeysToRemove: []string{
+			`"/cosmos.crisis.v1beta1.MsgUpdateParams"`,
+			`"/cosmos.crisis.v1beta1.MsgUpdateParamsResponse"`,
+			`"/cosmos.staking.v1beta1.MsgSetProposers"`,
+			`"/cosmos.staking.v1beta1.MsgSetProposersResponse"`,
+		},
+	},
+	{
+		MapVarName: "UnsupportedMsgSamples",
+		KeysToRemove: []string{
+			`"/cosmos.crisis.v1beta1.MsgVerifyInvariant"`,
+			`"/cosmos.crisis.v1beta1.MsgVerifyInvariantResponse"`,
+		},
+	},
+	{
+		MapVarName: "AllTypeMessages",
+		KeysToRemove: []string{
+			`"/cosmos.staking.v1beta1.MsgSetProposers"`,
+			`"/cosmos.staking.v1beta1.MsgSetProposersResponse"`,
+		},
+	},
+}
 
 // textReplacements defines text-level find-and-replace operations.
 // These run AFTER AST transformations and operate on the file as plain text.
@@ -17,6 +45,12 @@ var textReplacements = []migration.TextReplacement{
 	// --- BaseApp method simplification ---
 	{Old: "app.BaseApp.GRPCQueryRouter()", New: "app.GRPCQueryRouter()"},
 	{Old: "app.BaseApp.Simulate", New: "app.Simulate"},
+
+	// --- tx.Factory API cleanup ---
+	// The non-critical variant was folded into WithExtensionOptions.
+	{Old: ".WithNonCriticalExtensionOptions(", New: ".WithExtensionOptions("},
+	{Old: "telemetry.MetricKeyPrecommiter", New: `"precommitter"`},
+	{Old: "telemetry.MetricKeyPrepareCheckStater", New: `"prepare_check_stater"`},
 
 	// --- EpochsKeeper value -> pointer init pattern ---
 	// Convert field assignment to local variable declaration
@@ -90,6 +124,116 @@ var textReplacements = []migration.TextReplacement{
 	// --- app.go: strip leftover contrib module order entries ---
 	{Old: "\t\tnft.ModuleName,\n", New: "", FileMatch: "app.go"},
 	{Old: "\t\tcircuittypes.ModuleName,\n", New: "", FileMatch: "app.go"},
+	// --- app.go: remove crisis-specific module wiring ---
+	{Old: "\tvar skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))\n", New: "", FileMatch: "app.go"},
+	{Old: "\tparamsKeeper.Subspace(crisistypes.ModuleName)\n", New: "", FileMatch: "app.go"},
+
+	// --- Switch/map cleanup after crisis removals ---
+	{
+		Old:       "\n\t\t// crisis\n\t\t*crisis.MsgUpdateParams,\n",
+		New:       "\n",
+		FileMatch: "lib/ante/internal_msg.go",
+	},
+	{
+		Old:       "\n\t\t*crisis.MsgUpdateParams,\n",
+		New:       "\n",
+		FileMatch: "lib/ante/internal_msg.go",
+	},
+	{
+		Old:       "\n\t\t*crisis.MsgUpdateParams:\n",
+		New:       "\n",
+		FileMatch: "lib/ante/internal_msg.go",
+	},
+	{
+		Old:       "\t\t*crisis.MsgVerifyInvariant:\n",
+		New:       "",
+		FileMatch: "lib/ante/unsupported_msgs.go",
+	},
+	{
+		Old:       "\t\t*vaulttypes.MsgUpdateParams,\n\t\treturn true\n",
+		New:       "\t\t*vaulttypes.MsgUpdateParams:\n\t\treturn true\n",
+		FileMatch: "lib/ante/unsupported_msgs.go",
+	},
+	{
+		Old:       "\t\t// crisis\n",
+		New:       "",
+		FileMatch: "app/msgs/internal_msgs.go",
+	},
+	{
+		Old:       "\n\t\t// Disable MsgVerifyInvariant in the crisis module, since:\n\t\t// 1. We currently do not rely on crisis module for any invariant assertion.\n\t\t// 2. MsgVerifyInvariant can potentially be abused to consume massive compute.\n",
+		New:       "\n",
+		FileMatch: "app/msgs/unsupported_msgs.go",
+	},
+
+	// --- Remove stale staking MsgSetProposers references ---
+	{
+		Old:       "\t\t\"/cosmos.staking.v1beta1.MsgSetProposers\",\n",
+		New:       "",
+		FileMatch: "app/msgs/internal_msgs_test.go",
+	},
+	{
+		Old:       "\t\t\"/cosmos.staking.v1beta1.MsgSetProposersResponse\",\n",
+		New:       "",
+		FileMatch: "app/msgs/internal_msgs_test.go",
+	},
+	{
+		Old:       "\t\t*staking.MsgSetProposers,\n",
+		New:       "",
+		FileMatch: "lib/ante/internal_msg.go",
+	},
+
+	// --- curated simapp fixture: remove traceStore plumbing dropped in v54 ---
+	{
+		Old:       "\tdb dbm.DB,\n\ttraceStore io.Writer,\n\tloadLatest bool,\n",
+		New:       "\tdb dbm.DB,\n\tloadLatest bool,\n",
+		FileMatch: "app.go",
+	},
+	{Old: "\tbApp.SetCommitMultiStoreTracer(traceStore)\n", New: "", FileMatch: "app.go"},
+	{Old: "\tbApp.SetCommitMultiStoreTracer(nil)\n", New: "", FileMatch: "app_test.go"},
+	{
+		Old:       "\tlogger log.Logger,\n\tdb dbm.DB,\n\ttraceStore io.Writer,\n\tappOpts servertypes.AppOptions,\n",
+		New:       "\tlogger log.Logger,\n\tdb dbm.DB,\n\tappOpts servertypes.AppOptions,\n",
+		FileMatch: "simd/cmd/commands.go",
+	},
+	{
+		Old:       "\t\tlogger, db, traceStore, true,\n",
+		New:       "\t\tlogger, db, true,\n",
+		FileMatch: "simd/cmd/commands.go",
+	},
+	{
+		Old:       "\tlogger log.Logger,\n\tdb dbm.DB,\n\ttraceStore io.Writer,\n\theight int64,\n",
+		New:       "\tlogger log.Logger,\n\tdb dbm.DB,\n\theight int64,\n",
+		FileMatch: "simd/cmd/commands.go",
+	},
+	{
+		Old:       "\t\tsimApp = simapp.NewSimApp(logger, db, traceStore, false, appOpts)\n",
+		New:       "\t\tsimApp = simapp.NewSimApp(logger, db, false, appOpts)\n",
+		FileMatch: "simd/cmd/commands.go",
+	},
+	{
+		Old:       "\t\tsimApp = simapp.NewSimApp(logger, db, traceStore, true, appOpts)\n",
+		New:       "\t\tsimApp = simapp.NewSimApp(logger, db, true, appOpts)\n",
+		FileMatch: "simd/cmd/commands.go",
+	},
+	{Old: "NewSimApp(log.NewNopLogger(), db, nil, true, appOptions)", New: "NewSimApp(log.NewNopLogger(), db, true, appOptions)", FileMatch: "test_helpers.go"},
+	{Old: "NewSimApp(options.Logger, options.DB, nil, true, options.AppOpts)", New: "NewSimApp(options.Logger, options.DB, true, options.AppOpts)", FileMatch: "test_helpers.go"},
+	{Old: "NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))", New: "NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), true, simtestutil.NewAppOptionsWithFlagHome(dir))", FileMatch: "test_helpers.go"},
+	{
+		Old:       "NewSimApp(\n\t\t\tlog.NewNopLogger(), dbm.NewMemDB(), nil, true,",
+		New:       "NewSimApp(\n\t\t\tlog.NewNopLogger(), dbm.NewMemDB(), true,",
+		FileMatch: "test_helpers.go",
+	},
+	{
+		Old:       "return NewSimApp(\n\t\t\tval.GetCtx().Logger, dbm.NewMemDB(), nil, true,\n",
+		New:       "return NewSimApp(\n\t\t\tval.GetCtx().Logger, dbm.NewMemDB(), true,\n",
+		FileMatch: "test_helpers.go",
+	},
+	{Old: "NewSimApp(logger, db, nil, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)", New: "NewSimApp(logger, db, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)", FileMatch: "sim_test.go"},
+	{Old: "NewSimApp(logger.With(\"instance\", \"second\"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))", New: "NewSimApp(logger.With(\"instance\", \"second\"), db, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))", FileMatch: "app_test.go"},
+	{Old: "NewSimApp(logger.With(\"instance\", \"simapp\"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))", New: "NewSimApp(logger.With(\"instance\", \"simapp\"), db, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))", FileMatch: "app_test.go"},
+	{Old: "NewSimApp(log.NewTestLogger(t), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))", New: "NewSimApp(log.NewTestLogger(t), db, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))", FileMatch: "app_test.go"},
+	{Old: "NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(simsx.SimAppChainID))", New: "NewSimApp(logger, db, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(simsx.SimAppChainID))", FileMatch: "sim_bench_test.go"},
+	{Old: "simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))", New: "simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), true, simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))", FileMatch: "simd/cmd/root.go"},
 
 	// ============================================================
 	// app_config.go: depinject module configuration cleanup

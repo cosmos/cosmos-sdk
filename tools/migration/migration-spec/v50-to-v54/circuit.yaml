@@ -1,0 +1,90 @@
+id: circuit-contrib-migration
+title: x/circuit moved to contrib
+version: v50+ -> v54
+description: |
+  The x/circuit module has been moved to contrib/x/circuit. It is still
+  available and functional, but it will not be actively maintained by the
+  core Cosmos SDK team going forward. Chains using circuit should be aware
+  that they are taking on responsibility for this module long-term, or should
+  plan to remove it.
+
+  What this spec does:
+  - Rewrites import paths: cosmossdk.io/x/circuit → contrib/x/circuit
+  - Emits an end-of-run warning about the contrib move
+  - Keeps all keeper wiring, store keys, and module registrations in place
+  - Removes the custom ante.go wrapper file (v54 uses ante.NewAnteHandler directly)
+
+  What this spec does NOT do:
+  - Remove the CircuitKeeper from your app (it remains wired)
+  - Remove circuit from module ordering (it remains registered)
+
+  If you want to fully remove circuit, also apply the circuit-removal spec
+  (not yet written — remove manually and delete all app.CircuitKeeper references).
+
+detection:
+  imports:
+    - cosmossdk.io/x/circuit
+    - github.com/cosmos/cosmos-sdk/contrib/x/circuit  # post-rewrite path
+  patterns:
+    - app.CircuitKeeper
+    - circuitkeeper.NewKeeper
+    - circuitante
+
+changes:
+  # ── imports ──────────────────────────────────────────────────────────────
+  imports:
+    rewrites:
+      - old: cosmossdk.io/x/circuit
+        new: github.com/cosmos/cosmos-sdk/contrib/x/circuit
+        all_packages: true
+
+    warnings:
+      # Warn on both pre-rewrite and post-rewrite paths, since the warning
+      # check runs before and after import rewriting depending on the tool.
+      - prefix: cosmossdk.io/x/circuit
+        message: >
+          this module has been moved to contrib and will not be maintained
+          by the Cosmos SDK team.
+        fatal: false
+      - prefix: github.com/cosmos/cosmos-sdk/contrib/x/circuit
+        message: >
+          this module has been moved to contrib and will not be maintained
+          by the Cosmos SDK team.
+        fatal: false
+
+  # ── text replacements ─────────────────────────────────────────────────
+  text_replacements:
+    # Remove the circuitante import — it was only needed for the custom ante wrapper.
+    - old: "\tcircuitante \"cosmossdk.io/x/circuit/ante\"\n"
+      new: ""
+
+    - old: "\tcircuitante \"github.com/cosmos/cosmos-sdk/contrib/x/circuit/ante\"\n"
+      new: ""
+
+    # app.go: remove leftover circuit module order entries
+    # (circuit is still registered via module.NewManager but the explicit
+    # SetOrder* entries for contrib modules are cleaned up here)
+    - old: "\t\tcircuittypes.ModuleName,\n"
+      new: ""
+      file_match: app.go
+
+    # NOTE: The ante handler rewrite (NewAnteHandler → ante.NewAnteHandler,
+    # HandlerOptions wrapper removal) is handled by ante.yaml, not here.
+    # The two specs are complementary: circuit.yaml handles imports/warnings,
+    # ante.yaml handles the ante.go deletion and call-site rewrite.
+
+  # ── file removals ──────────────────────────────────────────────────────
+  # ante.go contains the custom ante handler that references circuitante.
+  # After this migration, ante.NewAnteHandler is called directly, so the
+  # wrapper file is no longer needed.
+  file_removals:
+    - file_name: ante.go
+      contains_must_match: circuitante
+
+# ── verification ────────────────────────────────────────────────────────────
+verification:
+  must_not_import:
+    - cosmossdk.io/x/circuit  # old path must be gone
+  must_not_contain:
+    - pattern: circuitante
+    - pattern: NewAnteHandler(\n\t\tHandlerOptions{  # old wrapper pattern

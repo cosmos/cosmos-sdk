@@ -1,0 +1,69 @@
+id: ante-handler-simplification
+title: Remove custom ante.go wrapper
+version: v50+ -> v54
+description: |
+  The v53 simapp ships with a custom ante.go file that wraps
+  ante.HandlerOptions in a chain-local HandlerOptions struct. This extra
+  struct existed solely to hold a CircuitKeeper field for the circuit-breaker
+  ante decorator. In v54, ante.NewAnteHandler is called directly using the SDK
+  ante.HandlerOptions struct, so the wrapper file is no longer needed.
+
+  This spec:
+  1. Deletes ante.go (verified to contain "circuitante" before deletion).
+  2. Rewrites the call site in app.go to use ante.NewAnteHandler with the SDK
+     HandlerOptions struct directly, removing the CircuitKeeper argument and
+     the outer HandlerOptions wrapper.
+
+  If your chain has customised ante.go beyond the circuitante decorator, do
+  NOT apply this spec automatically. Review ante.go manually and merge your
+  custom logic into the SDK HandlerOptions pattern.
+
+detection:
+  # ante.go file exists AND contains circuitante import
+  patterns:
+    - circuitante "cosmossdk.io/x/circuit/ante"
+    - circuitante "github.com/cosmos/cosmos-sdk/contrib/x/circuit/ante"
+    - NewAnteHandler(\n\t\tHandlerOptions{
+
+changes:
+  # ── file removals ──────────────────────────────────────────────────────
+  file_removals:
+    - file_name: ante.go
+      contains_must_match: circuitante
+
+  # ── text replacements ─────────────────────────────────────────────────
+  text_replacements:
+    # Rewrite the call site in app.go.
+    # Before:
+    #   anteHandler, err := NewAnteHandler(
+    #       HandlerOptions{
+    #           ante.HandlerOptions{
+    #               ...
+    #           },
+    #           &app.CircuitKeeper,
+    #       },
+    #   )
+    #
+    # After:
+    #   anteHandler, err := ante.NewAnteHandler(
+    #       ante.HandlerOptions{
+    #           ...
+    #       },
+    #   )
+    - old: "anteHandler, err := NewAnteHandler("
+      new: "anteHandler, err := ante.NewAnteHandler("
+      file_match: app.go
+
+    - old: "HandlerOptions{\n\t\t\tante.HandlerOptions{\n"
+      new: "ante.HandlerOptions{\n"
+      file_match: app.go
+
+    - old: "\t\t\t},\n\t\t\t&app.CircuitKeeper,\n\t\t},\n\t)\n"
+      new: "\t\t\t},\n\t)\n"
+      file_match: app.go
+
+# ── verification ────────────────────────────────────────────────────────────
+verification:
+  must_not_contain:
+    - pattern: circuitante
+    - pattern: "NewAnteHandler(\n\t\tHandlerOptions{"

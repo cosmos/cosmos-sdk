@@ -73,11 +73,45 @@ func hasDefaultGovVoteCalculator(expr ast.Expr, pkgAlias string) bool {
 
 // callArgEdits defines removal/addition of specific arguments from calls matched by pattern.
 var callArgEdits = []migration.CallArgRemoval{
+	// --- Remove crisis store key from KV store wiring ---
+	{
+		FuncPattern:  "storetypes.NewKVStoreKeys",
+		ArgsToRemove: []string{"crisistypes.StoreKey"},
+	},
+	// --- Remove crisis app module registrations ---
+	{
+		FuncPattern:  "module.NewManager",
+		ArgsToRemove: []string{"crisis.NewAppModule(...)"},
+	},
+	{
+		FuncPattern:  "module.NewBasicManager",
+		ArgsToRemove: []string{"crisis.AppModuleBasic{...}"},
+	},
+	{
+		FuncPattern:  "ante.MakeTestEncodingConfig",
+		ArgsToRemove: []string{"crisis.AppModuleBasic{...}"},
+	},
+	// --- Remove crisis module ordering entries ---
+	{
+		MethodName:   "SetOrderBeginBlockers",
+		ArgsToRemove: []string{"crisistypes.ModuleName"},
+	},
 	// --- SetOrderEndBlockers: add bank at front ---
 	{
 		MethodName: "SetOrderEndBlockers",
+		ArgsToRemove: []string{
+			"crisistypes.ModuleName",
+		},
 		ArgsToAdd: []migration.ArgAddition{
 			{Position: 0, Expr: "banktypes.ModuleName"},
 		},
+	},
+	{
+		MethodName:   "SetOrderInitGenesis",
+		ArgsToRemove: []string{"crisistypes.ModuleName"},
+	},
+	{
+		MethodName:   "SetOrderMigrations",
+		ArgsToRemove: []string{"crisistypes.ModuleName"},
 	},
 }

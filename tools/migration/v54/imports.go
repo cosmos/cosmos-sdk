@@ -8,10 +8,15 @@ import migration "github.com/cosmos/cosmos-sdk/tools/migrate"
 // 1. cosmossdk.io/x/* vanity URLs were removed — modules now live under github.com/cosmos/cosmos-sdk/x/*
 // 2. cosmossdk.io/log was upgraded to cosmossdk.io/log/v2
 // 3. circuit and nft moved to contrib/ (deprecated, not actively maintained)
+// 4. crisis should be removed rather than migrated forward
 var importReplacements = []migration.ImportReplacement{
 	// --- log/v2 migration ---
 	// cosmossdk.io/log -> cosmossdk.io/log/v2
 	{Old: "cosmossdk.io/log", New: "cosmossdk.io/log/v2", AllPackages: false},
+
+	// --- mock package migration ---
+	// SDK v54-generated mocks use go.uber.org/mock/gomock.
+	{Old: "github.com/golang/mock/gomock", New: "go.uber.org/mock/gomock", AllPackages: true},
 
 	// --- Vanity URL migrations (cosmossdk.io/x/* -> github.com/cosmos/cosmos-sdk/x/*) ---
 	{Old: "cosmossdk.io/x/feegrant", New: "github.com/cosmos/cosmos-sdk/x/feegrant", AllPackages: true},
@@ -36,6 +41,14 @@ var importWarnings = []migration.ImportWarning{
 	{
 		ImportPrefix: "github.com/cosmos/cosmos-sdk/contrib/x/circuit",
 		Message:      "this module has been moved to contrib and will not be maintained by the Cosmos SDK team.",
+	},
+	{
+		ImportPrefix: "cosmossdk.io/x/crisis",
+		Message:      "this module is deprecated and should be removed during migration instead of being carried forward.",
+	},
+	{
+		ImportPrefix: "github.com/cosmos/cosmos-sdk/x/crisis",
+		Message:      "this module is deprecated and should be removed during migration instead of being carried forward.",
 	},
 	{
 		ImportPrefix: "cosmossdk.io/x/nft",

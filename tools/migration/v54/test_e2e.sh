@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 #
-# End-to-end test for the v53 → v54 migration tool.
+# End-to-end test for the v50+ → v54 migration tool.
 #
-# Downloads the cosmos-sdk v0.53.6 simapp, runs the migration tool against it,
+# Downloads a target app, runs the migration tool against it,
 # builds the binary, initializes a chain, and attempts to start a node.
 #
 # Usage:
 #   ./test_e2e.sh              # uses defaults
 #   ./test_e2e.sh --keep       # keep work dir after run (for debugging)
 #   ./test_e2e.sh --workdir /tmp/my-test   # use a specific work dir
+#   ./test_e2e.sh --target dydx --git-ref main
+#   ./test_e2e.sh --git-repo https://github.com/org/chain --app-subdir app
 #
 # Output: a structured report at the end (and saved to a .log file) that can
 # be copy-pasted to share with someone for debugging.
@@ -72,11 +74,48 @@ fi
 KEEP=false
 LIVE=false
 WORKDIR=""
+TARGET="curated"
+TARGET_REPO_URL=""
+TARGET_REF=""
+TARGET_APP_SUBDIR=""
+TARGET_LABEL=""
+TARGET_PIN_V53_6=false
+TARGET_SOURCE_DESC=""
+BUILD_PACKAGE=""
+BINARY_NAME=""
+TARGET_USE_LOCAL_SDK_REPLACE=false
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./test_e2e.sh [flags]
+
+Flags:
+  --keep                  Keep work dir after run
+  --live                  Keep work dir and run the live node checks
+  --workdir DIR           Use a specific work dir
+  --target NAME           Target preset: curated, example, dydx
+  --git-repo URL          Clone this repo as the migration target
+  --git-ref REF           Git ref for external target clone (default: main)
+  --app-subdir PATH       Subdirectory within the cloned repo to migrate
+  --build-package PKG     Go package to build (default: ./simd/)
+  --binary-name NAME      Output binary name (default: simd)
+  --help                  Show this help
+EOF
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --keep)       KEEP=true; shift ;;
     --live)       LIVE=true; KEEP=true; shift ;;
     --workdir)    WORKDIR="$2"; shift 2 ;;
+    --target)     TARGET="$2"; shift 2 ;;
+    --git-repo)   TARGET_REPO_URL="$2"; shift 2 ;;
+    --git-ref)    TARGET_REF="$2"; shift 2 ;;
+    --app-subdir) TARGET_APP_SUBDIR="$2"; shift 2 ;;
+    --build-package) BUILD_PACKAGE="$2"; shift 2 ;;
+    --binary-name) BINARY_NAME="$2"; shift 2 ;;
+    --help|-h)    usage; exit 0 ;;
     *)            echo "Unknown flag: $1"; exit 1 ;;
   esac
 done
@@ -90,17 +129,69 @@ COSMOS_SDK_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 # Allow callers to override the clone source, but default to the current repo so
 # the harness works under `set -u` without extra environment.
 COSMOS_SDK_REPO="${COSMOS_SDK_REPO:-$COSMOS_SDK_ROOT}"
+SDK_LOG_COMPAT_DIR="$COSMOS_SDK_ROOT/tools/migration/v54/compat/cosmossdk-log"
+SDK_X_TX_COMPAT_DIR="$COSMOS_SDK_ROOT/tools/migration/v54/compat/cosmossdk-x-tx"
 
 if [[ -z "$WORKDIR" ]]; then
   WORKDIR="$(mktemp -d -t v54-migration-e2e.XXXXXX)"
 fi
 mkdir -p "$WORKDIR"
 
+case "$TARGET" in
+  curated)
+    TARGET_LABEL="curated"
+    TARGET_SOURCE_DESC="$CURATED_SIMAPP_FIXTURE"
+    TARGET_PIN_V53_6=true
+    TARGET_USE_LOCAL_SDK_REPLACE=true
+    ;;
+  example)
+    TARGET_LABEL="example"
+    TARGET_SOURCE_DESC="$CURATED_SIMAPP_FIXTURE (preserved local example fixture)"
+    TARGET_PIN_V53_6=true
+    TARGET_USE_LOCAL_SDK_REPLACE=true
+    ;;
+  dydx)
+    : "${TARGET_REPO_URL:=https://github.com/dydxprotocol/v4-chain}"
+    : "${TARGET_REF:=main}"
+    : "${TARGET_APP_SUBDIR:=protocol}"
+    : "${BUILD_PACKAGE:=./cmd/dydxprotocold}"
+    : "${BINARY_NAME:=dydxprotocold}"
+    TARGET_USE_LOCAL_SDK_REPLACE=true
+    TARGET_LABEL="dydx"
+    TARGET_SOURCE_DESC="${TARGET_REPO_URL}@${TARGET_REF}"
+    if [[ -n "$TARGET_APP_SUBDIR" ]]; then
+      TARGET_SOURCE_DESC="${TARGET_SOURCE_DESC}:${TARGET_APP_SUBDIR}"
+    fi
+    ;;
+  *)
+    echo "Unknown target preset: $TARGET" >&2
+    usage
+    exit 1
+    ;;
+esac
+
+if [[ -n "$TARGET_REPO_URL" ]]; then
+  if [[ -z "$TARGET_REF" ]]; then
+    TARGET_REF="main"
+  fi
+  if [[ "$TARGET" == "curated" ]]; then
+    TARGET_LABEL="custom"
+  fi
+  TARGET_SOURCE_DESC="${TARGET_REPO_URL}@${TARGET_REF}"
+  if [[ -n "$TARGET_APP_SUBDIR" ]]; then
+    TARGET_SOURCE_DESC="${TARGET_SOURCE_DESC}:${TARGET_APP_SUBDIR}"
+  fi
+fi
+
+: "${BUILD_PACKAGE:=./simd/}"
+: "${BINARY_NAME:=simd}"
+
 SIMAPP_DIR="$WORKDIR/simapp"
 SDK_MAIN_DIR="$WORKDIR/cosmos-sdk-main"
-SIMD_BIN="$WORKDIR/simd"
+APP_BIN="$WORKDIR/$BINARY_NAME"
 NODE_HOME="$WORKDIR/node-home"
 LOG_FILE="$WORKDIR/e2e-report.log"
+TARGET_CLONE_DIR="$WORKDIR/target-src"
 
 # ── Result tracking (bash 3 compatible — no associative arrays) ─────────────
 #
@@ -184,14 +275,14 @@ trap cleanup EXIT
 
 # ── Step names (define upfront for report iteration) ─────────────────────────
 
-S_CLONE="Copy curated v53 simapp fixture"
+S_CLONE="Prepare target app"
 S_SNAPSHOT="Snapshot pre-migration state"
 S_CLONE_MAIN="Clone SDK main for local replace"
 S_MIGRATE="Run v54 migration tool"
 S_GOIMPORTS="Run goimports"
 S_TIDY="Run go mod tidy"
 S_VERIFY="Verify migration artifacts"
-S_BUILD="Build simd binary"
+S_BUILD="Build ${BINARY_NAME} binary"
 S_INIT="Initialize chain"
 S_NODE="Start node (${NODE_STARTUP_TIMEOUT}s timeout)"
 
@@ -210,26 +301,53 @@ $S_NODE"
 
 echo ""
 printf "${BOLD}═══════════════════════════════════════════════════════════${NC}\n"
-printf "${BOLD}  v53 → v54 Migration Tool — End-to-End Test${NC}\n"
+printf "${BOLD}  v50+ → v54 Migration Tool — End-to-End Test${NC}\n"
 printf "${BOLD}═══════════════════════════════════════════════════════════${NC}\n"
 echo ""
-info "Source fixture:  $CURATED_SIMAPP_FIXTURE"
+info "Target:          $TARGET_LABEL"
+info "Source fixture:  $TARGET_SOURCE_DESC"
 info "Migration tool:  $MIGRATION_TOOL_DIR"
 info "SDK clone src:   $COSMOS_SDK_REPO"
 info "Work directory:  $WORKDIR"
 info "Build tags:      $BUILD_TAGS"
+info "Build package:   $BUILD_PACKAGE"
+info "Binary name:     $BINARY_NAME"
 info "Timestamp:       $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 echo ""
 
-# ── Step 1: Copy supported fixture ──────────────────────────────────────────
+# ── Step 1: Prepare target app ──────────────────────────────────────────────
 
 step "$S_CLONE"
 
-if [[ -d "$CURATED_SIMAPP_FIXTURE" ]]; then
+if [[ -n "$TARGET_REPO_URL" ]]; then
+  TARGET_LOG="$WORKDIR/target-clone.log"
+  if git clone --filter=blob:none --single-branch --branch "$TARGET_REF" "$TARGET_REPO_URL" "$TARGET_CLONE_DIR" \
+      >"$TARGET_LOG" 2>&1; then
+    SOURCE_DIR="$TARGET_CLONE_DIR"
+    if [[ -n "$TARGET_APP_SUBDIR" ]]; then
+      SOURCE_DIR="$TARGET_CLONE_DIR/$TARGET_APP_SUBDIR"
+    fi
+
+    if [[ ! -d "$SOURCE_DIR" ]]; then
+      fail "target source dir not found: $SOURCE_DIR"
+      tail -20 "$TARGET_LOG"
+      exit 1
+    fi
+
+    cp -r "$SOURCE_DIR" "$SIMAPP_DIR"
+    pass "Cloned target app ($(find "$SIMAPP_DIR" -name '*.go' | wc -l | tr -d ' ') Go files)"
+  else
+    fail "failed to clone target repo"
+    tail -20 "$TARGET_LOG"
+    exit 1
+  fi
+elif [[ -d "$CURATED_SIMAPP_FIXTURE" ]]; then
   cp -r "$CURATED_SIMAPP_FIXTURE" "$SIMAPP_DIR"
-  # The curated fixture tracks main in-repo, but this e2e case is meant to
-  # exercise a real v0.53.6 -> v0.54 migration.
-  (cd "$SIMAPP_DIR" && go mod edit -require=github.com/cosmos/cosmos-sdk@v0.53.6)
+  if [[ "$TARGET_PIN_V53_6" == true ]]; then
+    # The curated fixture tracks main in-repo, but this e2e case is meant to
+    # exercise a real v0.53.6 -> v0.54 migration.
+    (cd "$SIMAPP_DIR" && go mod edit -require=github.com/cosmos/cosmos-sdk@v0.53.6)
+  fi
   pass "Copied fixture simapp ($(find "$SIMAPP_DIR" -name '*.go' | wc -l | tr -d ' ') Go files)"
 else
   fail "fixture not found: $CURATED_SIMAPP_FIXTURE"
@@ -274,8 +392,10 @@ fi
 # Delete go.sum so go mod tidy regenerates it cleanly for the new versions
 # (the migration tool stripped local replaces and updated versions, so the
 # old go.sum is invalid)
-rm -f "$SIMAPP_DIR/go.sum"
-info "Deleted go.sum (will be regenerated by go mod tidy)"
+if [[ "$(get_result "$S_MIGRATE")" == "PASS" ]]; then
+  rm -f "$SIMAPP_DIR/go.sum"
+  info "Deleted go.sum (will be regenerated by go mod tidy)"
+fi
 
 # ── Step 3b: Clone SDK main for local replace ───────────────────────────────
 # The migration tool pins a pseudo-version for the SDK that can't be resolved
@@ -285,87 +405,107 @@ info "Deleted go.sum (will be regenerated by go mod tidy)"
 step "$S_CLONE_MAIN"
 
 CLONE_MAIN_LOG="$WORKDIR/clone-main.log"
-if git clone --filter=blob:none --single-branch --branch main "$COSMOS_SDK_REPO" "$SDK_MAIN_DIR" 2>"$CLONE_MAIN_LOG"; then
-  # Check out the exact commit the migration targets
-  if (cd "$SDK_MAIN_DIR" && git checkout "$SDK_TARGET_COMMIT") >>"$CLONE_MAIN_LOG" 2>&1; then
-    info "Checked out SDK at commit $SDK_TARGET_COMMIT"
+if [[ "$(get_result "$S_MIGRATE")" != "PASS" ]]; then
+  info "Skipping SDK clone because migration failed"
+elif [[ "$TARGET_USE_LOCAL_SDK_REPLACE" != true ]]; then
+  info "Skipping SDK clone and local replaces for external target"
+else
+  SDK_REPLACE_SRC=""
+  if [[ -d "$COSMOS_SDK_REPO" && -f "$COSMOS_SDK_REPO/go.mod" ]]; then
+    SDK_REPLACE_SRC="$COSMOS_SDK_REPO"
+    info "Using local SDK workspace for replace directives: $SDK_REPLACE_SRC"
+  elif git clone --filter=blob:none --single-branch --branch main "$COSMOS_SDK_REPO" "$SDK_MAIN_DIR" 2>"$CLONE_MAIN_LOG"; then
+    SDK_REPLACE_SRC="$SDK_MAIN_DIR"
+    # Check out the exact commit the migration targets
+    if (cd "$SDK_REPLACE_SRC" && git checkout "$SDK_TARGET_COMMIT") >>"$CLONE_MAIN_LOG" 2>&1; then
+      info "Checked out SDK at commit $SDK_TARGET_COMMIT"
+    else
+      warn "Could not checkout $SDK_TARGET_COMMIT, using HEAD of main"
+    fi
   else
-    warn "Could not checkout $SDK_TARGET_COMMIT, using HEAD of main"
+    fail "Failed to clone SDK main — see $WORKDIR/clone-main.log"
+    cat "$CLONE_MAIN_LOG" >&2
+    SDK_REPLACE_SRC=""
   fi
 
-  # Add local replace directives for the core SDK AND all cosmossdk.io/* submodules.
-  # The v54 SDK main branch migrated from cosmossdk.io/log to cosmossdk.io/log/v2,
-  # which means ALL submodules (store, core, x/tx, x/bank, etc.) must come from the
-  # same SDK main checkout so their interfaces are consistent. Without this, you get
-  # type mismatches like: store/types.Context expects log.Logger but SDK has log/v2.Logger.
-  #
-  # This mirrors what the real simapp on main does — it has replace directives for
-  # every submodule pointing to relative paths within the monorepo.
-  #
-  # We also cap each submodule's go directive to match our installed Go version, since
-  # SDK main may declare a newer patch version (e.g., go 1.25.8 vs our 1.25.0).
-  INSTALLED_GO_VERSION=$(go version | grep -oE 'go[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1 | sed 's/^go//')
+  if [[ -n "$SDK_REPLACE_SRC" ]]; then
+    # Add local replace directives for the core SDK AND all cosmossdk.io/* submodules.
+    # The v54 SDK migrated from cosmossdk.io/log to cosmossdk.io/log/v2, which means
+    # all SDK-owned submodules must come from the same source tree so their interfaces
+    # and generated APIs stay in sync.
+    INSTALLED_GO_VERSION=$(go version | grep -oE 'go[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1 | sed 's/^go//')
 
-  # Cap the root SDK go directive first
-  SDK_GO_VERSION=$(grep '^go ' "$SDK_MAIN_DIR/go.mod" | awk '{print $2}')
-  if [[ -n "$SDK_GO_VERSION" && -n "$INSTALLED_GO_VERSION" && "$SDK_GO_VERSION" != "$INSTALLED_GO_VERSION" ]]; then
-    info "Capping cloned SDK go directive from $SDK_GO_VERSION to $INSTALLED_GO_VERSION"
-    (cd "$SDK_MAIN_DIR" && go mod edit -go="$INSTALLED_GO_VERSION") 2>/dev/null || true
-    (cd "$SDK_MAIN_DIR" && go mod edit -toolchain=none) 2>/dev/null || true
-  fi
-
-  # Add replace for the root SDK module
-  (cd "$SIMAPP_DIR" && go mod edit -replace "github.com/cosmos/cosmos-sdk=$SDK_MAIN_DIR") 2>>"$CLONE_MAIN_LOG"
-  info "Added replace: github.com/cosmos/cosmos-sdk => $SDK_MAIN_DIR"
-
-  # Discover all submodules in the SDK clone and add local replaces for each.
-  # This finds every go.mod under $SDK_MAIN_DIR (excluding the root and simapp itself),
-  # extracts the module path, and adds a replace directive + go directive capping.
-  REPLACE_COUNT=0
-  while IFS= read -r submod_gomod; do
-    submod_dir=$(dirname "$submod_gomod")
-    # Skip the root go.mod (already handled above)
-    [[ "$submod_dir" == "$SDK_MAIN_DIR" ]] && continue
-    # Skip simapp directories to avoid circular replaces
-    [[ "$submod_dir" == *"/simapp"* ]] && continue
-    # Skip tests, testutil, internal directories that aren't real modules
-    [[ "$submod_dir" == *"/tests/"* ]] && continue
-
-    # Extract the module path from go.mod
-    mod_path=$(grep '^module ' "$submod_gomod" 2>/dev/null | awk '{print $2}')
-    [[ -z "$mod_path" ]] && continue
-
-    # Cap go directive if it differs from installed version
-    sub_go=$(grep '^go ' "$submod_gomod" 2>/dev/null | awk '{print $2}')
-    if [[ -n "$sub_go" && -n "$INSTALLED_GO_VERSION" && "$sub_go" != "$INSTALLED_GO_VERSION" ]]; then
-      (cd "$submod_dir" && go mod edit -go="$INSTALLED_GO_VERSION") 2>/dev/null || true
-      (cd "$submod_dir" && go mod edit -toolchain=none) 2>/dev/null || true
+    # Cap go directives only when operating on a throwaway clone.
+    if [[ "$SDK_REPLACE_SRC" == "$SDK_MAIN_DIR" ]]; then
+      SDK_GO_VERSION=$(grep '^go ' "$SDK_REPLACE_SRC/go.mod" | awk '{print $2}')
+      if [[ -n "$SDK_GO_VERSION" && -n "$INSTALLED_GO_VERSION" && "$SDK_GO_VERSION" != "$INSTALLED_GO_VERSION" ]]; then
+        info "Capping cloned SDK go directive from $SDK_GO_VERSION to $INSTALLED_GO_VERSION"
+        (cd "$SDK_REPLACE_SRC" && go mod edit -go="$INSTALLED_GO_VERSION") 2>/dev/null || true
+        (cd "$SDK_REPLACE_SRC" && go mod edit -toolchain=none) 2>/dev/null || true
+      fi
     fi
 
-    # Add replace directive
-    (cd "$SIMAPP_DIR" && go mod edit -replace "$mod_path=$submod_dir") 2>>"$CLONE_MAIN_LOG"
-    REPLACE_COUNT=$((REPLACE_COUNT + 1))
-  done < <(find "$SDK_MAIN_DIR" -name "go.mod" -type f 2>/dev/null | sort)
+    # Add replace for the root SDK module
+    (cd "$SIMAPP_DIR" && go mod edit -replace "github.com/cosmos/cosmos-sdk=$SDK_REPLACE_SRC") 2>>"$CLONE_MAIN_LOG"
+    info "Added replace: github.com/cosmos/cosmos-sdk => $SDK_REPLACE_SRC"
 
-  info "Added $REPLACE_COUNT local replace directives for SDK submodules"
+    # Discover all submodules in the SDK tree and add local replaces for each.
+    REPLACE_COUNT=0
+    while IFS= read -r submod_gomod; do
+      submod_dir=$(dirname "$submod_gomod")
+      # Skip the root go.mod (already handled above)
+      [[ "$submod_dir" == "$SDK_REPLACE_SRC" ]] && continue
+      # Skip simapp directories to avoid circular replaces
+      [[ "$submod_dir" == *"/simapp"* ]] && continue
+      # Skip tests, testutil, internal directories that aren't real modules
+      [[ "$submod_dir" == *"/tests/"* ]] && continue
 
-  pass "Cloned SDK main and added local replace directives"
-else
-  fail "Failed to clone SDK main — see $WORKDIR/clone-main.log"
-  cat "$CLONE_MAIN_LOG" >&2
+      # Extract the module path from go.mod
+      mod_path=$(grep '^module ' "$submod_gomod" 2>/dev/null | awk '{print $2}')
+      [[ -z "$mod_path" ]] && continue
+
+      # Cap go directive only for throwaway clones.
+      if [[ "$SDK_REPLACE_SRC" == "$SDK_MAIN_DIR" ]]; then
+        sub_go=$(grep '^go ' "$submod_gomod" 2>/dev/null | awk '{print $2}')
+        if [[ -n "$sub_go" && -n "$INSTALLED_GO_VERSION" && "$sub_go" != "$INSTALLED_GO_VERSION" ]]; then
+          (cd "$submod_dir" && go mod edit -go="$INSTALLED_GO_VERSION") 2>/dev/null || true
+          (cd "$submod_dir" && go mod edit -toolchain=none) 2>/dev/null || true
+        fi
+      fi
+
+      # Add replace directive
+      (cd "$SIMAPP_DIR" && go mod edit -replace "$mod_path=$submod_dir") 2>>"$CLONE_MAIN_LOG"
+      REPLACE_COUNT=$((REPLACE_COUNT + 1))
+    done < <(find "$SDK_REPLACE_SRC" -name "go.mod" -type f 2>/dev/null | sort)
+
+    info "Added $REPLACE_COUNT local replace directives for SDK submodules"
+    if [[ -d "$SDK_LOG_COMPAT_DIR" && -f "$SDK_LOG_COMPAT_DIR/go.mod" ]]; then
+      (cd "$SIMAPP_DIR" && go mod edit -replace "cosmossdk.io/log=$SDK_LOG_COMPAT_DIR") 2>>"$CLONE_MAIN_LOG"
+      info "Added replace: cosmossdk.io/log => $SDK_LOG_COMPAT_DIR"
+    fi
+    if [[ -d "$SDK_X_TX_COMPAT_DIR" && -f "$SDK_X_TX_COMPAT_DIR/go.mod" ]]; then
+      (cd "$SIMAPP_DIR" && go mod edit -replace "cosmossdk.io/x/tx=$SDK_X_TX_COMPAT_DIR") 2>>"$CLONE_MAIN_LOG"
+      info "Added replace: cosmossdk.io/x/tx => $SDK_X_TX_COMPAT_DIR"
+    fi
+    pass "Prepared SDK local replace directives"
+  fi
 fi
 
 # ── Step 4: Run goimports ───────────────────────────────────────────────────
 
 step "$S_GOIMPORTS"
 
-if ! command -v goimports &>/dev/null; then
+if [[ "$(get_result "$S_MIGRATE")" != "PASS" ]]; then
+  info "Skipping goimports because migration failed"
+elif ! command -v goimports &>/dev/null; then
   warn "goimports not found, installing..."
   go install golang.org/x/tools/cmd/goimports@latest 2>"$WORKDIR/goimports-install.log" || true
 fi
 
 GOIMPORTS_LOG="$WORKDIR/goimports.log"
-if goimports -w "$SIMAPP_DIR" >"$GOIMPORTS_LOG" 2>&1; then
+if [[ "$(get_result "$S_MIGRATE")" != "PASS" ]]; then
+  :
+elif goimports -w "$SIMAPP_DIR" >"$GOIMPORTS_LOG" 2>&1; then
   pass "goimports succeeded"
 else
   fail "goimports failed"
@@ -376,22 +516,28 @@ fi
 
 step "$S_TIDY"
 
-# Ensure we have the installed Go version (may already be set from clone step)
-if [[ -z "${INSTALLED_GO_VERSION:-}" ]]; then
-  INSTALLED_GO_VERSION=$(go version | grep -oE 'go[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1 | sed 's/^go//')
-fi
-
-# Pre-set simapp's go directive to our installed version BEFORE tidy.
-# This prevents tidy from bumping it to a version we can't build with
-# (e.g., cometbft v0.39.0-beta.3 requires go >= 1.25.0).
-(cd "$SIMAPP_DIR" && go mod edit -go="$INSTALLED_GO_VERSION") 2>/dev/null || true
-# Remove any toolchain directive that might conflict
-(cd "$SIMAPP_DIR" && go mod edit -toolchain=none) 2>/dev/null || true
-
 TIDY_LOG="$WORKDIR/tidy.log"
 # Use -e flag to continue past errors (e.g., missing test-only packages
 # like cosmossdk.io/api/cosmos/group/v1 that aren't needed for the build).
-if (cd "$SIMAPP_DIR" && GOFLAGS="-mod=mod" go mod tidy -e) >"$TIDY_LOG" 2>&1; then
+if [[ "$(get_result "$S_MIGRATE")" != "PASS" ]]; then
+  info "Skipping go mod tidy because migration failed"
+else
+  # Ensure we have the installed Go version (may already be set from clone step)
+  if [[ -z "${INSTALLED_GO_VERSION:-}" ]]; then
+    INSTALLED_GO_VERSION=$(go version | grep -oE 'go[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1 | sed 's/^go//')
+  fi
+
+  # Pre-set simapp's go directive to our installed version BEFORE tidy.
+  # This prevents tidy from bumping it to a version we can't build with
+  # (e.g., cometbft v0.39.0-beta.3 requires go >= 1.25.0).
+  (cd "$SIMAPP_DIR" && go mod edit -go="$INSTALLED_GO_VERSION") 2>/dev/null || true
+  # Remove any toolchain directive that might conflict
+  (cd "$SIMAPP_DIR" && go mod edit -toolchain=none) 2>/dev/null || true
+fi
+
+if [[ "$(get_result "$S_MIGRATE")" != "PASS" ]]; then
+  :
+elif (cd "$SIMAPP_DIR" && GOFLAGS="-mod=mod" go mod tidy -e) >"$TIDY_LOG" 2>&1; then
   POST_GO_MOD_SDK_VERSION=$(grep 'github.com/cosmos/cosmos-sdk ' "$SIMAPP_DIR/go.mod" | awk '{print $2}' || echo "unknown")
   info "SDK version after migration: $POST_GO_MOD_SDK_VERSION"
 
@@ -424,40 +570,60 @@ step "$S_VERIFY"
 
 VERIFY_PASS=true
 
-# ante.go should be removed
-if [[ -f "$SIMAPP_DIR/ante.go" ]]; then
-  fail "ante.go still exists (should have been removed)"
-  VERIFY_PASS=false
-fi
-
-# Check that circuit/nft/group keepers are removed from app.go
-if grep -q 'CircuitKeeper' "$SIMAPP_DIR/app.go" 2>/dev/null; then
-  warn "CircuitKeeper still referenced in app.go"
-  VERIFY_PASS=false
-fi
-if grep -q 'NFTKeeper' "$SIMAPP_DIR/app.go" 2>/dev/null; then
-  warn "NFTKeeper still referenced in app.go"
-  VERIFY_PASS=false
-fi
-
-# Check log/v2 import
-if grep -q 'cosmossdk.io/log/v2' "$SIMAPP_DIR/app.go" 2>/dev/null; then
-  info "log/v2 import: present ✓"
+if [[ "$(get_result "$S_MIGRATE")" != "PASS" ]]; then
+  info "Skipping artifact verification because migration failed"
 else
-  warn "log/v2 import not found in app.go"
-  VERIFY_PASS=false
-fi
-
-# Check go.mod for removed vanity modules
-for mod in "cosmossdk.io/x/circuit" "cosmossdk.io/x/nft" "cosmossdk.io/x/evidence" "cosmossdk.io/x/upgrade"; do
-  if grep -q "^[[:space:]]*$mod " "$SIMAPP_DIR/go.mod" 2>/dev/null; then
-    warn "$mod still in go.mod (should be removed)"
+  # ante.go should be removed
+  if [[ -f "$SIMAPP_DIR/ante.go" ]]; then
+    fail "ante.go still exists (should have been removed)"
     VERIFY_PASS=false
   fi
-done
 
-if [[ "$VERIFY_PASS" == true ]]; then
-  pass "All migration artifacts look correct"
+  VERIFY_FILE="$SIMAPP_DIR/app.go"
+  if [[ ! -f "$VERIFY_FILE" && -f "$SIMAPP_DIR/app/app.go" ]]; then
+    VERIFY_FILE="$SIMAPP_DIR/app/app.go"
+  fi
+
+  # Check that circuit/nft/group keepers are removed from app.go
+  if grep -q 'CircuitKeeper' "$VERIFY_FILE" 2>/dev/null; then
+    warn "CircuitKeeper still referenced in $(basename "$VERIFY_FILE")"
+    VERIFY_PASS=false
+  fi
+  if grep -q 'NFTKeeper' "$VERIFY_FILE" 2>/dev/null; then
+    warn "NFTKeeper still referenced in $(basename "$VERIFY_FILE")"
+    VERIFY_PASS=false
+  fi
+
+  # Check log/v2 import
+  if grep -q 'cosmossdk.io/log/v2' "$VERIFY_FILE" 2>/dev/null; then
+    info "log/v2 import: present ✓"
+  else
+    warn "log/v2 import not found in $(basename "$VERIFY_FILE")"
+    VERIFY_PASS=false
+  fi
+
+  # Check go.mod for removed vanity modules
+  for mod in "cosmossdk.io/x/circuit" "cosmossdk.io/x/crisis" "cosmossdk.io/x/nft" "cosmossdk.io/x/evidence" "cosmossdk.io/x/upgrade"; do
+    mod_line=$(grep "^[[:space:]]*$mod " "$SIMAPP_DIR/go.mod" 2>/dev/null || true)
+    if [[ -n "$mod_line" ]]; then
+      if [[ "$mod_line" == *"// indirect"* ]]; then
+        warn "$mod still appears as an indirect dependency in go.mod"
+      else
+        warn "$mod still in go.mod as a direct dependency (should be removed)"
+        VERIFY_PASS=false
+      fi
+    fi
+    if grep -q "^[[:space:]]*replace[[:space:]]\+$mod[[:space:]]" "$SIMAPP_DIR/go.mod" 2>/dev/null; then
+      warn "$mod still has a replace directive in go.mod (should be removed)"
+      VERIFY_PASS=false
+    fi
+  done
+
+  if [[ "$VERIFY_PASS" == true ]]; then
+    pass "All migration artifacts look correct"
+  else
+    fail "Migration artifact verification found issues"
+  fi
 fi
 
 # ── Step 7: Build ───────────────────────────────────────────────────────────
@@ -466,13 +632,15 @@ step "$S_BUILD"
 
 BUILD_LOG="$WORKDIR/build.log"
 BUILD_START=$(date +%s)
-if (cd "$SIMAPP_DIR" && go build -tags "$BUILD_TAGS" -o "$SIMD_BIN" ./simd/) >"$BUILD_LOG" 2>&1; then
+if [[ "$(get_result "$S_MIGRATE")" != "PASS" ]]; then
+  info "Skipping build because migration failed"
+elif (cd "$SIMAPP_DIR" && go build -tags "$BUILD_TAGS" -o "$APP_BIN" "$BUILD_PACKAGE") >"$BUILD_LOG" 2>&1; then
   BUILD_END=$(date +%s)
   BUILD_SECS=$((BUILD_END - BUILD_START))
-  BINARY_SIZE=$(du -h "$SIMD_BIN" | cut -f1)
+  BINARY_SIZE=$(du -h "$APP_BIN" | cut -f1)
   info "Binary size: $BINARY_SIZE | Build time: ${BUILD_SECS}s"
-  GO_VERSION=$("$SIMD_BIN" version 2>/dev/null || echo "unknown")
-  info "simd version: $GO_VERSION"
+  GO_VERSION=$("$APP_BIN" version 2>/dev/null || echo "unknown")
+  info "${BINARY_NAME} version: $GO_VERSION"
   pass "Build succeeded"
 else
   BUILD_END=$(date +%s)
@@ -489,19 +657,21 @@ fi
 step "$S_INIT"
 
 INIT_LOG="$WORKDIR/init.log"
-if [[ -f "$SIMD_BIN" ]]; then
+if [[ "$(get_result "$S_BUILD")" != "PASS" ]]; then
+  info "Skipping init because build did not succeed"
+elif [[ -f "$APP_BIN" ]]; then
   INIT_OK=true
 
   # 8a. Init the chain
-  if ! "$SIMD_BIN" init "$MONIKER" --chain-id "$CHAIN_ID" --home "$NODE_HOME" >>"$INIT_LOG" 2>&1; then
-    fail "simd init failed"
+  if ! "$APP_BIN" init "$MONIKER" --chain-id "$CHAIN_ID" --home "$NODE_HOME" >>"$INIT_LOG" 2>&1; then
+    fail "${BINARY_NAME} init failed"
     tail -20 "$INIT_LOG"
     INIT_OK=false
   fi
 
   # 8b. Create a validator key (test keyring — no password)
   if [[ "$INIT_OK" == true ]]; then
-    if ! "$SIMD_BIN" keys add "$KEY_NAME" --keyring-backend test --home "$NODE_HOME" >>"$INIT_LOG" 2>&1; then
+    if ! "$APP_BIN" keys add "$KEY_NAME" --keyring-backend test --home "$NODE_HOME" >>"$INIT_LOG" 2>&1; then
       fail "keys add failed"
       tail -10 "$INIT_LOG"
       INIT_OK=false
@@ -510,8 +680,8 @@ if [[ -f "$SIMD_BIN" ]]; then
 
   # 8c. Add genesis account with tokens
   if [[ "$INIT_OK" == true ]]; then
-    VALIDATOR_ADDR=$("$SIMD_BIN" keys show "$KEY_NAME" --keyring-backend test --home "$NODE_HOME" -a 2>/dev/null)
-    if ! "$SIMD_BIN" genesis add-genesis-account "$VALIDATOR_ADDR" "2000000000${STAKE_DENOM}" \
+    VALIDATOR_ADDR=$("$APP_BIN" keys show "$KEY_NAME" --keyring-backend test --home "$NODE_HOME" -a 2>/dev/null)
+    if ! "$APP_BIN" genesis add-genesis-account "$VALIDATOR_ADDR" "2000000000${STAKE_DENOM}" \
         --keyring-backend test --home "$NODE_HOME" >>"$INIT_LOG" 2>&1; then
       fail "add-genesis-account failed"
       tail -10 "$INIT_LOG"
@@ -521,7 +691,7 @@ if [[ -f "$SIMD_BIN" ]]; then
 
   # 8d. Create genesis transaction (validator self-delegation)
   if [[ "$INIT_OK" == true ]]; then
-    if ! "$SIMD_BIN" genesis gentx "$KEY_NAME" "$STAKE_AMOUNT" \
+    if ! "$APP_BIN" genesis gentx "$KEY_NAME" "$STAKE_AMOUNT" \
         --chain-id "$CHAIN_ID" --keyring-backend test --home "$NODE_HOME" >>"$INIT_LOG" 2>&1; then
       fail "gentx failed"
       tail -10 "$INIT_LOG"
@@ -531,7 +701,7 @@ if [[ -f "$SIMD_BIN" ]]; then
 
   # 8e. Collect genesis transactions
   if [[ "$INIT_OK" == true ]]; then
-    if ! "$SIMD_BIN" genesis collect-gentxs --home "$NODE_HOME" >>"$INIT_LOG" 2>&1; then
+    if ! "$APP_BIN" genesis collect-gentxs --home "$NODE_HOME" >>"$INIT_LOG" 2>&1; then
       fail "collect-gentxs failed"
       tail -10 "$INIT_LOG"
       INIT_OK=false
@@ -542,7 +712,7 @@ if [[ -f "$SIMD_BIN" ]]; then
     pass "Chain initialized with validator (chain-id=$CHAIN_ID)"
   fi
 else
-  fail "Skipped — no binary (build failed)"
+  fail "Binary not found after successful build step"
 fi
 
 # ── Step 9: Start node ─────────────────────────────────────────────────────
@@ -554,11 +724,13 @@ step "$S_NODE"
 set +e
 
 NODE_LOG="$WORKDIR/node.log"
-if [[ -f "$SIMD_BIN" && -d "$NODE_HOME" ]]; then
+if [[ "$(get_result "$S_INIT")" != "PASS" ]]; then
+  info "Skipping node start because init did not succeed"
+elif [[ -f "$APP_BIN" && -d "$NODE_HOME" ]]; then
   # Start node in background to verify it produces blocks
-  "$SIMD_BIN" start --home "$NODE_HOME" >"$NODE_LOG" 2>&1 &
+  "$APP_BIN" start --home "$NODE_HOME" >"$NODE_LOG" 2>&1 &
   SIMD_PID=$!
-  info "Started simd (PID $SIMD_PID)"
+  info "Started ${BINARY_NAME} (PID $SIMD_PID)"
 
   # Wait for block production or failure
   NODE_OK=false
@@ -605,7 +777,7 @@ if [[ -f "$SIMD_BIN" && -d "$NODE_HOME" ]]; then
     info "Node shut down cleanly"
   fi
 else
-  fail "Skipped — no binary or init failed"
+  fail "Binary or node home missing after successful init step"
 fi
 
 set -e
@@ -626,7 +798,9 @@ set +e
   echo "# v54 Migration E2E Test Report"
   echo ""
   echo "Date:       $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
-  echo "Source:     $COSMOS_SDK_TAG"
+  echo "Target:     $TARGET_LABEL"
+  echo "Source:     $TARGET_SOURCE_DESC"
+  echo "SDK Main:   $COSMOS_SDK_TAG"
   echo "Go:         $(go version 2>/dev/null || echo 'unknown')"
   echo "OS/Arch:    $(uname -s)/$(uname -m)"
   echo "Work dir:   $WORKDIR"
@@ -785,7 +959,7 @@ set +e
 
   echo "## Diff: go.mod changes"
   echo '```'
-  echo "Before: ${PRE_GO_MOD_SDK_VERSION:-unknown}"
+    echo "Before: ${PRE_GO_MOD_SDK_VERSION:-unknown}"
   echo "After:  ${POST_GO_MOD_SDK_VERSION:-unknown}"
   echo '```'
 
@@ -798,7 +972,7 @@ printf "${BOLD}Report saved to: ${CYAN}file://%s${NC}\n" "$LOG_FILE"
 if [[ "$KEEP" == true ]]; then
   printf "${BOLD}Work dir kept at: ${CYAN}%s${NC}\n" "$WORKDIR"
   echo "  Simapp:  $SIMAPP_DIR"
-  echo "  Binary:  $SIMD_BIN"
+  echo "  Binary:  $APP_BIN"
   echo "  Logs:    $WORKDIR/*.log"
 fi
 
@@ -814,7 +988,7 @@ if grep -q '|FAIL|' "$RESULTS_FILE" 2>/dev/null; then
 fi
 
 # ── Live mode: restart node in foreground ─────────────────────────────────
-if [[ "$LIVE" == true && -f "$SIMD_BIN" && -d "$NODE_HOME" ]]; then
+if [[ "$LIVE" == true && -f "$APP_BIN" && -d "$NODE_HOME" ]]; then
   echo ""
   printf "${BOLD}═══════════════════════════════════════════════════════════${NC}\n"
   printf "${GREEN}${BOLD}  All tests passed — starting node in live mode${NC}\n"
@@ -830,7 +1004,7 @@ if [[ "$LIVE" == true && -f "$SIMD_BIN" && -d "$NODE_HOME" ]]; then
   # The work dir is kept (--live implies --keep).
   trap - EXIT
   # Restart with existing home dir. CometBFT resumes from the last committed block.
-  exec "$SIMD_BIN" start --home "$NODE_HOME"
+  exec "$APP_BIN" start --home "$NODE_HOME"
 fi
 
 exit 0

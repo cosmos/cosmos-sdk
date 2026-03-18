@@ -24,6 +24,7 @@ built around the specs instead of embedding a second source of truth in code.
 ```text
 tools/migration/
   README.md
+  agents.md
   go.mod
   migration-spec/
     v50-to-v54/
@@ -38,7 +39,7 @@ tools/migration/
       verify.go
 ```
 
-The repository root `agents.md` is the agent-facing entry point.
+The migration-specific agent guide lives at `tools/migration/agents.md`.
 
 ## Usage
 

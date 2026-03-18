@@ -1,123 +1,95 @@
-# Migration Agent Orchestration Guide
+# Repository guidelines for coding agents
 
-This file tells an AI agent how to migrate a Cosmos SDK chain repo from
-`v0.50.x` through `v0.53.x` to `v0.54.x` using the structured specs in this
-repository.
+This file provides guidance for automated agents contributing to this repository.
 
-## What you are doing
+## Repository Overview
 
-Your job is to:
+- This is the **Cosmos SDK**, a modular blockchain SDK for building application-specific blockchains.
+- The project is written in Go. Key areas:
+  - **`x/`** — Core SDK modules (auth, bank, staking, gov, distribution, consensus, etc.) and supplementary modules (authz, feegrant, epochs, etc.)
+  - **`baseapp/`** — Base application and ABCI handling
+  - **`client/`** — CLI and client utilities
+  - **`store/`** — State storage (IAVL, multistore)
+  - **`crypto/`** — Key types and signing
+  - **`simapp/`** — Demo application (simd) used for testing and as a reference
+  - **`contrib/`** — Additional modules (circuit, crisis, nft) — deprecated, not actively maintained
+  - **`enterprise/`** — Enterprise modules (poa, group) with different licensing; see `enterprise/README.md`
+- **Submodules** (each with its own `go.mod`): `client/v2`, `core`, `depinject`, `errors`, `math`, `collections`, `store`, `log`, `api`, `tools/cosmovisor`, `tools/confix`, `simapp`, `enterprise/*`
+- Protobuf definitions live under `proto/`.
+- Tests live throughout the repo. Unit and integration tests in `tests/`; system tests in `tests/systemtests/`; e2e tests in `tests/e2e/`.
+- Agents are **not** expected to run `test-e2e`, `test-sim-*`, or `test-system` by default — these are slow and environment-sensitive.
 
-1. Scan the target chain repo.
-2. Detect the current SDK version and enabled migration concerns.
-3. Select the relevant specs in dependency order.
-4. Produce and execute a migration plan in small, reviewable steps.
-5. Run verification until the repo is in a clean v54 state.
+## Documentation
 
-The source of truth is the YAML spec set in
-`tools/migration/migration-spec/v50-to-v54/`. The `migrate-to-v54` CLI is a
-scanner, planner, and verifier. It does not replace agent judgment.
+- **API & tutorials:** https://docs.cosmos.network/
+- **Architecture:** `docs/architecture/` — follow existing patterns when adding features
+- **Module overview:** `x/README.md` — lists all modules and their purposes
 
-## Where to look
+## Scope
 
-Start here:
+- **IBC** is maintained in a separate repo ([ibc-go](https://github.com/cosmos/ibc-go)); do not add IBC logic to the Cosmos SDK
+- **Deprecated modules** in `contrib/` (circuit, crisis, nft) — avoid adding new features; prefer core `x/` modules
+- **Enterprise modules** in `enterprise/` have different licensing — see `enterprise/README.md` before use
 
-- `agents.md`
-- `tools/migration/README.md`
-- `tools/migration/migration-spec/v50-to-v54/*.yaml`
-- `tools/migration/cmd/migrate-to-v54`
+## Common Mistakes
 
-Then inspect the target chain repo:
+- **Do not edit `go.sum` manually** — use `make tidy-all` to manage dependencies
+- **Do not run `golangci-lint` directly** with custom paths — use `make lint` to match CI
+- **Enterprise licensing** — modules under `enterprise/` use different licenses; do not copy code without checking
 
-- `go.mod` and any nested `go.mod` files
-- `app/app.go`, `app.go`, `app_config.go`, `app_di.go`, `root_di.go`
-- custom `ante.go` files
-- module wiring, keeper construction, and imports
+## Development Workflow
 
-## How to reason about the migration
+1. **Pre-push verification**
+   - Before committing or pushing, run in order: `make tidy-all`, `make build`, `make lint`, `make test` (or `make test-unit`)
+   - Fix any failures locally before pushing
+   - Use `make lint` (or repo equivalent) — never run `golangci-lint` directly with custom paths; use `./scripts/go-lint-all.bash` via the Makefile to match CI
+2. **Protobuf changes**
+   - Run `make proto-all` (format, lint, generate). Requires Docker and the proto-builder image.
+   - After proto changes, run `make build` and `make test` to ensure nothing is broken.
+3. **Formatting and linting**
+   - Run `make lint` to lint all modules
+   - Run `make lint-fix` to automatically fix lint issues
+4. **Testing**
+   - `make test` or `make test-unit` — runs unit tests across all submodules
+   - Tests run per-submodule (each directory with `go.mod`); `run-tests` iterates over them
+   - For enterprise modules: `make enterprise-all-test` or `make enterprise-poa-test` / `make enterprise-group-test`
+   - Do **not** run `make test-e2e`, `make test-sim-*`, or `make test-system` unless explicitly needed
+5. **After making changes to dependencies**
+   - Run `make tidy-all` to tidy dependencies across all modules.
+6. **Mocks**
+   - If you add or change interfaces that require mocks, run `make mocks` before pushing.
 
-Work spec-by-spec, not file-by-file.
+## Changelog
 
-Apply this order:
+- Add entries to `CHANGELOG.md` under the `## UNRELEASED` section.
+- Format: `* (tag) #issue-number message` — e.g. `* (x/staking) #12345 Fix validator power calculation`
+- Tags indicate the affected area: `(x/bank)`, `(store)`, `(baseapp)`, `(enterprise/poa)`, etc.
+- Use the appropriate stanza: Features, Improvements, Bug Fixes, Breaking Changes, Client Breaking, API Breaking, State Machine Breaking, etc.
+- See the header of `CHANGELOG.md` for full formatting rules.
 
-1. `group.yaml`
-2. `core.yaml`
-3. `crisis.yaml`
-4. `circuit.yaml`
-5. `nft.yaml`
-6. `gov.yaml`
-7. `epochs.yaml`
-8. `ante.yaml`
-9. `app-structure.yaml`
+## Commit Messages
 
-Key rules:
+- Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. Common types: `feat`, `fix`, `docs`, `test`, `deps`, `chore`.
+- Include the proposed commit message in the pull request description when opening a PR.
 
-- `group.yaml` is blocking. If group usage is detected, stop and report it.
-- `core.yaml` should run first because it sets the baseline dependency and
-  import state.
-- Chain-specific modules stay in place unless a spec explicitly says otherwise.
-- If a spec describes a manual step, make the smallest edit that satisfies the
-  spec and preserves existing chain wiring.
+## Pull Request Workflow
 
-## What commands to run
+- Add a changelog entry to `CHANGELOG.md` under `## UNRELEASED` for user-facing or notable changes
+- Ensure CI passes (build, lint, tests) before requesting review
+- Keep PRs focused — smaller changes are easier to review
 
-From this repository:
+## Enterprise Modules
 
-```bash
-cd tools/migration
-go run ./cmd/migrate-to-v54 --repo /path/to/chain scan
-go run ./cmd/migrate-to-v54 --repo /path/to/chain plan
-go run ./cmd/migrate-to-v54 --repo /path/to/chain verify
-```
+- Located in `enterprise/` (e.g. `enterprise/poa`, `enterprise/group`).
+- Each has its own `go.mod` and Makefile. Use `make enterprise-<module>-<target>` or `make enterprise-all-<target>`.
+- **Different licensing** — review the LICENSE file in each enterprise module before use.
+- When changing enterprise modules, run their specific tests: `make enterprise-poa-test` or `make enterprise-group-test`.
 
-Optional deeper verification after edits:
+## Tools
 
-```bash
-cd tools/migration
-go run ./cmd/migrate-to-v54 --repo /path/to/chain verify --go-mod-tidy --go-build --go-test
-```
+- **Cosmovisor** — `make cosmovisor` (in `tools/cosmovisor`)
+- **Confix** — `make confix` (in `tools/confix`)
 
-Useful direct inspection commands in the target repo:
+## Full verification
 
-```bash
-find . -name go.mod
-rg "github.com/cosmos/cosmos-sdk" -g'go.mod'
-rg "x/crisis|x/group|x/circuit|x/nft|x/gov|x/epochs" -g'*.go'
-rg "NewKeeper|NewAnteHandler|app_di.go|root_di.go" -g'*.go'
-```
-
-## How to stage edits
-
-Take one concern at a time.
-
-For each selected spec:
-
-1. Confirm the detection signals in the target repo.
-2. Read the spec description and manual steps.
-3. Apply the minimum set of edits required by that spec.
-4. Re-run `plan` or `verify` before moving to the next spec if the change is
-   structurally important.
-
-Do not mix unrelated cleanup into the migration.
-
-## What success looks like
-
-The migration is complete when:
-
-- the repo is on `github.com/cosmos/cosmos-sdk v0.54.x`
-- blocking specs are either resolved or explicitly escalated
-- selected specs no longer fail their verification checks
-- `go mod tidy`, `go build ./...`, and `go test ./...` pass when run
-- no leftover references remain to removed modules or pre-v54 wiring that the
-  selected specs are responsible for
-
-## How to report status
-
-When you finish, report:
-
-- detected SDK version(s)
-- selected specs in execution order
-- edits applied for each spec
-- manual interventions taken
-- verification results
-- any remaining blockers or follow-up work
+For a full local check (matches `make all`): `make tools build lint test vulncheck`

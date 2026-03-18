@@ -53,7 +53,7 @@ Use this checklist first, then read the linked sections for the exact code or wi
 - [ ] Migrate to `contrib/` imports if you use `x/circuit`, `x/nft`, or `x/crisis`. See [Module Deprecations](#module-deprecations).
 - [ ] Migrate to Cosmos Enterprise if you use the `x/group` module. See [Groups Module](#groups-module).
 - [ ] Update imports to `cosmossdk.io/log/v2` if your app imports the log package directly. See [Log v2](#log-v2).
-- [ ] Migrate imports to `cosmossdk.io/store/v2`. See [Store v2](#store-v2).
+- [ ] Migrate imports to `github.com/cosmos/cosmos-sdk/store/v2`. See [Store v2](#store-v2).
 - [ ] Review [Centralized Authority via Consensus Params](#centralized-authority-via-consensus-params). No upgrade action is required to keep using per-keeper authorities.
 - [ ] Review [Telemetry](#telemetry). No upgrade action is required to keep existing telemetry wiring, but upgrading to OpenTelemetry is strongly encouraged.
 - [ ] Review [PoA Module](#poa-module) if you are interested in adopting the new Cosmos Enterprise Proof of Authority module.
@@ -138,7 +138,7 @@ The bank module now contains an `EndBlock` method to support the new BlockSTM ex
 
 #### NodeService
 
-The node service has been updated to return the node's earliest store height in the `Status` query. Please update your registration with the following code (make sure you are already updated to `cosmossdk.io/store/v2`):
+The node service has been updated to return the node's earliest store height in the `Status` query. Please update your registration with the following code (make sure you are already updated to `github.com/cosmos/cosmos-sdk/store/v2`):
 
 ```go
 func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
@@ -173,7 +173,7 @@ To learn more about the new features offered in `log/v2`, as well as setting up 
 
 ### Store v2
 
-The store package has been updated to `v2`. Store v2 introduces a new async, deferred commit model that is the foundation for both BlockSTM parallel execution and the upcoming IAVLX storage engine — the deferred commit path is what makes concurrent transaction execution safe and allows the WAL-based design in IAVLX. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/store/v2`.
+The store package has been updated to `v2`. Store v2 introduces a new async, deferred commit model that is the foundation for both BlockSTM parallel execution and the upcoming IAVLX storage engine — the deferred commit path is what makes concurrent transaction execution safe and allows the WAL-based design in IAVLX. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `github.com/cosmos/cosmos-sdk/store/v2`.
 
 ## Conditional Changes
 

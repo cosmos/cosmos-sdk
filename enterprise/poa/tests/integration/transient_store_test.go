@@ -80,7 +80,7 @@ func initFixture(tb testing.TB) *fixture {
 	// Load the stores
 	require.NoError(tb, cms.LoadLatestVersion())
 
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{}, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 
@@ -208,7 +208,7 @@ func TestTransientStoreQueuesValidatorUpdates(t *testing.T) {
 	// Get the BaseApp's multistore and create a new context for the next block
 	// This simulates what happens in production when a new block begins
 	cms := f.app.CommitMultiStore()
-	newBlockCtx := sdk.NewContext(cms, cmtproto.Header{Height: ctx.BlockHeight() + 1}, false, ctx.Logger())
+	newBlockCtx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{Height: ctx.BlockHeight() + 1}, false, ctx.Logger())
 
 	// Query the transient store in the new block context - should be empty
 	// because transient stores are cleared on commit

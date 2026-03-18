@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/gaskv"
-	"cosmossdk.io/store/iavl"
+	"cosmossdk.io/store/legacy/cachekv"
+	"cosmossdk.io/store/legacy/iavl"
 	"cosmossdk.io/store/transient"
 	"cosmossdk.io/store/types"
 	"cosmossdk.io/store/wrapper"
@@ -518,7 +518,4 @@ func TestCacheWraps(t *testing.T) {
 
 	cacheWrapper := store.CacheWrap()
 	require.IsType(t, &cachekv.Store{}, cacheWrapper)
-
-	cacheWrappedWithTrace := store.CacheWrapWithTrace(nil, nil)
-	require.IsType(t, &cachekv.Store{}, cacheWrappedWithTrace)
 }

@@ -5,7 +5,7 @@ import (
 
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cache"
-	"cosmossdk.io/store/rootmulti"
+	"cosmossdk.io/store/legacy/rootmulti"
 	"cosmossdk.io/store/types"
 )
 

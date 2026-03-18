@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+* (x/consensus) [#25607](https://github.com/cosmos/cosmos-sdk/pull/25607) Add `AuthorityParams` to consensus params. When set, the consensus params authority takes precedence over per-keeper authority for all module parameter updates. Keeper constructor signatures are unchanged.
 * (x/staking) [#25724](https://github.com/cosmos/cosmos-sdk/issues/25724) Validate `BondDenom` in `MsgUpdateParams` to prevent setting non-existent or zero-supply denoms.
 * [#25778](https://github.com/cosmos/cosmos-sdk/pull/25778) Update `log` to log v2.
 * [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will no longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
@@ -54,9 +55,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#25617](https://github.com/cosmos/cosmos-sdk/pull/25617) `AfterProposalSubmission` hook now includes proposer address as a parameter.
 * (x/gov) [#25616](https://github.com/cosmos/cosmos-sdk/pull/25616) `DistrKeeper` `x/distribution` is now optional. Genesis validation ensures `distrKeeper` is set if distribution module is used as proposal cancel destination.
 * (systemtests) [#25930]https://github.com/cosmos/cosmos-sdk/pull/25930) Move `systemtests` into `testutil` and no longer under its own `go.mod`.
-* (abci) [#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) Add support for new application side mempool ABCI methods. 
-* (ABCI) [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) Add support for new ABCI methods, `InsertTx` and `ReapTxs`.
 * (baseapp) [#26060](https://github.com/cosmos/cosmos-sdk/pull/26060) Remove `BaseApp.SetStoreMetrics`. The `StoreMetrics` interface never worked, so removing dead code.
+* (store) [#26061](https://github.com/cosmos/cosmos-sdk/pull/26061) Remove store tracing API and all related plumbing:
+    * Remove `SetTracer`, `SetTracingContext`, and `TracingEnabled` from `MultiStore` interface.
+    * Remove `CacheWrapWithTrace` from `CacheWrapper` interface.
+    * Remove `BaseApp.SetCommitMultiStoreTracer` and tracing context logic from `BaseApp.cacheTxContext` and `FinalizeBlock`.
+    * Remove `io.Writer` parameter from `servertypes.AppCreator` and `traceWriter io.Writer` from `servertypes.AppExporter`.
+    * Remove `traceStore io.Writer` parameter from `simapp.NewSimApp` and all enterprise simapp constructors.
+    * Remove `traceStore io.Writer` from all `testutil/simsx` app factory signatures.
+* (baseapp) [#26056](https://github.com/cosmos/cosmos-sdk/pull/26056) Remove `BaseApp.SimWriteState()` and `BaseApp.NewUncachedContext()`. `Commit()` now handles flushing cached state internally. Use `BaseApp.NewNextBlockContext()` for test contexts between blocks.
 
 ### Features
 
@@ -101,6 +108,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [25883](https://github.com/cosmos/cosmos-sdk/pull/25883) Re-use decoded tx object in pre-estimates.
 * (blockstm) [#25788](https://github.com/cosmos/cosmos-sdk/pull/25788) Only validate transactions that's executed at lease once.
 * (blockstm) [#25767](https://github.com/cosmos/cosmos-sdk/pull/25767) Optimize block-stm MVMemory with bitmap index.
+* (baseapp) [#26056](https://github.com/cosmos/cosmos-sdk/pull/26056) Use `CommitBranch.StartCommit` and `CommitFinalizer` for two-phase commit with rollback support, enabling optimistic execution to begin commit work early. Removes `BaseApp.workingHash()`.
 
 ### Bug Fixes
 

@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/log/v2"
+	"cosmossdk.io/store/legacy/rootmulti"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/rootmulti"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -78,7 +78,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			defer db.Close()
 
 			logger := log.NewLogger(cmd.OutOrStdout())
-			app := appCreator(logger, db, nil, vp)
+			app := appCreator(logger, db, vp)
 			cms := app.CommitMultiStore()
 
 			rootMultiStore, ok := cms.(*rootmulti.Store)

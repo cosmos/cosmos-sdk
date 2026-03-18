@@ -1,7 +1,7 @@
 package rootmulti
 
 import (
-	"bytes"
+	"context"
 	"crypto/sha256"
 	"fmt"
 	"math/rand"
@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,8 +17,8 @@ import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cachemulti"
-	"cosmossdk.io/store/iavl"
 	sdkmaps "cosmossdk.io/store/internal/maps"
+	"cosmossdk.io/store/legacy/iavl"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/transient"
 	"cosmossdk.io/store/types"
@@ -41,7 +42,7 @@ func TestGetObjKVStore(t *testing.T) {
 	require.NotNil(t, store1)
 	require.IsType(t, &transient.ObjStore{}, store1)
 
-	store2 := ms.GetCommitStore(key)
+	store2 := ms.getCommitStore(key)
 	require.NotNil(t, store2)
 	require.IsType(t, &transient.ObjStore{}, store2)
 }
@@ -54,11 +55,11 @@ func TestGetCommitKVStore(t *testing.T) {
 
 	key := ms.keysByName["store1"]
 
-	store1 := ms.GetCommitKVStore(key)
+	store1 := ms.getCommitKVStore(key)
 	require.NotNil(t, store1)
 	require.IsType(t, &iavl.Store{}, store1)
 
-	store2 := ms.GetCommitStore(key)
+	store2 := ms.getCommitStore(key)
 	require.NotNil(t, store2)
 	require.IsType(t, &iavl.Store{}, store2)
 }
@@ -83,7 +84,7 @@ func TestCacheMultiStore(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
-	cacheMulti := ms.CacheMultiStore()
+	cacheMulti := ms.RootCacheMultiStore()
 	require.IsType(t, cachemulti.Store{}, cacheMulti)
 }
 
@@ -133,7 +134,7 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	// require we cannot commit (write) to a cache-versioned multi-store
 	require.Panics(t, func() {
 		kvStore.Set(k, []byte("newValue"))
-		cms.Write()
+		cms.(types.CacheMultiStore).Write()
 	})
 }
 
@@ -829,7 +830,7 @@ func TestSetInitialVersion(t *testing.T) {
 	multi.Commit()
 	require.Equal(t, int64(5), multi.LastCommitID().Version)
 
-	ckvs := multi.GetCommitKVStore(multi.keysByName["store1"])
+	ckvs := multi.getCommitKVStore(multi.keysByName["store1"])
 	iavlStore, ok := ckvs.(*iavl.Store)
 	require.True(t, ok)
 	require.True(t, iavlStore.VersionExists(5))
@@ -857,59 +858,6 @@ func TestCacheWraps(t *testing.T) {
 
 	cacheWrapper := multi.CacheWrap()
 	require.IsType(t, cachemulti.Store{}, cacheWrapper)
-
-	cacheWrappedWithTrace := multi.CacheWrapWithTrace(nil, nil)
-	require.IsType(t, cachemulti.Store{}, cacheWrappedWithTrace)
-}
-
-func TestTraceConcurrency(t *testing.T) {
-	db := dbm.NewMemDB()
-	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
-	err := multi.LoadLatestVersion()
-	require.NoError(t, err)
-
-	b := &bytes.Buffer{}
-	key := multi.keysByName["store1"]
-	tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
-
-	multi.SetTracer(b)
-	multi.SetTracingContext(tc)
-
-	cms := multi.CacheMultiStore()
-	store1 := cms.GetKVStore(key)
-	cw := store1.CacheWrapWithTrace(b, tc)
-	_ = cw
-	require.NotNil(t, store1)
-
-	stop := make(chan struct{})
-	stopW := make(chan struct{})
-
-	go func(stop chan struct{}) {
-		for {
-			select {
-			case <-stop:
-				return
-			default:
-				store1.Set([]byte{1}, []byte{1})
-				cms.Write()
-			}
-		}
-	}(stop)
-
-	go func(stop chan struct{}) {
-		for {
-			select {
-			case <-stop:
-				return
-			default:
-				multi.SetTracingContext(tc)
-			}
-		}
-	}(stopW)
-
-	time.Sleep(3 * time.Second)
-	stop <- struct{}{}
-	stopW <- struct{}{}
 }
 
 func TestCommitOrdered(t *testing.T) {
@@ -1068,7 +1016,7 @@ func TestStateListeners(t *testing.T) {
 	require.Equal(t, 1, len(ms.listeners))
 
 	require.NoError(t, ms.LoadLatestVersion())
-	cacheMulti := ms.CacheMultiStore()
+	cacheMulti := ms.cacheMultiStore()
 
 	store := cacheMulti.GetKVStore(testStoreKey1)
 	store.Set([]byte{1}, []byte{1})
@@ -1241,4 +1189,98 @@ func TestEarliestVersionPersistence(t *testing.T) {
 	// Earliest version should be persisted and restored
 	require.Equal(t, earliestBeforeRestart, ms2.EarliestVersion(),
 		"earliest version should persist across restarts")
+}
+
+func newCommitFinalizerForTest(t *testing.T) *commitFinalizer {
+	t.Helper()
+	db := dbm.NewMemDB()
+	store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptionsFromString("nothing"))
+	require.NoError(t, store.LoadLatestVersion())
+	branch := store.CommitBranch()
+	finalizer, err := branch.StartCommit(context.Background(), cmtproto.Header{Height: 1})
+	require.NoError(t, err)
+	return finalizer.(*commitFinalizer)
+}
+
+func TestCommitFinalizerIdempotency(t *testing.T) {
+	cf := newCommitFinalizerForTest(t)
+
+	cid, err := cf.StartFinalize()
+	require.NoError(t, err)
+	require.NotEmpty(t, cid.Hash)
+
+	// idempotent
+	cid2, err := cf.StartFinalize()
+	require.NoError(t, err)
+	require.Equal(t, cid, cid2)
+
+	// finalize completes
+	cid3, err := cf.Finalize()
+	require.NoError(t, err)
+	require.Equal(t, cid, cid3)
+
+	// idempotent
+	cid4, err := cf.Finalize()
+	require.NoError(t, err)
+	require.Equal(t, cid3, cid4)
+}
+
+func TestCommitFinalizerFinalizeDirectly(t *testing.T) {
+	cf := newCommitFinalizerForTest(t)
+
+	// no call to StartFinalize first
+	cid, err := cf.Finalize()
+	require.NoError(t, err)
+	require.NotEmpty(t, cid.Hash)
+
+	// idempotent
+	cid2, err := cf.Finalize()
+	require.NoError(t, err)
+	require.Equal(t, cid, cid2)
+}
+
+func TestCommitFinalizerRollback(t *testing.T) {
+	cf := newCommitFinalizerForTest(t)
+
+	require.NoError(t, cf.Rollback())
+
+	// idempotent
+	require.NoError(t, cf.Rollback())
+
+	// cannot finalize after rollback
+	_, err := cf.StartFinalize()
+	require.Error(t, err)
+
+	_, err = cf.Finalize()
+	require.Error(t, err)
+}
+
+func TestCommitFinalizerCannotRollbackAfterFinalize(t *testing.T) {
+	cf := newCommitFinalizerForTest(t)
+
+	_, err := cf.StartFinalize()
+	require.NoError(t, err)
+
+	require.Error(t, cf.Rollback())
+}
+
+func TestCommitFinalizerContextCanceled(t *testing.T) {
+	db := dbm.NewMemDB()
+	store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptionsFromString("nothing"))
+	require.NoError(t, store.LoadLatestVersion())
+	branch := store.CommitBranch()
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	finalizer, err := branch.StartCommit(ctx, cmtproto.Header{})
+	require.NoError(t, err)
+
+	// cancel before finalize
+	cancel()
+
+	_, err = finalizer.StartFinalize()
+	require.Error(t, err)
+
+	// rollback should return no error
+	require.NoError(t, finalizer.Rollback())
 }

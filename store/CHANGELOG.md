@@ -24,10 +24,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+* [#26037](https://github.com/cosmos/cosmos-sdk/pull/26037) Remove `GetCommitStore` and `GetCommitKVStore` from the `CommitMultiStore` interface. Remove top-level `store.CommitStore` and `store.CommitKVStore` type aliases from `store/reexport.go`.
 
 ### Breaking Changes
 
+* [#26056](https://github.com/cosmos/cosmos-sdk/pull/26056) Replace `CommitMultiStore.Commit` and `WorkingHash` with `CommitBranch.StartCommit` and `CommitFinalizer` for optimistic commit with rollback support. `CommitMultiStore` no longer embeds `Committer`. Refactor `MultiStore` interface hierarchy into `MultiStoreBase`, `MultiStore`, `CommitBranch`, and `RootMultiStore`.
+* [#26069](https://github.com/cosmos/cosmos-sdk/pull/26069) Move `cachekv` to `legacy/cachekv` so that iavl/v1 stores can continue using the existing implementation while a new mutex-free cachekv is introduced for new stores.
 * [#26060](https://github.com/cosmos/cosmos-sdk/pull/26060) Remove non-functional `StoreMetrics`. This metric interface never worked, so this simply removes dead code.
+* [#26061](https://github.com/cosmos/cosmos-sdk/pull/26061) Remove tracing from store interfaces and implementations:
+    * Remove `SetTracer`, `SetTracingContext`, and `TracingEnabled` from `MultiStore` interface.
+    * Remove `CacheWrapWithTrace` from `CacheWrapper` interface.
+    * Remove `traceWriter` and `traceContext` parameters from `cachemulti.NewStore`, `cachemulti.NewFromKVStore`, and `cachemulti.NewFromParent`.
+    * Remove `store/tracekv` package entirely.
+    * Remove `TraceContext` type `store/types`.
+* [#26078](https://github.com/cosmos/cosmos-sdk/pull/26078) Remove `SetInterBlockCache`, `SetIAVLCacheSize`, `SetIAVLDisableFastNode`, and `SetIAVLSyncPruning` from `CommitMultiStore` interface as they are iavl/v1 specific. These methods are still available on `rootmulti.Store` via type assertion.
+* [#26102](https://github.com/cosmos/cosmos-sdk/pull/26102) Move `rootmulti` and `iavl` to `legacy/rootmulti` and `legacy/iavl`.
 
 ### Bug Fixes
 

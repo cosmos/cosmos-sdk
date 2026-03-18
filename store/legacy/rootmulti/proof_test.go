@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/iavl"
+	"cosmossdk.io/store/legacy/iavl"
 	"cosmossdk.io/store/types"
 )
 
@@ -64,7 +64,7 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 	store.MountStoreWithDB(iavlStoreKey, types.StoreTypeIAVL, nil)
 	require.NoError(t, store.LoadVersion(0))
 
-	iavlStore := store.GetCommitStore(iavlStoreKey).(*iavl.Store)
+	iavlStore := store.stores[iavlStoreKey].(*iavl.Store)
 	iavlStore.Set([]byte("MYKEY"), []byte("MYVALUE"))
 	cid := store.Commit()
 
@@ -121,7 +121,7 @@ func TestVerifyMultiStoreQueryProofAbsence(t *testing.T) {
 	err := store.LoadVersion(0)
 	require.NoError(t, err)
 
-	iavlStore := store.GetCommitStore(iavlStoreKey).(*iavl.Store)
+	iavlStore := store.stores[iavlStoreKey].(*iavl.Store)
 	iavlStore.Set([]byte("MYKEY"), []byte("MYVALUE"))
 	cid := store.Commit() // Commit with empty iavl store.
 

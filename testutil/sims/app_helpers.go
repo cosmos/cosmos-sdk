@@ -26,6 +26,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -47,6 +48,12 @@ var DefaultConsensusParams = &cmtproto.ConsensusParams{
 		PubKeyTypes: []string{
 			cmttypes.ABCIPubKeyTypeEd25519,
 		},
+	},
+	// Authority sets the consensus-level authority that overrides per-keeper
+	// authority for module parameter updates. Tests that need a different
+	// authority should override this field or use custom consensus params.
+	Authority: &cmtproto.AuthorityParams{
+		Authority: sdk.MustBech32ifyAddressBytes(sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName)),
 	},
 }
 
@@ -125,7 +132,7 @@ func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.C
 	header.Time = newBlockTime
 	header.Height++
 
-	newCtx := app.BaseApp.NewUncachedContext(false, header).WithHeaderInfo(coreheader.Info{
+	newCtx := app.BaseApp.NewNextBlockContext(header).WithHeaderInfo(coreheader.Info{
 		Height: header.Height,
 		Time:   header.Time,
 	})

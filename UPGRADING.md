@@ -198,6 +198,16 @@ func TestApp(t *testing.T) {
 		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	})
 
+	/*
+	    Before the updates, most code would look like:
+	
+	    ctx := gaiaApp.NewUncachedContext(true, tmproto.Header{}) // CheckTx context
+	    app.MyKeeper.MyMethod(ctx, ...)
+	
+	    The main thing to be aware of is when you are using checkTx state and finalizeState.
+	    NewNextBlockContext will overwrite the finalize state and return a context that writes to that state.
+        Reading from checkTx state without committing will not reflect the changes made in finalizeBlock state UNLESS you have committed.
+	 */
 	ctx := app.BaseApp.NewNextBlockContext(cmtproto.Header{}) // gets finalize block state
 	app.BankKeeper.SetSendEnabled(ctx, "foobar", true)
 	_, err := app.Commit() // commit the out-of-band changes.

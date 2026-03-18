@@ -54,6 +54,7 @@ Use this checklist first, then read the linked sections for the exact code or wi
 - [ ] Migrate to Cosmos Enterprise if you use the `x/group` module. See [Groups Module](#groups-module).
 - [ ] Update imports to `cosmossdk.io/log/v2` if your app imports the log package directly. See [Log v2](#log-v2).
 - [ ] Migrate imports to `cosmossdk.io/store/v2`. See [Store v2](#store-v2).
+- [ ] Migrate any remaining `BaseApp.NewUncachedContext()` or `BaseApp.SimWriteState()` usage. See [Store v2](#store-v2).
 - [ ] Review [Centralized Authority via Consensus Params](#centralized-authority-via-consensus-params). No upgrade action is required to keep using per-keeper authorities.
 - [ ] Review [Telemetry](#telemetry). No upgrade action is required to keep existing telemetry wiring, but upgrading to OpenTelemetry is strongly encouraged.
 - [ ] Review [PoA Module](#poa-module) if you are interested in adopting the new Cosmos Enterprise Proof of Authority module.
@@ -174,6 +175,39 @@ To learn more about the new features offered in `log/v2`, as well as setting up 
 ### Store v2
 
 The store package has been updated to `v2`. Store v2 introduces a new async, deferred commit model that is the foundation for both BlockSTM parallel execution and the upcoming IAVLX storage engine — the deferred commit path is what makes concurrent transaction execution safe and allows the WAL-based design in IAVLX. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/store/v2`.
+
+`BaseApp.NewUncachedContext()` and `BaseApp.SimWriteState()` were removed as part of this work. With store v2, writes must go through a cache/branch first; the SDK no longer exposes a helper that lets applications write directly against the root `CommitMultiStore`.
+
+If you previously used `BaseApp.NewUncachedContext()` in tests:
+
+- Replace `app.NewUncachedContext(false, header)` with `app.NewNextBlockContext(header)` when the test needs a writable context between `Commit()` and the next `FinalizeBlock()`.
+- Replace `app.NewUncachedContext(true, header)` with `app.NewContext(true)` or `app.NewContextLegacy(true, header)` when the test only needs the `CheckTx` state.
+- If the test was relying on writes leaking directly into the root store, update it to work with the commit/rollback isolation now enforced by the store layer.
+
+If you previously used `BaseApp.SimWriteState()`, delete the call. `Commit()` now flushes the finalize state, so simulations and tests no longer need a separate write step.
+
+
+Below is an example of migrating away from `NewUncachedContext`.
+```go
+if loadLatest {
+	if err := app.LoadLatestVersion(); err != nil {
+		tmos.Exit(err.Error())
+	}
+
+    // previously was `ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})`
+	ctx := app.BaseApp.NewContext(true)
+
+	// Rebuild wasmvm's in-memory pinned-code cache from committed state.
+	// This context does not persist SDK store writes.
+	if err := app.WasmKeeper.InitializePinnedCodes(ctx); err != nil {
+		tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
+	}
+
+	if err := ibcwasmkeeper.InitializePinnedCodes(ctx); err != nil {
+		tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
+	}
+}
+```
 
 ## Conditional Changes
 

@@ -53,7 +53,7 @@ var DefaultConsensusParams = &cmtproto.ConsensusParams{
 	// authority for module parameter updates. Tests that need a different
 	// authority should override this field or use custom consensus params.
 	Authority: &cmtproto.AuthorityParams{
-		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Authority: sdk.MustBech32ifyAddressBytes(sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName)),
 	},
 }
 

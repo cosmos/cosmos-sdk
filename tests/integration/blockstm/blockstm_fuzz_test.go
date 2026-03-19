@@ -150,6 +150,7 @@ func runDifferentialBlockStream(
 
 	fundAccounts(t, seq, funded, fundingAmount)
 	fundAccounts(t, stm, funded, fundingAmount)
+	assertFundedBalancesPositive(t, seq, stm, funded)
 
 	stmRunner := txnrunner.NewSTMRunner(
 		stm.txConfig.TxDecoder(),
@@ -189,6 +190,22 @@ func runDifferentialBlockStream(
 
 		require.Equal(t, seq.app.LastCommitID().Hash, stm.app.LastCommitID().Hash, "case %s block %d commit hash mismatch", caseLabel, block)
 		assertQueryStateEqual(t, block, seq, stm, queryAddrs)
+	}
+}
+
+func assertFundedBalancesPositive(t *testing.T, seq, stm fuzzAppHarness, funded []sdk.AccAddress) {
+	t.Helper()
+
+	seqCtx, err := seq.app.CreateQueryContext(0, false)
+	require.NoError(t, err)
+	stmCtx, err := stm.app.CreateQueryContext(0, false)
+	require.NoError(t, err)
+
+	for _, addr := range funded {
+		seqBal := seq.bankKeeper.GetBalance(seqCtx, addr, fuzzDenom)
+		stmBal := stm.bankKeeper.GetBalance(stmCtx, addr, fuzzDenom)
+		require.True(t, seqBal.Amount.IsPositive(), "expected pre-funded seq balance for %s", addr.String())
+		require.True(t, stmBal.Amount.IsPositive(), "expected pre-funded stm balance for %s", addr.String())
 	}
 }
 

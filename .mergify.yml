@@ -12,14 +12,14 @@ queue_rules:
     merge_method: squash
 
 pull_request_rules:
-  - name: backport patches to v0.53.x branch
+  - name: backport patches to v0.54.x branch
     conditions:
       - base=main
-      - label=backport/v0.53.x
+      - label=backport/v0.54.x
     actions:
       backport:
         branches:
-          - release/v0.53.x
+          - release/v0.54.x
   - name: automerge to main with label automerge and branch protection passing
     conditions: []
     actions:

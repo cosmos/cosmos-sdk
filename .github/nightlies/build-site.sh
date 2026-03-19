@@ -7,6 +7,7 @@ IS_MAIN="$2"
 OWNER="${GITHUB_REPOSITORY_OWNER}"
 REPO="${GITHUB_REPOSITORY##*/}"
 SHA="${GITHUB_SHA}"
+SHORT_SHA="${SHA:0:7}"
 
 SITE_DIR="site"
 NIGHTLIES_DIR="$SITE_DIR/nightlies"
@@ -46,6 +47,76 @@ cat > "$CHANNEL_DIR/latest.json" <<EOF
     }
   }
 }
+EOF
+
+# HTML UI
+cat > "$CHANNEL_DIR/index.html" <<EOF
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>simd ${CHANNEL} nightlies</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 0 16px;
+      background: #fafafa;
+      color: #111;
+    }
+    h1 {
+      margin-bottom: 4px;
+    }
+    .meta {
+      color: #666;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      margin: 8px 0;
+    }
+    a {
+      text-decoration: none;
+      color: #0969da;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .box {
+      background: white;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>simd ${CHANNEL} nightlies</h1>
+  <div class="meta">
+    commit <a href="https://github.com/${OWNER}/${REPO}/commit/${SHA}">
+      <code>${SHORT_SHA}</code>
+    </a>
+  </div>
+
+  <div class="box">
+    <ul>
+      <li><a href="./simd-linux-amd64.tar.gz">Linux (amd64)</a></li>
+      <li><a href="./simd-linux-arm64.tar.gz">Linux (arm64)</a></li>
+      <li><a href="./simd-darwin-amd64.tar.gz">macOS (amd64)</a></li>
+      <li><a href="./simd-darwin-arm64.tar.gz">macOS (arm64)</a></li>
+    </ul>
+  </div>
+
+  <p style="margin-top:20px;">
+    <a href="./latest.json">latest.json</a>
+  </p>
+</body>
+</html>
 EOF
 
 mkdir -p "$NIGHTLIES_DIR"

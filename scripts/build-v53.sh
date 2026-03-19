@@ -62,8 +62,14 @@ try_download() {
 	trap cleanup RETURN
 
 	echo "Attempting to download ${archive} from v0.53 nightlies..."
-	curl -sfL -o "${archive_path}" "${archive_url}"
-	curl -sfL -o "${checksum_path}" "${checksum_url}"
+	if ! curl -sfL -o "${archive_path}" "${archive_url}"; then
+		echo "Failed to download ${archive} from ${archive_url}" >&2
+		return 1
+	fi
+	if ! curl -sfL -o "${checksum_path}" "${checksum_url}"; then
+		echo "Failed to download checksum from ${checksum_url}" >&2
+		return 1
+	fi
 
 	local expected actual
 	expected="$(awk '{print $1}' "${checksum_path}")"

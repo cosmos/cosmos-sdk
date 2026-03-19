@@ -208,7 +208,7 @@ func TestHeavyLoad(t *testing.T) {
 	// Distribute sends across multiple receivers to reduce account contention.
 	// Each tx needs a unique timeout; use batch+inner index to stagger creation time.
 	var totalSent, totalSkipped atomic.Int64
-	for batch := 0; batch < loadTestBatches; batch++ {
+	for batch := range loadTestBatches {
 		var wg sync.WaitGroup
 		txIdx := 0
 		for i := 0; i < loadTestTxsPerBatch; i++ {

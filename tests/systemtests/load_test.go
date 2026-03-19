@@ -76,7 +76,7 @@ func setupLoadTestChain(t *testing.T, senderCount, receiverCount int, fundAmount
 	cli := systest.NewCLIWrapper(t, sut, systest.Verbose)
 	senderNames := make([]string, senderCount)
 	senderAddrs := make([]string, senderCount)
-	for i := 0; i < senderCount; i++ {
+	for i := range senderCount {
 		name := fmt.Sprintf("%s%d", loadTestSenderPrefix, i)
 		senderNames[i] = name
 		senderAddrs[i] = cli.AddKey(name)

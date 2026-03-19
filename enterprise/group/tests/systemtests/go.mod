@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/enterprise/group/tests/systemtests
 go 1.25.8
 
 require (
-	github.com/cosmos/cosmos-sdk v0.54.0-rc.1.0.20251127205138-44ca1c39b279
+	github.com/cosmos/cosmos-sdk/tools/systemtests v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.18.0
 )
@@ -46,6 +46,7 @@ require (
 	github.com/cosmos/btree v1.0.0 // indirect
 	github.com/cosmos/cosmos-db v1.1.3 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.1.0.20251127205138-44ca1c39b279 // indirect
 	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-beta.0 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
@@ -284,4 +285,5 @@ replace (
 	github.com/cosmos/cosmos-sdk => ../../../../
 	github.com/cosmos/cosmos-sdk/enterprise/group => ../../
 	github.com/cosmos/cosmos-sdk/store/v2 => ../../../../store
+	github.com/cosmos/cosmos-sdk/tools/systemtests => ../../../../tools/systemtests
 )

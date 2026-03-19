@@ -559,7 +559,7 @@ test-system: test-sdk-system
 
 .PHONY: test-system test-sdk-system test-sdk-system-extended build-system-test-current
 
-# build-v53 fetches the v0.53 simd binary for system tests from v0.53.x-nightly.
+# build-v53 fetches the v0.53 simd binary for system tests from the v0.53 nightlies channel.
 # Skips if $(BUILDDIR)/simdv53 exists (e.g. local dev reuse).
 build-v53:
 	@if [ -f $(BUILDDIR)/simdv53 ]; then echo "build/simdv53 exists, skipping"; else \

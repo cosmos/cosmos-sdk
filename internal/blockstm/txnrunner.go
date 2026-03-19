@@ -125,7 +125,10 @@ func preEstimates(txs [][]byte, workers, authStore, bankStore int, coinDenom str
 			if !ok {
 				continue
 			}
-			feePayer := sdk.AccAddress(feeTx.FeePayer())
+			feePayer, ok := safeFeePayer(feeTx)
+			if !ok || len(feePayer) == 0 {
+				continue
+			}
 
 			// account key
 			accKey, err := collections.EncodeKeyWithPrefix(
@@ -169,4 +172,15 @@ func preEstimates(txs [][]byte, workers, authStore, bankStore int, coinDenom str
 	wg.Wait()
 
 	return memTxs, estimates
+}
+
+func safeFeePayer(feeTx sdk.FeeTx) (addr sdk.AccAddress, ok bool) {
+	defer func() {
+		if recover() != nil {
+			addr = nil
+			ok = false
+		}
+	}()
+
+	return sdk.AccAddress(feeTx.FeePayer()), true
 }

@@ -68,6 +68,22 @@ func (m *mockFeeTx) GetGas() uint64 {
 	return 0
 }
 
+type mockPanicFeeTx struct {
+	mockTx
+}
+
+func (m *mockPanicFeeTx) FeePayer() []byte {
+	panic("mock FeePayer panic")
+}
+
+func (m *mockPanicFeeTx) GetFee() sdk.Coins {
+	return nil
+}
+
+func (m *mockPanicFeeTx) GetGas() uint64 {
+	return 0
+}
+
 func mockTxDecoderWithFeeTx(txBytes []byte) (sdk.Tx, error) {
 	if len(txBytes) == 0 {
 		return nil, errors.New("empty tx")
@@ -80,6 +96,18 @@ func mockTxDecoderWithFeeTx(txBytes []byte) (sdk.Tx, error) {
 	return &mockFeeTx{
 		mockTx:   mockTx{txBytes: txBytes},
 		feePayer: feePayer,
+	}, nil
+}
+
+func mockTxDecoderWithPanicFeeTx(txBytes []byte) (sdk.Tx, error) {
+	if len(txBytes) == 0 {
+		return nil, errors.New("empty tx")
+	}
+	if txBytes[0] == 0xFF {
+		return nil, errors.New("invalid tx")
+	}
+	return &mockPanicFeeTx{
+		mockTx: mockTx{txBytes: txBytes},
 	}, nil
 }
 
@@ -383,6 +411,21 @@ func TestPreEstimates(t *testing.T) {
 		for _, estimate := range estimates {
 			require.Nil(t, estimate)
 		}
+	})
+
+	t.Run("fee payer panic is ignored", func(t *testing.T) {
+		decoder := mockTxDecoderWithPanicFeeTx
+		txs := [][]byte{
+			{0x01, 0x02},
+		}
+
+		require.NotPanics(t, func() {
+			memTxs, estimates := preEstimates(txs, 1, 0, 1, "stake", decoder)
+			require.Len(t, memTxs, len(txs))
+			require.Len(t, estimates, len(txs))
+			require.NotNil(t, memTxs[0])
+			require.Nil(t, estimates[0])
+		})
 	})
 }
 

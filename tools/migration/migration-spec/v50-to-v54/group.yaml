@@ -2,21 +2,21 @@ id: group-enterprise-migration
 title: x/group requires manual migration to enterprise/group
 version: v50+ -> v54
 description: |
-  The x/group module is NOT supported by the v54 migration workflow.
+  The x/group module is NOT supported by the automated v54 migration tool.
   It has been moved to enterprise/group under a commercial license. If your
   chain uses x/group you must contact Cosmos Labs to establish a commercial
   agreement before upgrading.
 
   This spec is intentionally fatal: if x/group imports are detected, the
-  migration workflow must halt with a clear error message and not apply any
-  automatic changes to group-related code.
+  migration tool will halt with a clear error message and not apply any
+  automated changes to group-related code.
 
   Steps required for manual migration:
   1. Contact Cosmos Labs (https://cosmos.network/enterprise) to obtain a
      commercial license for enterprise/group.
   2. Once licensed, follow the enterprise/group migration guide to update
      your import paths and keeper wiring.
-  3. Re-run the migration planner after removing or updating x/group usage.
+  3. Re-run the migration tool after removing or updating x/group usage.
 
 detection:
   imports:

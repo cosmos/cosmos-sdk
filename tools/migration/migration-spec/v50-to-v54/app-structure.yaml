@@ -14,6 +14,11 @@ description: |
   3. Stale MsgSetProposers references are removed from AllTypeMessages and
      internal_msgs_test.go.
 
+  This spec is intentionally narrower than a full app.go rewrite. For
+  simapp-shaped targets, the current v54 reference layout may still require
+  manual follow-up beyond these deletions, especially when older helper files
+  survive after the mechanical migration.
+
 detection:
   patterns:
     - "//go:build !app_v1"
@@ -77,6 +82,13 @@ changes:
     - old: "\t\t\"/cosmos.staking.v1beta1.MsgSetProposersResponse\",\n"
       new: ""
       file_match: app/msgs/internal_msgs_test.go
+
+manual_steps:
+  - |
+    If the target still follows an older simapp-style app layout, compare the
+    migrated app structure against the current v54 reference files. DI-era
+    helpers and related wiring can survive the mechanical migration even when
+    this spec has applied cleanly.
 
 # ── verification ────────────────────────────────────────────────────────────
 verification:

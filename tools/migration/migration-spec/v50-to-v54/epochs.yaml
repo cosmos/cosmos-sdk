@@ -20,9 +20,9 @@ description: |
   1. Rewrite the assignment to a local variable declaration.
   2. Insert the pointer assignment before the SetHooks call.
 
-detection:
-  imports:
-    - github.com/cosmos/cosmos-sdk/x/epochs/keeper
+  detection:
+    imports:
+      - github.com/cosmos/cosmos-sdk/x/epochs/keeper
   patterns:
     - app.EpochsKeeper = epochskeeper.NewKeeper(
     - app.EpochsKeeper = *epochsmodulekeeper.NewKeeper(

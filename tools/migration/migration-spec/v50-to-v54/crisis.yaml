@@ -7,7 +7,7 @@ description: |
   on invariant checking via MsgVerifyInvariant need to audit their app wiring
   and remove all crisis references manually.
 
-  This spec captures the full expected removal scope: keeper, store key, module
+  This spec handles the full automated removal: keeper, store key, module
   registration, ordering entries, flag wiring, and related map/type cleanup.
 
 detection:
@@ -153,9 +153,9 @@ changes:
     # app/msgs/unsupported_msgs.go: remove MsgVerifyInvariant comment block
     - old: |
 
-            // Disable MsgVerifyInvariant in the crisis module, since:
-            // 1. We currently do not rely on crisis module for any invariant assertion.
-            // 2. MsgVerifyInvariant can potentially be abused to consume massive compute.
+        		// Disable MsgVerifyInvariant in the crisis module, since:
+        		// 1. We currently do not rely on crisis module for any invariant assertion.
+        		// 2. MsgVerifyInvariant can potentially be abused to consume massive compute.
       new: "\n"
       file_match: app/msgs/unsupported_msgs.go
 

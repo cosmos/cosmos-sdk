@@ -17,20 +17,33 @@ description: |
   - A new final arg wraps the staking keeper:
       govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(stakingKeeper)
 
-  This transformation is not a safe single-line text replacement because the
-  package alias for govkeeper varies by chain (some use "govkeeper", others
-  "keeper", etc.). Treat this as a guided manual edit driven by the steps
-  below.
+  This transformation is AST-based and cannot be expressed as a simple text
+  replacement because the package alias for govkeeper varies by chain (some
+  use "govkeeper", others "keeper", etc.). The migration tool resolves the
+  actual alias from the file's import block and injects it correctly.
 
 detection:
   imports:
     - github.com/cosmos/cosmos-sdk/x/gov/keeper
   patterns:
     - govkeeper.NewKeeper(
+    - keeper.NewKeeper(   # alias may vary
 
 changes:
-  # No declarative rewrites are listed here because the edit depends on the
-  # local package alias and the exact keeper wiring used by the target chain.
+  # ── AST surgery ──────────────────────────────────────────────────────────
+  # This change is implemented as an ArgSurgeryWithAST in the Go tooling
+  # (v54/calls.go). It cannot be encoded as a declarative YAML rule because:
+  #   1. The package alias is dynamic (resolved at parse time).
+  #   2. The transformation synthesises a new AST CallExpr node.
+  #
+  # The manual_steps section below describes what the tool does for chains
+  # where the Go migration tool is not available or the automatic transform
+  # needs to be verified.
+  #
+  # See also: tools/migration/v54/calls.go → argSurgeries
+
+  # No text_replacements, call_arg_edits, or import_rewrites needed here.
+  # The full change is handled by ArgSurgeryWithAST.
 
 manual_steps:
   - id: gov-keeper-new-keeper

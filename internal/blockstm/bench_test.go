@@ -3,26 +3,12 @@ package blockstm
 import (
 	"context"
 	"strconv"
-	"sync/atomic"
 	"testing"
 
 	"github.com/test-go/testify/require"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
-
-func executeBlock(stores map[storetypes.StoreKey]int, storage MultiStore, worker int, block *MockBlock) error {
-	incarnationCache := make([]atomic.Pointer[map[string]any], block.Size())
-	for i := 0; i < block.Size(); i++ {
-		m := make(map[string]any)
-		incarnationCache[i].Store(&m)
-	}
-	return ExecuteBlock(context.Background(), block.Size(), stores, storage, worker, func(txn TxnIndex, store MultiStore) {
-		cache := incarnationCache[txn].Swap(nil)
-		block.ExecuteTx(txn, store, *cache)
-		incarnationCache[txn].Store(cache)
-	})
-}
 
 func BenchmarkBlockSTM(b *testing.B) {
 	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0, StoreKeyBank: 1}
@@ -52,7 +38,8 @@ func BenchmarkBlockSTM(b *testing.B) {
 				b.ResetTimer()
 				for i := 0; i < b.N; i++ {
 					require.NoError(
-						b, executeBlock(stores, storage, worker, tc.block),
+						b,
+						ExecuteBlock(context.Background(), tc.block.Size(), stores, storage, worker, tc.block.ExecuteTx),
 					)
 				}
 			})
@@ -62,6 +49,6 @@ func BenchmarkBlockSTM(b *testing.B) {
 
 func runSequential(storage MultiStore, block *MockBlock) {
 	for i, tx := range block.Txs {
-		block.Results[i] = tx(storage, nil)
+		block.Results[i] = tx(storage)
 	}
 }

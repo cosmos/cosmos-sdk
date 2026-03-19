@@ -332,7 +332,7 @@ func runProgrammaticLoadTest(t *testing.T, senderCount, txCount, workers int, fu
 	}()
 
 	var wg sync.WaitGroup
-	for w := 0; w < workers; w++ {
+	for w := range workers {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

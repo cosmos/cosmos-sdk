@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - release/*
+      - release/v*
   workflow_dispatch:
 
 permissions:
@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   build:
+    timeout-minutes: 15
     runs-on: depot-ubuntu-22.04-4
     strategy:
       fail-fast: false
@@ -62,21 +63,24 @@ jobs:
           retention-days: 7
 
   publish:
+    timeout-minutes: 15
     needs: build
     runs-on: depot-ubuntu-22.04-4
     permissions:
       pages: write
       id-token: write
       contents: read
+      actions: read
 
     steps:
       - uses: actions/checkout@v6
 
-      # Make scripts executable
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq gh
+
       - name: Prepare scripts
         run: chmod +x .github/nightlies/*.sh
 
-      # Determine channel (main vs release)
       - name: Determine channel
         id: channel
         run: .github/nightlies/determine-channel.sh
@@ -87,15 +91,29 @@ jobs:
           path: artifacts
           merge-multiple: true
 
-      # Fetch existing Pages content (best-effort merge base)
       - name: Download existing Pages content
         continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p existing
-          curl -L "https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY##*/}/" \
-            | tar -xz -C existing 2>/dev/null || true
+          set -euo pipefail
 
-      # Build site via script
+          mkdir -p existing
+
+          artifact_url=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/artifacts?name=github-pages&per_page=1" \
+            --jq '.artifacts[] | select(.expired==false) | .archive_download_url' \
+            | head -n1)
+
+          if [ -n "$artifact_url" ]; then
+            curl -L \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              "$artifact_url" \
+              | tar -xz -C existing
+          else
+            echo "No existing Pages artifact found"
+          fi
+
       - name: Build site
         run: |
           .github/nightlies/build-site.sh \

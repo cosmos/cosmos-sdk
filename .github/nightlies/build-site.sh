@@ -22,7 +22,6 @@ cp artifacts/*.sha256 "$CHANNEL_DIR/"
 
 BASE_URL="https://${OWNER}.github.io/${REPO}/nightlies/${CHANNEL}"
 
-# channel manifest
 cat > "$CHANNEL_DIR/latest.json" <<EOF
 {
   "channel": "${CHANNEL}",
@@ -51,7 +50,6 @@ EOF
 
 mkdir -p "$NIGHTLIES_DIR"
 
-# global latest.json (only main updates)
 if [ "$IS_MAIN" = "true" ]; then
   cat > "$NIGHTLIES_DIR/latest.json" <<EOF
 {
@@ -61,33 +59,25 @@ if [ "$IS_MAIN" = "true" ]; then
 EOF
 fi
 
-# channels.json
 CHANNELS_JSON="$NIGHTLIES_DIR/channels.json"
-echo '{ "channels": [' > "$CHANNELS_JSON"
 
-first=true
+channels_array="[]"
+
 for dir in "$NIGHTLIES_DIR"/*/; do
   [ -d "$dir" ] || continue
   name=$(basename "$dir")
 
-  if [ "$first" = true ]; then
-    first=false
-  else
-    echo ',' >> "$CHANNELS_JSON"
-  fi
-
-  cat >> "$CHANNELS_JSON" <<EOF
-{
-  "name": "$name",
-  "path": "$name",
-  "manifest": "./$name/latest.json"
-}
-EOF
+  channels_array=$(echo "$channels_array" | jq \
+    --arg n "$name" \
+    '. += [{
+      "name": $n,
+      "path": $n,
+      "manifest": "./\($n)/latest.json"
+    }]')
 done
 
-echo ']}' >> "$CHANNELS_JSON"
+echo "{ \"channels\": $channels_array }" | jq . > "$CHANNELS_JSON"
 
-# redirect
 cat > "$NIGHTLIES_DIR/index.html" <<EOF
 <meta http-equiv="refresh" content="0; url=./latest/">
 EOF

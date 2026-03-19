@@ -82,7 +82,7 @@ func setupLoadTestChain(t *testing.T, senderCount, receiverCount int, fundAmount
 		senderAddrs[i] = cli.AddKey(name)
 	}
 	receiverAddrs := make([]string, receiverCount)
-	for i := 0; i < receiverCount; i++ {
+	for i := range receiverCount {
 		name := fmt.Sprintf("%s%d", loadTestReceiverPrefix, i)
 		receiverAddrs[i] = cli.AddKey(name)
 	}

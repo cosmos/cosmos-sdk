@@ -305,7 +305,7 @@ func runProgrammaticLoadTest(t *testing.T, senderCount, txCount, workers int, fu
 		nodeAddr     string
 	}
 	jobs := make(chan job, txCount)
-	for i := 0; i < txCount; i++ {
+	for i := range txCount {
 		jobs <- job{
 			idx:          i,
 			senderName:   senderNames[i%senderCount],

@@ -70,10 +70,10 @@ func FuzzBlockSTMAppHashDeterminism(f *testing.F) {
 		numFundedAccounts := 2 + int(b.next()%23) // [2,24]
 		numBlocks := 1 + int(b.next()%8)          // [1,8]
 		txsPerBlock := 1 + int(b.next()%32)       // [1,32]
-		workers := 1 + int(b.next()%8)             // [1,8]
+		workers := 1 + int(b.next()%8)            // [1,8]
 		estimate := b.next()%2 == 0
-		insufficientPercent := int(b.next()%10)  // [0,9]
-		extraRecipientCount := int(b.next() % 6)   // [0,5]
+		insufficientPercent := int(b.next() % 10) // [0,9]
+		extraRecipientCount := int(b.next() % 6)  // [0,5]
 
 		funded := deterministicAddrs(data, 0xAA, numFundedAccounts)
 		recipients := deterministicAddrs(data, 0xBB, numFundedAccounts+extraRecipientCount)
@@ -101,10 +101,10 @@ func TestBlockSTMCrossWorkerInvariance(t *testing.T) {
 	r := rand.New(rand.NewSource(seed))
 
 	const (
-		numFundedAccounts  = 24
-		extraRecipients    = 8
-		numBlocks          = 5
-		txsPerBlock        = 80
+		numFundedAccounts   = 24
+		extraRecipients     = 8
+		numBlocks           = 5
+		txsPerBlock         = 80
 		insufficientPercent = 6
 	)
 

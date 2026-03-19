@@ -1,0 +1,133 @@
+name: Build simd Nightlies
+
+on:
+  push:
+    branches:
+      - main
+      - release/v*
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}-simd-nightlies
+  cancel-in-progress: true
+
+jobs:
+  build:
+    timeout-minutes: 15
+    runs-on: depot-ubuntu-22.04-4
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.8"
+          cache: true
+
+      - name: Install aarch64 cross-compiler
+        if: matrix.goos == 'linux' && matrix.goarch == 'arm64'
+        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
+
+      - name: Build simd
+        run: make build-${{ matrix.goos }}-${{ matrix.goarch }}
+
+      - name: Package
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          bin="simd-${{ matrix.goos }}-${{ matrix.goarch }}"
+          cp build/simd "dist/$bin"
+          chmod +x "dist/$bin"
+          tar -C dist -czf "dist/$bin.tar.gz" "$bin"
+          sha256sum "dist/$bin.tar.gz" > "dist/$bin.tar.gz.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: simd-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    timeout-minutes: 15
+    needs: build
+    runs-on: depot-ubuntu-22.04-4
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+      actions: read
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq gh
+
+      - name: Prepare scripts
+        run: chmod +x .github/nightlies/*.sh
+
+      - name: Determine channel
+        id: channel
+        run: .github/nightlies/determine-channel.sh
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Download existing Pages content
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p existing
+
+          artifact_url=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/artifacts?name=github-pages&per_page=1" \
+            --jq '.artifacts[] | select(.expired==false) | .archive_download_url' \
+            | head -n1)
+
+          if [ -n "$artifact_url" ]; then
+            curl -L \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              "$artifact_url" \
+              | tar -xz -C existing
+          else
+            echo "No existing Pages artifact found"
+          fi
+
+      - name: Build site
+        run: |
+          .github/nightlies/build-site.sh \
+            "${{ steps.channel.outputs.channel }}" \
+            "${{ steps.channel.outputs.is_main }}"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - uses: actions/deploy-pages@v4

@@ -60,6 +60,7 @@ jobs:
         with:
           name: simd-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/*
+          if-no-files-found: error
           retention-days: 7
 
   publish:

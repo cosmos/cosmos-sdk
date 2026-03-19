@@ -88,7 +88,11 @@ func FuzzBlockSTMAppHashDeterminism(f *testing.F) {
 			minInvalidAmount:    20_000,
 		})
 
-		runDifferentialBlockStream(t, blocks, funded, queryAddrs, workers, estimate, 10_000)
+		caseLabel := fmt.Sprintf(
+			"seed=%d workers=%d estimate=%t funded=%d blocks=%d txsPerBlock=%d insufficientPct=%d extraRecipients=%d data=%x",
+			seed, workers, estimate, numFundedAccounts, numBlocks, txsPerBlock, insufficientPercent, extraRecipientCount, data,
+		)
+		runDifferentialBlockStream(t, blocks, funded, queryAddrs, workers, estimate, 10_000, caseLabel)
 	})
 }
 
@@ -122,7 +126,7 @@ func TestBlockSTMCrossWorkerInvariance(t *testing.T) {
 		for _, estimate := range []bool{false, true} {
 			name := fmt.Sprintf("workers=%d/estimate=%t", workers, estimate)
 			t.Run(name, func(t *testing.T) {
-				runDifferentialBlockStream(t, blocks, funded, queryAddrs, workers, estimate, 20_000)
+				runDifferentialBlockStream(t, blocks, funded, queryAddrs, workers, estimate, 20_000, name)
 			})
 		}
 	}
@@ -136,6 +140,7 @@ func runDifferentialBlockStream(
 	workers int,
 	estimate bool,
 	fundingAmount int64,
+	caseLabel string,
 ) {
 	t.Helper()
 
@@ -170,10 +175,10 @@ func runDifferentialBlockStream(
 		})
 		require.NoError(t, err)
 
-		require.Equal(t, seqRes.AppHash, stmRes.AppHash, "block %d app hash mismatch", block)
-		require.Equal(t, len(seqRes.TxResults), len(stmRes.TxResults), "block %d tx result length mismatch", block)
+		require.Equal(t, seqRes.AppHash, stmRes.AppHash, "case %s block %d app hash mismatch", caseLabel, block)
+		require.Equal(t, len(seqRes.TxResults), len(stmRes.TxResults), "case %s block %d tx result length mismatch", caseLabel, block)
 		for i := range seqRes.TxResults {
-			require.Equal(t, seqRes.TxResults[i].Code, stmRes.TxResults[i].Code, "block %d tx %d code mismatch", block, i)
+			require.Equal(t, seqRes.TxResults[i].Code, stmRes.TxResults[i].Code, "case %s block %d tx %d code mismatch", caseLabel, block, i)
 		}
 
 		_, err = seq.app.Commit()
@@ -181,7 +186,7 @@ func runDifferentialBlockStream(
 		_, err = stm.app.Commit()
 		require.NoError(t, err)
 
-		require.Equal(t, seq.app.LastCommitID().Hash, stm.app.LastCommitID().Hash, "block %d commit hash mismatch", block)
+		require.Equal(t, seq.app.LastCommitID().Hash, stm.app.LastCommitID().Hash, "case %s block %d commit hash mismatch", caseLabel, block)
 		assertQueryStateEqual(t, block, seq, stm, queryAddrs)
 	}
 }

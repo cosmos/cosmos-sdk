@@ -34,8 +34,8 @@ const (
 
 	// Mini load test: runs in short mode on PRs (~1-2 min)
 	loadTestMiniSenderCount = 5
-	loadTestMiniTxCount    = 1000
-	loadTestMiniWorkers    = 10
+	loadTestMiniTxCount     = 1000
+	loadTestMiniWorkers     = 10
 
 	loadTestReceiverCount = 50
 

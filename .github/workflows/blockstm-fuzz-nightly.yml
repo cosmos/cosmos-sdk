@@ -1,0 +1,65 @@
+name: BlockSTM Fuzz Nightly
+
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}-blockstm-fuzz-nightly
+  cancel-in-progress: true
+
+jobs:
+  blockstm-fuzz:
+    runs-on: depot-ubuntu-22.04-4
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.8"
+          check-latest: true
+          cache: true
+
+      - name: Run BlockSTM fuzz test (30m)
+        working-directory: tests
+        run: |
+          go test ./integration/blockstm \
+            -run FuzzBlockSTMAppHashDeterminism \
+            -fuzz FuzzBlockSTMAppHashDeterminism \
+            -fuzztime 30m
+
+  blockstm-fuzz-notify:
+    permissions:
+      contents: none
+    needs: [blockstm-fuzz]
+    runs-on: depot-ubuntu-22.04-4
+    if: ${{ always() }}
+    steps:
+      - name: Notify Slack on success
+        if: ${{ needs.blockstm-fuzz.result == 'success' }}
+        uses: rtCamp/action-slack-notify@v2.3.3
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: ci-stack
+          SLACK_USERNAME: BlockSTM Fuzz
+          SLACK_ICON_EMOJI: ":white_check_mark:"
+          SLACK_COLOR: good
+          SLACK_MESSAGE: "BlockSTM Fuzz Nightly passed (<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|view run>)"
+          SLACK_FOOTER: ""
+
+      - name: Notify Slack on failure
+        if: ${{ needs.blockstm-fuzz.result == 'failure' }}
+        uses: rtCamp/action-slack-notify@v2.3.3
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: ci-stack
+          SLACK_USERNAME: BlockSTM Fuzz
+          SLACK_ICON_EMOJI: ":skull:"
+          SLACK_COLOR: danger
+          SLACK_MESSAGE: "BlockSTM Fuzz Nightly failed (<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|view run>)"
+          SLACK_FOOTER: ""

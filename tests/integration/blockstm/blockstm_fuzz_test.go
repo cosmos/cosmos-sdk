@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -286,6 +287,8 @@ func newFuzzAppHarness(t *testing.T) fuzzAppHarness {
 	require.NoError(t, err)
 	_, err = bApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: bApp.LastBlockHeight() + 1})
 	require.NoError(t, err)
+	_, err = bApp.Commit()
+	require.NoError(t, err)
 
 	return fuzzAppHarness{
 		app:           bApp,
@@ -298,13 +301,17 @@ func newFuzzAppHarness(t *testing.T) fuzzAppHarness {
 
 func fundAccounts(t *testing.T, h fuzzAppHarness, addrs []sdk.AccAddress, amount int64) {
 	t.Helper()
-	ctx := h.app.NewContext(false)
+	nextHeight := h.app.LastBlockHeight() + 1
+	ctx := h.app.NewNextBlockContext(cmtproto.Header{
+		ChainID: fuzzChainID,
+		Height:  nextHeight,
+	})
 	coins := sdk.NewCoins(sdk.NewInt64Coin(fuzzDenom, amount))
 	for _, addr := range addrs {
 		require.NoError(t, banktestutil.FundAccount(ctx, h.bankKeeper, addr, coins))
 	}
 
-	_, err := h.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: h.app.LastBlockHeight() + 1})
+	_, err := h.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: nextHeight})
 	require.NoError(t, err)
 	_, err = h.app.Commit()
 	require.NoError(t, err)

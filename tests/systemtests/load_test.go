@@ -121,11 +121,13 @@ func gatherLoadTestStats(t *testing.T, sut *systest.SystemUnderTest, committed, 
 		time   time.Time
 	}
 	var withTxs []blockInfo
+	blockTimes := make(map[int64]time.Time, heightAfterWait-heightBeforeBroadcast)
 	for h := heightBeforeBroadcast + 1; h <= heightAfterWait; h++ {
 		blk, err := blockRpc.Block(context.Background(), &h)
 		if err != nil {
 			continue
 		}
+		blockTimes[h] = blk.Block.Time
 		n := len(blk.Block.Txs)
 		if n > 0 {
 			withTxs = append(withTxs, blockInfo{h, n, blk.Block.Time})
@@ -166,11 +168,10 @@ func gatherLoadTestStats(t *testing.T, sut *systest.SystemUnderTest, committed, 
 			if txRes.Height < first.height || txRes.Height > last.height {
 				continue
 			}
-			blk, err := blockRpc.Block(context.Background(), &txRes.Height)
-			if err != nil {
+			blockTime, ok := blockTimes[txRes.Height]
+			if !ok {
 				continue
 			}
-			blockTime := blk.Block.Time
 			inclusion := blockTime.Sub(e.bcast)
 			if inclusion >= 0 {
 				totalInclusion += inclusion
@@ -200,18 +201,17 @@ func TestHeavyLoad(t *testing.T) {
 	senderNames, receiverAddrs, nodeEndpoints := setup.senderNames, setup.receiverAddrs, setup.nodeEndpoints
 
 	// Wait for chain to stabilize
-	time.Sleep(2 * sut.BlockTime())
+	sut.AwaitNBlocks(t, 3)
 
 	loadStart := time.Now()
 
 	// Use unordered txs to avoid sequence conflicts when many txs from same sender are in flight.
 	// Distribute sends across multiple receivers to reduce account contention.
-	// Each tx needs a unique timeout; use batch+inner index to stagger creation time.
 	var totalSent, totalSkipped atomic.Int64
 	for batch := range loadTestBatches {
 		var wg sync.WaitGroup
 		txIdx := 0
-		for i := range loadTestTxsPerBatch {
+		for range loadTestTxsPerBatch {
 			for si, senderName := range senderNames {
 				idx := txIdx
 				txIdx++
@@ -332,7 +332,7 @@ func runProgrammaticLoadTest(t *testing.T, senderCount, txCount, workers int, fu
 	}()
 
 	var wg sync.WaitGroup
-	for w := range workers {
+	for range workers {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

@@ -237,7 +237,7 @@ func TestHeavyLoad(t *testing.T) {
 		sut.AwaitNBlocks(t, 1, loadTestBlockWait)
 
 		// Check for consensus failure in logs
-		for i := 0; i < sut.NodesCount(); i++ {
+		for i := range sut.NodesCount() {
 			logPath := filepath.Join(systest.WorkDir, "testnet", fmt.Sprintf("node%d.out", i))
 			data, err := os.ReadFile(logPath)
 			if err == nil && strings.Contains(string(data), "CONSENSUS FAILURE") {

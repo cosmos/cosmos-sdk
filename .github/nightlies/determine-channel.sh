@@ -12,6 +12,6 @@ elif [[ "$REF" =~ release/v([0-9]+\.[0-9]+)\.x ]]; then
   echo "is_main=false" >> "$GITHUB_OUTPUT"
 
 else
-  echo "Unsupported branch: $REF"
+  echo "Unsupported branch: $REF. Expected main or release/vX.Y.x."
   exit 1
 fi

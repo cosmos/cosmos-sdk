@@ -4,21 +4,13 @@ A spec-driven migration guide for upgrading Cosmos SDK chains across breaking ve
 
 ## Overview
 
-Migrating a chain to a new SDK version involves dozens of coordinated changes:
-import rewrites, keeper signature updates, module removals, file deletions, and
-`go.mod` bumps. Encoding all of this as a single monolithic script breaks down
-quickly when chains diverge from simapp with custom aliases, extra modules, or
-chain-specific wiring.
+Migrating a chain to a new SDK version involves dozens of coordinated changes: import rewrites, keeper signature updates, module removals, file deletions, and go.mod bumps.
 
-This directory keeps only the pieces that matter for the current approach:
+This framework takes a three-pronged approach:
 
-1. **`migration-spec/`** — YAML files that are the source of truth for each
-   migration concern. One file per component/version jump. Human-readable,
-   diffable, and reusable across chains.
+1. **`migration-spec/`** — YAML files that are the authoritative source of truth for each migration concern. One file per component/version jump. Human-readable, diffable, and reusable across chains.
 
-2. **`agents.md`** — An orchestration guide for AI agents. It explains where to
-   look, how to reason about the migration, what commands to run, and what
-   success looks like.
+2. **`agents.md`** — An orchestration guide for AI agents. Explains where to look, how to reason about the migration, what commands to run, how to stage edits, and what success looks like. An agent that reads this file can migrate a chain without any compiled tooling.
 
 ---
 
@@ -28,7 +20,7 @@ This directory keeps only the pieces that matter for the current approach:
 tools/migration/
   agents.md                      ← AI agent orchestration guide
   migration-spec/
-    v50-to-v54/                  ← specs for the v50+ → v54 upgrade
+    v50-to-v54/                     ← specs for the v50+ → v54 upgrade
       core.yaml                  ← SDK version bumps, vanity URL rewrites (always apply first)
       crisis.yaml                ← Remove x/crisis entirely
       circuit.yaml               ← x/circuit moved to contrib (keep, warn)
@@ -38,25 +30,39 @@ tools/migration/
       epochs.yaml                ← EpochsKeeper value → pointer
       ante.yaml                  ← Remove custom ante.go wrapper
       app-structure.yaml         ← DI files, misc ordering cleanup
+  mcp/                           ← MCP server for AI agent integration
+    server.py                  ← Tools, resources, prompts
+    specs.py                   ← Spec loader, scanner, verifier
 ```
 
 ---
 
 ## How to use
 
-### For AI-assisted migration
+### Via MCP server (recommended)
 
-Point an AI agent (Claude, etc.) at `agents.md` and the target chain repo:
+Connect the `cosmos-migration` MCP server to Claude Desktop, Claude Code, or
+any MCP-compatible agent:
+
+```bash
+# Claude Code
+claude mcp add cosmos-migration -- uv --directory tools/migration/mcp run server.py
+```
+
+Then ask: *"Migrate the chain at ~/code/mychain to v54."*
+
+The agent uses `scan_chain_tool` → `get_migration_plan` → `apply_spec` (per
+spec) → `verify_all_specs` → `verify_build`. See `mcp/README.md` for full setup.
+
+### For AI-assisted migration (without MCP)
+
+Point an AI agent at `agents.md` and the target chain repo:
 
 > "Read tools/migration/agents.md and then migrate the chain at <path> to v54."
 
-The agent reads the YAML specs, scans the repo to detect which modules are in
-use, applies changes using standard code editing (AST rewrites, text
-replacements, file deletions), and verifies the result builds. This is the
-recommended path for chains with custom wiring because the agent can reason about
-edge cases that purely mechanical migration steps cannot handle, such as
-different import aliases, non-standard file layouts, forked replace
-directives, historical upgrade files, and custom ante handlers.
+The agent reads the YAML specs, scans the repo, applies changes using standard
+code editing, and verifies the result builds. This path works without the MCP
+server but requires the agent to parse specs and run grep/sed manually.
 
 Important: fatal checks such as `x/group` are preflight gates, not cleanup
 steps. A migration that stops on a fatal spec should do so before deleting files
@@ -99,23 +105,3 @@ verification:
   must_not_contain: [...]
   must_contain:     [...]
 ```
-
----
-
-## Adding a migration for a new version
-
-1. Create `migration-spec/v54-v55/` (or whatever the version jump is).
-2. Write one YAML file per concern following the format above.
-3. Update `agents.md` with any new ordering rules or special cases for that version.
-
-The YAML specs are the source of truth.
-
-## Current v54 caveats
-
-- Fatal specs must abort before any target mutations. A repo that hits
-  `group.yaml` should remain clean after the failed run.
-- Simapp-shaped apps may still require manual comparison against the current v54
-  reference layout after the mechanical rewrites are applied.
-- Published release candidates and the live v54 monorepo can drift. Validate
-  against the actual target dependency graph and reference app layout instead of
-  assuming a release-candidate module graph is a perfect proxy.

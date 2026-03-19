@@ -1,0 +1,17 @@
+[project]
+name = "cosmos-migration-mcp"
+version = "0.1.0"
+description = "MCP server for Cosmos SDK chain migration (v50+ → v54)"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.2.0",
+    "pyyaml>=6.0",
+    "pydantic>=2.0",
+]
+
+[project.scripts]
+cosmos-migration-mcp = "server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

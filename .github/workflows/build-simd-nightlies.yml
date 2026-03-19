@@ -67,6 +67,9 @@ jobs:
     timeout-minutes: 15
     needs: build
     runs-on: depot-ubuntu-22.04-4
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     permissions:
       pages: write
       id-token: write

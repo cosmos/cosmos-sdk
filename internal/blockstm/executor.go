@@ -73,7 +73,13 @@ func (e *Executor) Run() error {
 func (e *Executor) TryExecute(version TxnVersion) (TxnVersion, TaskKind) {
 	start := time.Now()
 	e.scheduler.executedTxns.Add(1)
+	seq := e.scheduler.sequencing.Load()
+	seq.sequencing[version.Index] = &sequenceData{
+		start: start,
+	}
+	e.scheduler.sequencing.Store(seq)
 	view := e.execute(version.Index)
+	finish := time.Now()
 
 	// Track read and write counts
 	readCount := view.CountReads()
@@ -86,6 +92,9 @@ func (e *Executor) TryExecute(version TxnVersion) (TxnVersion, TaskKind) {
 		telemetry.IncrCounter(1, TelemetrySubsystem, KeyTxNewLocationWrite) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	}
 
+	seq = e.scheduler.sequencing.Load()
+	seq.sequencing[version.Index].end = finish
+	e.scheduler.sequencing.Store(seq)
 	telemetry.MeasureSince(start, TelemetrySubsystem, KeyTryExecuteTime) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	return e.scheduler.FinishExecution(version, wroteNewLocation)
 }

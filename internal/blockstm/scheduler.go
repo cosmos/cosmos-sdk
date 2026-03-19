@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 type TaskKind int
@@ -51,14 +52,19 @@ type Scheduler struct {
 	// metrics
 	executedTxns  atomic.Int64
 	validatedTxns atomic.Int64
+	sequencing    atomic.Pointer[sequenceDebugging]
 }
 
 func NewScheduler(blockSize int) *Scheduler {
-	return &Scheduler{
+	sched := &Scheduler{
 		blockSize:     blockSize,
 		txnDependency: make([]TxDependency, blockSize),
 		txnStatus:     make([]StatusEntry, blockSize),
 	}
+	sched.sequencing.Store(&sequenceDebugging{
+		make([]*sequenceData, blockSize),
+	})
+	return sched
 }
 
 func (s *Scheduler) Done() bool {
@@ -148,6 +154,13 @@ func (s *Scheduler) NextTask() (TxnVersion, TaskKind) {
 }
 
 func (s *Scheduler) WaitForDependency(txn, blockingTxn TxnIndex) *Condvar {
+	start := time.Now()
+	suspension := suspendData{
+		suspend: start,
+	}
+	// TODO
+	seq := seq.
+		s.sequencing.Load().sequencing[txn].suspensions
 	cond := NewCondvar()
 	entry := &s.txnDependency[blockingTxn]
 	entry.Lock()

@@ -2,19 +2,18 @@ package baseapp
 
 import (
 	"fmt"
-	"io"
 	"math"
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/snapshots"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
@@ -75,19 +74,37 @@ func SetIndexEvents(ie []string) func(*BaseApp) {
 
 // SetIAVLCacheSize provides a BaseApp option function that sets the size of IAVL cache.
 func SetIAVLCacheSize(size int) func(*BaseApp) {
-	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
+	return func(bapp *BaseApp) {
+		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
+			rms.SetIAVLCacheSize(size)
+		} else {
+			bapp.logger.Warn("SetIAVLCacheSize: CommitMultiStore is not rootmulti.Store, option ignored")
+		}
+	}
 }
 
 // SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
 func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
-	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
+	return func(bapp *BaseApp) {
+		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
+			rms.SetIAVLDisableFastNode(disable)
+		} else {
+			bapp.logger.Warn("SetIAVLDisableFastNode: CommitMultiStore is not rootmulti.Store, option ignored")
+		}
+	}
 }
 
 // SetIAVLSyncPruning set sync/async pruning in the IAVL store. Developers should rarely use this.
 // This option was added to allow the `Prune` command to force synchronous pruning, which is needed to allow the
 // command to wait before returning.
 func SetIAVLSyncPruning(syncPruning bool) func(*BaseApp) {
-	return func(bapp *BaseApp) { bapp.cms.SetIAVLSyncPruning(syncPruning) }
+	return func(bapp *BaseApp) {
+		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
+			rms.SetIAVLSyncPruning(syncPruning)
+		} else {
+			bapp.logger.Warn("SetIAVLSyncPruning: CommitMultiStore is not rootmulti.Store, option ignored")
+		}
+	}
 }
 
 // SetInterBlockCache provides a BaseApp option function that sets the
@@ -276,12 +293,6 @@ func (app *BaseApp) SetNotSigverifyTx() {
 	app.sigverifyTx = false
 }
 
-// SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
-// CommitMultiStore.
-func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
-	app.cms.SetTracer(w)
-}
-
 // SetStoreLoader allows us to customize the rootMultiStore initialization.
 func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
 	if app.sealed {
@@ -325,7 +336,7 @@ func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
 // SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
-func (app *BaseApp) SetQueryMultiStore(ms storetypes.MultiStore) {
+func (app *BaseApp) SetQueryMultiStore(ms storetypes.RootMultiStore) {
 	app.qms = ms
 }
 
@@ -361,24 +372,6 @@ func (app *BaseApp) SetCheckTxHandler(handler sdk.CheckTxHandler) {
 	}
 
 	app.abciHandlers.CheckTxHandler = handler
-}
-
-// SetInsertTxHandler sets the InsertTx function for the BaseApp.
-func (app *BaseApp) SetInsertTxHandler(handler sdk.InsertTxHandler) {
-	if app.sealed {
-		panic("SetInsertTxHandler() on sealed BaseApp")
-	}
-
-	app.abciHandlers.InsertTxHandler = handler
-}
-
-// SetReapTxsHandler sets the ReapTxs function for the BaseApp.
-func (app *BaseApp) SetReapTxsHandler(handler sdk.ReapTxsHandler) {
-	if app.sealed {
-		panic("SetReapTxsHandler() on sealed BaseApp")
-	}
-
-	app.abciHandlers.ReapTxsHandler = handler
 }
 
 func (app *BaseApp) SetExtendVoteHandler(handler sdk.ExtendVoteHandler) {

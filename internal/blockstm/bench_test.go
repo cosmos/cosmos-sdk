@@ -9,7 +9,7 @@ import (
 
 	"github.com/test-go/testify/require"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func BenchmarkBlockSTM(b *testing.B) {

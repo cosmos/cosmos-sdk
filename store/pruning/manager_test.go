@@ -12,8 +12,9 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/mock"
-	"cosmossdk.io/store/pruning/types"
+
+	"github.com/cosmos/cosmos-sdk/store/v2/mock"
+	"github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 )
 
 const dbErr = "db error"

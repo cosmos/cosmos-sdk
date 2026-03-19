@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -70,4 +72,53 @@ func (s *IntegrationTestSuite) TestUpdateParams() {
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestUpdateParamsAuthority() {
+	keeperAuthority := s.mintKeeper.GetAuthority()
+	overrideAuthority := sdk.AccAddress("override_authority___").String()
+
+	validParams := types.Params{
+		MintDenom:           sdk.DefaultBondDenom,
+		InflationRateChange: sdkmath.LegacyNewDecWithPrec(8, 2),
+		InflationMax:        sdkmath.LegacyNewDecWithPrec(20, 2),
+		InflationMin:        sdkmath.LegacyNewDecWithPrec(2, 2),
+		GoalBonded:          sdkmath.LegacyNewDecWithPrec(37, 2),
+		BlocksPerYear:       uint64(60 * 60 * 8766 / 5),
+		MaxSupply:           sdkmath.ZeroInt(),
+	}
+
+	s.Run("fallback to keeper authority", func() {
+		_, err := s.msgServer.UpdateParams(s.ctx, &types.MsgUpdateParams{
+			Authority: keeperAuthority,
+			Params:    validParams,
+		})
+		s.Require().NoError(err)
+
+		_, err = s.msgServer.UpdateParams(s.ctx, &types.MsgUpdateParams{
+			Authority: overrideAuthority,
+			Params:    validParams,
+		})
+		s.Require().Error(err)
+		s.Require().Contains(err.Error(), "invalid authority")
+	})
+
+	s.Run("consensus params authority takes precedence", func() {
+		ctx := s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAuthority},
+		})
+
+		_, err := s.msgServer.UpdateParams(ctx, &types.MsgUpdateParams{
+			Authority: overrideAuthority,
+			Params:    validParams,
+		})
+		s.Require().NoError(err)
+
+		_, err = s.msgServer.UpdateParams(ctx, &types.MsgUpdateParams{
+			Authority: keeperAuthority,
+			Params:    validParams,
+		})
+		s.Require().Error(err)
+		s.Require().Contains(err.Error(), "invalid authority")
+	})
 }

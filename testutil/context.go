@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store"
-	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/store/v2"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,7 +25,7 @@ func DefaultContext(key, tkey storetypes.StoreKey) sdk.Context {
 	if err != nil {
 		panic(err)
 	}
-	ctx := sdk.NewContext(cms, cmtproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{}, false, log.NewNopLogger())
 
 	return ctx
 }
@@ -57,7 +57,7 @@ func DefaultContextWithKeys(
 		panic(err)
 	}
 
-	return sdk.NewContext(cms, cmtproto.Header{}, false, log.NewNopLogger())
+	return sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{}, false, log.NewNopLogger())
 }
 
 type TestContext struct {
@@ -75,7 +75,7 @@ func DefaultContextWithDB(tb testing.TB, key, tkey storetypes.StoreKey) TestCont
 	err := cms.LoadLatestVersion()
 	assert.NoError(tb, err)
 
-	ctx := sdk.NewContext(cms, cmtproto.Header{Time: time.Now()}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{Time: time.Now()}, false, log.NewNopLogger())
 
 	return TestContext{ctx, db, cms}
 }
@@ -90,7 +90,7 @@ func DefaultContextWithObjectStore(tb testing.TB, key, tkey, okey storetypes.Sto
 	err := cms.LoadLatestVersion()
 	assert.NoError(tb, err)
 
-	ctx := sdk.NewContext(cms, cmtproto.Header{Time: time.Now()}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{Time: time.Now()}, false, log.NewNopLogger())
 
 	return TestContext{ctx, db, cms}
 }

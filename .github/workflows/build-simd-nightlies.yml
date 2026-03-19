@@ -80,7 +80,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y jq gh
+        run: sudo apt-get update && sudo apt-get install -y jq gh unzip
 
       - name: Prepare scripts
         run: chmod +x .github/nightlies/*.sh
@@ -105,17 +105,32 @@ jobs:
           mkdir -p existing
 
           artifact_url=$(gh api \
-            "repos/$GITHUB_REPOSITORY/actions/artifacts?name=github-pages&per_page=1" \
-            --jq '.artifacts[] | select(.expired==false) | .archive_download_url' \
-            | head -n1)
+            "repos/$GITHUB_REPOSITORY/actions/artifacts?name=github-pages&per_page=100" \
+            --jq '.artifacts
+              | map(select(.expired == false))
+              | sort_by(.created_at)
+              | reverse
+              | .[0].archive_download_url // ""')
 
-          if [ -n "$artifact_url" ]; then
-            curl -L \
+          if [ -z "$artifact_url" ]; then
+            echo "No existing Pages artifact found"
+            exit 0
+          fi
+
+          tmp_zip=$(mktemp /tmp/github-pages-XXXXXX.zip)
+
+          curl -fLsS \
               -H "Authorization: Bearer $GH_TOKEN" \
               "$artifact_url" \
-              | tar -xz -C existing
-          else
-            echo "No existing Pages artifact found"
+              -o "$tmp_zip"
+
+          unzip -q "$tmp_zip" -d existing
+          rm -f "$tmp_zip"
+
+          # upload-pages-artifact stores the site payload as artifact.tar inside the zip.
+          if [ -f existing/artifact.tar ]; then
+            tar -xf existing/artifact.tar -C existing
+            rm -f existing/artifact.tar
           fi
 
       - name: Build site

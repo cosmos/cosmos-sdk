@@ -105,10 +105,10 @@ cat > "$CHANNEL_DIR/index.html" <<EOF
 
   <div class="box">
     <ul>
-      <li><a href="./simd-linux-amd64.tar.gz">Linux (amd64)</a></li>
-      <li><a href="./simd-linux-arm64.tar.gz">Linux (arm64)</a></li>
-      <li><a href="./simd-darwin-amd64.tar.gz">macOS (amd64)</a></li>
-      <li><a href="./simd-darwin-arm64.tar.gz">macOS (arm64)</a></li>
+      <li><a href="./simd-linux-amd64.tar.gz">Linux (amd64)</a> - <a href="./simd-linux-amd64.tar.gz.sha256">sha256</a></li>
+      <li><a href="./simd-linux-arm64.tar.gz">Linux (arm64)</a> - <a href="./simd-linux-arm64.tar.gz.sha256">sha256</a></li>
+      <li><a href="./simd-darwin-amd64.tar.gz">macOS (amd64)</a> - <a href="./simd-darwin-amd64.tar.gz.sha256">sha256</a></li>
+      <li><a href="./simd-darwin-arm64.tar.gz">macOS (arm64)</a> - <a href="./simd-darwin-arm64.tar.gz.sha256">sha256</a></li>
     </ul>
   </div>
 

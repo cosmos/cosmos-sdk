@@ -99,7 +99,7 @@ func setupLoadTestChain(t *testing.T, senderCount, receiverCount int, fundAmount
 	sut.AwaitNBlocks(t, 2)
 
 	nodeEndpoints := make([]nodeEndpoint, sut.NodesCount())
-	for i := 0; i < sut.NodesCount(); i++ {
+	for i := range sut.NodesCount() {
 		nodeEndpoints[i] = nodeEndpoint{
 			RPC:  fmt.Sprintf("tcp://127.0.0.1:%d", systest.DefaultRpcPort+i),
 			GRPC: fmt.Sprintf("127.0.0.1:%d", systest.DefaultGrpcPort+i),

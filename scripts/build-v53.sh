@@ -1,12 +1,20 @@
 #!/usr/bin/env bash
 # build-v53 fetches the v0.53 simd binary for system tests.
-# Downloads from the v0.53.x-nightly release (non-production).
+# Downloads from the v0.53 nightly channel on GitHub Pages (non-production).
 # If download fails, errors with instructions to build manually.
 set -euo pipefail
 
-REPO="cosmos/cosmos-sdk"
-RELEASE_TAG="v0.53.x-nightly"
+NIGHTLY_BASE_URL="https://cosmos.github.io/cosmos-sdk/nightlies/v0.53"
 OUTPUT="${BUILDDIR:-./build}/simdv53"
+
+sha256_file() {
+	local file="$1"
+	if command -v sha256sum >/dev/null 2>&1; then
+		sha256sum "$file" | awk '{print $1}'
+		return 0
+	fi
+	shasum -a 256 "$file" | awk '{print $1}'
+}
 
 # Map uname to Go-style GOOS/GOARCH
 detect_goos_goarch() {
@@ -40,15 +48,36 @@ try_download() {
 	local goos_goarch
 	goos_goarch=$(detect_goos_goarch)
 	local asset="simd-${goos_goarch}"
-	local url="https://github.com/${REPO}/releases/download/${RELEASE_TAG}/${asset}"
+	local archive="${asset}.tar.gz"
+	local archive_url="${NIGHTLY_BASE_URL}/${archive}"
+	local checksum_url="${archive_url}.sha256"
+	local tmp_dir
+	tmp_dir="$(mktemp -d)"
+	local archive_path="${tmp_dir}/${archive}"
+	local checksum_path="${tmp_dir}/${archive}.sha256"
 
-	echo "Attempting to download ${asset} from ${RELEASE_TAG}..."
-	if curl -sfL -o "$OUTPUT" "$url"; then
-		chmod +x "$OUTPUT"
-		echo "Downloaded simdv53 to ${OUTPUT}"
-		return 0
+	cleanup() {
+		rm -rf "${tmp_dir}"
+	}
+	trap cleanup RETURN
+
+	echo "Attempting to download ${archive} from v0.53 nightlies..."
+	curl -sfL -o "${archive_path}" "${archive_url}"
+	curl -sfL -o "${checksum_path}" "${checksum_url}"
+
+	local expected actual
+	expected="$(awk '{print $1}' "${checksum_path}")"
+	actual="$(sha256_file "${archive_path}")"
+	if [ "${expected}" != "${actual}" ]; then
+		echo "Checksum mismatch for ${archive}" >&2
+		return 1
 	fi
-	return 1
+
+	tar -xzf "${archive_path}" -C "${tmp_dir}"
+	mv "${tmp_dir}/${asset}" "$OUTPUT"
+	chmod +x "$OUTPUT"
+	echo "Downloaded simdv53 to ${OUTPUT}"
+	return 0
 }
 
 main() {

@@ -211,7 +211,7 @@ func TestHeavyLoad(t *testing.T) {
 	for batch := range loadTestBatches {
 		var wg sync.WaitGroup
 		txIdx := 0
-		for i := 0; i < loadTestTxsPerBatch; i++ {
+		for i := range loadTestTxsPerBatch {
 			for si, senderName := range senderNames {
 				idx := txIdx
 				txIdx++

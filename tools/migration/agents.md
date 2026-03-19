@@ -30,7 +30,7 @@ spec in `tools/migration/migration-spec/v50-to-v54/`. Your job is to:
 ```
 tools/migration/
   agents.md                      ← this file
-  migration-spec/v50-to-v54/        ← one YAML file per migration concern
+  migration-spec/v50-to-v54/     ← one YAML file per migration concern
     core.yaml                    ← always apply first
     crisis.yaml
     circuit.yaml
@@ -40,8 +40,6 @@ tools/migration/
     epochs.yaml
     ante.yaml
     app-structure.yaml           ← apply last
-  migrate.go                     ← Go migration library (AST engine)
-  v54/                           ← compiled migration rules for simapp reference
 ```
 
 The target chain repo (the one you are migrating) is a separate directory,
@@ -144,20 +142,19 @@ control to the user.
 ### Step 3 — Apply structured changes in order
 
 **Important**: Text replacements are match-based, so applying a spec twice is
-generally safe — the `old` pattern simply won't be found the second time. But AST
-surgery (like the gov NewKeeper change) should check if the migration was already
-applied before modifying. The gov spec's Go implementation does this via
-`hasDefaultGovVoteCalculator`.
+generally safe — the `old` pattern simply won't be found the second time. More
+structural edits, such as the gov `NewKeeper` rewrite, should still be checked
+for idempotency before you modify them.
 
 For each spec, apply changes in this sub-order:
 
 1. **file_removals** — delete files first so AST doesn't process dead code
 2. **go_mod changes** — update versions, remove modules, strip local replaces
-3. **import rewrites** — rewrite import paths (AST-level)
+3. **import rewrites** — rewrite import paths
 4. **statement_removals** — remove keeper init and wiring statements
 5. **map_entry_removals** — remove map/slice entries
 6. **call_arg_edits** — remove/add arguments to specific function calls
-7. **manual_steps** (AST surgery) — apply complex argument transformations
+7. **manual_steps** — apply complex argument transformations
 8. **text_replacements** — post-AST text-level cleanup
 
 ### Step 4 — Emit warnings
@@ -224,7 +221,7 @@ If `go build ./...` fails, read the errors carefully. Common causes:
 - **Custom ante wrapper** — if the chain has a project-local `HandlerOptions`
   or additional ante decorators, do not force the simapp rewrite. Keep the local
   wrapper and migrate it manually.
-- **Wrong argument count** — the gov NewKeeper surgery may not have applied if
+- **Wrong argument count** — the gov `NewKeeper` rewrite may not have applied if
   the call site had fewer than 9 args. Check manually.
 
 ---
@@ -233,8 +230,8 @@ If `go build ./...` fails, read the errors carefully. Common causes:
 
 ### Custom module aliases
 Some chains alias packages differently from simapp. For example, the gov keeper
-package might be imported as `keeper` not `govkeeper`. The migration tool resolves
-aliases from the AST, but if you're applying changes manually:
+package might be imported as `keeper` not `govkeeper`. If you're applying
+changes manually:
 
 ```bash
 # Find the actual alias used

@@ -30,20 +30,14 @@ detection:
     - keeper.NewKeeper(   # alias may vary
 
 changes:
-  # ── AST surgery ──────────────────────────────────────────────────────────
-  # This change is implemented as an ArgSurgeryWithAST in the Go tooling
-  # (v54/calls.go). It cannot be encoded as a declarative YAML rule because:
+  # ── structural rewrite ───────────────────────────────────────────────────
+  # This change is described as a manual structural rewrite because it cannot
+  # be encoded as a simple declarative YAML rule:
   #   1. The package alias is dynamic (resolved at parse time).
-  #   2. The transformation synthesises a new AST CallExpr node.
+  #   2. The transformation synthesises a new final function-call argument.
   #
-  # The manual_steps section below describes what the tool does for chains
-  # where the Go migration tool is not available or the automatic transform
-  # needs to be verified.
-  #
-  # See also: tools/migration/v54/calls.go → argSurgeries
-
-  # No text_replacements, call_arg_edits, or import_rewrites needed here.
-  # The full change is handled by ArgSurgeryWithAST.
+  # The manual_steps section below describes exactly how to rewrite these call
+  # sites.
 
 manual_steps:
   - id: gov-keeper-new-keeper

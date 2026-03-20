@@ -177,7 +177,6 @@ func (k *Keeper) createABCIValidatorUpdate(pubKeyAny *codectypes.Any, power int6
 	return abci.ValidatorUpdate{PubKey: pubKeyCMT, Power: power}, nil
 }
 
-
 // IterateActiveValidators walks the power index in descending order, skipping validators with power 0.
 func (k *Keeper) IterateActiveValidators(ctx sdk.Context, callback func(consAddr sdk.ConsAddress, power int64, validator types.Validator) (stop bool, err error)) error {
 	ranger := new(collections.Range[collections.Pair[int64, sdk.ConsAddress]]).Descending()

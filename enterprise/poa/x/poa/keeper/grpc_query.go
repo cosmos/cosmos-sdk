@@ -50,7 +50,7 @@ func (k *Keeper) Validator(
 	consAddress, consErr := sdk.ConsAddressFromBech32(req.Address)
 	if consErr == nil {
 		// Successfully parsed as consensus address
-		validator, err := k.GetValidator(sdkCtx, consAddress)
+		validator, err := k.validators.Get(sdkCtx, consAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -79,8 +79,7 @@ func (k *Keeper) Validator(
 	)
 }
 
-// Validators queries all validators with pagination
-// Behavior is to return validators in descending order by power. The pagination reverse field is ignored.
+// Validators queries all validators with pagination in descending power order.
 func (k *Keeper) Validators(
 	ctx context.Context, req *types.QueryValidatorsRequest,
 ) (*types.QueryValidatorsResponse, error) {
@@ -89,15 +88,15 @@ func (k *Keeper) Validators(
 		pageReq = &query.PageRequest{}
 	}
 
-	// fix reverse to true so we always return in descending order
+	// Always reverse to get descending power order
 	pageReq.Reverse = true
 
-	validators, pageRes, err := query.CollectionPaginate(
+	validators, pageRes, err := query.CollectionPaginate[collections.Pair[int64, sdk.ConsAddress], collections.NoValue](
 		ctx,
-		k.validators,
+		k.validators.Indexes.Power,
 		pageReq,
-		func(key collections.Pair[int64, string], value types.Validator) (types.Validator, error) {
-			return value, nil
+		func(key collections.Pair[int64, sdk.ConsAddress], _ collections.NoValue) (types.Validator, error) {
+			return k.validators.Get(ctx, key.K2())
 		},
 	)
 	if err != nil {
@@ -121,17 +120,20 @@ func (k *Keeper) WithdrawableFees(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	// Use the secondary index to find the composite key
-	compositeKey, err := k.validators.Indexes.OperatorAddress.MatchExact(sdkCtx, operatorAddress.String())
+	// Use the secondary index to find the consensus address
+	consAddr, err := k.validators.Indexes.OperatorAddress.MatchExact(sdkCtx, operatorAddress.String())
 	if err != nil {
 		return nil, err
 	}
 
-	consAddr := compositeKey.K2()
-	power := compositeKey.K1()
+	validator, err := k.validators.Get(sdkCtx, consAddr)
+	if err != nil {
+		return nil, err
+	}
+	power := validator.Power
 
 	// Get allocated fees from the separate collection (not found = zero value)
-	allocated, err := k.validatorAllocatedFees.Get(sdkCtx, consAddr)
+	allocated, err := k.validatorAllocatedFees.Get(sdkCtx, consAddr.String())
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			allocated = types.ValidatorFees{Fees: sdk.DecCoins{}}

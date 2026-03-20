@@ -354,9 +354,9 @@ func TestPOACalculateVoteResultsAndVotingPower_EdgeCases(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrInvalidTotalPower)
 
 		// Verify validator power was NOT changed (validation failed before changes)
-		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
+		v, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
 		require.NoError(t, err)
-		require.Equal(t, int64(100), power)
+		require.Equal(t, int64(100), v.Power)
 
 		// Tally should work normally with validator still having power
 		tallyFn := NewPOACalculateVoteResultsAndVotingPowerFn(*f.poaKeeper)

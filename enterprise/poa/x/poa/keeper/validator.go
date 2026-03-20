@@ -32,33 +32,23 @@ import (
 // UpdateValidator updates a single validator's power and metadata.
 // It validates the power is non-negative, updates the validator state, and queues an ABCI update if power changed.
 func (k *Keeper) UpdateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, updates types.Validator) error {
-	// Validate power
 	if updates.Power < 0 {
 		return types.ErrNegativeValidatorPower
 	}
 
-	// Check validator exists
-	if ok, err := k.HasValidator(ctx, consAddress); err != nil {
-		return err
-	} else if !ok {
-		return types.ErrUnknownValidator
-	}
-
-	// Get current state
-	oldPower, err := k.GetValidatorPower(ctx, consAddress)
+	existingValidator, err := k.validators.Get(ctx, consAddress)
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.ErrUnknownValidator
+		}
 		return err
 	}
 
-	existingValidator, err := k.GetValidator(ctx, consAddress)
-	if err != nil {
-		return err
-	}
+	oldPower := existingValidator.Power
 
 	// Apply updates
 	existingValidator.Power = updates.Power
 	if updates.Metadata != nil {
-		// Get the pubkey to check (use updated one if provided, otherwise existing)
 		pubKeyToCheck := existingValidator.PubKey
 		if updates.PubKey != nil {
 			pubKeyToCheck = updates.PubKey
@@ -74,20 +64,19 @@ func (k *Keeper) UpdateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, u
 		existingValidator.PubKey = updates.PubKey
 	}
 
-	// Delete old entry and insert with new power
-	// Handles the total validator power.
-	if err := k.SetValidatorPower(ctx, consAddress, existingValidator.Power); err != nil {
+	// Update power (handles checkpointing and total power adjustment)
+	if oldPower != updates.Power {
+		if err := k.SetValidatorPower(ctx, consAddress, existingValidator.Power); err != nil {
+			return err
+		}
+	}
+
+	// Save the full validator object (power index auto-updates via Multi.Reference)
+	if err := k.validators.Set(ctx, consAddress, existingValidator); err != nil {
 		return err
 	}
 
-	// Update the full validator object (SetValidatorPower only updates power)
-	compositeKey := collections.Join(existingValidator.Power, consAddress.String())
-	if err := k.validators.Set(ctx, compositeKey, existingValidator); err != nil {
-		return err
-	}
-
-	// Create validator update for CometBFT
-	// Only send update if power actually changed
+	// Create validator update for CometBFT only if power actually changed
 	if oldPower != updates.Power {
 		update, err := k.createABCIValidatorUpdate(existingValidator.PubKey, existingValidator.Power)
 		if err != nil {
@@ -129,10 +118,7 @@ func (k *Keeper) UpdateValidators(ctx sdk.Context, validators []types.Validator)
 // CreateValidator creates a new validator with the specified initial state.
 // The validator can be created with non-zero power if needed (e.g., during genesis).
 func (k *Keeper) CreateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, validator types.Validator, checkpoint bool) error {
-	// Check if validator already exists
-	// This is necessary because Set() with the same primary key (power, consensus_address)
-	// will overwrite without checking unique indexes, allowing operator address to change
-	exists, err := k.HasValidator(ctx, consAddress)
+	exists, err := k.validators.Has(ctx, consAddress)
 	if err != nil {
 		return err
 	}
@@ -140,17 +126,11 @@ func (k *Keeper) CreateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, v
 		return types.ErrValidatorAlreadyExists
 	}
 
-	// Validate operator and consensus pubkey are different
 	if err := k.ValidateOperatorAndConsensusPubKeyDifferent(validator.Metadata.OperatorAddress, validator.PubKey); err != nil {
 		return err
 	}
 
-	// Create validator with initial power (from validator.Power)
-	// Keepers are the only ones that can set power to > 0.
-	// Thus, on creation, we queue an update for consensus.
 	if validator.Power > 0 {
-		// Checkpoint all validators if requested. The only time we don't want to do this is
-		// during ImportGenesis, where we re-add all the validators one by one.
 		if checkpoint {
 			if err := k.checkpointAllValidators(ctx); err != nil {
 				return err
@@ -164,41 +144,21 @@ func (k *Keeper) CreateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, v
 			return err
 		}
 
-		// Adjust total power
 		if err := k.AdjustTotalPower(ctx, validator.Power); err != nil {
 			return err
 		}
 	}
 
-	// The unique index on consensus address will prevent duplicates when
-	// primary key differs, but we also need the HasValidator check above
-	// to prevent overwrites with the same primary key
-	key := collections.Join(validator.Power, consAddress.String())
-	return k.validators.Set(ctx, key, validator)
+	return k.validators.Set(ctx, consAddress, validator)
 }
 
-// HasValidator checks if a validator exists by consensus address.
-func (k *Keeper) HasValidator(ctx sdk.Context, consAddress sdk.ConsAddress) (bool, error) {
-	// Use ConsensusAddress index to check if validator exists
-	_, err := k.validators.Indexes.ConsensusAddress.MatchExact(ctx, consAddress.String())
-	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return false, nil
-		}
-		return false, err
-	}
-	return true, nil
-}
-
-// GetValidator retrieves a validator by consensus address.
-func (k *Keeper) GetValidator(ctx sdk.Context, consAddress sdk.ConsAddress) (types.Validator, error) {
-	// Use ConsensusAddress index to find the composite key
-	compositeKey, err := k.validators.Indexes.ConsensusAddress.MatchExact(ctx, consAddress.String())
+// GetValidatorByOperatorAddress retrieves a validator by operator address using the secondary index.
+func (k *Keeper) GetValidatorByOperatorAddress(ctx sdk.Context, operatorAddr sdk.AccAddress) (types.Validator, error) {
+	consAddr, err := k.validators.Indexes.OperatorAddress.MatchExact(ctx, operatorAddr.String())
 	if err != nil {
 		return types.Validator{}, err
 	}
-	// Get the full validator using the composite key
-	return k.validators.Get(ctx, compositeKey)
+	return k.validators.Get(ctx, consAddr)
 }
 
 // createABCIValidatorUpdate creates a CometBFT validator update from a validator's public key and power.
@@ -216,79 +176,39 @@ func (k *Keeper) createABCIValidatorUpdate(pubKeyAny *codectypes.Any, power int6
 	return abci.ValidatorUpdate{PubKey: pubKeyCMT, Power: power}, nil
 }
 
-// SetValidatorPower sets the power for a validator and handles the rekeying of the primary power key.
-// This checkpoints all validators before making the change to ensure accurate fee distribution.
+// SetValidatorPower updates a validator's power, checkpointing fees and adjusting total power.
+// The power index is automatically maintained by the Multi index on Set.
 func (k *Keeper) SetValidatorPower(ctx sdk.Context, consAddress sdk.ConsAddress, power int64) error {
-	// Checkpoint all validators before any power change
 	if err := k.checkpointAllValidators(ctx); err != nil {
 		return err
 	}
 
-	// Get existing validator and old composite key
-	oldCompositeKey, err := k.validators.Indexes.ConsensusAddress.MatchExact(ctx, consAddress.String())
+	validator, err := k.validators.Get(ctx, consAddress)
 	if err != nil {
 		return err
 	}
 
-	validator, err := k.validators.Get(ctx, oldCompositeKey)
-	if err != nil {
-		return err
-	}
-
-	// Store old power for delta calculation
-	oldPower := validator.Power
-	delta := power - oldPower
-
+	delta := power - validator.Power
 	if err := k.AdjustTotalPower(ctx, delta); err != nil {
 		return err
 	}
 
-	// Delete old entry
-	if err := k.validators.Remove(ctx, oldCompositeKey); err != nil {
-		return err
-	}
-
-	// Update power and insert with new key
 	validator.Power = power
-	newKey := collections.Join(power, consAddress.String())
-	return k.validators.Set(ctx, newKey, validator)
+	return k.validators.Set(ctx, consAddress, validator)
 }
 
-// GetValidatorPower gets the power for a validator by consensus address.
-func (k *Keeper) GetValidatorPower(ctx sdk.Context, consAddress sdk.ConsAddress) (int64, error) {
-	// The power is in the composite key itself
-	compositeKey, err := k.validators.Indexes.ConsensusAddress.MatchExact(ctx, consAddress.String())
-	if err != nil {
-		return 0, err
-	}
-	return compositeKey.K1(), nil
-}
-
-// GetValidatorByConsAddress retrieves a validator by consensus address.
-func (k *Keeper) GetValidatorByConsAddress(ctx sdk.Context, consAddr sdk.ConsAddress) (types.Validator, error) {
-	// Use consensus address index to find composite key
-	compositeKey, err := k.validators.Indexes.ConsensusAddress.MatchExact(ctx, consAddr.String())
-	if err != nil {
-		return types.Validator{}, err
-	}
-	return k.validators.Get(ctx, compositeKey)
-}
-
-// GetValidatorByOperatorAddress retrieves a validator by operator address using the secondary index.
-func (k *Keeper) GetValidatorByOperatorAddress(ctx sdk.Context, operatorAddr sdk.AccAddress) (types.Validator, error) {
-	// Use operator address index to find composite key
-	compositeKey, err := k.validators.Indexes.OperatorAddress.MatchExact(ctx, operatorAddr.String())
-	if err != nil {
-		return types.Validator{}, err
-	}
-	return k.validators.Get(ctx, compositeKey)
-}
-
-// IterateValidators iterates over validators with a custom range and callback function.
-func (k *Keeper) IterateValidators(ctx sdk.Context, ranger *collections.Range[collections.Pair[int64, string]], callback func(power int64, validator types.Validator) (stop bool, err error)) error {
-	return k.validators.Walk(ctx, ranger, func(key collections.Pair[int64, string], val types.Validator) (bool, error) {
-		power := key.K1()
-		return callback(power, val)
+// IterateActiveValidators walks the power index in descending order, skipping validators with power 0.
+func (k *Keeper) IterateActiveValidators(ctx sdk.Context, callback func(consAddr sdk.ConsAddress, power int64, validator types.Validator) (stop bool, err error)) error {
+	ranger := new(collections.Range[collections.Pair[int64, sdk.ConsAddress]]).Descending()
+	return k.validators.Indexes.Power.Walk(ctx, ranger, func(power int64, consAddr sdk.ConsAddress) (bool, error) {
+		if power == 0 {
+			return true, nil
+		}
+		validator, err := k.validators.Get(ctx, consAddr)
+		if err != nil {
+			return true, err
+		}
+		return callback(consAddr, power, validator)
 	})
 }
 
@@ -297,8 +217,6 @@ func (k *Keeper) GetTotalPower(ctx sdk.Context) (int64, error) {
 	power, err := k.totalPower.Get(ctx)
 	if err != nil {
 		if ctx.BlockHeight() == 0 {
-			// The only context where we don't want to send an error is on genesis.
-			// Total power should never be 0 otherwise.
 			return 0, nil
 		} else {
 			return 0, err
@@ -331,14 +249,16 @@ func (k *Keeper) AdjustTotalPower(ctx sdk.Context, delta int64) error {
 	return k.totalPower.Set(ctx, newTotal)
 }
 
-// GetAllValidators returns all validators in the store.
-// Validators are returned in descending power order.
+// GetAllValidators returns all validators in descending power order.
 func (k *Keeper) GetAllValidators(ctx sdk.Context) ([]types.Validator, error) {
 	var validators []types.Validator
-	// Iterate validators in descending power order
-	ranger := new(collections.Range[collections.Pair[int64, string]]).Descending()
-	err := k.validators.Walk(ctx, ranger, func(key collections.Pair[int64, string], val types.Validator) (bool, error) {
-		validators = append(validators, val)
+	ranger := new(collections.Range[collections.Pair[int64, sdk.ConsAddress]]).Descending()
+	err := k.validators.Indexes.Power.Walk(ctx, ranger, func(power int64, consAddr sdk.ConsAddress) (bool, error) {
+		validator, err := k.validators.Get(ctx, consAddr)
+		if err != nil {
+			return true, err
+		}
+		validators = append(validators, validator)
 		return false, nil
 	})
 	if err != nil {

@@ -117,7 +117,7 @@ func TestProportionalDistribution(t *testing.T) {
 
 		// With lazy distribution, fees remain in fee collector (no panic)
 		feeCollector := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
-		feeCollectorBalance := f.bankKeeper.GetAllBalances(f.ctx, feeCollector.GetAddress())
+		feeCollector := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
 		require.Equal(t, fees, feeCollectorBalance)
 	})
 

@@ -465,6 +465,7 @@ func TestBlockGasMeterParallelRunnerPanic(t *testing.T) {
 		{
 			"panic on bstm + gas meter",
 			func(t *testing.T, bap *baseapp.BaseApp) {
+				t.Helper()
 				bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil))
 				require.Panics(t, func() { bap.SetDisableBlockGasMeter(false) })
 				require.Panics(t, func() { baseapp.EnableBlockGasMeter()(bap) })
@@ -473,6 +474,7 @@ func TestBlockGasMeterParallelRunnerPanic(t *testing.T) {
 		{
 			"panic on gas meter + bstm",
 			func(t *testing.T, bap *baseapp.BaseApp) {
+				t.Helper()
 				bap.SetDisableBlockGasMeter(false)
 				require.Panics(t, func() { bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil)) })
 			},
@@ -480,6 +482,7 @@ func TestBlockGasMeterParallelRunnerPanic(t *testing.T) {
 		{
 			"successful bstm parallelism",
 			func(t *testing.T, bap *baseapp.BaseApp) {
+				t.Helper()
 				require.NotPanics(t, func() { bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil)) })
 			},
 		},

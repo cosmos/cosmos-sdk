@@ -23,7 +23,6 @@ import (
 	"cosmossdk.io/math"
 
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

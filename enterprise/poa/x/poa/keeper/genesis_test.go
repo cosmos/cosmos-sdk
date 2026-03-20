@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestExportGenesis(t *testing.T) {
@@ -516,7 +515,7 @@ func TestInitGenesis(t *testing.T) {
 			sdk.NewInt64Coin("stake", 1000),
 			sdk.NewInt64Coin("atom", 500),
 		)
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, feeCollectorFees)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, feeCollectorFees)
 		require.NoError(t, err)
 
 		// Import the exported genesis
@@ -525,7 +524,7 @@ func TestInitGenesis(t *testing.T) {
 		require.Len(t, updates, numValidators)
 
 		// Verify fee collector has the balances
-		feeCollectorImport := f.authKeeper.GetModuleAccount(f.ctx, authtypes.FeeCollectorName)
+		feeCollectorImport := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
 		feeCollectorBalanceImport := f.bankKeeper.GetAllBalances(f.ctx, feeCollectorImport.GetAddress())
 		require.Equal(t, feeCollectorFees, feeCollectorBalanceImport, "fee collector balances should be set")
 
@@ -538,7 +537,7 @@ func TestInitGenesis(t *testing.T) {
 		}
 
 		// Verify fee collector balance remains unchanged (genesis doesn't distribute fees)
-		feeCollectorAfterImport := f.authKeeper.GetModuleAccount(f.ctx, authtypes.FeeCollectorName)
+		feeCollectorAfterImport := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
 		feeCollectorBalanceAfterImport := f.bankKeeper.GetAllBalances(f.ctx, feeCollectorAfterImport.GetAddress())
 		require.Equal(t, feeCollectorFees, feeCollectorBalanceAfterImport,
 			"fee collector balance should remain unchanged during genesis import")

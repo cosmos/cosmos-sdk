@@ -23,7 +23,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // checkpointAllValidators allocates pending fees to all validators.
@@ -94,7 +93,7 @@ func (k *Keeper) checkpointAllValidators(ctx sdk.Context) error {
 // Returns zero values if there are no unallocated fees or no validators.
 func (k *Keeper) getUnallocatedFees(ctx sdk.Context) (unallocated sdk.DecCoins, err error) {
 	// Get fee collector balance
-	feeCollector := k.authKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
+	feeCollector := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 	feeCollectorBalance := k.bankKeeper.GetAllBalances(ctx, feeCollector.GetAddress())
 
 	// If no fees in collector, return zero
@@ -173,7 +172,7 @@ func (k *Keeper) WithdrawValidatorFees(ctx sdk.Context, validatorAddr sdk.AccAdd
 	}
 
 	// Transfer fees from fee collector to validator address
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, authtypes.FeeCollectorName, validatorAddr, coins)
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, validatorAddr, coins)
 	if err != nil {
 		return nil, err
 	}

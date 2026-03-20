@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestValidatorsQueryDescendingOrder(t *testing.T) {
@@ -408,7 +407,7 @@ func TestWithdrawableFeesQuery(t *testing.T) {
 
 		// Add fees to fee collector
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, types.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Query validator 1 - should show 25% (250 stake) as pending
@@ -434,7 +433,7 @@ func TestWithdrawableFeesQuery(t *testing.T) {
 
 		// Add initial fees
 		fees1 := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees1)
+		err := f.bankKeeper.MintCoins(f.ctx, types.ModuleName, fees1)
 		require.NoError(t, err)
 
 		// Checkpoint to allocate fees
@@ -450,7 +449,7 @@ func TestWithdrawableFeesQuery(t *testing.T) {
 
 		// Add more fees
 		fees2 := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees2)
+		err = f.bankKeeper.MintCoins(f.ctx, types.ModuleName, fees2)
 		require.NoError(t, err)
 
 		// Query should show 100 (allocated) + 50 (pending) = 150 total
@@ -473,7 +472,7 @@ func TestWithdrawableFeesQuery(t *testing.T) {
 			sdk.NewInt64Coin("stake", 1000),
 			sdk.NewInt64Coin("atom", 400),
 		)
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, types.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Query validator 1 - should show 25% of each denom
@@ -502,7 +501,7 @@ func TestWithdrawableFeesQuery(t *testing.T) {
 
 		// Add fees
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, types.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Validator with zero power should show zero fees
@@ -539,7 +538,7 @@ func TestWithdrawableFeesQuery(t *testing.T) {
 
 		// Add initial fees
 		fees1 := sdk.NewCoins(sdk.NewInt64Coin("stake", 200))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees1)
+		err := f.bankKeeper.MintCoins(f.ctx, types.ModuleName, fees1)
 		require.NoError(t, err)
 
 		// Checkpoint to allocate (each gets 100)
@@ -552,7 +551,7 @@ func TestWithdrawableFeesQuery(t *testing.T) {
 
 		// Add more fees
 		fees2 := sdk.NewCoins(sdk.NewInt64Coin("stake", 400))
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees2)
+		err = f.bankKeeper.MintCoins(f.ctx, types.ModuleName, fees2)
 		require.NoError(t, err)
 
 		// Validator 1 now has 300/(300+100) = 75% of pending
@@ -581,7 +580,7 @@ func TestWithdrawableFeesQuery(t *testing.T) {
 
 		// Add fees
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err = f.bankKeeper.MintCoins(f.ctx, types.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Query before withdrawal

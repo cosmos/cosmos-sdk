@@ -28,7 +28,7 @@ type DeductFeeDecorator struct {
 
 func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper, tfc TxFeeChecker) DeductFeeDecorator {
 	if tfc == nil {
-		tfc = checkTxFeeWithValidatorMinGasPrices
+		tfc = CheckTxFeeWithValidatorMinGasPrices
 	}
 
 	return DeductFeeDecorator{

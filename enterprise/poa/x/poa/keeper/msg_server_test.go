@@ -27,7 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var adminAddr = sdk.AccAddress("admin").String()
@@ -1535,7 +1534,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 
 		// Add fees to fee collector
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Checkpoint to allocate fees
@@ -1627,7 +1626,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 
 		// Add fees to fee collector
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Checkpoint to allocate fees
@@ -1671,7 +1670,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 			sdk.NewInt64Coin("stake", 1000),
 			sdk.NewInt64Coin("atom", 500),
 		)
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Checkpoint to allocate fees
@@ -1756,7 +1755,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 
 		// Add fees to fee collector (don't checkpoint)
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Withdraw fees (should still work with lazy distribution)

@@ -1052,21 +1052,9 @@ func TestValidatorIteration(t *testing.T) {
 		require.Equal(t, "validator-0", iteratedValidators[4].moniker)
 	})
 
-	t.Run("stops iteration at power 0", func(t *testing.T) {
-		// Iterate but stop when we hit power 0
-		ranger := new(collections.Range[collections.Pair[int64, sdk.ConsAddress]]).Descending()
-
+	t.Run("IterateActiveValidators skips zero-power validators", func(t *testing.T) {
 		var activeValidators []validatorInfo
-		err := f.poaKeeper.validators.Indexes.Power.Walk(f.ctx, ranger, func(power int64, consAddr sdk.ConsAddress) (bool, error) {
-			// Stop when we hit power 0
-			if power == 0 {
-				return true, nil
-			}
-
-			val, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
-			if err != nil {
-				return true, err
-			}
+		err := f.poaKeeper.IterateActiveValidators(f.ctx, func(consAddr sdk.ConsAddress, power int64, val types.Validator) (bool, error) {
 			activeValidators = append(activeValidators, validatorInfo{
 				power:   power,
 				moniker: val.Metadata.Moniker,
@@ -1075,7 +1063,7 @@ func TestValidatorIteration(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// Should only have validators with power > 0
+		// Should only have validators with power > 0, in descending order
 		require.Len(t, activeValidators, 4)
 		require.Equal(t, int64(500), activeValidators[0].power)
 		require.Equal(t, int64(300), activeValidators[1].power)

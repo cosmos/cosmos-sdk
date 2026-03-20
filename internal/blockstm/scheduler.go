@@ -159,8 +159,9 @@ func (s *Scheduler) WaitForDependency(txn, blockingTxn TxnIndex) *Condvar {
 		suspend: start,
 	}
 	// TODO
-	seq := seq.
-		s.sequencing.Load().sequencing[txn].suspensions
+	seq := s.sequencing.Load().sequencing[txn].suspensions
+	seq[txn].suspensions = append(seq[txn].suspensions, suspension)
+	s.sequencing.Store(seq)
 	cond := NewCondvar()
 	entry := &s.txnDependency[blockingTxn]
 	entry.Lock()

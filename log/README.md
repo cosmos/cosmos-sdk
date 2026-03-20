@@ -188,7 +188,7 @@ In that setup:
 - logs are also exported through OpenTelemetry
 - context-aware log calls carry trace context into the OpenTelemetry branch as well
 
-This is the path to use when you want the SDK to write logs directly into an OpenTelemetry logging backend, which eliminates the need to setup scraping infrastructure.
+This is the path to use when you want the SDK to write logs directly into an OpenTelemetry logging backend, which eliminates the need to set up scraping infrastructure.
 
 ## Future Direction
 

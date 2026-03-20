@@ -99,11 +99,9 @@ func initFixture(tb testing.TB) *fixture {
 		authority.String(),
 	)
 
-	// Create module accounts
-	feeCollectorAcc := authtypes.NewEmptyModuleAccount(authtypes.FeeCollectorName)
-	accountKeeper.SetModuleAccount(newCtx, feeCollectorAcc)
-	poaModuleAcc := authtypes.NewEmptyModuleAccount(poatypes.ModuleName)
-	accountKeeper.SetModuleAccount(newCtx, poaModuleAcc)
+	// Create module accounts (GetModuleAccount auto-creates with proper account numbering)
+	accountKeeper.GetModuleAccount(newCtx, authtypes.FeeCollectorName)
+	accountKeeper.GetModuleAccount(newCtx, poatypes.ModuleName)
 
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,

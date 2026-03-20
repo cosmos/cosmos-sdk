@@ -21,6 +21,9 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
+
+	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 )
 
 func TestExportGenesis(t *testing.T) {

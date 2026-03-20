@@ -31,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -122,6 +123,13 @@ func (f *anteTestFixture) poaModuleBalance(t *testing.T) sdk.Coins {
 	return f.bankKeeper.GetAllBalances(f.ctx, addr)
 }
 
+// newPOADeductFeeDecorator creates a DeductFeeDecorator that sends fees to the
+// POA module, with an optional custom TxFeeChecker.
+func (f *anteTestFixture) newPOADeductFeeDecorator(tfc ante.TxFeeChecker) ante.DeductFeeDecorator {
+	return ante.NewDeductFeeDecorator(f.authKeeper, f.bankKeeper, nil, tfc).
+		WithFeeRecipientModule(poatypes.ModuleName)
+}
+
 // TestPOADeductFeeDecorator_ZeroGas mirrors TestDeductFeeDecorator_ZeroGas
 // from x/auth/ante/fee_test.go.
 func TestPOADeductFeeDecorator_ZeroGas(t *testing.T) {
@@ -142,8 +150,7 @@ func TestPOADeductFeeDecorator_ZeroGas(t *testing.T) {
 			f.createAccount(t, userAddr)
 			f.fundAccount(t, userAddr, sdk.NewCoins(sdk.NewInt64Coin("stake", 100)))
 
-			dfd := NewPOADeductFeeDecorator(f.authKeeper, f.bankKeeper, nil, nil)
-			anteHandler := sdk.ChainAnteDecorators(dfd)
+			anteHandler := sdk.ChainAnteDecorators(f.newPOADeductFeeDecorator(nil))
 
 			tx := mockFeeTx{fee: sdk.NewCoins(sdk.NewInt64Coin("stake", 50)), gas: 0, feePayer: userAddr}
 
@@ -209,8 +216,7 @@ func TestPOAEnsureMempoolFees(t *testing.T) {
 			f.createAccount(t, userAddr)
 			f.fundAccount(t, userAddr, sdk.NewCoins(sdk.NewInt64Coin("atom", 1000)))
 
-			dfd := NewPOADeductFeeDecorator(f.authKeeper, f.bankKeeper, nil, nil)
-			anteHandler := sdk.ChainAnteDecorators(dfd)
+			anteHandler := sdk.ChainAnteDecorators(f.newPOADeductFeeDecorator(nil))
 
 			feeAmount := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 			tx := mockFeeTx{fee: feeAmount, gas: 15, feePayer: userAddr}
@@ -273,13 +279,11 @@ func TestPOADeductFees(t *testing.T) {
 				f.fundAccount(t, userAddr, tc.fundUser)
 			}
 
-			dfd := NewPOADeductFeeDecorator(
-				f.authKeeper, f.bankKeeper, nil,
-				func(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error) {
+			anteHandler := sdk.ChainAnteDecorators(
+				f.newPOADeductFeeDecorator(func(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error) {
 					return feeAmount, 0, nil
-				},
+				}),
 			)
-			anteHandler := sdk.ChainAnteDecorators(dfd)
 
 			tx := mockFeeTx{fee: feeAmount, gas: 200000, feePayer: userAddr}
 

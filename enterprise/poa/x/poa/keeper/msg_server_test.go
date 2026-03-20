@@ -22,12 +22,12 @@ import (
 
 	"cosmossdk.io/math"
 
+	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var adminAddr = sdk.AccAddress("admin").String()

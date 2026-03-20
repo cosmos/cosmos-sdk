@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"google.golang.org/grpc"
@@ -26,8 +27,10 @@ import (
 // Use for load tests to avoid spawning 10k simd processes.
 // Call Close() when done to release the gRPC connection.
 type LoadTestBroadcaster struct {
-	clientCtx client.Context
-	grpcConn  *grpc.ClientConn
+	clientCtx       client.Context
+	grpcConn        *grpc.ClientConn
+	accountNumsMu   sync.RWMutex
+	accountNumsByID map[string]uint64
 }
 
 // NewLoadTestBroadcaster creates a broadcaster that uses the keyring at keyringDir,
@@ -57,7 +60,11 @@ func NewLoadTestBroadcaster(keyringDir, chainID, nodeAddr, grpcAddr string) (*Lo
 		WithAccountRetriever(authtypes.AccountRetriever{}).
 		WithBroadcastMode("sync").
 		WithCmdContext(context.Background())
-	return &LoadTestBroadcaster{clientCtx: clientCtx, grpcConn: grpcConn}, nil
+	return &LoadTestBroadcaster{
+		clientCtx:       clientCtx,
+		grpcConn:        grpcConn,
+		accountNumsByID: make(map[string]uint64),
+	}, nil
 }
 
 // Close releases the underlying gRPC connection.
@@ -127,11 +134,17 @@ func (b *LoadTestBroadcaster) broadcastBankSend(fromKey, toAddr, amount, fees st
 		WithKeybase(b.clientCtx.Keyring).
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 	if unordered {
-		accNum, _, err := b.clientCtx.AccountRetriever.GetAccountNumberSequence(b.clientCtx, fromAddr)
+		accNum, err := b.getCachedAccountNumber(fromKey, fromAddr)
 		if err != nil {
 			return "", 0, err
 		}
 		txFactory = txFactory.WithAccountNumber(accNum).WithSequence(0)
+	} else {
+		accNum, seq, err := b.clientCtx.AccountRetriever.GetAccountNumberSequence(b.clientCtx, fromAddr)
+		if err != nil {
+			return "", 0, err
+		}
+		txFactory = txFactory.WithAccountNumber(accNum).WithSequence(seq)
 	}
 	if err := authclient.SignTx(txFactory, b.clientCtx, fromKey, txBuilder, unordered, true); err != nil {
 		return "", 0, err
@@ -145,6 +158,29 @@ func (b *LoadTestBroadcaster) broadcastBankSend(fromKey, toAddr, amount, fees st
 		return "", 0, err
 	}
 	return res.TxHash, res.Code, nil
+}
+
+func (b *LoadTestBroadcaster) getCachedAccountNumber(fromKey string, fromAddr sdk.AccAddress) (uint64, error) {
+	b.accountNumsMu.RLock()
+	accNum, ok := b.accountNumsByID[fromKey]
+	b.accountNumsMu.RUnlock()
+	if ok {
+		return accNum, nil
+	}
+
+	accNum, _, err := b.clientCtx.AccountRetriever.GetAccountNumberSequence(b.clientCtx, fromAddr)
+	if err != nil {
+		return 0, err
+	}
+
+	b.accountNumsMu.Lock()
+	if existing, found := b.accountNumsByID[fromKey]; found {
+		b.accountNumsMu.Unlock()
+		return existing, nil
+	}
+	b.accountNumsByID[fromKey] = accNum
+	b.accountNumsMu.Unlock()
+	return accNum, nil
 }
 
 // KeyringDir returns the keyring directory for the given work dir and output dir.

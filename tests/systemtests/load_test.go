@@ -258,7 +258,7 @@ func TestHeavyLoad(t *testing.T) {
 	}
 }
 
-// TestHeavyLoadMini runs in short mode on PRs. Small load (~200 txs) to validate broadcaster and chain under load.
+// TestHeavyLoadMini runs in short mode on PRs. Small load (~1000 txs) to validate broadcaster and chain under load.
 func TestHeavyLoadMini(t *testing.T) {
 	runProgrammaticLoadTest(t, loadTestMiniSenderCount, loadTestMiniTxCount, loadTestMiniWorkers, loadTestInitialBalance)
 }

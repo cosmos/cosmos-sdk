@@ -320,123 +320,6 @@ func TestGetValidatorByOperatorAddress(t *testing.T) {
 	})
 }
 
-func TestSetValidatorPower(t *testing.T) {
-	f := setupTest(t)
-
-	consAddr := sdk.ConsAddress("cons1")
-	operatorAddr := sdk.AccAddress("operator1")
-
-	pubKey := ed25519.GenPrivKey().PubKey()
-	pubKeyAny, err := codectypes.NewAnyWithValue(pubKey)
-	require.NoError(t, err)
-
-	validator := types.Validator{
-		PubKey: pubKeyAny,
-		Power:  100,
-		Metadata: &types.ValidatorMetadata{
-			Moniker:         "test-validator",
-			OperatorAddress: operatorAddr.String(),
-		},
-	}
-
-	t.Run("error for non-existing validator", func(t *testing.T) {
-		err := f.poaKeeper.SetValidatorPower(f.ctx, consAddr, 200)
-		require.ErrorIs(t, err, collections.ErrNotFound)
-	})
-
-	t.Run("successfully updates power", func(t *testing.T) {
-		err := f.poaKeeper.CreateValidator(f.ctx, consAddr, validator, true)
-		require.NoError(t, err)
-
-		// Update power
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr, 200)
-		require.NoError(t, err)
-
-		// Verify power changed
-		v, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
-		require.NoError(t, err)
-		require.Equal(t, int64(200), v.Power)
-
-		// Verify validator is still retrievable
-		retrieved, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
-		require.NoError(t, err)
-		require.Equal(t, int64(200), retrieved.Power)
-	})
-
-	t.Run("can set power to 0 when other validators exist", func(t *testing.T) {
-		f := setupTest(t)
-
-		// Create first validator
-		err := f.poaKeeper.CreateValidator(f.ctx, consAddr, validator, true)
-		require.NoError(t, err)
-
-		// Create second validator to prevent total power from becoming 0
-		consAddr2 := sdk.ConsAddress("cons2")
-		operatorAddr2 := sdk.AccAddress("operator2")
-		pubKey2 := ed25519.GenPrivKey().PubKey()
-		pubKeyAny2, err := codectypes.NewAnyWithValue(pubKey2)
-		require.NoError(t, err)
-
-		validator2 := types.Validator{
-			PubKey: pubKeyAny2,
-			Power:  150,
-			Metadata: &types.ValidatorMetadata{
-				Moniker:         "test-validator-2",
-				OperatorAddress: operatorAddr2.String(),
-			},
-		}
-		err = f.poaKeeper.CreateValidator(f.ctx, consAddr2, validator2, true)
-		require.NoError(t, err)
-
-		// Now we can set first validator to 0
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr, 0)
-		require.NoError(t, err)
-
-		v, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
-		require.NoError(t, err)
-		require.Equal(t, int64(0), v.Power)
-
-		// Total power should be 150 (only validator2)
-		totalPower, err := f.poaKeeper.GetTotalPower(f.ctx)
-		require.NoError(t, err)
-		require.Equal(t, int64(150), totalPower)
-	})
-}
-
-func TestGetValidatorPower(t *testing.T) {
-	f := setupTest(t)
-
-	consAddr := sdk.ConsAddress("cons1")
-	operatorAddr := sdk.AccAddress("operator1")
-
-	pubKey := ed25519.GenPrivKey().PubKey()
-	pubKeyAny, err := codectypes.NewAnyWithValue(pubKey)
-	require.NoError(t, err)
-
-	validator := types.Validator{
-		PubKey: pubKeyAny,
-		Power:  150,
-		Metadata: &types.ValidatorMetadata{
-			Moniker:         "test-validator",
-			OperatorAddress: operatorAddr.String(),
-		},
-	}
-
-	t.Run("error for non-existing validator", func(t *testing.T) {
-		_, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
-		require.ErrorIs(t, err, collections.ErrNotFound)
-	})
-
-	t.Run("successfully gets power", func(t *testing.T) {
-		err := f.poaKeeper.CreateValidator(f.ctx, consAddr, validator, true)
-		require.NoError(t, err)
-
-		v, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
-		require.NoError(t, err)
-		require.Equal(t, int64(150), v.Power)
-	})
-}
-
 func TestUpdateValidator(t *testing.T) {
 	f := setupTest(t)
 
@@ -509,20 +392,27 @@ func TestUpdateValidator(t *testing.T) {
 	t.Run("no update queued if power doesn't change", func(t *testing.T) {
 		f := setupTest(t)
 
-		err := f.poaKeeper.CreateValidator(f.ctx, consAddr, validator, true)
-		require.NoError(t, err)
-
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr, 200)
-		require.NoError(t, err)
-
-		updates := types.Validator{
-			Power: 200,
+		// Create validator with power 200 (this queues one ABCI update from CreateValidator)
+		validatorWith200 := types.Validator{
+			PubKey: validator.PubKey,
+			Power:  200,
+			Metadata: &types.ValidatorMetadata{
+				Moniker:         "test-validator",
+				OperatorAddress: operatorAddr.String(),
+			},
 		}
-		err = f.poaKeeper.UpdateValidator(f.ctx, consAddr, updates)
+		err := f.poaKeeper.CreateValidator(f.ctx, consAddr, validatorWith200, true)
 		require.NoError(t, err)
 
-		validatorUpdates := f.poaKeeper.ReapValidatorUpdates(f.ctx)
-		require.Len(t, validatorUpdates, 0)
+		// Count updates queued so far (from CreateValidator)
+		updatesBefore := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+
+		// Update with same power — should not queue additional updates
+		err = f.poaKeeper.UpdateValidator(f.ctx, consAddr, types.Validator{Power: 200})
+		require.NoError(t, err)
+
+		updatesAfter := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		require.Equal(t, len(updatesBefore), len(updatesAfter))
 	})
 
 	t.Run("rejects update with operator address matching consensus key", func(t *testing.T) {
@@ -706,19 +596,28 @@ func TestUpdateValidators(t *testing.T) {
 	t.Run("no update queued if power doesn't change", func(t *testing.T) {
 		f := setupTest(t)
 
-		err := f.poaKeeper.CreateValidator(f.ctx, consAddr, validator, true)
+		// Create validator with power 200 (this queues one ABCI update from CreateValidator)
+		validatorWith200 := types.Validator{
+			PubKey: pubKeyAny,
+			Power:  200,
+			Metadata: &types.ValidatorMetadata{
+				Moniker:         "test-validator",
+				OperatorAddress: operatorAddr.String(),
+			},
+		}
+		err := f.poaKeeper.CreateValidator(f.ctx, consAddr, validatorWith200, true)
 		require.NoError(t, err)
 
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr, 200)
-		require.NoError(t, err)
+		// Count updates queued so far (from CreateValidator)
+		updatesBefore := f.poaKeeper.ReapValidatorUpdates(f.ctx)
 
-		sameValidator := validator
-		sameValidator.Power = 200
+		sameValidator := validatorWith200
 		err = f.poaKeeper.UpdateValidators(f.ctx, []types.Validator{sameValidator})
 		require.NoError(t, err)
 
-		validatorUpdates := f.poaKeeper.ReapValidatorUpdates(f.ctx)
-		require.Len(t, validatorUpdates, 0)
+		// No additional updates should be queued
+		updatesAfter := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		require.Equal(t, len(updatesBefore), len(updatesAfter))
 	})
 
 	t.Run("nil metadata preserves existing metadata", func(t *testing.T) {
@@ -1125,7 +1024,7 @@ func TestValidatorDemotion(t *testing.T) {
 		}
 
 		// Demote validator-500 to power 0
-		err := f.poaKeeper.SetValidatorPower(f.ctx, validator500.consAddr, 0)
+		err := f.poaKeeper.UpdateValidator(f.ctx, validator500.consAddr, types.Validator{Power: 0})
 		require.NoError(t, err)
 
 		// Verify power was updated
@@ -1458,13 +1357,13 @@ func TestAdjustTotalPower(t *testing.T) {
 		require.Equal(t, int64(775), totalPower) // 100+250+75+300+50
 
 		// Change some validator powers
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddrs[0], 150) // 100 -> 150
+		err = f.poaKeeper.UpdateValidator(f.ctx, consAddrs[0], types.Validator{Power: 150}) // 100 -> 150
 		require.NoError(t, err)
 
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddrs[2], 0) // 75 -> 0
+		err = f.poaKeeper.UpdateValidator(f.ctx, consAddrs[2], types.Validator{Power: 0}) // 75 -> 0
 		require.NoError(t, err)
 
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddrs[3], 400) // 300 -> 400
+		err = f.poaKeeper.UpdateValidator(f.ctx, consAddrs[3], types.Validator{Power: 400}) // 300 -> 400
 		require.NoError(t, err)
 
 		// Recalculate sum after changes
@@ -1635,7 +1534,7 @@ func TestGetTotalPower(t *testing.T) {
 		require.Equal(t, int64(300), totalPower)
 
 		// Set first validator power to 0
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr1, 0)
+		err = f.poaKeeper.UpdateValidator(f.ctx, consAddr1, types.Validator{Power: 0})
 		require.NoError(t, err)
 
 		totalPower, err = f.poaKeeper.GetTotalPower(f.ctx)
@@ -1643,7 +1542,7 @@ func TestGetTotalPower(t *testing.T) {
 		require.Equal(t, int64(200), totalPower) // Only validator2's power remains
 
 		// Try to set second validator power to 0 - should fail as it's the last one
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr2, 0)
+		err = f.poaKeeper.UpdateValidator(f.ctx, consAddr2, types.Validator{Power: 0})
 		require.Error(t, err)
 		require.ErrorIs(t, err, types.ErrInvalidTotalPower)
 
@@ -1693,7 +1592,7 @@ func TestGetTotalPower(t *testing.T) {
 		require.Equal(t, expectedTotal, totalPower)
 
 		// Increase first validator power by 50
-		err = f.poaKeeper.SetValidatorPower(f.ctx, validators[0].consAddr, 150)
+		err = f.poaKeeper.UpdateValidator(f.ctx, validators[0].consAddr, types.Validator{Power: 150})
 		require.NoError(t, err)
 		expectedTotal += 50
 
@@ -1702,7 +1601,7 @@ func TestGetTotalPower(t *testing.T) {
 		require.Equal(t, expectedTotal, totalPower)
 
 		// Decrease second validator power by 100
-		err = f.poaKeeper.SetValidatorPower(f.ctx, validators[1].consAddr, 100)
+		err = f.poaKeeper.UpdateValidator(f.ctx, validators[1].consAddr, types.Validator{Power: 100})
 		require.NoError(t, err)
 		expectedTotal -= 100
 
@@ -1711,7 +1610,7 @@ func TestGetTotalPower(t *testing.T) {
 		require.Equal(t, expectedTotal, totalPower)
 
 		// Set third validator power to 0
-		err = f.poaKeeper.SetValidatorPower(f.ctx, validators[2].consAddr, 0)
+		err = f.poaKeeper.UpdateValidator(f.ctx, validators[2].consAddr, types.Validator{Power: 0})
 		require.NoError(t, err)
 		expectedTotal -= 300
 
@@ -1747,10 +1646,10 @@ func TestGetTotalPower(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, int64(100), totalPower)
 
-		// Try to set power to a value that would make total negative
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr, -100)
+		// Try to set power to a negative value
+		err = f.poaKeeper.UpdateValidator(f.ctx, consAddr, types.Validator{Power: -100})
 		require.Error(t, err)
-		require.ErrorIs(t, err, types.ErrInvalidTotalPower)
+		require.ErrorIs(t, err, types.ErrNegativeValidatorPower)
 
 		// Verify total power unchanged
 		totalPower, err = f.poaKeeper.GetTotalPower(f.ctx)
@@ -1783,7 +1682,7 @@ func TestGetTotalPower(t *testing.T) {
 		require.Equal(t, int64(100), totalPower)
 
 		// Try to set the only validator's power to 0 - should fail
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr, 0)
+		err = f.poaKeeper.UpdateValidator(f.ctx, consAddr, types.Validator{Power: 0})
 		require.Error(t, err)
 		require.ErrorIs(t, err, types.ErrInvalidTotalPower)
 
@@ -1839,7 +1738,7 @@ func TestGetTotalPower(t *testing.T) {
 		require.Equal(t, int64(300), totalPower)
 
 		// Set first validator power to 0 - should succeed because validator2 still has power
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr1, 0)
+		err = f.poaKeeper.UpdateValidator(f.ctx, consAddr1, types.Validator{Power: 0})
 		require.NoError(t, err)
 
 		// Verify total power is now 200
@@ -1848,7 +1747,7 @@ func TestGetTotalPower(t *testing.T) {
 		require.Equal(t, int64(200), totalPower)
 
 		// Try to set second validator to 0 - should fail as it's the last one
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr2, 0)
+		err = f.poaKeeper.UpdateValidator(f.ctx, consAddr2, types.Validator{Power: 0})
 		require.Error(t, err)
 		require.ErrorIs(t, err, types.ErrInvalidTotalPower)
 

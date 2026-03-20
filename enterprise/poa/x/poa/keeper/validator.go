@@ -64,14 +64,15 @@ func (k *Keeper) UpdateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, u
 		existingValidator.PubKey = updates.PubKey
 	}
 
-	// Update power (handles checkpointing and total power adjustment)
 	if oldPower != updates.Power {
-		if err := k.SetValidatorPower(ctx, consAddress, existingValidator.Power); err != nil {
+		if err := k.checkpointAllValidators(ctx); err != nil {
+			return err
+		}
+		if err := k.AdjustTotalPower(ctx, updates.Power-oldPower); err != nil {
 			return err
 		}
 	}
 
-	// Save the full validator object (power index auto-updates via Multi.Reference)
 	if err := k.validators.Set(ctx, consAddress, existingValidator); err != nil {
 		return err
 	}
@@ -176,26 +177,6 @@ func (k *Keeper) createABCIValidatorUpdate(pubKeyAny *codectypes.Any, power int6
 	return abci.ValidatorUpdate{PubKey: pubKeyCMT, Power: power}, nil
 }
 
-// SetValidatorPower updates a validator's power, checkpointing fees and adjusting total power.
-// The power index is automatically maintained by the Multi index on Set.
-func (k *Keeper) SetValidatorPower(ctx sdk.Context, consAddress sdk.ConsAddress, power int64) error {
-	if err := k.checkpointAllValidators(ctx); err != nil {
-		return err
-	}
-
-	validator, err := k.validators.Get(ctx, consAddress)
-	if err != nil {
-		return err
-	}
-
-	delta := power - validator.Power
-	if err := k.AdjustTotalPower(ctx, delta); err != nil {
-		return err
-	}
-
-	validator.Power = power
-	return k.validators.Set(ctx, consAddress, validator)
-}
 
 // IterateActiveValidators walks the power index in descending order, skipping validators with power 0.
 func (k *Keeper) IterateActiveValidators(ctx sdk.Context, callback func(consAddr sdk.ConsAddress, power int64, validator types.Validator) (stop bool, err error)) error {

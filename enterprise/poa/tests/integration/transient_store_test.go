@@ -103,7 +103,6 @@ func initFixture(tb testing.TB) *fixture {
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount(authtypes.FeeCollectorName)
 	accountKeeper.SetModuleAccount(newCtx, feeCollectorAcc)
 	poaModuleAcc := authtypes.NewEmptyModuleAccount(poatypes.ModuleName)
-	poaModuleAcc.AccountNumber = 1
 	accountKeeper.SetModuleAccount(newCtx, poaModuleAcc)
 
 	bankKeeper := bankkeeper.NewBaseKeeper(

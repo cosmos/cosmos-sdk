@@ -19,11 +19,12 @@ import (
 	"errors"
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
+
 	"cosmossdk.io/collections"
 
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 // Params returns the current module parameters.

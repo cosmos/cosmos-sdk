@@ -50,4 +50,4 @@ replace (
 	google.golang.org/grpc => google.golang.org/grpc v1.69.2
 )
 
-replace github.com/cometbft/cometbft => github.com/agoric-labs/cometbft v0.38.21-alpha.agoric.0
+replace github.com/cometbft/cometbft => github.com/agoric-labs/cometbft v0.38.21-alpha.agoric.1

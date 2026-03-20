@@ -1532,7 +1532,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 		opAddrSdk, err := sdk.AccAddressFromBech32(opAddr)
 		require.NoError(t, err)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
 		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
@@ -1624,7 +1624,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 		opAddrSdk2, err := sdk.AccAddressFromBech32(opAddr2)
 		require.NoError(t, err)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
 		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
@@ -1665,7 +1665,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 		opAddrSdk, err := sdk.AccAddressFromBech32(opAddr)
 		require.NoError(t, err)
 
-		// Add multiple denominations to fee collector
+		// Add multiple denominations to poa module
 		fees := sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 1000),
 			sdk.NewInt64Coin("atom", 500),
@@ -1753,7 +1753,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 		opAddrSdk, err := sdk.AccAddressFromBech32(opAddr)
 		require.NoError(t, err)
 
-		// Add fees to fee collector (don't checkpoint)
+		// Add fees to poa module (don't checkpoint)
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
 		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)

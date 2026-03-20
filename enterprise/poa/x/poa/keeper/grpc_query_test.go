@@ -405,7 +405,7 @@ func TestWithdrawableFeesQuery(t *testing.T) {
 		opAddr1, _ := createValidator(t, f, 1, 100) // 25% power
 		opAddr2, _ := createValidator(t, f, 2, 300) // 75% power
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
 		err := f.bankKeeper.MintCoins(f.ctx, types.ModuleName, fees)
 		require.NoError(t, err)

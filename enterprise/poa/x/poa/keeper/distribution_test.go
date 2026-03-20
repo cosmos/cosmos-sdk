@@ -37,8 +37,7 @@ func TestProportionalDistribution(t *testing.T) {
 		validatorAddr1, _ := createValidator(t, f, 1, 100)
 		validatorAddr2, _ := createValidator(t, f, 2, 300)
 
-		// Add fees to fee collector
-		feeCollector := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
 		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
@@ -57,9 +56,10 @@ func TestProportionalDistribution(t *testing.T) {
 		expectedFees2 := sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(750))}
 		require.Equal(t, expectedFees2, resp2.Fees.Fees)
 
-		// Verify fee collector still has all fees (lazy distribution)
-		feeCollectorBalance := f.bankKeeper.GetAllBalances(f.ctx, feeCollector.GetAddress())
-		require.Equal(t, fees, feeCollectorBalance)
+		// Verify poa module still has all fees (lazy distribution)
+		poaModule := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
+		poaModuleBalance := f.bankKeeper.GetAllBalances(f.ctx, poaModule.GetAddress())
+		require.Equal(t, fees, poaModuleBalance)
 	})
 
 	t.Run("equal power results in equal distribution", func(t *testing.T) {
@@ -70,7 +70,7 @@ func TestProportionalDistribution(t *testing.T) {
 		validatorAddr2, _ := createValidator(t, f, 2, 100)
 		validatorAddr3, _ := createValidator(t, f, 3, 100)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 300))
 		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
@@ -110,15 +110,15 @@ func TestProportionalDistribution(t *testing.T) {
 	t.Run("no validators with lazy distribution", func(t *testing.T) {
 		f := setupTest(t)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
 		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
-		// With lazy distribution, fees remain in fee collector (no panic)
-		feeCollector := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
-		feeCollector := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
-		require.Equal(t, fees, feeCollectorBalance)
+		// With lazy distribution, fees remain in poa module (no panic)
+		poaModule := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
+		poaModuleBalance := f.bankKeeper.GetAllBalances(f.ctx, poaModule.GetAddress())
+		require.Equal(t, fees, poaModuleBalance)
 	})
 
 	t.Run("accumulated fees persist across multiple blocks", func(t *testing.T) {
@@ -196,7 +196,7 @@ func TestProportionalDistribution(t *testing.T) {
 		validatorAddr1, _ := createValidator(t, f, 1, 100)
 		validatorAddr2, _ := createValidator(t, f, 2, 300)
 
-		// Add multiple denominations to fee collector
+		// Add multiple denominations to poa module
 		fees := sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 1000),
 			sdk.NewInt64Coin("atom", 400),
@@ -413,7 +413,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		_, consAddr1 := createValidator(t, f, 1, 100)
 		_, consAddr2 := createValidator(t, f, 2, 300)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
 		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
@@ -441,10 +441,10 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(1000))}, totalAllocated)
 
-		// Fee collector balance should remain unchanged (lazy distribution)
-		feeCollector := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
-		feeCollectorBalance := f.bankKeeper.GetAllBalances(f.ctx, feeCollector.GetAddress())
-		require.Equal(t, fees, feeCollectorBalance)
+		// POA module balance should remain unchanged (lazy distribution)
+		poaModule := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
+		poaModuleBalance := f.bankKeeper.GetAllBalances(f.ctx, poaModule.GetAddress())
+		require.Equal(t, fees, poaModuleBalance)
 	})
 
 	t.Run("checkpoint with no fees does nothing", func(t *testing.T) {
@@ -479,7 +479,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		_, consAddr1 := createValidator(t, f, 1, 100)
 		_, consAddr2 := createValidator(t, f, 2, 0)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
@@ -632,7 +632,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 		_, _ = createValidator(t, f, 1, 0)
 		_, _ = createValidator(t, f, 2, 0)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
 		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
@@ -1068,7 +1068,7 @@ func TestCalculateValidatorPendingFees(t *testing.T) {
 }
 
 func TestGetUnallocatedFees(t *testing.T) {
-	t.Run("returns zero when fee collector is empty", func(t *testing.T) {
+	t.Run("returns zero when poa module is empty", func(t *testing.T) {
 		f := setupTest(t)
 
 		unallocated, err := f.poaKeeper.getUnallocatedFees(f.ctx)
@@ -1079,7 +1079,7 @@ func TestGetUnallocatedFees(t *testing.T) {
 	t.Run("returns all fees when nothing allocated", func(t *testing.T) {
 		f := setupTest(t)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
 		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
@@ -1095,7 +1095,7 @@ func TestGetUnallocatedFees(t *testing.T) {
 		// Create validator
 		_, _ = createValidator(t, f, 1, 100)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
 		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)

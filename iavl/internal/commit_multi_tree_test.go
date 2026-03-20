@@ -13,11 +13,10 @@ import (
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/log/v2"
-	storeiavl "cosmossdk.io/store/iavl"
-	storemetrics "cosmossdk.io/store/metrics"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/rootmulti"
-	store "cosmossdk.io/store/types"
+	storeiavl "github.com/cosmos/cosmos-sdk/store/v2/legacy/iavl"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	store "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func TestCommitMultiTree_Reload(t *testing.T) {
@@ -35,11 +34,11 @@ func TestCommitMultiTree_Reload(t *testing.T) {
 
 	// open db & create some data
 	loadDb()
-	cacheMs := db.CacheMultiStore()
-	testStore := cacheMs.GetKVStore(testStoreKey)
+	cb := db.CommitBranch()
+	testStore := cb.GetKVStore(testStoreKey)
 	testStore.Set([]byte("key1"), []byte("value1"))
 	testStore.Set([]byte("key2"), []byte("value2"))
-	committer, err := db.StartCommit(context.Background(), cacheMs, cmtproto.Header{})
+	committer, err := cb.StartCommit(context.Background(), cmtproto.Header{})
 	require.NoError(t, err)
 	commitId, err := committer.Finalize()
 	require.NoError(t, err)
@@ -49,13 +48,13 @@ func TestCommitMultiTree_Reload(t *testing.T) {
 	loadDb()
 
 	// verify data is still there
-	cacheMs = db.CacheMultiStore()
-	testStore = cacheMs.GetKVStore(testStoreKey)
+	cb = db.CommitBranch()
+	testStore = cb.GetKVStore(testStoreKey)
 	val1 := testStore.Get([]byte("key1"))
 	require.Equal(t, []byte("value1"), val1)
 	val2 := testStore.Get([]byte("key2"))
 	require.Equal(t, []byte("value2"), val2)
-	committer, err = db.StartCommit(context.Background(), cacheMs, cmtproto.Header{})
+	committer, err = cb.StartCommit(context.Background(), cmtproto.Header{})
 	require.NoError(t, err)
 	commitId, err = committer.Finalize()
 	require.NoError(t, err)
@@ -94,7 +93,7 @@ func TestCommitMultiTreeSims(t *testing.T) {
 
 func testCommitMultiTreeSims(t *rapid.T, iter int, opts Options, pruningOpts pruningtypes.PruningOptions) {
 	dbV1 := dbm.NewMemDB()
-	mtV1 := rootmulti.NewStore(dbV1, log.NewNopLogger(), storemetrics.NewNoOpMetrics())
+	mtV1 := rootmulti.NewStore(dbV1, log.NewNopLogger())
 
 	// NOTE: if we need to debug test failures, we can uncomment this code to save data after test failures:
 	// dataDir := fmt.Sprintf("testdata/iavl-data/run-%d", iter)
@@ -210,12 +209,12 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 	// randomly generate some updates that we'll revert to test rollback capability
 	testRollback := rapid.Bool().Draw(t, "testRollback")
 	if testRollback {
-		cacheMs2 := sim.mtV2.CacheMultiStore()
+		cb := sim.mtV2.CommitBranch()
 		numUpdates := rapid.IntRange(0, 20).Draw(t, "numRollbackUpdates")
 		for i := 0; i < numUpdates; i++ {
 			j := rapid.IntRange(0, len(sim.storeKeys)-1).Draw(t, "storeKey")
 			storeKey := sim.storeKeys[j]
-			st := cacheMs2.GetKVStore(storeKey)
+			st := cb.GetKVStore(storeKey)
 			// don't use the key gen here since we don't want to affect the main state!
 			isDelete := rapid.Bool().Draw(t, "isDelete")
 			key := rapid.SliceOfN(rapid.Byte(), 1, 100).Draw(t, "key")
@@ -226,7 +225,7 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 				st.Set(key, value)
 			}
 		}
-		committer, err := sim.mtV2.StartCommit(context.Background(), cacheMs2, cmtproto.Header{})
+		committer, err := cb.StartCommit(context.Background(), cmtproto.Header{})
 		require.NoError(t, err)
 		// wait a little bit of time before rolling back
 		// to increase chance of overlapping with other async operations
@@ -235,17 +234,17 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 		require.NoError(t, committer.Rollback())
 	}
 
-	cacheMs1 := sim.mtV1.CacheMultiStore()
-	cacheMs2 := sim.mtV2.CacheMultiStore()
+	cb1 := sim.mtV1.CommitBranch()
+	cb2 := sim.mtV2.CommitBranch()
 
-	sim.applyVersionUpdates(t, cacheMs1, cacheMs2)
+	sim.applyVersionUpdates(t, cb1, cb2)
 
-	// follow old workflow with store v1
-	cacheMs1.Write()
-	commitId1 := sim.mtV1.Commit()
+	committer1, err := cb1.StartCommit(context.Background(), cmtproto.Header{})
+	require.NoError(t, err)
+	commitId1, err := committer1.Finalize()
+	require.NoError(t, err)
 
-	// follow new workflow with store v2
-	committer2, err := sim.mtV2.StartCommit(context.Background(), cacheMs2, cmtproto.Header{})
+	committer2, err := cb2.StartCommit(context.Background(), cmtproto.Header{})
 	require.NoError(t, err)
 	commitId2, err := committer2.Finalize()
 	require.NoError(t, err)
@@ -477,13 +476,13 @@ func setupQueryableMultiTree(t *testing.T) (*CommitMultiTree, *store.KVStoreKey)
 func commitQueryableTree(t *testing.T, mt *CommitMultiTree, key store.StoreKey, updates []testKV) store.CommitID {
 	t.Helper()
 
-	cacheMs := mt.CacheMultiStore()
-	kvStore := cacheMs.GetKVStore(key)
+	cb := mt.CommitBranch()
+	kvStore := cb.GetKVStore(key)
 	for _, update := range updates {
 		kvStore.Set(update.key, update.value)
 	}
 
-	committer, err := mt.StartCommit(context.Background(), cacheMs, cmtproto.Header{Time: time.Now()})
+	committer, err := cb.StartCommit(context.Background(), cmtproto.Header{Time: time.Now()})
 	require.NoError(t, err)
 
 	cid, err := committer.Finalize()
@@ -503,7 +502,6 @@ func legacySubspaceResponse(t *testing.T, updates []testKV, prefix []byte) []byt
 		store.CommitID{},
 		storeiavl.DefaultIAVLCacheSize,
 		false,
-		storemetrics.NewNoOpMetrics(),
 	)
 	require.NoError(t, err)
 	legacy := iavlStore.(*storeiavl.Store)

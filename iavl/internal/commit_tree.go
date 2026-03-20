@@ -19,11 +19,12 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	errorsmod "cosmossdk.io/errors"
+
 	"cosmossdk.io/log/v2"
 
-	"cosmossdk.io/store/cachekv"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/store/types/kv"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/types/kv"
 )
 
 type CommitTree struct {
@@ -96,7 +97,7 @@ type commitTreeFinalizer struct {
 	walErr             error
 }
 
-func (c *CommitTree) StartCommit(ctx context.Context, updates iter.Seq[cachekv.Update[[]byte]], updateCount int) storetypes.CommitFinalizer {
+func (c *CommitTree) startCommit(ctx context.Context, updates iter.Seq[cachekv.Update[[]byte]], updateCount int) *commitTreeFinalizer {
 	cancelCtx, cancel := context.WithCancel(ctx)
 	committer := &commitTreeFinalizer{
 		CommitTree:         c,

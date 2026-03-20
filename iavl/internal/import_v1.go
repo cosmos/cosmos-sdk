@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/iavl"
 	iavldb "github.com/cosmos/iavl/db"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func ImportIAVLV1MultiStore(dataDir, outDir string, logger log.Logger) error {

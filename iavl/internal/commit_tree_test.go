@@ -17,8 +17,9 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	sdklog "cosmossdk.io/log"
+
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 )
 
 func TestCommitTreeSims(t *testing.T) {
@@ -101,7 +102,7 @@ func (s *SimCommitTree) checkNewVersion(t *rapid.T) {
 	testRollback := rapid.Bool().Draw(t, "testRollback")
 	if testRollback {
 		tempUpdates := s.genUpdates(t, true)
-		committer := s.treeV2.StartCommit(context.Background(), slices.Values(tempUpdates), len(tempUpdates))
+		committer := s.treeV2.startCommit(context.Background(), slices.Values(tempUpdates), len(tempUpdates))
 		// wait a little bit of time before rolling back
 		time.Sleep(5 * time.Millisecond)
 		require.NoError(t, committer.Rollback())
@@ -122,7 +123,7 @@ func (s *SimCommitTree) checkNewVersion(t *rapid.T) {
 	require.NoError(t, err, "failed to save version in V1 tree")
 
 	// apply updates to v2 tree
-	committer := s.treeV2.StartCommit(context.Background(), slices.Values(updates), len(updates))
+	committer := s.treeV2.startCommit(context.Background(), slices.Values(updates), len(updates))
 	commitIdV2, err := committer.Finalize()
 	require.NoError(t, err, "failed to finalize commit in V2 tree")
 

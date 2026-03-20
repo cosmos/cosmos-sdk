@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func saveCommitInfo(outDir string, ci *storetypes.CommitInfo) error {

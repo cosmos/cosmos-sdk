@@ -2,10 +2,9 @@ package internal
 
 import (
 	"fmt"
-	io "io"
 	"sync"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 type MultiTree struct {
@@ -71,11 +70,6 @@ func (t *MultiTree) CacheWrap() storetypes.CacheWrap {
 	return t.CacheMultiStore()
 }
 
-func (t *MultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	// TODO implement me
-	return t.CacheWrap()
-}
-
 func (t *MultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 	// create a nested MultiTree, which in turn creates CacheWraps for each store
 	return NewMultiTree(t.latestVersion, func(key storetypes.StoreKey) storetypes.CacheWrap {
@@ -103,20 +97,6 @@ func (t *MultiTree) GetKVStore(key storetypes.StoreKey) storetypes.KVStore {
 		panic(fmt.Sprintf("store with key %v is not KVStore: store type=%T", key, store))
 	}
 	return kvStore
-}
-
-func (t *MultiTree) TracingEnabled() bool {
-	return false
-}
-
-func (t *MultiTree) SetTracer(w io.Writer) storetypes.MultiStore {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (t *MultiTree) SetTracingContext(context storetypes.TraceContext) storetypes.MultiStore {
-	// TODO implement me
-	panic("implement me")
 }
 
 func (t *MultiTree) LatestVersion() int64 {

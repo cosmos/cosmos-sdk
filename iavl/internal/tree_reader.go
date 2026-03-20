@@ -2,11 +2,11 @@ package internal
 
 import (
 	"errors"
-	"io"
 
-	"cosmossdk.io/store/cachekv"
-	storetypes "cosmossdk.io/store/types"
 	ics23 "github.com/cosmos/ics23/go"
+
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 type TreeReader struct {
@@ -78,11 +78,6 @@ func (t TreeReader) GetStoreType() storetypes.StoreType {
 }
 
 func (t TreeReader) CacheWrap() storetypes.CacheWrap {
-	return cachekv.NewStore(t)
-}
-
-func (t TreeReader) CacheWrapWithTrace(io.Writer, storetypes.TraceContext) storetypes.CacheWrap {
-	// TODO implement me
 	return cachekv.NewStore(t)
 }
 

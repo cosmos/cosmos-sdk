@@ -3,11 +3,8 @@ package internal
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
-	"iter"
-	"log"
 	"os"
 	"path/filepath"
 	"slices"
@@ -15,7 +12,6 @@ import (
 	"sync"
 	"sync/atomic"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"go.opentelemetry.io/otel/attribute"
@@ -23,9 +19,9 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	errorsmod "cosmossdk.io/errors"
+
 	"cosmossdk.io/log/v2"
 
-	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/v2/mem"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
@@ -58,411 +54,25 @@ type CommitMultiTree struct {
 	logger           log.Logger
 }
 
-func (db *CommitMultiTree) EarliestVersion() int64 {
-	return db.earliestVersion.Load()
-}
-
 type storeData struct {
 	key   storetypes.StoreKey
 	typ   storetypes.StoreType
 	store any
 }
 
-func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.MultiStore, header cmtproto.Header) (storetypes.CommitFinalizer, error) {
-	ctx, span := tracer.Start(ctx, "CommitMultiTree.commit",
-		trace.WithAttributes(
-			attribute.Int64("version", int64(db.stagedVersion())),
-		),
-	)
-
-	multiTree, ok := store.(*MultiTree)
-	if !ok {
-		return nil, fmt.Errorf("expected MultiTree, got %T", store)
-	}
-
-	latestVersion := db.LatestVersion()
-	if multiTree.LatestVersion() != latestVersion {
-		return nil, fmt.Errorf("store version mismatch: expected %d, got %d", latestVersion, multiTree.LatestVersion())
-	}
-
-	numIavlStores := len(db.iavlStores)
-	storeInfos := make([]storetypes.StoreInfo, numIavlStores)
-	finalizers := make([]*commitTreeFinalizer, numIavlStores)
-	commitInfo := &storetypes.CommitInfo{
-		StoreInfos: storeInfos,
-		Timestamp:  header.Time,
-		Version:    db.stagedVersion(),
-	}
-	for i, si := range db.iavlStores {
-		commitStore := si.store.(*CommitTree)
-		cachedStore := multiTree.GetCacheWrapIfExists(si.key)
-		var updates iter.Seq[cachekv.Update[[]byte]]
-		var updateCount int
-		if cachedStore != nil {
-			cacheKv, ok := cachedStore.(*cachekv.Store)
-			if !ok {
-				return nil, fmt.Errorf("expected %T, got %T", cachekv.Store{}, cachedStore)
-			}
-			updates, updateCount = cacheKv.Updates()
-		}
-		finalizer := commitStore.StartCommit(ctx, updates, updateCount)
-		iavlFinalizer, ok := finalizer.(*commitTreeFinalizer)
-		if !ok {
-			return nil, fmt.Errorf("expected iavl commitTreeFinalizer, got %T", finalizer)
-		}
-		finalizers[i] = iavlFinalizer
-		storeInfos[i].Name = si.key.Name()
-	}
-	ctx, cancel := context.WithCancel(ctx)
-	finalizer := &multiTreeFinalizer{
-		CommitMultiTree:    db,
-		cacheMs:            multiTree,
-		ctx:                ctx,
-		cancel:             cancel,
-		finalizers:         finalizers,
-		workingCommitInfo:  commitInfo,
-		done:               make(chan struct{}),
-		hashReady:          make(chan struct{}),
-		finalizeOrRollback: make(chan struct{}),
-	}
-	go func() {
-		// Prevent context leak: WithCancel registers a child in the parent context's tree,
-		// and that registration is only cleaned up when cancel() is called.
-		// Safe here because all ctx.Err() checks are inside commit(), which has already
-		// returned by the time this defer fires. On rollback, cancel() is called first;
-		// calling it again here is a no-op.
-		defer cancel()
-		err := finalizer.commit(ctx, span)
-		if err != nil {
-			finalizer.err.Store(err)
-		}
-		close(finalizer.done)
-		db.compactIfNeeded() // start background compaction when needed
-	}()
-	return finalizer, nil
-}
-
-type multiTreeFinalizer struct {
-	*CommitMultiTree
-	ctx                context.Context
-	cancel             context.CancelFunc
-	cacheMs            *MultiTree
-	finalizers         []*commitTreeFinalizer
-	workingCommitInfo  *storetypes.CommitInfo
-	workingCommitId    storetypes.CommitID
-	done               chan struct{}
-	hashReady          chan struct{}
-	finalizeOnce       sync.Once
-	finalizeOrRollback chan struct{}
-	err                atomic.Value
-}
-
-func (db *multiTreeFinalizer) commit(ctx context.Context, span trace.Span) error {
-	// we pass the span from StartCommit into here and finish it here so that all sub-tree commits
-	// are nested under this span
-	defer span.End()
-
-	db.commitMutex.Lock()
-	defer db.commitMutex.Unlock()
-
-	if err := db.prepareCommit(ctx); err != nil {
-		db.startRollback()
-
-		// do not use an errGroup here since, we want to rollback everything even if some rollbacks fail
-		var wg sync.WaitGroup
-		errs := make([]error, len(db.finalizers))
-		for i, finalizer := range db.finalizers {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				errs[i] = finalizer.Rollback()
-			}()
-		}
-
-		wg.Wait()
-		if err := errors.Join(errs...); err != nil {
-			return fmt.Errorf("rollback failed: %w", err.(error))
-		}
-
-		return fmt.Errorf("%w; cause: %v", rolledbackErr, err)
-	}
-
-	var errGroup errgroup.Group
-	// finalize IAVL stores
-	for _, finalizer := range db.finalizers {
-		errGroup.Go(func() error {
-			_, err := finalizer.Finalize()
-			return err
-		})
-	}
-	// commit non-IAVL stores
-	for _, si := range db.otherStores {
-		errGroup.Go(func() error {
-			cachedStore := db.cacheMs.GetCacheWrapIfExists(si.key)
-			if cachedStore == nil {
-				return nil
-			}
-			cachedStore.Write()
-			committer, ok := si.store.(storetypes.Committer)
-			if !ok {
-				return nil
-			}
-			committer.Commit()
-			return nil
-		})
-	}
-	// wait for all stores to finalize
-	if err := errGroup.Wait(); err != nil {
-		return fmt.Errorf("finalizing commit failed: %w", err)
-	}
-
-	version := db.workingCommitId.Version
-	db.commitData.Store(&commitData{
-		commitId:   db.workingCommitId,
-		commitInfo: db.workingCommitInfo,
-	})
-	if db.earliestVersion.Load() == 0 {
-		db.earliestVersion.Store(version)
-	}
-	return nil
-}
-
-func (db *multiTreeFinalizer) writeCommitInfo(headerDone chan error) {
-	// in order to not block on fsync until AFTER we have computed all hashes, which SHOULD be the slowest operation (WAL writing should complete before that)
-	// we write and fsync the first part of the commit info (store names) as soon as we know finalization will happen,
-	// and then append hashes at the end once they are ready, without fsyncing again since they aren't needed for durability
-
-	file, err := db.writeCommitInfoHeader()
-	headerDone <- err
-	close(headerDone)
-	if err != nil {
-		return
-	}
-
-	// Wait for hashes to be ready. The ctx.Done case prevents a goroutine leak:
-	// if SignalFinalize() was called before hashes completed and hash computation
-	// then fails, hashReady is never closed and this goroutine would block forever.
-	// At this point the durable state is already settled (committed or rolled back),
-	// so we just clean up and exit.
-	select {
-	case <-db.hashReady:
-	case <-db.ctx.Done():
-		_ = file.Close()
-		return
-	}
-
-	err = writeCommitInfoFooter(file, db.workingCommitInfo)
-	if err != nil {
-		// at this point we don't error on such errors
-		db.logger.Error("failed to write commit info footer with hashes", "error", err)
-	}
-
-	err = file.Close()
-	if err != nil {
-		db.logger.Error("failed to close commit info file after writing hashes", "error", err)
-		return
-	}
-}
-
-func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
-	var headerBuf bytes.Buffer
-	info := db.workingCommitInfo
-	err := writeCommitInfoHeader(&headerBuf, info)
-	if err != nil {
-		return nil, fmt.Errorf("failed to write commit info header to buffer: %w", err)
-	}
-
-	// wait for finalization signal
-	select {
-	case <-db.finalizeOrRollback:
-	case <-db.ctx.Done():
-	}
-	if db.ctx.Err() != nil {
-		return nil, db.ctx.Err() // do not write commit info if rolling back
-	}
-
-	// write the header to disk
-	commitInfoDir := filepath.Join(db.dir, commitInfoSubPath)
-	err = os.MkdirAll(commitInfoDir, 0o700)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create commit info dir: %w", err)
-	}
-
-	stagedVersion := info.Version
-
-	pendingPath := filepath.Join(commitInfoDir, fmt.Sprintf(".pending.%d", stagedVersion))
-	commitInfoPath := filepath.Join(commitInfoDir, fmt.Sprintf("%d", stagedVersion))
-	file, err := os.OpenFile(pendingPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open commit info file for version %d: %w", stagedVersion, err)
-	}
-
-	_, err = file.Write(headerBuf.Bytes())
-	if err != nil {
-		_ = file.Close()
-		return nil, fmt.Errorf("failed to write commit info header for version %d: %w", stagedVersion, err)
-	}
-
-	// fsync the file to ensure durability of store names
-	err = file.Sync()
-	if err != nil {
-		_ = file.Close()
-		return nil, fmt.Errorf("failed to sync commit info file for version %d: %w", stagedVersion, err)
-	}
-
-	// wait for all trees to complete their WAL writes before renaming so we only commit when all children have committed
-	var wg errgroup.Group
-	for _, finalizer := range db.finalizers {
-		wg.Go(func() error {
-			return finalizer.WaitForWAL()
-		})
-	}
-	if err := wg.Wait(); err != nil {
-		_ = file.Close()
-		_ = os.Remove(pendingPath)
-		return nil, fmt.Errorf("failed when waiting for WAL completion: %w", err)
-	}
-
-	err = os.Rename(pendingPath, commitInfoPath)
-	if err != nil {
-		_ = file.Close()
-		return nil, fmt.Errorf("failed to rename commit info file for version %d: %w", stagedVersion, err)
-	}
-
-	// fsync the parent directory to ensure the rename is durable.
-	// This runs while per-tree hash computation is still in progress,
-	// so it adds no latency to the critical path.
-	parentDir, err := os.Open(commitInfoDir)
-	if err != nil {
-		_ = file.Close()
-		return nil, fmt.Errorf("failed to open commit info dir for fsync: %w", err)
-	}
-	if err := parentDir.Sync(); err != nil {
-		_ = parentDir.Close()
-		_ = file.Close()
-		return nil, fmt.Errorf("failed to fsync commit info dir: %w", err)
-	}
-	_ = parentDir.Close()
-
-	return file, nil
-}
-
-func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
-	// start writing commit info in background
-	commitInfoSynced := make(chan error, 1)
-	go func() {
-		db.writeCommitInfo(commitInfoSynced)
-	}()
-
-	var hashErrGroup errgroup.Group
-	for i, finalizer := range db.finalizers {
-		hashErrGroup.Go(func() error {
-			hash, err := finalizer.WaitForHash()
-			if err != nil {
-				return err
-			}
-			if hash.Version != 0 && hash.Version != int64(db.stagedVersion()) {
-				return fmt.Errorf("store %s returned mismatched version in commit ID: expected %d, got %d", db.iavlStores[i].key.Name(), db.stagedVersion(), hash.Version)
-			}
-			db.workingCommitInfo.StoreInfos[i].CommitId = hash
-			return nil
-		})
-	}
-	if err := hashErrGroup.Wait(); err != nil {
-		return err
-	}
-
-	db.workingCommitId = storetypes.CommitID{
-		Version: db.stagedVersion(),
-		Hash:    db.workingCommitInfo.Hash(),
-	}
-	close(db.hashReady)
-
-	select {
-	case <-db.finalizeOrRollback:
-	case <-ctx.Done():
-	}
-
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-
-	// wait for commit info to be written before we start finalizing stores,
-	// otherwise checkpointing may start, and commit is not atomic
-	if err := <-commitInfoSynced; err != nil {
-		return fmt.Errorf("writing commit info failed: %w", err)
-	}
-
-	// we are past the rollback point so we don't return ctx.Err()
-	return nil
-}
-
-func (db *multiTreeFinalizer) PrepareFinalize() (storetypes.CommitID, error) {
-	if err := db.SignalFinalize(); err != nil {
-		return storetypes.CommitID{}, err
-	}
-	select {
-	case <-db.hashReady:
-	case <-db.done:
-	}
-	err := db.err.Load()
-	if err != nil {
-		return storetypes.CommitID{}, err.(error)
-	}
-	return db.workingCommitId, nil
-}
-
-func (db *multiTreeFinalizer) SignalFinalize() error {
-	db.finalizeOnce.Do(func() {
-		close(db.finalizeOrRollback)
-	})
-	return nil
-}
-
-func (db *multiTreeFinalizer) Finalize() (storetypes.CommitID, error) {
-	if err := db.SignalFinalize(); err != nil {
-		return storetypes.CommitID{}, err
-	}
-
-	<-db.done
-	err := db.err.Load()
-	if err != nil {
-		return storetypes.CommitID{}, err.(error)
-	}
-	return db.workingCommitId, nil
-}
-
-func (db *multiTreeFinalizer) Rollback() error {
-	db.startRollback()
-	<-db.done
-	err := db.err.Load()
-	if err == nil {
-		return fmt.Errorf("rollback failed, commit succeeded")
-	}
-	if !errors.Is(err.(error), rolledbackErr) {
-		return fmt.Errorf("rollback failed: %w", err.(error))
-	}
-	return nil
-}
-
-func (db *multiTreeFinalizer) startRollback() {
-	// we must propagate cancellation to any background operations
-	db.cancel()
-	db.finalizeOnce.Do(func() {
-		close(db.finalizeOrRollback)
-	})
-}
-
 func (db *CommitMultiTree) GetCommitInfo(ver int64) (*storetypes.CommitInfo, error) {
 	return loadCommitInfo(db.dir, ver)
 }
 
-func (db *CommitMultiTree) Commit() storetypes.CommitID {
-	panic("cannot call Commit on uncached CommitMultiTree directly; use StartCommit")
+func (db *CommitMultiTree) CommitBranch() storetypes.CommitBranch {
+	return &commitBranch{
+		MultiTree: db.rootCacheMultiStore(),
+		db:        db,
+	}
 }
 
-func (db *CommitMultiTree) WorkingHash() []byte {
-	panic("cannot call PrepareFinalize on uncached CommitMultiTree directly; use StartCommit")
+func (db *CommitMultiTree) EarliestVersion() int64 {
+	return db.earliestVersion.Load()
 }
 
 func (db *CommitMultiTree) LastCommitID() storetypes.CommitID {
@@ -496,28 +106,6 @@ func (db *CommitMultiTree) GetKVStore(storetypes.StoreKey) storetypes.KVStore {
 // GetObjKVStore returns a mounted ObjKVStore for a given StoreKey.
 func (db *CommitMultiTree) GetObjKVStore(storetypes.StoreKey) storetypes.ObjKVStore {
 	panic("cannot call GetObjKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
-}
-
-func (db *CommitMultiTree) GetCommitStore(storetypes.StoreKey) storetypes.CommitStore {
-	panic("cannot call GetCommitStore on uncached CommitMultiTree directly; use CacheMultiStore first")
-}
-
-func (db *CommitMultiTree) GetCommitKVStore(storetypes.StoreKey) storetypes.CommitKVStore {
-	panic("cannot call GetCommitKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
-}
-
-func (db *CommitMultiTree) SetTracer(io.Writer) storetypes.MultiStore {
-	db.logger.Warn("SetTracer is not implemented for CommitMultiTree")
-	return db
-}
-
-func (db *CommitMultiTree) SetTracingContext(storetypes.TraceContext) storetypes.MultiStore {
-	db.logger.Warn("SetTracingContext is not implemented for CommitMultiTree")
-	return db
-}
-
-func (db *CommitMultiTree) TracingEnabled() bool {
-	return false
 }
 
 func (db *CommitMultiTree) Snapshot(height uint64, protoWriter protoio.Writer) error {
@@ -652,19 +240,9 @@ func (db *CommitMultiTree) LoadVersion(ver int64) error {
 	return fmt.Errorf("LoadVersion has not been implemented yet")
 }
 
-func (db *CommitMultiTree) SetInterBlockCache(cache storetypes.MultiStorePersistentCache) {
-	db.logger.Warn("SetInterBlockCache is not implemented for CommitMultiTree")
-}
-
 func (db *CommitMultiTree) SetInitialVersion(version int64) error {
 	return fmt.Errorf("SetInitialVersion has not been implemented yet")
 }
-
-func (db *CommitMultiTree) SetIAVLCacheSize(size int) {}
-
-func (db *CommitMultiTree) SetIAVLDisableFastNode(disable bool) {}
-
-func (db *CommitMultiTree) SetIAVLSyncPruning(sync bool) {}
 
 func (db *CommitMultiTree) RollbackToVersion(version int64) error {
 	//db.commitMutex.Lock()
@@ -713,10 +291,6 @@ func (db *CommitMultiTree) AddListeners(keys []storetypes.StoreKey) {
 func (db *CommitMultiTree) PopStateCache() []*storetypes.StoreKVPair {
 	// TODO implement me
 	panic("implement me")
-}
-
-func (db *CommitMultiTree) SetMetrics(metrics metrics.StoreMetrics) {
-	db.logger.Warn("SetMetrics is not implemented for CommitMultiTree")
 }
 
 func LoadCommitMultiTree(path string, opts Options, logger log.Logger) (*CommitMultiTree, error) {
@@ -768,15 +342,14 @@ func (db *CommitMultiTree) Close() error {
 }
 
 func (db *CommitMultiTree) CacheWrap() storetypes.CacheWrap {
-	return db.CacheMultiStore()
+	panic("TODO")
 }
 
-func (db *CommitMultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	db.logger.Warn("CacheWrapWithTrace is not implemented for CommitMultiTree; falling back to CacheWrap")
-	return db.CacheWrap()
+func (db *CommitMultiTree) RootCacheMultiStore() storetypes.MultiStore {
+	return db.rootCacheMultiStore()
 }
 
-func (db *CommitMultiTree) CacheMultiStore() storetypes.CacheMultiStore {
+func (db *CommitMultiTree) rootCacheMultiStore() *MultiTree {
 	cd := db.commitData.Load()
 	if cd == nil {
 		return db.cacheMultiStore(0)
@@ -784,10 +357,10 @@ func (db *CommitMultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 	return db.cacheMultiStore(cd.commitId.Version)
 }
 
-func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes.CacheMultiStore, error) {
+func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes.MultiStore, error) {
 	if version == 0 {
 		// use latest version
-		return db.CacheMultiStore(), nil
+		return db.RootCacheMultiStore(), nil
 	}
 	// check if we actually have CommitInfo for this version - basically fail fast when we don't
 	_, err := loadCommitInfo(db.dir, version)
@@ -798,7 +371,7 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 	return db.cacheMultiStore(version), nil
 }
 
-func (db *CommitMultiTree) cacheMultiStore(version int64) storetypes.CacheMultiStore {
+func (db *CommitMultiTree) cacheMultiStore(version int64) *MultiTree {
 	return NewMultiTree(version, func(key storetypes.StoreKey) storetypes.CacheWrap {
 		idx, ok := db.storesByKey[key]
 		if !ok {

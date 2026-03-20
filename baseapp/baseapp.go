@@ -187,7 +187,7 @@ type BaseApp struct {
 	// when disabled, the block gas meter in context is a noop one.
 	//
 	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
-	// Defaults to true
+	// Defaults to true (block gas meter disabled by default).
 	disableBlockGasMeter bool
 
 	// Optional alternative tx runner, used for block-stm parallel transaction execution. If nil, default txRunner is used.

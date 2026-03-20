@@ -460,11 +460,11 @@ func TestBlockGasMeterParallelRunnerPanic(t *testing.T) {
 
 	testCases := []struct {
 		name     string
-		testFunc func(*baseapp.BaseApp)
+		testFunc func(*testing.T, *baseapp.BaseApp)
 	}{
 		{
 			"panic on bstm + gas meter",
-			func(bap *baseapp.BaseApp) {
+			func(t *testing.T, bap *baseapp.BaseApp) {
 				bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil))
 				require.Panics(t, func() { bap.SetDisableBlockGasMeter(false) })
 				require.Panics(t, func() { baseapp.EnableBlockGasMeter()(bap) })
@@ -472,14 +472,14 @@ func TestBlockGasMeterParallelRunnerPanic(t *testing.T) {
 		},
 		{
 			"panic on gas meter + bstm",
-			func(bap *baseapp.BaseApp) {
+			func(t *testing.T, bap *baseapp.BaseApp) {
 				bap.SetDisableBlockGasMeter(false)
 				require.Panics(t, func() { bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil)) })
 			},
 		},
 		{
 			"successful bstm parallelism",
-			func(bap *baseapp.BaseApp) {
+			func(t *testing.T, bap *baseapp.BaseApp) {
 				require.NotPanics(t, func() { bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil)) })
 			},
 		},
@@ -488,7 +488,7 @@ func TestBlockGasMeterParallelRunnerPanic(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			bap := baseapp.NewBaseApp("foo", log.NewTestLogger(t), db, nil)
-			tc.testFunc(bap)
+			tc.testFunc(t, bap)
 		})
 	}
 }

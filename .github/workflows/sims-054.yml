@@ -1,6 +1,7 @@
-name: Sims release/0.53.x
+name: Sims release/0.54.x
 # Sims workflow runs multiple types of simulations (nondeterminism, import-export, after-import, multi-seed-short)
-# This workflow will run on all Pull Requests, if a .go, .mod or .sum file have been changed
+# Sims workflow runs multiple types of simulations (nondeterminism, import-export, after-import, multi-seed-short)
+# This workflow runs on a schedule (twice daily) and on published releases.
 
 on:
   schedule:
@@ -9,7 +10,7 @@ on:
     types: [published]
 
 concurrency:
-  group: ci-${{ github.ref }}-sims-050
+  group: ci-${{ github.ref }}-sims-054
   cancel-in-progress: true
 
 jobs:
@@ -19,10 +20,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: "release/v0.53.x"
+          ref: "release/v0.54.x"
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.7"
+          go-version: "1.25.8"
           check-latest: true
       - run: make build
 
@@ -34,7 +35,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.7"
+          go-version: "1.25.8"
           check-latest: true
       - name: Install runsim
         run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
@@ -50,10 +51,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: "release/v0.53.x"
+          ref: "release/v0.54.x"
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.7"
+          go-version: "1.25.8"
           check-latest: true
       - uses: actions/cache@v5
         with:
@@ -69,10 +70,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: "release/v0.53.x"
+          ref: "release/v0.54.x"
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.7"
+          go-version: "1.25.8"
           check-latest: true
       - uses: actions/cache@v5
         with:
@@ -88,10 +89,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: "release/v0.53.x"
+          ref: "release/v0.54.x"
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.7"
+          go-version: "1.25.8"
           check-latest: true
       - uses: actions/cache@v5
         with:
@@ -114,8 +115,8 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: sdk-sims
-          SLACK_USERNAME: Sim Tests release/0.50.x
+          SLACK_USERNAME: Sim Tests release/0.54.x
           SLACK_ICON_EMOJI: ":skull:"
           SLACK_COLOR: danger
-          SLACK_MESSAGE: 0.50.x Sims are failing
+          SLACK_MESSAGE: 0.54.x Sims are failing
           SLACK_FOOTER: ""

@@ -16,16 +16,23 @@ package types
 
 import (
 	"fmt"
+	"math"
 
 	"cosmossdk.io/core/address"
 	sdkerrors "cosmossdk.io/errors"
 )
 
+// MinPubKeyLength is the minimum expected pubkey serialized length (ed25519 ~34 bytes, secp256k1 ~35 bytes with proto overhead).
+const MinPubKeyLength = 30
+
+// MaxPubKeyLength is the maximum allowed pubkey serialized length (includes proto overhead).
+const MaxPubKeyLength = 128
+
 // ValidateBasic performs basic validation on a Validator.
 // It ensures that:
 //   - Power is non-negative
 //   - Metadata passes validation (operator address, moniker, and description are valid)
-//   - PubKey is not nil
+//   - PubKey is not nil and has valid length
 func (v *Validator) ValidateBasic() error {
 	if v.Power < 0 {
 		return ErrNegativeValidatorPower
@@ -39,6 +46,13 @@ func (v *Validator) ValidateBasic() error {
 	if v.PubKey == nil {
 		return fmt.Errorf("validator pubkey cannot be nil")
 	}
+	// Validate pubkey length (Value contains serialized pubkey bytes)
+	if len(v.PubKey.Value) < MinPubKeyLength {
+		return sdkerrors.Wrapf(ErrInvalidPubKeyLength, "pubkey length %d is below minimum %d", len(v.PubKey.Value), MinPubKeyLength)
+	}
+	if len(v.PubKey.Value) > MaxPubKeyLength {
+		return sdkerrors.Wrapf(ErrInvalidPubKeyLength, "pubkey length %d exceeds maximum %d", len(v.PubKey.Value), MaxPubKeyLength)
+	}
 
 	return nil
 }
@@ -47,11 +61,14 @@ func (v *Validator) ValidateBasic() error {
 // It ensures that:
 //   - All validators pass basic validation
 //   - No duplicate operator addresses exist across validators
+//   - Total power does not overflow int64
+//   - Total power is greater than zero (at least one validator with non-zero power)
 //
 // Returns an error with the validator index if validation fails.
 func ValidateValidatorSet(vs []Validator) error {
 	// Track operator addresses to detect duplicates
 	operatorAddresses := make(map[string]struct{})
+	var totalPower int64
 
 	// Validate each validator
 	for i, validator := range vs {
@@ -66,6 +83,16 @@ func ValidateValidatorSet(vs []Validator) error {
 			return fmt.Errorf("duplicate operator address %s found in validators", operatorAddr)
 		}
 		operatorAddresses[operatorAddr] = struct{}{}
+
+		// Check for total power overflow when summing
+		if totalPower > math.MaxInt64-validator.Power {
+			return ErrTotalPowerOverflow
+		}
+		totalPower += validator.Power
+	}
+
+	if totalPower <= 0 {
+		return sdkerrors.Wrap(ErrInvalidTotalPower, "total power must be greater than zero")
 	}
 
 	return nil
@@ -163,7 +190,72 @@ func (m *MsgCreateValidator) Validate(ac address.Codec) error {
 	if m.PubKey == nil {
 		return fmt.Errorf("validator pubkey cannot be nil")
 	}
+	// Validate pubkey length
+	if len(m.PubKey.Value) < MinPubKeyLength {
+		return sdkerrors.Wrapf(ErrInvalidPubKeyLength, "pubkey length %d is below minimum %d", len(m.PubKey.Value), MinPubKeyLength)
+	}
+	if len(m.PubKey.Value) > MaxPubKeyLength {
+		return sdkerrors.Wrapf(ErrInvalidPubKeyLength, "pubkey length %d exceeds maximum %d", len(m.PubKey.Value), MaxPubKeyLength)
+	}
 
+	return nil
+}
+
+// ValidateBasic performs basic validation on ValidatorFees.
+// It ensures that no fee coin has a negative amount.
+func (f *ValidatorFees) ValidateBasic() error {
+	for _, fee := range f.Fees {
+		if fee.Amount.IsNegative() {
+			return sdkerrors.Wrapf(ErrInvalidAllocatedFees, "negative fee amount for denom %s: %s", fee.Denom, fee.Amount)
+		}
+	}
+	return nil
+}
+
+// ValidateBasic performs basic validation on GenesisAllocatedFees.
+// It ensures that:
+//   - ConsensusAddress is not empty
+//   - Fees are not negative
+func (g *GenesisAllocatedFees) ValidateBasic() error {
+	if g.ConsensusAddress == "" {
+		return sdkerrors.Wrap(ErrInvalidAllocatedFees, "consensus address cannot be empty")
+	}
+	for _, fee := range g.Fees {
+		if fee.Amount.IsNegative() {
+			return sdkerrors.Wrapf(ErrInvalidAllocatedFees, "negative fee amount for denom %s: %s", fee.Denom, fee.Amount)
+		}
+	}
+	return nil
+}
+
+// Validate performs full validation on GenesisAllocatedFees.
+// In addition to basic validation, it verifies that the consensus address
+// is a valid address format according to the provided address codec.
+func (g *GenesisAllocatedFees) Validate(ac address.Codec) error {
+	if err := g.ValidateBasic(); err != nil {
+		return err
+	}
+	if _, err := ac.StringToBytes(g.ConsensusAddress); err != nil {
+		return sdkerrors.Wrapf(ErrInvalidAllocatedFees, "invalid consensus address: %s", err)
+	}
+	return nil
+}
+
+// ValidateAllocatedFees validates a slice of GenesisAllocatedFees.
+// It ensures that:
+//   - Each entry passes basic validation
+//   - No duplicate consensus addresses exist
+func ValidateAllocatedFees(fees []GenesisAllocatedFees) error {
+	seen := make(map[string]struct{})
+	for i, entry := range fees {
+		if err := entry.ValidateBasic(); err != nil {
+			return fmt.Errorf("allocated fees at index %d: %w", i, err)
+		}
+		if _, found := seen[entry.ConsensusAddress]; found {
+			return sdkerrors.Wrapf(ErrInvalidAllocatedFees, "duplicate consensus address %s at index %d", entry.ConsensusAddress, i)
+		}
+		seen[entry.ConsensusAddress] = struct{}{}
+	}
 	return nil
 }
 

@@ -15,14 +15,18 @@
 package types
 
 import (
+	"math"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestValidatorValidateBasic(t *testing.T) {
@@ -93,6 +97,40 @@ func TestValidatorValidateBasic(t *testing.T) {
 				}
 			}(),
 			wantErr: nil,
+		},
+		{
+			name: "pubkey too short",
+			validator: func() *Validator {
+				// Create Any with Value shorter than MinPubKeyLength
+				pubKeyAny := &codectypes.Any{TypeUrl: "/cosmos.crypto.ed25519.PubKey", Value: make([]byte, 10)}
+				return &Validator{
+					PubKey: pubKeyAny,
+					Power:  100,
+					Metadata: &ValidatorMetadata{
+						OperatorAddress: "cosmos1operator",
+						Moniker:         "test-validator",
+						Description:     "Test validator description",
+					},
+				}
+			}(),
+			wantErr: ErrInvalidPubKeyLength,
+		},
+		{
+			name: "pubkey too long",
+			validator: func() *Validator {
+				// Create Any with Value longer than MaxPubKeyLength
+				pubKeyAny := &codectypes.Any{TypeUrl: "/cosmos.crypto.ed25519.PubKey", Value: make([]byte, MaxPubKeyLength+1)}
+				return &Validator{
+					PubKey: pubKeyAny,
+					Power:  100,
+					Metadata: &ValidatorMetadata{
+						OperatorAddress: "cosmos1operator",
+						Moniker:         "test-validator",
+						Description:     "Test validator description",
+					},
+				}
+			}(),
+			wantErr: ErrInvalidPubKeyLength,
 		},
 	}
 
@@ -367,7 +405,39 @@ func TestMsgUpdateValidatorsValidateBasic(t *testing.T) {
 			msg: &MsgUpdateValidators{
 				Validators: []Validator{},
 			},
-			wantErr: false,
+			wantErr: true,
+		},
+		{
+			name: "all zero power validators",
+			msg: func() *MsgUpdateValidators {
+				pubKey1 := ed25519.GenPrivKey().PubKey()
+				pubKeyAny1, _ := codectypes.NewAnyWithValue(pubKey1)
+				pubKey2 := ed25519.GenPrivKey().PubKey()
+				pubKeyAny2, _ := codectypes.NewAnyWithValue(pubKey2)
+				return &MsgUpdateValidators{
+					Validators: []Validator{
+						{
+							PubKey: pubKeyAny1,
+							Power:  0,
+							Metadata: &ValidatorMetadata{
+								OperatorAddress: "cosmos1operator1",
+								Moniker:         "validator-1",
+								Description:     "Validator 1 description",
+							},
+						},
+						{
+							PubKey: pubKeyAny2,
+							Power:  0,
+							Metadata: &ValidatorMetadata{
+								OperatorAddress: "cosmos1operator2",
+								Moniker:         "validator-2",
+								Description:     "Validator 2 description",
+							},
+						},
+					},
+				}
+			}(),
+			wantErr: true,
 		},
 		{
 			name: "invalid validator",
@@ -446,6 +516,41 @@ func TestMsgUpdateValidatorsValidateBasic(t *testing.T) {
 							Power:  50,
 							Metadata: &ValidatorMetadata{
 								OperatorAddress: "",
+								Moniker:         "validator-2",
+								Description:     "Validator 2 description",
+							},
+						},
+					},
+				}
+			}(),
+			wantErr: true,
+		},
+		{
+			name: "total power overflow",
+			msg: func() *MsgUpdateValidators {
+				pubKey1 := ed25519.GenPrivKey().PubKey()
+				pubKeyAny1, _ := codectypes.NewAnyWithValue(pubKey1)
+				pubKey2 := ed25519.GenPrivKey().PubKey()
+				pubKeyAny2, _ := codectypes.NewAnyWithValue(pubKey2)
+				// Two validators whose powers sum to > math.MaxInt64
+				power1 := int64(math.MaxInt64/2 + 1)
+				power2 := int64(math.MaxInt64/2 + 1)
+				return &MsgUpdateValidators{
+					Validators: []Validator{
+						{
+							PubKey: pubKeyAny1,
+							Power:  power1,
+							Metadata: &ValidatorMetadata{
+								OperatorAddress: "cosmos1operator1",
+								Moniker:         "validator-1",
+								Description:     "Validator 1 description",
+							},
+						},
+						{
+							PubKey: pubKeyAny2,
+							Power:  power2,
+							Metadata: &ValidatorMetadata{
+								OperatorAddress: "cosmos1operator2",
 								Moniker:         "validator-2",
 								Description:     "Validator 2 description",
 							},
@@ -574,6 +679,26 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 			}(),
 			wantErr: false,
 		},
+		{
+			name: "pubkey too short",
+			msg: &MsgCreateValidator{
+				PubKey:          &codectypes.Any{TypeUrl: "/cosmos.crypto.ed25519.PubKey", Value: make([]byte, 10)},
+				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
+				Moniker:         "test-moniker",
+				Description:     "test-description",
+			},
+			wantErr: true,
+		},
+		{
+			name: "pubkey too long",
+			msg: &MsgCreateValidator{
+				PubKey:          &codectypes.Any{TypeUrl: "/cosmos.crypto.ed25519.PubKey", Value: make([]byte, MaxPubKeyLength+1)},
+				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
+				Moniker:         "test-moniker",
+				Description:     "test-description",
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -581,6 +706,216 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 			err := tt.msg.Validate(ac)
 			if tt.wantErr {
 				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidatorFeesValidateBasic(t *testing.T) {
+	tests := []struct {
+		name    string
+		fees    *ValidatorFees
+		wantErr bool
+	}{
+		{
+			name:    "empty fees",
+			fees:    &ValidatorFees{},
+			wantErr: false,
+		},
+		{
+			name: "valid fees",
+			fees: &ValidatorFees{
+				Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))},
+			},
+			wantErr: false,
+		},
+		{
+			name: "negative fee amount",
+			fees: &ValidatorFees{
+				Fees: sdk.DecCoins{sdk.DecCoin{Denom: "stake", Amount: sdkmath.LegacyNewDec(-1)}},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fees.ValidateBasic()
+			if tt.wantErr {
+				require.Error(t, err)
+				require.ErrorIs(t, err, ErrInvalidAllocatedFees)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGenesisAllocatedFeesValidateBasic(t *testing.T) {
+	tests := []struct {
+		name    string
+		entry   *GenesisAllocatedFees
+		wantErr bool
+		errMsg  string
+	}{
+		{
+			name: "valid entry",
+			entry: &GenesisAllocatedFees{
+				ConsensusAddress: "cosmosvalcons1abc",
+				Fees:             sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))},
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty consensus address",
+			entry: &GenesisAllocatedFees{
+				ConsensusAddress: "",
+				Fees:             sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))},
+			},
+			wantErr: true,
+			errMsg:  "consensus address cannot be empty",
+		},
+		{
+			name: "negative fee",
+			entry: &GenesisAllocatedFees{
+				ConsensusAddress: "cosmosvalcons1abc",
+				Fees:             sdk.DecCoins{sdk.DecCoin{Denom: "stake", Amount: sdkmath.LegacyNewDec(-1)}},
+			},
+			wantErr: true,
+			errMsg:  "negative fee amount",
+		},
+		{
+			name: "empty fees is valid",
+			entry: &GenesisAllocatedFees{
+				ConsensusAddress: "cosmosvalcons1abc",
+				Fees:             sdk.DecCoins{},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.entry.ValidateBasic()
+			if tt.wantErr {
+				require.Error(t, err)
+				require.ErrorIs(t, err, ErrInvalidAllocatedFees)
+				if tt.errMsg != "" {
+					require.Contains(t, err.Error(), tt.errMsg)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGenesisAllocatedFeesValidate(t *testing.T) {
+	consAddr := sdk.ConsAddress(ed25519.GenPrivKey().PubKey().Address())
+
+	tests := []struct {
+		name    string
+		prefix  string
+		entry   *GenesisAllocatedFees
+		wantErr string
+	}{
+		{
+			name:   "valid with cosmosvalcons prefix",
+			prefix: "cosmosvalcons",
+			entry: &GenesisAllocatedFees{
+				ConsensusAddress: consAddr.String(),
+				Fees:             sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))},
+			},
+		},
+		{
+			name:   "valid with custom prefix",
+			prefix: "mychain",
+			entry: &GenesisAllocatedFees{
+				ConsensusAddress: sdk.MustBech32ifyAddressBytes("mychain", consAddr),
+				Fees:             sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))},
+			},
+		},
+		{
+			name:   "wrong prefix rejected",
+			prefix: "otherchain",
+			entry: &GenesisAllocatedFees{
+				ConsensusAddress: consAddr.String(), // cosmosvalcons prefix
+				Fees:             sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))},
+			},
+			wantErr: "invalid consensus address",
+		},
+		{
+			name:   "invalid bech32 rejected",
+			prefix: "cosmosvalcons",
+			entry: &GenesisAllocatedFees{
+				ConsensusAddress: "invalid-address",
+				Fees:             sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))},
+			},
+			wantErr: "invalid consensus address",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ac := address.NewBech32Codec(tt.prefix)
+			err := tt.entry.Validate(ac)
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.wantErr)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateAllocatedFees(t *testing.T) {
+	tests := []struct {
+		name    string
+		fees    []GenesisAllocatedFees
+		wantErr string
+	}{
+		{
+			name: "nil list is valid",
+			fees: nil,
+		},
+		{
+			name: "empty list is valid",
+			fees: []GenesisAllocatedFees{},
+		},
+		{
+			name: "valid entries",
+			fees: []GenesisAllocatedFees{
+				{ConsensusAddress: "addr1", Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))}},
+				{ConsensusAddress: "addr2", Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(200))}},
+			},
+		},
+		{
+			name: "duplicate consensus addresses",
+			fees: []GenesisAllocatedFees{
+				{ConsensusAddress: "addr1", Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))}},
+				{ConsensusAddress: "addr1", Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(200))}},
+			},
+			wantErr: "duplicate consensus address",
+		},
+		{
+			name: "empty consensus address",
+			fees: []GenesisAllocatedFees{
+				{ConsensusAddress: "addr1", Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", sdkmath.LegacyNewDec(100))}},
+				{ConsensusAddress: "", Fees: sdk.DecCoins{}},
+			},
+			wantErr: "allocated fees at index 1",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateAllocatedFees(tt.fees)
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.wantErr)
 			} else {
 				require.NoError(t, err)
 			}

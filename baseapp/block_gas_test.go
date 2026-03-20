@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log/v2"
 	sdkmath "cosmossdk.io/math"
-	store "cosmossdk.io/store/types"
 
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -22,6 +21,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	store "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -99,7 +99,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			&appBuilder)
 		require.NoError(t, err)
 
-		bapp := appBuilder.Build(dbm.NewMemDB(), nil)
+		bapp := appBuilder.Build(dbm.NewMemDB())
 		err = bapp.Load(true)
 		require.NoError(t, err)
 

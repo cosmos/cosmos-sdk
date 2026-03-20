@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
-	storetypes "cosmossdk.io/store/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -36,7 +36,7 @@ func TestMultiSendNewAccountsGetUniqueIDs(t *testing.T) {
 	logger := log.NewTestLogger(t)
 
 	cms := integration.CreateMultiStore(keys, logger)
-	ctx := sdk.NewContext(cms, cmtproto.Header{
+	ctx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{
 		Height:  1,
 		AppHash: []byte("test-app-hash"),
 	}, false, logger).

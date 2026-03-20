@@ -4,16 +4,14 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"maps"
 	"slices"
 
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/store/metrics"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
 )
 
 type Store interface {
@@ -42,7 +40,7 @@ type CommitStore interface {
 // Queryable allows a Store to expose internal state to the abci.Query
 // interface. Multistore can route requests to the proper Store.
 //
-// This is an optional, but useful extension to any CommitStore
+// This is an optional, but useful extension to any Store
 type Queryable interface {
 	Query(*RequestQuery) (*ResponseQuery, error)
 }
@@ -114,17 +112,8 @@ func (s *StoreUpgrades) RenamedFrom(key string) string {
 	return ""
 }
 
-type MultiStore interface {
+type MultiStoreBase interface {
 	Store
-
-	// Branches MultiStore into a cached storage object.
-	// NOTE: Caller should probably not call .Write() on each, but
-	// call CacheMultiStore.Write().
-	CacheMultiStore() CacheMultiStore
-
-	// CacheMultiStoreWithVersion branches the underlying MultiStore where
-	// each stored is loaded at a specific version (height).
-	CacheMultiStoreWithVersion(version int64) (CacheMultiStore, error)
 
 	// Convenience for fetching substores.
 	// If the store does not exist, panics.
@@ -132,21 +121,17 @@ type MultiStore interface {
 	GetKVStore(StoreKey) KVStore
 	GetObjKVStore(StoreKey) ObjKVStore
 
-	// TracingEnabled returns if tracing is enabled for the MultiStore.
-	TracingEnabled() bool
-
-	// SetTracer sets the tracer for the MultiStore that the underlying
-	// stores will utilize to trace operations. The modified MultiStore is
-	// returned.
-	SetTracer(w io.Writer) MultiStore
-
-	// SetTracingContext sets the tracing context for a MultiStore. It is
-	// implied that the caller should update the context when necessary between
-	// tracing operations. The modified MultiStore is returned.
-	SetTracingContext(TraceContext) MultiStore
-
 	// LatestVersion returns the latest version in the store
 	LatestVersion() int64
+}
+
+type MultiStore interface {
+	MultiStoreBase
+
+	// Branches MultiStore into a cached storage object.
+	// NOTE: Caller should probably not call .Write() on each, but
+	// call CacheMultiStore.Write().
+	CacheMultiStore() CacheMultiStore
 }
 
 // CacheMultiStore extends MultiStore with a Write() method.
@@ -155,16 +140,58 @@ type CacheMultiStore interface {
 	Write() // Writes operations to underlying KVStore
 }
 
-// CommitMultiStore is an interface for a MultiStore without cache capabilities.
-type CommitMultiStore interface {
-	// TODO deprecate the old commit interface
-	Committer
+// CommitBranch is a cached MultiStore that is the branch right on top of the root MultiStore and which
+// we use to initialize commits. Writers should write any changes to this multistore and then call
+// StartCommit when they are ready to commit.
+// Callers must not call StartCommit more than once on a CommitBranch.
+type CommitBranch interface {
 	MultiStore
-	snapshottypes.Snapshotter
-	io.Closer
 
-	StartCommit(context.Context, MultiStore, cmtproto.Header) (CommitFinalizer, error)
+	// StartCommit starts a commit and returns a CommitFinalizer to finalize or rollback the commit.
+	// This allows for transaction isolation of the commits and allows the multi-store to
+	// optimistically do the work of committing (which involves CPU intensive tree manipulations and hashing),
+	// without actually committing until we are sure we want to commit.
+	// This is useful for ABCI optimistic execution.
+	//
+	// If the context passed in is canceled, the commit will be rolled back
+	// as long as the cancellation signal is received before CommitFinalizer.StartFinalize()
+	// or CommitFinalizer.Finalize() is called.
+	// The comet header argument is used to obtain the commit timestamp.
+	//
+	// Callers must not call StartCommit more than once on a CommitBranch.
+	StartCommit(context.Context, cmtproto.Header) (CommitFinalizer, error)
+}
+
+// RootMultiStore is the root uncached multistore layer in a multistore db.
+type RootMultiStore interface {
+	MultiStoreBase
+
+	// RootCacheMultiStore is a readonly version of the latest version of the RootMultiStore
+	// to which any changes will be written to a cache layer and discarded.
+	RootCacheMultiStore() MultiStore
+
+	// CacheMultiStoreWithVersion branches the underlying MultiStore where
+	// each stored is loaded at a specific version (height).
+	CacheMultiStoreWithVersion(version int64) (MultiStore, error)
+}
+
+// CommitMultiStore is the root multistore in a multistore db which can be committed to via CommitBranch.
+type CommitMultiStore interface {
+	RootMultiStore
+
+	snapshottypes.Snapshotter
+
+	// CommitBranch branches CommitMultiStore into a cached storage object.
+	// To write changes back to the CommitMultiStore from the CommitBranch,
+	// use CommitBranch.StartCommit().
+	CommitBranch() CommitBranch
+
 	GetCommitInfo(ver int64) (*CommitInfo, error)
+
+	LastCommitID() CommitID
+
+	SetPruning(pruningtypes.PruningOptions)
+	GetPruning() pruningtypes.PruningOptions
 
 	// EarliestVersion returns the earliest version in the store
 	EarliestVersion() int64
@@ -172,12 +199,6 @@ type CommitMultiStore interface {
 	// Mount a store of type using the given db.
 	// If db == nil, the new store will use the CommitMultiStore db.
 	MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB)
-
-	// Panics on a nil key.
-	GetCommitStore(key StoreKey) CommitStore
-
-	// Panics on a nil key.
-	GetCommitKVStore(key StoreKey) CommitKVStore
 
 	// Load the latest persisted version. Called once after all calls to
 	// Mount*Store() are complete.
@@ -199,25 +220,9 @@ type CommitMultiStore interface {
 	// undefined.
 	LoadVersion(ver int64) error
 
-	// Set an inter-block (persistent) cache that maintains a mapping from
-	// StoreKeys to CommitKVStores.
-	SetInterBlockCache(MultiStorePersistentCache)
-
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
 	// starting a new chain at an arbitrary height.
 	SetInitialVersion(version int64) error
-
-	// SetIAVLCacheSize sets the cache size of the IAVL tree.
-	SetIAVLCacheSize(size int)
-
-	// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
-	SetIAVLDisableFastNode(disable bool)
-
-	// SetIAVLSyncPruning set sync/async pruning on iavl.
-	// It is not recommended to use this option.
-	// It is here to enable the prune command to force this to true, allowing the command to wait
-	// for the pruning to finish before returning.
-	SetIAVLSyncPruning(sync bool)
 
 	// RollbackToVersion rollback the db to specific version(height).
 	RollbackToVersion(version int64) error
@@ -231,19 +236,30 @@ type CommitMultiStore interface {
 	// PopStateCache returns the accumulated state change messages from the CommitMultiStore
 	PopStateCache() []*StoreKVPair
 
-	// SetMetrics sets the metrics for the KVStore
-	SetMetrics(metrics metrics.StoreMetrics)
+	io.Closer
 }
 
+// CommitFinalizer defines the type that will be used for committing transactions against the CommitMultiStore.
+// It is designed to allow optimistic commit and rollback if the underlying store supports it.
 type CommitFinalizer interface {
-	// PrepareFinalize signals finalization and waits until the hash is ready.
-	// After PrepareFinalize is called, Rollback will return an error.
-	PrepareFinalize() (CommitID, error)
-	// Finalize signals finalization and waits for the commit to complete (including fsync).
-	// After Finalize is called, Rollback will return an error.
+	// StartFinalize begins finalization and waits until the hash is ready,
+	// but may return before the commit has been fully finalized (i.e. fsync'd to disk).
+	// Once a successful StartFinalize is called, Rollback can no longer be called and will return an error.
+	// If StartFinalize fails due to context cancellation, the finalizer is automatically
+	// rolled back and a subsequent Rollback() will return nil.
+	// StartFinalize is idempotent: repeated calls return the same CommitID.
+	StartFinalize() (CommitID, error)
+	// Finalize begins finalization if it hasn't been started yet and
+	// waits for the commit to complete (including fsync).
+	// StartFinalize may be called before Finalize to start finalization early.
+	// After a successful Finalize, Rollback can no longer be called and will return an error.
+	// Finalize is idempotent: repeated calls return the same CommitID.
 	Finalize() (CommitID, error)
 	// Rollback aborts the in-progress commit and leaves the stores in the previous state.
-	// Rollback returns an error if SignalFinalize, PrepareFinalize, or Finalize has been called.
+	// Rollback returns an error if a successful StartFinalize or Finalize has already been called.
+	// Rollback is idempotent: repeated calls return nil.
+	// If the context was canceled before finalization, the finalizer is already in a rolled-back
+	// state and Rollback will return nil.
 	Rollback() error
 }
 
@@ -253,19 +269,15 @@ type CommitFinalizer interface {
 // GBasicKVStore is a simple interface to get/set data
 type GBasicKVStore[V any] interface {
 	// Get returns nil if key doesn't exist. Panics on nil key.
-	// It is safe to call Get from multiple go routines as long as there are no concurrent writes.
 	Get(key []byte) V
 
 	// Has checks if a key exists. Panics on nil key.
-	// It is safe to call Has from multiple go routines as long as there are no concurrent writes.
 	Has(key []byte) bool
 
 	// Set sets the key. Panics on nil key or value.
-	// Concurrent writes are not allowed and may cause undefined behavior.
 	Set(key []byte, value V)
 
 	// Delete deletes the key. Panics on nil key.
-	// Concurrent writes are not allowed and may cause undefined behavior.
 	Delete(key []byte)
 }
 
@@ -280,15 +292,13 @@ type GKVStore[V any] interface {
 	// To iterate over entire domain, use store.Iterator(nil, nil)
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	// Exceptionally allowed for cachekv.Store, safe to write in the modules.
-	// It is safe to call Iterator from multiple go routines as long as there are no concurrent writes.
 	Iterator(start, end []byte) GIterator[V]
 
-	// ReverseIterator over a domain of keys in descending order. End is exclusive.
+	// Iterator over a domain of keys in descending order. End is exclusive.
 	// Start must be less than end, or the Iterator is invalid.
 	// Iterator must be closed by caller.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	// Exceptionally allowed for cachekv.Store, safe to write in the modules.
-	// It is safe to call ReverseIterator from multiple go routines as long as there are no concurrent writes.
 	ReverseIterator(start, end []byte) GIterator[V]
 }
 
@@ -364,9 +374,6 @@ type CacheWrap interface {
 type CacheWrapper interface {
 	// CacheWrap branches a store.
 	CacheWrap() CacheWrap
-
-	// CacheWrapWithTrace branches a store with tracing enabled.
-	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
 }
 
 func (cid CommitID) IsZero() bool {
@@ -538,31 +545,6 @@ func (key *MemoryStoreKey) Name() string {
 // String returns a stringified representation of the MemoryStoreKey.
 func (key *MemoryStoreKey) String() string {
 	return fmt.Sprintf("MemoryStoreKey{%p, %s}", key, key.name)
-}
-
-//----------------------------------------
-
-// TraceContext contains TraceKVStore context data. It will be written with
-// every trace operation.
-type TraceContext map[string]interface{}
-
-// Clone clones tc into another instance of TraceContext.
-func (tc TraceContext) Clone() TraceContext {
-	ret := TraceContext{}
-	maps.Copy(ret, tc)
-
-	return ret
-}
-
-// Merge merges value of newTc into tc.
-func (tc TraceContext) Merge(newTc TraceContext) TraceContext {
-	if tc == nil {
-		tc = TraceContext{}
-	}
-
-	maps.Copy(tc, newTc)
-
-	return tc
 }
 
 // MultiStorePersistentCache defines an interface which provides inter-block

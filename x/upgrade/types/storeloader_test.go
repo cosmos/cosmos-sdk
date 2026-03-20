@@ -11,12 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/metrics"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/rootmulti"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*baseapp.BaseApp) {
@@ -28,7 +27,7 @@ func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*ba
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	t.Helper()
 
-	rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	rs := rootmulti.NewStore(db, log.NewNopLogger())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := storetypes.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
@@ -46,7 +45,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
 	t.Helper()
-	rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	rs := rootmulti.NewStore(db, log.NewNopLogger())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := storetypes.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)

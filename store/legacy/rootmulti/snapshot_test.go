@@ -15,16 +15,16 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/iavl"
-	"cosmossdk.io/store/metrics"
-	"cosmossdk.io/store/rootmulti"
-	"cosmossdk.io/store/snapshots"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	"cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/iavl"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
+	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *rootmulti.Store {
-	multiStore := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	multiStore := rootmulti.NewStore(db, log.NewNopLogger())
 	r := rand.New(rand.NewSource(49872768940)) // Fixed seed for deterministic tests
 
 	keys := []*types.KVStoreKey{}
@@ -39,7 +39,7 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 	}
 
 	for _, key := range keys {
-		store := multiStore.GetCommitKVStore(key).(*iavl.Store)
+		store := multiStore.GetKVStore(key).(*iavl.Store)
 		for i := uint64(0); i < storeKeys; i++ {
 			k := make([]byte, 8)
 			v := make([]byte, 1024)
@@ -62,7 +62,7 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 }
 
 func newMultiStoreWithMixedMounts(db dbm.DB) *rootmulti.Store {
-	store := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := rootmulti.NewStore(db, log.NewNopLogger())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl3"), types.StoreTypeIAVL, nil)
@@ -243,7 +243,7 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		target := rootmulti.NewStore(dbm.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
+		target := rootmulti.NewStore(dbm.NewMemDB(), log.NewNopLogger())
 		for _, key := range source.StoreKeysByName() {
 			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
 		}
@@ -279,7 +279,7 @@ func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys ui
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		target := rootmulti.NewStore(dbm.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
+		target := rootmulti.NewStore(dbm.NewMemDB(), log.NewNopLogger())
 		for _, key := range source.StoreKeysByName() {
 			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
 		}

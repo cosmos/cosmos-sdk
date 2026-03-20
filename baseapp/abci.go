@@ -18,12 +18,12 @@ import (
 
 	coreheader "cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/codec"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -113,41 +113,38 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 			}))
 	}()
 
-	var res *abci.ResponseInitChain
 	if app.abciHandlers.InitChainer == nil {
-		res = &abci.ResponseInitChain{}
-	} else {
-		// add block gas meter for any genesis transactions (allow infinite gas)
-		finalizeState.SetContext(finalizeState.Context().WithBlockGasMeter(storetypes.NewInfiniteGasMeter()))
+		return &abci.ResponseInitChain{}, nil
+	}
 
-		var err error
-		res, err = app.abciHandlers.InitChainer(finalizeState.Context(), req)
-		if err != nil {
-			return nil, err
+	// add block gas meter for any genesis transactions (allow infinite gas)
+	finalizeState.SetContext(finalizeState.Context().WithBlockGasMeter(storetypes.NewInfiniteGasMeter()))
+
+	res, err := app.abciHandlers.InitChainer(finalizeState.Context(), req)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(req.Validators) > 0 {
+		if len(req.Validators) != len(res.Validators) {
+			return nil, fmt.Errorf(
+				"len(RequestInitChain.Validators) != len(GenesisValidators) (%d != %d)",
+				len(req.Validators), len(res.Validators),
+			)
 		}
 
-		if len(req.Validators) > 0 {
-			if len(req.Validators) != len(res.Validators) {
-				return nil, fmt.Errorf(
-					"len(RequestInitChain.Validators) != len(GenesisValidators) (%d != %d)",
-					len(req.Validators), len(res.Validators),
-				)
-			}
+		sort.Sort(abci.ValidatorUpdates(req.Validators))
+		sort.Sort(abci.ValidatorUpdates(res.Validators))
 
-			sort.Sort(abci.ValidatorUpdates(req.Validators))
-			sort.Sort(abci.ValidatorUpdates(res.Validators))
-
-			for i := range res.Validators {
-				if !proto.Equal(&res.Validators[i], &req.Validators[i]) {
-					return nil, fmt.Errorf("genesisValidators[%d] != req.Validators[%d] ", i, i)
-				}
+		for i := range res.Validators {
+			if !proto.Equal(&res.Validators[i], &req.Validators[i]) {
+				return nil, fmt.Errorf("genesisValidators[%d] != req.Validators[%d] ", i, i)
 			}
 		}
 	}
 
-	// NOTE: We don't commit during InitChain. The genesis state is preserved in
-	// the FinalizeBlockState and will be committed together with block 1's changes
-	// when the first Commit() is called after FinalizeBlock(height=1).
+	// NOTE: We don't commit, but FinalizeBlock for block InitialHeight starts from
+	// this FinalizeBlockState.
 	return &abci.ResponseInitChain{
 		ConsensusParams: res.ConsensusParams,
 		Validators:      res.Validators,
@@ -406,22 +403,6 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 	return app.abciHandlers.CheckTxHandler(runTx, req)
 }
 
-// InsertTx inserts a tx into the applications mempool.
-func (app *BaseApp) InsertTx(req *abci.RequestInsertTx) (*abci.ResponseInsertTx, error) {
-	if app.abciHandlers.InsertTxHandler == nil {
-		return nil, errors.New("InsertTx handler not set")
-	}
-	return app.abciHandlers.InsertTxHandler(req)
-}
-
-// ReapTxs returns new valid txs from the applications mempool.
-func (app *BaseApp) ReapTxs(req *abci.RequestReapTxs) (*abci.ResponseReapTxs, error) {
-	if app.abciHandlers.ReapTxsHandler == nil {
-		return nil, errors.New("ReapTxs handler not set")
-	}
-	return app.abciHandlers.ReapTxsHandler(req)
-}
-
 // PrepareProposal implements the PrepareProposal ABCI method and returns a
 // ResponsePrepareProposal object to the client. The PrepareProposal method is
 // responsible for allowing the block proposer to perform application-dependent
@@ -436,8 +417,6 @@ func (app *BaseApp) ReapTxs(req *abci.RequestReapTxs) (*abci.ResponseReapTxs, er
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
-	app.logger.Info("PrepareProposal START", "height", req.Height)
-	defer func() { app.logger.Info("PrepareProposal END", "height", req.Height) }()
 	if app.abciHandlers.PrepareProposalHandler == nil {
 		return nil, errors.New("PrepareProposal handler not set")
 	}
@@ -449,12 +428,9 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 	// No-op if OE is not enabled.
 	// Similar call to Abort() is done in `ProcessProposal`.
 	app.optimisticExec.Abort()
-	// If OE had already reached StartCommit, the committer holds a mutex and is blocked
-	// waiting for finalization. We must rollback to release the mutex before any new commit
-	// can proceed.
-	if app.committer != nil {
-		_ = app.committer.Rollback()
-		app.committer = nil
+	// If OE had already reached StartCommit, rollback to discard uncommitted state.
+	if err := app.rollbackCommitter(); err != nil {
+		return nil, fmt.Errorf("failed to rollback committer in PrepareProposal: %w", err)
 	}
 
 	// Always reset state given that PrepareProposal can timeout and be called
@@ -574,10 +550,9 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	if req.Height > app.initialHeight {
 		// abort any running OE
 		app.optimisticExec.Abort()
-		// If OE had already reached StartCommit, rollback to release the commit mutex.
-		if app.committer != nil {
-			_ = app.committer.Rollback()
-			app.committer = nil
+		// If OE had already reached StartCommit, rollback to discard uncommitted state.
+		if err := app.rollbackCommitter(); err != nil {
+			return nil, fmt.Errorf("failed to rollback committer in ProcessProposal: %w", err)
 		}
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 	}
@@ -670,7 +645,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		ctx, _ = app.stateManager.GetState(execModeFinalize).Context().CacheContext()
 	} else {
 		emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
-		ms := app.cms.CacheMultiStore()
+		ms := app.cms.CommitBranch()
 		ctx = sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 	}
 
@@ -748,7 +723,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		ctx, _ = app.stateManager.GetState(execModeFinalize).Context().CacheContext()
 	} else {
 		emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
-		ms := app.cms.CacheMultiStore()
+		ms := app.cms.CommitBranch()
 		ctx = sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 	}
 
@@ -805,7 +780,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 // Execution flow or by the FinalizeBlock ABCI method. The context received is
 // only used to handle early cancellation, for anything related to state app.stateManager.GetState(execModeFinalize).Context()
 // must be used.
-func (app *BaseApp) internalFinalizeBlock(cancelCtx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	var events []abci.Event
 
 	if err := app.checkHalt(req.Height, req.Time); err != nil {
@@ -814,12 +789,6 @@ func (app *BaseApp) internalFinalizeBlock(cancelCtx context.Context, req *abci.R
 
 	if err := app.validateFinalizeBlockHeight(req); err != nil {
 		return nil, err
-	}
-
-	if app.cms.TracingEnabled() {
-		app.cms.SetTracingContext(storetypes.TraceContext(
-			map[string]any{"blockHeight": req.Height},
-		))
 	}
 
 	// NOTE: Header populated here is intentionally partial; it omits Version, LastBlockID,
@@ -843,7 +812,7 @@ func (app *BaseApp) internalFinalizeBlock(cancelCtx context.Context, req *abci.R
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 		finalizeState = app.stateManager.GetState(execModeFinalize)
 	}
-	ctx := finalizeState.Context().WithContext(cancelCtx)
+	ctx := finalizeState.Context().WithContext(goCtx)
 	ctx, span := ctx.StartSpan(tracer, "internalFinalizeBlock")
 	defer span.End()
 
@@ -919,10 +888,6 @@ func (app *BaseApp) internalFinalizeBlock(cancelCtx context.Context, req *abci.R
 		return nil, err
 	}
 
-	if finalizeState.MultiStore.TracingEnabled() {
-		finalizeState.MultiStore = finalizeState.MultiStore.SetTracingContext(nil).(storetypes.CacheMultiStore)
-	}
-
 	var (
 		blockGasUsed   uint64
 		blockGasWanted uint64
@@ -959,7 +924,7 @@ func (app *BaseApp) internalFinalizeBlock(cancelCtx context.Context, req *abci.R
 	cp := app.GetConsensusParams(finalizeState.Context())
 
 	// if we haven't aborted thus far, start committing the state, we can always rollback later
-	committer, err := app.cms.StartCommit(cancelCtx, finalizeState.MultiStore, header)
+	committer, err := finalizeState.MultiStore.StartCommit(goCtx, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start commit: %w", err)
 	}
@@ -1009,10 +974,6 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	if app.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
-		if aborted {
-			//nolint:staticcheck // todo: refactor
-			telemetry.IncrCounter(1, TelemetrySubsystem, MetricOEAborted)
-		}
 		// Wait for the OE to finish, regardless of whether it was aborted or not
 		res, err = app.optimisticExec.WaitResult()
 
@@ -1022,20 +983,20 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 			if err != nil {
 				return nil, err
 			}
-			if app.committer != nil {
-				return app.finishFinalizeBlock(res)
+			if app.committer == nil {
+				return nil, fmt.Errorf("unexpected nil committer after successful optimistic execution")
 			}
+			return app.finishFinalizeBlock(res)
 		} else {
+			//nolint:staticcheck // todo: refactor
+			telemetry.IncrCounter(1, TelemetrySubsystem, MetricOEAborted)
+
 			// if it was aborted, we need to reset the state
 			app.stateManager.ClearState(execModeFinalize)
 			app.optimisticExec.Reset()
 			// rollback the committer if it was started
-			if app.committer != nil {
-				err := app.committer.Rollback()
-				if err != nil {
-					return nil, fmt.Errorf("failed to rollback committer: %w", err)
-				}
-				app.committer = nil
+			if err := app.rollbackCommitter(); err != nil {
+				return nil, fmt.Errorf("failed to rollback optimistic execution commit: %w", err)
 			}
 		}
 	}
@@ -1047,15 +1008,6 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	}
 
 	return app.finishFinalizeBlock(res)
-}
-
-func (app *BaseApp) finishFinalizeBlock(res *abci.ResponseFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
-	hash, err := app.committer.PrepareFinalize()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get working hash: %w", err)
-	}
-	res.AppHash = hash.Hash
-	return res, nil
 }
 
 // checkHalt checks if height or time exceeds halt-height or halt-time respectively.
@@ -1100,9 +1052,9 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	app.committer = nil
 
 	if committer == nil {
-		// during InitChain we must initialize the committer here
+		// during InitChain or simulations we must initialize the committer here
 		var err error
-		committer, err = app.cms.StartCommit(context.Background(), finalizeState.MultiStore, header)
+		committer, err = finalizeState.MultiStore.StartCommit(context.Background(), header)
 		if err != nil {
 			return nil, fmt.Errorf("failed to start commit: %w", err)
 		}
@@ -1148,6 +1100,25 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	blockCounter.Add(ctx, 1)
 
 	return resp, nil
+}
+
+// rollbackCommitter rolls back and nils the in-progress committer, if any.
+func (app *BaseApp) rollbackCommitter() error {
+	if app.committer == nil {
+		return nil
+	}
+	err := app.committer.Rollback()
+	app.committer = nil
+	return err
+}
+
+func (app *BaseApp) finishFinalizeBlock(res *abci.ResponseFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	hash, err := app.committer.StartFinalize()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get working hash: %w", err)
+	}
+	res.AppHash = hash.Hash
+	return res, nil
 }
 
 func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.ResponseQuery {
@@ -1365,7 +1336,7 @@ func (bapp *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, chec
 	// use custom query multi-store if provided
 	qms := bapp.qms
 	if qms == nil {
-		qms = bapp.cms.(storetypes.MultiStore)
+		qms = bapp.cms
 	}
 
 	lastBlockHeight := qms.LatestVersion()

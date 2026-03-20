@@ -83,6 +83,64 @@ func TestMsgServerUpdateParams(t *testing.T) {
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "invalid authority")
 	})
+
+	t.Run("fallback to keeper authority", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
+		require.NoError(t, err)
+
+		// No consensus params authority set, keeper admin works
+		msg := &poatypes.MsgUpdateParams{
+			Admin:  adminAddr,
+			Params: poatypes.Params{Admin: adminAddr},
+		}
+		resp, err := msgServer.UpdateParams(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		// Wrong address fails
+		msg = &poatypes.MsgUpdateParams{
+			Admin:  sdk.AccAddress("wrongadmin").String(),
+			Params: poatypes.Params{Admin: adminAddr},
+		}
+		_, err = msgServer.UpdateParams(f.ctx, msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid authority")
+	})
+
+	t.Run("consensus params authority takes precedence", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
+		require.NoError(t, err)
+
+		overrideAddr := sdk.AccAddress("override-authority").String()
+		f.ctx = f.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Validator: &cmtproto.ValidatorParams{
+				PubKeyTypes: []string{"ed25519"},
+			},
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAddr},
+		})
+
+		// Override address works
+		msg := &poatypes.MsgUpdateParams{
+			Admin:  overrideAddr,
+			Params: poatypes.Params{Admin: overrideAddr},
+		}
+		resp, err := msgServer.UpdateParams(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		// Original keeper admin fails
+		msg = &poatypes.MsgUpdateParams{
+			Admin:  adminAddr,
+			Params: poatypes.Params{Admin: adminAddr},
+		}
+		_, err = msgServer.UpdateParams(f.ctx, msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid authority")
+	})
 }
 
 func TestMsgServerCreateValidator(t *testing.T) {
@@ -700,6 +758,94 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		require.Equal(t, "400", attrs2[poatypes.AttributeKeyPower])
 	})
 
+	t.Run("rejects update that would set total power to zero", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
+		require.NoError(t, err)
+
+		// Create single validator with power 100
+		operatorAddr := sdk.AccAddress("operator1")
+		pubKey := ed25519.GenPrivKey().PubKey()
+		pubKeyAny := types.UnsafePackAny(pubKey)
+		consAddr := sdk.GetConsAddress(pubKey)
+
+		validator := poatypes.Validator{
+			PubKey: pubKeyAny,
+			Power:  100,
+			Metadata: &poatypes.ValidatorMetadata{
+				Moniker:         "test-validator",
+				OperatorAddress: operatorAddr.String(),
+			},
+		}
+
+		err = f.poaKeeper.CreateValidator(f.ctx, consAddr, validator, true)
+		require.NoError(t, err)
+
+		// Try to set power to zero (would make total power zero)
+		validator.Power = 0
+		msg := &poatypes.MsgUpdateValidators{
+			Admin:      adminAddr,
+			Validators: []poatypes.Validator{validator},
+		}
+
+		_, err = msgServer.UpdateValidators(f.ctx, msg)
+		require.Error(t, err)
+		require.ErrorIs(t, err, poatypes.ErrInvalidTotalPower)
+		require.Contains(t, err.Error(), "total power cannot be zero")
+
+		// Verify validator power unchanged
+		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
+		require.NoError(t, err)
+		require.Equal(t, int64(100), power)
+	})
+
+	t.Run("empty update array is a no-op", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
+		require.NoError(t, err)
+
+		// Create validator
+		operatorAddr := sdk.AccAddress("operator1")
+		pubKey := ed25519.GenPrivKey().PubKey()
+		pubKeyAny := types.UnsafePackAny(pubKey)
+		consAddr := sdk.GetConsAddress(pubKey)
+
+		validator := poatypes.Validator{
+			PubKey: pubKeyAny,
+			Power:  100,
+			Metadata: &poatypes.ValidatorMetadata{
+				Moniker:         "test-validator",
+				OperatorAddress: operatorAddr.String(),
+			},
+		}
+
+		err = f.poaKeeper.CreateValidator(f.ctx, consAddr, validator, true)
+		require.NoError(t, err)
+
+		// Send empty update array (bypasses ante; in production ValidateBasic rejects this)
+		msg := &poatypes.MsgUpdateValidators{
+			Admin:      adminAddr,
+			Validators: []poatypes.Validator{},
+		}
+
+		resp, err := msgServer.UpdateValidators(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		// Validator set unchanged
+		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
+		require.NoError(t, err)
+		require.Equal(t, int64(100), power)
+
+		totalPower, err := f.poaKeeper.GetTotalPower(f.ctx)
+		require.NoError(t, err)
+		require.Equal(t, int64(100), totalPower)
+	})
+
 	t.Run("sets validator power to zero with other validators present", func(t *testing.T) {
 		f := setupTest(t)
 		msgServer := NewMsgServer(f.poaKeeper)
@@ -1034,6 +1180,346 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
 		require.NoError(t, err)
 		require.Equal(t, int64(200), power)
+	})
+
+	t.Run("fallback to keeper authority", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
+		require.NoError(t, err)
+
+		// Create a validator to update
+		operatorAddr := sdk.AccAddress("operator-auth-fb")
+		pubKey := ed25519.GenPrivKey().PubKey()
+		pubKeyAny := types.UnsafePackAny(pubKey)
+		consAddr := sdk.GetConsAddress(pubKey)
+
+		validator := poatypes.Validator{
+			PubKey: pubKeyAny,
+			Power:  100,
+			Metadata: &poatypes.ValidatorMetadata{
+				Moniker:         "test-validator",
+				OperatorAddress: operatorAddr.String(),
+			},
+		}
+		err = f.poaKeeper.CreateValidator(f.ctx, consAddr, validator, true)
+		require.NoError(t, err)
+
+		// No consensus params authority set, keeper admin works
+		validator.Power = 200
+		msg := &poatypes.MsgUpdateValidators{
+			Admin:      adminAddr,
+			Validators: []poatypes.Validator{validator},
+		}
+		resp, err := msgServer.UpdateValidators(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		// Wrong address fails
+		validator.Power = 300
+		msg = &poatypes.MsgUpdateValidators{
+			Admin:      sdk.AccAddress("wrongadmin").String(),
+			Validators: []poatypes.Validator{validator},
+		}
+		_, err = msgServer.UpdateValidators(f.ctx, msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid authority")
+	})
+
+	t.Run("consensus params authority takes precedence", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
+		require.NoError(t, err)
+
+		overrideAddr := sdk.AccAddress("override-authority").String()
+		f.ctx = f.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Validator: &cmtproto.ValidatorParams{
+				PubKeyTypes: []string{"ed25519"},
+			},
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAddr},
+		})
+
+		// Create a validator to update
+		operatorAddr := sdk.AccAddress("operator-auth-cp")
+		pubKey := ed25519.GenPrivKey().PubKey()
+		pubKeyAny := types.UnsafePackAny(pubKey)
+		consAddr := sdk.GetConsAddress(pubKey)
+
+		validator := poatypes.Validator{
+			PubKey: pubKeyAny,
+			Power:  100,
+			Metadata: &poatypes.ValidatorMetadata{
+				Moniker:         "test-validator",
+				OperatorAddress: operatorAddr.String(),
+			},
+		}
+		err = f.poaKeeper.CreateValidator(f.ctx, consAddr, validator, true)
+		require.NoError(t, err)
+
+		// Override address works
+		validator.Power = 200
+		msg := &poatypes.MsgUpdateValidators{
+			Admin:      overrideAddr,
+			Validators: []poatypes.Validator{validator},
+		}
+		resp, err := msgServer.UpdateValidators(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		// Original keeper admin fails
+		validator.Power = 300
+		msg = &poatypes.MsgUpdateValidators{
+			Admin:      adminAddr,
+			Validators: []poatypes.Validator{validator},
+		}
+		_, err = msgServer.UpdateValidators(f.ctx, msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid authority")
+	})
+
+	t.Run("metadata-only update preserves power", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
+		require.NoError(t, err)
+
+		operatorAddr := sdk.AccAddress("operator1")
+		pubKey := ed25519.GenPrivKey().PubKey()
+		pubKeyAny := types.UnsafePackAny(pubKey)
+		consAddr := sdk.GetConsAddress(pubKey)
+
+		validator := poatypes.Validator{
+			PubKey: pubKeyAny,
+			Power:  100,
+			Metadata: &poatypes.ValidatorMetadata{
+				Moniker:         "original-moniker",
+				Description:     "original-description",
+				OperatorAddress: operatorAddr.String(),
+			},
+		}
+
+		err = f.poaKeeper.CreateValidator(f.ctx, consAddr, validator, true)
+		require.NoError(t, err)
+
+		// Update only metadata, power unchanged
+		updatedValidator := poatypes.Validator{
+			PubKey: pubKeyAny,
+			Power:  100,
+			Metadata: &poatypes.ValidatorMetadata{
+				Moniker:         "updated-moniker",
+				Description:     "updated-description",
+				OperatorAddress: operatorAddr.String(),
+			},
+		}
+
+		msg := &poatypes.MsgUpdateValidators{
+			Admin:      adminAddr,
+			Validators: []poatypes.Validator{updatedValidator},
+		}
+
+		resp, err := msgServer.UpdateValidators(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		// Power unchanged
+		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
+		require.NoError(t, err)
+		require.Equal(t, int64(100), power)
+
+		// Metadata updated
+		retrieved, err := f.poaKeeper.GetValidator(f.ctx, consAddr)
+		require.NoError(t, err)
+		require.Equal(t, "updated-moniker", retrieved.Metadata.Moniker)
+		require.Equal(t, "updated-description", retrieved.Metadata.Description)
+	})
+
+	t.Run("re-activates zero-power validator", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
+		require.NoError(t, err)
+
+		// Create two validators so we can set one to zero
+		operatorAddr1 := sdk.AccAddress("operator1")
+		pubKey1 := ed25519.GenPrivKey().PubKey()
+		pubKeyAny1 := types.UnsafePackAny(pubKey1)
+		consAddr1 := sdk.GetConsAddress(pubKey1)
+
+		validator1 := poatypes.Validator{
+			PubKey: pubKeyAny1,
+			Power:  100,
+			Metadata: &poatypes.ValidatorMetadata{
+				Moniker:         "validator-1",
+				OperatorAddress: operatorAddr1.String(),
+			},
+		}
+
+		operatorAddr2 := sdk.AccAddress("operator2")
+		pubKey2 := ed25519.GenPrivKey().PubKey()
+		pubKeyAny2 := types.UnsafePackAny(pubKey2)
+		consAddr2 := sdk.GetConsAddress(pubKey2)
+
+		validator2 := poatypes.Validator{
+			PubKey: pubKeyAny2,
+			Power:  100,
+			Metadata: &poatypes.ValidatorMetadata{
+				Moniker:         "validator-2",
+				OperatorAddress: operatorAddr2.String(),
+			},
+		}
+
+		err = f.poaKeeper.CreateValidator(f.ctx, consAddr1, validator1, true)
+		require.NoError(t, err)
+		err = f.poaKeeper.CreateValidator(f.ctx, consAddr2, validator2, true)
+		require.NoError(t, err)
+
+		// Set first validator to zero power
+		validator1.Power = 0
+		msg := &poatypes.MsgUpdateValidators{
+			Admin:      adminAddr,
+			Validators: []poatypes.Validator{validator1},
+		}
+		_, err = msgServer.UpdateValidators(f.ctx, msg)
+		require.NoError(t, err)
+
+		// Re-activate by setting power back to non-zero
+		validator1.Power = 50
+		msg = &poatypes.MsgUpdateValidators{
+			Admin:      adminAddr,
+			Validators: []poatypes.Validator{validator1},
+		}
+
+		resp, err := msgServer.UpdateValidators(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr1)
+		require.NoError(t, err)
+		require.Equal(t, int64(50), power)
+
+		totalPower, err := f.poaKeeper.GetTotalPower(f.ctx)
+		require.NoError(t, err)
+		require.Equal(t, int64(150), totalPower) // 50 + 100
+	})
+
+	t.Run("partial failure reverts all updates", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
+		require.NoError(t, err)
+
+		// Create two validators
+		operatorAddr1 := sdk.AccAddress("operator1")
+		pubKey1 := ed25519.GenPrivKey().PubKey()
+		pubKeyAny1 := types.UnsafePackAny(pubKey1)
+		consAddr1 := sdk.GetConsAddress(pubKey1)
+
+		validator1 := poatypes.Validator{
+			PubKey: pubKeyAny1,
+			Power:  100,
+			Metadata: &poatypes.ValidatorMetadata{
+				Moniker:         "validator-1",
+				OperatorAddress: operatorAddr1.String(),
+			},
+		}
+
+		operatorAddr2 := sdk.AccAddress("operator2")
+		pubKey2 := ed25519.GenPrivKey().PubKey()
+		pubKeyAny2 := types.UnsafePackAny(pubKey2)
+		consAddr2 := sdk.GetConsAddress(pubKey2)
+
+		validator2 := poatypes.Validator{
+			PubKey: pubKeyAny2,
+			Power:  200,
+			Metadata: &poatypes.ValidatorMetadata{
+				Moniker:         "validator-2",
+				OperatorAddress: operatorAddr2.String(),
+			},
+		}
+
+		err = f.poaKeeper.CreateValidator(f.ctx, consAddr1, validator1, true)
+		require.NoError(t, err)
+		err = f.poaKeeper.CreateValidator(f.ctx, consAddr2, validator2, true)
+		require.NoError(t, err)
+
+		// Update validator1 (valid), then non-existent validator (invalid)
+		validator1.Power = 150
+		nonExistentPubKey := ed25519.GenPrivKey().PubKey()
+		nonExistentPubKeyAny := types.UnsafePackAny(nonExistentPubKey)
+
+		msg := &poatypes.MsgUpdateValidators{
+			Admin: adminAddr,
+			Validators: []poatypes.Validator{
+				{PubKey: pubKeyAny1, Power: 150, Metadata: &poatypes.ValidatorMetadata{
+					Moniker: validator1.Metadata.Moniker, OperatorAddress: operatorAddr1.String(),
+				}},
+				{PubKey: nonExistentPubKeyAny, Power: 100, Metadata: &poatypes.ValidatorMetadata{
+					Moniker: "non-existent", OperatorAddress: sdk.AccAddress("nonex").String(),
+				}},
+			},
+		}
+
+		_, err = msgServer.UpdateValidators(f.ctx, msg)
+		require.Error(t, err)
+		require.ErrorIs(t, err, poatypes.ErrUnknownValidator)
+
+		// All updates reverted - first validator unchanged
+		power1, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr1)
+		require.NoError(t, err)
+		require.Equal(t, int64(100), power1)
+
+		// Second validator unchanged
+		power2, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr2)
+		require.NoError(t, err)
+		require.Equal(t, int64(200), power2)
+	})
+
+	t.Run("duplicate consensus address in update last wins", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
+		require.NoError(t, err)
+
+		operatorAddr := sdk.AccAddress("operator1")
+		pubKey := ed25519.GenPrivKey().PubKey()
+		pubKeyAny := types.UnsafePackAny(pubKey)
+		consAddr := sdk.GetConsAddress(pubKey)
+
+		validator := poatypes.Validator{
+			PubKey: pubKeyAny,
+			Power:  100,
+			Metadata: &poatypes.ValidatorMetadata{
+				Moniker:         "test-validator",
+				OperatorAddress: operatorAddr.String(),
+			},
+		}
+
+		err = f.poaKeeper.CreateValidator(f.ctx, consAddr, validator, true)
+		require.NoError(t, err)
+
+		// Same validator listed twice with different powers - last wins
+		msg := &poatypes.MsgUpdateValidators{
+			Admin: adminAddr,
+			Validators: []poatypes.Validator{
+				{PubKey: pubKeyAny, Power: 200, Metadata: validator.Metadata},
+				{PubKey: pubKeyAny, Power: 300, Metadata: validator.Metadata},
+			},
+		}
+
+		resp, err := msgServer.UpdateValidators(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
+		require.NoError(t, err)
+		require.Equal(t, int64(300), power)
 	})
 }
 

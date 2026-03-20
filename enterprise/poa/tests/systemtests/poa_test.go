@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -28,8 +29,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/testutil/systemtests"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/tools/systemtests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 const (
@@ -530,7 +532,7 @@ func TestWithdrawFees(t *testing.T) {
 	// Wait a few blocks for fee distribution
 	sut.AwaitNBlocks(t, 3)
 
-	expectedFee, err := types.ParseDecCoin("125.0stake")
+	expectedFee, err := sdk.ParseDecCoin("125.0stake")
 	require.NoError(t, err)
 
 	t.Run("check all fees", func(t *testing.T) {
@@ -540,7 +542,7 @@ func TestWithdrawFees(t *testing.T) {
 			// Fees should have accumulated
 			fees := gjson.Get(rsp, "fees.fees").Array()
 			require.NotEmpty(t, fees)
-			amount, err := types.ParseDecCoin(fees[0].Str)
+			amount, err := sdk.ParseDecCoin(fees[0].Str)
 			require.NoError(t, err)
 
 			require.True(t, amount.Equal(expectedFee))
@@ -554,9 +556,9 @@ func TestWithdrawFees(t *testing.T) {
 		require.NotEmpty(t, operatorKeyname, "should find key for validator operator")
 
 		balBeforeInt := cli.QueryBalance(operatorAddr, "stake")
-		balanceBefore := types.NewInt64DecCoin("stake", balBeforeInt)
+		balanceBefore := sdk.NewInt64DecCoin("stake", balBeforeInt)
 		t.Logf("Balance Before: %s", balanceBefore.String())
-		expectedBalanceAfter := balanceBefore.Add(expectedFee).Sub(types.NewInt64DecCoin("stake", 1))
+		expectedBalanceAfter := balanceBefore.Add(expectedFee).Sub(sdk.NewInt64DecCoin("stake", 1))
 		rsp = cli.Run(
 			"tx", poaModule, "withdraw-fees",
 			"--from="+operatorKeyname,
@@ -566,8 +568,122 @@ func TestWithdrawFees(t *testing.T) {
 
 		// Check balance increased (accounting for tx fee)
 		balanceAfterInt := cli.QueryBalance(operatorAddr, "stake")
-		balanceAfter := types.NewInt64DecCoin("stake", balanceAfterInt)
+		balanceAfter := sdk.NewInt64DecCoin("stake", balanceAfterInt)
 		t.Logf("Balance After: %s", balanceAfter.String())
 		require.True(t, expectedBalanceAfter.Equal(balanceAfter))
+	})
+}
+
+func TestPOAGovernance(t *testing.T) {
+	// Scenario:
+	// - Submit a governance proposal from a POA validator
+	// - Verify non-validators cannot vote
+	// - Validators vote on the proposal
+	// - Verify votes exist during voting period
+	// - Wait for voting period to end (tally occurs)
+	// - Verify proposal passed
+	// - Verify votes are removed after tally
+
+	sut := systemtests.Sut
+	sut.ResetChain(t)
+
+	votingPeriod := 30 * time.Second
+	sut.ModifyGenesisJSON(t, systemtests.SetGovVotingPeriod(t, votingPeriod))
+
+	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
+	sut.StartChain(t)
+
+	// Get a validator operator (only validators can submit/vote in POA)
+	rsp := cli.CustomQuery("q", poaModule, "validators")
+	validators := gjson.Get(rsp, "validators").Array()
+	require.NotEmpty(t, validators)
+
+	valOperator := gjson.Get(validators[0].Raw, "metadata.operator_address").String()
+	valKeyName := getKeyNameForAddress(t, cli, valOperator)
+	require.NotEmpty(t, valKeyName)
+
+	govAddr := sdk.AccAddress(address.Module("gov")).String()
+
+	// Submit a proposal with empty messages (text-only)
+	proposal := fmt.Sprintf(`{
+ "messages": [],
+ "metadata": "ipfs://CID",
+ "deposit": "10000000stake",
+ "title": "POA Governance Test",
+ "summary": "Testing POA governance and vote removal after tally",
+ "proposer": %q
+}`, govAddr)
+
+	propFile := systemtests.StoreTempFile(t, []byte(proposal))
+	defer propFile.Close()
+
+	rsp = cli.Run(
+		"tx", "gov", "submit-proposal",
+		propFile.Name(),
+		"--from="+valKeyName,
+		"--fees=1stake",
+		"--gas=auto",
+	)
+	systemtests.RequireTxSuccess(t, rsp)
+	sut.AwaitNextBlock(t)
+
+	// Find proposal ID
+	rsp = cli.CustomQuery("q", "gov", "proposals")
+	proposals := gjson.Get(rsp, "proposals").Array()
+	require.NotEmpty(t, proposals)
+	proposalID := gjson.Get(proposals[len(proposals)-1].Raw, "id").String()
+	t.Logf("Proposal ID: %s", proposalID)
+
+	// Verify proposal is in voting period
+	rsp = cli.CustomQuery("q", "gov", "proposal", proposalID)
+	require.Equal(t, "PROPOSAL_STATUS_VOTING_PERIOD", gjson.Get(rsp, "proposal.status").String())
+
+	t.Run("non-validator cannot vote", func(t *testing.T) {
+		cli.AddKey("nonvalidator")
+		rsp, _ := cli.WithRunErrorsIgnored().RunOnly(
+			"tx", "gov", "vote", proposalID, "yes",
+			"--from=nonvalidator",
+			"--fees=1stake",
+		)
+		require.True(t,
+			strings.Contains(rsp, "not an active POA validator") ||
+				strings.Contains(rsp, "insufficient funds") ||
+				strings.Contains(rsp, "error"),
+			"non-validator vote should fail, got: %s", rsp,
+		)
+	})
+
+	t.Run("validators vote and votes are removed on tally", func(t *testing.T) {
+		// All validators vote yes
+		for i := 0; i < sut.NodesCount(); i++ {
+			rsp := cli.Run(
+				"tx", "gov", "vote", proposalID, "yes",
+				"--from="+fmt.Sprintf("node%d", i),
+				"--fees=1stake",
+			)
+			systemtests.RequireTxSuccess(t, rsp)
+		}
+		sut.AwaitNextBlock(t)
+
+		// Verify votes exist before tally
+		rsp := cli.CustomQuery("q", "gov", "votes", proposalID)
+		votes := gjson.Get(rsp, "votes").Array()
+		require.NotEmpty(t, votes, "votes should exist before tally")
+		assert.Equal(t, sut.NodesCount(), len(votes), "all validators should have voted")
+		t.Logf("Votes before tally: %d", len(votes))
+
+		// Wait for voting period to end and tally to occur
+		time.Sleep(votingPeriod + 2*time.Second)
+		sut.AwaitNextBlock(t)
+
+		// Verify proposal passed
+		rsp = cli.CustomQuery("q", "gov", "proposal", proposalID)
+		assert.Equal(t, "PROPOSAL_STATUS_PASSED", gjson.Get(rsp, "proposal.status").String())
+
+		// Verify votes are removed after tally
+		rsp = cli.CustomQuery("q", "gov", "votes", proposalID)
+		votesAfter := gjson.Get(rsp, "votes").Array()
+		assert.Empty(t, votesAfter, "votes should be removed after tally")
+		t.Logf("Votes after tally: %d", len(votesAfter))
 	})
 }

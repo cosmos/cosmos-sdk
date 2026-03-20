@@ -5,10 +5,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/mem"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/mem"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func TestStore(t *testing.T) {
@@ -29,10 +29,7 @@ func TestStore(t *testing.T) {
 	require.Nil(t, db.Get(key))
 
 	cacheWrapper := db.CacheWrap()
-	require.IsType(t, &cachekv.GStore[[]byte]{}, cacheWrapper)
-
-	cacheWrappedWithTrace := db.CacheWrapWithTrace(nil, nil)
-	require.IsType(t, &cachekv.GStore[[]byte]{}, cacheWrappedWithTrace)
+	require.IsType(t, &cachekv.Store{}, cacheWrapper)
 }
 
 func TestCommit(t *testing.T) {

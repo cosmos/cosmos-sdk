@@ -7,11 +7,11 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/listenkv"
-	"cosmossdk.io/store/prefix"
-	"cosmossdk.io/store/types"
-	"cosmossdk.io/store/types/kv"
+	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/v2/internal/kv"
+	"github.com/cosmos/cosmos-sdk/store/v2/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func bz(s string) []byte { return []byte(s) }
@@ -273,9 +273,4 @@ func TestListenKVStoreGetStoreType(t *testing.T) {
 func TestListenKVStoreCacheWrap(t *testing.T) {
 	store := newEmptyListenKVStore(nil)
 	store.CacheWrap()
-}
-
-func TestListenKVStoreCacheWrapWithTrace(t *testing.T) {
-	store := newEmptyListenKVStore(nil)
-	require.Panics(t, func() { store.CacheWrapWithTrace(nil, nil) })
 }

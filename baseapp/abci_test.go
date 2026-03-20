@@ -28,16 +28,14 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/rootmulti"
-	"cosmossdk.io/store/snapshots"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
-	iavlx "github.com/cosmos/cosmos-sdk/iavl"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -557,69 +555,6 @@ func TestABCI_GRPCQuery(t *testing.T) {
 	require.Equal(t, "Hello foo!", res.Greeting)
 }
 
-func TestABCI_QueryProof(t *testing.T) {
-	key, value := []byte("hello"), []byte("goodbye")
-
-	setCMSOpt := func(bapp *baseapp.BaseApp) {
-		var err error
-		cms, err := iavlx.LoadCommitMultiTree(t.TempDir(), iavlx.Options{}, log.NewNopLogger())
-		require.NoError(t, err)
-		bapp.SetCMS(cms)
-		t.Cleanup(func() {
-			_ = cms.Close()
-		})
-	}
-	anteOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			ctx.KVStore(capKey1).Set(key, value)
-			return ctx, nil
-		})
-	}
-
-	suite := NewBaseAppSuite(t, setCMSOpt, anteOpt)
-
-	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
-		ConsensusParams: &cmtproto.ConsensusParams{},
-	})
-	require.NoError(t, err)
-
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
-	bz, err := suite.txConfig.TxEncoder()(tx)
-	require.NoError(t, err)
-
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: 1,
-		Txs:    [][]byte{bz},
-	})
-	require.NoError(t, err)
-	_, err = suite.baseApp.Commit()
-	require.NoError(t, err)
-
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: 2,
-		Txs:    [][]byte{bz},
-	})
-	require.NoError(t, err)
-	_, err = suite.baseApp.Commit()
-	require.NoError(t, err)
-
-	res, err := suite.baseApp.Query(context.TODO(), &abci.RequestQuery{
-		Path:   "/store/key1/key",
-		Data:   key,
-		Height: 2,
-		Prove:  true,
-	})
-	require.NoError(t, err)
-	require.Equal(t, value, res.Value)
-	require.NotNil(t, res.ProofOps)
-	require.Len(t, res.ProofOps.Ops, 2)
-	require.Empty(t, res.Log)
-
-	prt := rootmulti.DefaultProofRuntime()
-	require.NoError(t, prt.VerifyValue(res.ProofOps, suite.baseApp.LastCommitID().Hash, "/key1/hello", value))
-}
-
 func TestABCI_P2PQuery(t *testing.T) {
 	addrPeerFilterOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAddrPeerFilter(func(addrport string) *abci.ResponseQuery {
@@ -946,6 +881,46 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 		_, err = suite.baseApp.Commit()
 		require.NoError(t, err)
 	}
+}
+
+func TestABCI_AnteHandlerContextValuesReachMsgServer(t *testing.T) {
+	type sdkCtxKey struct{}
+	type goCtxKey struct{}
+
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
+			ctx = ctx.WithValue(sdkCtxKey{}, "sdk-value")
+			ctx = ctx.WithContext(context.WithValue(ctx.Context(), goCtxKey{}, "go-value"))
+			return ctx, nil
+		})
+	}
+
+	executed := false
+	suite := NewBaseAppSuite(t, anteOpt)
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), mockCounterServer{
+		incrementCounterFn: func(ctx context.Context, _ *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
+			sdkCtx := sdk.UnwrapSDKContext(ctx)
+			executed = true
+			require.Equal(t, "sdk-value", sdkCtx.Value(sdkCtxKey{}))
+			require.Equal(t, "go-value", sdkCtx.Value(goCtxKey{}))
+			require.Equal(t, "sdk-value", ctx.Value(sdkCtxKey{}))
+			require.Equal(t, "go-value", ctx.Value(goCtxKey{}))
+			return &baseapptestutil.MsgCreateCounterResponse{}, nil
+		},
+	})
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	txbz, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	_, result, err := suite.baseApp.Simulate(txbz)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	require.True(t, executed)
 }
 
 func TestABCI_InvalidTransaction(t *testing.T) {

@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/mock"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/mock"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 var errFoo = errors.New("dummy")
@@ -79,8 +79,5 @@ func TestCacheWraps(t *testing.T) {
 	store := dbadapter.Store{mockDB}
 
 	cacheWrapper := store.CacheWrap()
-	require.IsType(t, &cachekv.GStore[[]byte]{}, cacheWrapper)
-
-	cacheWrappedWithTrace := store.CacheWrapWithTrace(nil, nil)
-	require.IsType(t, &cachekv.GStore[[]byte]{}, cacheWrappedWithTrace)
+	require.IsType(t, &cachekv.Store{}, cacheWrapper)
 }

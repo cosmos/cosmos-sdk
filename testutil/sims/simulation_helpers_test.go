@@ -9,10 +9,9 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/metrics"
-	"cosmossdk.io/store/rootmulti"
-	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -105,7 +104,7 @@ func initTestStores(t *testing.T) (storetypes.KVStore, storetypes.KVStore) {
 	t.Helper()
 
 	db := dbm.NewMemDB()
-	ms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	ms := rootmulti.NewStore(db, log.NewNopLogger())
 
 	key1 := storetypes.NewKVStoreKey("store1")
 	key2 := storetypes.NewKVStoreKey("store2")

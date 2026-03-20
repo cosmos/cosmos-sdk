@@ -28,7 +28,7 @@ We will be breaking down the steps to create a testnet from mainnet state.
 When creating a testnet the important part is to migrate the validator set from many validators to one or a few. This allows developers to spin up the chain without needing to replace validator keys. 
 
 ```go
-	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(true)
 	pubkey := &ed25519.PubKey{Key: newValPubKey.Bytes()}
 	pubkeyAny, err := types.NewAnyWithValue(pubkey)
 	if err != nil {
@@ -204,9 +204,9 @@ Next we will add a newTestnetApp helper function:
 ```diff
 // newTestnetApp starts by running the normal newApp method. From there, the app interface returned is modified in order
 // for a testnet to be created from the provided app.
-func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+func newTestnetApp(logger log.Logger, db cometbftdb.DB, appOpts servertypes.AppOptions) servertypes.Application {
 	// Create an app and type cast to an SimApp
-	app := newApp(logger, db, traceStore, appOpts)
+	app := newApp(logger, db, appOpts)
 	simApp, ok := app.(*simapp.SimApp)
 	if !ok {
 		panic("app created from newApp is not of type simApp")

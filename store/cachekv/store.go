@@ -1,15 +1,13 @@
 package cachekv
 
 import (
-	"io"
 	"iter"
 	"unsafe"
 
 	"github.com/cosmos/btree"
 
-	"cosmossdk.io/store/cachekv/internal"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv/internal"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 // GStore is an in-memory KV store that buffers writes and deletions until Write() is called.
@@ -49,14 +47,6 @@ func (store *GStore[V]) GetStoreType() types.StoreType {
 
 func (store *GStore[V]) CacheWrap() types.CacheWrap {
 	return NewGStore[V](store, store.isZero, store.valueLen)
-}
-
-func (store *GStore[V]) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	// We need to make a type assertion here as the tracekv store requires bytes value types for serialization.
-	if store, ok := any(store).(*GStore[[]byte]); ok {
-		return NewStore(tracekv.NewStore(store, w, tc))
-	}
-	return store.CacheWrap()
 }
 
 func (store *GStore[V]) Get(key []byte) V {

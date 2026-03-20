@@ -45,6 +45,9 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 // By default this is the fee_collector. Use this to redirect fees to a
 // different module (e.g. a distribution module that manages its own balance).
 func (dfd DeductFeeDecorator) WithFeeRecipientModule(moduleName string) DeductFeeDecorator {
+	if moduleName == "" {
+		panic("fee recipient module name cannot be empty")
+	}
 	dfd.feeRecipientModule = moduleName
 	return dfd
 }

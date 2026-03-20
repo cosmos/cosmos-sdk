@@ -83,13 +83,13 @@ func (k *Keeper) Validator(
 func (k *Keeper) Validators(
 	ctx context.Context, req *types.QueryValidatorsRequest,
 ) (*types.QueryValidatorsResponse, error) {
-	pageReq := req.Pagination
-	if pageReq == nil {
-		pageReq = &query.PageRequest{}
+	pageReq := &query.PageRequest{Reverse: true}
+	if req.Pagination != nil {
+		pageReq.Limit = req.Pagination.Limit
+		pageReq.Offset = req.Pagination.Offset
+		pageReq.Key = req.Pagination.Key
+		pageReq.CountTotal = req.Pagination.CountTotal
 	}
-
-	// Always reverse to get descending power order
-	pageReq.Reverse = true
 
 	validators, pageRes, err := query.CollectionPaginate[collections.Pair[int64, sdk.ConsAddress], collections.NoValue](
 		ctx,

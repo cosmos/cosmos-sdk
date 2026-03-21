@@ -24,7 +24,7 @@ func newMockSubspace(fee sdk.Coin) mockSubspace {
 	return mockSubspace{constantFee: fee}
 }
 
-func (ms mockSubspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
+func (ms mockSubspace) Get(ctx sdk.Context, key []byte, ptr any) {
 	*ptr.(*sdk.Coin) = ms.constantFee
 }
 

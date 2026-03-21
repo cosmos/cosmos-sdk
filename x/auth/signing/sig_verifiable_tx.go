@@ -23,5 +23,6 @@ type Tx interface {
 	types.TxWithMemo
 	types.FeeTx
 	types.TxWithTimeoutHeight
+	types.TxWithUnordered
 	types.HasValidateBasic
 }

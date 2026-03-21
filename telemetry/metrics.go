@@ -3,6 +3,7 @@ package telemetry
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -21,6 +22,11 @@ var globalTelemetryEnabled bool
 // IsTelemetryEnabled provides controlled access to check if telemetry is enabled.
 func IsTelemetryEnabled() bool {
 	return globalTelemetryEnabled
+}
+
+// EnableTelemetry allows for the global telemetry enabled state to be set.
+func EnableTelemetry() {
+	globalTelemetryEnabled = true
 }
 
 // globalLabels defines the set of global labels that will be applied to all
@@ -192,7 +198,7 @@ func (m *Metrics) Gather(format string) (GatherResponse, error) {
 // If Prometheus metrics are not enabled, it returns an error.
 func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
 	if !m.prometheusEnabled {
-		return GatherResponse{}, fmt.Errorf("prometheus metrics are not enabled")
+		return GatherResponse{}, errors.New("prometheus metrics are not enabled")
 	}
 
 	metricsFamilies, err := prometheus.DefaultGatherer.Gather()
@@ -218,7 +224,7 @@ func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
 func (m *Metrics) gatherGeneric() (GatherResponse, error) {
 	gm, ok := m.sink.(DisplayableSink)
 	if !ok {
-		return GatherResponse{}, fmt.Errorf("non in-memory metrics sink does not support generic format")
+		return GatherResponse{}, errors.New("non in-memory metrics sink does not support generic format")
 	}
 
 	summary, err := gm.DisplayMetrics(nil, nil)

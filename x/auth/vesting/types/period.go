@@ -102,7 +102,7 @@ func coinsMin(a, b sdk.Coins) sdk.Coins {
 	min := sdk.NewCoins()
 	for _, coinA := range a {
 		denom := coinA.Denom
-		bAmt := b.AmountOfNoDenomValidation(denom)
+		bAmt := b.AmountOf(denom)
 		minAmt := coinA.Amount
 		if minAmt.GT(bAmt) {
 			minAmt = bAmt
@@ -314,5 +314,5 @@ func AlignSchedules(startP, startQ int64, p, q []Period) (startTime, endTime int
 		endQ += period.Length
 	}
 	endTime = max64(endP, endQ)
-	return
+	return startTime, endTime
 }

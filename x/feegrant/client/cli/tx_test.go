@@ -412,8 +412,6 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -531,7 +529,7 @@ func (s *CLITestSuite) msgSubmitLegacyProposal(clientCtx client.Context, from, t
 
 	args = append(args, extraArgs...)
 
-	cmd := govcli.NewCmdSubmitLegacyProposal()
+	cmd := govcli.NewCmdSubmitLegacyProposal() //nolint:staticcheck // SA1019: deprecated is the *point*
 
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
@@ -608,8 +606,6 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdFeeGrant(codecaddress.NewBech32Codec("cosmos"))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -671,8 +667,6 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 	}
 
 	for _, tc := range cases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			err := tc.malleate()
 			s.Require().NoError(err)

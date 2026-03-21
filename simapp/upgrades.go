@@ -4,19 +4,20 @@ import (
 	"context"
 
 	storetypes "cosmossdk.io/store/types"
-	circuittypes "cosmossdk.io/x/circuit/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
+	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade
-// from v047 to v050.
+// from v050 to v053.
 //
 // NOTE: This upgrade defines a reference implementation of what an upgrade
 // could look like when an application is migrating from Cosmos SDK version
-// v0.47.x to v0.50.x.
-const UpgradeName = "v047-to-v050"
+// v0.50.x to v0.53.x.
+const UpgradeName = "v050-to-v053"
 
 func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
@@ -34,7 +35,8 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
 			Added: []string{
-				circuittypes.ModuleName,
+				epochstypes.ModuleName,
+				protocolpooltypes.ModuleName,
 			},
 		}
 

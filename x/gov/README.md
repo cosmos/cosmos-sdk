@@ -180,6 +180,47 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1beta1/g
 
 For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the sum of weights of all options must be equal to 1.
 
+#### Custom Vote Calculation
+
+Cosmos SDK v0.53.0 introduced an option for developers to define a custom vote result and voting power calculation function.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/main/x/gov/keeper/tally.go#L15-L24
+```
+
+This gives developers a more expressive way to handle governance on their appchains. 
+Developers can now build systems with:
+
+- Quadratic Voting
+- Time-weighted Voting
+- Reputation-Based voting
+
+##### Example
+
+```go
+func myCustomVotingFunction(
+  ctx context.Context,
+  k Keeper,
+  proposal v1.Proposal,
+  validators map[string]v1.ValidatorGovInfo,
+) (totalVoterPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, err error) {
+  // ... tally logic
+}
+
+govKeeper := govkeeper.NewKeeper(
+  appCodec,
+  runtime.NewKVStoreService(keys[govtypes.StoreKey]),
+  app.AccountKeeper,
+  app.BankKeeper,
+  app.StakingKeeper,
+  app.DistrKeeper,
+  app.MsgServiceRouter(),
+  govConfig,
+  authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+  govkeeper.WithCustomCalculateVoteResultsAndVotingPowerFn(myCustomVotingFunction),
+)
+```
+
 ### Quorum
 
 Quorum is defined as the minimum percentage of voting power that needs to be

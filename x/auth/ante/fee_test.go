@@ -1,11 +1,10 @@
 package ante_test
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
 
@@ -15,7 +14,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -40,12 +38,6 @@ func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
 	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
-
-	// Get the signer's address from the transaction
-	signers, err := tx.GetSigners()
-	require.NoError(t, err)
-	signerAddr := sdk.AccAddress(signers[0])
-	fmt.Printf("Signer address: %s\n", signerAddr.String())
 
 	// Set IsCheckTx to true
 	s.ctx = s.ctx.WithIsCheckTx(true)
@@ -81,12 +73,6 @@ func TestEnsureMempoolFees(t *testing.T) {
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
 	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
-
-	// Get the signer's address from the transaction
-	signers, err := tx.GetSigners()
-	require.NoError(t, err)
-	signerAddr := sdk.AccAddress(signers[0])
-	fmt.Printf("Signer address: %s\n", signerAddr.String())
 
 	// Set high gas price so standard test fee fails
 	atomPrice := sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(20))
@@ -145,12 +131,6 @@ func TestDeductFees(t *testing.T) {
 	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	// Get the signer's address from the transaction
-	signers, err := tx.GetSigners()
-	require.NoError(t, err)
-	signerAddr := sdk.AccAddress(signers[0])
-	fmt.Printf("Signer address: %s\n", signerAddr.String())
-
 	dfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil)
 	antehandler := sdk.ChainAnteDecorators(dfd)
 	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(sdkerrors.ErrInsufficientFunds)
@@ -178,7 +158,7 @@ func TestDeductFees_WithName_Table(t *testing.T) {
 		},
 		{
 			name:             "fee collector module",
-			altCollectorName: types.FeeCollectorName,
+			altCollectorName: authtypes.FeeCollectorName,
 			expectedError:    nil,
 		},
 	}
@@ -202,22 +182,16 @@ func TestDeductFees_WithName_Table(t *testing.T) {
 			tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 			require.NoError(t, err)
 
-			// Get the signer's address from the transaction
-			signers, err := tx.GetSigners()
-			require.NoError(t, err)
-			signerAddr := sdk.AccAddress(signers[0])
-			fmt.Printf("Signer address: %s\n", signerAddr.String())
-
 			// Set up initial account with coins
 			coins := sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(200)))
 
 			// Using mock bank keeper
-			s.bankKeeper.EXPECT().MintCoins(s.ctx, types.FeeCollectorName, coins).Return(nil)
-			s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.ctx, types.FeeCollectorName, accs[0].acc.GetAddress(), coins).Return(nil)
+			s.bankKeeper.EXPECT().MintCoins(s.ctx, authtypes.FeeCollectorName, coins).Return(nil)
+			s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.ctx, authtypes.FeeCollectorName, accs[0].acc.GetAddress(), coins).Return(nil)
 
-			err = s.bankKeeper.MintCoins(s.ctx, types.FeeCollectorName, coins)
+			err = s.bankKeeper.MintCoins(s.ctx, authtypes.FeeCollectorName, coins)
 			require.NoError(t, err)
-			err = s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, types.FeeCollectorName, accs[0].acc.GetAddress(), coins)
+			err = s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.FeeCollectorName, accs[0].acc.GetAddress(), coins)
 			require.NoError(t, err)
 
 			s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), tc.altCollectorName, gomock.Any()).Return(nil)

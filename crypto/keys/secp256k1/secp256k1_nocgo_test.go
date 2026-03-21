@@ -1,5 +1,4 @@
 //go:build !libsecp256k1_sdk
-// +build !libsecp256k1_sdk
 
 package secp256k1
 
@@ -15,7 +14,7 @@ import (
 // Note: run with CGO_ENABLED=0 or go test -tags !cgo.
 func TestSignatureVerificationAndRejectUpperS(t *testing.T) {
 	msg := []byte("We have lingered long enough on the shores of the cosmic ocean.")
-	for i := 0; i < 500; i++ {
+	for range 500 {
 		priv := GenPrivKey()
 		sigStr, err := priv.Sign(msg)
 		require.NoError(t, err)

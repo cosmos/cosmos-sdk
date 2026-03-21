@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
@@ -14,18 +14,18 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	ctx, keeper := s.ctx, s.slashingKeeper
 	require := s.Require()
 
-	keeper.SetParams(ctx, testutil.TestParams())
+	s.Require().NoError(keeper.SetParams(ctx, testutil.TestParams()))
 
-	consAddr1 := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
-	consAddr2 := sdk.ConsAddress(sdk.AccAddress([]byte("addr2_______________")))
+	consAddr1 := sdk.ConsAddress("addr1_______________")
+	consAddr2 := sdk.ConsAddress("addr2_______________")
 
 	info1 := types.NewValidatorSigningInfo(consAddr1, int64(4), int64(3),
 		time.Now().UTC().Add(100000000000), false, int64(10))
 	info2 := types.NewValidatorSigningInfo(consAddr2, int64(5), int64(4),
 		time.Now().UTC().Add(10000000000), false, int64(10))
 
-	keeper.SetValidatorSigningInfo(ctx, consAddr1, info1)
-	keeper.SetValidatorSigningInfo(ctx, consAddr2, info2)
+	require.NoError(keeper.SetValidatorSigningInfo(ctx, consAddr1, info1))
+	require.NoError(keeper.SetValidatorSigningInfo(ctx, consAddr2, info2))
 	genesisState := keeper.ExportGenesis(ctx)
 
 	require.Equal(genesisState.Params, testutil.TestParams())

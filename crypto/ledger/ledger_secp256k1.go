@@ -17,6 +17,9 @@ import (
 // options stores the Ledger Options that can be used to customize Ledger usage
 var options Options
 
+// AppName defines the Ledger app used for signing. Cosmos SDK uses the Cosmos app
+const AppName = "Cosmos"
+
 type (
 	// discoverLedgerFn defines a Ledger discovery function that returns a
 	// connected device or an error upon failure. Its allows a method to avoid CGO
@@ -66,7 +69,7 @@ func initOptionsDefault() {
 	options.createPubkey = func(key []byte) types.PubKey {
 		return &secp256k1.PubKey{Key: key}
 	}
-	options.appName = "Cosmos"
+	options.appName = AppName
 	options.skipDERConversion = false
 }
 
@@ -88,6 +91,51 @@ func SetAppName(appName string) {
 // Set the DER Conversion requirement to true (false by default)
 func SetSkipDERConversion() {
 	options.skipDERConversion = true
+}
+
+// SetDERConversion configures whether DER signature conversion should be enabled.
+// When enabled (true), signatures returned from the Ledger device are converted
+// from DER format to BER format, which is the standard behavior for Cosmos SDK chains.
+// When disabled (false), raw signatures are used without conversion, which is
+// typically required for Ethereum/EVM-compatible chains.
+//
+// Parameters:
+//   - enabled: true to enable DER conversion (Cosmos chains), false to disable (Ethereum chains)
+//
+// Example usage for different coin types in a key management CLI:
+//
+//	switch coinType {
+//	case 60:
+//	    // Ethereum/EVM chains - disable DER conversion for raw signatures
+//	    cosmosLedger.SetDiscoverLedger(func() (cosmosLedger.SECP256K1, error) {
+//	        return evmkeyring.LedgerDerivation()
+//	    })
+//	    cosmosLedger.SetCreatePubkey(func(key []byte) cryptotypes.PubKey {
+//	        return evmkeyring.CreatePubkey(key)
+//	    })
+//	    cosmosLedger.SetAppName(evmkeyring.AppName)
+//	    cosmosLedger.SetDERConversion(false) // Disable DER conversion for Ethereum
+//	case 118:
+//	    // Cosmos SDK chains - enable DER conversion for signature compatibility
+//	    cosmosLedger.SetDiscoverLedger(func() (cosmosLedger.SECP256K1, error) {
+//	        device, err := ledger.FindLedgerCosmosUserApp()
+//	        if err != nil {
+//	            return nil, err
+//	        }
+//	        return device, nil
+//	    })
+//	    cosmosLedger.SetCreatePubkey(func(key []byte) cryptotypes.PubKey {
+//	        return &secp256k1.PubKey{Key: key}
+//	    })
+//	    cosmosLedger.SetAppName(cosmosLedger.AppName)
+//	    cosmosLedger.SetDERConversion(true) // Enable DER conversion for Cosmos
+//	default:
+//	    return fmt.Errorf(
+//	        "unsupported coin type %d for Ledger. Supported coin types: 60 (Ethereum app), 118 (Cosmos app)", coinType,
+//	    )
+//	}
+func SetDERConversion(enabled bool) {
+	options.skipDERConversion = !enabled
 }
 
 // NewPrivKeySecp256k1Unsafe will generate a new key and store the public key for later use.
@@ -316,13 +364,13 @@ func sign(device SECP256K1, pkl PrivKeyLedgerSecp256k1, msg []byte, p2 byte) ([]
 func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error) {
 	publicKey, err := device.GetPublicKeySECP256K1(path.DerivationPath())
 	if err != nil {
-		return nil, fmt.Errorf("please open the %v app on the Ledger device - error: %v", options.appName, err)
+		return nil, fmt.Errorf("please open the %v app on the Ledger device - error: %w", options.appName, err)
 	}
 
 	// re-serialize in the 33-byte compressed format
 	cmp, err := secp.ParsePubKey(publicKey)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing public key: %v", err)
+		return nil, fmt.Errorf("error parsing public key: %w", err)
 	}
 
 	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
@@ -331,7 +379,7 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error
 	return options.createPubkey(compressedPublicKey), nil
 }
 
-// getPubKeyAddr reads the pubkey and the address from a ledger device.
+// getPubKeyAddrSafe reads the pubkey and the address from a ledger device.
 // This function is marked as Safe as it will require user confirmation and
 // account and index will be shown in the device.
 //
@@ -340,13 +388,19 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error
 func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (types.PubKey, string, error) {
 	publicKey, addr, err := device.GetAddressPubKeySECP256K1(path.DerivationPath(), hrp)
 	if err != nil {
-		return nil, "", fmt.Errorf("%w: address rejected for path %s", err, path.String())
+		// Check special case if user is trying to use an index > 100
+		if path.AddressIndex > 100 {
+			return nil, "", fmt.Errorf("%w: cannot derive paths where index > 100: %s "+
+				"This is a security measure to avoid very hard to find derivation paths introduced by a possible attacker. "+
+				"You can disable this by setting expert mode in your ledger device. Do this at your own risk", err, path)
+		}
+		return nil, "", fmt.Errorf("%w: address rejected for path %s", err, path)
 	}
 
 	// re-serialize in the 33-byte compressed format
 	cmp, err := secp.ParsePubKey(publicKey)
 	if err != nil {
-		return nil, "", fmt.Errorf("error parsing public key: %v", err)
+		return nil, "", fmt.Errorf("error parsing public key: %w", err)
 	}
 
 	compressedPublicKey := make([]byte, secp256k1.PubKeySize)

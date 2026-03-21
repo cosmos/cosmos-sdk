@@ -68,7 +68,7 @@ func (msr *MsgServiceRouter) HandlerByTypeURL(typeURL string) MsgServiceHandler 
 //   - if it is called before the service `Msg`s have been registered using
 //     RegisterInterfaces,
 //   - or if a service is being registered twice.
-func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
+func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler any) {
 	// Adds a top-level query handler based on the gRPC service name.
 	for _, method := range sd.Methods {
 		err := msr.registerMsgServiceHandler(sd, method, handler)
@@ -86,7 +86,7 @@ func (msr *MsgServiceRouter) HybridHandlerByMsgName(msgName string) func(ctx con
 	return msr.hybridHandlers[msgName]
 }
 
-func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
+func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler any) error {
 	inputName, err := protocompat.RequestFullNameFromMethodDesc(sd, method)
 	if err != nil {
 		return err
@@ -117,7 +117,7 @@ func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method 
 	return nil
 }
 
-func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
+func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler any) error {
 	fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 	methodHandler := method.Handler
 
@@ -126,7 +126,7 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 	// NOTE: This is how we pull the concrete request type for each handler for registering in the InterfaceRegistry.
 	// This approach is maybe a bit hacky, but less hacky than reflecting on the handler object itself.
 	// We use a no-op interceptor to avoid actually calling into the handler itself.
-	_, _ = methodHandler(nil, context.Background(), func(i interface{}) error {
+	_, _ = methodHandler(nil, context.Background(), func(i any) error {
 		msg, ok := i.(sdk.Msg)
 		if !ok {
 			// We panic here because there is no other alternative and the app cannot be initialized correctly
@@ -170,7 +170,7 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 
 	msr.routes[requestTypeName] = func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
-		interceptor := func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		interceptor := func(goCtx context.Context, _ any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 			goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
 			return handler(goCtx, msg)
 		}
@@ -215,7 +215,7 @@ func (msr *MsgServiceRouter) SetInterfaceRegistry(interfaceRegistry codectypes.I
 	msr.interfaceRegistry = interfaceRegistry
 }
 
-func noopDecoder(_ interface{}) error { return nil }
-func noopInterceptor(_ context.Context, _ interface{}, _ *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (interface{}, error) {
+func noopDecoder(_ any) error { return nil }
+func noopInterceptor(_ context.Context, _ any, _ *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (any, error) {
 	return nil, nil
 }

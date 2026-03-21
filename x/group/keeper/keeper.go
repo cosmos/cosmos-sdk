@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -95,12 +96,12 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	if err != nil {
 		panic(err.Error())
 	}
-	k.groupByAdminIndex, err = orm.NewIndex(groupTable, GroupByAdminIndexPrefix, func(val interface{}) ([]interface{}, error) {
+	k.groupByAdminIndex, err = orm.NewIndex(groupTable, GroupByAdminIndexPrefix, func(val any) ([]any, error) {
 		addr, err := accKeeper.AddressCodec().StringToBytes(val.(*group.GroupInfo).Admin)
 		if err != nil {
 			return nil, err
 		}
-		return []interface{}{addr}, nil
+		return []any{addr}, nil
 	}, []byte{})
 	if err != nil {
 		panic(err.Error())
@@ -112,20 +113,20 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	if err != nil {
 		panic(err.Error())
 	}
-	k.groupMemberByGroupIndex, err = orm.NewIndex(groupMemberTable, GroupMemberByGroupIndexPrefix, func(val interface{}) ([]interface{}, error) {
+	k.groupMemberByGroupIndex, err = orm.NewIndex(groupMemberTable, GroupMemberByGroupIndexPrefix, func(val any) ([]any, error) {
 		group := val.(*group.GroupMember).GroupId
-		return []interface{}{group}, nil
+		return []any{group}, nil
 	}, group.GroupMember{}.GroupId)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.groupMemberByMemberIndex, err = orm.NewIndex(groupMemberTable, GroupMemberByMemberIndexPrefix, func(val interface{}) ([]interface{}, error) {
+	k.groupMemberByMemberIndex, err = orm.NewIndex(groupMemberTable, GroupMemberByMemberIndexPrefix, func(val any) ([]any, error) {
 		memberAddr := val.(*group.GroupMember).Member.Address
 		addr, err := accKeeper.AddressCodec().StringToBytes(memberAddr)
 		if err != nil {
 			return nil, err
 		}
-		return []interface{}{addr}, nil
+		return []any{addr}, nil
 	}, []byte{})
 	if err != nil {
 		panic(err.Error())
@@ -138,19 +139,19 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	if err != nil {
 		panic(err.Error())
 	}
-	k.groupPolicyByGroupIndex, err = orm.NewIndex(groupPolicyTable, GroupPolicyByGroupIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		return []interface{}{value.(*group.GroupPolicyInfo).GroupId}, nil
+	k.groupPolicyByGroupIndex, err = orm.NewIndex(groupPolicyTable, GroupPolicyByGroupIndexPrefix, func(value any) ([]any, error) {
+		return []any{value.(*group.GroupPolicyInfo).GroupId}, nil
 	}, group.GroupPolicyInfo{}.GroupId)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.groupPolicyByAdminIndex, err = orm.NewIndex(groupPolicyTable, GroupPolicyByAdminIndexPrefix, func(value interface{}) ([]interface{}, error) {
+	k.groupPolicyByAdminIndex, err = orm.NewIndex(groupPolicyTable, GroupPolicyByAdminIndexPrefix, func(value any) ([]any, error) {
 		admin := value.(*group.GroupPolicyInfo).Admin
 		addr, err := accKeeper.AddressCodec().StringToBytes(admin)
 		if err != nil {
 			return nil, err
 		}
-		return []interface{}{addr}, nil
+		return []any{addr}, nil
 	}, []byte{})
 	if err != nil {
 		panic(err.Error())
@@ -162,20 +163,20 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	if err != nil {
 		panic(err.Error())
 	}
-	k.proposalByGroupPolicyIndex, err = orm.NewIndex(proposalTable, ProposalByGroupPolicyIndexPrefix, func(value interface{}) ([]interface{}, error) {
+	k.proposalByGroupPolicyIndex, err = orm.NewIndex(proposalTable, ProposalByGroupPolicyIndexPrefix, func(value any) ([]any, error) {
 		account := value.(*group.Proposal).GroupPolicyAddress
 		addr, err := accKeeper.AddressCodec().StringToBytes(account)
 		if err != nil {
 			return nil, err
 		}
-		return []interface{}{addr}, nil
+		return []any{addr}, nil
 	}, []byte{})
 	if err != nil {
 		panic(err.Error())
 	}
-	k.proposalsByVotingPeriodEnd, err = orm.NewIndex(proposalTable, ProposalsByVotingPeriodEndPrefix, func(value interface{}) ([]interface{}, error) {
+	k.proposalsByVotingPeriodEnd, err = orm.NewIndex(proposalTable, ProposalsByVotingPeriodEndPrefix, func(value any) ([]any, error) {
 		votingPeriodEnd := value.(*group.Proposal).VotingPeriodEnd
-		return []interface{}{sdk.FormatTimeBytes(votingPeriodEnd)}, nil
+		return []any{sdk.FormatTimeBytes(votingPeriodEnd)}, nil
 	}, []byte{})
 	if err != nil {
 		panic(err.Error())
@@ -187,18 +188,18 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	if err != nil {
 		panic(err.Error())
 	}
-	k.voteByProposalIndex, err = orm.NewIndex(voteTable, VoteByProposalIndexPrefix, func(value interface{}) ([]interface{}, error) {
-		return []interface{}{value.(*group.Vote).ProposalId}, nil
+	k.voteByProposalIndex, err = orm.NewIndex(voteTable, VoteByProposalIndexPrefix, func(value any) ([]any, error) {
+		return []any{value.(*group.Vote).ProposalId}, nil
 	}, group.Vote{}.ProposalId)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.voteByVoterIndex, err = orm.NewIndex(voteTable, VoteByVoterIndexPrefix, func(value interface{}) ([]interface{}, error) {
+	k.voteByVoterIndex, err = orm.NewIndex(voteTable, VoteByVoterIndexPrefix, func(value any) ([]any, error) {
 		addr, err := accKeeper.AddressCodec().StringToBytes(value.(*group.Vote).Voter)
 		if err != nil {
 			return nil, err
 		}
-		return []interface{}{addr}, nil
+		return []any{addr}, nil
 	}, []byte{})
 	if err != nil {
 		panic(err.Error())
@@ -219,6 +220,10 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", group.ModuleName))
+}
+
+func (k Keeper) AddressCodec() address.Codec {
+	return k.accKeeper.AddressCodec()
 }
 
 // GetGroupSequence returns the current value of the group table sequence
@@ -285,7 +290,6 @@ func (k Keeper) abortProposals(ctx sdk.Context, groupPolicyAddr sdk.AccAddress) 
 		return err
 	}
 
-	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointer on &proposalInfo)"
 	for _, proposalInfo := range proposals {
 		// Mark all proposals still in the voting phase as aborted.
 		if proposalInfo.Status == group.PROPOSAL_STATUS_SUBMITTED {
@@ -330,7 +334,6 @@ func (k Keeper) pruneVotes(ctx sdk.Context, proposalID uint64) error {
 		return err
 	}
 
-	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointer on &v)"
 	for _, v := range votes {
 		err = k.voteTable.Delete(ctx.KVStore(k.key), &v)
 		if err != nil {
@@ -399,7 +402,6 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 	if err != nil {
 		return nil
 	}
-	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointers in the loop)"
 	for _, proposal := range proposals {
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
 		if err != nil {
@@ -412,7 +414,8 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 		}
 
 		proposalID := proposal.Id
-		if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN {
+		switch proposal.Status {
+		case group.PROPOSAL_STATUS_ABORTED, group.PROPOSAL_STATUS_WITHDRAWN:
 			if err := k.pruneProposal(ctx, proposalID); err != nil {
 				return err
 			}
@@ -427,7 +430,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				}); err != nil {
 				return err
 			}
-		} else if proposal.Status == group.PROPOSAL_STATUS_SUBMITTED {
+		case group.PROPOSAL_STATUS_SUBMITTED:
 			if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
 				return errorsmod.Wrap(err, "doTallyAndUpdate")
 			}

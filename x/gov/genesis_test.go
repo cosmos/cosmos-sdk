@@ -15,7 +15,7 @@ import (
 func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.App
-	ctx := app.BaseApp.NewContext(false)
+	ctx := app.NewContext(false)
 	require.Panics(t, func() {
 		gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, &v1.GenesisState{
 			Deposits: v1.Deposits{

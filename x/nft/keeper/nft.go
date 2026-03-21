@@ -54,8 +54,7 @@ func (k Keeper) Burn(ctx context.Context, classID, nftID string) error {
 		return errors.Wrap(nft.ErrNFTNotExists, nftID)
 	}
 
-	k.burnWithNoCheck(ctx, classID, nftID)
-	return nil
+	return k.burnWithNoCheck(ctx, classID, nftID)
 }
 
 // burnWithNoCheck defines a method for burning a nft from a specific account.
@@ -116,8 +115,7 @@ func (k Keeper) Transfer(ctx context.Context,
 		return errors.Wrap(nft.ErrNFTNotExists, nftID)
 	}
 
-	k.transferWithNoCheck(ctx, classID, nftID, receiver)
-	return nil
+	return k.transferWithNoCheck(ctx, classID, nftID, receiver)
 }
 
 // Transfer defines a method for sending a nft from one account to another account.
@@ -213,7 +211,7 @@ func (k Keeper) setNFT(ctx context.Context, token nft.NFT) {
 
 func (k Keeper) setOwner(ctx context.Context, classID, nftID string, owner sdk.AccAddress) {
 	store := k.storeService.OpenKVStore(ctx)
-	store.Set(ownerStoreKey(classID, nftID), owner.Bytes())
+	_ = store.Set(ownerStoreKey(classID, nftID), owner.Bytes())
 
 	ownerStore := k.getClassStoreByOwner(ctx, owner, classID)
 	ownerStore.Set([]byte(nftID), Placeholder)
@@ -221,7 +219,7 @@ func (k Keeper) setOwner(ctx context.Context, classID, nftID string, owner sdk.A
 
 func (k Keeper) deleteOwner(ctx context.Context, classID, nftID string, owner sdk.AccAddress) {
 	store := k.storeService.OpenKVStore(ctx)
-	store.Delete(ownerStoreKey(classID, nftID))
+	_ = store.Delete(ownerStoreKey(classID, nftID))
 
 	ownerStore := k.getClassStoreByOwner(ctx, owner, classID)
 	ownerStore.Delete([]byte(nftID))

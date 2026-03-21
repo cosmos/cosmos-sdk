@@ -28,7 +28,7 @@ type (
 	// the expected types and could result in type assertion errors. It is recommend
 	// to either use the cast package or perform manual conversion for safety.
 	AppOptions interface {
-		Get(string) interface{}
+		Get(string) any
 	}
 
 	// Application defines an application interface that wraps abci.Application.
@@ -39,9 +39,9 @@ type (
 
 		RegisterAPIRoutes(*api.Server, config.APIConfig)
 
-		// RegisterGRPCServer registers gRPC services directly with the gRPC
-		// server.
-		RegisterGRPCServer(grpc.Server)
+		// RegisterGRPCServerWithSkipCheckHeader registers gRPC services directly with the gRPC
+		// server and bypass check header flag.
+		RegisterGRPCServerWithSkipCheckHeader(grpc.Server, bool)
 
 		// RegisterTxService registers the gRPC Query service for tx (such as tx
 		// simulation, fetching txs by hash...).

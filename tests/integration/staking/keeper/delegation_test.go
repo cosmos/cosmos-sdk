@@ -291,7 +291,7 @@ func TestTransferUnbonding(t *testing.T) {
 	require.NoError(t, err)
 
 	// full transfer
-	resUnbond, err = f.stakingKeeper.GetUnbondingDelegation(f.sdkCtx, addrDels[1], valAddrs[0])
+	_, err = f.stakingKeeper.GetUnbondingDelegation(f.sdkCtx, addrDels[1], valAddrs[0])
 	require.NoError(t, err)
 
 	transferred, err = f.stakingKeeper.TransferUnbonding(f.sdkCtx, addrDels[0], addrDels[1], valAddrs[0], math.NewInt(999))

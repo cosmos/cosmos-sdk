@@ -16,6 +16,8 @@ import (
 )
 
 // Keeper - crisis keeper
+//
+// Deprecated: the crisis keeper is deprecated and will be removed in the next Cosmos SDK major release.
 type Keeper struct {
 	routes         []types.InvarRoute
 	invCheckPeriod uint
@@ -37,6 +39,8 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new Keeper object
+//
+// Deprecated: the crisis keeper is deprecated and will be removed in the next Cosmos SDK major release.
 func NewKeeper(
 	cdc codec.BinaryCodec, storeService storetypes.KVStoreService, invCheckPeriod uint,
 	supplyKeeper types.SupplyKeeper, feeCollectorName, authority string, ac address.Codec,

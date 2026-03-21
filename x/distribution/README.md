@@ -125,6 +125,29 @@ is created which might need to reference the historical record, the reference co
 Each time one object which previously needed to reference the historical record is deleted, the reference
 count is decremented. If the reference count hits zero, the historical record is deleted.
 
+### External Community Pool Keepers
+
+An external pool community keeper is defined as:
+
+```go
+// ExternalCommunityPoolKeeper is the interface that an external community pool module keeper must fulfill
+// for x/distribution to properly accept it as a community pool fund destination.
+type ExternalCommunityPoolKeeper interface {
+	// GetCommunityPoolModule gets the module name that funds should be sent to for the community pool.
+	// This is the address that x/distribution will send funds to for external management.
+	GetCommunityPoolModule() string
+	// FundCommunityPool allows an account to directly fund the community fund pool.
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, senderAddr sdk.AccAddress) error
+	// DistributeFromCommunityPool distributes funds from the community pool module account to
+	// a receiver address.
+	DistributeFromCommunityPool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
+}
+```
+
+By default, the distribution module will use a community pool implementation that is internal.  An external community pool 
+can be provided to the module which will have funds be diverted to it instead of the internal implementation.  The reference
+external community pool maintained by the Cosmos SDK is [`x/protocolpool`](../protocolpool/README.md).
+
 ## State
 
 ### FeePool
@@ -226,6 +249,56 @@ through the messages `FundCommunityPool`, `WithdrawValidatorCommission` and
 The community pool gets `community_tax * fees`, plus any remaining dust after
 validators get their rewards that are always rounded down to the nearest
 integer value.
+
+#### Using an External Community Pool
+
+Starting with Cosmos SDK v0.53.0, an external community pool, such as `x/protocolpool`, can be used in place of the `x/distribution` managed community pool.
+
+
+Please view the warning in the next section before deciding to use an external community pool.
+
+```go
+// ExternalCommunityPoolKeeper is the interface that an external community pool module keeper must fulfill
+// for x/distribution to properly accept it as a community pool fund destination.
+type ExternalCommunityPoolKeeper interface {
+	// GetCommunityPoolModule gets the module name that funds should be sent to for the community pool.
+	// This is the address that x/distribution will send funds to for external management.
+	GetCommunityPoolModule() string
+	// FundCommunityPool allows an account to directly fund the community fund pool.
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, senderAddr sdk.AccAddress) error
+	// DistributeFromCommunityPool distributes funds from the community pool module account to
+	// a receiver address.
+	DistributeFromCommunityPool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
+}
+```
+
+```go
+app.DistrKeeper = distrkeeper.NewKeeper(
+    appCodec,
+    runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
+    app.AccountKeeper,
+    app.BankKeeper,
+    app.StakingKeeper,
+    authtypes.FeeCollectorName,
+    authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+    distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper), // New option.
+)
+```
+
+#### External Community Pool Usage Warning
+
+When using an external community pool with `x/distribution`, the following handlers will return an error:
+
+**QueryService**
+
+- `CommunityPool`
+
+**MsgService**
+
+- `CommunityPoolSpend`
+- `FundCommunityPool`
+
+If you have services that rely on this functionality from `x/distribution`, please update them to use the `x/protocolpool` equivalents.
 
 #### Reward To the Validators
 
@@ -345,6 +418,12 @@ The amount withdrawn is deducted from the `ValidatorOutstandingRewards` variable
 Only integer amounts can be sent. If the accumulated awards have decimals, the amount is truncated before the withdrawal is sent, and the remainder is left to be withdrawn later.
 
 ### FundCommunityPool
+
+:::warning
+
+This handler will return an error if an `ExternalCommunityPool` is used.
+
+:::
 
 This message sends coins directly from the sender to the community pool.
 

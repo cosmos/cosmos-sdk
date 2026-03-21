@@ -58,7 +58,11 @@ func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 				return err
 			}
 
-			proposal, err := cli.ReadGovPropFlags(clientCtx, cmd.Flags())
+			proposer, err := ac.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return fmt.Errorf("invalid proposer address: %w", err)
+			}
+			proposal, err := cli.ReadGovPropCmdFlags(proposer, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -127,7 +131,7 @@ func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 	// add common proposal flags
 	flags.AddTxFlagsToCmd(cmd)
 	cli.AddGovPropFlagsToCmd(cmd)
-	cmd.MarkFlagRequired(cli.FlagTitle)
+	_ = cmd.MarkFlagRequired(cli.FlagTitle)
 
 	return cmd
 }
@@ -145,7 +149,11 @@ func NewCmdSubmitCancelUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 				return err
 			}
 
-			proposal, err := cli.ReadGovPropFlags(clientCtx, cmd.Flags())
+			proposer, err := ac.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return fmt.Errorf("invalid proposer address: %w", err)
+			}
+			proposal, err := cli.ReadGovPropCmdFlags(proposer, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -176,7 +184,7 @@ func NewCmdSubmitCancelUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 	// add common proposal flags
 	flags.AddTxFlagsToCmd(cmd)
 	cli.AddGovPropFlagsToCmd(cmd)
-	cmd.MarkFlagRequired(cli.FlagTitle)
+	_ = cmd.MarkFlagRequired(cli.FlagTitle)
 
 	return cmd
 }

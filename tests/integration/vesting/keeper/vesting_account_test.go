@@ -43,7 +43,6 @@ var (
 	PKs        = simtestutil.CreateTestPubKeys(500)
 	stakeDenom = "stake"
 	feeDenom   = "fee"
-	emptyCoin  = sdk.Coins{}
 )
 
 type fixture struct {
@@ -71,6 +70,7 @@ func initBaseAccount() (*authtypes.BaseAccount, sdk.Coins) {
 }
 
 func initFixtures(t *testing.T) *fixture {
+	t.Helper()
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, stakingtypes.StoreKey, banktypes.StoreKey, minttypes.StoreKey)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, vesting.AppModuleBasic{}).Codec
 
@@ -241,6 +241,7 @@ func TestAddGrantPeroidicVestingAcc(t *testing.T) {
 	ctx = ctx.WithBlockTime(now.Add(1500 * stdtime.Second))
 	// err = f.bankKeeper.SendCoins(ctx, pva.GetAddress(), dest, origCoins)
 	require.NoError(t, err)
+	require.NotEmpty(t, ctx)
 }
 
 func TestAddGrantPeriodicVestincAcc_FullSlash(t *testing.T) {

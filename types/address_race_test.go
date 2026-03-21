@@ -52,7 +52,7 @@ func (s *addressTestSuite) TestAddressRace() {
 	close(cancel)
 
 	// cleanup
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		<-done
 	}
 }

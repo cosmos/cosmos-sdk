@@ -169,12 +169,6 @@ just trying the examples, you can skip ahead to the [Testing](#testing) section.
 make proto-gen 
 ```
 
-* stdout plugin; from inside the `store/` dir, run:
-
-```shell
-go build -o streaming/abci/examples/stdout/stdout streaming/abci/examples/stdout/stdout.go
-```
-
 * file plugin (writes to `~/`); from inside the `store/` dir, run:
 
 ```shell
@@ -184,12 +178,6 @@ go build -o streaming/abci/examples/file/file streaming/abci/examples/file/file.
 ### Testing
 
 Export a plugin from one of the Go or Python examples.
-
-* stdout plugin
-
-```shell
-export COSMOS_SDK_ABCI="{path to}/cosmos-sdk/store/streaming/abci/examples/stdout/stdout"
-```
 
 * file plugin (writes to ~/)
 

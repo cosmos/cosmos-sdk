@@ -56,12 +56,14 @@ var (
 	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
 
 	DelegationByValIndexKey = []byte{0x71} // key for delegations by a validator
+
+	// NOTE: keys in range 0x81–0x87 were previously used in liquid staking forks of the staking module.
+	// Module developers MUST NOT use these keys and MUST consider them "reserved".
 )
 
 // UnbondingType defines the type of unbonding operation
 type UnbondingType int
 
-//nolint:revive // we want these underscores, they make life easier
 const (
 	UnbondingType_Undefined UnbondingType = iota
 	UnbondingType_UnbondingDelegation

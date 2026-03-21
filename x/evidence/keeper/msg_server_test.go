@@ -66,7 +66,6 @@ func (s *KeeperTestSuite) TestSubmitEvidence() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			_, err := s.msgServer.SubmitEvidence(s.ctx, tc.req)
 			if tc.expErr {

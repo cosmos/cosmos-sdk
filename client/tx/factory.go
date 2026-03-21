@@ -3,8 +3,10 @@ package tx
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/pflag"
@@ -32,9 +34,11 @@ type Factory struct {
 	sequence           uint64
 	gas                uint64
 	timeoutHeight      uint64
+	timeoutTimestamp   time.Time
 	gasAdjustment      float64
 	chainID            string
 	fromName           string
+	unordered          bool
 	offline            bool
 	generateOnly       bool
 	memo               string
@@ -50,6 +54,14 @@ type Factory struct {
 
 // NewFactoryCLI creates a new Factory.
 func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
+	if clientCtx.Viper == nil {
+		clientCtx = clientCtx.WithViper("")
+	}
+
+	if err := clientCtx.Viper.BindPFlags(flagSet); err != nil {
+		return Factory{}, fmt.Errorf("failed to bind flags to viper: %w", err)
+	}
+
 	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
 	switch clientCtx.SignModeStr {
 	case flags.SignModeDirect:
@@ -67,18 +79,24 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 	var accNum, accSeq uint64
 	if clientCtx.Offline {
 		if flagSet.Changed(flags.FlagAccountNumber) && flagSet.Changed(flags.FlagSequence) {
-			accNum, _ = flagSet.GetUint64(flags.FlagAccountNumber)
-			accSeq, _ = flagSet.GetUint64(flags.FlagSequence)
+			accNum = clientCtx.Viper.GetUint64(flags.FlagAccountNumber)
+			accSeq = clientCtx.Viper.GetUint64(flags.FlagSequence)
 		} else {
 			return Factory{}, errors.New("account-number and sequence must be set in offline mode")
 		}
 	}
 
-	gasAdj, _ := flagSet.GetFloat64(flags.FlagGasAdjustment)
-	memo, _ := flagSet.GetString(flags.FlagNote)
-	timeoutHeight, _ := flagSet.GetUint64(flags.FlagTimeoutHeight)
+	gasAdj := clientCtx.Viper.GetFloat64(flags.FlagGasAdjustment)
+	memo := clientCtx.Viper.GetString(flags.FlagNote)
+	timeout := clientCtx.Viper.GetDuration(flags.TimeoutDuration)
+	var timeoutTimestamp time.Time
+	if timeout > 0 {
+		timeoutTimestamp = time.Now().Add(timeout)
+	}
+	timeoutHeight := clientCtx.Viper.GetUint64(flags.FlagTimeoutHeight)
+	unordered := clientCtx.Viper.GetBool(flags.FlagUnordered)
 
-	gasStr, _ := flagSet.GetString(flags.FlagGas)
+	gasStr := clientCtx.Viper.GetString(flags.FlagGas)
 	gasSetting, _ := flags.ParseGasSetting(gasStr)
 
 	f := Factory{
@@ -94,6 +112,8 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		accountNumber:      accNum,
 		sequence:           accSeq,
 		timeoutHeight:      timeoutHeight,
+		timeoutTimestamp:   timeoutTimestamp,
+		unordered:          unordered,
 		gasAdjustment:      gasAdj,
 		memo:               memo,
 		signMode:           signMode,
@@ -101,10 +121,10 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		feePayer:           clientCtx.FeePayer,
 	}
 
-	feesStr, _ := flagSet.GetString(flags.FlagFees)
+	feesStr := clientCtx.Viper.GetString(flags.FlagFees)
 	f = f.WithFees(feesStr)
 
-	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
+	gasPricesStr := clientCtx.Viper.GetString(flags.FlagGasPrices)
 	f = f.WithGasPrices(gasPricesStr)
 
 	f = f.WithPreprocessTxHook(clientCtx.PreprocessTxHook)
@@ -123,6 +143,8 @@ func (f Factory) Fees() sdk.Coins                           { return f.fees }
 func (f Factory) GasPrices() sdk.DecCoins                   { return f.gasPrices }
 func (f Factory) AccountRetriever() client.AccountRetriever { return f.accountRetriever }
 func (f Factory) TimeoutHeight() uint64                     { return f.timeoutHeight }
+func (f Factory) TimeoutTimestamp() time.Time               { return f.timeoutTimestamp }
+func (f Factory) Unordered() bool                           { return f.unordered }
 func (f Factory) FromName() string                          { return f.fromName }
 
 // SimulateAndExecute returns the option to simulate and then execute the transaction
@@ -236,6 +258,18 @@ func (f Factory) WithTimeoutHeight(height uint64) Factory {
 	return f
 }
 
+// WithTimeoutTimestamp returns a copy of the Factory with an updated timeout timestamp.
+func (f Factory) WithTimeoutTimestamp(timestamp time.Time) Factory {
+	f.timeoutTimestamp = timestamp
+	return f
+}
+
+// WithUnordered returns a copy of the Factory with an updated unordered field.
+func (f Factory) WithUnordered(v bool) Factory {
+	f.unordered = v
+	return f
+}
+
 // WithFeeGranter returns a copy of the Factory with an updated fee granter.
 func (f Factory) WithFeeGranter(fg sdk.AccAddress) Factory {
 	f.feeGranter = fg
@@ -311,14 +345,16 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 			return nil, errors.New("cannot provide both fees and gas prices")
 		}
 
-		glDec := math.LegacyNewDec(int64(f.gas))
+		// f.gas is a uint64 and we should convert to LegacyDec
+		// without the risk of under/overflow via uint64->int64.
+		gasLimitDec := math.LegacyNewDecFromBigInt(new(big.Int).SetUint64(f.gas))
 
 		// Derive the fees based on the provided gas prices, where
 		// fee = ceil(gasPrice * gasLimit).
 		fees = make(sdk.Coins, len(f.gasPrices))
 
 		for i, gp := range f.gasPrices {
-			fee := gp.Amount.Mul(glDec)
+			fee := gp.Amount.Mul(gasLimitDec)
 			fees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
 		}
 	}
@@ -340,6 +376,8 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 	tx.SetFeeGranter(f.feeGranter)
 	tx.SetFeePayer(f.feePayer)
 	tx.SetTimeoutHeight(f.TimeoutHeight())
+	tx.SetTimeoutTimestamp(f.TimeoutTimestamp())
+	tx.SetUnordered(f.Unordered())
 
 	if etx, ok := tx.(client.ExtendedTxBuilder); ok {
 		etx.SetExtensionOptions(f.extOptions...)
@@ -477,12 +515,15 @@ func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) signing.SignatureDat
 // A new Factory with the updated fields will be returned.
 // Note: When in offline mode, the Prepare does nothing and returns the original factory.
 func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
+	if f.sequence > 0 && f.unordered {
+		return f, errors.New("unordered transactions must not have sequence values set")
+	}
 	if clientCtx.Offline {
 		return f, nil
 	}
 
 	fc := f
-	from := clientCtx.GetFromAddress()
+	from := clientCtx.FromAddress
 
 	if err := fc.accountRetriever.EnsureExists(clientCtx, from); err != nil {
 		return fc, err
@@ -499,7 +540,7 @@ func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 			fc = fc.WithAccountNumber(num)
 		}
 
-		if initSeq == 0 {
+		if initSeq == 0 && !f.unordered {
 			fc = fc.WithSequence(seq)
 		}
 	}

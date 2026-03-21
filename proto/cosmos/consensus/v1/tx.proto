@@ -1,4 +1,3 @@
-// Since: cosmos-sdk 0.47
 syntax = "proto3";
 package cosmos.consensus.v1;
 
@@ -15,9 +14,9 @@ service Msg {
 
   // UpdateParams defines a governance operation for updating the x/consensus module parameters.
   // The authority is defined in the keeper.
-  //
-  // Since: cosmos-sdk 0.47
-  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse) {
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.47";
+  };
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -37,8 +36,7 @@ message MsgUpdateParams {
   tendermint.types.EvidenceParams  evidence  = 3;
   tendermint.types.ValidatorParams validator = 4;
 
-  // Since: cosmos-sdk 0.50
-  tendermint.types.ABCIParams abci = 5;
+  tendermint.types.ABCIParams abci = 5 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.50"];
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a

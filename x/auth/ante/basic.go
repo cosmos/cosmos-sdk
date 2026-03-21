@@ -1,6 +1,9 @@
 package ante
 
 import (
+	"slices"
+	"time"
+
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
@@ -166,10 +169,8 @@ func isIncompleteSignature(data signing.SignatureData) bool {
 		if len(data.Signatures) == 0 {
 			return true
 		}
-		for _, s := range data.Signatures {
-			if isIncompleteSignature(s) {
-				return true
-			}
+		if slices.ContainsFunc(data.Signatures, isIncompleteSignature) {
+			return true
 		}
 	}
 
@@ -187,6 +188,7 @@ type (
 		sdk.Tx
 
 		GetTimeoutHeight() uint64
+		GetTimeoutTimeStamp() time.Time
 	}
 )
 
@@ -210,6 +212,14 @@ func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	if timeoutHeight > 0 && uint64(ctx.BlockHeight()) > timeoutHeight {
 		return ctx, errorsmod.Wrapf(
 			sdkerrors.ErrTxTimeoutHeight, "block height: %d, timeout height: %d", ctx.BlockHeight(), timeoutHeight,
+		)
+	}
+
+	timeoutTimestamp := timeoutTx.GetTimeoutTimeStamp()
+	blockTime := ctx.BlockHeader().Time
+	if !timeoutTimestamp.IsZero() && timeoutTimestamp.Unix() != 0 && timeoutTimestamp.Before(blockTime) {
+		return ctx, errorsmod.Wrapf(
+			sdkerrors.ErrTxTimeout, "block time: %s, timeout timestamp: %s", blockTime, timeoutTimestamp.String(),
 		)
 	}
 

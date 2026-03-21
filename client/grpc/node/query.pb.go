@@ -404,6 +404,7 @@ func _Service_Status_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+var Service_serviceDesc = _Service_serviceDesc
 var _Service_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.base.node.v1beta1.Service",
 	HandlerType: (*ServiceServer)(nil),

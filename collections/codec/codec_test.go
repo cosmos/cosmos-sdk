@@ -7,7 +7,7 @@ import (
 )
 
 func TestUntypedValueCodec(t *testing.T) {
-	vc := NewUntypedValueCodec(KeyToValueCodec(NewStringKeyCodec[string]()))
+	vc := NewUntypedValueCodec(ValueCodec[string](KeyToValueCodec(KeyCodec[string](NewStringKeyCodec[string]()))))
 
 	t.Run("encode/decode", func(t *testing.T) {
 		_, err := vc.Encode(0)

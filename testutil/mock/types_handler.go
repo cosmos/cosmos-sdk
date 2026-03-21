@@ -8,11 +8,11 @@
 package mock
 
 import (
-	reflect "reflect"
+	"reflect"
 
-	gomock "github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 
-	types "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 // MockAnteDecorator is a mock of AnteDecorator interface.
@@ -47,7 +47,7 @@ func (m *MockAnteDecorator) AnteHandle(ctx types.Context, tx types.Tx, simulate 
 }
 
 // AnteHandle indicates an expected call of AnteHandle.
-func (mr *MockAnteDecoratorMockRecorder) AnteHandle(ctx, tx, simulate, next interface{}) *gomock.Call {
+func (mr *MockAnteDecoratorMockRecorder) AnteHandle(ctx, tx, simulate, next any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AnteHandle", reflect.TypeOf((*MockAnteDecorator)(nil).AnteHandle), ctx, tx, simulate, next)
 }
@@ -84,7 +84,7 @@ func (m *MockPostDecorator) PostHandle(ctx types.Context, tx types.Tx, simulate,
 }
 
 // PostHandle indicates an expected call of PostHandle.
-func (mr *MockPostDecoratorMockRecorder) PostHandle(ctx, tx, simulate, success, next interface{}) *gomock.Call {
+func (mr *MockPostDecoratorMockRecorder) PostHandle(ctx, tx, simulate, success, next any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostHandle", reflect.TypeOf((*MockPostDecorator)(nil).PostHandle), ctx, tx, simulate, success, next)
 }

@@ -39,6 +39,7 @@ package gogoreflection // import "google.golang.org/grpc/reflection"
 import (
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -188,7 +189,7 @@ func fqn(prefix, name string) string {
 // fileDescForType gets the file descriptor for the given type.
 // The given type should be a proto message.
 func (s *serverReflectionServer) fileDescForType(st reflect.Type) (*dpb.FileDescriptorProto, error) {
-	m, ok := reflect.Zero(reflect.PtrTo(st)).Interface().(protoMessage)
+	m, ok := reflect.Zero(reflect.PointerTo(st)).Interface().(protoMessage)
 	if !ok {
 		return nil, fmt.Errorf("failed to create message from type: %v", st)
 	}
@@ -202,12 +203,12 @@ func (s *serverReflectionServer) fileDescForType(st reflect.Type) (*dpb.FileDesc
 func decodeFileDesc(enc []byte) (*dpb.FileDescriptorProto, error) {
 	raw, err := decompress(enc)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decompress enc: %v", err)
+		return nil, fmt.Errorf("failed to decompress enc: %w", err)
 	}
 
 	fd := new(dpb.FileDescriptorProto)
 	if err := proto.Unmarshal(raw, fd); err != nil {
-		return nil, fmt.Errorf("bad descriptor: %v", err)
+		return nil, fmt.Errorf("bad descriptor: %w", err)
 	}
 	return fd, nil
 }
@@ -216,11 +217,11 @@ func decodeFileDesc(enc []byte) (*dpb.FileDescriptorProto, error) {
 func decompress(b []byte) ([]byte, error) {
 	r, err := gzip.NewReader(bytes.NewReader(b))
 	if err != nil {
-		return nil, fmt.Errorf("bad gzipped descriptor: %v", err)
+		return nil, fmt.Errorf("bad gzipped descriptor: %w", err)
 	}
 	out, err := io.ReadAll(r)
 	if err != nil {
-		return nil, fmt.Errorf("bad gzipped descriptor: %v", err)
+		return nil, fmt.Errorf("bad gzipped descriptor: %w", err)
 	}
 	return out, nil
 }
@@ -236,7 +237,7 @@ func typeForName(name string) (reflect.Type, error) {
 }
 
 func fileDescContainingExtension(st reflect.Type, ext int32) (*dpb.FileDescriptorProto, error) {
-	m, ok := reflect.Zero(reflect.PtrTo(st)).Interface().(proto.Message)
+	m, ok := reflect.Zero(reflect.PointerTo(st)).Interface().(proto.Message)
 	if !ok {
 		return nil, fmt.Errorf("failed to create message from type: %v", st)
 	}
@@ -251,7 +252,7 @@ func fileDescContainingExtension(st reflect.Type, ext int32) (*dpb.FileDescripto
 }
 
 func (s *serverReflectionServer) allExtensionNumbersForType(st reflect.Type) ([]int32, error) {
-	m, ok := reflect.Zero(reflect.PtrTo(st)).Interface().(proto.Message)
+	m, ok := reflect.Zero(reflect.PointerTo(st)).Interface().(proto.Message)
 	if !ok {
 		return nil, fmt.Errorf("failed to create message from type: %v", st)
 	}
@@ -308,7 +309,7 @@ func (s *serverReflectionServer) fileDescEncodingByFilename(name string, sentFil
 // For SupportPackageIsVersion4, m is the name of the proto file, we
 // call proto.FileDescriptor to get the byte slice.
 // For SupportPackageIsVersion3, m is a byte slice itself.
-func parseMetadata(meta interface{}) ([]byte, bool) {
+func parseMetadata(meta any) ([]byte, bool) {
 	// Check if meta is the file name.
 	if fileNameForMeta, ok := meta.(string); ok {
 		return getFileDescriptor(fileNameForMeta), true
@@ -380,7 +381,7 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 	sentFileDescriptors := make(map[string]bool)
 	for {
 		in, err := stream.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return nil
 		}
 		if err != nil {

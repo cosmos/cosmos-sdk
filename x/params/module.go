@@ -57,6 +57,8 @@ func (am AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistr
 }
 
 // AppModule implements an application module for the distribution module.
+//
+// Deprecated: the params module is deprecated and will be removed in the next Cosmos SDK major release.
 type AppModule struct {
 	AppModuleBasic
 
@@ -64,6 +66,8 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
+//
+// Deprecated: the params module is deprecated and will be removed in the next Cosmos SDK major release.
 func NewAppModule(k keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},

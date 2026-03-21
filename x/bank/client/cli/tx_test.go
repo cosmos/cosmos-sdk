@@ -51,7 +51,7 @@ func (s *CLITestSuite) SetupSuite() {
 func (s *CLITestSuite) TestSendTxCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 	cmd := cli.NewSendTxCmd(address.NewBech32Codec("cosmos"))
-	cmd.SetOutput(io.Discard)
+	cmd.SetOut(io.Discard)
 
 	extraArgs := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -111,7 +111,6 @@ func (s *CLITestSuite) TestSendTxCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			args := append([]string{tc.from.String(), tc.to.String(), tc.amount.String()}, tc.extraArgs...)
 
@@ -137,7 +136,7 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 3)
 
 	cmd := cli.NewMultiSendTxCmd(address.NewBech32Codec("cosmos"))
-	cmd.SetOutput(io.Discard)
+	cmd.SetOut(io.Discard)
 
 	extraArgs := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -224,7 +223,6 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 

@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
@@ -1072,7 +1073,7 @@ func (k Keeper) doUpdateGroup(ctx sdk.Context, groupID uint64, reqGroupAdmin str
 // is greater than a pre-defined maxMetadataLen.
 func (k Keeper) assertMetadataLength(metadata, description string) error {
 	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
-		return errorsmod.Wrapf(errors.ErrMaxLimit, description)
+		return errorsmod.Wrapf(errors.ErrMaxLimit, "%s", description)
 	}
 	return nil
 }
@@ -1163,13 +1164,7 @@ func (k Keeper) validateMembers(members []group.MemberRequest) error {
 
 // isProposer checks that an address is a proposer of a given proposal.
 func isProposer(proposal group.Proposal, address string) bool {
-	for _, proposer := range proposal.Proposers {
-		if proposer == address {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(proposal.Proposers, address)
 }
 
 func validateMsgs(msgs []sdk.Msg) error {

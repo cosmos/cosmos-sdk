@@ -38,7 +38,6 @@ func (s *E2ETestSuite) TestGetProposalGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
@@ -92,7 +91,6 @@ func (s *E2ETestSuite) TestGetProposalsGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
@@ -159,7 +157,6 @@ func (s *E2ETestSuite) TestGetProposalVoteGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
@@ -203,7 +200,6 @@ func (s *E2ETestSuite) TestGetProposalVotesGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
@@ -252,7 +248,6 @@ func (s *E2ETestSuite) TestGetProposalDepositGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
@@ -291,7 +286,6 @@ func (s *E2ETestSuite) TestGetProposalDepositsGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
@@ -336,7 +330,6 @@ func (s *E2ETestSuite) TestGetTallyGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
@@ -398,7 +391,6 @@ func (s *E2ETestSuite) TestGetParamsGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)

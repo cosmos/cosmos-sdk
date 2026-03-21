@@ -3,14 +3,14 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"reflect"
+	"slices"
 	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	proto "github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -22,7 +22,7 @@ type EventManagerI interface {
 	EmitTypedEvents(tevs ...proto.Message) error
 	EmitEvent(event Event)
 	EmitEvents(events Events)
-	ABCIEventHistory() []abci.Event
+	OverrideEvents(events Events)
 }
 
 // ----------------------------------------------------------------------------
@@ -35,68 +35,38 @@ var _ EventManagerI = (*EventManager)(nil)
 // can be emitted from.
 type EventManager struct {
 	events Events
-	// history holds the events from all transactions delivered in a block
-	// [AGORIC] Used to communicate the history through the context.
-	history Events
-}
-
-// NewEventManagerWithHistory returns a new event manager with empty events,
-// but seeded with the provided history of earlier events in the block.
-// [AGORIC] This should be used to create the EventManager for use in EndBlockers.
-func NewEventManagerWithHistory(history Events) *EventManager {
-	return &EventManager{
-		events:  EmptyEvents(),
-		history: history,
-	}
 }
 
 func NewEventManager() *EventManager {
-	return NewEventManagerWithHistory(EmptyEvents())
-}
-
-// GetABCIEventHistory returns a deep copy of the ABCI events history.
-// [AGORIC] This should only be called in EndBlock processing.
-func (em *EventManager) GetABCIEventHistory() []abci.Event {
-	history := make([]Event, len(em.history))
-	for i, event := range em.history {
-		history[i].Type = event.Type
-		attrs := make([]abci.EventAttribute, len(event.Attributes))
-		history[i].Attributes = attrs
-		for j, attr := range event.Attributes {
-			attrs[j] = abci.EventAttribute{
-				Index: attr.Index,
-				Key:   attr.Key,
-				Value: attr.Value,
-			}
-		}
-	}
-
-	copy(history, em.history)
-	return em.history.ToABCIEvents()
+	return &EventManager{EmptyEvents()}
 }
 
 func (em *EventManager) Events() Events { return em.events }
 
 // EmitEvent stores a single Event object.
+//
 // Deprecated: Use EmitTypedEvent
 func (em *EventManager) EmitEvent(event Event) {
 	em.events = em.events.AppendEvent(event)
 }
 
 // EmitEvents stores a series of Event objects.
+//
 // Deprecated: Use EmitTypedEvents
 func (em *EventManager) EmitEvents(events Events) {
 	em.events = em.events.AppendEvents(events)
 }
 
+// OverrideEvents removes all previous events and sets a
+// completely new series of Event objects. Should only be used
+// in cases where existing events should be modified.
+func (em *EventManager) OverrideEvents(events Events) {
+	em.events = events
+}
+
 // ABCIEvents returns all stored Event objects as abci.Event objects.
 func (em EventManager) ABCIEvents() []abci.Event {
 	return em.events.ToABCIEvents()
-}
-
-// ABCIEventHistory returns all stored Event objects as abci.Event objects.
-func (em EventManager) ABCIEventHistory() []abci.Event {
-	return em.history.ToABCIEvents()
 }
 
 // EmitTypedEvent takes typed event and emits converting it into Event
@@ -140,8 +110,7 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 	}
 
 	// sort the keys to ensure the order is always the same
-	keys := maps.Keys(attrMap)
-	slices.Sort(keys)
+	keys := slices.Sorted(maps.Keys(attrMap))
 
 	attrs := make([]abci.EventAttribute, 0, len(attrMap))
 	for _, k := range keys {

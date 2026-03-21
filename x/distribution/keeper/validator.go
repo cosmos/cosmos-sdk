@@ -122,10 +122,12 @@ func (k Keeper) incrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 	if err != nil {
 		return err
 	}
+
+	historical.ReferenceCount++
 	if historical.ReferenceCount > 2 {
 		panic("reference count should never exceed 2")
 	}
-	historical.ReferenceCount++
+
 	return k.SetValidatorHistoricalRewards(ctx, valAddr, period, historical)
 }
 
@@ -165,7 +167,10 @@ func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.Va
 	}
 
 	// increment reference count on period we need to track
-	k.incrementReferenceCount(ctx, valAddr, newPeriod)
+	err = k.incrementReferenceCount(ctx, valAddr, newPeriod)
+	if err != nil {
+		return err
+	}
 
 	slashEvent := types.NewValidatorSlashEvent(newPeriod, fraction)
 	height := uint64(sdkCtx.BlockHeight())

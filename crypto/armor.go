@@ -3,6 +3,7 @@ package crypto
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 
@@ -104,7 +105,7 @@ func UnarmorInfoBytes(armorStr string) ([]byte, error) {
 func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypePubKey)
 	if err != nil {
-		return nil, "", fmt.Errorf("couldn't unarmor bytes: %v", err)
+		return nil, "", fmt.Errorf("couldn't unarmor bytes: %w", err)
 	}
 
 	switch header[headerVersion] {
@@ -127,15 +128,15 @@ func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]string, err error) {
 	bType, header, bz, err := DecodeArmor(armorStr)
 	if err != nil {
-		return
+		return bz, header, err
 	}
 
 	if bType != blockType {
 		err = fmt.Errorf("unrecognized armor type %q, expected: %q", bType, blockType)
-		return
+		return bz, header, err
 	}
 
-	return
+	return bz, header, err
 }
 
 //-----------------------------------------------------------------
@@ -240,7 +241,7 @@ func decryptPrivKey(saltBytes, encBytes []byte, passphrase, kdf string) (privKey
 		key = crypto.Sha256(key) // Get 32 bytes
 		privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)
 
-		if err == xsalsa20symmetric.ErrCiphertextDecrypt {
+		if errors.Is(err, xsalsa20symmetric.ErrCiphertextDecrypt) {
 			return privKey, sdkerrors.ErrWrongPassword
 		}
 	default:
@@ -261,15 +262,15 @@ func EncodeArmor(blockType string, headers map[string]string, data []byte) strin
 	buf := new(bytes.Buffer)
 	w, err := armor.Encode(buf, blockType, headers)
 	if err != nil {
-		panic(fmt.Errorf("could not encode ascii armor: %s", err))
+		panic(fmt.Errorf("could not encode ascii armor: %w", err))
 	}
 	_, err = w.Write(data)
 	if err != nil {
-		panic(fmt.Errorf("could not encode ascii armor: %s", err))
+		panic(fmt.Errorf("could not encode ascii armor: %w", err))
 	}
 	err = w.Close()
 	if err != nil {
-		panic(fmt.Errorf("could not encode ascii armor: %s", err))
+		panic(fmt.Errorf("could not encode ascii armor: %w", err))
 	}
 	return buf.String()
 }

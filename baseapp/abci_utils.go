@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"slices" //nolint: gci // ignore this line for this linter
+	"slices"
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	protoio "github.com/cosmos/gogoproto/io"
-	"github.com/cosmos/gogoproto/proto" //nolint: gci // ignore this line for this linter
+	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/comet"
 
@@ -21,7 +22,7 @@ import (
 )
 
 type (
-	// ValidatorStore defines the interface contract require for verifying vote
+	// ValidatorStore defines the interface contract required for verifying vote
 	// extension signatures. Typically, this will be implemented by the x/staking
 	// module, which has knowledge of the CometBFT public key.
 	ValidatorStore interface {
@@ -83,7 +84,7 @@ func ValidateVoteExtensions(
 		totalVP += vote.Validator.Power
 
 		// Only check + include power if the vote is a commit vote. There must be super-majority, otherwise the
-		// previous block (the block vote is for) could not have been committed.
+		// previous block (the block the vote is for) could not have been committed.
 		if vote.BlockIdFlag != cmtproto.BlockIDFlagCommit {
 			continue
 		}
@@ -229,6 +230,11 @@ func (h *DefaultProposalHandler) SetTxSelector(ts TxSelector) {
 	h.txSelector = ts
 }
 
+// SetSignerExtractionAdapter sets the SetSignerExtractionAdapter on the DefaultProposalHandler.
+func (h *DefaultProposalHandler) SetSignerExtractionAdapter(signerExtAdapter mempool.SignerExtractionAdapter) {
+	h.signerExtAdapter = signerExtAdapter
+}
+
 // PrepareProposalHandler returns the default implementation for processing an
 // ABCI proposal. The application's mempool is enumerated and all valid
 // transactions are added to the proposal. Transactions are valid if they:
@@ -286,35 +292,41 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid dead lock
 		)
 		mempool.SelectBy(ctx, h.mempool, req.Txs, func(memTx sdk.Tx) bool {
-			signerData, err := h.signerExtAdapter.GetSigners(memTx)
-			if err != nil {
-				// propagate the error to the caller
-				resError = err
-				return false
-			}
-
-			// If the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
-			// so we add them and continue given that we don't need to check the sequence.
-			shouldAdd := true
+			unorderedTx, ok := memTx.(sdk.TxWithUnordered)
+			isUnordered := ok && unorderedTx.GetUnordered()
 			txSignersSeqs := make(map[string]uint64)
-			for _, signer := range signerData {
-				seq, ok := selectedTxsSignersSeqs[signer.Signer.String()]
-				if !ok {
-					txSignersSeqs[signer.Signer.String()] = signer.Sequence
-					continue
+
+			// if the tx is unordered, we don't need to check the sequence, we just add it
+			if !isUnordered {
+				signerData, err := h.signerExtAdapter.GetSigners(memTx)
+				if err != nil {
+					// propagate the error to the caller
+					resError = err
+					return false
 				}
 
-				// If we have seen this signer before in this block, we must make
-				// sure that the current sequence is seq+1; otherwise is invalid
-				// and we skip it.
-				if seq+1 != signer.Sequence {
-					shouldAdd = false
-					break
+				// If the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
+				// so we add them and continue given that we don't need to check the sequence.
+				shouldAdd := true
+				for _, signer := range signerData {
+					seq, ok := selectedTxsSignersSeqs[signer.Signer.String()]
+					if !ok {
+						txSignersSeqs[signer.Signer.String()] = signer.Sequence
+						continue
+					}
+
+					// If we have seen this signer before in this block, we must make
+					// sure that the current sequence is seq+1; otherwise is invalid
+					// and we skip it.
+					if seq+1 != signer.Sequence {
+						shouldAdd = false
+						break
+					}
+					txSignersSeqs[signer.Signer.String()] = signer.Sequence
 				}
-				txSignersSeqs[signer.Signer.String()] = signer.Sequence
-			}
-			if !shouldAdd {
-				return true
+				if !shouldAdd {
+					return true
+				}
 			}
 
 			// NOTE: Since transaction verification was already executed in CheckTx,
@@ -331,18 +343,21 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				}
 
 				txsLen := len(h.txSelector.SelectedTxs(ctx))
-				for sender, seq := range txSignersSeqs {
-					// If txsLen != selectedTxsNums is true, it means that we've
-					// added a new tx to the selected txs, so we need to update
-					// the sequence of the sender.
-					if txsLen != selectedTxsNums {
-						selectedTxsSignersSeqs[sender] = seq
-					} else if _, ok := selectedTxsSignersSeqs[sender]; !ok {
-						// The transaction hasn't been added but it passed the
-						// verification, so we know that the sequence is correct.
-						// So we set this sender's sequence to seq-1, in order
-						// to avoid unnecessary calls to PrepareProposalVerifyTx.
-						selectedTxsSignersSeqs[sender] = seq - 1
+				// If the tx is unordered, we don't need to update the sender sequence.
+				if !isUnordered {
+					for sender, seq := range txSignersSeqs {
+						// If txsLen != selectedTxsNums is true, it means that we've
+						// added a new tx to the selected txs, so we need to update
+						// the sequence of the sender.
+						if txsLen != selectedTxsNums {
+							selectedTxsSignersSeqs[sender] = seq
+						} else if _, ok := selectedTxsSignersSeqs[sender]; !ok {
+							// The transaction hasn't been added but it passed the
+							// verification, so we know that the sequence is correct.
+							// So we set this sender's sequence to seq-1, in order
+							// to avoid unnecessary calls to PrepareProposalVerifyTx.
+							selectedTxsSignersSeqs[sender] = seq - 1
+						}
 					}
 				}
 				selectedTxsNums = txsLen
@@ -488,7 +503,7 @@ func (ts *defaultTxSelector) Clear() {
 }
 
 func (ts *defaultTxSelector) SelectTxForProposal(_ context.Context, maxTxBytes, maxBlockGas uint64, memTx sdk.Tx, txBz []byte) bool {
-	txSize := uint64(len(txBz))
+	txSize := uint64(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz}))
 
 	var txGasLimit uint64
 	if memTx != nil {

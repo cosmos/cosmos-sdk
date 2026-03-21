@@ -1,0 +1,47 @@
+name: Lint
+on:
+  push:
+    branches:
+      - main
+      - release/**
+  pull_request:
+  merge_group:
+permissions:
+  contents: read
+
+jobs:
+  golangci:
+    name: golangci-lint
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          check-latest: true
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.mk
+            Makefile
+            **/Makefile
+            .golangci.yml
+      - name: run linting (long)
+        if: env.GIT_DIFF
+        id: lint_long
+        run: |
+          make lint
+      - uses: technote-space/get-diff-action@v6.1.2
+        if: steps.lint_long.outcome == 'skipped'
+        with:
+          PATTERNS: |
+            **/*.go
+            *.go
+      - name: run linting (short)
+        if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
+        run: |
+          make lint
+        env:
+          GIT_DIFF: ${{ env.GIT_DIFF }}
+          LINT_DIFF: 1

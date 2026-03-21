@@ -72,7 +72,7 @@ type (
 		// UnmarshalInterface is a helper method which will parse binary enoded data
 		// into `Any` and unpack any into the `ptr`. It fails if the target interface type
 		// is not registered in codec, or is not compatible with the serialized data
-		UnmarshalInterface(bz []byte, ptr interface{}) error
+		UnmarshalInterface(bz []byte, ptr any) error
 
 		types.AnyUnpacker
 	}
@@ -88,7 +88,7 @@ type (
 		// UnmarshalInterfaceJSON is a helper method which will parse JSON enoded data
 		// into `Any` and unpack any into the `ptr`. It fails if the target interface type
 		// is not registered in codec, or is not compatible with the serialized data
-		UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error
+		UnmarshalInterfaceJSON(bz []byte, ptr any) error
 
 		// UnmarshalJSON parses the data encoded with MarshalJSON method and stores the result
 		// in the value pointed to by v.

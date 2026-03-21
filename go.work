@@ -1,0 +1,53 @@
+go 1.24.1
+
+use (
+	.
+	./api
+	./client/v2
+	./collections
+	./core
+	./depinject
+	./errors
+	./log
+	./math
+	./simapp
+	./store
+	./systemtests
+	./tests
+	./tests/systemtests
+	./tools/benchmark
+	./tools/confix
+	./tools/cosmovisor
+	./x/circuit
+	./x/evidence
+	./x/feegrant
+	./x/nft
+	./x/tx
+	./x/upgrade
+)
+
+replace (
+	cosmossdk.io/auth => ./x/auth
+	cosmossdk.io/authz => ./x/authz
+	cosmossdk.io/bank => ./x/bank
+	cosmossdk.io/consensus => ./x/consensus
+	cosmossdk.io/crisis => ./x/crisis
+	cosmossdk.io/crypto => ./crypto
+	cosmossdk.io/distribution => ./x/distribution
+	cosmossdk.io/gov => ./x/gov
+	cosmossdk.io/group => ./x/group
+	cosmossdk.io/mint => ./x/mint
+	cosmossdk.io/params => ./x/params
+	cosmossdk.io/protocolpool => ./x/protocolpool
+	cosmossdk.io/slashing => ./x/slashing
+	cosmossdk.io/staking => ./x/staking
+)
+
+// go/pkg/mod/cloud.google.com/go/storage@v1.53.0/grpc_metrics.go:34:2: cannot
+// find module providing package google.golang.org/grpc/stats/opentelemetry
+replace (
+	cloud.google.com/go/storage => cloud.google.com/go/storage v1.49.0
+	google.golang.org/grpc => google.golang.org/grpc v1.69.2
+)
+
+replace github.com/cometbft/cometbft => github.com/agoric-labs/cometbft v0.38.21-alpha.agoric.1

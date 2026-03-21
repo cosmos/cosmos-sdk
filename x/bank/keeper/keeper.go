@@ -46,7 +46,10 @@ type Keeper interface {
 	DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	UndelegateCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	MintCoinsVirtual(ctx context.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	BurnCoinsVirtual(ctx context.Context, moduleName string, amt sdk.Coins) error
+	SettleVirtualSupply(ctx context.Context) error
 
 	SendCoinsFromAccountToModuleVirtual(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccountVirtual(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
@@ -211,7 +214,7 @@ func (k BaseKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegato
 	return nil
 }
 
-// GetSupply retrieves the Supply from store
+// GetSupply retrieves the Supply from store.
 func (k BaseKeeper) GetSupply(ctx context.Context, denom string) sdk.Coin {
 	amt, err := k.Supply.Get(ctx, denom)
 	if err != nil {

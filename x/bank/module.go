@@ -204,7 +204,10 @@ func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Re
 }
 
 func (am AppModule) EndBlock(ctx context.Context) error {
-	return am.keeper.CreditVirtualAccounts(ctx)
+	if err := am.keeper.CreditVirtualAccounts(ctx); err != nil {
+		return err
+	}
+	return am.keeper.SettleVirtualSupply(ctx)
 }
 
 // App Wiring Setup

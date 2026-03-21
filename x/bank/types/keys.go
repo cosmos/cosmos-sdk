@@ -37,6 +37,17 @@ var (
 	ParamsKey = collections.NewPrefix(5)
 )
 
+// ObjectStore keys for virtual operations
+var (
+	// VirtualBalancePrefix is the prefix for virtual balance changes in ObjectStore.
+	// Key format: VirtualBalancePrefix + address + txIndex (8 bytes)
+	VirtualBalancePrefix = []byte{0x00}
+
+	// VirtualSupplyPrefix is the prefix for virtual supply changes in ObjectStore.
+	// Key format: VirtualSupplyPrefix + denom + txIndex (8 bytes)
+	VirtualSupplyPrefix = []byte{0x01}
+)
+
 // BalanceValueCodec is a codec for encoding bank balances in a backwards compatible way.
 // Historically, balances were represented as Coin, now they're represented as a simple math.Int
 var BalanceValueCodec = collcodec.NewAltValueCodec(sdk.IntValue, func(bytes []byte) (math.Int, error) {

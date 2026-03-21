@@ -1,5 +1,4 @@
 name: Lint
-
 on:
   push:
     branches:
@@ -14,9 +13,6 @@ jobs:
   golangci:
     name: golangci-lint
     runs-on: depot-ubuntu-22.04-4
-    strategy:
-      matrix:
-        mode: [no-failure, no-deprecations]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5

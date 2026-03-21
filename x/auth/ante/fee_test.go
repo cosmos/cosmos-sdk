@@ -1,7 +1,6 @@
 package ante_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -40,12 +39,6 @@ func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
 	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	// Get the signer's address from the transaction
-	signers, err := tx.GetSigners()
-	require.NoError(t, err)
-	signerAddr := sdk.AccAddress(signers[0])
-	fmt.Printf("Signer address: %s\n", signerAddr.String())
-
 	// Set IsCheckTx to true
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
@@ -80,12 +73,6 @@ func TestEnsureMempoolFees(t *testing.T) {
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
 	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
-
-	// Get the signer's address from the transaction
-	signers, err := tx.GetSigners()
-	require.NoError(t, err)
-	signerAddr := sdk.AccAddress(signers[0])
-	fmt.Printf("Signer address: %s\n", signerAddr.String())
 
 	// Set high gas price so standard test fee fails
 	atomPrice := sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(20))
@@ -144,12 +131,6 @@ func TestDeductFees(t *testing.T) {
 	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	// Get the signer's address from the transaction
-	signers, err := tx.GetSigners()
-	require.NoError(t, err)
-	signerAddr := sdk.AccAddress(signers[0])
-	fmt.Printf("Signer address: %s\n", signerAddr.String())
-
 	dfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil)
 	antehandler := sdk.ChainAnteDecorators(dfd)
 	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(sdkerrors.ErrInsufficientFunds)
@@ -200,12 +181,6 @@ func TestDeductFees_WithName_Table(t *testing.T) {
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
 			tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 			require.NoError(t, err)
-
-			// Get the signer's address from the transaction
-			signers, err := tx.GetSigners()
-			require.NoError(t, err)
-			signerAddr := sdk.AccAddress(signers[0])
-			fmt.Printf("Signer address: %s\n", signerAddr.String())
 
 			// Set up initial account with coins
 			coins := sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(200)))

@@ -87,6 +87,7 @@ type startArgs struct {
 }
 
 func addTestnetFlagsToCmd(cmd *cobra.Command) {
+	// [AGORIC] deprecate `-v $count` in favor of `-c $count`
 	cmd.Flags().IntP(flagNumValidators, shortFlagNumValidators, 4, "Number of validators to initialize the testnet with")
 	cmd.Flags().Int(flagDeprecatedNumValidators, 4, "Number of validators to initialize the testnet with")
 	cmd.Flags().MarkDeprecated(flagDeprecatedNumValidators, fmt.Sprintf("use -%s or --%s", shortFlagNumValidators, flagNumValidators))
@@ -123,11 +124,11 @@ func NewTestnetCmd(mm module.BasicManager, genBalIterator banktypes.GenesisBalan
 }
 
 // testnetInitFilesCmd returns a cmd to initialize all files for CometBFT testnet and application
-func testnetInitFilesCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator, appName string) *cobra.Command {
+func testnetInitFilesCmd(mm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator, appName string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init-files",
 		Short: "Initialize config directories & files for a multi-validator testnet running locally via separate processes (e.g. Docker Compose or similar)",
-		Long: fmt.Sprintf(`init-files will setup a number of directories (specified by "-%[2]s") and populate each with
+		Long: fmt.Sprintf(`init-files will setup one directory per validator (count specified by "-%[2]s") and populate each with
 necessary files (private validator, genesis, config, etc.) for running validator nodes.
 
 Booting up a network with these validator folders is intended to be used with Docker Compose,
@@ -165,12 +166,12 @@ Example:
 				return err
 			}
 
-			return initTestnetFiles(clientCtx, cmd, config, mbm, genBalIterator, args)
+			return initTestnetFiles(clientCtx, cmd, config, mm, genBalIterator, args)
 		},
 	}
 
 	addTestnetFlagsToCmd(cmd)
-	cmd.Flags().String(flagNodeDirPrefix, "node", "Prefix the directory name for each node with (node results in node0, node1, ...)")
+	cmd.Flags().String(flagNodeDirPrefix, "node", "Prefix for the name of per-validator subdirectories (to be number-suffixed like node0, node1, ...)")
 	cmd.Flags().String(flagNodeDaemonHome, appName, "Home directory of the node's daemon configuration")
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	cmd.Flags().String(flagListenIPAddress, "0.0.0.0", "TCP or UNIX socket IP address for the RPC server to listen on")
@@ -188,8 +189,8 @@ func testnetStartCmd(appName string) *cobra.Command {
 		Use:   "start",
 		Short: "Launch an in-process multi-validator testnet",
 		Long: fmt.Sprintf(`testnet will launch an in-process multi-validator testnet,
-and generate a number of directories (specified by "-%[2]s"), populated with necessary validator configuration files
-(private validator, genesis, config, etc.).
+and generate a directory for each validator populated with necessary
+configuration files (private validator, genesis, config, etc.).
 
 Example:
 	%[1]s testnet start -%[2]s 4 --output-dir ./.testnets

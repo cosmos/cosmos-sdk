@@ -144,5 +144,6 @@ jobs:
       - uses: actions/upload-pages-artifact@v4
         with:
           path: site
+          retention-days: 90
 
       - uses: actions/deploy-pages@v4

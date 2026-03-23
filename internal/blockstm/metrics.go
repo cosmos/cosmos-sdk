@@ -60,7 +60,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	var err error
 	i.MVDataRead, err = i.Meter.Int64Histogram(
 		"mvdata.read",
-		metric.WithDescription(""),
+		metric.WithDescription("Time to read a value from multi-version data"),
 		metric.WithUnit(TimingUnit),
 	)
 	if err != nil {
@@ -68,7 +68,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	}
 	i.MVDataConsolidate, err = i.Meter.Int64Histogram(
 		"mvdata.consolidate",
-		metric.WithDescription(""),
+		metric.WithDescription("Time to consolidate a transaction's write set into multi-version data"),
 		metric.WithUnit(TimingUnit),
 	)
 	if err != nil {
@@ -76,7 +76,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	}
 	i.MVViewReadWriteSet, err = i.Meter.Int64Histogram(
 		"mvdata.read.writeset",
-		metric.WithDescription(""),
+		metric.WithDescription("Time to read a value from the transaction's own write set"),
 		metric.WithUnit(TimingUnit),
 	)
 	if err != nil {
@@ -84,7 +84,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	}
 	i.MVViewReadMVData, err = i.Meter.Int64Histogram(
 		"mvview.read_mvdata",
-		metric.WithDescription(""),
+		metric.WithDescription("Time to read a value from another transaction's write set via multi-version data"),
 		metric.WithUnit(TimingUnit),
 	)
 	if err != nil {
@@ -92,7 +92,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	}
 	i.MVViewReadStorage, err = i.Meter.Int64Histogram(
 		"mvview.read.storage",
-		metric.WithDescription(""),
+		metric.WithDescription("Time to read a value from the underlying storage when not found in multi-version data"),
 		metric.WithUnit(TimingUnit),
 	)
 	if err != nil {
@@ -100,7 +100,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	}
 	i.MVViewWrite, err = i.Meter.Int64Histogram(
 		"mvview.write",
-		metric.WithDescription(""),
+		metric.WithDescription("Time to write a value to the transaction's write set"),
 		metric.WithUnit(TimingUnit),
 	)
 	if err != nil {
@@ -108,7 +108,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	}
 	i.MVViewDelete, err = i.Meter.Int64Histogram(
 		"mvview.delete",
-		metric.WithDescription(""),
+		metric.WithDescription("Time to delete a key in the transaction's write set"),
 		metric.WithUnit(TimingUnit),
 	)
 	if err != nil {
@@ -116,7 +116,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	}
 	i.MVViewIteratorKeys, err = i.Meter.Int64Histogram(
 		"mvview.iterator.keys.read",
-		metric.WithDescription(""),
+		metric.WithDescription("Time spent iterating over keys in the multi-version view"),
 		metric.WithUnit(TimingUnit),
 	)
 	if err != nil {
@@ -124,14 +124,14 @@ func (i *instrument) Start(cfg map[string]any) error {
 	}
 	i.MVViewIteratorKeysCnt, err = i.Meter.Int64Counter(
 		"mvview.iterator.keys.read.count",
-		metric.WithDescription(""),
+		metric.WithDescription("Total number of keys read by iterators in the multi-version view"),
 	)
 	if err != nil {
 		return err
 	}
 	i.MVViewEstimateWait, err = i.Meter.Int64Histogram(
 		"mvview.estimate.wait",
-		metric.WithDescription(""),
+		metric.WithDescription("Time spent waiting for a blocking transaction to complete due to an estimate marker"),
 		metric.WithUnit(TimingUnit),
 	)
 	if err != nil {
@@ -139,35 +139,35 @@ func (i *instrument) Start(cfg map[string]any) error {
 	}
 	i.ExecutedTxs, err = i.Meter.Int64Counter(
 		"executed.txs",
-		metric.WithDescription(""),
+		metric.WithDescription("Total number of transaction executions including re-executions"),
 	)
 	if err != nil {
 		return err
 	}
 	i.ValidatedTxs, err = i.Meter.Int64Counter(
 		"validated.txs",
-		metric.WithDescription(""),
+		metric.WithDescription("Total number of transaction validations"),
 	)
 	if err != nil {
 		return err
 	}
 	i.DecreaseCount, err = i.Meter.Int64Counter(
 		"decrease.count",
-		metric.WithDescription(""),
+		metric.WithDescription("Total number of scheduler task count decreases"),
 	)
 	if err != nil {
 		return err
 	}
 	i.ExecutionRatio, err = i.Meter.Float64Counter(
 		"execution.ratio",
-		metric.WithDescription(""),
+		metric.WithDescription("Ratio of total executions to block size, indicating re-execution overhead"),
 	)
 	if err != nil {
 		return err
 	}
 	i.TryExecuteTime, err = i.Meter.Int64Histogram(
 		"try.execute.time",
-		metric.WithDescription(""),
+		metric.WithDescription("Time to execute a transaction and record its results"),
 		metric.WithUnit(TimingUnit),
 	)
 	if err != nil {
@@ -175,21 +175,21 @@ func (i *instrument) Start(cfg map[string]any) error {
 	}
 	i.TxReadCount, err = i.Meter.Int64Counter(
 		"tx.read.count",
-		metric.WithDescription(""),
+		metric.WithDescription("Total number of keys read across all transaction executions"),
 	)
 	if err != nil {
 		return err
 	}
 	i.TxWriteCount, err = i.Meter.Int64Counter(
 		"tx.write.count",
-		metric.WithDescription(""),
+		metric.WithDescription("Total number of keys written across all transaction executions"),
 	)
 	if err != nil {
 		return err
 	}
 	i.TxNewLocationWrite, err = i.Meter.Int64Counter(
 		"tx.new.location.write",
-		metric.WithDescription(""),
+		metric.WithDescription("Total number of transaction executions that wrote to a new storage location"),
 	)
 	if err != nil {
 		return err

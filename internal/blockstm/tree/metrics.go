@@ -41,7 +41,7 @@ func (i *treeInstrument) Start(cfg map[string]any) error {
 	var err error
 	i.Get, err = i.Meter.Int64Histogram(
 		"get",
-		metric.WithDescription(""),
+		metric.WithDescription("Time to look up an item in the B-tree"),
 		metric.WithUnit(TreeTimingUnit),
 	)
 	if err != nil {
@@ -49,7 +49,7 @@ func (i *treeInstrument) Start(cfg map[string]any) error {
 	}
 	i.Set, err = i.Meter.Int64Histogram(
 		"set",
-		metric.WithDescription(""),
+		metric.WithDescription("Time to insert or update an item in the B-tree via copy-on-write"),
 		metric.WithUnit(TreeTimingUnit),
 	)
 	if err != nil {
@@ -57,7 +57,7 @@ func (i *treeInstrument) Start(cfg map[string]any) error {
 	}
 	i.Delete, err = i.Meter.Int64Histogram(
 		"delete",
-		metric.WithDescription(""),
+		metric.WithDescription("Time to delete an item from the B-tree via copy-on-write"),
 		metric.WithUnit(TreeTimingUnit),
 	)
 	if err != nil {
@@ -65,7 +65,7 @@ func (i *treeInstrument) Start(cfg map[string]any) error {
 	}
 	i.ReverseSeek, err = i.Meter.Int64Histogram(
 		"reverse_seek",
-		metric.WithDescription(""),
+		metric.WithDescription("Time to find the first item less than or equal to a pivot in the B-tree"),
 		metric.WithUnit(TreeTimingUnit),
 	)
 	if err != nil {
@@ -73,7 +73,7 @@ func (i *treeInstrument) Start(cfg map[string]any) error {
 	}
 	i.Scan, err = i.Meter.Int64Histogram(
 		"scan",
-		metric.WithDescription(""),
+		metric.WithDescription("Time to scan all items in the B-tree in ascending order"),
 		metric.WithUnit(TreeTimingUnit),
 	)
 	if err != nil {
@@ -81,7 +81,7 @@ func (i *treeInstrument) Start(cfg map[string]any) error {
 	}
 	i.GetOrDefault, err = i.Meter.Int64Histogram(
 		"get_or_default",
-		metric.WithDescription(""),
+		metric.WithDescription("Time to look up an item in the B-tree, inserting a default if not found"),
 		metric.WithUnit(TreeTimingUnit),
 	)
 	if err != nil {

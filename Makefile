@@ -542,9 +542,9 @@ build-system-test-current: build
 
 # test-sdk-system runs only the core SDK system tests (tests/systemtests), not enterprise.
 # Used by CI to avoid redundant runs when test-poa-system and test-group-system exist.
-test-sdk-system: build-v53 build-system-test-current
-	mkdir -p ./tests/systemtests/binaries/v0.53 ./tests/systemtests/testnet
-	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
+test-sdk-system: build-v54 build-system-test-current
+	mkdir -p ./tests/systemtests/binaries/v0.54 ./tests/systemtests/testnet
+	mv $(BUILDDIR)/simdv54 ./tests/systemtests/binaries/v0.54/simd
 	$(MAKE) -C tests/systemtests test
 
 test-system: test-sdk-system
@@ -553,9 +553,9 @@ test-system: test-sdk-system
 
 .PHONY: test-system test-sdk-system build-system-test-current
 
-# build-v53 fetches the v0.53 simd binary for system tests from the v0.53 nightlies channel.
-# Skips if $(BUILDDIR)/simdv53 exists (e.g. local dev reuse).
-build-v53:
-	@if [ -f $(BUILDDIR)/simdv53 ]; then echo "build/simdv53 exists, skipping"; else \
-		BUILDDIR=$(BUILDDIR) bash scripts/build-v53.sh; fi
-.PHONY: build-v53
+# build-v54 fetches the v0.54 simd binary for system tests from the v0.54 nightlies channel.
+# Skips if $(BUILDDIR)/simdv54 exists (e.g. local dev reuse).
+build-v54:
+	@if [ -f $(BUILDDIR)/simdv54 ]; then echo "build/simdv54 exists, skipping"; else \
+		BUILDDIR=$(BUILDDIR) bash scripts/build-v54.sh; fi
+.PHONY: build-v54

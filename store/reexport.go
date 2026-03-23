@@ -18,8 +18,6 @@ type (
 	CommitID         = types.CommitID
 	Key              = types.StoreKey
 	Type             = types.StoreType
-	Queryable        = types.Queryable
 	Gas              = types.Gas
 	GasMeter         = types.GasMeter
-	GasConfig        = types.GasConfig
 )

@@ -1,4 +1,4 @@
-package iavl
+package iavlx
 
 import (
 	"cosmossdk.io/log/v2"

@@ -1,4 +1,4 @@
-package iavl
+package iavlx
 
 import (
 	"time"

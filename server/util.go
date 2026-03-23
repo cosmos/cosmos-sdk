@@ -579,7 +579,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 
 func enableIavx(appOpts types.AppOptions, homeDir string) func(*baseapp.BaseApp) {
 	return func(bapp *baseapp.BaseApp) {
-		var opts iavl.Options
+		var opts iavlx.Options
 		optsJson, ok := appOpts.Get(FlagIAVLXOptions).(string)
 		if !ok || optsJson == "" {
 			fmt.Println("Using iavl/v1")
@@ -591,7 +591,7 @@ func enableIavx(appOpts types.AppOptions, homeDir string) func(*baseapp.BaseApp)
 			panic(fmt.Errorf("failed to unmarshal iavlx options: %w", err))
 		}
 
-		db, err := iavl.LoadCommitMultiTree(
+		db, err := iavlx.LoadCommitMultiTree(
 			filepath.Join(homeDir, "data", "iavlx"),
 			opts,
 			bapp.Logger(),

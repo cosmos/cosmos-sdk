@@ -24,7 +24,6 @@ const (
 	KeyMVViewReadStorage     = "mvview_read_storage"
 	KeyMVViewWrite           = "mvview_write"
 	KeyMVViewDelete          = "mvview_delete"
-	KeyMVViewApplyWriteSet   = "mvview_apply_writeset"
 	KeyMVViewIteratorKeys    = "mvview_iterator_keys_read"
 	KeyMVViewIteratorKeysCnt = "mvview_iterator_keys_read_count"
 	KeyMVViewEstimateWait    = "mvview_estimate_wait"

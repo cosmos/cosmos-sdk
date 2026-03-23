@@ -63,6 +63,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * Remove `io.Writer` parameter from `servertypes.AppCreator` and `traceWriter io.Writer` from `servertypes.AppExporter`.
     * Remove `traceStore io.Writer` parameter from `simapp.NewSimApp` and all enterprise simapp constructors.
     * Remove `traceStore io.Writer` from all `testutil/simsx` app factory signatures.
+* (baseapp) [#26138](https://github.com/cosmos/cosmos-sdk/pull/26138) Default block gas meter to disabled. Adds checking to ensure block gas meter is not enabled while bstm parallel execution is configured and panics in these scenarios during parameter assignment.
 
 ### Features
 

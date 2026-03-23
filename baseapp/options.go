@@ -12,6 +12,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
+	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -124,12 +125,16 @@ func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp
 
 // SetBlockSTMTxRunner sets the block stm tx runner for the BaseApp for parallel execution.
 func (app *BaseApp) SetBlockSTMTxRunner(txRunner sdk.TxRunner) {
+	if _, ok := txRunner.(*txnrunner.STMRunner); ok && !app.disableBlockGasMeter {
+		// This combination results in indeterminism
+		panic("Cannot configure parallel execution while block gas meter is enabled")
+	}
 	app.txRunner = txRunner
 }
 
-// DisableBlockGasMeter disables the block gas meter.
-func DisableBlockGasMeter() func(*BaseApp) {
-	return func(app *BaseApp) { app.SetDisableBlockGasMeter(true) }
+// EnableBlockGasMeter enables the block gas meter.
+func EnableBlockGasMeter() func(*BaseApp) {
+	return func(app *BaseApp) { app.SetDisableBlockGasMeter(false) }
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -379,6 +384,10 @@ func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
 
 // SetDisableBlockGasMeter sets the disableBlockGasMeter flag for the BaseApp.
 func (app *BaseApp) SetDisableBlockGasMeter(disableBlockGasMeter bool) {
+	if _, ok := app.txRunner.(*txnrunner.STMRunner); ok && !disableBlockGasMeter {
+		// This combination results in indeterminism
+		panic("Cannot enable block gas meter while parallel execution is configured")
+	}
 	app.disableBlockGasMeter = disableBlockGasMeter
 }
 

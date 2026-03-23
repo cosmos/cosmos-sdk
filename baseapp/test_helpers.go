@@ -72,6 +72,19 @@ func (app *BaseApp) NewContext(isCheckTx bool) sdk.Context {
 	return app.NewContextLegacy(isCheckTx, cmtproto.Header{})
 }
 
+// NewNextBlockContext sets up the finalize state for the next block and
+// returns a context that writes to it. This should be used in tests that need
+// to perform state mutations between Commit and the next FinalizeBlock.
+//
+// IMPORTANT: This method will reset the finalizeBlock state. Writing to this
+// context, then resetting it with another call To this method will discard all
+// changes. It is important to perform all writes against this context, then
+// commit.
+func (app *BaseApp) NewNextBlockContext(header cmtproto.Header) sdk.Context {
+	app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
+	return app.stateManager.GetState(execModeFinalize).Context()
+}
+
 func (app *BaseApp) NewUncachedContext(isCheckTx bool, header cmtproto.Header) sdk.Context {
 	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
 }

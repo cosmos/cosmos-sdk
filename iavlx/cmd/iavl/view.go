@@ -16,8 +16,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
-	"github.com/cosmos/cosmos-sdk/iavl/internal"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/iavlx/internal"
 )
 
 func newViewCmd() *cobra.Command {

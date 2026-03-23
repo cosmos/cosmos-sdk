@@ -9,7 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/cosmos/cosmos-sdk/iavl/internal"
+	"github.com/cosmos/cosmos-sdk/iavlx/internal"
 )
 
 type orphansView struct {

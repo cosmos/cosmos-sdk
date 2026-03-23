@@ -3,7 +3,7 @@ package iavlx
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/iavl/internal"
+	"github.com/cosmos/cosmos-sdk/iavlx/internal"
 )
 
 type Options struct {

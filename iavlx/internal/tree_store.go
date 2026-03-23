@@ -12,14 +12,11 @@ import (
 	"github.com/tidwall/btree"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-
-	"cosmossdk.io/log/v2"
 )
 
 type TreeStore struct {
-	dir    string
-	opts   TreeOptions
-	logger log.Logger
+	dir  string
+	opts TreeOptions
 
 	root           atomic.Pointer[versionedRoot]
 	lastCheckpoint atomic.Uint32
@@ -44,7 +41,7 @@ type versionedRoot struct {
 	root    *NodePointer
 }
 
-func NewTreeStore(dir string, opts TreeOptions, logger log.Logger) (*TreeStore, error) {
+func NewTreeStore(dir string, opts TreeOptions) (*TreeStore, error) {
 	ts := &TreeStore{
 		dir:          dir,
 		opts:         opts,

@@ -11,7 +11,7 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/cosmos/cosmos-sdk/iavl/docs"
+	"github.com/cosmos/cosmos-sdk/iavlx/docs"
 )
 
 // glamourStyle is detected once at startup, before BubbleTea takes over the

@@ -20,13 +20,11 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"cosmossdk.io/log/v2"
-
-	"github.com/cosmos/cosmos-sdk/store/v2/mem"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/transient"
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	"cosmossdk.io/store/mem"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	"cosmossdk.io/store/transient"
+	storetypes "cosmossdk.io/store/types"
 )
 
 type commitData struct {

@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/log/v2"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/iavl/internal"
+	"github.com/cosmos/cosmos-sdk/iavlx/internal"
 )
 
 func newImportCmd() *cobra.Command {

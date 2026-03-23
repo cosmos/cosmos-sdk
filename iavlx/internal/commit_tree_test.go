@@ -19,7 +19,7 @@ import (
 	sdklog "cosmossdk.io/log"
 
 	"cosmossdk.io/log/v2"
-	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	"cosmossdk.io/store/cachekv"
 )
 
 func TestCommitTreeSims(t *testing.T) {

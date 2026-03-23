@@ -20,11 +20,9 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"cosmossdk.io/log/v2"
-
-	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/types/kv"
+	"cosmossdk.io/store/cachekv"
+	storetypes "cosmossdk.io/store/types"
+	//"cosmossdk.io/store/types/kv"
 )
 
 type CommitTree struct {
@@ -37,13 +35,13 @@ type CommitTree struct {
 	lastCommitId storetypes.CommitID
 }
 
-func NewCommitTree(dir string, opts TreeOptions, logger log.Logger) (*CommitTree, error) {
+func NewCommitTree(dir string, opts TreeOptions) (*CommitTree, error) {
 	err := os.MkdirAll(dir, 0o700)
 	if err != nil {
 		return nil, fmt.Errorf("creating tree directory: %w", err)
 	}
 
-	treeStore, err := NewTreeStore(dir, opts, logger)
+	treeStore, err := NewTreeStore(dir, opts)
 	if err != nil {
 		return nil, fmt.Errorf("creating tree store: %w", err)
 	}

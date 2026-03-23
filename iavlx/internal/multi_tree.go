@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 type MultiTree struct {

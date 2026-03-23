@@ -1,13 +1,15 @@
 package internal
 
 import (
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 )
 
 var (
-	tracer          = otel.Tracer("iavl")
-	meter           = otel.Meter("iavl")
+	tracer          = otel.Tracer("iavlx")
+	meter           = otel.Meter("iavlx")
+	logger          = otelslog.NewLogger("iavlx")
 	leafHashLatency metric.Int64Histogram
 	walWriteLatency metric.Int64Histogram
 	queryLatency    metric.Int64Histogram

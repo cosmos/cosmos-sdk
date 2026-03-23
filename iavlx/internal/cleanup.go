@@ -5,12 +5,9 @@ import (
 	"slices"
 	"sync"
 	"time"
-
-	"cosmossdk.io/log/v2"
 )
 
 type cleanupProc struct {
-	logger           log.Logger
 	mtx              sync.Mutex
 	newDisposals     []*ChangesetReaderRef
 	newDeletions     []*Changeset
@@ -20,10 +17,9 @@ type cleanupProc struct {
 	cancel           context.CancelFunc
 }
 
-func newCleanupProc(logger log.Logger) *cleanupProc {
+func newCleanupProc() *cleanupProc {
 	return &cleanupProc{
-		logger: logger,
-		done:   make(chan struct{}),
+		done: make(chan struct{}),
 	}
 }
 
@@ -77,7 +73,7 @@ func (cp *cleanupProc) sweep(ctx context.Context) {
 	cp.pendingDisposals = slices.DeleteFunc(cp.pendingDisposals, func(ref *ChangesetReaderRef) bool {
 		disposed, err := ref.TryDispose()
 		if err != nil {
-			cp.logger.ErrorContext(ctx, "failed to dispose changeset reader ref", "error", err)
+			logger.ErrorContext(ctx, "failed to dispose changeset reader ref", "error", err)
 		}
 		return disposed
 	})
@@ -86,7 +82,7 @@ func (cp *cleanupProc) sweep(ctx context.Context) {
 	cp.pendingDeletions = slices.DeleteFunc(cp.pendingDeletions, func(cs *Changeset) bool {
 		deleted, err := cs.TryDelete(ctx)
 		if err != nil {
-			cp.logger.ErrorContext(ctx, "failed to delete changeset", "error", err)
+			logger.ErrorContext(ctx, "failed to delete changeset", "error", err)
 		}
 		return deleted
 	})

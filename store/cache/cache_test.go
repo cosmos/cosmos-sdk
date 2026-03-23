@@ -10,8 +10,8 @@ import (
 
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cache"
+	"cosmossdk.io/store/cachekv"
 	iavlstore "cosmossdk.io/store/iavl"
-	"cosmossdk.io/store/legacy/cachekv"
 	"cosmossdk.io/store/types"
 	"cosmossdk.io/store/wrapper"
 )

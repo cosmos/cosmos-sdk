@@ -3,7 +3,7 @@ package dbadapter
 import (
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/store/legacy/cachekv"
+	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/types"
 )
 

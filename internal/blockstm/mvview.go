@@ -3,7 +3,7 @@ package blockstm
 import (
 	"time"
 
-	"cosmossdk.io/store/legacy/cachekv"
+	"cosmossdk.io/store/cachekv"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"

@@ -103,6 +103,22 @@ func (ms multiStore) SetSnapshotInterval(snapshotInterval uint64) {
 	panic("not implemented")
 }
 
+func (ms multiStore) SetInterBlockCache(_ storetypes.MultiStorePersistentCache) {
+	panic("not implemented")
+}
+
+func (ms multiStore) SetIAVLCacheSize(size int) {
+	panic("not implemented")
+}
+
+func (ms multiStore) SetIAVLDisableFastNode(disable bool) {
+	panic("not implemented")
+}
+
+func (ms multiStore) SetIAVLSyncPruning(syncPruning bool) {
+	panic("not implemented")
+}
+
 func (ms multiStore) SetInitialVersion(version int64) error {
 	panic("not implemented")
 }

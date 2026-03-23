@@ -7,7 +7,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/rootmulti"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
@@ -75,37 +74,19 @@ func SetIndexEvents(ie []string) func(*BaseApp) {
 
 // SetIAVLCacheSize provides a BaseApp option function that sets the size of IAVL cache.
 func SetIAVLCacheSize(size int) func(*BaseApp) {
-	return func(bapp *BaseApp) {
-		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
-			rms.SetIAVLCacheSize(size)
-		} else {
-			bapp.logger.Warn("SetIAVLCacheSize: CommitMultiStore is not rootmulti.Store, option ignored")
-		}
-	}
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
 }
 
 // SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
 func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
-	return func(bapp *BaseApp) {
-		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
-			rms.SetIAVLDisableFastNode(disable)
-		} else {
-			bapp.logger.Warn("SetIAVLDisableFastNode: CommitMultiStore is not rootmulti.Store, option ignored")
-		}
-	}
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
 }
 
 // SetIAVLSyncPruning set sync/async pruning in the IAVL store. Developers should rarely use this.
 // This option was added to allow the `Prune` command to force synchronous pruning, which is needed to allow the
 // command to wait before returning.
 func SetIAVLSyncPruning(syncPruning bool) func(*BaseApp) {
-	return func(bapp *BaseApp) {
-		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
-			rms.SetIAVLSyncPruning(syncPruning)
-		} else {
-			bapp.logger.Warn("SetIAVLSyncPruning: CommitMultiStore is not rootmulti.Store, option ignored")
-		}
-	}
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLSyncPruning(syncPruning) }
 }
 
 // SetInterBlockCache provides a BaseApp option function that sets the

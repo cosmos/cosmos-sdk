@@ -22,8 +22,8 @@ type CommitFinalizer struct {
 	cancel             context.CancelFunc
 	cacheMs            *MultiTree
 	finalizers         []*commitTreeFinalizer
-	workingCommitInfo  *storetypes.CommitInfo
-	workingCommitId    storetypes.CommitID
+	workingCommitInfo  *CommitInfo
+	workingCommitId    CommitID
 	done               chan struct{}
 	hashReady          chan struct{}
 	finalizeOnce       sync.Once

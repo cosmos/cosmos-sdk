@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
@@ -28,13 +29,15 @@ import (
 )
 
 type commitData struct {
-	commitInfo *storetypes.CommitInfo
-	commitId   storetypes.CommitID
+	commitInfo *CommitInfo
+	commitId   CommitID
 }
 
 type CommitMultiTree struct {
-	dir         string
-	opts        Options
+	dir    string
+	opts   Options
+	logger *slog.Logger
+
 	stores      []*storeData                // always ordered by name
 	iavlStores  []*storeData                // subset of stores that are IAVL, ordered by name
 	otherStores []*storeData                // subset of stores that are not IAVL
@@ -72,10 +75,10 @@ func (db *CommitMultiTree) EarliestVersion() int64 {
 	return db.earliestVersion.Load()
 }
 
-func (db *CommitMultiTree) LastCommitID() storetypes.CommitID {
+func (db *CommitMultiTree) LastCommitID() CommitID {
 	cd := db.commitData.Load()
 	if cd == nil {
-		return storetypes.CommitID{}
+		return CommitID{}
 	}
 	return cd.commitId
 }
@@ -110,11 +113,11 @@ func (db *CommitMultiTree) Snapshot(height uint64, protoWriter protoio.Writer) e
 }
 
 func (db *CommitMultiTree) PruneSnapshotHeight(height int64) {
-	logger.Warn("PruneSnapshotHeight is not implemented for CommitMultiTree")
+	db.logger.Warn("PruneSnapshotHeight is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) SetSnapshotInterval(snapshotInterval uint64) {
-	logger.Warn("SetSnapshotInterval is not implemented for CommitMultiTree")
+	db.logger.Warn("SetSnapshotInterval is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) Restore(height uint64, format uint32, protoReader protoio.Reader) (snapshottypes.SnapshotItem, error) {
@@ -150,7 +153,7 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 		// should be nil on initial creation
 		version = ci.Version
 		db.commitData.Store(&commitData{
-			commitId: storetypes.CommitID{
+			commitId: CommitID{
 				Version: version,
 				Hash:    ci.Hash(),
 			},
@@ -194,7 +197,7 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 			Options:         db.opts,
 			TreeName:        key.Name(),
 			ExpectedVersion: uint32(expectedVersion),
-		})
+		}, db.logger.With("store", key.Name()))
 		if err != nil {
 			return nil, fmt.Errorf("failed to load CommitTree for store %s: %w", key.Name(), err)
 		}
@@ -277,12 +280,12 @@ func (db *CommitMultiTree) RollbackToVersion(version int64) error {
 }
 
 func (db *CommitMultiTree) ListeningEnabled(key storetypes.StoreKey) bool {
-	logger.Warn("ListeningEnabled is not implemented for CommitMultiTree")
+	db.logger.Warn("ListeningEnabled is not implemented for CommitMultiTree")
 	return false
 }
 
 func (db *CommitMultiTree) AddListeners(keys []storetypes.StoreKey) {
-	logger.Warn("AddListeners is not implemented for CommitMultiTree")
+	db.logger.Warn("AddListeners is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) PopStateCache() []*storetypes.StoreKVPair {

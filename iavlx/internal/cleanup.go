@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"log/slog"
 	"slices"
 	"sync"
 	"time"
@@ -15,11 +16,13 @@ type cleanupProc struct {
 	pendingDeletions []*Changeset
 	done             chan struct{}
 	cancel           context.CancelFunc
+	logger           *slog.Logger
 }
 
-func newCleanupProc() *cleanupProc {
+func newCleanupProc(logger *slog.Logger) *cleanupProc {
 	return &cleanupProc{
-		done: make(chan struct{}),
+		done:   make(chan struct{}),
+		logger: logger,
 	}
 }
 
@@ -73,7 +76,7 @@ func (cp *cleanupProc) sweep(ctx context.Context) {
 	cp.pendingDisposals = slices.DeleteFunc(cp.pendingDisposals, func(ref *ChangesetReaderRef) bool {
 		disposed, err := ref.TryDispose()
 		if err != nil {
-			logger.ErrorContext(ctx, "failed to dispose changeset reader ref", "error", err)
+			cp.logger.ErrorContext(ctx, "failed to dispose changeset reader ref", "error", err)
 		}
 		return disposed
 	})
@@ -82,7 +85,7 @@ func (cp *cleanupProc) sweep(ctx context.Context) {
 	cp.pendingDeletions = slices.DeleteFunc(cp.pendingDeletions, func(cs *Changeset) bool {
 		deleted, err := cs.TryDelete(ctx)
 		if err != nil {
-			logger.ErrorContext(ctx, "failed to delete changeset", "error", err)
+			cp.logger.ErrorContext(ctx, "failed to delete changeset", "error", err)
 		}
 		return deleted
 	})

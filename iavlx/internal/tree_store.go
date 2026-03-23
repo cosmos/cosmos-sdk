@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 	"sync/atomic"
 	"unsafe"
@@ -15,8 +16,9 @@ import (
 )
 
 type TreeStore struct {
-	dir  string
-	opts TreeOptions
+	dir    string
+	opts   TreeOptions
+	logger *slog.Logger
 
 	root           atomic.Pointer[versionedRoot]
 	lastCheckpoint atomic.Uint32
@@ -41,7 +43,7 @@ type versionedRoot struct {
 	root    *NodePointer
 }
 
-func NewTreeStore(dir string, opts TreeOptions) (*TreeStore, error) {
+func NewTreeStore(dir string, opts TreeOptions, logger *slog.Logger) (*TreeStore, error) {
 	ts := &TreeStore{
 		dir:          dir,
 		opts:         opts,

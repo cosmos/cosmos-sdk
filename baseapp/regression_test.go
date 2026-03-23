@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
+	"cosmossdk.io/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/config"
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
-	"github.com/cosmos/cosmos-sdk/store/v2"
 )
 
 // Ensures that error checks are performed before sealing the app.

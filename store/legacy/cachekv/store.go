@@ -8,11 +8,10 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/math"
-
-	"github.com/cosmos/cosmos-sdk/store/v2/internal/btree"
-	"github.com/cosmos/cosmos-sdk/store/v2/internal/conv"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/cachekv/internal"
-	"github.com/cosmos/cosmos-sdk/store/v2/types"
+	"cosmossdk.io/store/internal/btree"
+	"cosmossdk.io/store/internal/conv"
+	"cosmossdk.io/store/legacy/cachekv/internal"
+	"cosmossdk.io/store/types"
 )
 
 // cValue represents a cached value.

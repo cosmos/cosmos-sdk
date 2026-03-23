@@ -5,7 +5,7 @@ package cosmos.store.streaming.abci;
 import "tendermint/abci/types.proto";
 import "cosmos/store/v1beta1/listening.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/store/v2/streaming/abci";
+option go_package = "cosmossdk.io/store/streaming/abci";
 
 // ListenEndBlockRequest is the request type for the ListenEndBlock RPC method
 message ListenFinalizeBlockRequest {

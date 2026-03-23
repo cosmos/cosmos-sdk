@@ -3,7 +3,7 @@ package blockstm
 import (
 	"sync/atomic"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 type (

@@ -1,4 +1,4 @@
-module github.com/cosmos/cosmos-sdk/store/v2
+module cosmossdk.io/store
 
 go 1.25.0
 

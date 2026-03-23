@@ -9,9 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
-
-	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
-	"github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	"cosmossdk.io/store/snapshots"
+	"cosmossdk.io/store/snapshots/types"
 )
 
 var opts = types.NewSnapshotOptions(1500, 2)

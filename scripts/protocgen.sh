@@ -35,13 +35,6 @@ cp -r github.com/cosmos/cosmos-sdk/* ./
 cp -r cosmossdk.io/** ./
 rm -rf github.com cosmossdk.io
 
-# store module path is store/v2 but files live in store/ on disk
-# move generated store/v2/* into store/ to match the repo layout
-if [ -d store/v2 ]; then
-  cp -r store/v2/* store/
-  rm -rf store/v2
-fi
-
 go mod tidy
 
 ./scripts/protocgen-pulsar.sh

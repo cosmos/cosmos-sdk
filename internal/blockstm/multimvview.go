@@ -1,6 +1,6 @@
 package blockstm
 
-import storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+import storetypes "cosmossdk.io/store/types"
 
 const ViewsPreAllocate = 4
 

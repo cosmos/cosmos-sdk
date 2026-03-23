@@ -1,8 +1,8 @@
 package blockstm
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/v2/cachemulti"
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	"cosmossdk.io/store/cachemulti"
+	storetypes "cosmossdk.io/store/types"
 )
 
 var (

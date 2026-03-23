@@ -5,8 +5,8 @@ import (
 
 	lru "github.com/hashicorp/golang-lru"
 
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/v2/types"
+	"cosmossdk.io/store/legacy/cachekv"
+	"cosmossdk.io/store/types"
 )
 
 var (

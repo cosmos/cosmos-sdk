@@ -6,7 +6,7 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/store/v2/types"
+	"cosmossdk.io/store/types"
 )
 
 func TestBytesIsZero(t *testing.T) {

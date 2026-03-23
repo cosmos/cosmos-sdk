@@ -24,6 +24,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log/v2"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -34,7 +35,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/keeper"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -79,8 +79,9 @@ func initFixture(tb testing.TB) *fixture {
 
 	// Load the stores
 	require.NoError(tb, cms.LoadLatestVersion())
+	rcms := cms.RootCacheMultiStore()
 
-	newCtx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{}, true, logger)
+	newCtx := sdk.NewContext(rcms, cmtproto.Header{}, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 
@@ -207,8 +208,8 @@ func TestTransientStoreQueuesValidatorUpdates(t *testing.T) {
 
 	// Get the BaseApp's multistore and create a new context for the next block
 	// This simulates what happens in production when a new block begins
-	cms := f.app.CommitMultiStore()
-	newBlockCtx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{Height: ctx.BlockHeight() + 1}, false, ctx.Logger())
+	cms := f.app.CommitMultiStore().RootCacheMultiStore()
+	newBlockCtx := sdk.NewContext(cms, cmtproto.Header{Height: ctx.BlockHeight() + 1}, false, ctx.Logger())
 
 	// Query the transient store in the new block context - should be empty
 	// because transient stores are cleared on commit

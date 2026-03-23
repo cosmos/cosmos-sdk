@@ -9,12 +9,12 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/log/v2"
+	"cosmossdk.io/store/legacy/rootmulti"
+	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 )
 
 const FlagAppDBBackend = "app-db-backend"

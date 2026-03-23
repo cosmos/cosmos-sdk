@@ -20,10 +20,9 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/log/v2"
-
-	"github.com/cosmos/cosmos-sdk/store/v2"
-	"github.com/cosmos/cosmos-sdk/store/v2/gaskv"
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/gaskv"
+	storetypes "cosmossdk.io/store/types"
 )
 
 type MockContext struct {

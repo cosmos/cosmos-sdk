@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 func TestExecuteBlock_CancelWakesSuspendedExecutors(t *testing.T) {

@@ -5,7 +5,8 @@ import (
 
 	"go.opentelemetry.io/otel/trace"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

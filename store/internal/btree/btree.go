@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/btree"
 
-	"github.com/cosmos/cosmos-sdk/store/v2/types"
+	"cosmossdk.io/store/types"
 )
 
 const (

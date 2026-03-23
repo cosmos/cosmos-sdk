@@ -16,13 +16,12 @@ import (
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
-
-	"github.com/cosmos/cosmos-sdk/store/v2/cachemulti"
-	sdkmaps "github.com/cosmos/cosmos-sdk/store/v2/internal/maps"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/iavl"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/transient"
-	"github.com/cosmos/cosmos-sdk/store/v2/types"
+	"cosmossdk.io/store/cachemulti"
+	sdkmaps "cosmossdk.io/store/internal/maps"
+	"cosmossdk.io/store/legacy/iavl"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/transient"
+	"cosmossdk.io/store/types"
 )
 
 func TestStoreType(t *testing.T) {

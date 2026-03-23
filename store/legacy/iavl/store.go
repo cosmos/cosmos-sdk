@@ -11,12 +11,11 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
-
-	"github.com/cosmos/cosmos-sdk/store/v2/internal/kv"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/cachekv"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/wrapper"
+	"cosmossdk.io/store/internal/kv"
+	"cosmossdk.io/store/legacy/cachekv"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/types"
+	"cosmossdk.io/store/wrapper"
 )
 
 const (

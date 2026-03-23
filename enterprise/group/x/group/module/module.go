@@ -25,6 +25,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	store "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
@@ -35,7 +36,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/client/cli"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/keeper"
 	simulation2 "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/simulation"
-	store "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"

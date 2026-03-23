@@ -8,7 +8,7 @@ import (
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 const SigVerificationResultCacheKey = "ante:SigVerificationResult"

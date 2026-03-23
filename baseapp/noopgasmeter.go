@@ -1,6 +1,6 @@
 package baseapp
 
-import storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+import storetypes "cosmossdk.io/store/types"
 
 type noopGasMeter struct{}
 

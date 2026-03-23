@@ -6,7 +6,7 @@ import (
 
 	"github.com/test-go/testify/require"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 func TestMVMemoryRecord(t *testing.T) {

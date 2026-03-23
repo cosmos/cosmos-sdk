@@ -20,17 +20,16 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
-
-	"github.com/cosmos/cosmos-sdk/store/v2/cachemulti"
-	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/iavl"
-	"github.com/cosmos/cosmos-sdk/store/v2/listenkv"
-	"github.com/cosmos/cosmos-sdk/store/v2/mem"
-	"github.com/cosmos/cosmos-sdk/store/v2/pruning"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/transient"
-	"github.com/cosmos/cosmos-sdk/store/v2/types"
+	"cosmossdk.io/store/cachemulti"
+	"cosmossdk.io/store/dbadapter"
+	"cosmossdk.io/store/legacy/iavl"
+	"cosmossdk.io/store/listenkv"
+	"cosmossdk.io/store/mem"
+	"cosmossdk.io/store/pruning"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	"cosmossdk.io/store/transient"
+	"cosmossdk.io/store/types"
 )
 
 const (

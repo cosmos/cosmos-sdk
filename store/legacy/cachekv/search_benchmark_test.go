@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store/v2/internal/btree"
+	"cosmossdk.io/store/internal/btree"
 )
 
 func BenchmarkLargeUnsortedMisses(b *testing.B) {

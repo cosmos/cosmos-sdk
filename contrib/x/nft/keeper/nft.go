@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
+	"cosmossdk.io/store/prefix"
 
 	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

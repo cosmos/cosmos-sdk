@@ -7,9 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
-
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/iavl"
-	"github.com/cosmos/cosmos-sdk/store/v2/types"
+	"cosmossdk.io/store/legacy/iavl"
+	"cosmossdk.io/store/types"
 )
 
 func TestVerifyIAVLStoreQueryProof(t *testing.T) {

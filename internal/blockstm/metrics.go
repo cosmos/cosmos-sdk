@@ -37,6 +37,7 @@ type instrument struct {
 	ExecutedTxs        metric.Int64Counter
 	ValidatedTxs       metric.Int64Counter
 	DecreaseCount      metric.Int64Counter
+	ExecutionRatio     metric.Float64Counter
 	TryExecuteTime     metric.Int64ObservableCounter
 	TxReadCount        metric.Int64Counter
 	TxWriteCount       metric.Int64Counter
@@ -151,13 +152,42 @@ func (i *instrument) Start(cfg map[string]any) error {
 	if err != nil {
 		return err
 	}
-	i.DecreaseCount, err = i.Meter.Int64Counter(
-		"decrease.count",
+	i.ExecutionRatio, err = i.Meter.Float64Counter(
+		"execution.ratio",
+		metric.WithDescription(""),
+	)
+	if err != nil {
+		return err
+	}
+	i.TryExecuteTime, err = i.Meter.Int64ObservableCounter(
+		"try.execute.time",
+		metric.WithDescription(""),
+		metric.WithUnit(TimingUnit),
+	)
+	if err != nil {
+		return err
+	}
+	i.TxReadCount, err = i.Meter.Int64Counter(
+		"tx.read.count",
+		metric.WithDescription(""),
+	)
+	if err != nil {
+		return err
+	}
+	i.TxWriteCount, err = i.Meter.Int64Counter(
+		"tx.write.count",
+		metric.WithDescription(""),
+	)
+	if err != nil {
+		return err
+	}
+	i.TxNewLocationWrite, err = i.Meter.Int64Counter(
+		"tx.new.location.write",
 		metric.WithDescription(""),
 	)
 	if err != nil {
 		return err
 	}
 
-	return err
+	return nil
 }

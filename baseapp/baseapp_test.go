@@ -22,6 +22,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
+	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -452,6 +453,47 @@ func TestOptionFunction(t *testing.T) {
 	db := dbm.NewMemDB()
 	bap := baseapp.NewBaseApp("starting name", log.NewTestLogger(t), db, nil, testChangeNameHelper("new name"))
 	require.Equal(t, bap.Name(), "new name", "BaseApp should have had name changed via option function")
+}
+
+func TestBlockGasMeterParallelRunnerPanic(t *testing.T) {
+	db := dbm.NewMemDB()
+
+	testCases := []struct {
+		name     string
+		testFunc func(*testing.T, *baseapp.BaseApp)
+	}{
+		{
+			"panic on bstm + gas meter",
+			func(t *testing.T, bap *baseapp.BaseApp) {
+				t.Helper()
+				bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil))
+				require.Panics(t, func() { bap.SetDisableBlockGasMeter(false) })
+				require.Panics(t, func() { baseapp.EnableBlockGasMeter()(bap) })
+			},
+		},
+		{
+			"panic on gas meter + bstm",
+			func(t *testing.T, bap *baseapp.BaseApp) {
+				t.Helper()
+				bap.SetDisableBlockGasMeter(false)
+				require.Panics(t, func() { bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil)) })
+			},
+		},
+		{
+			"successful bstm parallelism",
+			func(t *testing.T, bap *baseapp.BaseApp) {
+				t.Helper()
+				require.NotPanics(t, func() { bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil)) })
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			bap := baseapp.NewBaseApp("foo", log.NewTestLogger(t), db, nil)
+			tc.testFunc(t, bap)
+		})
+	}
 }
 
 func TestBaseAppOptionSeal(t *testing.T) {

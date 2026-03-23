@@ -23,15 +23,15 @@ HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 
-# Required for scripts (e.g. build-v53.sh)
+# Required for scripts (e.g. build-v54.sh)
 SH := $(shell command -v sh 2>/dev/null || true)
 ifeq ($(SH),)
-$(error sh not found. Required for build-v53 and other scripts. Install a POSIX shell.)
+$(error sh not found. Required for build-v54 and other scripts. Install a POSIX shell.)
 endif
-# build-v53.sh uses bash-specific features (BASH_SOURCE, local)
+# build-v54.sh uses bash-specific features (BASH_SOURCE, local)
 BASH := $(shell command -v bash 2>/dev/null || true)
 ifeq ($(BASH),)
-$(error bash not found. Required for build-v53. Install bash.)
+$(error bash not found. Required for build-v54. Install bash.)
 endif
 
 # process build tags

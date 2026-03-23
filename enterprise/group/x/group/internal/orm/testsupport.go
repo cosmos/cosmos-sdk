@@ -26,30 +26,27 @@ import (
 )
 
 type MockContext struct {
-	db      *dbm.MemDB
-	store   storetypes.CommitMultiStore
-	mounted map[storetypes.StoreKey]bool
+	db    *dbm.MemDB
+	store storetypes.CommitMultiStore
 }
 
 func NewMockContext() *MockContext {
 	db := dbm.NewMemDB()
 	return &MockContext{
-		db:      db,
-		store:   store.NewCommitMultiStore(db, log.NewNopLogger()),
-		mounted: make(map[storetypes.StoreKey]bool),
+		db:    dbm.NewMemDB(),
+		store: store.NewCommitMultiStore(db, log.NewNopLogger()),
 	}
 }
 
-func (m *MockContext) KVStore(key storetypes.StoreKey) storetypes.KVStore {
-	if !m.mounted[key] {
-		m.store.MountStoreWithDB(key, storetypes.StoreTypeIAVL, m.db)
-		if err := m.store.LoadLatestVersion(); err != nil {
-			panic(err)
-		}
-		m.mounted[key] = true
+func (m MockContext) KVStore(key storetypes.StoreKey) storetypes.KVStore {
+	if s := m.store.GetCommitStore(key); s != nil {
+		return s.(storetypes.KVStore)
 	}
-	// GetKVStore will panic if the store isn't mounted yet
-	return m.store.GetKVStore(key)
+	m.store.MountStoreWithDB(key, storetypes.StoreTypeIAVL, m.db)
+	if err := m.store.LoadLatestVersion(); err != nil {
+		panic(err)
+	}
+	return m.store.GetCommitKVStore(key)
 }
 
 type debuggingGasMeter struct {

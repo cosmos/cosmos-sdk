@@ -38,7 +38,7 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 	}
 
 	for _, key := range keys {
-		store := multiStore.GetKVStore(key).(*iavl.Store)
+		store := multiStore.GetCommitKVStore(key).(*iavl.Store)
 		for i := uint64(0); i < storeKeys; i++ {
 			k := make([]byte, 8)
 			v := make([]byte, 1024)

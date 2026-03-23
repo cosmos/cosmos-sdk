@@ -24,7 +24,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
-* [#26037](https://github.com/cosmos/cosmos-sdk/pull/26037) Remove `GetCommitStore` and `GetCommitKVStore` from the `CommitMultiStore` interface. Remove top-level `store.CommitStore` and `store.CommitKVStore` type aliases from `store/reexport.go`.
 
 ### Breaking Changes
 

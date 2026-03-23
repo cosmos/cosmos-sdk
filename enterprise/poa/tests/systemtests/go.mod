@@ -285,4 +285,5 @@ replace (
 	cosmossdk.io/store => ../../../../store
 	github.com/cosmos/cosmos-sdk => ../../../../
 	github.com/cosmos/cosmos-sdk/enterprise/poa => ../../
+	github.com/cosmos/cosmos-sdk/tools/systemtests => ../../../../tools/systemtests
 )

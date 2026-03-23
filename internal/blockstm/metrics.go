@@ -1,6 +1,9 @@
 package blockstm
 
 import (
+	"context"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/telemetry/registry"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
@@ -15,6 +18,9 @@ const (
 	TimingUnit = "ms"
 )
 
+// inst is the package-level instrument instance, set during Start().
+var inst *instrument
+
 func init() {
 	registry.Register(&instrument{})
 }
@@ -22,23 +28,23 @@ func init() {
 type instrument struct {
 	Meter metric.Meter
 	// MVData metrics
-	MVDataRead        metric.Int64ObservableCounter
-	MVDataConsolidate metric.Int64ObservableCounter
+	MVDataRead        metric.Int64Histogram
+	MVDataConsolidate metric.Int64Histogram
 	// MVView metrics
-	MVViewReadWriteSet    metric.Int64ObservableCounter
-	MVViewReadMVData      metric.Int64ObservableCounter
-	MVViewReadStorage     metric.Int64ObservableCounter
-	MVViewWrite           metric.Int64ObservableCounter
-	MVViewDelete          metric.Int64ObservableCounter
-	MVViewIteratorKeys    metric.Int64ObservableCounter
+	MVViewReadWriteSet    metric.Int64Histogram
+	MVViewReadMVData      metric.Int64Histogram
+	MVViewReadStorage     metric.Int64Histogram
+	MVViewWrite           metric.Int64Histogram
+	MVViewDelete          metric.Int64Histogram
+	MVViewIteratorKeys    metric.Int64Histogram
 	MVViewIteratorKeysCnt metric.Int64Counter
-	MVViewEstimateWait    metric.Int64ObservableCounter
+	MVViewEstimateWait    metric.Int64Histogram
 	// Executor/Transaction metrics
 	ExecutedTxs        metric.Int64Counter
 	ValidatedTxs       metric.Int64Counter
 	DecreaseCount      metric.Int64Counter
 	ExecutionRatio     metric.Float64Counter
-	TryExecuteTime     metric.Int64ObservableCounter
+	TryExecuteTime     metric.Int64Histogram
 	TxReadCount        metric.Int64Counter
 	TxWriteCount       metric.Int64Counter
 	TxNewLocationWrite metric.Int64Counter
@@ -52,7 +58,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	)
 
 	var err error
-	i.MVDataRead, err = i.Meter.Int64ObservableCounter(
+	i.MVDataRead, err = i.Meter.Int64Histogram(
 		"mvdata.read",
 		metric.WithDescription(""),
 		metric.WithUnit(TimingUnit),
@@ -60,7 +66,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	if err != nil {
 		return err
 	}
-	i.MVDataConsolidate, err = i.Meter.Int64ObservableCounter(
+	i.MVDataConsolidate, err = i.Meter.Int64Histogram(
 		"mvdata.consolidate",
 		metric.WithDescription(""),
 		metric.WithUnit(TimingUnit),
@@ -68,7 +74,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	if err != nil {
 		return err
 	}
-	i.MVViewReadWriteSet, err = i.Meter.Int64ObservableCounter(
+	i.MVViewReadWriteSet, err = i.Meter.Int64Histogram(
 		"mvdata.read.writeset",
 		metric.WithDescription(""),
 		metric.WithUnit(TimingUnit),
@@ -76,7 +82,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	if err != nil {
 		return err
 	}
-	i.MVViewReadMVData, err = i.Meter.Int64ObservableCounter(
+	i.MVViewReadMVData, err = i.Meter.Int64Histogram(
 		"mvview.read_mvdata",
 		metric.WithDescription(""),
 		metric.WithUnit(TimingUnit),
@@ -84,7 +90,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	if err != nil {
 		return err
 	}
-	i.MVViewReadStorage, err = i.Meter.Int64ObservableCounter(
+	i.MVViewReadStorage, err = i.Meter.Int64Histogram(
 		"mvview.read.storage",
 		metric.WithDescription(""),
 		metric.WithUnit(TimingUnit),
@@ -92,7 +98,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	if err != nil {
 		return err
 	}
-	i.MVViewWrite, err = i.Meter.Int64ObservableCounter(
+	i.MVViewWrite, err = i.Meter.Int64Histogram(
 		"mvview.write",
 		metric.WithDescription(""),
 		metric.WithUnit(TimingUnit),
@@ -100,7 +106,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	if err != nil {
 		return err
 	}
-	i.MVViewDelete, err = i.Meter.Int64ObservableCounter(
+	i.MVViewDelete, err = i.Meter.Int64Histogram(
 		"mvview.delete",
 		metric.WithDescription(""),
 		metric.WithUnit(TimingUnit),
@@ -108,7 +114,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	if err != nil {
 		return err
 	}
-	i.MVViewIteratorKeys, err = i.Meter.Int64ObservableCounter(
+	i.MVViewIteratorKeys, err = i.Meter.Int64Histogram(
 		"mvview.iterator.keys.read",
 		metric.WithDescription(""),
 		metric.WithUnit(TimingUnit),
@@ -123,7 +129,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	if err != nil {
 		return err
 	}
-	i.MVViewEstimateWait, err = i.Meter.Int64ObservableCounter(
+	i.MVViewEstimateWait, err = i.Meter.Int64Histogram(
 		"mvview.estimate.wait",
 		metric.WithDescription(""),
 		metric.WithUnit(TimingUnit),
@@ -159,7 +165,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 	if err != nil {
 		return err
 	}
-	i.TryExecuteTime, err = i.Meter.Int64ObservableCounter(
+	i.TryExecuteTime, err = i.Meter.Int64Histogram(
 		"try.execute.time",
 		metric.WithDescription(""),
 		metric.WithUnit(TimingUnit),
@@ -189,5 +195,15 @@ func (i *instrument) Start(cfg map[string]any) error {
 		return err
 	}
 
+	inst = i
 	return nil
+}
+
+// measureSince records the duration in milliseconds since start on the given histogram.
+// Safe to call when inst is nil.
+func measureSince(ctx context.Context, get func() metric.Int64Histogram, start time.Time) {
+	if inst == nil {
+		return
+	}
+	get().Record(ctx, time.Since(start).Milliseconds())
 }

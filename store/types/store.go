@@ -1,13 +1,10 @@
 package types
 
 import (
-	"context"
 	"fmt"
-	"io"
 	"slices"
 
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -112,8 +109,17 @@ func (s *StoreUpgrades) RenamedFrom(key string) string {
 	return ""
 }
 
-type MultiStoreBase interface {
+type MultiStore interface {
 	Store
+
+	// Branches MultiStore into a cached storage object.
+	// NOTE: Caller should probably not call .Write() on each, but
+	// call CacheMultiStore.Write().
+	CacheMultiStore() CacheMultiStore
+
+	// CacheMultiStoreWithVersion branches the underlying MultiStore where
+	// each stored is loaded at a specific version (height).
+	CacheMultiStoreWithVersion(version int64) (CacheMultiStore, error)
 
 	// Convenience for fetching substores.
 	// If the store does not exist, panics.
@@ -125,73 +131,17 @@ type MultiStoreBase interface {
 	LatestVersion() int64
 }
 
-type MultiStore interface {
-	MultiStoreBase
-
-	// Branches MultiStore into a cached storage object.
-	// NOTE: Caller should probably not call .Write() on each, but
-	// call CacheMultiStore.Write().
-	CacheMultiStore() CacheMultiStore
-}
-
 // CacheMultiStore extends MultiStore with a Write() method.
 type CacheMultiStore interface {
 	MultiStore
 	Write() // Writes operations to underlying KVStore
 }
 
-// CommitBranch is a cached MultiStore that is the branch right on top of the root MultiStore and which
-// we use to initialize commits. Writers should write any changes to this multistore and then call
-// StartCommit when they are ready to commit.
-// Callers must not call StartCommit more than once on a CommitBranch.
-type CommitBranch interface {
-	MultiStore
-
-	// StartCommit starts a commit and returns a CommitFinalizer to finalize or rollback the commit.
-	// This allows for transaction isolation of the commits and allows the multi-store to
-	// optimistically do the work of committing (which involves CPU intensive tree manipulations and hashing),
-	// without actually committing until we are sure we want to commit.
-	// This is useful for ABCI optimistic execution.
-	//
-	// If the context passed in is canceled, the commit will be rolled back
-	// as long as the cancellation signal is received before CommitFinalizer.StartFinalize()
-	// or CommitFinalizer.Finalize() is called.
-	// The comet header argument is used to obtain the commit timestamp.
-	//
-	// Callers must not call StartCommit more than once on a CommitBranch.
-	StartCommit(context.Context, cmtproto.Header) (CommitFinalizer, error)
-}
-
-// RootMultiStore is the root uncached multistore layer in a multistore db.
-type RootMultiStore interface {
-	MultiStoreBase
-
-	// RootCacheMultiStore is a readonly version of the latest version of the RootMultiStore
-	// to which any changes will be written to a cache layer and discarded.
-	RootCacheMultiStore() MultiStore
-
-	// CacheMultiStoreWithVersion branches the underlying MultiStore where
-	// each stored is loaded at a specific version (height).
-	CacheMultiStoreWithVersion(version int64) (MultiStore, error)
-}
-
-// CommitMultiStore is the root multistore in a multistore db which can be committed to via CommitBranch.
+// CommitMultiStore is an interface for a MultiStore without cache capabilities.
 type CommitMultiStore interface {
-	RootMultiStore
-
+	Committer
+	MultiStore
 	snapshottypes.Snapshotter
-
-	// CommitBranch branches CommitMultiStore into a cached storage object.
-	// To write changes back to the CommitMultiStore from the CommitBranch,
-	// use CommitBranch.StartCommit().
-	CommitBranch() CommitBranch
-
-	GetCommitInfo(ver int64) (*CommitInfo, error)
-
-	LastCommitID() CommitID
-
-	SetPruning(pruningtypes.PruningOptions)
-	GetPruning() pruningtypes.PruningOptions
 
 	// EarliestVersion returns the earliest version in the store
 	EarliestVersion() int64
@@ -235,32 +185,6 @@ type CommitMultiStore interface {
 
 	// PopStateCache returns the accumulated state change messages from the CommitMultiStore
 	PopStateCache() []*StoreKVPair
-
-	io.Closer
-}
-
-// CommitFinalizer defines the type that will be used for committing transactions against the CommitMultiStore.
-// It is designed to allow optimistic commit and rollback if the underlying store supports it.
-type CommitFinalizer interface {
-	// StartFinalize begins finalization and waits until the hash is ready,
-	// but may return before the commit has been fully finalized (i.e. fsync'd to disk).
-	// Once a successful StartFinalize is called, Rollback can no longer be called and will return an error.
-	// If StartFinalize fails due to context cancellation, the finalizer is automatically
-	// rolled back and a subsequent Rollback() will return nil.
-	// StartFinalize is idempotent: repeated calls return the same CommitID.
-	StartFinalize() (CommitID, error)
-	// Finalize begins finalization if it hasn't been started yet and
-	// waits for the commit to complete (including fsync).
-	// StartFinalize may be called before Finalize to start finalization early.
-	// After a successful Finalize, Rollback can no longer be called and will return an error.
-	// Finalize is idempotent: repeated calls return the same CommitID.
-	Finalize() (CommitID, error)
-	// Rollback aborts the in-progress commit and leaves the stores in the previous state.
-	// Rollback returns an error if a successful StartFinalize or Finalize has already been called.
-	// Rollback is idempotent: repeated calls return nil.
-	// If the context was canceled before finalization, the finalizer is already in a rolled-back
-	// state and Rollback will return nil.
-	Rollback() error
 }
 
 //---------subsp-------------------------------

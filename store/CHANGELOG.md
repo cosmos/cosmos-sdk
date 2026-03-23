@@ -28,7 +28,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
-* [#26056](https://github.com/cosmos/cosmos-sdk/pull/26056) Replace `CommitMultiStore.Commit` and `WorkingHash` with `CommitBranch.StartCommit` and `CommitFinalizer` for optimistic commit with rollback support. `CommitMultiStore` no longer embeds `Committer`. Refactor `MultiStore` interface hierarchy into `MultiStoreBase`, `MultiStore`, `CommitBranch`, and `RootMultiStore`.
 * [#26069](https://github.com/cosmos/cosmos-sdk/pull/26069) Move `cachekv` to `legacy/cachekv` so that iavl/v1 stores can continue using the existing implementation while a new mutex-free cachekv is introduced for new stores.
 * [#26060](https://github.com/cosmos/cosmos-sdk/pull/26060) Remove non-functional `StoreMetrics`. This metric interface never worked, so this simply removes dead code.
 * [#26061](https://github.com/cosmos/cosmos-sdk/pull/26061) Remove tracing from store interfaces and implementations:

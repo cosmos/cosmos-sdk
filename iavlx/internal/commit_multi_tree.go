@@ -49,7 +49,6 @@ type CommitMultiTree struct {
 	compactionActive atomic.Bool
 	compactionDone   chan struct{}
 	pruningOptions   pruningtypes.PruningOptions
-	logger           log.Logger
 }
 
 type storeData struct {
@@ -62,8 +61,8 @@ func (db *CommitMultiTree) GetCommitInfo(ver int64) (*storetypes.CommitInfo, err
 	return loadCommitInfo(db.dir, ver)
 }
 
-func (db *CommitMultiTree) CommitBranch() storetypes.CommitBranch {
-	return &commitBranch{
+func (db *CommitMultiTree) CommitBranch() *CommitBranch {
+	return &CommitBranch{
 		MultiTree: db.rootCacheMultiStore(),
 		db:        db,
 	}
@@ -101,21 +100,21 @@ func (db *CommitMultiTree) GetKVStore(storetypes.StoreKey) storetypes.KVStore {
 	panic("cannot call GetKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
 }
 
-// GetObjKVStore returns a mounted ObjKVStore for a given StoreKey.
-func (db *CommitMultiTree) GetObjKVStore(storetypes.StoreKey) storetypes.ObjKVStore {
-	panic("cannot call GetObjKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
-}
+//// GetObjKVStore returns a mounted ObjKVStore for a given StoreKey.
+//func (db *CommitMultiTree) GetObjKVStore(storetypes.StoreKey) storetypes.ObjKVStore {
+//	panic("cannot call GetObjKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
+//}
 
 func (db *CommitMultiTree) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	return fmt.Errorf("snapshotting has not been implemented yet")
 }
 
 func (db *CommitMultiTree) PruneSnapshotHeight(height int64) {
-	db.logger.Warn("PruneSnapshotHeight is not implemented for CommitMultiTree")
+	logger.Warn("PruneSnapshotHeight is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) SetSnapshotInterval(snapshotInterval uint64) {
-	db.logger.Warn("SetSnapshotInterval is not implemented for CommitMultiTree")
+	logger.Warn("SetSnapshotInterval is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) Restore(height uint64, format uint32, protoReader protoio.Reader) (snapshottypes.SnapshotItem, error) {
@@ -195,7 +194,7 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 			Options:         db.opts,
 			TreeName:        key.Name(),
 			ExpectedVersion: uint32(expectedVersion),
-		}, db.logger.With("store", key.Name()))
+		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to load CommitTree for store %s: %w", key.Name(), err)
 		}
@@ -216,11 +215,11 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 		}
 
 		return mem.NewStore(), nil
-	case storetypes.StoreTypeObject:
-		if _, ok := key.(*storetypes.ObjectStoreKey); !ok {
-			return nil, fmt.Errorf("unexpected key type for a ObjectStoreKey: %s", key.String())
-		}
-		return transient.NewObjStore(), nil
+	//case storetypes.StoreTypeObject:
+	//	if _, ok := key.(*storetypes.ObjectStoreKey); !ok {
+	//		return nil, fmt.Errorf("unexpected key type for a ObjectStoreKey: %s", key.String())
+	//	}
+	//	return transient.NewObjStore(), nil
 	default:
 		return nil, fmt.Errorf("unsupported store type: %s", typ.String())
 	}
@@ -278,12 +277,12 @@ func (db *CommitMultiTree) RollbackToVersion(version int64) error {
 }
 
 func (db *CommitMultiTree) ListeningEnabled(key storetypes.StoreKey) bool {
-	db.logger.Warn("ListeningEnabled is not implemented for CommitMultiTree")
+	logger.Warn("ListeningEnabled is not implemented for CommitMultiTree")
 	return false
 }
 
 func (db *CommitMultiTree) AddListeners(keys []storetypes.StoreKey) {
-	db.logger.Warn("AddListeners is not implemented for CommitMultiTree")
+	logger.Warn("AddListeners is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) PopStateCache() []*storetypes.StoreKVPair {
@@ -291,13 +290,12 @@ func (db *CommitMultiTree) PopStateCache() []*storetypes.StoreKVPair {
 	panic("implement me")
 }
 
-func LoadCommitMultiTree(path string, opts Options, logger log.Logger) (*CommitMultiTree, error) {
+func LoadCommitMultiTree(path string, opts Options) (*CommitMultiTree, error) {
 	db := &CommitMultiTree{
 		dir:            path,
 		opts:           opts,
 		storesByKey:    make(map[storetypes.StoreKey]int),
 		pruningOptions: pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
-		logger:         logger,
 	}
 	return db, nil
 }
@@ -418,7 +416,7 @@ func (db *CommitMultiTree) compactIfNeeded() {
 
 	if !db.compactionActive.CompareAndSwap(false, true) {
 		// another compaction started since we checked, skip
-		db.logger.Warn("skipping compaction since another compaction is already in progress",
+		logger.Warn("skipping compaction since another compaction is already in progress",
 			"version", version,
 			"retain_version", retainVersion,
 			"pruning_interval", db.pruningOptions.Interval,
@@ -426,7 +424,7 @@ func (db *CommitMultiTree) compactIfNeeded() {
 		)
 		return
 	}
-	db.logger.Info("starting compaction of old versions of IAVL trees",
+	logger.Info("starting compaction of old versions of IAVL trees",
 		"version", version,
 		"retain_version", retainVersion,
 		"pruning_interval", db.pruningOptions.Interval,
@@ -463,7 +461,7 @@ func (db *CommitMultiTree) compactNow(ctx context.Context, retainVersion uint64)
 
 	err := deleteOldCommitInfos(db.dir, retainVersion)
 	if err != nil {
-		db.logger.Error(fmt.Sprintf("failed to delete old commit info files: %v", err))
+		logger.Error(fmt.Sprintf("failed to delete old commit info files: %v", err))
 	}
 
 	for _, si := range db.iavlStores {
@@ -474,12 +472,12 @@ func (db *CommitMultiTree) compactNow(ctx context.Context, retainVersion uint64)
 		)
 		ct, ok := si.store.(*CommitTree)
 		if !ok {
-			db.logger.Error(fmt.Sprintf("store %s is not a CommitTree, cannot compact", si.key.Name()))
+			logger.Error(fmt.Sprintf("store %s is not a CommitTree, cannot compact", si.key.Name()))
 			continue
 		}
 		err := ct.compact(ctx, uint32(retainVersion))
 		if err != nil {
-			db.logger.Error(fmt.Sprintf("failed to compact store %s: %v", si.key.Name(), err))
+			logger.Error(fmt.Sprintf("failed to compact store %s: %v", si.key.Name(), err))
 			continue
 		}
 		span.End()

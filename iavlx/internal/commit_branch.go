@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"iter"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
@@ -13,12 +12,12 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
-type commitBranch struct {
+type CommitBranch struct {
 	*MultiTree
 	db *CommitMultiTree
 }
 
-func (cb *commitBranch) StartCommit(ctx context.Context, header cmtproto.Header) (storetypes.CommitFinalizer, error) {
+func (cb *CommitBranch) StartCommit(ctx context.Context) (*CommitFinalizer, error) {
 	db := cb.db
 	ctx, span := tracer.Start(ctx, "CommitMultiTree.commit",
 		trace.WithAttributes(
@@ -37,13 +36,13 @@ func (cb *commitBranch) StartCommit(ctx context.Context, header cmtproto.Header)
 	finalizers := make([]*commitTreeFinalizer, numIavlStores)
 	commitInfo := &storetypes.CommitInfo{
 		StoreInfos: storeInfos,
-		Timestamp:  header.Time,
-		Version:    db.stagedVersion(),
+		//Timestamp:  header.Time,
+		Version: db.stagedVersion(),
 	}
 	for i, si := range db.iavlStores {
 		commitStore := si.store.(*CommitTree)
 		cachedStore := multiTree.GetCacheWrapIfExists(si.key)
-		var updates iter.Seq[cachekv.Update[[]byte]]
+		var updates iter.Seq[Update]
 		var updateCount int
 		if cachedStore != nil {
 			cacheKv, ok := cachedStore.(*cachekv.Store)
@@ -57,7 +56,7 @@ func (cb *commitBranch) StartCommit(ctx context.Context, header cmtproto.Header)
 		storeInfos[i].Name = si.key.Name()
 	}
 	ctx, cancel := context.WithCancel(ctx)
-	finalizer := &multiTreeFinalizer{
+	finalizer := &CommitFinalizer{
 		CommitMultiTree:    db,
 		cacheMs:            multiTree,
 		ctx:                ctx,

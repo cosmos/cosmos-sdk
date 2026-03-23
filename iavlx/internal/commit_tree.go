@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"errors"
@@ -13,16 +12,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	ics23 "github.com/cosmos/ics23/go"
+	//cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	//ics23 "github.com/cosmos/ics23/go"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
 	errorsmod "cosmossdk.io/errors"
 
-	"cosmossdk.io/store/cachekv"
 	storetypes "cosmossdk.io/store/types"
-	//"cosmossdk.io/store/types/kv"
 )
 
 type CommitTree struct {
@@ -95,7 +92,12 @@ type commitTreeFinalizer struct {
 	walErr             error
 }
 
-func (c *CommitTree) startCommit(ctx context.Context, updates iter.Seq[cachekv.Update[[]byte]], updateCount int) *commitTreeFinalizer {
+type Update = struct {
+	Key, Value []byte
+	Delete     bool
+}
+
+func (c *CommitTree) startCommit(ctx context.Context, updates iter.Seq[Update], updateCount int) *commitTreeFinalizer {
 	cancelCtx, cancel := context.WithCancel(ctx)
 	committer := &commitTreeFinalizer{
 		CommitTree:         c,
@@ -123,7 +125,7 @@ func (c *CommitTree) startCommit(ctx context.Context, updates iter.Seq[cachekv.U
 
 var rolledbackErr = errors.New("commit rolled back")
 
-func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[cachekv.Update[[]byte]], updateCount int) error {
+func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[Update], updateCount int) error {
 	c.commitMutex.Lock()
 	defer c.commitMutex.Unlock()
 
@@ -178,7 +180,7 @@ type prepareCommitResult struct {
 	mutationCtx *MutationContext
 }
 
-func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Seq[cachekv.Update[[]byte]], updateCount int) (*prepareCommitResult, error) {
+func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Seq[Update], updateCount int) (*prepareCommitResult, error) {
 	ctx, span := tracer.Start(ctx, "PrepareCommit")
 	defer span.End()
 
@@ -425,81 +427,82 @@ var _ storetypes.Queryable = (*CommitTree)(nil)
 
 // Query handles query paths for a single IAVL-backed store.
 func (c *CommitTree) Query(req *storetypes.RequestQuery) (_ *storetypes.ResponseQuery, err error) {
-	start := time.Now()
-	defer func() {
-		if err != nil {
-			queryLatency.Record(context.Background(), time.Since(start).Milliseconds())
-		}
-	}()
-
-	height, err := c.queryHeight(req.Height)
-	if err != nil {
-		return &storetypes.ResponseQuery{}, err
-	}
-
-	res := &storetypes.ResponseQuery{Height: height}
-
-	tree, err := c.GetVersion(uint32(height))
-	if err != nil {
-		// Keep this as response metadata to match existing query behavior.
-		res.Log = err.Error()
-		return res, nil
-	}
-
-	switch req.Path {
-	case "/key":
-		if len(req.Data) == 0 {
-			return &storetypes.ResponseQuery{}, errorsmod.Wrap(storetypes.ErrTxDecode, "query cannot be zero length")
-		}
-
-		key := req.Data
-		res.Key = key
-
-		value, err := tree.GetErr(key)
-		if err != nil {
-			return &storetypes.ResponseQuery{}, err
-		}
-		res.Value = value
-
-		if req.Prove {
-			res.ProofOps, err = iavlProofOps(&tree, key, value != nil)
-			if err != nil {
-				return &storetypes.ResponseQuery{}, errorsmod.Wrapf(storetypes.ErrInvalidRequest, "failed to create proof: %v", err)
-			}
-		}
-
-		return res, nil
-
-	case "/subspace":
-		subspace := req.Data
-		res.Key = subspace
-
-		iterator := storetypes.KVStorePrefixIterator(tree, subspace)
-		pairs := kv.Pairs{
-			Pairs: make([]kv.Pair, 0),
-		}
-		for ; iterator.Valid(); iterator.Next() {
-			pairs.Pairs = append(pairs.Pairs, kv.Pair{
-				Key:   bytes.Clone(iterator.Key()),
-				Value: bytes.Clone(iterator.Value()),
-			})
-		}
-		if err := iterator.Close(); err != nil {
-			return &storetypes.ResponseQuery{}, fmt.Errorf("failed to close iterator: %w", err)
-		}
-
-		bz, err := pairs.Marshal()
-		if err != nil {
-			panic(fmt.Errorf("failed to marshal KV pairs: %w", err))
-		}
-
-		res.Value = bz
-
-		return res, nil
-
-	default:
-		return &storetypes.ResponseQuery{}, errorsmod.Wrapf(storetypes.ErrUnknownRequest, "unexpected query path: %v", req.Path)
-	}
+	//start := time.Now()
+	//defer func() {
+	//	if err != nil {
+	//		queryLatency.Record(context.Background(), time.Since(start).Milliseconds())
+	//	}
+	//}()
+	//
+	//height, err := c.queryHeight(req.Height)
+	//if err != nil {
+	//	return &storetypes.ResponseQuery{}, err
+	//}
+	//
+	//res := &storetypes.ResponseQuery{Height: height}
+	//
+	//tree, err := c.GetVersion(uint32(height))
+	//if err != nil {
+	//	// Keep this as response metadata to match existing query behavior.
+	//	res.Log = err.Error()
+	//	return res, nil
+	//}
+	//
+	//switch req.Path {
+	//case "/key":
+	//	if len(req.Data) == 0 {
+	//		return &storetypes.ResponseQuery{}, errorsmod.Wrap(storetypes.ErrTxDecode, "query cannot be zero length")
+	//	}
+	//
+	//	key := req.Data
+	//	res.Key = key
+	//
+	//	value, err := tree.GetErr(key)
+	//	if err != nil {
+	//		return &storetypes.ResponseQuery{}, err
+	//	}
+	//	res.Value = value
+	//
+	//	if req.Prove {
+	//		res.ProofOps, err = iavlProofOps(&tree, key, value != nil)
+	//		if err != nil {
+	//			return &storetypes.ResponseQuery{}, errorsmod.Wrapf(storetypes.ErrInvalidRequest, "failed to create proof: %v", err)
+	//		}
+	//	}
+	//
+	//	return res, nil
+	//
+	//case "/subspace":
+	//	subspace := req.Data
+	//	res.Key = subspace
+	//
+	//	iterator := storetypes.KVStorePrefixIterator(tree, subspace)
+	//	pairs := kv.Pairs{
+	//		Pairs: make([]kv.Pair, 0),
+	//	}
+	//	for ; iterator.Valid(); iterator.Next() {
+	//		pairs.Pairs = append(pairs.Pairs, kv.Pair{
+	//			Key:   bytes.Clone(iterator.Key()),
+	//			Value: bytes.Clone(iterator.Value()),
+	//		})
+	//	}
+	//	if err := iterator.Close(); err != nil {
+	//		return &storetypes.ResponseQuery{}, fmt.Errorf("failed to close iterator: %w", err)
+	//	}
+	//
+	//	bz, err := pairs.Marshal()
+	//	if err != nil {
+	//		panic(fmt.Errorf("failed to marshal KV pairs: %w", err))
+	//	}
+	//
+	//	res.Value = bz
+	//
+	//	return res, nil
+	//
+	//default:
+	//	return &storetypes.ResponseQuery{}, errorsmod.Wrapf(storetypes.ErrUnknownRequest, "unexpected query path: %v", req.Path)
+	//}
+	panic("TODO")
 }
 
 func (c *CommitTree) queryHeight(reqHeight int64) (int64, error) {
@@ -516,24 +519,24 @@ func (c *CommitTree) queryHeight(reqHeight int64) (int64, error) {
 	return reqHeight, nil
 }
 
-func iavlProofOps(tree *TreeReader, key []byte, exists bool) (*cmtprotocrypto.ProofOps, error) {
-	var (
-		commitmentProof *ics23.CommitmentProof
-		err             error
-	)
-
-	if exists {
-		commitmentProof, err = tree.GetMembershipProof(key)
-	} else {
-		commitmentProof, err = tree.GetNonMembershipProof(key)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	op := storetypes.NewIavlCommitmentOp(key, commitmentProof)
-	return &cmtprotocrypto.ProofOps{Ops: []cmtprotocrypto.ProofOp{op.ProofOp()}}, nil
-}
+//func iavlProofOps(tree *TreeReader, key []byte, exists bool) (*cmtprotocrypto.ProofOps, error) {
+//	var (
+//		commitmentProof *ics23.CommitmentProof
+//		err             error
+//	)
+//
+//	if exists {
+//		commitmentProof, err = tree.GetMembershipProof(key)
+//	} else {
+//		commitmentProof, err = tree.GetNonMembershipProof(key)
+//	}
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	op := storetypes.NewIavlCommitmentOp(key, commitmentProof)
+//	return &cmtprotocrypto.ProofOps{Ops: []cmtprotocrypto.ProofOp{op.ProofOp()}}, nil
+//}
 
 func (c *CommitTree) compact(ctx context.Context, retainVersion uint32) error {
 	return RunCompactor(ctx, c.treeStore, CompactionOptions{

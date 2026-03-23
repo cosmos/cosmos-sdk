@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/store/legacy/rootmulti"
+	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"

@@ -9,7 +9,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/legacy/rootmulti"
+	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/types/kv"

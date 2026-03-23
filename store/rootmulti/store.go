@@ -22,7 +22,7 @@ import (
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/legacy/iavl"
+	"cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/listenkv"
 	"cosmossdk.io/store/mem"
 	"cosmossdk.io/store/pruning"

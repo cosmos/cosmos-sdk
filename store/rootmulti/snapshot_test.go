@@ -15,8 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/legacy/iavl"
-	"cosmossdk.io/store/legacy/rootmulti"
+	"cosmossdk.io/store/iavl"
+	"cosmossdk.io/store/rootmulti"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	"cosmossdk.io/store/types"

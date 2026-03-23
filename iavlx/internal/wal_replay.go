@@ -7,15 +7,13 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-
-	"cosmossdk.io/log/v2"
 )
 
 // ReplayWALForStartup replays WAL entries from walFile starting from root at rootVersion up to expectedVersion.
 // It returns the new root node pointer at the expected version if possible, the actual version reached, a bool indicating whether a rollback was needed, and any error encountered.
 // If autoRepair is true, it will attempt to roll back the WAL file to the last good offset if it encounters entries beyond the expected version,
 // which can happen if there was a crash during a commit that caused partial writes to the WAL.
-func ReplayWALForStartup(ctx context.Context, root *NodePointer, walFile *os.File, rootVersion, expectedVersion uint32, logger log.Logger, autoRepair bool) (*NodePointer, uint32, bool, error) {
+func ReplayWALForStartup(ctx context.Context, root *NodePointer, walFile *os.File, rootVersion, expectedVersion uint32, autoRepair bool) (*NodePointer, uint32, bool, error) {
 	_, span := tracer.Start(ctx, "ReplayWALForStartup",
 		trace.WithAttributes(
 			attribute.String("walFile", walFile.Name()),

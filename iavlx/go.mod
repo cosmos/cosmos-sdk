@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/iavlx
 go 1.26.1
 
 require (
-	cosmossdk.io/core v1.1.0
+	cosmossdk.io/core v0.12.1-0.20240725072823-6a2d039e1212
 	cosmossdk.io/errors v1.1.0
 	cosmossdk.io/log v1.6.1
 	cosmossdk.io/log/v2 v2.0.1
@@ -80,7 +80,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.11 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/linxGnu/grocksdb v1.8.15 // indirect
+	github.com/linxGnu/grocksdb v1.9.3 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

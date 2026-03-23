@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -14,7 +15,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
-func ImportIAVLV1MultiStore(dataDir, outDir string) error {
+func ImportIAVLV1MultiStore(dataDir, outDir string, logger log.Logger) error {
 	logger.Info("Starting import of IAVL v1 multi-store", "sourceDir", dataDir, "destDir", outDir)
 	v1Db, err := dbm.NewGoLevelDB("application", dataDir, nil)
 	if err != nil {

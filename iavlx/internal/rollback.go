@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	cp "github.com/otiai10/copy"
 )
 

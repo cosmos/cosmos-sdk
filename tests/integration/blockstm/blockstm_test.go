@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
+	"github.com/cosmos/cosmos-sdk/client"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -30,31 +31,120 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
+type blockSTMTestApp struct {
+	app        *baseapp.BaseApp
+	bankKeeper bankkeeper.BaseKeeper
+	txConfig   client.TxConfig
+}
+
 // TestBlockSTM_AccountCreationPanics validates no recoverable panics occur during
 // new account creation happening in parallel via block-stm.
 func TestBlockSTM_AccountCreationPanics(t *testing.T) {
 	numSenders := 50
 
 	// Generate sender addresses
-	senderAddrs := make([]sdk.AccAddress, numSenders)
-	for i := range numSenders {
-		senderAddrs[i] = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	}
+	senderAddrs := generateAddrs(numSenders)
 
 	// Use a capturing logger to detect panics
 	var logBuf bytes.Buffer
 	logger := log.NewLogger(&logBuf, log.OutputJSONOption())
 
-	// Create store keys for auth and bank
-	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey)
+	blockSTMApp := newBlockSTMTestApp(t, dbm.NewMemDB(), logger, true)
+	initChainAndFundAccounts(t, blockSTMApp, senderAddrs)
 
-	// Create codec with auth and bank interfaces registered
+	// Generate unique destination addresses (new accounts, not in genesis)
+	recipientAddrs := generateAddrs(numSenders)
+	txBytes := buildSendTxs(t, blockSTMApp.txConfig, senderAddrs, recipientAddrs)
+
+	// Clear the log buffer before executing the block with BlockSTM
+	logBuf.Reset()
+
+	// Execute the block with BlockSTM - all transactions create new accounts in parallel.
+	blockRes, err := blockSTMApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: blockSTMApp.app.LastBlockHeight() + 1,
+		Txs:    txBytes,
+	})
+	require.NoError(t, err)
+	requireSuccessfulTxResults(t, blockRes.TxResults)
+
+	// Check the log output for evidence of panics from the uniqueness constraint violation.
+	logOutput := logBuf.String()
+	panicCount := strings.Count(logOutput, "panic recovered in runTx")
+	uniquenessViolationCount := strings.Count(logOutput, "uniqueness constraint violation")
+
+	t.Logf("Log output panics: %d recovered panics, %d uniqueness violations", panicCount, uniquenessViolationCount)
+	if panicCount > 0 {
+		lines := strings.Split(logOutput, "\n")
+		shown := 0
+		for _, line := range lines {
+			if strings.Contains(line, "panic recovered") && shown < 3 {
+				t.Logf("  panic log: %s", line)
+				shown++
+			}
+		}
+	}
+
+	require.Equal(t, panicCount, 0,
+		"expected no panic recovery log entries from uniqueness constraint violations during BlockSTM parallel"+
+			" execution of account-creating transactions")
+}
+
+func TestBlockSTM_DeterministicAppHash(t *testing.T) {
+	numSenders := 50
+	db := dbm.NewMemDB()
+
+	senderAddrs := generateAddrs(numSenders)
+	recipientAddrs := generateAddrs(numSenders)
+
+	sequentialApp := newBlockSTMTestApp(t, db, log.NewNopLogger(), false)
+	initChainAndFundAccounts(t, sequentialApp, senderAddrs)
+
+	txBytes := buildSendTxs(t, sequentialApp.txConfig, senderAddrs, recipientAddrs)
+	baseVersion := sequentialApp.app.LastCommitID().Version
+
+	sequentialRes, err := sequentialApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: sequentialApp.app.LastBlockHeight() + 1,
+		Txs:    txBytes,
+	})
+	require.NoError(t, err)
+	requireSuccessfulTxResults(t, sequentialRes.TxResults)
+
+	_, err = sequentialApp.app.Commit()
+	require.NoError(t, err)
+	sequentialCommitID := sequentialApp.app.LastCommitID()
+
+	blockSTMApp := newBlockSTMTestApp(t, db, log.NewNopLogger(), true)
+	require.NoError(t, blockSTMApp.app.LoadVersion(baseVersion))
+
+	blockSTMRes, err := blockSTMApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: baseVersion + 1,
+		Txs:    txBytes,
+	})
+	require.NoError(t, err)
+	requireSuccessfulTxResults(t, blockSTMRes.TxResults)
+
+	_, err = blockSTMApp.app.Commit()
+	require.NoError(t, err)
+	blockSTMCommitID := blockSTMApp.app.LastCommitID()
+
+	require.NotEmpty(t, sequentialRes.AppHash)
+	require.NotEmpty(t, sequentialCommitID.Hash)
+	require.NotEmpty(t, blockSTMRes.AppHash)
+	require.NotEmpty(t, blockSTMCommitID.Hash)
+
+	require.Equal(t, sequentialRes.AppHash, sequentialCommitID.Hash)
+	require.Equal(t, sequentialRes.AppHash, blockSTMRes.AppHash)
+	require.Equal(t, sequentialCommitID, blockSTMCommitID)
+}
+
+func newBlockSTMTestApp(t *testing.T, db dbm.DB, logger log.Logger, enableBlockSTM bool) blockSTMTestApp {
+	t.Helper()
+
+	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey)
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
 	cdc := encCfg.Codec
-	txConfig := encCfg.TxConfig
 
-	// Create BaseApp
-	bApp := baseapp.NewBaseApp("blockstm-test", logger, dbm.NewMemDB(), txConfig.TxDecoder(), baseapp.SetChainID("blockstm-test"))
+	bApp := baseapp.NewBaseApp("blockstm-test", logger, db, encCfg.TxConfig.TxDecoder(), baseapp.SetChainID("blockstm-test"))
 	bApp.MountKVStores(keys)
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
@@ -79,7 +169,6 @@ func TestBlockSTM_AccountCreationPanics(t *testing.T) {
 		log.NewNopLogger(),
 	)
 
-	// Set InitChainer with default genesis for auth and bank
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
 
@@ -89,95 +178,80 @@ func TestBlockSTM_AccountCreationPanics(t *testing.T) {
 		return &abci.ResponseInitChain{}, nil
 	})
 
-	// Register bank MsgServer for FinalizeBlock message routing
 	banktypes.RegisterMsgServer(bApp.MsgServiceRouter(), bankkeeper.NewMsgServerImpl(bankKeeper))
 
-	// Initialize the chain
-	require.NoError(t, bApp.LoadLatestVersion())
-	_, err := bApp.InitChain(&abci.RequestInitChain{ChainId: "blockstm-test"})
+	if enableBlockSTM {
+		bApp.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(
+			encCfg.TxConfig.TxDecoder(),
+			[]storetypes.StoreKey{keys[authtypes.StoreKey], keys[banktypes.StoreKey]},
+			8,
+			false,
+			func(_ storetypes.MultiStore) string { return sdk.DefaultBondDenom },
+		))
+	}
+
+	return blockSTMTestApp{
+		app:        bApp,
+		bankKeeper: bankKeeper,
+		txConfig:   encCfg.TxConfig,
+	}
+}
+
+func initChainAndFundAccounts(t *testing.T, testApp blockSTMTestApp, senderAddrs []sdk.AccAddress) {
+	t.Helper()
+
+	require.NoError(t, testApp.app.LoadLatestVersion())
+
+	_, err := testApp.app.InitChain(&abci.RequestInitChain{ChainId: "blockstm-test"})
 	require.NoError(t, err)
 
-	// FinalizeBlock (without Commit) keeps finalizeBlockState alive for direct keeper writes
-	_, err = bApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: bApp.LastBlockHeight() + 1})
+	_, err = testApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: testApp.app.LastBlockHeight() + 1})
 	require.NoError(t, err)
 
-	// Fund all sender accounts with foocoin
-	ctx := bApp.NewContext(false)
+	ctx := testApp.app.NewContext(false)
 	for _, addr := range senderAddrs {
-		require.NoError(t, testutil.FundAccount(ctx, bankKeeper, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 1000))))
+		require.NoError(t, testutil.FundAccount(ctx, testApp.bankKeeper, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 1000))))
 	}
 
-	// Persist funded accounts
-	_, err = bApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: bApp.LastBlockHeight() + 1})
+	_, err = testApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: testApp.app.LastBlockHeight() + 1})
 	require.NoError(t, err)
-	_, err = bApp.Commit()
+	_, err = testApp.app.Commit()
 	require.NoError(t, err)
+}
 
-	// Enable BlockSTM runner with high parallelism
-	storeKeys := make([]storetypes.StoreKey, 0, len(keys))
-	for _, key := range keys {
-		storeKeys = append(storeKeys, key)
-	}
-	runner := txnrunner.NewSTMRunner(
-		txConfig.TxDecoder(),
-		storeKeys,
-		8,     // high worker count to maximize parallelism
-		false, // no pre-estimation to avoid serialization hints
-		func(_ storetypes.MultiStore) string { return sdk.DefaultBondDenom },
-	)
-	bApp.SetBlockSTMTxRunner(runner)
+func buildSendTxs(t *testing.T, txConfig client.TxConfig, senderAddrs, recipientAddrs []sdk.AccAddress) [][]byte {
+	t.Helper()
+	require.Len(t, recipientAddrs, len(senderAddrs))
 
-	// Generate unique destination addresses (new accounts, not in genesis)
-	recipientAddrs := make([]sdk.AccAddress, numSenders)
-	for i := range numSenders {
-		recipientAddrs[i] = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	}
-
-	// Build unsigned transactions — no ante handler is configured, so signatures are not needed.
-	txBytes := make([][]byte, numSenders)
-	for i := range numSenders {
+	txBytes := make([][]byte, len(senderAddrs))
+	for i := range senderAddrs {
 		msg := banktypes.NewMsgSend(senderAddrs[i], recipientAddrs[i], sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10)))
 		txBuilder := txConfig.NewTxBuilder()
 		require.NoError(t, txBuilder.SetMsgs(msg))
-		txBytes[i], err = txConfig.TxEncoder()(txBuilder.GetTx())
+
+		bz, err := txConfig.TxEncoder()(txBuilder.GetTx())
 		require.NoError(t, err)
+
+		txBytes[i] = bz
 	}
 
-	// Clear the log buffer before executing the block with BlockSTM
-	logBuf.Reset()
+	return txBytes
+}
 
-	// Execute the block with BlockSTM - all transactions create new accounts in parallel.
-	blockRes, err := bApp.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: bApp.LastBlockHeight() + 1,
-		Txs:    txBytes,
-	})
-	require.NoError(t, err)
-	require.Len(t, blockRes.TxResults, numSenders)
+func generateAddrs(count int) []sdk.AccAddress {
+	addrs := make([]sdk.AccAddress, count)
+	for i := range count {
+		addrs[i] = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	}
 
-	// All transactions should succeed (BlockSTM re-executes on conflict).
-	for i, result := range blockRes.TxResults {
+	return addrs
+}
+
+func requireSuccessfulTxResults(t *testing.T, txResults []*abci.ExecTxResult) {
+	t.Helper()
+
+	for i, result := range txResults {
 		require.Equal(t, uint32(0), result.Code,
 			"tx %d should succeed, got code=%d log=%s", i, result.Code, result.Log)
 	}
-
-	// Check the log output for evidence of panics from the uniqueness constraint violation.
-	logOutput := logBuf.String()
-	panicCount := strings.Count(logOutput, "panic recovered in runTx")
-	uniquenessViolationCount := strings.Count(logOutput, "uniqueness constraint violation")
-
-	t.Logf("Log output panics: %d recovered panics, %d uniqueness violations", panicCount, uniquenessViolationCount)
-	if panicCount > 0 {
-		lines := strings.Split(logOutput, "\n")
-		shown := 0
-		for _, line := range lines {
-			if strings.Contains(line, "panic recovered") && shown < 3 {
-				t.Logf("  panic log: %s", line)
-				shown++
-			}
-		}
-	}
-
-	require.Equal(t, panicCount, 0,
-		"expected no panic recovery log entries from uniqueness constraint violations during BlockSTM parallel"+
-			" execution of account-creating transactions")
 }

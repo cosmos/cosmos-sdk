@@ -359,7 +359,7 @@ func (c *Compactor) switchoverChangesets() (*Changeset, error) {
 	// this operation does not error, but critically it marks the original changesets for deletion!
 	// this operation MUST happen while we are holding the orphan proc lock to prevent orphans from going to the old changesets now that we've switched over
 	for _, entry := range c.processedChangesets {
-		entry.orig.MarkCompacted(cs)
+		entry.orig.markCompacted(cs)
 	}
 
 	return cs, nil

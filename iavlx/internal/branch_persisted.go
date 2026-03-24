@@ -5,6 +5,11 @@ import (
 	"fmt"
 )
 
+// BranchPersisted implements the Node interface for a pinned BranchLayout and
+// a pinned ChangesetReader for the file within which the BranchLayout occurs.
+// Both the ChangesetReader and BranchLayout must be actively pinned while this
+// struct is in use because they point to mmap'ed data which will be unmapped
+// as soon as all the pins have been freed.
 type BranchPersisted struct {
 	store  *ChangesetReader
 	layout *BranchLayout

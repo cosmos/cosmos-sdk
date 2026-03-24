@@ -294,7 +294,7 @@ func (cs *ChangesetWriter) CreateReader() error {
 		return fmt.Errorf("failed to flush data before creating shared reader: %w", err)
 	}
 
-	return cs.changeset.OpenNewReader()
+	return cs.changeset.openNewReader()
 }
 
 func (cs *ChangesetWriter) Flush() error {

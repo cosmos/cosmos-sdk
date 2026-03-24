@@ -156,7 +156,7 @@ func (ts *TreeStore) load() error {
 		}
 		if repaired {
 			// if we did any WAL repairs, we need to reload the changeset reader to ensure it reflects the repaired state of the WAL files
-			err = cs.OpenNewReader()
+			err = cs.openNewReader()
 			if err != nil {
 				return false
 			}

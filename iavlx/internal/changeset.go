@@ -26,7 +26,7 @@ func NewChangeset(treeStore *TreeStore, files *ChangesetFiles) (*Changeset, erro
 		files:        files,
 		orphanWriter: NewStructWriterSize[OrphanEntry](files.OrphansFile(), orphanWriterBufSize),
 	}
-	err := cs.OpenNewReader()
+	err := cs.openNewReader()
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset reader: %w", err)
 	}
@@ -70,6 +70,9 @@ func (ch *Changeset) TryPinReader() (*ChangesetReader, Pin) {
 	return nil, Pin{}
 }
 
+// TryPinUncompactedReader attempts to pin a reader for only this changeset and
+// will return a nil reader if this changeset has been compacted or closed.
+// This is used when we ONLY want to read THIS changeset and not its compaction.
 func (ch *Changeset) TryPinUncompactedReader() (*ChangesetReader, Pin) {
 	for {
 		pinner := ch.readerRef.Load()
@@ -85,33 +88,48 @@ func (ch *Changeset) TryPinUncompactedReader() (*ChangesetReader, Pin) {
 	}
 }
 
+// TreeStore returns the TreeStore to which this changeset belongs.
 func (ch *Changeset) TreeStore() *TreeStore {
 	return ch.treeStore
 }
 
+// Compacted returns the Changeset this has been compacted into if this
+// Changeset was compacted, otherwise it returns nil.
 func (ch *Changeset) Compacted() *Changeset {
 	return ch.compacted.Load()
 }
 
-func (ch *Changeset) OpenNewReader() error {
+// openNewReader opens a new reader for this changeset.
+// This should only be used internally by methods managing changeset writing and loading.
+// Other callers shouldn't need to call this method.
+// Generally this would be called when we have written more data to the changeset and
+// want to swap out the current mmap's for mmap's that reference the newly written data.
+func (ch *Changeset) openNewReader() error {
+	// Open a new reader with new mmap's.
 	newRdr, err := NewChangesetReader(ch)
 	if err != nil {
 		return fmt.Errorf("failed to create new changeset reader: %w", err)
 	}
 
 	var newPinner *ChangesetReaderRef
-	if newRdr != nil {
+	if newRdr != nil { // should never be nil here, not sure why we need this check??
+		// Create a pinner reference to this changeset reader to do reference counting
 		newPinner = &ChangesetReaderRef{rdr: newRdr, changeset: ch}
 	}
+	// Swap the reader reference to point to the new reader.
 	existing := ch.readerRef.Swap(newPinner)
 	if existing != nil {
+		// If there is an existing reader, evict it.
 		existing.Evict()
 	}
+	// Increment the active reader count. This will be used to know when we can safely delete this changeset if it's compacted.
 	ch.activeReaderCount.Add(1)
 	return nil
 }
 
-func (ch *Changeset) MarkCompacted(compacted *Changeset) {
+// markCompacted marks this changeset as compacted and sets its compacted pointer to the compacted changeset.
+// Only the compactor should call this method.
+func (ch *Changeset) markCompacted(compacted *Changeset) {
 	ch.compacted.Store(compacted)
 	// evict our reader since we won't be needed anymore
 	existing := ch.readerRef.Swap(nil)
@@ -122,6 +140,7 @@ func (ch *Changeset) MarkCompacted(compacted *Changeset) {
 	ch.treeStore.addToDeletionQueue(ch)
 }
 
+// Close closes this changeset.
 func (ch *Changeset) Close() error {
 	readerRef := ch.readerRef.Swap(nil)
 	if readerRef != nil {
@@ -228,7 +247,7 @@ func (ch *Changeset) RollbackLastCheckpoint(cr *ChangesetReader) error {
 	}
 
 	// open a new reader to update our in-memory state to reflect the rolled back files
-	err = ch.OpenNewReader()
+	err = ch.openNewReader()
 	if err != nil {
 		return fmt.Errorf("failed to open new reader after rollback: %w", err)
 	}

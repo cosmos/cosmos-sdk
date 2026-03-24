@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/log/v2"
 	"github.com/cosmos/iavl"
+
+	"cosmossdk.io/log/v2"
 )
 
 type Importer struct {

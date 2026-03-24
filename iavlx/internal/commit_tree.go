@@ -180,13 +180,21 @@ type prepareCommitResult struct {
 	mutationCtx *MutationContext
 }
 
+// prepareCommit does most of the work for updating the tree and committing its new state,
+// while still allowing it to be cleanly rolled back
 func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Seq[cachekv.Update[[]byte]], updateCount int) (*prepareCommitResult, error) {
 	ctx, span := tracer.Start(ctx, "PrepareCommit")
 	defer span.End()
 
 	stagedVersion := c.treeStore.StagedVersion()
+	// Create a mutation context where cowVersion == stagedVersion, this means nodes created in this version
+	// will be mutated in place, but any nodes from previous versions will be safely copied.
+	// This is okay because nodes from this version will not be shared until the commit is done.
 	mutationCtx := NewMutationContext(stagedVersion, stagedVersion)
 
+	// We start by creating a KVUpdate for every update in the commit.
+	// The main difference between KVUpdate and Update, is that KVUpdate actually creates the leaf MemNode's
+	// that will end up in the new version of the tree.
 	// TODO pre-allocate a decent sized slice that we reuse and reset across commits
 	nodeUpdates := make([]KVUpdate, 0, updateCount)
 	if updates != nil { // updates can be nil for empty commits
@@ -196,31 +204,40 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 			} else {
 				nodeUpdates = append(
 					nodeUpdates,
-					KVUpdate{SetNode: mutationCtx.NewLeafNode(update.Key, update.Value)},
+					KVUpdate{
+						// This actually creates a new leaf MemNode that will end up in the new tree once all updates have been applied.
+						SetNode: mutationCtx.NewLeafNode(update.Key, update.Value),
+					},
 				)
 			}
 		}
 	}
 
-	// background start writing nodeUpdates to WAL immediately
-	// pass ctx as a parameter to avoid a data race: the main goroutine reassigns ctx later
-	// (e.g. in tracer.Start) while this goroutine may still be reading it
+	// Our first optimization is to start writing the WAL right away in a background go routine.
+	// The WAL is simply a log of all the sets and deletes we are going to apply to the tree.
+	// We haven't even mutated the tree at all yet, but we're going to log these updates to
+	// disk "ahead" of updating the actual tree thus "write-ahead log".
+	// Because this WAL is append-only, it is really easy to rollback the commit
+	// by just truncating the WAL file back to its previous size.
 	go func(ctx context.Context) {
 		_, walSpan := tracer.Start(ctx, "WALWrite")
 		defer walSpan.End()
-		defer close(c.walDone)
+		defer close(c.walDone) // notify listeners that we are done writing the WAL
 		c.walDone <- c.treeStore.WriteWALUpdates(ctx, nodeUpdates, !c.opts.DisableWALFsync)
-	}(ctx)
-	// Always wait for the WAL goroutine before returning. Without this, commit() calls
-	// RollbackWAL() while the WAL goroutine is still running — the old goroutine's late
-	// auto-rollback can destroy data written by the next successful commit.
-	// sync.Once gives us a single drain point: the happy path drains + records latency,
-	// the deferred call is a no-op (or drains on early error exits).
+	}(ctx) // pass ctx as a parameter to avoid a data race: the main goroutine reassigns ctx later (e.g. in tracer.Start) while this goroutine may still be reading it
+
+	// We always wait for the WAL goroutine to finish before returning from prepareCommit.
+	// Without this, commit() may call WALWriter.Rollback() while the WAL goroutine is still running,
+	// which causes a data race between two go routines trying to mutate the WAL.
+	// The WALWriter is actually listening to context cancellation, so if a rollback is initiated
+	// externally before WAL writing has completed, the WALWriter will actually do the rollback
+	// itself and return immediately - when commit() calls WALWriter.Rollback() later the second call is idempotent.
 	defer func() { _ = c.WaitForWAL() }()
 
-	// start computing hashes for leaf nodes in parallel
-	// this is a rather naive algorithm that assumes leaf nodes updates are evenly distributed
-	// if we see consistent latency here we can tune the algorithm
+	// Our second optimization is to spin off a go routine which computes leaf hashes in parallel,
+	// also before we have done any mutations to the root of the tree.
+	// Because leaf hashes can be computed independently, we can hash all the leaf nodes in parallel
+	// batches to speed things up a bit more.
 	leafHashErr := make(chan error, 1)
 	go func() {
 		defer close(leafHashErr)
@@ -232,9 +249,13 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 			return
 		}
 
-		// we choose a minimum bucket size to avoid too many goroutines being created for small buckets
+		// This concurrency algorithm is rather naive that assumes leaf nodes updates are evenly distributed.
+		// If we see consistent latency here, we could tune the algorithm to accomodate extra large key-value
+		// pairs that slow down hashing.
+		// Here choose a minimum bucket size to avoid too many goroutines being created for small buckets
 		const minBucketSize = 64
 		numCPUs := runtime.NumCPU()
+		// Choose the number of workers based on the number of CPUs and minimum bucket size.
 		numWorkers := min(numCPUs, max(1, n/minBucketSize))
 		bucketSize := (n + numWorkers - 1) / numWorkers
 

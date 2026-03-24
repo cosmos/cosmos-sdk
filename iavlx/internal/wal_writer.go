@@ -227,10 +227,13 @@ func (kvs *WALWriter) writeWALCommit(version uint64, checkpoint bool) error {
 // - truncating the WAL file back to its previous height
 // - making sure that we leave the key cache in a clean state and do not leave any entries in the cache that reference
 //   data in the truncated/rolled-back region
+// Rollback MUST not be called while a go routine is calling WriteWALVersion - WALWriter must be accessed by a single thread at a time.
+// But if WriteWALVersion has returned and the WAL has already been rolled back, a second call Rollback is idempotent.
 func (kvs *WALWriter) Rollback() error {
 	currentSize := uint64(kvs.writer.Size())
 	if kvs.lastVersionOffset == currentSize {
-		// nothing to roll back
+		// Nothing to rollback. This may be the case if we have already rolled back,
+		// making a second call to Rollback idempotent.
 		return nil
 	}
 	if kvs.lastVersionOffset > currentSize {

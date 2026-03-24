@@ -132,6 +132,19 @@ func TestValidatorValidateBasic(t *testing.T) {
 			}(),
 			wantErr: ErrInvalidPubKeyLength,
 		},
+		{
+			name: "nil metadata",
+			validator: func() *Validator {
+				pubKey := ed25519.GenPrivKey().PubKey()
+				pubKeyAny, _ := codectypes.NewAnyWithValue(pubKey)
+				return &Validator{
+					PubKey:   pubKeyAny,
+					Power:    100,
+					Metadata: nil,
+				}
+			}(),
+			wantErr: ErrInvalidMetadata,
+		},
 	}
 
 	for _, tt := range tests {
@@ -141,6 +154,178 @@ func TestValidatorValidateBasic(t *testing.T) {
 				require.Error(t, err)
 				// Error is wrapped, so check that the error message contains the expected error
 				require.Contains(t, err.Error(), tt.wantErr.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateValidatorSet(t *testing.T) {
+	makeValidator := func(power int64, operator string) Validator {
+		pubKey := ed25519.GenPrivKey().PubKey()
+		pubKeyAny, err := codectypes.NewAnyWithValue(pubKey)
+		require.NoError(t, err)
+		return Validator{
+			PubKey: pubKeyAny,
+			Power:  power,
+			Metadata: &ValidatorMetadata{
+				OperatorAddress: operator,
+				Moniker:         "validator-" + operator,
+				Description:     "desc",
+			},
+		}
+	}
+
+	tests := []struct {
+		name       string
+		validators []Validator
+		wantErr    string
+	}{
+		{
+			name:       "empty set invalid",
+			validators: []Validator{},
+			wantErr:    "total power must be greater than zero",
+		},
+		{
+			name: "all zero power invalid",
+			validators: []Validator{
+				makeValidator(0, "cosmos1operator1"),
+				makeValidator(0, "cosmos1operator2"),
+			},
+			wantErr: "total power must be greater than zero",
+		},
+		{
+			name: "duplicate operator invalid",
+			validators: []Validator{
+				makeValidator(100, "cosmos1duplicate"),
+				makeValidator(200, "cosmos1duplicate"),
+			},
+			wantErr: "duplicate operator address",
+		},
+		{
+			name: "total power overflow invalid",
+			validators: []Validator{
+				makeValidator(math.MaxInt64/2+1, "cosmos1operator1"),
+				makeValidator(math.MaxInt64/2+1, "cosmos1operator2"),
+			},
+			wantErr: ErrTotalPowerOverflow.Error(),
+		},
+		{
+			name: "valid set",
+			validators: []Validator{
+				makeValidator(100, "cosmos1operator1"),
+				makeValidator(200, "cosmos1operator2"),
+			},
+			wantErr: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateValidatorSet(tt.validators)
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.wantErr)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidatorMetadataValidateBasic(t *testing.T) {
+	tests := []struct {
+		name     string
+		metadata *ValidatorMetadata
+		wantErr  bool
+		errMsg   string
+	}{
+		{
+			name: "valid metadata",
+			metadata: &ValidatorMetadata{
+				OperatorAddress: "cosmos1operator",
+				Moniker:         "validator",
+				Description:     "description",
+			},
+			wantErr: false,
+		},
+		{
+			name: "missing operator address",
+			metadata: &ValidatorMetadata{
+				OperatorAddress: "",
+				Moniker:         "validator",
+				Description:     "description",
+			},
+			wantErr: true,
+			errMsg:  ErrMissingOperatorAddress.Error(),
+		},
+		{
+			name: "empty moniker",
+			metadata: &ValidatorMetadata{
+				OperatorAddress: "cosmos1operator",
+				Moniker:         "",
+				Description:     "description",
+			},
+			wantErr: true,
+			errMsg:  "moniker cannot be empty",
+		},
+		{
+			name: "moniker at max length is valid",
+			metadata: &ValidatorMetadata{
+				OperatorAddress: "cosmos1operator",
+				Moniker:         strings.Repeat("m", 256),
+				Description:     "description",
+			},
+			wantErr: false,
+		},
+		{
+			name: "moniker too long",
+			metadata: &ValidatorMetadata{
+				OperatorAddress: "cosmos1operator",
+				Moniker:         strings.Repeat("m", 257),
+				Description:     "description",
+			},
+			wantErr: true,
+			errMsg:  "moniker too long",
+		},
+		{
+			name: "empty description is valid",
+			metadata: &ValidatorMetadata{
+				OperatorAddress: "cosmos1operator",
+				Moniker:         "validator",
+				Description:     "",
+			},
+			wantErr: false,
+		},
+		{
+			name: "description at max length is valid",
+			metadata: &ValidatorMetadata{
+				OperatorAddress: "cosmos1operator",
+				Moniker:         "validator",
+				Description:     strings.Repeat("a", 256),
+			},
+			wantErr: false,
+		},
+		{
+			name: "description too long",
+			metadata: &ValidatorMetadata{
+				OperatorAddress: "cosmos1operator",
+				Moniker:         "validator",
+				Description:     strings.Repeat("a", 257),
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.metadata.ValidateBasic()
+			if tt.wantErr {
+				require.Error(t, err)
+				if tt.errMsg != "" {
+					require.Contains(t, err.Error(), tt.errMsg)
+				}
 			} else {
 				require.NoError(t, err)
 			}
@@ -635,12 +820,17 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 		},
 		{
 			name: "empty description",
-			msg: &MsgCreateValidator{
-				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
-				Moniker:         "test-moniker",
-				Description:     "",
-			},
-			wantErr: true,
+			msg: func() *MsgCreateValidator {
+				pubKey := ed25519.GenPrivKey().PubKey()
+				pubKeyAny, _ := codectypes.NewAnyWithValue(pubKey)
+				return &MsgCreateValidator{
+					PubKey:          pubKeyAny,
+					OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
+					Moniker:         "test-moniker",
+					Description:     "",
+				}
+			}(),
+			wantErr: false,
 		},
 		{
 			name: "description too long",

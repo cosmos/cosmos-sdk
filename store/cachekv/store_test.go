@@ -9,8 +9,8 @@ import (
 
 	"cosmossdk.io/math/unsafe"
 
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 

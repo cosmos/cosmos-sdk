@@ -164,7 +164,8 @@ func TestValidatorValidateBasic(t *testing.T) {
 func TestValidateValidatorSet(t *testing.T) {
 	makeValidator := func(power int64, operator string) Validator {
 		pubKey := ed25519.GenPrivKey().PubKey()
-		pubKeyAny, _ := codectypes.NewAnyWithValue(pubKey)
+		pubKeyAny, err := codectypes.NewAnyWithValue(pubKey)
+		require.NoError(t, err)
 		return Validator{
 			PubKey: pubKeyAny,
 			Power:  power,
@@ -238,6 +239,7 @@ func TestValidatorMetadataValidateBasic(t *testing.T) {
 		name     string
 		metadata *ValidatorMetadata
 		wantErr  bool
+		errMsg   string
 	}{
 		{
 			name: "valid metadata",
@@ -247,6 +249,45 @@ func TestValidatorMetadataValidateBasic(t *testing.T) {
 				Description:     "description",
 			},
 			wantErr: false,
+		},
+		{
+			name: "missing operator address",
+			metadata: &ValidatorMetadata{
+				OperatorAddress: "",
+				Moniker:         "validator",
+				Description:     "description",
+			},
+			wantErr: true,
+			errMsg:  ErrMissingOperatorAddress.Error(),
+		},
+		{
+			name: "empty moniker",
+			metadata: &ValidatorMetadata{
+				OperatorAddress: "cosmos1operator",
+				Moniker:         "",
+				Description:     "description",
+			},
+			wantErr: true,
+			errMsg:  "moniker cannot be empty",
+		},
+		{
+			name: "moniker at max length is valid",
+			metadata: &ValidatorMetadata{
+				OperatorAddress: "cosmos1operator",
+				Moniker:         strings.Repeat("m", 256),
+				Description:     "description",
+			},
+			wantErr: false,
+		},
+		{
+			name: "moniker too long",
+			metadata: &ValidatorMetadata{
+				OperatorAddress: "cosmos1operator",
+				Moniker:         strings.Repeat("m", 257),
+				Description:     "description",
+			},
+			wantErr: true,
+			errMsg:  "moniker too long",
 		},
 		{
 			name: "empty description is valid",
@@ -282,6 +323,9 @@ func TestValidatorMetadataValidateBasic(t *testing.T) {
 			err := tt.metadata.ValidateBasic()
 			if tt.wantErr {
 				require.Error(t, err)
+				if tt.errMsg != "" {
+					require.Contains(t, err.Error(), tt.errMsg)
+				}
 			} else {
 				require.NoError(t, err)
 			}

@@ -220,7 +220,7 @@ func NewEditValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
 		Short: "Edit an existing validator's metadata",
-		Long:  "Edit a validator's moniker, description, or operator address. The tx signer must be the current operator.",
+		Long:  "Edit a validator's moniker, description, or operator address. The tx signer must be the current operator. Only the flags you pass will be changed; all other fields keep their current values.",
 		Args:  cobra.NoArgs,
 		Example: fmt.Sprintf(
 			"%s tx poa edit-validator --moniker new-moniker --description \"Updated description\"",
@@ -232,23 +232,41 @@ func NewEditValidatorCmd() *cobra.Command {
 				return err
 			}
 
-			moniker, _ := cmd.Flags().GetString("moniker")
-			desc, _ := cmd.Flags().GetString("description")
-			newOperator, _ := cmd.Flags().GetString("new-operator")
-
 			sender := clientCtx.GetFromAddress().String()
-			operatorAddr := sender
-			if newOperator != "" {
-				operatorAddr = newOperator
+
+			// Query current validator state to fill in unchanged fields
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.Validator(cmd.Context(), &types.QueryValidatorRequest{Address: sender})
+			if err != nil {
+				return fmt.Errorf("failed to query validator: %w", err)
+			}
+			md := res.Validator.Metadata
+
+			if cmd.Flags().Changed("moniker") {
+				moniker, err := cmd.Flags().GetString("moniker")
+				if err != nil {
+					return err
+				}
+				md.Moniker = moniker
+			}
+			if cmd.Flags().Changed("description") {
+				desc, err := cmd.Flags().GetString("description")
+				if err != nil {
+					return err
+				}
+				md.Description = desc
+			}
+			if cmd.Flags().Changed("new-operator") {
+				newOp, err := cmd.Flags().GetString("new-operator")
+				if err != nil {
+					return err
+				}
+				md.OperatorAddress = newOp
 			}
 
 			msg := &types.MsgEditValidator{
-				Sender: sender,
-				Metadata: types.ValidatorMetadata{
-					Moniker:         moniker,
-					Description:     desc,
-					OperatorAddress: operatorAddr,
-				},
+				Sender:   sender,
+				Metadata: *md,
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

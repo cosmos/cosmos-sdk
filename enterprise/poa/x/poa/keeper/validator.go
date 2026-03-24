@@ -166,6 +166,10 @@ func (k *Keeper) EditValidatorMetadata(ctx sdk.Context, senderAddr sdk.AccAddres
 		return err
 	}
 
+	if err := k.ValidateOperatorAndConsensusPubKeyDifferent(metadata.OperatorAddress, validator.PubKey); err != nil {
+		return err
+	}
+
 	validator.Metadata = &metadata
 
 	return k.validators.Set(ctx, compositeKey, validator)

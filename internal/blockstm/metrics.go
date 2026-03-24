@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/telemetry/registry"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
+
+	"github.com/cosmos/cosmos-sdk/telemetry/registry"
 )
 
 const (

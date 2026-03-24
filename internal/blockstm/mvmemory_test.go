@@ -13,7 +13,7 @@ func TestMVMemoryRecord(t *testing.T) {
 	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
 	storage := NewMultiMemDB(stores)
 	scheduler := NewScheduler(16)
-	mv := NewMVMemory(16, stores, storage, scheduler)
+	mv := NewMVMemory(16, stores, MultiStoreToStorage(storage, stores), scheduler)
 
 	var views []*MultiMVMemoryView
 	for i := TxnIndex(0); i < 3; i++ {
@@ -159,7 +159,7 @@ func TestMVMemoryDelete(t *testing.T) {
 		bankStore.Set(balanceKey, []byte{100})
 	}
 	scheduler := NewScheduler(16)
-	mv := NewMVMemory(16, stores, storage, scheduler)
+	mv := NewMVMemory(16, stores, MultiStoreToStorage(storage, stores), scheduler)
 
 	genMockTx := func(txNonce int) func(*MultiMVMemoryView) bool {
 		return func(view *MultiMVMemoryView) bool {
@@ -228,7 +228,7 @@ func TestMVMemoryDelete(t *testing.T) {
 func TestMVMemoryIteration(t *testing.T) {
 	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
 	storage := NewMultiMemDB(stores)
-	mv := NewMVMemory(16, stores, storage, nil)
+	mv := NewMVMemory(16, stores, MultiStoreToStorage(storage, stores), nil)
 
 	view := mv.View(0)
 	store := view.GetKVStore(StoreKeyAuth)

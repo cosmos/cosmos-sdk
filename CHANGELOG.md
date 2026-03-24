@@ -63,6 +63,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * Remove `io.Writer` parameter from `servertypes.AppCreator` and `traceWriter io.Writer` from `servertypes.AppExporter`.
     * Remove `traceStore io.Writer` parameter from `simapp.NewSimApp` and all enterprise simapp constructors.
     * Remove `traceStore io.Writer` from all `testutil/simsx` app factory signatures.
+* (store) [#26042](https://github.com/cosmos/cosmos-sdk/pull/26042) We are now importing `github.com/cosmos/cosmos-sdk/store/v2` as the store package instead of `cosmossdk.io/store` and all import paths have changed.
+* (baseapp) [#26056](https://github.com/cosmos/cosmos-sdk/pull/26056) Deprecate `BaseApp.NewUncachedContext()`. It is no longer possible to write directly to the `CommitMultiStore` without using a cache layer first. Tests that used `BaseApp.NewUncachedContext(false, header)` could adapt to using a regular cache context using `BaseApp.NewNextBlockContext(header)`. Tests that used `BaseApp.NewUncachedContext(true, header)` (with `isCheckTx` true) could adapt to `BaseApp.NewContext(true)`, but mostly usage of uncached contexts for `CheckTx` in tests was wrong. 
 * (baseapp) [#26138](https://github.com/cosmos/cosmos-sdk/pull/26138) Default block gas meter to disabled. Adds checking to ensure block gas meter is not enabled while bstm parallel execution is configured and panics in these scenarios during parameter assignment.
 
 ### Features

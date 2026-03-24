@@ -54,9 +54,6 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 // SimWriteState is an entrypoint for simulations only. They are not executed
 // during the normal ABCI finalize block step but later. Therefore, an extra
 // call to the root multi-store (app.cms) is required to write the changes.
-//
-// Deprecated: Use NewNextBlockContext(header) instead, will be removed in a
-// future release.
 func (app *BaseApp) SimWriteState() {
 	app.stateManager.GetState(execModeFinalize).MultiStore.Write()
 }

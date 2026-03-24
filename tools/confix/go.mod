@@ -18,7 +18,7 @@ require (
 	cosmossdk.io/core v1.1.0 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.1.0 // indirect
-	cosmossdk.io/log/v2 v2.0.1 // indirect
+	cosmossdk.io/log/v2 v2.1.0-rc.0 // indirect
 	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
@@ -279,5 +279,3 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../
 
 replace github.com/cosmos/cosmos-sdk/store/v2 => ../../store
-
-replace cosmossdk.io/log/v2 => ../../log

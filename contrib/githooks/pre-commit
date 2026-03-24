@@ -20,12 +20,21 @@ f_check_cmds() {
   done
 }
 
+f_is_generated() {
+  local file="$1"
+  head -n 5 "$file" | grep -Eq '^// Code generated .* DO NOT EDIT\.$'
+}
+
 f_check_cmds
 
 if [[ $STAGED_GO_FILES != "" ]]; then
   f_echo_stderr "[pre-commit] fmt'ing staged files..."
   for file in $STAGED_GO_FILES; do
     if [[ $file =~ vendor/ ]] || [[ $file =~ tests/mocks/ ]] || [[ $file =~ \.pb\.go ]]; then
+      continue
+    fi
+
+    if f_is_generated "$file"; then
       continue
     fi
 

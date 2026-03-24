@@ -8,8 +8,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
@@ -17,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft/module"
 	nfttestutil "github.com/cosmos/cosmos-sdk/contrib/x/nft/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -4,7 +4,7 @@ module github.com/cosmos/cosmos-sdk/tools/systemtests
 
 require (
 	cosmossdk.io/math v1.5.3
-	github.com/cometbft/cometbft v0.39.0-rc1
+	github.com/cometbft/cometbft v0.39.0-rc2
 	github.com/cosmos/cosmos-sdk v0.53.6
 	github.com/creachadair/tomledit v0.0.29
 	github.com/stretchr/testify v1.11.1
@@ -101,7 +101,6 @@ require (
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-metrics v0.5.4 // indirect
 	github.com/hashicorp/go-plugin v1.7.0 // indirect
-	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect

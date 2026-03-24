@@ -89,11 +89,11 @@ func TestGovHooks_ValidateVoter(t *testing.T) {
 		validatorAddr, consAddr := createValidator(t, f, 2, 0)
 
 		// Verify the validator has zero power
-		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
+		v, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
 		if err != nil {
 			require.ErrorIs(t, err, collections.ErrNotFound)
 		} else {
-			require.Equal(t, int64(0), power)
+			require.Equal(t, int64(0), v.Power)
 		}
 
 		// Create a proposal (using validator with power as proposer)

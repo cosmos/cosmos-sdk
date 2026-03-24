@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# build-v53 fetches the v0.53 simd binary for system tests.
-# Downloads from the v0.53 nightly channel on GitHub Pages (non-production).
+# build-v54 fetches the v0.54 simd binary for system tests.
+# Downloads from the v0.54 nightly channel on GitHub Pages (non-production).
 # If download fails, errors with instructions to build manually.
 set -euo pipefail
 
-NIGHTLY_BASE_URL="https://cosmos.github.io/cosmos-sdk/nightlies/v0.53"
-OUTPUT="${BUILDDIR:-./build}/simdv53"
+NIGHTLY_BASE_URL="https://cosmos.github.io/cosmos-sdk/nightlies/v0.54"
+OUTPUT="${BUILDDIR:-./build}/simdv54"
 
 sha256_file() {
 	local file="$1"
@@ -61,7 +61,7 @@ try_download() {
 	}
 	trap cleanup RETURN
 
-	echo "Attempting to download ${archive} from v0.53 nightlies..."
+	echo "Attempting to download ${archive} from v0.54 nightlies..."
 	if ! curl -sfL -o "${archive_path}" "${archive_url}"; then
 		echo "Failed to download ${archive} from ${archive_url}" >&2
 		return 1
@@ -82,7 +82,7 @@ try_download() {
 	tar -xzf "${archive_path}" -C "${tmp_dir}"
 	mv "${tmp_dir}/${asset}" "$OUTPUT"
 	chmod +x "$OUTPUT"
-	echo "Downloaded simdv53 to ${OUTPUT}"
+	echo "Downloaded simdv54 to ${OUTPUT}"
 	return 0
 }
 
@@ -97,7 +97,7 @@ main() {
 	echo "" >&2
 	echo "Download failed. To build manually:" >&2
 	echo "  cd ${root_dir}" >&2
-	echo "  git checkout release/v0.53.x" >&2
+	echo "  git checkout release/v0.54.x" >&2
 	echo "  make build" >&2
 	echo "  cp build/simd \"${OUTPUT}\"" >&2
 	echo "" >&2

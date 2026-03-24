@@ -591,8 +591,8 @@ func TestCheckpointAllValidators(t *testing.T) {
 		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
-		// SetValidatorPower should checkpoint before changing power
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr1, 200)
+		// UpdateValidator should checkpoint before changing power
+		err = f.poaKeeper.UpdateValidator(f.ctx, consAddr1, poatypes.Validator{Power: 200})
 		require.NoError(t, err)
 
 		// Both validators should have received 100 stake (before power change)

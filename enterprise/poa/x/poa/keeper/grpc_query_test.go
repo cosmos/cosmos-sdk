@@ -372,7 +372,7 @@ func TestTotalPowerQuery(t *testing.T) {
 		require.Equal(t, int64(300), resp.TotalPower)
 
 		// Update first validator's power
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr1, 150)
+		err = f.poaKeeper.UpdateValidator(f.ctx, consAddr1, types.Validator{Power: 150})
 		require.NoError(t, err)
 
 		// Check updated total
@@ -546,7 +546,7 @@ func TestWithdrawableFeesQuery(t *testing.T) {
 		require.NoError(t, err)
 
 		// Change power distribution
-		err = f.poaKeeper.SetValidatorPower(f.ctx, sdk.ConsAddress("cons1"), 300)
+		err = f.poaKeeper.UpdateValidator(f.ctx, sdk.ConsAddress("cons1"), types.Validator{Power: 300})
 		require.NoError(t, err)
 
 		// Add more fees
@@ -709,7 +709,7 @@ func TestValidatorQuery(t *testing.T) {
 		opAddr, consAddr := createValidator(t, f, 1, 100)
 
 		// Update power
-		err := f.poaKeeper.SetValidatorPower(f.ctx, consAddr, 200)
+		err := f.poaKeeper.UpdateValidator(f.ctx, consAddr, types.Validator{Power: 200})
 		require.NoError(t, err)
 
 		// Query should return updated power (query by consensus address)

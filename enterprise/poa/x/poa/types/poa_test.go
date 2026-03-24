@@ -761,6 +761,7 @@ func TestMsgUpdateValidatorsValidateBasic(t *testing.T) {
 
 func TestMsgCreateValidatorValidate(t *testing.T) {
 	ac := address.NewBech32Codec("cosmos")
+	adminAddr := "cosmos1w3jhxarpv3j8yvg4ufs4x"
 
 	tests := []struct {
 		name    string
@@ -777,6 +778,8 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 					OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 					Moniker:         "test-moniker",
 					Description:     "test-description",
+					Power:           1,
+					Admin:           adminAddr,
 				}
 			}(),
 			wantErr: false,
@@ -788,6 +791,8 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 				Moniker:         "test-moniker",
 				Description:     "test-description",
+				Power:           1,
+				Admin:           adminAddr,
 			},
 			wantErr: true,
 		},
@@ -797,6 +802,8 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 				OperatorAddress: "",
 				Moniker:         "test-moniker",
 				Description:     "test-description",
+				Power:           1,
+				Admin:           adminAddr,
 			},
 			wantErr: true,
 		},
@@ -806,6 +813,8 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 				Moniker:         "",
 				Description:     "test-description",
+				Power:           1,
+				Admin:           adminAddr,
 			},
 			wantErr: true,
 		},
@@ -815,6 +824,8 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 				Moniker:         strings.Repeat("a", 257),
 				Description:     "test-description",
+				Power:           1,
+				Admin:           adminAddr,
 			},
 			wantErr: true,
 		},
@@ -828,6 +839,8 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 					OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 					Moniker:         "test-moniker",
 					Description:     "",
+					Power:           1,
+					Admin:           adminAddr,
 				}
 			}(),
 			wantErr: false,
@@ -838,6 +851,8 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 				Moniker:         "test-moniker",
 				Description:     strings.Repeat("a", 257),
+				Power:           1,
+				Admin:           adminAddr,
 			},
 			wantErr: true,
 		},
@@ -851,6 +866,8 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 					OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 					Moniker:         strings.Repeat("a", 256),
 					Description:     "test-description",
+					Power:           1,
+					Admin:           adminAddr,
 				}
 			}(),
 			wantErr: false,
@@ -865,6 +882,8 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 					OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 					Moniker:         "test-moniker",
 					Description:     strings.Repeat("a", 256),
+					Power:           1,
+					Admin:           adminAddr,
 				}
 			}(),
 			wantErr: false,
@@ -876,6 +895,8 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 				Moniker:         "test-moniker",
 				Description:     "test-description",
+				Power:           1,
+				Admin:           adminAddr,
 			},
 			wantErr: true,
 		},
@@ -886,6 +907,44 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 				Moniker:         "test-moniker",
 				Description:     "test-description",
+				Power:           1,
+				Admin:           adminAddr,
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty admin",
+			msg: &MsgCreateValidator{
+				PubKey:          &codectypes.Any{TypeUrl: "/cosmos.crypto.ed25519.PubKey", Value: make([]byte, MinPubKeyLength)},
+				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
+				Moniker:         "test-moniker",
+				Description:     "test-description",
+				Power:           1,
+				Admin:           "",
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid admin",
+			msg: &MsgCreateValidator{
+				PubKey:          &codectypes.Any{TypeUrl: "/cosmos.crypto.ed25519.PubKey", Value: make([]byte, MinPubKeyLength)},
+				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
+				Moniker:         "test-moniker",
+				Description:     "test-description",
+				Power:           1,
+				Admin:           "not-an-address",
+			},
+			wantErr: true,
+		},
+		{
+			name: "zero power",
+			msg: &MsgCreateValidator{
+				PubKey:          &codectypes.Any{TypeUrl: "/cosmos.crypto.ed25519.PubKey", Value: make([]byte, MinPubKeyLength)},
+				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
+				Moniker:         "test-moniker",
+				Description:     "test-description",
+				Power:           0,
+				Admin:           adminAddr,
 			},
 			wantErr: true,
 		},

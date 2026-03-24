@@ -88,7 +88,9 @@ func ExecuteBlockWithEstimates(
 		inst.ExecutedTxs.Add(ctx, scheduler.executedTxns.Load())
 		inst.ValidatedTxs.Add(ctx, scheduler.validatedTxns.Load())
 		inst.DecreaseCount.Add(ctx, int64(scheduler.decreaseCnt.Load()))
-		inst.ExecutionRatio.Add(ctx, float64(scheduler.executedTxns.Load())/float64(blockSize))
+		if blockSize > 0 {
+			inst.ExecutionRatio.Add(ctx, float64(scheduler.executedTxns.Load())/float64(blockSize))
+		}
 	}
 
 	// Write the snapshot into the storage

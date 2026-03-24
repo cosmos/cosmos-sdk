@@ -76,7 +76,7 @@ func (i *instrument) Start(cfg map[string]any) error {
 		return err
 	}
 	i.MVViewReadWriteSet, err = i.Meter.Int64Histogram(
-		"mvdata.read.writeset",
+		"mvview.read.writeset",
 		metric.WithDescription("Time to read a value from the transaction's own write set"),
 		metric.WithUnit(TimingUnit),
 	)

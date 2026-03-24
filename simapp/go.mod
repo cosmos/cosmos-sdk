@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-beta.11
 	cosmossdk.io/core v1.1.0
 	cosmossdk.io/depinject v1.2.1
-	cosmossdk.io/log/v2 v2.0.1
+	cosmossdk.io/log/v2 v2.1.0-rc.0
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/tools/confix v0.1.2
 	github.com/cometbft/cometbft v0.39.0-rc3
@@ -336,7 +336,6 @@ require (
 // short-lived replaces, should be removed after tags are cut
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/log/v2 => ../log
 	github.com/cosmos/cosmos-sdk/store/v2 => ../store
 )
 

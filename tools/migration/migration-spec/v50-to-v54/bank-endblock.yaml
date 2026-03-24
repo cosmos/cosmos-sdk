@@ -1,0 +1,37 @@
+id: bank-endblock-order
+title: Put x/bank first in SetOrderEndBlockers
+version: v50+ -> v54
+description: |
+  Cosmos SDK v0.54 requires x/bank to participate in EndBlock. Every app should
+  place banktypes.ModuleName first in SetOrderEndBlockers, even if the chain
+  does not enable BlockSTM.
+
+  This spec rewrites SetOrderEndBlockers calls by removing any existing
+  banktypes.ModuleName entry and re-inserting it at position 0.
+
+upstream_sources:
+  - docs://upgrading/v0.54
+  - docs://changelog/v0.54-breaking
+
+detection:
+  patterns:
+    - SetOrderEndBlockers(
+
+changes:
+  call_arg_edits:
+    - method_name: SetOrderEndBlockers
+      remove:
+        - banktypes.ModuleName
+      add:
+        - position: 0
+          expr: banktypes.ModuleName
+
+manual_steps:
+  - id: bank-endblock-review
+    description: |
+      Review the final SetOrderEndBlockers ordering if your app computes module
+      order dynamically or wraps ModuleManager calls behind helpers.
+
+verification:
+  must_contain:
+    - pattern: banktypes.ModuleName

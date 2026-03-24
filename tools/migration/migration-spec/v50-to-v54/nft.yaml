@@ -17,6 +17,10 @@ description: |
   If you want to fully remove nft, remove app.NFTKeeper and all nft.*
   module ordering references manually.
 
+upstream_sources:
+  - docs://upgrading/v0.54
+  - docs://changelog/v0.54-breaking
+
 detection:
   imports:
     - cosmossdk.io/x/nft

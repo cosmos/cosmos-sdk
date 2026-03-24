@@ -1,0 +1,67 @@
+id: store-v2-migration
+title: Store v2 imports and removed BaseApp store helpers
+version: v50+ -> v54
+description: |
+  Cosmos SDK v0.54 moves store imports to github.com/cosmos/cosmos-sdk/store/v2
+  and removes several BaseApp store helpers:
+
+  - BaseApp.NewUncachedContext()
+  - BaseApp.SimWriteState()
+  - BaseApp.SetStoreMetrics()
+
+  This spec rewrites store imports, removes the two dead helper calls, and
+  rewrites straightforward NewUncachedContext call sites mechanically:
+
+  - app.NewUncachedContext(false, header) -> app.NewNextBlockContext(header)
+  - app.NewUncachedContext(true, header) -> app.NewContext(true)
+
+  Some tests relied on uncached-write semantics rather than just the helper
+  name. Review any rewritten call sites that mutate state between Commit and
+  FinalizeBlock, because store-v2 now enforces commit/rollback isolation.
+
+upstream_sources:
+  - docs://upgrading/v0.54
+  - docs://changelog/v0.54-breaking
+
+detection:
+  imports:
+    - cosmossdk.io/store
+  patterns:
+    - NewUncachedContext(
+    - SimWriteState(
+    - SetStoreMetrics(
+  go_mod:
+    - cosmossdk.io/store
+
+changes:
+  go_mod:
+    remove:
+      - cosmossdk.io/store
+
+  imports:
+    rewrites:
+      - old: cosmossdk.io/store
+        new: github.com/cosmos/cosmos-sdk/store/v2
+        all_packages: true
+
+  statement_removals:
+    - call_pattern: SimWriteState
+    - call_pattern: SetStoreMetrics
+
+  special_cases:
+    - uncached_context
+
+manual_steps:
+  - id: store-v2-followup
+    description: |
+      Review rewritten NewUncachedContext call sites. Some tests need semantic
+      follow-up beyond the mechanical method rename because store-v2 no longer
+      permits writes to bypass cache/branch isolation.
+
+verification:
+  must_not_import:
+    - cosmossdk.io/store
+  must_not_contain:
+    - pattern: NewUncachedContext(
+    - pattern: SimWriteState(
+    - pattern: SetStoreMetrics(

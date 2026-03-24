@@ -43,9 +43,9 @@ claude mcp add cosmos-migration -- uv --directory /path/to/tools/migration/mcp r
 |---|---|
 | `scan_chain_tool` | Detect SDK version and which specs apply to a chain |
 | `get_migration_plan` | Preview all changes without modifying files |
-| `apply_spec` | Apply a single spec (with optional dry_run) |
+| `apply_spec` | Apply a single spec, including go.mod edits, arg rewrites, and special cases |
 | `verify_spec_tool` | Run verification checks for one spec |
-| `verify_all_specs` | Run verification for all applicable specs |
+| `verify_all_specs` | Run verification for an explicit spec list or for currently detectable specs |
 | `verify_build` | Run `go build ./...` and return structured results |
 | `list_specs` | List all available migration specs |
 | `get_spec` | Get full content of a specific spec |
@@ -58,6 +58,10 @@ claude mcp add cosmos-migration -- uv --directory /path/to/tools/migration/mcp r
 | `specs://v50-to-v54/{id}` | Read a spec as YAML text |
 | `specs://v50-to-v54/index` | List all specs with metadata |
 | `agents://orchestration` | Read the agents.md guide |
+| `docs://upgrading/v0.54` | Read the v0.54 upgrade guide from this repo |
+| `docs://upgrade-checklist/v0.54` | Read the upgrade checklist section only |
+| `docs://changelog/v0.54-breaking` | Read the v0.54 breaking changes section |
+| `docs://release-notes/v0.54` | Read the v0.54 release notes |
 
 ## Prompts
 
@@ -77,8 +81,8 @@ claude mcp add cosmos-migration -- uv --directory /path/to/tools/migration/mcp r
 > 2. Calls `get_migration_plan("~/code/mychain")`
 >    → 43 files affected, 2 warnings (circuit, nft)
 > 3. Applies each spec in order via `apply_spec`
-> 4. Handles manual steps (govkeeper surgery) directly
-> 5. Calls `verify_all_specs` → all pass
+> 4. Handles any remaining manual steps directly
+> 5. Calls `verify_all_specs(..., spec_ids=<application_order>)` → all pass
 > 6. Calls `verify_build` → pass
 > 7. Reports summary with warnings
 
@@ -95,7 +99,7 @@ mcp/
   ../agents.md                           ← Orchestration guide
 ```
 
-The MCP server is a thin layer over the spec loader in `specs.py`. All
-migration logic reads from the same YAML specs that the Go binary and
-agents.md reference. The three execution paths (MCP tools, Go binary,
-manual following agents.md) all use the same source of truth.
+The MCP server executes the YAML specs directly and augments them with
+repository docs resources for the official `v0.54` guidance. The YAMLs remain
+the declarative source of truth for migration concerns; the MCP path is the
+executable implementation.

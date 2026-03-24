@@ -1,0 +1,37 @@
+id: gov-hooks-proposer-arg
+title: x/gov AfterProposalSubmission hook adds proposer address
+version: v50+ -> v54
+description: |
+  Cosmos SDK v0.54 adds the proposer address to the AfterProposalSubmission
+  governance hook. Interface methods and hook implementations now take:
+
+    AfterProposalSubmission(ctx context.Context, proposalID uint64, proposerAddr sdk.AccAddress) error
+
+  The MCP server applies this rewrite for standard hooks that already import
+  github.com/cosmos/cosmos-sdk/types. Non-standard type aliases still require
+  manual follow-up.
+
+upstream_sources:
+  - docs://upgrading/v0.54
+  - docs://changelog/v0.54-breaking
+
+detection:
+  patterns:
+    - AfterProposalSubmission(
+
+changes:
+  special_cases:
+    - gov_hooks_after_proposal_submission
+
+manual_steps:
+  - id: gov-hooks-followup
+    description: |
+      If the automatic rewrite did not apply, update every AfterProposalSubmission
+      declaration manually to include the proposer address parameter using the
+      sdk/types alias already imported by the file.
+
+verification:
+  must_not_contain:
+    - pattern: AfterProposalSubmission(ctx context.Context, proposalID uint64) error
+  must_contain:
+    - pattern: proposerAddr

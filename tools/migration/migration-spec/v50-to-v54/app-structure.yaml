@@ -19,11 +19,15 @@ description: |
   manual follow-up beyond these deletions, especially when older helper files
   survive after the mechanical migration.
 
+upstream_sources:
+  - docs://upgrading/v0.54
+
 detection:
+  files:
+    - app_di.go
+    - root_di.go
   patterns:
     - "//go:build !app_v1"
-    - "app_di.go"
-    - "root_di.go"
     - "MsgSetProposers"
 
 changes:
@@ -84,11 +88,12 @@ changes:
       file_match: app/msgs/internal_msgs_test.go
 
 manual_steps:
-  - |
-    If the target still follows an older simapp-style app layout, compare the
-    migrated app structure against the current v54 reference files. DI-era
-    helpers and related wiring can survive the mechanical migration even when
-    this spec has applied cleanly.
+  - id: app-structure-followup
+    description: |
+      If the target still follows an older simapp-style app layout, compare the
+      migrated app structure against the current v54 reference files. DI-era
+      helpers and related wiring can survive the mechanical migration even when
+      this spec has applied cleanly.
 
 # ── verification ────────────────────────────────────────────────────────────
 verification:

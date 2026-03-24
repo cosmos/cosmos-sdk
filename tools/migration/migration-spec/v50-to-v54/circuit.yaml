@@ -21,6 +21,10 @@ description: |
   If you want to fully remove circuit, also apply the circuit-removal spec
   (not yet written — remove manually and delete all app.CircuitKeeper references).
 
+upstream_sources:
+  - docs://upgrading/v0.54
+  - docs://changelog/v0.54-breaking
+
 detection:
   imports:
     - cosmossdk.io/x/circuit

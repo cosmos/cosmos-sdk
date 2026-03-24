@@ -22,6 +22,10 @@ description: |
   use "govkeeper", others "keeper", etc.). The migration tool resolves the
   actual alias from the file's import block and injects it correctly.
 
+upstream_sources:
+  - docs://upgrading/v0.54
+  - docs://changelog/v0.54-breaking
+
 detection:
   imports:
     - github.com/cosmos/cosmos-sdk/x/gov/keeper
@@ -30,14 +34,8 @@ detection:
     - keeper.NewKeeper(   # alias may vary
 
 changes:
-  # ── structural rewrite ───────────────────────────────────────────────────
-  # This change is described as a manual structural rewrite because it cannot
-  # be encoded as a simple declarative YAML rule:
-  #   1. The package alias is dynamic (resolved at parse time).
-  #   2. The transformation synthesises a new final function-call argument.
-  #
-  # The manual_steps section below describes exactly how to rewrite these call
-  # sites.
+  special_cases:
+    - gov_new_keeper
 
 manual_steps:
   - id: gov-keeper-new-keeper

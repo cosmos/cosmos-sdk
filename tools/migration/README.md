@@ -12,6 +12,8 @@ This framework takes a three-pronged approach:
 
 2. **`agents.md`** — An orchestration guide for AI agents. Explains where to look, how to reason about the migration, what commands to run, how to stage edits, and what success looks like. An agent that reads this file can migrate a chain without any compiled tooling.
 
+3. **`mcp/`** — An executable MCP server that applies the spec model directly and exposes repository docs as MCP resources for agents that support tool use.
+
 ---
 
 ## Directory structure
@@ -20,14 +22,18 @@ This framework takes a three-pronged approach:
 tools/migration/
   agents.md                      ← AI agent orchestration guide
   migration-spec/
-    v50-to-v54/                     ← specs for the v50+ → v54 upgrade
+    v50-to-v54/                  ← specs for the v50+ → v54 upgrade
       core.yaml                  ← SDK version bumps, vanity URL rewrites (always apply first)
+      store-v2.yaml              ← store/v2 imports + removed BaseApp store helpers
+      bank-endblock.yaml         ← move x/bank to the front of SetOrderEndBlockers
       crisis.yaml                ← Remove x/crisis entirely
       circuit.yaml               ← x/circuit moved to contrib (keep, warn)
       nft.yaml                   ← x/nft moved to contrib (keep, warn)
       group.yaml                 ← x/group → enterprise (fatal, halt migration)
       gov.yaml                   ← govkeeper.NewKeeper signature change
+      gov-hooks.yaml             ← AfterProposalSubmission adds proposer address
       epochs.yaml                ← EpochsKeeper value → pointer
+      epochs-app-module.yaml     ← x/epochs NewAppModule should receive a pointer
       ante.yaml                  ← Remove custom ante.go wrapper
       app-structure.yaml         ← DI files, misc ordering cleanup
   mcp/                           ← MCP server for AI agent integration
@@ -53,6 +59,9 @@ Then ask: *"Migrate the chain at ~/code/mychain to v54."*
 
 The agent uses `scan_chain_tool` → `get_migration_plan` → `apply_spec` (per
 spec) → `verify_all_specs` → `verify_build`. See `mcp/README.md` for full setup.
+The spec set remains focused on the `v0.54` breaking changes; the `v0.50+`
+support claim means those `v0.54` rules also fit older app layouts when the
+same features existed.
 
 ### For AI-assisted migration (without MCP)
 
@@ -86,9 +95,14 @@ version: v53 -> v54
 description: |
   What this migration does and why.
 
+upstream_sources:
+  - docs://upgrading/v0.54
+
 detection:
   imports: [list of import prefixes that indicate this spec applies]
   patterns: [code patterns to search for]
+  files: [filenames that indicate this spec applies]
+  go_mod: [go.mod entries that indicate this spec applies]
 
 changes:
   go_mod:        { remove, update, add, strip_local_replaces }
@@ -96,9 +110,13 @@ changes:
   statement_removals:  [...]
   map_entry_removals:  [...]
   call_arg_edits:      [...]
+  special_cases:       [...]   # targeted structural rewrites in the MCP server
   text_replacements:   [...]
   file_removals:       [...]
-  manual_steps:        [...]   # for changes that can't be automated
+
+manual_steps:
+  - id: <stable-id>
+    description: <manual follow-up instructions>
 
 verification:
   must_not_import:  [...]

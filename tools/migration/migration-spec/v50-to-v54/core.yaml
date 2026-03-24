@@ -7,11 +7,17 @@ description: |
   migration, mock package migration, BaseApp API simplifications, and module
   ordering changes common to all apps.
 
+upstream_sources:
+  - docs://upgrading/v0.54
+  - docs://upgrade-checklist/v0.54
+  - docs://changelog/v0.54-breaking
+
 detection:
   imports:
     - github.com/cosmos/cosmos-sdk
   patterns:
     - cosmossdk.io/x/feegrant
+    - cosmossdk.io/x/tx
     - cosmossdk.io/x/upgrade
     - cosmossdk.io/log
 
@@ -21,11 +27,11 @@ changes:
     update:
       github.com/cosmos/cosmos-sdk: v0.54.0
       cosmossdk.io/log: v2.0.0
-      cosmossdk.io/x/tx: v1.1.0
 
     remove:
       - cosmossdk.io/x/feegrant
       - cosmossdk.io/x/evidence
+      - cosmossdk.io/x/tx
       - cosmossdk.io/x/upgrade
       - cosmossdk.io/x/circuit
       - cosmossdk.io/x/nft
@@ -55,12 +61,16 @@ changes:
         new: github.com/cosmos/cosmos-sdk/x/evidence
         all_packages: true
 
+      - old: cosmossdk.io/x/tx
+        new: github.com/cosmos/cosmos-sdk/x/tx
+        all_packages: true
+
       - old: cosmossdk.io/x/upgrade
         new: github.com/cosmos/cosmos-sdk/x/upgrade
         all_packages: true
 
       - old: cosmossdk.io/systemtests
-        new: github.com/cosmos/cosmos-sdk/testutil/systemtests
+        new: github.com/cosmos/cosmos-sdk/tools/systemtests
         all_packages: true
 
       # Modules moved to contrib (import rewrite only; keepers/modules kept)

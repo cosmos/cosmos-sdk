@@ -1,0 +1,35 @@
+id: epochs-app-module-pointer
+title: x/epochs NewAppModule keeper argument should stay as a pointer
+version: v50+ -> v54
+description: |
+  Alongside the EpochsKeeper field moving to a pointer, the x/epochs
+  NewAppModule wiring should pass the keeper as a pointer as well. Most chains
+  are already correct once the field type is updated, but some older apps still
+  explicitly dereference the keeper when constructing the module.
+
+  This spec removes the common explicit dereference pattern. Heavily customized
+  app wiring may still require a manual review.
+
+upstream_sources:
+  - docs://upgrading/v0.54
+
+detection:
+  patterns:
+    - epochs.NewAppModule(
+    - "*app.EpochsKeeper"
+
+changes:
+  text_replacements:
+    - old: "*app.EpochsKeeper"
+      new: "app.EpochsKeeper"
+
+manual_steps:
+  - id: epochs-app-module-followup
+    description: |
+      If your epochs app module is created through helper constructors or local
+      variables rather than app.EpochsKeeper directly, confirm that the final
+      argument type is *keeper.Keeper after the migration.
+
+verification:
+  must_not_contain:
+    - pattern: "*app.EpochsKeeper"

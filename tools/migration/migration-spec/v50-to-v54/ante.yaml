@@ -18,6 +18,9 @@ description: |
   NOT apply this spec automatically. Review ante.go manually and merge your
   custom logic into the SDK HandlerOptions pattern.
 
+upstream_sources:
+  - docs://upgrading/v0.54
+
 detection:
   # ante.go file exists AND the app.go call site still passes CircuitKeeper.
   patterns:

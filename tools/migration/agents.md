@@ -32,12 +32,16 @@ tools/migration/
   agents.md                      ← this file
   migration-spec/v50-to-v54/        ← one YAML file per migration concern
     core.yaml                    ← always apply first
+    store-v2.yaml
+    bank-endblock.yaml
     crisis.yaml
     circuit.yaml
     nft.yaml
     group.yaml                   ← fatal if detected; stop immediately
     gov.yaml
+    gov-hooks.yaml
     epochs.yaml
+    epochs-app-module.yaml
     ante.yaml
     app-structure.yaml           ← apply last
 ```
@@ -73,8 +77,8 @@ scan for leftovers before assuming it is complete.
 ## How to select specs
 
 Run detection for each spec in order. A spec **applies** if any of its
-`detection.imports` are found in `*.go` files or its `detection.patterns`
-are found in the codebase.
+`detection.imports`, `detection.patterns`, `detection.files`, or
+`detection.go_mod` rules match.
 
 ```bash
 # Check if a spec applies — example for crisis
@@ -88,13 +92,17 @@ grep -r 'app\.CrisisKeeper\|crisistypes\.StoreKey' . --include='*.go' -l
 |-------|------------------|-----------------------------------------------------|
 | 1     | group.yaml       | Fatal check — halt immediately if group is found    |
 | 2     | core.yaml        | Import rewrites must happen before other specs      |
-| 3     | crisis.yaml      | Keeper/module removal                               |
-| 4     | circuit.yaml     | Import rewrite + ante cleanup                       |
-| 5     | nft.yaml         | Import rewrite                                      |
-| 6     | gov.yaml         | Keeper signature surgery                            |
-| 7     | epochs.yaml      | Keeper pointer change                               |
-| 8     | ante.yaml        | File deletion + call-site rewrite                   |
-| 9     | app-structure.yaml | DI file deletion + misc cleanup                   |
+| 3     | store-v2.yaml    | Store import and BaseApp helper removals            |
+| 4     | bank-endblock.yaml | Put x/bank first in SetOrderEndBlockers          |
+| 5     | crisis.yaml      | Keeper/module removal                               |
+| 6     | circuit.yaml     | Import rewrite + ante cleanup                       |
+| 7     | nft.yaml         | Import rewrite                                      |
+| 8     | gov.yaml         | Keeper signature surgery                            |
+| 9     | gov-hooks.yaml   | AfterProposalSubmission signature update            |
+| 10    | epochs.yaml      | Keeper pointer change                               |
+| 11    | epochs-app-module.yaml | Remove stale keeper dereferences             |
+| 12    | ante.yaml        | File deletion + call-site rewrite                   |
+| 13    | app-structure.yaml | DI file deletion + misc cleanup                  |
 
 ---
 
@@ -137,10 +145,9 @@ Do not modify any files. Return control to the user.
 ### Step 3 — Apply structured changes in order
 
 **Important**: Text replacements are match-based, so applying a spec twice is
-generally safe — the `old` pattern simply won't be found the second time. But AST
-surgery (like the gov NewKeeper change) should check if the migration was already
-applied before modifying. The gov spec's Go implementation does this via
-`hasDefaultGovVoteCalculator`.
+generally safe — the `old` pattern simply won't be found the second time. For
+structural rewrites such as the gov keeper signature change, check whether the
+new v0.54 form is already present before editing.
 
 For each spec, apply changes in this sub-order:
 
@@ -150,8 +157,9 @@ For each spec, apply changes in this sub-order:
 4. **statement_removals** — remove keeper init and wiring statements
 5. **map_entry_removals** — remove map/slice entries
 6. **call_arg_edits** — remove/add arguments to specific function calls
-7. **manual_steps** (AST surgery) — apply complex argument transformations
-8. **text_replacements** — post-AST text-level cleanup
+7. **special_cases** — apply targeted structural rewrites described by the spec
+8. **manual_steps** — apply whatever still cannot be handled safely
+9. **text_replacements** — post-structural cleanup
 
 ### Step 4 — Emit warnings
 
@@ -178,13 +186,13 @@ go build ./...
 # 3. Run tests
 go test ./...
 
-# 4. Run the linter (if golangci-lint is configured)
-golangci-lint run
+# 4. Run the repo's lint command if one exists
 
 # 5. Check for leftover references to removed modules
 grep -r 'cosmossdk.io/x/circuit\|cosmossdk.io/x/nft' . --include='*.go'
 grep -r 'x/crisis' . --include='*.go'
 grep -r 'x/group' . --include='*.go'
+grep -r 'NewUncachedContext\|SimWriteState\|SetStoreMetrics' . --include='*.go'
 ```
 
 If `go mod tidy` fails, common causes:
@@ -290,7 +298,9 @@ A successful migration means:
 - [ ] No imports of `cosmossdk.io/x/circuit`, `cosmossdk.io/x/nft`, removed vanity URLs
 - [ ] No references to `app.CrisisKeeper`, `crisistypes.StoreKey`, `x/crisis`
 - [ ] `govkeeper.NewDefaultCalculateVoteResultsAndVotingPower` is present in gov keeper init
+- [ ] `AfterProposalSubmission` declarations include the proposer address arg
 - [ ] `app.EpochsKeeper = &epochsKeeper` is present (if epochs was used)
+- [ ] No `NewUncachedContext`, `SimWriteState`, or `SetStoreMetrics` calls remain
 - [ ] `ante.go` is deleted (if it contained circuitante)
 - [ ] End-of-run warnings emitted for circuit and nft (expected — not failures)
 - [ ] `go.mod` versions updated and `go mod tidy` clean

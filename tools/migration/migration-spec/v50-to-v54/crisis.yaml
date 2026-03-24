@@ -2,18 +2,27 @@ id: crisis-removal
 title: Remove x/crisis module
 version: v50+ -> v54
 description: |
-  The x/crisis module is deprecated in v54 and should be removed entirely.
-  It is no longer wired into the default SDK application. Chains that relied
-  on invariant checking via MsgVerifyInvariant need to audit their app wiring
-  and remove all crisis references manually.
+  Cosmos SDK v0.54 moves x/crisis to contrib and no longer wires it into the
+  reference application. This migration framework intentionally removes crisis
+  by default instead of carrying it forward under contrib, because most chains
+  should drop the module rather than preserve the older invariant message path.
+
+  Chains that intentionally want to keep crisis should stop after planning and
+  migrate to contrib/x/crisis manually instead of applying this spec.
 
   This spec handles the full automated removal: keeper, store key, module
   registration, ordering entries, flag wiring, and related map/type cleanup.
+
+upstream_sources:
+  - docs://upgrading/v0.54
+  - docs://changelog/v0.54-breaking
 
 detection:
   # The spec applies if any of these import prefixes are found in the repo.
   imports:
     - github.com/cosmos/cosmos-sdk/x/crisis
+    - cosmossdk.io/x/crisis
+    - github.com/cosmos/cosmos-sdk/contrib/x/crisis
   # Additional code patterns that indicate usage (belt-and-suspenders).
   patterns:
     - app.CrisisKeeper
@@ -29,13 +38,18 @@ changes:
     warnings:
       - prefix: github.com/cosmos/cosmos-sdk/x/crisis
         message: >
-          this module is deprecated and should be removed during migration
-          instead of being carried forward.
+          this framework removes crisis by default. If you intend to keep it,
+          stop and migrate to contrib/x/crisis manually instead.
         fatal: false
       - prefix: cosmossdk.io/x/crisis
         message: >
-          this module is deprecated and should be removed during migration
-          instead of being carried forward.
+          this framework removes crisis by default. If you intend to keep it,
+          stop and migrate to contrib/x/crisis manually instead.
+        fatal: false
+      - prefix: github.com/cosmos/cosmos-sdk/contrib/x/crisis
+        message: >
+          this framework removes crisis by default. If you intend to keep it,
+          do not apply the crisis-removal spec.
         fatal: false
 
   # ── statement removals ──────────────────────────────────────────────────
@@ -152,10 +166,10 @@ changes:
 
     # app/msgs/unsupported_msgs.go: remove MsgVerifyInvariant comment block
     - old: |
-
-        		// Disable MsgVerifyInvariant in the crisis module, since:
-        		// 1. We currently do not rely on crisis module for any invariant assertion.
-        		// 2. MsgVerifyInvariant can potentially be abused to consume massive compute.
+        
+                // Disable MsgVerifyInvariant in the crisis module, since:
+                // 1. We currently do not rely on crisis module for any invariant assertion.
+                // 2. MsgVerifyInvariant can potentially be abused to consume massive compute.
       new: "\n"
       file_match: app/msgs/unsupported_msgs.go
 

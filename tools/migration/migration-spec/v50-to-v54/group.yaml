@@ -18,6 +18,10 @@ description: |
      your import paths and keeper wiring.
   3. Re-run the migration tool after removing or updating x/group usage.
 
+upstream_sources:
+  - docs://upgrading/v0.54
+  - docs://changelog/v0.54-breaking
+
 detection:
   imports:
     - github.com/cosmos/cosmos-sdk/x/group

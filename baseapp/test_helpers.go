@@ -88,6 +88,8 @@ func (app *BaseApp) NewNextBlockContext(header cmtproto.Header) sdk.Context {
 	return app.stateManager.GetState(execModeFinalize).Context()
 }
 
+// Deprecated: Consider using app.NewNextBlockContext(header) or app.NewContext
+// instead. This function will be removed in a future release.
 func (app *BaseApp) NewUncachedContext(isCheckTx bool, header cmtproto.Header) sdk.Context {
 	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
 }

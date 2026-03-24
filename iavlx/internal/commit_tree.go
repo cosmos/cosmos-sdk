@@ -252,11 +252,13 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 		// This concurrency algorithm is rather naive that assumes leaf nodes updates are evenly distributed.
 		// If we see consistent latency here, we could tune the algorithm to accomodate extra large key-value
 		// pairs that slow down hashing.
-		// Here choose a minimum bucket size to avoid too many goroutines being created for small buckets
+		// Minimum items per worker to avoid goroutine overhead dominating small workloads.
 		const minBucketSize = 64
 		numCPUs := runtime.NumCPU()
-		// Choose the number of workers based on the number of CPUs and minimum bucket size.
+		// Cap workers at CPU count, but also ensure each worker gets at least minBucketSize items.
+		// When n < minBucketSize, n/minBucketSize == 0, so max(1, ...) guarantees at least one worker.
 		numWorkers := min(numCPUs, max(1, n/minBucketSize))
+		// Ceiling division: distribute items as evenly as possible, with the last bucket potentially smaller.
 		bucketSize := (n + numWorkers - 1) / numWorkers
 
 		var wg sync.WaitGroup
@@ -271,6 +273,7 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 				}
 				for _, nu := range updates {
 					if setNode := nu.SetNode; setNode != nil {
+						// SyncHashScheduler will compute the hash in the current go routine which is already running.
 						if _, err := setNode.ComputeHash(SyncHashScheduler{}); err != nil {
 							select {
 							case leafHashErr <- err:
@@ -285,19 +288,51 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 		wg.Wait()
 	}()
 
-	// process all the nodeUpdates against the current root to produce a new root
+	// Now we actually do the work of updating the tree while the other go routines
+	// happily write the WAL and compute leaf node hashes.
 	root, err := c.treeStore.GetRootForUpdate(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("tree store not ready for update: %w", err)
 	}
 
+	// Create a span to see how long it takes to update the root of the tree.
 	_, nodeUpdatesSpan := tracer.Start(ctx, "ApplyNodeUpdates")
+	// Here we do the actual work of updating the root of the tree by applying each set or delete, in order,
+	// to the root of the tree.
+	// Note that after each set or delete we actually have a new root because the tree is essentially immutable.
+	// We only have the next version root after applying all updates.
+	// We use the mutation context we created above which has the correct version and cowVersion set and
+	// which is tracking any orphans that we create during this update process.
+	// (Orphans are basically nodes that were in this tree but are no longer in the new tree and which we may want to
+	// delete from disk sometime later.)
+	// Regarding performance of updating the tree, in benchmarks this depends heavily on the size
+	// of the tree and how much of it can be kept in RAM.
+	// Even if the tree is mostly kept in memory, a larger, deeper tree will take longer to update because
+	// we simply need to do more updating and balancing of tree nodes for every key-value update.
+	// But if we need to retrieve nodes from disk, that is an order of magnitude slower than reading them
+	// from memory however large the tree is.
+	// Also, note that there are two layers here - even if nodes are technically "read from disk", we may
+	// actually be reading them from the OS mmap cache and not the actual physical storage.
+	// Reading from the OS mmap cache is actually only a little bit slower than reading them from the heap,
+	// but it's harder to control and measure.
+	// The key lesson here for large trees is the more memory the better.
+	// If there is more memory available, node operators can increase the eviction depths in options
+	// to retain more nodes in memory.
 	for _, nu := range nodeUpdates {
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
 		var err error
 		if setNode := nu.SetNode; setNode != nil {
+			// The setNode that we are passing in here is the leaf MemNode we created above
+			// at the beginning of prepareCommit in the nodeUpdates array.
+			// While we are inserting it into the tree here:
+			// - the WAL writer go routine may be reading it, writing its key and value to the WAL, and saving
+			//   the key and value offsets to the MemNode - this is okay because concurrent reads of key and value are okay,
+			//   and we won't read those offsets until much later after commit is done (if we write a checkpoint)
+			// - one of the leaf hash go routines may be reading its key, value and version and writing the hash value
+			//   in the MemNode.hash field - this is also okay because key, value and version are already set,
+			//   and we won't be reading the hash
 			root, _, err = SetRecursive(root, setNode, mutationCtx)
 			if err != nil {
 				return nil, err
@@ -309,45 +344,72 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 			}
 		}
 	}
+	// Track that we're done updating the tree so we can see how long this step takes.
 	nodeUpdatesSpan.End()
 
+	// This timestamp is simply for us to track a metric about whether it took longer for leaf hashes to compute
+	// than it took to update the tree.
+	// In the happy path our wait time should be 0, but if not, it alerts operators that we may need to optimize
+	// leaf node hashing
 	startWaitForLeafHashes := time.Now()
 
-	// wait for the leaf node hash queue to finish
+	// Wait for the leaf node hashing go routines to return.
+	// These go routines must complete before we can start computing the root hash - otherwise there's a race condition.
 	select {
-	case err := <-leafHashErr:
+	case err := <-leafHashErr: // This channel returns nil if the leaf hashing completed successfully
 		if err != nil {
 			return nil, err
 		}
-	case <-ctx.Done():
+	case <-ctx.Done(): // Also listen for ctx.Done() in case we rollback in the meantime
 		return nil, ctx.Err()
 	}
 	span.AddEvent("leaf hash compute returned")
 
+	// Track any latency caused by waiting for leaf hashes to finish, which ideally should be negligible or zero.
 	leafHashLatency.Record(ctx, time.Since(startWaitForLeafHashes).Milliseconds())
 
+	// Now we compute the root hash and create a span to track how long that takes.
 	ctx, rootHashSpan := tracer.Start(ctx, "ComputeRootHash")
-	// compute the root hash
+	// Compute the root hash.
+	// This rootHash function attempts to speed things up by computing the hash of different branches of the tree in parallel.
 	hash, err := rootHash(ctx, root)
 	if err != nil {
 		return nil, err
 	}
-	// notify that the root hash is ready
+	// Save the root hash.
 	c.workingHash = storetypes.CommitID{
 		Hash:    hash,
 		Version: int64(stagedVersion),
 	}
+	// Close the hashReady go channel to notify anyone who was waiting for the root hash that it is ready and that
+	// they can read the hashReady field.
+	// This allows for the root hash of a multi-tree to be computed before WAL writing finishes (if it actually takes longer)
+	// and it also allows FinalizeBlock to return before the full commit is done.
 	close(c.hashReady)
+	// Close the span so we track how long it took to compute the root hash.
 	rootHashSpan.End()
 
-	// wait for the WAL write to finish
+	// Like we did when waiting for leaf hash go routines to return,
+	// we create a timestamp to measure how long it takes us to wait for the WAL writing go routine to return.
 	startWaitForWAL := time.Now()
+	// Wait for the WAL go routine to return.
 	if err := c.WaitForWAL(); err != nil {
 		return nil, err
 	}
+	// Track any latency we observed when waiting for WAL writing to complete.
+	// Ideally, this value is zero, but if it isn't, it likely communicates to the
+	// node operator that they need to get a faster storage device.
+	// The WAL is an append-only file, so on a fast SSD, the WAL should be written long before everything else is done.
+	// Our work should primarily be CPU-bound here - we should be able to speed things up with more CPUs
+	// to split up hashing and with faster CPUs to compute the root faster, but if the WAL writing is slow,
+	// that should be easily fixable with better storage.
 	walWriteLatency.Record(ctx, time.Since(startWaitForWAL).Milliseconds())
 	span.AddEvent("WAL write returned")
 
+	// Here we wait for one of two signals, either:
+	// - the caller has explicitly request to finalize the commit or rollback in which case the finalizeOrRollback channel will be closed first
+	// - the context cancelled and ctx.Done() returns first
+	// We are waiting because the caller needs to know that we are ready to either finalize or rollback once this method returns
 	select {
 	case <-c.finalizeOrRollback:
 	case <-ctx.Done():

@@ -91,11 +91,22 @@ func (ts *TreeStore) initNewWriter() error {
 	return nil
 }
 
+// GetRootForUpdate returns the root of the current tree waiting for any node ID assignment happening in the
+// background to complete before returning the root.
+// NodeID's get assigned in a background thread AFTER commit when we are writing a checkpoint.
+// Checkpoint writing itself can proceed WHILE we work with the root returned from this function,
+// but if we return BEFORE NodeID's are assigned we will not track orphans properly, and generally
+// there will be unsynchronized access to NodeID fields.
+// The context parameter passed to this function allows us to return early in the case of a rollback.
 func (ts *TreeStore) GetRootForUpdate(ctx context.Context) (*NodePointer, error) {
 	if nodeIDsAssigned := ts.lastNodeIDsAssigned; nodeIDsAssigned != nil {
+		// If we have a channel that will signal that nodes have been assigned, that means
+		// the NodeID assignment go routine is currently running and we must wait.
 		select {
+		// If the ctx finishes before NodeID's are assigned, we're rolling back so just return and let the caller handle the error.
 		case <-ctx.Done():
 			return nil, ctx.Err()
+		// Otherwise wait for the NodeIDs to be assigned and then clear the lastNodeIDsAssigned field because we know the go routine has returned.
 		case <-nodeIDsAssigned:
 			ts.lastNodeIDsAssigned = nil
 		}

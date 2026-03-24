@@ -51,8 +51,12 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 	return gasInfo, result, err
 }
 
-// SimWriteState is an entrypoint for simulations only. They are not executed during the normal ABCI finalize
-// block step but later. Therefore, an extra call to the root multi-store (app.cms) is required to write the changes.
+// SimWriteState is an entrypoint for simulations only. They are not executed
+// during the normal ABCI finalize block step but later. Therefore, an extra
+// call to the root multi-store (app.cms) is required to write the changes.
+//
+// Deprecated: Use NewNextBlockContext(header) instead, will be removed in a
+// future release.
 func (app *BaseApp) SimWriteState() {
 	app.stateManager.GetState(execModeFinalize).MultiStore.Write()
 }
@@ -85,6 +89,8 @@ func (app *BaseApp) NewNextBlockContext(header cmtproto.Header) sdk.Context {
 	return app.stateManager.GetState(execModeFinalize).Context()
 }
 
+// Deprecated: Use NewNextBlockContext(header) instead, will be removed in a
+// future release.
 func (app *BaseApp) NewUncachedContext(isCheckTx bool, header cmtproto.Header) sdk.Context {
 	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
 }

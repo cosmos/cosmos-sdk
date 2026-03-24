@@ -141,7 +141,7 @@ The bank module now contains an `EndBlock` method to support the new BlockSTM ex
 
 #### NodeService
 
-The node service has been updated to return the node's earliest store height in the `Status` query. Please update your registration with the following code:
+The node service has been updated to return the node's earliest store height in the `Status` query. Please update your registration with the following code (make sure you are already updated to `github.com/cosmos/cosmos-sdk/store/v2`):
 
 ```go
 func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {

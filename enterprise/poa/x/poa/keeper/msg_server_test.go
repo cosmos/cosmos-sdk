@@ -167,7 +167,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 		// Verify validator was created
 		consAddr := sdk.GetConsAddress(pubKey)
-		validator, err := f.poaKeeper.GetValidator(f.ctx, consAddr)
+		validator, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
 		require.NoError(t, err)
 		require.Equal(t, int64(0), validator.Power) // New validators start with 0 power
 		require.Equal(t, "test-validator", validator.Metadata.Moniker)
@@ -213,7 +213,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 		// Verify all metadata was stored
 		consAddr := sdk.GetConsAddress(pubKey)
-		validator, err := f.poaKeeper.GetValidator(f.ctx, consAddr)
+		validator, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
 		require.NoError(t, err)
 		require.Equal(t, "test-validator", validator.Metadata.Moniker)
 		require.Equal(t, "A test validator for unit tests", validator.Metadata.Description)
@@ -493,7 +493,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 		// Verify validator was created
 		consAddr := sdk.GetConsAddress(consensusKey.PubKey())
-		validator, err := f.poaKeeper.GetValidator(f.ctx, consAddr)
+		validator, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
 		require.NoError(t, err)
 		require.Equal(t, "test-validator", validator.Metadata.Moniker)
 	})
@@ -555,7 +555,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 		// Verify validator was created
 		consAddr := sdk.GetConsAddress(pubKey)
-		validator, err := f.poaKeeper.GetValidator(f.ctx, consAddr)
+		validator, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
 		require.NoError(t, err)
 		require.Equal(t, "test-validator", validator.Metadata.Moniker)
 	})
@@ -629,9 +629,9 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		require.NotNil(t, resp)
 
 		// Verify validator was updated
-		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
+		v, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
 		require.NoError(t, err)
-		require.Equal(t, int64(200), power)
+		require.Equal(t, int64(200), v.Power)
 	})
 
 	t.Run("fails with invalid admin", func(t *testing.T) {
@@ -724,13 +724,13 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		require.NotNil(t, resp)
 
 		// Verify both validators were updated
-		power1, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr1)
+		v1, err := f.poaKeeper.validators.Get(f.ctx, consAddr1)
 		require.NoError(t, err)
-		require.Equal(t, int64(300), power1)
+		require.Equal(t, int64(300), v1.Power)
 
-		power2, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr2)
+		v2, err := f.poaKeeper.validators.Get(f.ctx, consAddr2)
 		require.NoError(t, err)
-		require.Equal(t, int64(400), power2)
+		require.Equal(t, int64(400), v2.Power)
 
 		// Verify total power
 		totalPower, err := f.poaKeeper.GetTotalPower(f.ctx)
@@ -796,9 +796,9 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		require.Contains(t, err.Error(), "total power cannot be zero")
 
 		// Verify validator power unchanged
-		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
+		v, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
 		require.NoError(t, err)
-		require.Equal(t, int64(100), power)
+		require.Equal(t, int64(100), v.Power)
 	})
 
 	t.Run("empty update array is a no-op", func(t *testing.T) {
@@ -837,9 +837,9 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		require.NotNil(t, resp)
 
 		// Validator set unchanged
-		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
+		v, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
 		require.NoError(t, err)
-		require.Equal(t, int64(100), power)
+		require.Equal(t, int64(100), v.Power)
 
 		totalPower, err := f.poaKeeper.GetTotalPower(f.ctx)
 		require.NoError(t, err)
@@ -899,9 +899,9 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		require.NotNil(t, resp)
 
 		// Verify validator power is zero
-		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr1)
+		v, err := f.poaKeeper.validators.Get(f.ctx, consAddr1)
 		require.NoError(t, err)
-		require.Equal(t, int64(0), power)
+		require.Equal(t, int64(0), v.Power)
 
 		// Verify total power is still 100
 		totalPower, err := f.poaKeeper.GetTotalPower(f.ctx)
@@ -1078,7 +1078,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		require.NotNil(t, resp)
 
 		// Verify update was applied
-		updated, err := f.poaKeeper.GetValidator(f.ctx, consAddr)
+		updated, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
 		require.NoError(t, err)
 		require.Equal(t, int64(200), updated.Power)
 		require.Equal(t, "updated-validator", updated.Metadata.Moniker)
@@ -1177,9 +1177,9 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		require.NotNil(t, resp)
 
 		// Verify update was applied
-		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
+		val, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
 		require.NoError(t, err)
-		require.Equal(t, int64(200), power)
+		require.Equal(t, int64(200), val.Power)
 	})
 
 	t.Run("fallback to keeper authority", func(t *testing.T) {
@@ -1325,14 +1325,10 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp)
 
-		// Power unchanged
-		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
+		// Power unchanged, metadata updated
+		retrieved, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
 		require.NoError(t, err)
-		require.Equal(t, int64(100), power)
-
-		// Metadata updated
-		retrieved, err := f.poaKeeper.GetValidator(f.ctx, consAddr)
-		require.NoError(t, err)
+		require.Equal(t, int64(100), retrieved.Power)
 		require.Equal(t, "updated-moniker", retrieved.Metadata.Moniker)
 		require.Equal(t, "updated-description", retrieved.Metadata.Description)
 	})
@@ -1398,9 +1394,9 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp)
 
-		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr1)
+		val, err := f.poaKeeper.validators.Get(f.ctx, consAddr1)
 		require.NoError(t, err)
-		require.Equal(t, int64(50), power)
+		require.Equal(t, int64(50), val.Power)
 
 		totalPower, err := f.poaKeeper.GetTotalPower(f.ctx)
 		require.NoError(t, err)
@@ -1470,14 +1466,14 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		require.ErrorIs(t, err, poatypes.ErrUnknownValidator)
 
 		// All updates reverted - first validator unchanged
-		power1, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr1)
+		v1, err := f.poaKeeper.validators.Get(f.ctx, consAddr1)
 		require.NoError(t, err)
-		require.Equal(t, int64(100), power1)
+		require.Equal(t, int64(100), v1.Power)
 
 		// Second validator unchanged
-		power2, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr2)
+		v2, err := f.poaKeeper.validators.Get(f.ctx, consAddr2)
 		require.NoError(t, err)
-		require.Equal(t, int64(200), power2)
+		require.Equal(t, int64(200), v2.Power)
 	})
 
 	t.Run("duplicate consensus address in update last wins", func(t *testing.T) {
@@ -1517,9 +1513,9 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp)
 
-		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
+		v, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
 		require.NoError(t, err)
-		require.Equal(t, int64(300), power)
+		require.Equal(t, int64(300), v.Power)
 	})
 }
 

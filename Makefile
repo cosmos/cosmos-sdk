@@ -23,15 +23,15 @@ HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 
-# Required for scripts (e.g. build-v53.sh)
+# Required for scripts (e.g. build-v54.sh)
 SH := $(shell command -v sh 2>/dev/null || true)
 ifeq ($(SH),)
-$(error sh not found. Required for build-v53 and other scripts. Install a POSIX shell.)
+$(error sh not found. Required for build-v54 and other scripts. Install a POSIX shell.)
 endif
-# build-v53.sh uses bash-specific features (BASH_SOURCE, local)
+# build-v54.sh uses bash-specific features (BASH_SOURCE, local)
 BASH := $(shell command -v bash 2>/dev/null || true)
 ifeq ($(BASH),)
-$(error bash not found. Required for build-v53. Install bash.)
+$(error bash not found. Required for build-v54. Install bash.)
 endif
 
 # process build tags
@@ -542,15 +542,15 @@ build-system-test-current: build
 
 # test-sdk-system runs only the core SDK system tests (tests/systemtests), not enterprise.
 # Default: short suite (~5–7 min). Used by CI on PRs.
-test-sdk-system: build-v53 build-system-test-current
-	mkdir -p ./tests/systemtests/binaries/v0.53 ./tests/systemtests/testnet
-	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
+test-sdk-system: build-v54 build-system-test-current
+	mkdir -p ./tests/systemtests/binaries/v0.54 ./tests/systemtests/testnet
+	mv $(BUILDDIR)/simdv54 ./tests/systemtests/binaries/v0.54/simd
 	$(MAKE) -C tests/systemtests test-short
 
 # test-sdk-system-extended: full suite (~30 min). For local runs and CI on merges to main.
-test-sdk-system-extended: build-v53 build-system-test-current
-	mkdir -p ./tests/systemtests/binaries/v0.53 ./tests/systemtests/testnet
-	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
+test-sdk-system-extended: build-v54 build-system-test-current
+	mkdir -p ./tests/systemtests/binaries/v0.54 ./tests/systemtests/testnet
+	mv $(BUILDDIR)/simdv54 ./tests/systemtests/binaries/v0.54simd
 	$(MAKE) -C tests/systemtests test
 
 test-system: test-sdk-system
@@ -559,9 +559,9 @@ test-system: test-sdk-system
 
 .PHONY: test-system test-sdk-system test-sdk-system-extended build-system-test-current
 
-# build-v53 fetches the v0.53 simd binary for system tests from the v0.53 nightlies channel.
-# Skips if $(BUILDDIR)/simdv53 exists (e.g. local dev reuse).
-build-v53:
-	@if [ -f $(BUILDDIR)/simdv53 ]; then echo "build/simdv53 exists, skipping"; else \
-		BUILDDIR=$(BUILDDIR) bash scripts/build-v53.sh; fi
-.PHONY: build-v53
+# build-v54 fetches the v0.54 simd binary for system tests from the v0.54 nightlies channel.
+# Skips if $(BUILDDIR)/simdv54 exists (e.g. local dev reuse).
+build-v54:
+	@if [ -f $(BUILDDIR)/simdv54 ]; then echo "build/simdv54 exists, skipping"; else \
+		BUILDDIR=$(BUILDDIR) bash scripts/build-v54.sh; fi
+.PHONY: build-v54

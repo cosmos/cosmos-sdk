@@ -30,7 +30,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/v2"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -84,20 +83,15 @@ func init() {
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
-	mu     sync.Mutex // mu protects the fields below.
-	logger log.Logger
-	name   string                      // application name from abci.BlockInfo
-	db     dbm.DB                      // common DB backend
-	cms    storetypes.CommitMultiStore // Main (uncached) state
-	// committer is the in-progress CommitFinalizer for the current block, created by StartCommit
-	// during internalFinalizeBlock. It must be set to nil after Finalize() or Rollback() to
-	// release the reference. The CommitFinalizer's state machine guards against misuse
-	// (double-finalize, post-rollback finalize), but callers should still nil the field promptly.
-	committer         storetypes.CommitFinalizer
-	qms               storetypes.RootMultiStore // Optional alternative multistore for querying only.
-	storeLoader       StoreLoader               // function to handle store loading, may be overridden with SetStoreLoader()
-	grpcQueryRouter   *GRPCQueryRouter          // router for redirecting gRPC query calls
-	msgServiceRouter  *MsgServiceRouter         // router for redirecting Msg service messages
+	mu                sync.Mutex // mu protects the fields below.
+	logger            log.Logger
+	name              string                      // application name from abci.BlockInfo
+	db                dbm.DB                      // common DB backend
+	cms               storetypes.CommitMultiStore // Main (uncached) state
+	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
+	storeLoader       StoreLoader                 // function to handle store loading, may be overridden with SetStoreLoader()
+	grpcQueryRouter   *GRPCQueryRouter            // router for redirecting gRPC query calls
+	msgServiceRouter  *MsgServiceRouter           // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
@@ -238,11 +232,7 @@ func NewBaseApp(
 		app.SetVerifyVoteExtensionHandler(NoOpVerifyVoteExtensionHandler())
 	}
 	if app.interBlockCache != nil {
-		if rms, ok := app.cms.(*rootmulti.Store); ok {
-			rms.SetInterBlockCache(app.interBlockCache)
-		} else {
-			logger.Warn("SetInterBlockCache: CommitMultiStore is not rootmulti.Store, option ignored")
-		}
+		app.cms.SetInterBlockCache(app.interBlockCache)
 	}
 
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()

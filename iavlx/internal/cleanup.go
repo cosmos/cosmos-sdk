@@ -2,13 +2,15 @@ package internal
 
 import (
 	"context"
-	"log/slog"
 	"slices"
 	"sync"
 	"time"
+
+	"cosmossdk.io/log/v2"
 )
 
 type cleanupProc struct {
+	logger           log.Logger
 	mtx              sync.Mutex
 	newDisposals     []*ChangesetReaderRef
 	newDeletions     []*Changeset
@@ -16,13 +18,12 @@ type cleanupProc struct {
 	pendingDeletions []*Changeset
 	done             chan struct{}
 	cancel           context.CancelFunc
-	logger           *slog.Logger
 }
 
-func newCleanupProc(logger *slog.Logger) *cleanupProc {
+func newCleanupProc(logger log.Logger) *cleanupProc {
 	return &cleanupProc{
-		done:   make(chan struct{}),
 		logger: logger,
+		done:   make(chan struct{}),
 	}
 }
 

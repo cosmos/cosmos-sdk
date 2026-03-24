@@ -13,10 +13,10 @@ import (
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/log/v2"
-	storeiavl "cosmossdk.io/store/iavl"
-	"cosmossdk.io/store/rootmulti"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	store "cosmossdk.io/store/types"
+	storeiavl "github.com/cosmos/cosmos-sdk/store/v2/legacy/iavl"
+	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	store "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func TestCommitMultiTree_Reload(t *testing.T) {

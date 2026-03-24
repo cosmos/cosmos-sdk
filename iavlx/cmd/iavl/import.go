@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/iavlx/internal"

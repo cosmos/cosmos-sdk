@@ -2,7 +2,6 @@ package internal
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -11,26 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/store/v2/types/maps"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
-type CommitID struct {
-	Version int64
-	Hash    []byte
-}
-
-type StoreInfo struct {
-	Name     string
-	CommitId CommitID
-}
-
-type CommitInfo struct {
-	Version    int64
-	Timestamp  time.Time
-	StoreInfos []StoreInfo
-}
-
-func saveCommitInfo(outDir string, ci *CommitInfo) error {
+func saveCommitInfo(outDir string, ci *storetypes.CommitInfo) error {
 	ciFilename := filepath.Join(outDir, commitInfoSubPath, fmt.Sprintf("%d", ci.Version))
 	err := os.MkdirAll(filepath.Dir(ciFilename), 0700)
 	if err != nil {
@@ -56,7 +39,7 @@ func saveCommitInfo(outDir string, ci *CommitInfo) error {
 	return nil
 }
 
-func writeCommitInfo(writer io.Writer, info *CommitInfo) error {
+func writeCommitInfo(writer io.Writer, info *storetypes.CommitInfo) error {
 	err := writeCommitInfoHeader(writer, info)
 	if err != nil {
 		return fmt.Errorf("failed to write commit info header: %w", err)
@@ -70,7 +53,7 @@ func writeCommitInfo(writer io.Writer, info *CommitInfo) error {
 	return nil
 }
 
-func writeCommitInfoHeader(headerBuf io.Writer, info *CommitInfo) error {
+func writeCommitInfoHeader(headerBuf io.Writer, info *storetypes.CommitInfo) error {
 	// write version as litte-endian uint32
 	var scratchBuf [binary.MaxVarintLen64]byte
 	binary.LittleEndian.PutUint32(scratchBuf[:4], uint32(info.Version))
@@ -114,7 +97,7 @@ func writeCommitInfoHeader(headerBuf io.Writer, info *CommitInfo) error {
 	return nil
 }
 
-func writeCommitInfoFooter(writer io.Writer, info *CommitInfo) error {
+func writeCommitInfoFooter(writer io.Writer, info *storetypes.CommitInfo) error {
 	var scratchBuf [binary.MaxVarintLen64]byte
 
 	// append each store hash to the file
@@ -140,7 +123,7 @@ const commitInfoSubPath = "commit_info"
 
 // loadLatestCommitInfo loads the highest version number commit info file from the commit_info directory
 // if any exist, returning the version and CommitInfo.
-func loadLatestCommitInfo(dir string) (ci *CommitInfo, earliestVersion int64, err error) {
+func loadLatestCommitInfo(dir string) (ci *storetypes.CommitInfo, earliestVersion int64, err error) {
 	commitInfoDir := filepath.Join(dir, commitInfoSubPath)
 	err = os.MkdirAll(commitInfoDir, 0o700)
 	if err != nil {
@@ -192,7 +175,7 @@ func loadLatestCommitInfo(dir string) (ci *CommitInfo, earliestVersion int64, er
 	return commitInfo, earliestVersion, nil
 }
 
-func loadCommitInfo(dir string, version int64) (*CommitInfo, error) {
+func loadCommitInfo(dir string, version int64) (*storetypes.CommitInfo, error) {
 	commitInfoDir := filepath.Join(dir, commitInfoSubPath)
 	err := os.MkdirAll(commitInfoDir, 0o700)
 	if err != nil {
@@ -231,8 +214,8 @@ func loadCommitInfo(dir string, version int64) (*CommitInfo, error) {
 		return nil, fmt.Errorf("failed to read commit info store count for version %d: %w", version, err)
 	}
 
-	commitInfo := &CommitInfo{
-		StoreInfos: make([]StoreInfo, storeCount),
+	commitInfo := &storetypes.CommitInfo{
+		StoreInfos: make([]storetypes.StoreInfo, storeCount),
 		Timestamp:  time.Unix(0, int64(timestampNano)),
 		Version:    version,
 	}
@@ -270,64 +253,11 @@ func loadCommitInfo(dir string, version int64) (*CommitInfo, error) {
 			return commitInfo, nil
 		}
 
-		commitInfo.StoreInfos[i].CommitId = CommitID{
+		commitInfo.StoreInfos[i].CommitId = storetypes.CommitID{
 			Version: version,
 			Hash:    hashBytes,
 		}
 	}
 
 	return commitInfo, nil
-}
-
-// GetHash returns the GetHash from the CommitID.
-// This is used in CommitInfo.Hash()
-//
-// When we commit to this in a merkle proof, we create a map of storeInfo.Name -> storeInfo.GetHash()
-// and build a merkle proof from that.
-// This is then chained with the substore proof, so we prove the root hash from the substore before this
-// and need to pass that (unmodified) as the leaf value of the multistore proof.
-func (si StoreInfo) GetHash() []byte {
-	return si.CommitId.Hash
-}
-
-func (ci CommitInfo) toMap() map[string][]byte {
-	m := make(map[string][]byte, len(ci.StoreInfos))
-	for _, storeInfo := range ci.StoreInfos {
-		m[storeInfo.Name] = storeInfo.GetHash()
-	}
-
-	return m
-}
-
-// Hash returns the simple merkle root hash of the stores sorted by name.
-func (ci CommitInfo) Hash() []byte {
-	// we need a special case for empty set, as SimpleProofsFromMap requires at least one entry
-	if len(ci.StoreInfos) == 0 {
-		emptyHash := sha256.Sum256([]byte{})
-		return emptyHash[:]
-	}
-
-	rootHash, _, _ := maps.ProofsFromMap(ci.toMap())
-
-	if len(rootHash) == 0 {
-		emptyHash := sha256.Sum256([]byte{})
-		return emptyHash[:]
-	}
-
-	return rootHash
-}
-
-func (ci CommitInfo) ProofOp(storeName string) cmtprotocrypto.ProofOp {
-	ret, err := ProofOpFromMap(ci.toMap(), storeName)
-	if err != nil {
-		panic(err)
-	}
-	return ret
-}
-
-func (ci CommitInfo) CommitID() CommitID {
-	return CommitID{
-		Version: ci.Version,
-		Hash:    ci.Hash(),
-	}
 }

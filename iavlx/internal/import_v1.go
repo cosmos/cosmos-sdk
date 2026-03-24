@@ -5,14 +5,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/cosmos/iavl"
 	iavldb "github.com/cosmos/iavl/db"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func ImportIAVLV1MultiStore(dataDir, outDir string, logger log.Logger) error {

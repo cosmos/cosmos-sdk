@@ -4,10 +4,13 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/log/v2"
 	"github.com/cosmos/iavl"
 )
 
 type Importer struct {
+	logger log.Logger
+
 	branchCount   uint32
 	leafCount     uint32
 	stack         []*NodePointer
@@ -16,8 +19,8 @@ type Importer struct {
 	writer *ChangesetWriter
 }
 
-func NewImporter(stagedVersion uint32, treeDir string) (*Importer, error) {
-	ts, err := NewTreeStore(treeDir, TreeOptions{})
+func NewImporter(stagedVersion uint32, treeDir string, logger log.Logger) (*Importer, error) {
+	ts, err := NewTreeStore(treeDir, TreeOptions{}, logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tree store: %w", err)
 	}
@@ -36,6 +39,7 @@ func NewImporter(stagedVersion uint32, treeDir string) (*Importer, error) {
 	cw.checkpoint = 1
 
 	return &Importer{
+		logger:        logger,
 		stagedVersion: stagedVersion,
 		writer:        cw,
 	}, nil
@@ -190,7 +194,7 @@ func (i *Importer) Finalize() error {
 		return fmt.Errorf("failed to close changeset: %w", err)
 	}
 
-	logger.Info("Successfully finalized import", "version", cpInfo.Version, "checkpoint", cpInfo.Checkpoint, "rootID", cpInfo.RootID, "branchCount", cpInfo.Branches.Count, "leafCount", cpInfo.Leaves.Count)
+	i.logger.Info("Successfully finalized import", "version", cpInfo.Version, "checkpoint", cpInfo.Checkpoint, "rootID", cpInfo.RootID, "branchCount", cpInfo.Branches.Count, "leafCount", cpInfo.Leaves.Count)
 
 	return nil
 }

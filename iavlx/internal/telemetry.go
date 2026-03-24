@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	tracer          = otel.Tracer("iavlx")
-	meter           = otel.Meter("iavlx")
+	tracer          = otel.Tracer("iavl")
+	meter           = otel.Meter("iavl")
 	leafHashLatency metric.Int64Histogram
 	walWriteLatency metric.Int64Histogram
 	queryLatency    metric.Int64Histogram

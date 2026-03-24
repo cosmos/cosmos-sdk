@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
@@ -21,23 +20,23 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"cosmossdk.io/store/mem"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	"cosmossdk.io/store/transient"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/log/v2"
+
+	"github.com/cosmos/cosmos-sdk/store/v2/mem"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/transient"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 type commitData struct {
-	commitInfo *CommitInfo
-	commitId   CommitID
+	commitInfo *storetypes.CommitInfo
+	commitId   storetypes.CommitID
 }
 
 type CommitMultiTree struct {
-	dir    string
-	opts   Options
-	logger *slog.Logger
-
+	dir         string
+	opts        Options
 	stores      []*storeData                // always ordered by name
 	iavlStores  []*storeData                // subset of stores that are IAVL, ordered by name
 	otherStores []*storeData                // subset of stores that are not IAVL
@@ -52,6 +51,7 @@ type CommitMultiTree struct {
 	compactionActive atomic.Bool
 	compactionDone   chan struct{}
 	pruningOptions   pruningtypes.PruningOptions
+	logger           log.Logger
 }
 
 type storeData struct {
@@ -64,8 +64,8 @@ func (db *CommitMultiTree) GetCommitInfo(ver int64) (*storetypes.CommitInfo, err
 	return loadCommitInfo(db.dir, ver)
 }
 
-func (db *CommitMultiTree) CommitBranch() *CommitBranch {
-	return &CommitBranch{
+func (db *CommitMultiTree) CommitBranch() storetypes.CommitBranch {
+	return &commitBranch{
 		MultiTree: db.rootCacheMultiStore(),
 		db:        db,
 	}
@@ -75,10 +75,10 @@ func (db *CommitMultiTree) EarliestVersion() int64 {
 	return db.earliestVersion.Load()
 }
 
-func (db *CommitMultiTree) LastCommitID() CommitID {
+func (db *CommitMultiTree) LastCommitID() storetypes.CommitID {
 	cd := db.commitData.Load()
 	if cd == nil {
-		return CommitID{}
+		return storetypes.CommitID{}
 	}
 	return cd.commitId
 }
@@ -103,10 +103,10 @@ func (db *CommitMultiTree) GetKVStore(storetypes.StoreKey) storetypes.KVStore {
 	panic("cannot call GetKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
 }
 
-//// GetObjKVStore returns a mounted ObjKVStore for a given StoreKey.
-//func (db *CommitMultiTree) GetObjKVStore(storetypes.StoreKey) storetypes.ObjKVStore {
-//	panic("cannot call GetObjKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
-//}
+// GetObjKVStore returns a mounted ObjKVStore for a given StoreKey.
+func (db *CommitMultiTree) GetObjKVStore(storetypes.StoreKey) storetypes.ObjKVStore {
+	panic("cannot call GetObjKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
+}
 
 func (db *CommitMultiTree) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	return fmt.Errorf("snapshotting has not been implemented yet")
@@ -153,7 +153,7 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 		// should be nil on initial creation
 		version = ci.Version
 		db.commitData.Store(&commitData{
-			commitId: CommitID{
+			commitId: storetypes.CommitID{
 				Version: version,
 				Hash:    ci.Hash(),
 			},
@@ -218,11 +218,11 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 		}
 
 		return mem.NewStore(), nil
-	//case storetypes.StoreTypeObject:
-	//	if _, ok := key.(*storetypes.ObjectStoreKey); !ok {
-	//		return nil, fmt.Errorf("unexpected key type for a ObjectStoreKey: %s", key.String())
-	//	}
-	//	return transient.NewObjStore(), nil
+	case storetypes.StoreTypeObject:
+		if _, ok := key.(*storetypes.ObjectStoreKey); !ok {
+			return nil, fmt.Errorf("unexpected key type for a ObjectStoreKey: %s", key.String())
+		}
+		return transient.NewObjStore(), nil
 	default:
 		return nil, fmt.Errorf("unsupported store type: %s", typ.String())
 	}
@@ -293,12 +293,13 @@ func (db *CommitMultiTree) PopStateCache() []*storetypes.StoreKVPair {
 	panic("implement me")
 }
 
-func LoadCommitMultiTree(path string, opts Options) (*CommitMultiTree, error) {
+func LoadCommitMultiTree(path string, opts Options, logger log.Logger) (*CommitMultiTree, error) {
 	db := &CommitMultiTree{
 		dir:            path,
 		opts:           opts,
 		storesByKey:    make(map[storetypes.StoreKey]int),
 		pruningOptions: pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+		logger:         logger,
 	}
 	return db, nil
 }
@@ -419,7 +420,7 @@ func (db *CommitMultiTree) compactIfNeeded() {
 
 	if !db.compactionActive.CompareAndSwap(false, true) {
 		// another compaction started since we checked, skip
-		logger.Warn("skipping compaction since another compaction is already in progress",
+		db.logger.Warn("skipping compaction since another compaction is already in progress",
 			"version", version,
 			"retain_version", retainVersion,
 			"pruning_interval", db.pruningOptions.Interval,
@@ -427,7 +428,7 @@ func (db *CommitMultiTree) compactIfNeeded() {
 		)
 		return
 	}
-	logger.Info("starting compaction of old versions of IAVL trees",
+	db.logger.Info("starting compaction of old versions of IAVL trees",
 		"version", version,
 		"retain_version", retainVersion,
 		"pruning_interval", db.pruningOptions.Interval,
@@ -464,7 +465,7 @@ func (db *CommitMultiTree) compactNow(ctx context.Context, retainVersion uint64)
 
 	err := deleteOldCommitInfos(db.dir, retainVersion)
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed to delete old commit info files: %v", err))
+		db.logger.Error(fmt.Sprintf("failed to delete old commit info files: %v", err))
 	}
 
 	for _, si := range db.iavlStores {
@@ -475,12 +476,12 @@ func (db *CommitMultiTree) compactNow(ctx context.Context, retainVersion uint64)
 		)
 		ct, ok := si.store.(*CommitTree)
 		if !ok {
-			logger.Error(fmt.Sprintf("store %s is not a CommitTree, cannot compact", si.key.Name()))
+			db.logger.Error(fmt.Sprintf("store %s is not a CommitTree, cannot compact", si.key.Name()))
 			continue
 		}
 		err := ct.compact(ctx, uint32(retainVersion))
 		if err != nil {
-			logger.Error(fmt.Sprintf("failed to compact store %s: %v", si.key.Name(), err))
+			db.logger.Error(fmt.Sprintf("failed to compact store %s: %v", si.key.Name(), err))
 			continue
 		}
 		span.End()

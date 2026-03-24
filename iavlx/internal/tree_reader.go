@@ -5,8 +5,8 @@ import (
 
 	ics23 "github.com/cosmos/ics23/go"
 
-	"cosmossdk.io/store/cachekv"
-	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 type TreeReader struct {

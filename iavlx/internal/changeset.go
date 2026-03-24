@@ -155,7 +155,7 @@ func (ch *Changeset) TryDelete(ctx context.Context) (bool, error) {
 		// readers still active, can't delete yet
 		return false, nil
 	}
-	logger.InfoContext(ctx, "deleting changeset", "dir", ch.files.Dir())
+	ch.treeStore.logger.InfoContext(ctx, "deleting changeset", "dir", ch.files.Dir())
 	return true, ch.files.DeleteFiles()
 }
 

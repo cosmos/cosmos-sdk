@@ -26,6 +26,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/enterprise/poa/types";
 service Msg {
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
   rpc CreateValidator(MsgCreateValidator) returns (MsgCreateValidatorResponse);
+  rpc EditValidator(MsgEditValidator) returns (MsgEditValidatorResponse);
   rpc UpdateValidators(MsgUpdateValidators) returns (MsgUpdateValidatorsResponse);
   rpc WithdrawFees(MsgWithdrawFees) returns (MsgWithdrawFeesResponse);
 }
@@ -49,6 +50,15 @@ message MsgCreateValidator {
 }
 
 message MsgCreateValidatorResponse {}
+
+message MsgEditValidator {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string            sender   = 1;
+  ValidatorMetadata metadata = 2 [(gogoproto.nullable) = false];
+}
+
+message MsgEditValidatorResponse {}
 
 message MsgUpdateValidators {
   option (cosmos.msg.v1.signer) = "admin";

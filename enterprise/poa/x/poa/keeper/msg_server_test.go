@@ -591,6 +591,165 @@ func TestMsgServerCreateValidator(t *testing.T) {
 	})
 }
 
+func TestMsgServerEditValidator(t *testing.T) {
+	t.Run("successfully edits moniker and description", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		operatorAddr, _ := createValidator(t, f, 1, 10)
+
+		msg := &poatypes.MsgEditValidator{
+			Sender: operatorAddr,
+			Metadata: poatypes.ValidatorMetadata{
+				Moniker:         "new-moniker",
+				Description:     "new description",
+				OperatorAddress: operatorAddr,
+			},
+		}
+
+		resp, err := msgServer.EditValidator(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		// Verify metadata was updated
+		opAddr, _ := sdk.AccAddressFromBech32(operatorAddr)
+		validator, err := f.poaKeeper.GetValidatorByOperatorAddress(f.ctx, opAddr)
+		require.NoError(t, err)
+		require.Equal(t, "new-moniker", validator.Metadata.Moniker)
+		require.Equal(t, "new description", validator.Metadata.Description)
+		require.Equal(t, operatorAddr, validator.Metadata.OperatorAddress)
+	})
+
+	t.Run("successfully transfers operator address", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		operatorAddr, _ := createValidator(t, f, 1, 10)
+		newOperator := sdk.AccAddress("newoperator1").String()
+
+		msg := &poatypes.MsgEditValidator{
+			Sender: operatorAddr,
+			Metadata: poatypes.ValidatorMetadata{
+				Moniker:         "test-moniker",
+				Description:     "test",
+				OperatorAddress: newOperator,
+			},
+		}
+
+		resp, err := msgServer.EditValidator(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		// Old operator should no longer find the validator
+		opAddr, _ := sdk.AccAddressFromBech32(operatorAddr)
+		_, err = f.poaKeeper.GetValidatorByOperatorAddress(f.ctx, opAddr)
+		require.Error(t, err)
+
+		// New operator should find it
+		newOpAddr, _ := sdk.AccAddressFromBech32(newOperator)
+		validator, err := f.poaKeeper.GetValidatorByOperatorAddress(f.ctx, newOpAddr)
+		require.NoError(t, err)
+		require.Equal(t, "test-moniker", validator.Metadata.Moniker)
+		require.Equal(t, newOperator, validator.Metadata.OperatorAddress)
+	})
+
+	t.Run("fails with empty moniker", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		operatorAddr, _ := createValidator(t, f, 1, 10)
+
+		msg := &poatypes.MsgEditValidator{
+			Sender: operatorAddr,
+			Metadata: poatypes.ValidatorMetadata{
+				Moniker:         "",
+				Description:     "test",
+				OperatorAddress: operatorAddr,
+			},
+		}
+
+		_, err := msgServer.EditValidator(f.ctx, msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "moniker cannot be empty")
+	})
+
+	t.Run("fails when sender is not a validator", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		nonValidator := sdk.AccAddress("nonvalidator1").String()
+
+		msg := &poatypes.MsgEditValidator{
+			Sender: nonValidator,
+			Metadata: poatypes.ValidatorMetadata{
+				Moniker:         "moniker",
+				Description:     "test",
+				OperatorAddress: nonValidator,
+			},
+		}
+
+		_, err := msgServer.EditValidator(f.ctx, msg)
+		require.Error(t, err)
+		require.ErrorIs(t, err, poatypes.ErrUnknownValidator)
+	})
+
+	t.Run("does not change power or pubkey", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		operatorAddr, _ := createValidator(t, f, 1, 10)
+
+		// Get original validator state
+		opAddr, _ := sdk.AccAddressFromBech32(operatorAddr)
+		original, err := f.poaKeeper.GetValidatorByOperatorAddress(f.ctx, opAddr)
+		require.NoError(t, err)
+
+		msg := &poatypes.MsgEditValidator{
+			Sender: operatorAddr,
+			Metadata: poatypes.ValidatorMetadata{
+				Moniker:         "changed-moniker",
+				Description:     "changed",
+				OperatorAddress: operatorAddr,
+			},
+		}
+
+		_, err = msgServer.EditValidator(f.ctx, msg)
+		require.NoError(t, err)
+
+		updated, err := f.poaKeeper.GetValidatorByOperatorAddress(f.ctx, opAddr)
+		require.NoError(t, err)
+		require.Equal(t, original.Power, updated.Power)
+		require.Equal(t, original.PubKey, updated.PubKey)
+		require.Equal(t, "changed-moniker", updated.Metadata.Moniker)
+	})
+
+	t.Run("emits edit_validator event", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		operatorAddr, _ := createValidator(t, f, 1, 10)
+
+		// Reset event manager to only capture edit events
+		f.ctx = f.ctx.WithEventManager(sdk.NewEventManager())
+
+		msg := &poatypes.MsgEditValidator{
+			Sender: operatorAddr,
+			Metadata: poatypes.ValidatorMetadata{
+				Moniker:         "event-moniker",
+				Description:     "test",
+				OperatorAddress: operatorAddr,
+			},
+		}
+
+		_, err := msgServer.EditValidator(f.ctx, msg)
+		require.NoError(t, err)
+
+		events := f.ctx.EventManager().Events()
+		require.Len(t, events, 1)
+		require.Equal(t, poatypes.EventTypeEditValidator, events[0].Type)
+	})
+}
+
 func TestMsgServerUpdateValidators(t *testing.T) {
 	t.Run("successfully updates validators with valid admin", func(t *testing.T) {
 		f := setupTest(t)

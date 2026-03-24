@@ -263,6 +263,23 @@ func ValidateAllocatedFees(fees []GenesisAllocatedFees) error {
 	return nil
 }
 
+// Validate performs validation on MsgEditValidator.
+func (m *MsgEditValidator) Validate(ac address.Codec) error {
+	if _, err := ac.StringToBytes(m.Sender); err != nil {
+		return sdkerrors.Wrap(ErrInvalidMetadata, "sender address is invalid")
+	}
+
+	if err := m.Metadata.ValidateBasic(); err != nil {
+		return err
+	}
+
+	if _, err := ac.StringToBytes(m.Metadata.OperatorAddress); err != nil {
+		return sdkerrors.Wrap(ErrInvalidMetadata, "operator address is invalid")
+	}
+
+	return nil
+}
+
 // ValidateBasic performs basic validation on MsgWithdrawFees.
 // It ensures that the Operator field is not empty.
 func (m *MsgWithdrawFees) ValidateBasic() error {

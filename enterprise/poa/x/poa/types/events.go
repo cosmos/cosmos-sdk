@@ -18,6 +18,7 @@ package types
 const (
 	EventTypeUpdateParams    = "update_params"
 	EventTypeCreateValidator = "create_validator"
+	EventTypeEditValidator   = "edit_validator"
 	EventTypeUpdateValidator = "update_validator"
 	EventTypeWithdrawFees    = "withdraw_fees"
 )

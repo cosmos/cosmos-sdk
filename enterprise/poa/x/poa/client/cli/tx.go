@@ -45,6 +45,7 @@ func NewTxCommand(pubkeyFactory map[string]func(codec.Codec, []byte) *codectypes
 	txCmd.AddCommand(
 		NewUpdateParamsCmd(),
 		NewCreateValidatorCmd(pubkeyFactory),
+		NewEditValidatorCmd(),
 		NewUpdateValidatorsCmd(),
 		NewWithdrawFeesCmd(),
 	)
@@ -210,6 +211,53 @@ func NewCreateValidatorCmd(pubkeyFactory map[string]func(codec.Codec, []byte) *c
 	}
 
 	cmd.Flags().String(flagDescription, "", "validator description")
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewEditValidatorCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "edit-validator",
+		Short: "Edit an existing validator's metadata",
+		Long:  "Edit a validator's moniker, description, or operator address. The tx signer must be the current operator.",
+		Args:  cobra.NoArgs,
+		Example: fmt.Sprintf(
+			"%s tx poa edit-validator --moniker new-moniker --description \"Updated description\"",
+			version.AppName,
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			moniker, _ := cmd.Flags().GetString("moniker")
+			desc, _ := cmd.Flags().GetString("description")
+			newOperator, _ := cmd.Flags().GetString("new-operator")
+
+			sender := clientCtx.GetFromAddress().String()
+			operatorAddr := sender
+			if newOperator != "" {
+				operatorAddr = newOperator
+			}
+
+			msg := &types.MsgEditValidator{
+				Sender: sender,
+				Metadata: types.ValidatorMetadata{
+					Moniker:         moniker,
+					Description:     desc,
+					OperatorAddress: operatorAddr,
+				},
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String("moniker", "", "validator moniker")
+	cmd.Flags().String("description", "", "validator description")
+	cmd.Flags().String("new-operator", "", "new operator address (transfers ownership)")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

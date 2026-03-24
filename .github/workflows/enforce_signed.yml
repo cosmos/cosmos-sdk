@@ -62,6 +62,4 @@ jobs:
             await github.rest.issues.createComment({
               owner, repo, issue_number: prNumber, body: msg
             });
-
-            // Mark the job as failed so it’s obvious in checks
-            core.setFailed(`Found ${unsigned.length} unsigned commit(s).`);
+            

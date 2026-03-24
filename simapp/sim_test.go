@@ -34,6 +34,7 @@ import (
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 var FlagEnableStreamingValue bool
@@ -97,6 +98,11 @@ func TestAppImportExport(t *testing.T) {
 		require.NoError(tb, err)
 
 		tb.Log("comparing stores...")
+		// x/upgrade intentionally does not export upgrade state in genesis; see:
+		// https://github.com/cosmos/cosmos-sdk/blob/19f58baf64317a985552dec73fea92a54033e8ed/x/upgrade/module.go#L151-L154
+		skipStores := map[string]struct{}{
+			upgradetypes.StoreKey: {},
+		}
 		// skip certain prefixes
 		skipPrefixes := map[string][][]byte{
 			stakingtypes.StoreKey: {
@@ -109,7 +115,7 @@ func TestAppImportExport(t *testing.T) {
 			feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
 			slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
 		}
-		AssertEqualStores(tb, app, newApp, app.SimulationManager().StoreDecoders, skipPrefixes)
+		AssertEqualStores(tb, app, newApp, app.SimulationManager().StoreDecoders, skipPrefixes, skipStores)
 	})
 }
 
@@ -240,6 +246,7 @@ func AssertEqualStores(
 	app, newApp ComparableStoreApp,
 	storeDecoders simtypes.StoreDecoderRegistry,
 	skipPrefixes map[string][][]byte,
+	skipStores map[string]struct{},
 ) {
 	tb.Helper()
 	ctxA := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
@@ -255,6 +262,9 @@ func AssertEqualStores(
 		}
 
 		keyName := appKeyA.Name()
+		if _, skip := skipStores[keyName]; skip {
+			continue
+		}
 		appKeyB := newApp.GetKey(keyName)
 
 		storeA := ctxA.KVStore(appKeyA)

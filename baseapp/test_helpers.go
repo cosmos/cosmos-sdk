@@ -51,9 +51,11 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 	return gasInfo, result, err
 }
 
-// SimWriteState is an entrypoint for simulations only. They are not executed
-// during the normal ABCI finalize block step but later. Therefore, an extra
-// call to the root multi-store (app.cms) is required to write the changes.
+// SimWriteState manually flushes the finalizeBlock state to the root
+// CommitMultiStore. It is intended for simulation paths that bypass the
+// standard FinalizeBlock→Commit flow (e.g. SimTxFinalizeBlock). When
+// called after a normal FinalizeBlock, it is a no-op because workingHash()
+// has already written the cache.
 func (app *BaseApp) SimWriteState() {
 	app.stateManager.GetState(execModeFinalize).MultiStore.Write()
 }

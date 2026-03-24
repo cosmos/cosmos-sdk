@@ -38,6 +38,10 @@ func (v *Validator) ValidateBasic() error {
 		return ErrNegativeValidatorPower
 	}
 
+	if v.Metadata == nil {
+		return sdkerrors.Wrap(ErrInvalidMetadata, "metadata cannot be nil")
+	}
+
 	if err := v.Metadata.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(ErrInvalidMetadata, err.Error())
 	}
@@ -102,7 +106,7 @@ func ValidateValidatorSet(vs []Validator) error {
 // It ensures that:
 //   - OperatorAddress is not empty
 //   - Moniker is not empty and does not exceed 256 characters
-//   - Description is not empty and does not exceed 256 characters
+//   - Description does not exceed 256 characters (it may be empty)
 func (m *ValidatorMetadata) ValidateBasic() error {
 	if m.OperatorAddress == "" {
 		return ErrMissingOperatorAddress

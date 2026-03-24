@@ -761,6 +761,7 @@ func TestMsgUpdateValidatorsValidateBasic(t *testing.T) {
 
 func TestMsgCreateValidatorValidate(t *testing.T) {
 	ac := address.NewBech32Codec("cosmos")
+	adminAddr := "cosmos1w3jhxarpv3j8yvg4ufs4x"
 
 	tests := []struct {
 		name    string
@@ -777,6 +778,7 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 					OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 					Moniker:         "test-moniker",
 					Description:     "test-description",
+					Admin:           adminAddr,
 				}
 			}(),
 			wantErr: false,
@@ -788,6 +790,7 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 				Moniker:         "test-moniker",
 				Description:     "test-description",
+				Admin:           adminAddr,
 			},
 			wantErr: true,
 		},
@@ -797,6 +800,7 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 				OperatorAddress: "",
 				Moniker:         "test-moniker",
 				Description:     "test-description",
+				Admin:           adminAddr,
 			},
 			wantErr: true,
 		},
@@ -806,6 +810,7 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 				Moniker:         "",
 				Description:     "test-description",
+				Admin:           adminAddr,
 			},
 			wantErr: true,
 		},
@@ -815,6 +820,7 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 				Moniker:         strings.Repeat("a", 257),
 				Description:     "test-description",
+				Admin:           adminAddr,
 			},
 			wantErr: true,
 		},
@@ -828,6 +834,7 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 					OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 					Moniker:         "test-moniker",
 					Description:     "",
+					Admin:           adminAddr,
 				}
 			}(),
 			wantErr: false,
@@ -838,6 +845,7 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 				Moniker:         "test-moniker",
 				Description:     strings.Repeat("a", 257),
+				Admin:           adminAddr,
 			},
 			wantErr: true,
 		},
@@ -851,6 +859,7 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 					OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 					Moniker:         strings.Repeat("a", 256),
 					Description:     "test-description",
+					Admin:           adminAddr,
 				}
 			}(),
 			wantErr: false,
@@ -865,6 +874,7 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 					OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 					Moniker:         "test-moniker",
 					Description:     strings.Repeat("a", 256),
+					Admin:           adminAddr,
 				}
 			}(),
 			wantErr: false,
@@ -876,6 +886,7 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 				Moniker:         "test-moniker",
 				Description:     "test-description",
+				Admin:           adminAddr,
 			},
 			wantErr: true,
 		},
@@ -886,6 +897,7 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 				OperatorAddress: "cosmos1w3jhxarpv3j8yvg4ufs4x",
 				Moniker:         "test-moniker",
 				Description:     "test-description",
+				Admin:           adminAddr,
 			},
 			wantErr: true,
 		},

@@ -40,12 +40,13 @@ message MsgUpdateParams {
 message MsgUpdateParamsResponse {}
 
 message MsgCreateValidator {
-  option (cosmos.msg.v1.signer) = "operator_address";
+  option (cosmos.msg.v1.signer) = "admin";
 
   google.protobuf.Any pub_key          = 1;
   string              moniker          = 2;
   string              description      = 3;
   string              operator_address = 4;
+  string              admin            = 5;
 }
 
 message MsgCreateValidatorResponse {}

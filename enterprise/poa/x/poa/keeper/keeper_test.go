@@ -154,6 +154,7 @@ func TestValidatePubkeyType(t *testing.T) {
 	t.Run("accepts ed25519 key when ed25519 is in consensus params", func(t *testing.T) {
 		f := setupTest(t)
 		msgServer := NewMsgServer(f.poaKeeper)
+		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		pubKey := ed25519.GenPrivKey().PubKey()
 		pubKeyAny, err := codectypes.NewAnyWithValue(pubKey)
@@ -165,6 +166,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-ed25519",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+		Admin:           adminAddr,
 		}
 
 		resp, err := msgServer.CreateValidator(f.ctx, msg)
@@ -175,6 +177,7 @@ func TestValidatePubkeyType(t *testing.T) {
 	t.Run("accepts secp256k1 key when secp256k1 is in consensus params", func(t *testing.T) {
 		f := setupTest(t)
 		msgServer := NewMsgServer(f.poaKeeper)
+		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Set consensus params to allow secp256k1
 		f.ctx = f.ctx.WithConsensusParams(cmtproto.ConsensusParams{
@@ -195,6 +198,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-secp256k1",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+		Admin:           adminAddr,
 		}
 
 		resp, err := msgServer.CreateValidator(f.ctx, msg)
@@ -205,6 +209,7 @@ func TestValidatePubkeyType(t *testing.T) {
 	t.Run("accepts both key types when both are in consensus params", func(t *testing.T) {
 		f := setupTest(t)
 		msgServer := NewMsgServer(f.poaKeeper)
+		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Set consensus params to allow both ed25519 and secp256k1
 		f.ctx = f.ctx.WithConsensusParams(cmtproto.ConsensusParams{
@@ -224,6 +229,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-ed25519-both",
 			Description:     "test",
 			OperatorAddress: ed25519OperatorAddr.String(),
+		Admin:           adminAddr,
 		}
 
 		resp1, err := msgServer.CreateValidator(f.ctx, msg1)
@@ -243,6 +249,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-secp256k1-both",
 			Description:     "test",
 			OperatorAddress: secp256k1OperatorAddr.String(),
+		Admin:           adminAddr,
 		}
 
 		resp2, err := msgServer.CreateValidator(f.ctx, msg2)
@@ -253,6 +260,7 @@ func TestValidatePubkeyType(t *testing.T) {
 	t.Run("rejects ed25519 key when only secp256k1 is in consensus params", func(t *testing.T) {
 		f := setupTest(t)
 		msgServer := NewMsgServer(f.poaKeeper)
+		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Set consensus params to only allow secp256k1
 		f.ctx = f.ctx.WithConsensusParams(cmtproto.ConsensusParams{
@@ -271,6 +279,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-reject",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+		Admin:           adminAddr,
 		}
 
 		_, err = msgServer.CreateValidator(f.ctx, msg)
@@ -281,6 +290,7 @@ func TestValidatePubkeyType(t *testing.T) {
 	t.Run("rejects secp256k1 key when only ed25519 is in consensus params", func(t *testing.T) {
 		f := setupTest(t)
 		msgServer := NewMsgServer(f.poaKeeper)
+		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Set consensus params to only allow ed25519
 		f.ctx = f.ctx.WithConsensusParams(cmtproto.ConsensusParams{
@@ -301,6 +311,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-reject-secp",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+		Admin:           adminAddr,
 		}
 
 		_, err = msgServer.CreateValidator(f.ctx, msg)
@@ -311,6 +322,7 @@ func TestValidatePubkeyType(t *testing.T) {
 	t.Run("rejects key when consensus params has empty pubkey types", func(t *testing.T) {
 		f := setupTest(t)
 		msgServer := NewMsgServer(f.poaKeeper)
+		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Set consensus params with no allowed pubkey types
 		f.ctx = f.ctx.WithConsensusParams(cmtproto.ConsensusParams{
@@ -329,6 +341,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-empty",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+		Admin:           adminAddr,
 		}
 
 		_, err = msgServer.CreateValidator(f.ctx, msg)

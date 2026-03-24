@@ -173,6 +173,7 @@ func (m *MsgUpdateValidators) ValidateBasic() error {
 // It ensures that:
 //   - Metadata passes basic validation (operator address, moniker, and description are valid)
 //   - Operator address is a valid address format according to the address codec
+//   - Admin (signer) is a valid address format
 //   - PubKey is not nil
 //
 // The address codec is used to validate the operator address format.
@@ -188,6 +189,9 @@ func (m *MsgCreateValidator) Validate(ac address.Codec) error {
 
 	if _, err := ac.StringToBytes(m.OperatorAddress); err != nil {
 		return sdkerrors.Wrap(ErrInvalidMetadata, "operator address is invalid")
+	}
+	if _, err := ac.StringToBytes(m.Admin); err != nil {
+		return sdkerrors.Wrap(ErrInvalidAdminAddress, "invalid signer address: "+err.Error())
 	}
 
 	// Check that pubkey is not nil

@@ -317,9 +317,10 @@ func TestUpdateValidators(t *testing.T) {
 
 func TestCreateValidator(t *testing.T) {
 	// Scenario:
-	// - Test creating validators with both ed25519 and secp256k1 keys
-	// - Verify validators appear in the validators list (pending)
-	// - Admin approves validators by updating power
+	// - Admin creates validators with both ed25519 and secp256k1 keys
+	// - Verify non-admin creation attempts fail
+	// - Verify validators are created with initial positive power
+	// - Admin updates validator power
 	// - Verify validators are now active
 
 	sut := systemtests.Sut
@@ -357,14 +358,15 @@ func TestCreateValidator(t *testing.T) {
 	secp256k1PkString := base64.StdEncoding.EncodeToString(secp256k1PubKey.Bytes())
 
 	t.Run("create ed25519 validator", func(t *testing.T) {
-		// Create validator with ed25519 key
+		// Admin creates validator with ed25519 key
 		rsp := cli.Run(
 			"tx", poaModule, "create-validator",
 			"ed25519-validator",
 			ed25519PkString,
 			"ed25519",
 			"--description=Ed25519 test validator",
-			"--from="+ed25519ValKeyName,
+			"--operator-address="+ed25519ValAddr,
+			"--from="+adminKeyName,
 			"--gas=auto",
 		)
 		systemtests.RequireTxSuccess(t, rsp)
@@ -377,20 +379,21 @@ func TestCreateValidator(t *testing.T) {
 		moniker := gjson.Get(rsp, "validator.metadata.moniker").String()
 		assert.Equal(t, "ed25519-validator", moniker)
 
-		// New validator should have 0 power initially
+		// New validator should have positive power immediately
 		power := gjson.Get(rsp, "validator.power").Int()
-		assert.Equal(t, int64(0), power, "new validator should have 0 power initially")
+		assert.Equal(t, int64(1), power, "new validator should have initial positive power")
 	})
 
 	t.Run("create secp256k1 validator", func(t *testing.T) {
-		// Create validator with secp256k1 key
+		// Admin creates validator with secp256k1 key
 		rsp := cli.Run(
 			"tx", poaModule, "create-validator",
 			"secp256k1-validator",
 			secp256k1PkString,
 			"secp256k1",
 			"--description=Secp256k1 test validator",
-			"--from="+secp256k1ValKeyName,
+			"--operator-address="+secp256k1ValAddr,
+			"--from="+adminKeyName,
 			"--gas=auto",
 		)
 		systemtests.RequireTxSuccess(t, rsp)
@@ -403,9 +406,24 @@ func TestCreateValidator(t *testing.T) {
 		moniker := gjson.Get(rsp, "validator.metadata.moniker").String()
 		assert.Equal(t, "secp256k1-validator", moniker)
 
-		// New validator should have 0 power initially
+		// New validator should have positive power immediately
 		power := gjson.Get(rsp, "validator.power").Int()
-		assert.Equal(t, int64(0), power, "new validator should have 0 power initially")
+		assert.Equal(t, int64(1), power, "new validator should have initial positive power")
+	})
+
+	t.Run("non-admin cannot create validator", func(t *testing.T) {
+		rsp, _ := cli.WithRunErrorsIgnored().RunOnly(
+			"tx", poaModule, "create-validator",
+			"unauthorized-validator",
+			ed25519PkString,
+			"ed25519",
+			"--description=should fail",
+			"--operator-address="+ed25519ValAddr,
+			"--from="+ed25519ValKeyName,
+			"--gas=auto",
+		)
+		requireTxFailed(t, rsp)
+		require.Contains(t, rsp, "invalid authority")
 	})
 
 	t.Run("admin activates both validators", func(t *testing.T) {
@@ -475,10 +493,11 @@ func TestCreateValidator(t *testing.T) {
 		power = gjson.Get(rsp, "validator.power").Int()
 		assert.Equal(t, int64(secp256k1Power), power, "secp256k1 validator should now have power")
 
-		// Verify total power increased by both validators
+		// Verify total power increased by both validators.
+		// Both validators already had initial power=1 from creation.
 		rsp = cli.CustomQuery("q", poaModule, "total-power")
 		totalPowerAfter := gjson.Get(rsp, "total_power").Int()
-		expectedTotal := totalPowerBefore + int64(ed25519Power) + int64(secp256k1Power)
+		expectedTotal := totalPowerBefore + int64(ed25519Power-1) + int64(secp256k1Power-1)
 		assert.Equal(t, expectedTotal, totalPowerAfter, "total power should include both new validators")
 	})
 }

@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v1.0.0
 	cosmossdk.io/client/v2 v2.0.0-beta.11
 	cosmossdk.io/core v1.1.0
-	cosmossdk.io/log/v2 v2.0.1
+	cosmossdk.io/log/v2 v2.1.0-rc.0
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/tools/confix v0.1.2
 	github.com/cometbft/cometbft v0.39.0-rc3
@@ -288,7 +288,6 @@ replace github.com/cosmos/cosmos-sdk/enterprise/group => ..
 
 replace (
 	cosmossdk.io/client/v2 => ../../../client/v2
-	cosmossdk.io/log/v2 => ../../../log
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	github.com/cosmos/cosmos-sdk => ../../../.
 	github.com/cosmos/cosmos-sdk/store/v2 => ../../../store

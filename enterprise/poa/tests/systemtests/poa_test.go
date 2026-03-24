@@ -764,28 +764,42 @@ func validatorUpdateJSON(v validatorInfo, power int64) string {
 
 func TestReplaceAllValidatorsInOneBlock(t *testing.T) {
 	// Scenario:
-	// - Create 2 new validators (0 power)
-	// - In a single update-validators tx, give power to the new validators
-	//   and set all existing genesis validators to 0 power
-	// - Verify the old validators have 0 power and new validators are active
+	// - Start chain, add 2 fullnodes (real CometBFT processes with consensus keys)
+	// - Admin creates validators backed by those fullnodes (with power via create-validator)
+	// - Admin sets all genesis validators to 0 power in a single update-validators tx
+	// - Chain keeps producing blocks because fullnodes are now the active validator set
+	// - Verify old validators have 0 power and new validators are active
 
 	sut := systemtests.Sut
 	sut.ResetChain(t)
 
 	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
 
-	// Create accounts for replacement validators
-	newVal1KeyName := "replaceval1"
-	newVal1Addr := cli.AddKey(newVal1KeyName)
-	newVal2KeyName := "replaceval2"
-	newVal2Addr := cli.AddKey(newVal2KeyName)
+	// Create operator accounts for the replacement validators
+	newVal1OperatorAddr := cli.AddKey("replaceval1")
+	newVal2OperatorAddr := cli.AddKey("replaceval2")
 
 	sut.ModifyGenesisCLI(t,
-		[]string{"genesis", "add-genesis-account", newVal1Addr, "10000000stake"},
-		[]string{"genesis", "add-genesis-account", newVal2Addr, "10000000stake"},
+		[]string{"genesis", "add-genesis-account", newVal1OperatorAddr, "10000000stake"},
+		[]string{"genesis", "add-genesis-account", newVal2OperatorAddr, "10000000stake"},
 	)
 
 	sut.StartChain(t)
+
+	// Add 2 fullnodes — these are real CometBFT processes that can sign blocks
+	// once they become validators
+	fullnode1 := sut.AddFullnode(t)
+	sut.AwaitNodeUp(t, fullnode1.RPCAddr())
+
+	fullnode2 := sut.AddFullnode(t)
+	sut.AwaitNodeUp(t, fullnode2.RPCAddr())
+
+	// Read the fullnodes' consensus pubkeys from their priv_validator_key.json
+	fn1PubKey := systemtests.LoadValidatorPubKeyForNode(t, sut, sut.NodesCount()-2)
+	fn1PkStr := base64.StdEncoding.EncodeToString(fn1PubKey.Bytes())
+
+	fn2PubKey := systemtests.LoadValidatorPubKeyForNode(t, sut, sut.NodesCount()-1)
+	fn2PkStr := base64.StdEncoding.EncodeToString(fn2PubKey.Bytes())
 
 	_, adminKeyName := getAdmin(t, cli)
 
@@ -794,46 +808,26 @@ func TestReplaceAllValidatorsInOneBlock(t *testing.T) {
 	require.NotEmpty(t, genesisVals)
 	t.Logf("Genesis validators: %d", len(genesisVals))
 
-	// Generate keys and create 2 new validators with 0 power
-	newVal1PrivKey := ed25519.GenPrivKey()
-	newVal1PubKey := newVal1PrivKey.PubKey()
-	newVal1PkStr := base64.StdEncoding.EncodeToString(newVal1PubKey.Bytes())
-
-	newVal2PrivKey := ed25519.GenPrivKey()
-	newVal2PubKey := newVal2PrivKey.PubKey()
-	newVal2PkStr := base64.StdEncoding.EncodeToString(newVal2PubKey.Bytes())
-
+	// Admin creates 2 new validators backed by the fullnodes' consensus keys
+	// New create-validator gives them power immediately
 	rsp := cli.Run("tx", poaModule, "create-validator",
-		"replace-val-1", newVal1PkStr, "ed25519",
-		"--from="+newVal1KeyName, "--gas=auto",
+		"replace-val-1", fn1PkStr, "ed25519",
+		"--operator-address="+newVal1OperatorAddr,
+		"--power=5000",
+		"--from="+adminKeyName, "--gas=auto",
 	)
 	systemtests.RequireTxSuccess(t, rsp)
 
 	rsp = cli.Run("tx", poaModule, "create-validator",
-		"replace-val-2", newVal2PkStr, "ed25519",
-		"--from="+newVal2KeyName, "--gas=auto",
+		"replace-val-2", fn2PkStr, "ed25519",
+		"--operator-address="+newVal2OperatorAddr,
+		"--power=5000",
+		"--from="+adminKeyName, "--gas=auto",
 	)
 	systemtests.RequireTxSuccess(t, rsp)
 
-	// Build a single update-validators call that:
-	//   1. Sets new validators to positive power (first, so total power stays > 0)
-	//   2. Sets all genesis validators to 0 power
+	// Now set all genesis validators to 0 power in a single tx
 	var entries []string
-
-	// New validators get power
-	entries = append(entries, fmt.Sprintf(`{
-		"pub_key": {"@type": "/cosmos.crypto.ed25519.PubKey", "key": "%s"},
-		"power": 5000,
-		"metadata": {"moniker": "replace-val-1", "operator_address": "%s"}
-	}`, newVal1PkStr, newVal1Addr))
-
-	entries = append(entries, fmt.Sprintf(`{
-		"pub_key": {"@type": "/cosmos.crypto.ed25519.PubKey", "key": "%s"},
-		"power": 5000,
-		"metadata": {"moniker": "replace-val-2", "operator_address": "%s"}
-	}`, newVal2PkStr, newVal2Addr))
-
-	// Old validators lose power
 	for _, v := range genesisVals {
 		entries = append(entries, validatorUpdateJSON(v, 0))
 	}
@@ -851,10 +845,10 @@ func TestReplaceAllValidatorsInOneBlock(t *testing.T) {
 	sut.AwaitNBlocks(t, 3)
 
 	// Verify new validators are active
-	rsp = cli.CustomQuery("q", poaModule, "validator", newVal1Addr)
+	rsp = cli.CustomQuery("q", poaModule, "validator", newVal1OperatorAddr)
 	assert.Equal(t, int64(5000), gjson.Get(rsp, "validator.power").Int(), "new validator 1 should have power")
 
-	rsp = cli.CustomQuery("q", poaModule, "validator", newVal2Addr)
+	rsp = cli.CustomQuery("q", poaModule, "validator", newVal2OperatorAddr)
 	assert.Equal(t, int64(5000), gjson.Get(rsp, "validator.power").Int(), "new validator 2 should have power")
 
 	// Verify old validators have 0 power

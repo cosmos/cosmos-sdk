@@ -26,6 +26,7 @@ func NewFileWriter(file *os.File) *FileWriter {
 func NewFileWriterSize(file *os.File, size int) *FileWriter {
 	var written int
 	if info, err := file.Stat(); err == nil {
+		// Make sure we initialize the writer with the correct current size of the file.
 		written = int(info.Size())
 	}
 	return &FileWriter{

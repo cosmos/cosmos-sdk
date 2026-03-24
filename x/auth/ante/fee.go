@@ -11,6 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+// FeeRecipientModule holds the module name that receives deducted tx fees.
+// It is set by NewDeductFeeDecorator (default: fee_collector) and updated by
+// WithFeeRecipientModule. Other modules can read this to verify that fees are
+// being routed to the expected destination.
+var FeeRecipientModule string
+
 // TxFeeChecker check if the provided fee is enough and returns the effective fee and tx priority,
 // the effective fee should be deducted later, and the priority should be returned in abci response.
 type TxFeeChecker func(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error)
@@ -32,6 +38,8 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 		tfc = checkTxFeeWithValidatorMinGasPrices
 	}
 
+	FeeRecipientModule = types.FeeCollectorName
+
 	return DeductFeeDecorator{
 		accountKeeper:      ak,
 		bankKeeper:         bk,
@@ -49,6 +57,7 @@ func (dfd DeductFeeDecorator) WithFeeRecipientModule(moduleName string) DeductFe
 		panic("fee recipient module name cannot be empty")
 	}
 	dfd.feeRecipientModule = moduleName
+	FeeRecipientModule = moduleName
 	return dfd
 }
 

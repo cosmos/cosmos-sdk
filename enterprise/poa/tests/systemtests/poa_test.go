@@ -366,6 +366,7 @@ func TestCreateValidator(t *testing.T) {
 			"ed25519",
 			"--description=Ed25519 test validator",
 			"--operator-address="+ed25519ValAddr,
+			"--power=1",
 			"--from="+adminKeyName,
 			"--gas=auto",
 		)
@@ -393,6 +394,7 @@ func TestCreateValidator(t *testing.T) {
 			"secp256k1",
 			"--description=Secp256k1 test validator",
 			"--operator-address="+secp256k1ValAddr,
+			"--power=1",
 			"--from="+adminKeyName,
 			"--gas=auto",
 		)
@@ -419,11 +421,28 @@ func TestCreateValidator(t *testing.T) {
 			"ed25519",
 			"--description=should fail",
 			"--operator-address="+ed25519ValAddr,
+			"--power=1",
 			"--from="+ed25519ValKeyName,
 			"--gas=auto",
 		)
 		requireTxFailed(t, rsp)
 		require.Contains(t, rsp, "invalid authority")
+	})
+
+	t.Run("admin cannot create zero-power validator", func(t *testing.T) {
+		rsp, _ := cli.WithRunErrorsIgnored().RunOnly(
+			"tx", poaModule, "create-validator",
+			"zero-power-validator",
+			ed25519PkString,
+			"ed25519",
+			"--description=should fail",
+			"--operator-address="+ed25519ValAddr,
+			"--power=0",
+			"--from="+adminKeyName,
+			"--gas=auto",
+		)
+		requireTxFailed(t, rsp)
+		require.Contains(t, rsp, "validator power must be greater than zero")
 	})
 
 	t.Run("admin activates both validators", func(t *testing.T) {

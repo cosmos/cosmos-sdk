@@ -193,6 +193,9 @@ func (m *MsgCreateValidator) Validate(ac address.Codec) error {
 	if _, err := ac.StringToBytes(m.Admin); err != nil {
 		return sdkerrors.Wrap(ErrInvalidAdminAddress, "invalid signer address: "+err.Error())
 	}
+	if m.Power <= 0 {
+		return sdkerrors.Wrap(ErrInvalidValidatorPower, "validator power must be greater than zero")
+	}
 
 	// Check that pubkey is not nil
 	if m.PubKey == nil {

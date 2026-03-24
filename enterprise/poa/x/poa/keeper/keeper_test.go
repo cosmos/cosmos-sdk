@@ -166,6 +166,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-ed25519",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -198,6 +199,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-secp256k1",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -229,6 +231,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-ed25519-both",
 			Description:     "test",
 			OperatorAddress: ed25519OperatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -249,6 +252,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-secp256k1-both",
 			Description:     "test",
 			OperatorAddress: secp256k1OperatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -279,6 +283,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-reject",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -311,6 +316,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-reject-secp",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -341,6 +347,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-empty",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 

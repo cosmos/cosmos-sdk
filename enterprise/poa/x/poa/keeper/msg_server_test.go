@@ -160,6 +160,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "test description",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -209,6 +210,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "A test validator for unit tests",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -239,12 +241,36 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "unauthorized-validator",
 			Description:     "should fail",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           sdk.AccAddress("wrongadmin").String(),
 		}
 
 		_, err := msgServer.CreateValidator(f.ctx, msg)
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "invalid authority")
+	})
+
+	t.Run("fails when creating zero-powered validator", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
+
+		pubKey := ed25519.GenPrivKey().PubKey()
+		pubKeyAny := types.UnsafePackAny(pubKey)
+		operatorAddr := sdk.AccAddress("operator-zero-power")
+
+		msg := &poatypes.MsgCreateValidator{
+			PubKey:          pubKeyAny,
+			Moniker:         "zero-power-validator",
+			Description:     "should fail",
+			OperatorAddress: operatorAddr.String(),
+			Power:           0,
+			Admin:           adminAddr,
+		}
+
+		_, err := msgServer.CreateValidator(f.ctx, msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "validator power must be greater than zero")
 	})
 
 	t.Run("fails validation with empty moniker", func(t *testing.T) {
@@ -261,6 +287,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "", // Empty moniker
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -286,6 +313,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         longMoniker,
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -311,6 +339,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     longDescription,
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -332,6 +361,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "test",
 			OperatorAddress: "", // Missing operator address
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -353,6 +383,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "test",
 			OperatorAddress: "invalid-address",
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -462,6 +493,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator-1",
 			Description:     "first validator",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -477,6 +509,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator-2",
 			Description:     "second validator",
 			OperatorAddress: operatorAddr.String(), // Same operator address
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -502,6 +535,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -528,6 +562,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -564,6 +599,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -594,6 +630,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 
@@ -632,6 +669,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
+			Power:           1,
 			Admin:           adminAddr,
 		}
 

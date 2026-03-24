@@ -113,7 +113,7 @@ func (s *MsgServer) CreateValidator(
 
 	validator := types.Validator{
 		PubKey: req.PubKey,
-		Power:  1,
+		Power:  req.Power,
 		Metadata: &types.ValidatorMetadata{
 			Moniker:         req.Moniker,
 			Description:     req.Description,
@@ -133,7 +133,7 @@ func (s *MsgServer) CreateValidator(
 			sdk.NewAttribute(types.AttributeKeyOperatorAddress, req.OperatorAddress),
 			sdk.NewAttribute(types.AttributeKeyConsensusAddress, consAddress.String()),
 			sdk.NewAttribute(types.AttributeKeyMoniker, req.Moniker),
-			sdk.NewAttribute(types.AttributeKeyPower, "1"),
+			sdk.NewAttribute(types.AttributeKeyPower, strconv.FormatInt(validator.Power, 10)),
 		),
 	)
 

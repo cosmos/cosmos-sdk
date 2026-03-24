@@ -158,6 +158,7 @@ simd tx poa create-validator \
     "ed25519" \
     --description "My validator description" \
     --operator-address $OPERATOR_ADDR \
+    --power 1 \
     --from account \
     --keyring-backend test \
     --fees 1token

@@ -55,6 +55,7 @@ Use this checklist first, then read the linked sections for the exact code or wi
 - [ ] Migrate to Cosmos Enterprise if you use the `x/group` module. See [Groups Module](#groups-module).
 - [ ] Update imports to `cosmossdk.io/log/v2` if your app imports the log package directly. See [Log v2](#log-v2).
 - [ ] Migrate imports to `github.com/cosmos/cosmos-sdk/store/v2`. See [Store v2](#store-v2).
+- [ ] Migrate any remaining `BaseApp.NewUncachedContext()` or `BaseApp.SimWriteState()` usage. See [Store v2](#store-v2).
 - [ ] If using `systemtests` update import to `github.com/cosmos/cosmos-sdk/tools/systemtests`.
 - [ ] Review [Centralized Authority via Consensus Params](#centralized-authority-via-consensus-params). No upgrade action is required to keep using per-keeper authorities.
 - [ ] Review [Telemetry](#telemetry). No upgrade action is required to keep existing telemetry wiring, but upgrading to OpenTelemetry is strongly encouraged.
@@ -182,6 +183,56 @@ To learn more about the new features offered in `log/v2`, as well as setting up 
 The store package has been updated to `v2`. Applications using v0.54.0+ of
 Cosmos SDK will be required to update imports to
 `github.com/cosmos/cosmos-sdk/store/v2`. 
+
+`BaseApp.NewUncachedContext()` and `BaseApp.SimWriteState()` were removed as part of this work. With store v2, writes must go through a cache/branch first; the SDK no longer exposes a helper that lets applications write directly against the root `CommitMultiStore`.
+
+If you previously used `BaseApp.NewUncachedContext()` in tests:
+
+- Replace `app.NewUncachedContext(false, header)` with `app.NewNextBlockContext(header)` when the test needs a writable context between `Commit()` and the next `FinalizeBlock()`.
+- Replace `app.NewUncachedContext(true, header)` with `app.NewContext(true)` or `app.NewContextLegacy(true, header)` when the test only needs the `CheckTx` state.
+- If the test was relying on writes leaking directly into the root store, update it to work with the commit/rollback isolation now enforced by the store layer.
+
+If you previously used `BaseApp.SimWriteState()`, delete the call. `Commit()` now flushes the finalize state, so simulations and tests no longer need a separate write step.
+
+
+Below is an example of migrating away from `NewUncachedContext`.
+```go
+func TestApp(t *testing.T) {
+	db := dbm.NewMemDB()
+	logger := log.NewTestLogger(t)
+	app := NewSimappWithCustomOptions(t, false, SetupOptions{
+		Logger:  logger.With("instance", "first"),
+		DB:      db,
+		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
+	})
+
+	/*
+	    Before the updates, most code would look like:
+	
+	    ctx := gaiaApp.NewUncachedContext(true, tmproto.Header{}) // CheckTx context
+	    app.MyKeeper.MyMethod(ctx, ...)
+	
+	    The main thing to be aware of is when you are using checkTx state and finalizeState.
+	    NewNextBlockContext will overwrite the finalize state and return a context that writes to that state.
+        Reading from checkTx state without committing will not reflect the changes made in finalizeBlock state UNLESS you have committed.
+	 */
+	ctx := app.BaseApp.NewNextBlockContext(cmtproto.Header{}) // gets finalize block state
+	app.BankKeeper.SetSendEnabled(ctx, "foobar", true)
+	_, err := app.Commit() // commit the out-of-band changes.
+    require.NoError(t, err)
+	
+	// since we committed, we can now read the out-of-band changes via checkTx state.
+	// If we didn't commit above, we could read this value by passing `false` to NewContext, which would give us a handle
+	// on the finalize block state. However, if you DID commit like we did above, you MUST use `true` here.
+	res, err := app.BankKeeper.SendEnabled(app.BaseApp.NewContext(true), &banktypes.QuerySendEnabledRequest{
+		Denoms:     []string{"foobar"},
+		Pagination: nil,
+	})
+	require.NoError(t, err)
+	require.Len(t, res.SendEnabled, 1)
+	require.Equal(t, "foobar", res.SendEnabled[0].Denom)
+}
+```
 
 ## Conditional Changes
 

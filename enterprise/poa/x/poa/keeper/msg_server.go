@@ -134,6 +134,10 @@ func (s *MsgServer) CreateValidator(
 func (s *MsgServer) EditValidator(
 	ctx context.Context, req *types.MsgEditValidator,
 ) (*types.MsgEditValidatorResponse, error) {
+	if err := req.Validate(s.keeper.authKeeper.AddressCodec()); err != nil {
+		return nil, err
+	}
+
 	addrBz, err := s.keeper.authKeeper.AddressCodec().StringToBytes(req.Sender)
 	if err != nil {
 		return nil, err

@@ -942,8 +942,10 @@ func TestCreateZeroThenReplaceActiveSet(t *testing.T) {
 	require.Equal(t, int64(0), gjson.Get(rsp, "validator.power").Int())
 
 	// Step 3: In ONE tx, resurrect the zeroed validators and remove the entire
-	// genesis active set. New validators are listed first so total power stays > 0
-	// during sequential processing.
+	// genesis active set. Order matters: Keeper.UpdateValidators iterates the
+	// slice sequentially, calling AdjustTotalPower per entry inside a cacheCtx.
+	// If total power hits 0 on any intermediate step the whole batch reverts.
+	// Listing the power-gaining entries first avoids that.
 	genesisVals := getValidators(t, cli)
 	var activeGenesis []validatorInfo
 	for _, v := range genesisVals {

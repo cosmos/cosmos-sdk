@@ -166,7 +166,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-ed25519",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		resp, err := msgServer.CreateValidator(f.ctx, msg)
@@ -198,7 +198,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-secp256k1",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		resp, err := msgServer.CreateValidator(f.ctx, msg)
@@ -229,7 +229,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-ed25519-both",
 			Description:     "test",
 			OperatorAddress: ed25519OperatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		resp1, err := msgServer.CreateValidator(f.ctx, msg1)
@@ -249,7 +249,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-secp256k1-both",
 			Description:     "test",
 			OperatorAddress: secp256k1OperatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		resp2, err := msgServer.CreateValidator(f.ctx, msg2)
@@ -279,7 +279,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-reject",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		_, err = msgServer.CreateValidator(f.ctx, msg)
@@ -311,7 +311,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-reject-secp",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		_, err = msgServer.CreateValidator(f.ctx, msg)
@@ -341,7 +341,7 @@ func TestValidatePubkeyType(t *testing.T) {
 			Moniker:         "test-validator-empty",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		_, err = msgServer.CreateValidator(f.ctx, msg)

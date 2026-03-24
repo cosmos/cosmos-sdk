@@ -160,7 +160,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "test description",
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		resp, err := msgServer.CreateValidator(f.ctx, msg)
@@ -209,7 +209,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "A test validator for unit tests",
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		resp, err := msgServer.CreateValidator(f.ctx, msg)
@@ -261,7 +261,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "", // Empty moniker
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		_, err := msgServer.CreateValidator(f.ctx, msg)
@@ -286,7 +286,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         longMoniker,
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		_, err := msgServer.CreateValidator(f.ctx, msg)
@@ -311,7 +311,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     longDescription,
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		_, err := msgServer.CreateValidator(f.ctx, msg)
@@ -353,7 +353,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "test",
 			OperatorAddress: "invalid-address",
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		_, err := msgServer.CreateValidator(f.ctx, msg)
@@ -462,7 +462,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator-1",
 			Description:     "first validator",
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		_, err := msgServer.CreateValidator(f.ctx, msg1)
@@ -502,7 +502,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		_, err := msgServer.CreateValidator(f.ctx, msg)
@@ -528,7 +528,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		resp, err := msgServer.CreateValidator(f.ctx, msg)
@@ -564,7 +564,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		_, err := msgServer.CreateValidator(f.ctx, msg)
@@ -594,7 +594,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		resp, err := msgServer.CreateValidator(f.ctx, msg)
@@ -632,7 +632,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 			Moniker:         "test-validator",
 			Description:     "test",
 			OperatorAddress: operatorAddr.String(),
-		Admin:           adminAddr,
+			Admin:           adminAddr,
 		}
 
 		_, err := msgServer.CreateValidator(f.ctx, msg)

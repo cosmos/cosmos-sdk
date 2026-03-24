@@ -9,6 +9,7 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
 ## Table of Contents
 
 - [Upgrade Checklist](#upgrade-checklist)
+- [Migration MCP Server](#migration-mcp-server)
 - [Required Changes](#required-changes)
     - [App Wiring Changes](#app-wiring-changes)
         - [x/gov](#xgov)
@@ -61,6 +62,41 @@ Use this checklist first, then read the linked sections for the exact code or wi
 - [ ] Review [Telemetry](#telemetry). No upgrade action is required to keep existing telemetry wiring, but upgrading to OpenTelemetry is strongly encouraged.
 - [ ] Review [PoA Module](#poa-module) if you are interested in adopting the new Cosmos Enterprise Proof of Authority module.
 - [ ] Review [Experimental Features](#experimental-features) if you are interested in enabling `libp2p` or `BlockSTM`.
+
+## Migration MCP Server
+
+This repository includes an MCP server under `tools/migration/mcp` that can
+scan a chain repository, propose the applicable `v0.54` migration steps,
+apply the mechanical rewrites, and verify the result.
+
+This is optional tooling, not a substitute for reading the upgrade notes. You
+should still review the sections below for any manual follow-up, module-specific
+behavior changes, or release-specific constraints that are not safe to infer
+purely from code rewrites.
+
+Basic workflow:
+
+1. Start the server from `tools/migration/mcp`.
+2. Ask your MCP-capable agent to run `scan_chain_tool` on your chain repo.
+3. If the scan reports `fatal_blocks`, stop and handle those first.
+4. Run `get_migration_plan` and keep the returned `application_order`.
+5. Apply specs in order with `apply_spec`.
+6. Run `go mod tidy`.
+7. Run `verify_all_specs(..., spec_ids=<application_order>)`.
+8. Run `verify_build`.
+9. Review any remaining warnings or `manual_steps_required`, then compare the
+   result against the relevant sections in this guide.
+
+The MCP server is especially useful for:
+
+- `go.mod` dependency updates
+- import-path rewrites
+- common app wiring migrations such as `x/gov`, `x/epochs`, and `x/bank`
+- removing obsolete helper calls such as `BaseApp.NewUncachedContext()` and
+  `BaseApp.SimWriteState()`
+
+For setup details, MCP resource URIs, and tool names, see
+`tools/migration/mcp/README.md`.
 
 ## Required Changes
 

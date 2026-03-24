@@ -11,6 +11,7 @@ import os
 import re
 import subprocess
 from dataclasses import asdict
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Callable
 
@@ -20,21 +21,23 @@ from mcp.server.fastmcp import FastMCP
 from specs import (
     CHANGELOG_FILE,
     RELEASE_NOTES_FILE,
+    REPO_ROOT,
     SPEC_DIR,
     UPGRADING_FILE,
+    ScanResult,
     Spec,
     list_go_files,
     list_go_mod_files,
     load_specs,
     order_specs,
+    semver_sort_desc,
     scan_chain,
     verify_spec,
 )
 
 mcp = FastMCP(
     "cosmos-migration",
-    version="0.2.0",
-    description="Cosmos SDK chain migration server (v50+ → v54). "
+    instructions="Cosmos SDK chain migration server (v50+ → v54). "
     "Provides tools for scanning chains, planning migrations, applying "
     "specs, and verifying results against the repository upgrade docs.",
 )
@@ -58,7 +61,7 @@ def scan_chain_tool(chain_dir: str) -> dict[str, Any]:
     Args:
         chain_dir: Absolute path to the chain repository root.
     """
-    return asdict(scan_chain(chain_dir))
+    return asdict(_scan_chain_refined(chain_dir))
 
 
 @mcp.tool()
@@ -78,7 +81,7 @@ def get_migration_plan(chain_dir: str) -> dict[str, Any]:
         chain_dir: Absolute path to the chain repository root.
     """
     specs = load_specs()
-    scan = scan_chain(chain_dir, specs)
+    scan = _scan_chain_refined(chain_dir, specs)
 
     if scan.fatal_blocks:
         return {
@@ -95,6 +98,7 @@ def get_migration_plan(chain_dir: str) -> dict[str, Any]:
         spec = spec_map.get(spec_id)
         if not spec:
             continue
+        preview = _execute_spec(chain_dir, spec, dry_run=True)
 
         plan.append(
             {
@@ -103,12 +107,9 @@ def get_migration_plan(chain_dir: str) -> dict[str, Any]:
                 "description": spec.description.strip(),
                 "changes_summary": _summarize_changes(spec.changes),
                 "affected_files": _estimate_affected_files(chain_dir, spec),
-                "manual_steps": spec.manual_steps,
+                "manual_steps": preview.get("manual_steps_required", []),
                 "upstream_sources": spec.raw.get("upstream_sources", []),
-                "has_warnings": any(
-                    not warning.get("fatal", False)
-                    for warning in spec.changes.get("imports", {}).get("warnings", [])
-                ),
+                "has_warnings": bool(preview.get("warnings")),
             }
         )
 
@@ -149,37 +150,7 @@ def apply_spec(chain_dir: str, spec_id: str, dry_run: bool = False) -> dict[str,
             "message": spec.fatal_message,
         }
 
-    results: dict[str, Any] = {
-        "spec_id": spec_id,
-        "dry_run": dry_run,
-        "go_mod_changes": [],
-        "file_removals": [],
-        "import_rewrites": [],
-        "statement_removals": [],
-        "map_entry_removals": [],
-        "call_arg_edits": [],
-        "special_case_rewrites": [],
-        "text_replacements": [],
-        "manual_steps_required": list(spec.manual_steps),
-        "warnings": [],
-    }
-
-    changes = spec.changes
-
-    _apply_file_removals(chain_dir, changes.get("file_removals", []), dry_run, results)
-    _apply_go_mod_changes(chain_dir, changes.get("go_mod", {}), dry_run, results)
-    _apply_import_rewrites(chain_dir, changes.get("imports", {}).get("rewrites", []), dry_run, results)
-    _apply_statement_removals(chain_dir, changes.get("statement_removals", []), dry_run, results)
-    _apply_map_entry_removals(chain_dir, changes.get("map_entry_removals", []), dry_run, results)
-    _apply_call_arg_edits(chain_dir, changes.get("call_arg_edits", []), dry_run, results)
-    _apply_special_cases(chain_dir, changes.get("special_cases", []), dry_run, results)
-    _apply_text_replacements(chain_dir, changes.get("text_replacements", []), dry_run, results)
-
-    for warning in changes.get("imports", {}).get("warnings", []):
-        if not warning.get("fatal", False):
-            results["warnings"].append(warning.get("message", ""))
-
-    return results
+    return _execute_spec(chain_dir, spec, dry_run)
 
 
 @mcp.tool()
@@ -207,7 +178,7 @@ def verify_all_specs(chain_dir: str, spec_ids: list[str] | None = None) -> dict[
     """
     specs = load_specs()
     spec_map = {spec.id: spec for spec in specs}
-    selected_ids = spec_ids or scan_chain(chain_dir, specs).applicable_specs
+    selected_ids = spec_ids or _scan_chain_refined(chain_dir, specs).applicable_specs
 
     results = []
     all_passed = True
@@ -298,7 +269,7 @@ def get_spec(spec_id: str) -> dict[str, Any]:
 @mcp.tool()
 def check_warnings(chain_dir: str) -> dict[str, Any]:
     """Check a chain directory for fatal and non-fatal migration warnings."""
-    scan = scan_chain(chain_dir)
+    scan = _scan_chain_refined(chain_dir)
     return {
         "chain_dir": chain_dir,
         "fatal_blocks": scan.fatal_blocks,
@@ -306,6 +277,42 @@ def check_warnings(chain_dir: str) -> dict[str, Any]:
         "has_fatal": bool(scan.fatal_blocks),
         "has_warnings": bool(scan.warnings),
     }
+
+
+def _scan_chain_refined(chain_dir: str, specs: list[Spec] | None = None) -> ScanResult:
+    specs = specs or load_specs()
+    raw_scan = scan_chain(chain_dir, specs)
+    spec_map = {spec.id: spec for spec in specs}
+    fatal_ids = {entry["spec_id"] for entry in raw_scan.fatal_blocks}
+
+    applicable_specs: list[str] = []
+    detection_details: dict[str, dict[str, list[str]]] = {}
+
+    for spec_id in raw_scan.applicable_specs:
+        spec = spec_map.get(spec_id)
+        if not spec:
+            continue
+
+        if spec_id in fatal_ids:
+            applicable_specs.append(spec_id)
+            if spec_id in raw_scan.detection_details:
+                detection_details[spec_id] = raw_scan.detection_details[spec_id]
+            continue
+
+        preview = _execute_spec(chain_dir, spec, dry_run=True)
+        if _results_have_effective_changes(preview) or not preview.get("verification_passed", False):
+            applicable_specs.append(spec_id)
+            if spec_id in raw_scan.detection_details:
+                detection_details[spec_id] = raw_scan.detection_details[spec_id]
+
+    return ScanResult(
+        chain_dir=raw_scan.chain_dir,
+        sdk_version=raw_scan.sdk_version,
+        applicable_specs=applicable_specs,
+        warnings=_dedupe_warning_entries(raw_scan.warnings),
+        fatal_blocks=raw_scan.fatal_blocks,
+        detection_details=detection_details,
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -473,6 +480,95 @@ def _load_spec(spec_id: str) -> Spec | None:
     return next((spec for spec in load_specs() if spec.id == spec_id), None)
 
 
+def _execute_spec(chain_dir: str, spec: Spec, dry_run: bool) -> dict[str, Any]:
+    results: dict[str, Any] = {
+        "spec_id": spec.id,
+        "dry_run": dry_run,
+        "go_mod_changes": [],
+        "file_removals": [],
+        "import_rewrites": [],
+        "statement_removals": [],
+        "map_entry_removals": [],
+        "call_arg_edits": [],
+        "special_case_rewrites": [],
+        "text_replacements": [],
+        "manual_steps_required": list(spec.manual_steps),
+        "warnings": [],
+    }
+
+    changes = spec.changes
+
+    _apply_file_removals(chain_dir, changes.get("file_removals", []), dry_run, results)
+    _apply_go_mod_changes(chain_dir, changes.get("go_mod", {}), dry_run, results)
+    _apply_import_rewrites(chain_dir, changes.get("imports", {}).get("rewrites", []), dry_run, results)
+    _apply_statement_removals(chain_dir, changes.get("statement_removals", []), dry_run, results)
+    _apply_map_entry_removals(chain_dir, changes.get("map_entry_removals", []), dry_run, results)
+    _apply_call_arg_edits(chain_dir, changes.get("call_arg_edits", []), dry_run, results)
+    _apply_special_cases(chain_dir, changes.get("special_cases", []), dry_run, results)
+    _apply_text_replacements(chain_dir, changes.get("text_replacements", []), dry_run, results)
+
+    for warning in changes.get("imports", {}).get("warnings", []):
+        if not warning.get("fatal", False):
+            results["warnings"].append(warning.get("message", ""))
+
+    return _finalize_spec_results(chain_dir, spec, results)
+
+
+def _finalize_spec_results(chain_dir: str, spec: Spec, results: dict[str, Any]) -> dict[str, Any]:
+    results["warnings"] = _dedupe_strings(results.get("warnings", []))
+
+    verification = verify_spec(spec, chain_dir)
+    results["verification_passed"] = verification.passed
+
+    if not _results_have_effective_changes(results) and verification.passed:
+        results["already_satisfied"] = True
+        results["manual_steps_required"] = []
+        return results
+
+    results["already_satisfied"] = False
+    if spec.raw.get("manual_steps_policy") == "only_when_unresolved" and verification.passed:
+        results["manual_steps_required"] = []
+
+    return results
+
+
+def _results_have_effective_changes(results: dict[str, Any]) -> bool:
+    change_keys = (
+        "go_mod_changes",
+        "file_removals",
+        "import_rewrites",
+        "statement_removals",
+        "map_entry_removals",
+        "call_arg_edits",
+        "special_case_rewrites",
+        "text_replacements",
+    )
+    return any(results.get(key) for key in change_keys)
+
+
+def _dedupe_strings(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        deduped.append(value)
+    return deduped
+
+
+def _dedupe_warning_entries(entries: list[dict[str, str]]) -> list[dict[str, str]]:
+    seen: set[tuple[str, str]] = set()
+    deduped: list[dict[str, str]] = []
+    for entry in entries:
+        key = (entry.get("spec_id", ""), entry.get("message", ""))
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(entry)
+    return deduped
+
+
 def _apply_file_removals(
     chain_dir: str,
     removals: list[dict[str, Any]],
@@ -502,25 +598,27 @@ def _apply_go_mod_changes(
     if not go_mod_changes:
         return
 
+    resolved_changes = _resolve_go_mod_versions(go_mod_changes, results)
+
     for path in list_go_mod_files(chain_dir):
         original = _read_file(path)
         updated = original
         changed_details: list[str] = []
 
-        if go_mod_changes.get("strip_local_replaces"):
+        if resolved_changes.get("strip_local_replaces"):
             updated, changed = _strip_local_replaces(updated)
             if changed:
                 changed_details.append("strip_local_replaces")
 
-        updated, removed = _remove_go_mod_modules(updated, go_mod_changes.get("remove", []))
+        updated, removed = _remove_go_mod_modules(updated, resolved_changes.get("remove", []))
         if removed:
             changed_details.extend(f"remove:{module}" for module in removed)
 
-        updated, updated_modules = _update_go_mod_modules(updated, go_mod_changes.get("update", {}))
+        updated, updated_modules = _update_go_mod_modules(updated, resolved_changes.get("update", {}))
         if updated_modules:
             changed_details.extend(f"update:{module}" for module in updated_modules)
 
-        updated, added = _add_go_mod_modules(updated, go_mod_changes.get("add", {}))
+        updated, added = _add_go_mod_modules(updated, resolved_changes.get("add", {}))
         if added:
             changed_details.extend(f"add:{module}" for module in added)
 
@@ -1203,6 +1301,115 @@ def _normalize_args_list(args: list[str]) -> list[str]:
 # ═══════════════════════════════════════════════════════════════════════════════
 # GO.MOD HELPERS
 # ═══════════════════════════════════════════════════════════════════════════════
+
+
+def _resolve_go_mod_versions(
+    go_mod_changes: dict[str, Any],
+    results: dict[str, Any],
+) -> dict[str, Any]:
+    resolved = dict(go_mod_changes)
+    resolved["update"] = {}
+    resolved["add"] = {}
+
+    for module, version in go_mod_changes.get("update", {}).items():
+        resolved_version = _resolve_requested_module_version(module, version)
+        if not resolved_version:
+            results["warnings"].append(
+                f"could not resolve a concrete version for {module} from selector {version}"
+            )
+            continue
+        resolved["update"][module] = resolved_version
+
+    for module, version in go_mod_changes.get("add", {}).items():
+        resolved_version = _resolve_requested_module_version(module, version)
+        if not resolved_version:
+            results["warnings"].append(
+                f"could not resolve a concrete version for {module} from selector {version}"
+            )
+            continue
+        resolved["add"][module] = resolved_version
+
+    return resolved
+
+
+def _resolve_requested_module_version(module: str, version: str) -> str | None:
+    if not version.startswith("latest:"):
+        return version
+
+    selector = version.split(":", 1)[1].strip()
+    if not selector:
+        return None
+
+    versions = _list_module_versions(module)
+    matches = [candidate for candidate in versions if candidate.startswith(selector)]
+    if not matches:
+        return None
+
+    return semver_sort_desc(matches)[0]
+
+
+@lru_cache(maxsize=64)
+def _list_module_versions(module: str) -> tuple[str, ...]:
+    versions: set[str] = set()
+
+    try:
+        result = subprocess.run(
+            ["go", "list", "-m", "-versions", module],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        result = None
+
+    if result and result.returncode == 0:
+        parts = result.stdout.split()
+        versions.update(parts[1:])
+
+    if module == "github.com/cosmos/cosmos-sdk":
+        versions.update(_list_repo_git_tags())
+    else:
+        versions.update(_list_repo_go_mod_versions(module))
+
+    return tuple(semver_sort_desc([version for version in versions if version]))
+
+
+def _list_repo_go_mod_versions(module: str) -> set[str]:
+    versions: set[str] = set()
+    for path in list_go_mod_files(str(REPO_ROOT)):
+        for line in _read_file(path).splitlines():
+            stripped = line.strip()
+            if not _line_starts_with_module(stripped, module):
+                continue
+            parts = stripped.split()
+            if stripped.startswith("require "):
+                if len(parts) >= 3:
+                    versions.add(parts[2])
+            elif len(parts) >= 2:
+                versions.add(parts[1])
+    return versions
+
+
+@lru_cache(maxsize=1)
+def _list_repo_git_tags() -> tuple[str, ...]:
+    try:
+        result = subprocess.run(
+            ["git", "tag", "--list", "v*"],
+            capture_output=True,
+            text=True,
+            check=False,
+            cwd=REPO_ROOT,
+            timeout=10,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return ()
+
+    if result.returncode != 0:
+        return ()
+
+    tags = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    return tuple(semver_sort_desc(tags))
 
 
 def _strip_local_replaces(content: str) -> tuple[str, bool]:

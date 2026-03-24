@@ -23,6 +23,8 @@ upstream_sources:
   - docs://upgrading/v0.54
 
 detection:
+  sdk_version:
+    max_exclusive: v0.54.0-0
   files:
     - app_di.go
     - root_di.go

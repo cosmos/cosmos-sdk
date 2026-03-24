@@ -24,6 +24,8 @@ upstream_sources:
   - docs://changelog/v0.54-breaking
 
 detection:
+  sdk_version:
+    max_exclusive: v0.54.0-0
   imports:
     - cosmossdk.io/store
   patterns:

@@ -100,6 +100,8 @@ mcp/
 ```
 
 The MCP server executes the YAML specs directly and augments them with
-repository docs resources for the official `v0.54` guidance. The YAMLs remain
-the declarative source of truth for migration concerns; the MCP path is the
-executable implementation.
+repository docs resources for the official `v0.54` guidance. Scan results are
+refined before they are returned: version-bounded specs are skipped outside
+their declared SDK range, and specs whose automated changes would be a no-op
+and already verify cleanly are treated as already satisfied rather than
+reported as actionable.

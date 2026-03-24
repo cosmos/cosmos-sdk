@@ -13,6 +13,8 @@ upstream_sources:
   - docs://changelog/v0.54-breaking
 
 detection:
+  sdk_version:
+    max_exclusive: v0.54.0-0
   imports:
     - github.com/cosmos/cosmos-sdk
   patterns:
@@ -25,10 +27,10 @@ changes:
   # ── go.mod ──────────────────────────────────────────────────────────────
   go_mod:
     update:
-      github.com/cosmos/cosmos-sdk: v0.54.0
-      cosmossdk.io/log: v2.0.0
+      github.com/cosmos/cosmos-sdk: latest:v0.54
 
     remove:
+      - cosmossdk.io/log
       - cosmossdk.io/x/feegrant
       - cosmossdk.io/x/evidence
       - cosmossdk.io/x/tx
@@ -36,6 +38,9 @@ changes:
       - cosmossdk.io/x/circuit
       - cosmossdk.io/x/nft
       - cosmossdk.io/systemtests
+
+    add:
+      cosmossdk.io/log/v2: latest:v2
 
     strip_local_replaces: true
 
@@ -191,6 +196,14 @@ changes:
 
     - old: NewSimApp(logger, db, nil, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
       new: NewSimApp(logger, db, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
+      file_match: sim_test.go
+
+    - old: "func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) *SimApp"
+      new: "func(logger log.Logger, db dbm.DB, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) *SimApp"
+      file_match: sim_test.go
+
+    - old: "\t\"io\"\n"
+      new: ""
       file_match: sim_test.go
 
     - old: NewSimApp(logger.With("instance", "second"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))

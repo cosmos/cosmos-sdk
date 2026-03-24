@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import re
 from dataclasses import dataclass, field
+from functools import cmp_to_key
 from pathlib import Path
 from typing import Any
 
@@ -45,6 +46,8 @@ class Spec:
     detection_patterns: list[str] = field(default_factory=list)
     detection_files: list[str] = field(default_factory=list)
     detection_go_mod: list[str] = field(default_factory=list)
+    detection_min_sdk_version: str = ""
+    detection_max_sdk_version_exclusive: str = ""
 
     # Changes
     changes: dict[str, Any] = field(default_factory=dict)
@@ -121,6 +124,8 @@ def load_specs(spec_dir: Path | None = None) -> list[Spec]:
                 detection_patterns=detection.get("patterns", []),
                 detection_files=detection.get("files", []),
                 detection_go_mod=detection.get("go_mod", []),
+                detection_min_sdk_version=str(detection.get("sdk_version", {}).get("min_inclusive", "")),
+                detection_max_sdk_version_exclusive=str(detection.get("sdk_version", {}).get("max_exclusive", "")),
                 changes=raw.get("changes", {}),
                 manual_steps=_normalize_manual_steps(raw.get("manual_steps", [])),
                 verification=raw.get("verification", {}),
@@ -168,9 +173,10 @@ def _iter_files(
     include_names = include_names or set()
     for root, _, files in os.walk(directory):
         for name in files:
-            if suffixes and not name.endswith(suffixes):
-                if name not in include_names:
-                    continue
+            if suffixes is not None and not name.endswith(suffixes) and name not in include_names:
+                continue
+            if suffixes is None and include_names and name not in include_names:
+                continue
             results.append(os.path.join(root, name))
     return sorted(results)
 
@@ -256,6 +262,101 @@ def _detect_sdk_version(chain_dir: str) -> str:
     return "unknown"
 
 
+def _parse_semver(version: str) -> tuple[tuple[int, int, int], list[str | int] | None] | None:
+    cleaned = version.strip()
+    if not cleaned or cleaned == "unknown":
+        return None
+
+    cleaned = cleaned.split("+", 1)[0]
+    match = re.match(
+        r"^v?(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(?:-(?P<prerelease>[0-9A-Za-z.-]+))?$",
+        cleaned,
+    )
+    if not match:
+        return None
+
+    prerelease = match.group("prerelease")
+    prerelease_parts: list[str | int] | None = None
+    if prerelease:
+        prerelease_parts = [
+            int(part) if part.isdigit() else part
+            for part in prerelease.split(".")
+        ]
+
+    return (
+        (
+            int(match.group("major")),
+            int(match.group("minor")),
+            int(match.group("patch")),
+        ),
+        prerelease_parts,
+    )
+
+
+def _compare_semver(left: str, right: str) -> int:
+    parsed_left = _parse_semver(left)
+    parsed_right = _parse_semver(right)
+
+    if parsed_left is None and parsed_right is None:
+        return 0
+    if parsed_left is None:
+        return -1
+    if parsed_right is None:
+        return 1
+
+    left_main, left_prerelease = parsed_left
+    right_main, right_prerelease = parsed_right
+
+    if left_main != right_main:
+        return -1 if left_main < right_main else 1
+
+    if left_prerelease is None and right_prerelease is None:
+        return 0
+    if left_prerelease is None:
+        return 1
+    if right_prerelease is None:
+        return -1
+
+    for left_part, right_part in zip(left_prerelease, right_prerelease):
+        if left_part == right_part:
+            continue
+
+        left_numeric = isinstance(left_part, int)
+        right_numeric = isinstance(right_part, int)
+        if left_numeric and right_numeric:
+            return -1 if left_part < right_part else 1
+        if left_numeric != right_numeric:
+            return -1 if left_numeric else 1
+        return -1 if str(left_part) < str(right_part) else 1
+
+    if len(left_prerelease) == len(right_prerelease):
+        return 0
+    return -1 if len(left_prerelease) < len(right_prerelease) else 1
+
+
+def semver_sort_desc(versions: list[str]) -> list[str]:
+    return sorted(versions, key=cmp_to_key(_compare_semver), reverse=True)
+
+
+def sdk_version_matches(spec: Spec, sdk_version: str) -> bool:
+    if sdk_version == "unknown":
+        return True
+
+    if (
+        spec.detection_min_sdk_version
+        and _compare_semver(sdk_version, spec.detection_min_sdk_version) < 0
+    ):
+        return False
+
+    if (
+        spec.detection_max_sdk_version_exclusive
+        and _compare_semver(sdk_version, spec.detection_max_sdk_version_exclusive) >= 0
+    ):
+        return False
+
+    return True
+
+
 # ── Chain scanning ────────────────────────────────────────────────────────────
 
 
@@ -288,8 +389,12 @@ def scan_chain(chain_dir: str, specs: list[Spec] | None = None) -> ScanResult:
 
     go_files = list_go_files(chain_dir)
     go_mod_files = list_go_mod_files(chain_dir)
+    warning_keys: set[tuple[str, str]] = set()
 
     for spec in order_specs(specs):
+        if not sdk_version_matches(spec, sdk_version):
+            continue
+
         matched_imports = _search_files(
             go_files,
             "|".join(re.escape(imp) for imp in spec.detection_imports),
@@ -328,9 +433,11 @@ def scan_chain(chain_dir: str, specs: list[Spec] | None = None) -> ScanResult:
 
             for warning in spec.changes.get("imports", {}).get("warnings", []):
                 if not warning.get("fatal", False):
-                    warnings.append(
-                        {"spec_id": spec.id, "message": warning.get("message", "")}
-                    )
+                    key = (spec.id, warning.get("message", ""))
+                    if key in warning_keys:
+                        continue
+                    warning_keys.add(key)
+                    warnings.append({"spec_id": spec.id, "message": key[1]})
 
     return ScanResult(
         chain_dir=chain_dir,

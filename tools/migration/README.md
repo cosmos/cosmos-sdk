@@ -99,6 +99,9 @@ upstream_sources:
   - docs://upgrading/v0.54
 
 detection:
+  sdk_version:
+    min_inclusive: <optional lower bound>
+    max_exclusive: <optional upper bound>
   imports: [list of import prefixes that indicate this spec applies]
   patterns: [code patterns to search for]
   files: [filenames that indicate this spec applies]
@@ -106,6 +109,8 @@ detection:
 
 changes:
   go_mod:        { remove, update, add, strip_local_replaces }
+                 # update/add values may be explicit versions or selectors
+                 # such as latest:v0.54 or latest:v2
   imports:       { rewrites: [...], warnings: [...] }
   statement_removals:  [...]
   map_entry_removals:  [...]

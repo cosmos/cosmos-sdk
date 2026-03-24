@@ -26,7 +26,11 @@ upstream_sources:
   - docs://upgrading/v0.54
   - docs://changelog/v0.54-breaking
 
+manual_steps_policy: only_when_unresolved
+
 detection:
+  sdk_version:
+    max_exclusive: v0.54.0-0
   imports:
     - github.com/cosmos/cosmos-sdk/x/gov/keeper
   patterns:

@@ -22,6 +22,8 @@ upstream_sources:
   - docs://upgrading/v0.54
 
 detection:
+  sdk_version:
+    max_exclusive: v0.54.0-0
   # ante.go file exists AND the app.go call site still passes CircuitKeeper.
   patterns:
     - circuitante "cosmossdk.io/x/circuit/ante"

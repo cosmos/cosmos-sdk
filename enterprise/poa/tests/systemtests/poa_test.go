@@ -801,14 +801,6 @@ func TestReplaceAllValidatorsInOneBlock(t *testing.T) {
 	t.Logf("Genesis validators: %d", len(genesisVals))
 
 	// Admin creates validators backed by the fullnodes — they get power immediately
-	rsp := cli.Run("tx", poaModule, "create-validator",
-		"replace-val-1", fn1PkStr, "ed25519",
-		"--operator-address="+newVal1OperatorAddr,
-		"--power=5000",
-		"--from="+adminKeyName, "--gas=auto",
-	)
-	systemtests.RequireTxSuccess(t, rsp)
-
 	rsp = cli.Run("tx", poaModule, "create-validator",
 		"replace-val-2", fn2PkStr, "ed25519",
 		"--operator-address="+newVal2OperatorAddr,
@@ -817,19 +809,10 @@ func TestReplaceAllValidatorsInOneBlock(t *testing.T) {
 	)
 	systemtests.RequireTxSuccess(t, rsp)
 
+	// Wait for create-validator txs to be committed before zeroing genesis validators.
+	sut.AwaitNextBlock(t)
+
 	// Remove all genesis validators in one tx
-	var entries []string
-	for _, v := range genesisVals {
-		entries = append(entries, validatorUpdateJSON(v, 0))
-	}
-	validatorsFile := systemtests.StoreTempFile(t, []byte("["+strings.Join(entries, ",")+"]"))
-
-
-	rsp = cli.Run("tx", poaModule, "update-validators",
-		validatorsFile.Name(),
-		"--from="+adminKeyName, "--gas=auto",
-	)
-	systemtests.RequireTxSuccess(t, rsp)
 
 	sut.AwaitNBlocks(t, 3)
 

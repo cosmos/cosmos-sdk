@@ -38,33 +38,33 @@ import (
 )
 
 const (
-	blockSTMMixedParticipantCount      = 4
-	blockSTMMixedInitialValidatorCount = 2
-	blockSTMMixedInitialBalance        = int64(1_000)
-	blockSTMSelfDelegation             = int64(100)
-	blockSTMMixedMaxOps                = 30
+	accountsCount         = 4
+	initialValidatorCount = 2
+	initialBalance        = int64(1_000)
+	selfDelegation        = int64(100)
+	maximumOperations     = 30
 )
 
-type blockSTMMixedApp struct {
+type testApplication struct {
 	app           *baseapp.BaseApp
 	bankKeeper    bankkeeper.BaseKeeper
 	stakingKeeper *stakingkeeper.Keeper
 	txConfig      client.TxConfig
 }
 
-type blockSTMMixedOpKind string
+type operationKind string
 
 const (
-	blockSTMMixedCreateValidator blockSTMMixedOpKind = "create-validator"
-	blockSTMMixedSend            blockSTMMixedOpKind = "send"
-	blockSTMMixedDelegate        blockSTMMixedOpKind = "delegate"
-	blockSTMMixedUndelegate      blockSTMMixedOpKind = "undelegate"
-	blockSTMMixedRedelegate      blockSTMMixedOpKind = "redelegate"
-	blockSTMMixedCancelUnbonding blockSTMMixedOpKind = "cancel-unbonding"
+	opCreateValidator operationKind = "create-validator"
+	opSendCoins       operationKind = "send"
+	opDelegate        operationKind = "delegate"
+	opUndelegate      operationKind = "undelegate"
+	opRedelegate      operationKind = "redelegate"
+	opCancelUnbonding operationKind = "cancel-unbonding"
 )
 
-type blockSTMMixedOp struct {
-	kind         blockSTMMixedOpKind
+type operation struct {
+	kind         operationKind
 	account      int
 	to           int
 	validator    int
@@ -72,7 +72,7 @@ type blockSTMMixedOp struct {
 	amount       int64
 }
 
-type blockSTMMixedWorld struct {
+type state struct {
 	balances              []int64
 	validatorExists       []bool
 	delegations           [][]int64
@@ -80,32 +80,32 @@ type blockSTMMixedWorld struct {
 	receivingRedelegation [][]bool
 }
 
-type blockSTMMixedDelegationRef struct {
+type delegationRef struct {
 	delegator int
 	validator int
 }
 
 func TestBlockSTM_MixedMessageDeterminism(t *testing.T) {
-	participantAddrs := generateAddrs(blockSTMMixedParticipantCount)
-	validatorPubKeys := generateValidatorPubKeys(blockSTMMixedParticipantCount)
+	participantAddrs := generateAddrs(accountsCount)
+	validatorPubKeys := generateValidatorPubKeys(accountsCount)
 
 	rapid.Check(t, func(rt *rapid.T) {
-		regularApp := newBlockSTMMixedApp(t, dbm.NewMemDB(), false)
-		blockSTMApp := newBlockSTMMixedApp(t, dbm.NewMemDB(), true)
+		regularApp := newTestApplication(t, dbm.NewMemDB(), false)
+		blockSTMApp := newTestApplication(t, dbm.NewMemDB(), true)
 
-		initChainAndBootstrapMixedApp(t, regularApp, participantAddrs, validatorPubKeys, blockSTMMixedInitialValidatorCount)
-		initChainAndBootstrapMixedApp(t, blockSTMApp, participantAddrs, validatorPubKeys, blockSTMMixedInitialValidatorCount)
+		initTestApplication(t, regularApp, participantAddrs, validatorPubKeys, initialValidatorCount)
+		initTestApplication(t, blockSTMApp, participantAddrs, validatorPubKeys, initialValidatorCount)
 
 		require.Equal(t, regularApp.app.LastCommitID(), blockSTMApp.app.LastCommitID())
 
-		ops := generateMixedOps(rt, newBlockSTMMixedWorld(
+		ops := generateOperations(rt, newState(
 			len(participantAddrs),
-			blockSTMMixedInitialValidatorCount,
-			blockSTMMixedInitialBalance,
-			blockSTMSelfDelegation,
-		), blockSTMMixedMaxOps)
+			initialValidatorCount,
+			initialBalance,
+			selfDelegation,
+		), maximumOperations)
 		execHeight := regularApp.app.LastBlockHeight() + 1
-		txBytes := buildMixedTxs(t, regularApp.txConfig, participantAddrs, validatorPubKeys, execHeight, ops)
+		txBytes := buildTxs(t, regularApp.txConfig, participantAddrs, validatorPubKeys, execHeight, ops)
 
 		regularRes, err := regularApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: execHeight,
@@ -131,7 +131,7 @@ func TestBlockSTM_MixedMessageDeterminism(t *testing.T) {
 	})
 }
 
-func newBlockSTMMixedApp(t *testing.T, db dbm.DB, enableBlockSTM bool) blockSTMMixedApp {
+func newTestApplication(t *testing.T, db dbm.DB, enableBlockSTM bool) testApplication {
 	t.Helper()
 
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey)
@@ -143,11 +143,11 @@ func newBlockSTMMixedApp(t *testing.T, db dbm.DB, enableBlockSTM bool) blockSTMM
 	cdc := encCfg.Codec
 
 	bApp := baseapp.NewBaseApp(
-		"blockstm-mixed-test",
+		"test",
 		log.NewNopLogger(),
 		db,
 		encCfg.TxConfig.TxDecoder(),
-		baseapp.SetChainID("blockstm-mixed-test"),
+		baseapp.SetChainID("test"),
 	)
 	bApp.MountKVStores(keys)
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
@@ -235,7 +235,7 @@ func newBlockSTMMixedApp(t *testing.T, db dbm.DB, enableBlockSTM bool) blockSTMM
 		))
 	}
 
-	return blockSTMMixedApp{
+	return testApplication{
 		app:           bApp,
 		bankKeeper:    bankKeeper,
 		stakingKeeper: stakingKeeper,
@@ -243,9 +243,9 @@ func newBlockSTMMixedApp(t *testing.T, db dbm.DB, enableBlockSTM bool) blockSTMM
 	}
 }
 
-func initChainAndBootstrapMixedApp(
+func initTestApplication(
 	t *testing.T,
-	testApp blockSTMMixedApp,
+	testApp testApplication,
 	participantAddrs []sdk.AccAddress,
 	validatorPubKeys []cryptotypes.PubKey,
 	initialValidatorCount int,
@@ -254,7 +254,7 @@ func initChainAndBootstrapMixedApp(
 
 	require.NoError(t, testApp.app.LoadLatestVersion())
 
-	_, err := testApp.app.InitChain(&abci.RequestInitChain{ChainId: "blockstm-mixed-test"})
+	_, err := testApp.app.InitChain(&abci.RequestInitChain{ChainId: "test"})
 	require.NoError(t, err)
 
 	_, err = testApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: testApp.app.LastBlockHeight() + 1})
@@ -267,7 +267,7 @@ func initChainAndBootstrapMixedApp(
 			ctx,
 			testApp.bankKeeper,
 			addr,
-			sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, blockSTMMixedInitialBalance)),
+			sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, initialBalance)),
 		))
 	}
 
@@ -276,7 +276,7 @@ func initChainAndBootstrapMixedApp(
 		stakingHelper.CreateValidator(
 			sdk.ValAddress(participantAddrs[i]),
 			validatorPubKeys[i],
-			math.NewInt(blockSTMSelfDelegation),
+			math.NewInt(selfDelegation),
 			true,
 		)
 	}
@@ -287,88 +287,88 @@ func initChainAndBootstrapMixedApp(
 	require.NoError(t, err)
 }
 
-func generateMixedOps(rt *rapid.T, world blockSTMMixedWorld, maxOps int) []blockSTMMixedOp {
+func generateOperations(rt *rapid.T, s state, maxOps int) []operation {
 	opCount := rapid.IntRange(1, maxOps).Draw(rt, "op-count")
-	ops := make([]blockSTMMixedOp, 0, opCount)
+	ops := make([]operation, 0, opCount)
 
 	for i := range opCount {
-		kinds := availableMixedOpKinds(world)
+		kinds := availableOps(s)
 		kind := rapid.SampledFrom(kinds).Draw(rt, opLabel(i, "kind"))
 
 		switch kind {
-		case blockSTMMixedCreateValidator:
-			candidates := createValidatorCandidates(world)
+		case opCreateValidator:
+			candidates := createValidatorCandidates(s)
 			account := rapid.SampledFrom(candidates).Draw(rt, opLabel(i, "account"))
-			amount := rapid.Int64Range(1, world.balances[account]).Draw(rt, opLabel(i, "amount"))
+			amount := rapid.Int64Range(1, s.balances[account]).Draw(rt, opLabel(i, "amount"))
 
-			world.balances[account] -= amount
-			world.validatorExists[account] = true
-			world.delegations[account][account] += amount
+			s.balances[account] -= amount
+			s.validatorExists[account] = true
+			s.delegations[account][account] += amount
 
-			ops = append(ops, blockSTMMixedOp{kind: kind, account: account, amount: amount})
+			ops = append(ops, operation{kind: kind, account: account, amount: amount})
 
-		case blockSTMMixedSend:
-			senders := accountsWithPositiveAmount(world.balances)
+		case opSendCoins:
+			senders := accountsWithPositiveAmount(s.balances)
 			account := rapid.SampledFrom(senders).Draw(rt, opLabel(i, "account"))
 
-			toChoices := make([]int, 0, len(world.balances)-1)
-			for candidate := range world.balances {
+			toChoices := make([]int, 0, len(s.balances)-1)
+			for candidate := range s.balances {
 				if candidate != account {
 					toChoices = append(toChoices, candidate)
 				}
 			}
 			to := rapid.SampledFrom(toChoices).Draw(rt, opLabel(i, "to"))
-			amount := rapid.Int64Range(1, world.balances[account]).Draw(rt, opLabel(i, "amount"))
+			amount := rapid.Int64Range(1, s.balances[account]).Draw(rt, opLabel(i, "amount"))
 
-			world.balances[account] -= amount
-			world.balances[to] += amount
+			s.balances[account] -= amount
+			s.balances[to] += amount
 
-			ops = append(ops, blockSTMMixedOp{kind: kind, account: account, to: to, amount: amount})
+			ops = append(ops, operation{kind: kind, account: account, to: to, amount: amount})
 
-		case blockSTMMixedDelegate:
-			delegators := accountsWithPositiveAmount(world.balances)
+		case opDelegate:
+			delegators := accountsWithPositiveAmount(s.balances)
 			account := rapid.SampledFrom(delegators).Draw(rt, opLabel(i, "account"))
-			validators := existingValidators(world.validatorExists)
+			validators := existingValidators(s.validatorExists)
 			validator := rapid.SampledFrom(validators).Draw(rt, opLabel(i, "validator"))
-			amount := rapid.Int64Range(1, world.balances[account]).Draw(rt, opLabel(i, "amount"))
+			amount := rapid.Int64Range(1, s.balances[account]).Draw(rt, opLabel(i, "amount"))
 
-			world.balances[account] -= amount
-			world.delegations[account][validator] += amount
+			s.balances[account] -= amount
+			s.delegations[account][validator] += amount
 
-			ops = append(ops, blockSTMMixedOp{kind: kind, account: account, validator: validator, amount: amount})
+			ops = append(ops, operation{kind: kind, account: account, validator: validator, amount: amount})
 
-		case blockSTMMixedUndelegate:
-			delegations := positiveDelegations(world.delegations)
+		case opUndelegate:
+			delegations := positiveDelegations(s.delegations)
 			ref := rapid.SampledFrom(delegations).Draw(rt, opLabel(i, "delegation"))
-			amount := rapid.Int64Range(1, world.delegations[ref.delegator][ref.validator]).Draw(rt, opLabel(i, "amount"))
+			amount := rapid.Int64Range(1, s.delegations[ref.delegator][ref.validator]).Draw(rt, opLabel(i, "amount"))
 
-			world.delegations[ref.delegator][ref.validator] -= amount
-			world.unbondings[ref.delegator][ref.validator] += amount
+			s.delegations[ref.delegator][ref.validator] -= amount
+			s.unbondings[ref.delegator][ref.validator] += amount
 
-			ops = append(ops, blockSTMMixedOp{
+			ops = append(ops, operation{
 				kind:      kind,
 				account:   ref.delegator,
 				validator: ref.validator,
 				amount:    amount,
 			})
 
-		case blockSTMMixedRedelegate:
-			sources := redelegationSources(world)
+		case opRedelegate:
+			sources := redelegationSources(s)
 			ref := rapid.SampledFrom(sources).Draw(rt, opLabel(i, "delegation"))
-			dstChoices := make([]int, 0, len(world.validatorExists)-1)
-			for _, validator := range existingValidators(world.validatorExists) {
+			dstChoices := make([]int, 0, len(s.validatorExists)-1)
+			for _, validator := range existingValidators(s.validatorExists) {
 				if validator != ref.validator {
 					dstChoices = append(dstChoices, validator)
 				}
 			}
 			dstValidator := rapid.SampledFrom(dstChoices).Draw(rt, opLabel(i, "dst-validator"))
-			amount := rapid.Int64Range(1, world.delegations[ref.delegator][ref.validator]).Draw(rt, opLabel(i, "amount"))
+			amount := rapid.Int64Range(1, s.delegations[ref.delegator][ref.validator]).Draw(rt, opLabel(i, "amount"))
 
-			world.delegations[ref.delegator][ref.validator] -= amount
-			world.delegations[ref.delegator][dstValidator] += amount
-			world.receivingRedelegation[ref.delegator][dstValidator] = true
+			s.delegations[ref.delegator][ref.validator] -= amount
+			s.delegations[ref.delegator][dstValidator] += amount
+			s.receivingRedelegation[ref.delegator][dstValidator] = true
 
-			ops = append(ops, blockSTMMixedOp{
+			ops = append(ops, operation{
 				kind:         kind,
 				account:      ref.delegator,
 				validator:    ref.validator,
@@ -376,15 +376,15 @@ func generateMixedOps(rt *rapid.T, world blockSTMMixedWorld, maxOps int) []block
 				amount:       amount,
 			})
 
-		case blockSTMMixedCancelUnbonding:
-			unbondings := positiveDelegations(world.unbondings)
+		case opCancelUnbonding:
+			unbondings := positiveDelegations(s.unbondings)
 			ref := rapid.SampledFrom(unbondings).Draw(rt, opLabel(i, "unbonding"))
-			amount := rapid.Int64Range(1, world.unbondings[ref.delegator][ref.validator]).Draw(rt, opLabel(i, "amount"))
+			amount := rapid.Int64Range(1, s.unbondings[ref.delegator][ref.validator]).Draw(rt, opLabel(i, "amount"))
 
-			world.unbondings[ref.delegator][ref.validator] -= amount
-			world.delegations[ref.delegator][ref.validator] += amount
+			s.unbondings[ref.delegator][ref.validator] -= amount
+			s.delegations[ref.delegator][ref.validator] += amount
 
-			ops = append(ops, blockSTMMixedOp{
+			ops = append(ops, operation{
 				kind:      kind,
 				account:   ref.delegator,
 				validator: ref.validator,
@@ -399,37 +399,37 @@ func generateMixedOps(rt *rapid.T, world blockSTMMixedWorld, maxOps int) []block
 	return ops
 }
 
-func availableMixedOpKinds(world blockSTMMixedWorld) []blockSTMMixedOpKind {
-	kinds := make([]blockSTMMixedOpKind, 0, 6)
+func availableOps(s state) []operationKind {
+	kinds := make([]operationKind, 0, 6)
 
-	if len(createValidatorCandidates(world)) > 0 {
-		kinds = append(kinds, blockSTMMixedCreateValidator)
+	if len(createValidatorCandidates(s)) > 0 {
+		kinds = append(kinds, opCreateValidator)
 	}
 
-	if len(accountsWithPositiveAmount(world.balances)) > 0 {
-		kinds = append(kinds, blockSTMMixedSend)
-		if len(existingValidators(world.validatorExists)) > 0 {
-			kinds = append(kinds, blockSTMMixedDelegate)
+	if len(accountsWithPositiveAmount(s.balances)) > 0 {
+		kinds = append(kinds, opSendCoins)
+		if len(existingValidators(s.validatorExists)) > 0 {
+			kinds = append(kinds, opDelegate)
 		}
 	}
 
-	if len(positiveDelegations(world.delegations)) > 0 {
-		kinds = append(kinds, blockSTMMixedUndelegate)
+	if len(positiveDelegations(s.delegations)) > 0 {
+		kinds = append(kinds, opUndelegate)
 	}
 
-	if len(redelegationSources(world)) > 0 {
-		kinds = append(kinds, blockSTMMixedRedelegate)
+	if len(redelegationSources(s)) > 0 {
+		kinds = append(kinds, opRedelegate)
 	}
 
-	if len(positiveDelegations(world.unbondings)) > 0 {
-		kinds = append(kinds, blockSTMMixedCancelUnbonding)
+	if len(positiveDelegations(s.unbondings)) > 0 {
+		kinds = append(kinds, opCancelUnbonding)
 	}
 
 	return kinds
 }
 
-func newBlockSTMMixedWorld(participantCount, initialValidatorCount int, initialBalance, selfDelegation int64) blockSTMMixedWorld {
-	world := blockSTMMixedWorld{
+func newState(participantCount, initialValidatorCount int, initialBalance, selfDelegation int64) state {
+	s := state{
 		balances:              make([]int64, participantCount),
 		validatorExists:       make([]bool, participantCount),
 		delegations:           make([][]int64, participantCount),
@@ -438,19 +438,19 @@ func newBlockSTMMixedWorld(participantCount, initialValidatorCount int, initialB
 	}
 
 	for i := range participantCount {
-		world.balances[i] = initialBalance
-		world.delegations[i] = make([]int64, participantCount)
-		world.unbondings[i] = make([]int64, participantCount)
-		world.receivingRedelegation[i] = make([]bool, participantCount)
+		s.balances[i] = initialBalance
+		s.delegations[i] = make([]int64, participantCount)
+		s.unbondings[i] = make([]int64, participantCount)
+		s.receivingRedelegation[i] = make([]bool, participantCount)
 	}
 
 	for i := range initialValidatorCount {
-		world.balances[i] -= selfDelegation
-		world.validatorExists[i] = true
-		world.delegations[i][i] = selfDelegation
+		s.balances[i] -= selfDelegation
+		s.validatorExists[i] = true
+		s.delegations[i][i] = selfDelegation
 	}
 
-	return world
+	return s
 }
 
 func accountsWithPositiveAmount(amounts []int64) []int {
@@ -464,10 +464,10 @@ func accountsWithPositiveAmount(amounts []int64) []int {
 	return indices
 }
 
-func createValidatorCandidates(world blockSTMMixedWorld) []int {
-	candidates := make([]int, 0, len(world.balances))
-	for i, balance := range world.balances {
-		if !world.validatorExists[i] && balance > 0 {
+func createValidatorCandidates(s state) []int {
+	candidates := make([]int, 0, len(s.balances))
+	for i, balance := range s.balances {
+		if !s.validatorExists[i] && balance > 0 {
 			candidates = append(candidates, i)
 		}
 	}
@@ -486,12 +486,12 @@ func existingValidators(validatorExists []bool) []int {
 	return validators
 }
 
-func positiveDelegations(amounts [][]int64) []blockSTMMixedDelegationRef {
-	refs := make([]blockSTMMixedDelegationRef, 0)
+func positiveDelegations(amounts [][]int64) []delegationRef {
+	refs := make([]delegationRef, 0)
 	for delegator, perValidator := range amounts {
 		for validator, amount := range perValidator {
 			if amount > 0 {
-				refs = append(refs, blockSTMMixedDelegationRef{
+				refs = append(refs, delegationRef{
 					delegator: delegator,
 					validator: validator,
 				})
@@ -502,23 +502,23 @@ func positiveDelegations(amounts [][]int64) []blockSTMMixedDelegationRef {
 	return refs
 }
 
-func redelegationSources(world blockSTMMixedWorld) []blockSTMMixedDelegationRef {
-	refs := make([]blockSTMMixedDelegationRef, 0)
-	validators := existingValidators(world.validatorExists)
+func redelegationSources(s state) []delegationRef {
+	refs := make([]delegationRef, 0)
+	validators := existingValidators(s.validatorExists)
 
 	if len(validators) < 2 {
 		return refs
 	}
 
-	for delegator, perValidator := range world.delegations {
+	for delegator, perValidator := range s.delegations {
 		for validator, amount := range perValidator {
-			if amount <= 0 || world.receivingRedelegation[delegator][validator] {
+			if amount <= 0 || s.receivingRedelegation[delegator][validator] {
 				continue
 			}
 
 			for _, candidate := range validators {
 				if candidate != validator {
-					refs = append(refs, blockSTMMixedDelegationRef{
+					refs = append(refs, delegationRef{
 						delegator: delegator,
 						validator: validator,
 					})
@@ -531,13 +531,13 @@ func redelegationSources(world blockSTMMixedWorld) []blockSTMMixedDelegationRef 
 	return refs
 }
 
-func buildMixedTxs(
+func buildTxs(
 	t *testing.T,
 	txConfig client.TxConfig,
 	participantAddrs []sdk.AccAddress,
 	validatorPubKeys []cryptotypes.PubKey,
 	height int64,
-	ops []blockSTMMixedOp,
+	ops []operation,
 ) [][]byte {
 	t.Helper()
 
@@ -546,7 +546,7 @@ func buildMixedTxs(
 		var msg sdk.Msg
 
 		switch op.kind {
-		case blockSTMMixedCreateValidator:
+		case opCreateValidator:
 			description := stakingtypes.Description{Moniker: fmt.Sprintf("validator-%d", op.account)}
 			createValidatorMsg, err := stakingtypes.NewMsgCreateValidator(
 				sdk.ValAddress(participantAddrs[op.account]).String(),
@@ -559,28 +559,28 @@ func buildMixedTxs(
 			require.NoError(t, err)
 			msg = createValidatorMsg
 
-		case blockSTMMixedSend:
+		case opSendCoins:
 			msg = banktypes.NewMsgSend(
 				participantAddrs[op.account],
 				participantAddrs[op.to],
 				sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, op.amount)),
 			)
 
-		case blockSTMMixedDelegate:
+		case opDelegate:
 			msg = stakingtypes.NewMsgDelegate(
 				participantAddrs[op.account].String(),
 				sdk.ValAddress(participantAddrs[op.validator]).String(),
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, op.amount),
 			)
 
-		case blockSTMMixedUndelegate:
+		case opUndelegate:
 			msg = stakingtypes.NewMsgUndelegate(
 				participantAddrs[op.account].String(),
 				sdk.ValAddress(participantAddrs[op.validator]).String(),
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, op.amount),
 			)
 
-		case blockSTMMixedRedelegate:
+		case opRedelegate:
 			msg = stakingtypes.NewMsgBeginRedelegate(
 				participantAddrs[op.account].String(),
 				sdk.ValAddress(participantAddrs[op.validator]).String(),
@@ -588,7 +588,7 @@ func buildMixedTxs(
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, op.amount),
 			)
 
-		case blockSTMMixedCancelUnbonding:
+		case opCancelUnbonding:
 			msg = stakingtypes.NewMsgCancelUnbondingDelegation(
 				participantAddrs[op.account].String(),
 				sdk.ValAddress(participantAddrs[op.validator]).String(),

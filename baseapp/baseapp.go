@@ -187,6 +187,7 @@ type BaseApp struct {
 	// when disabled, the block gas meter in context is a noop one.
 	//
 	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
+	// Defaults to true (block gas meter disabled by default).
 	disableBlockGasMeter bool
 
 	// Optional alternative tx runner, used for block-stm parallel transaction execution. If nil, default txRunner is used.
@@ -200,17 +201,18 @@ func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
-		logger:           logger.With(log.ModuleKey, "baseapp"),
-		name:             name,
-		db:               db,
-		cms:              store.NewCommitMultiStore(db, logger),
-		storeLoader:      DefaultStoreLoader,
-		grpcQueryRouter:  NewGRPCQueryRouter(),
-		msgServiceRouter: NewMsgServiceRouter(),
-		txDecoder:        txDecoder,
-		fauxMerkleMode:   false,
-		sigverifyTx:      true,
-		gasConfig:        config.GasConfig{QueryGasLimit: math.MaxUint64},
+		logger:               logger.With(log.ModuleKey, "baseapp"),
+		name:                 name,
+		db:                   db,
+		cms:                  store.NewCommitMultiStore(db, logger),
+		storeLoader:          DefaultStoreLoader,
+		grpcQueryRouter:      NewGRPCQueryRouter(),
+		msgServiceRouter:     NewMsgServiceRouter(),
+		txDecoder:            txDecoder,
+		fauxMerkleMode:       false,
+		sigverifyTx:          true,
+		gasConfig:            config.GasConfig{QueryGasLimit: math.MaxUint64},
+		disableBlockGasMeter: true,
 	}
 
 	for _, option := range options {

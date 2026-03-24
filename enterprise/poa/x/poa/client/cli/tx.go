@@ -240,6 +240,9 @@ func NewEditValidatorCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to query validator: %w", err)
 			}
+			if res.Validator.Metadata == nil {
+				return fmt.Errorf("validator %s has no metadata", sender)
+			}
 			md := res.Validator.Metadata
 
 			if cmd.Flags().Changed("moniker") {

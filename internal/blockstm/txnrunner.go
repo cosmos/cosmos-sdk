@@ -2,6 +2,7 @@ package blockstm
 
 import (
 	"context"
+	"log"
 	"sync"
 	"sync/atomic"
 
@@ -176,7 +177,8 @@ func preEstimates(txs [][]byte, workers, authStore, bankStore int, coinDenom str
 
 func safeFeePayer(feeTx sdk.FeeTx) (addr sdk.AccAddress, ok bool) {
 	defer func() {
-		if recover() != nil {
+		if r := recover(); r != nil {
+			log.Printf("blockstm pre-estimate: recovered panic from FeePayer(): %v", r)
 			addr = nil
 			ok = false
 		}

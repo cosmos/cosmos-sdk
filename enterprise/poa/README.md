@@ -148,15 +148,18 @@ export CONS_PUBKEY="$(simd comet show-validator | jq -r '.key')"
 # Option B: For testing, you can use an arbitrary ed25519 key like 13iyxnnVneLg0AxHeUD7dRAegA8W3gB1mT4p7sPGjyY=
 ```
 
-3. **Create the validator (any funded account can do this):**
+3. **Create the validator (admin-gated):**
 ```bash
-# Create validator with zero power (pending activation by admin)
+# Admin creates validator with initial positive power.
+# operator-address is the validator operator account, while --from is the admin signer.
 simd tx poa create-validator \
     "My Validator" \
     $CONS_PUBKEY \
     "ed25519" \
     --description "My validator description" \
-    --from myvalidator \
+    --operator-address $OPERATOR_ADDR \
+    --power 1 \
+    --from account \
     --keyring-backend test \
     --fees 1token
 ```

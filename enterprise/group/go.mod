@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/core v1.1.0
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/errors v1.1.0
-	cosmossdk.io/log/v2 v2.0.1
+	cosmossdk.io/log/v2 v2.1.0-rc.0
 	cosmossdk.io/math v1.5.3
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cometbft/cometbft v0.39.0-rc3
@@ -278,7 +278,6 @@ require (
 )
 
 replace (
-	cosmossdk.io/log/v2 => ../../log
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	github.com/cosmos/cosmos-sdk => ../../.
 	github.com/cosmos/cosmos-sdk/store/v2 => ../../store

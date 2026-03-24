@@ -1,6 +1,7 @@
 package blockstm
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -9,8 +10,9 @@ import (
 )
 
 func TestEmptyMVData(t *testing.T) {
+	ctx := context.Background()
 	data := NewMVData(1)
-	value, _, estimate := data.Read([]byte("a"), 1)
+	value, _, estimate := data.Read(ctx, []byte("a"), 1)
 	require.False(t, estimate)
 	require.Nil(t, value)
 }
@@ -24,59 +26,60 @@ func KV(kv ...[]byte) *MemDB {
 }
 
 func TestMVData(t *testing.T) {
+	ctx := context.Background()
 	data := NewMVData(10)
 
 	// read closest version
-	data.Consolidate(TxnVersion{Index: 1, Incarnation: 1}, KV([]byte("a"), []byte("1")))
-	data.Consolidate(TxnVersion{Index: 2, Incarnation: 1}, KV([]byte("a"), []byte("2")))
-	data.Consolidate(TxnVersion{Index: 3, Incarnation: 1}, KV([]byte("a"), []byte("3")))
-	data.Consolidate(TxnVersion{Index: 2, Incarnation: 1}, KV([]byte("a"), []byte("2"), []byte("b"), []byte("2")))
+	data.Consolidate(ctx, TxnVersion{Index: 1, Incarnation: 1}, KV([]byte("a"), []byte("1")))
+	data.Consolidate(ctx, TxnVersion{Index: 2, Incarnation: 1}, KV([]byte("a"), []byte("2")))
+	data.Consolidate(ctx, TxnVersion{Index: 3, Incarnation: 1}, KV([]byte("a"), []byte("3")))
+	data.Consolidate(ctx, TxnVersion{Index: 2, Incarnation: 1}, KV([]byte("a"), []byte("2"), []byte("b"), []byte("2")))
 
 	// read closest version
-	value, _, estimate := data.Read([]byte("a"), 1)
+	value, _, estimate := data.Read(ctx, []byte("a"), 1)
 	require.False(t, estimate)
 	require.Nil(t, value)
 
 	// read closest version
-	value, version, estimate := data.Read([]byte("a"), 4)
+	value, version, estimate := data.Read(ctx, []byte("a"), 4)
 	require.False(t, estimate)
 	require.Equal(t, []byte("3"), value)
 	require.Equal(t, TxnVersion{Index: 3, Incarnation: 1}, version)
 
 	// read closest version
-	value, version, estimate = data.Read([]byte("a"), 3)
+	value, version, estimate = data.Read(ctx, []byte("a"), 3)
 	require.False(t, estimate)
 	require.Equal(t, []byte("2"), value)
 	require.Equal(t, TxnVersion{Index: 2, Incarnation: 1}, version)
 
 	// read closest version
-	value, version, estimate = data.Read([]byte("b"), 3)
+	value, version, estimate = data.Read(ctx, []byte("b"), 3)
 	require.False(t, estimate)
 	require.Equal(t, []byte("2"), value)
 	require.Equal(t, TxnVersion{Index: 2, Incarnation: 1}, version)
 
 	// new incarnation overrides old
-	data.Consolidate(TxnVersion{Index: 3, Incarnation: 2}, KV([]byte("a"), []byte("3-2")))
-	value, version, estimate = data.Read([]byte("a"), 4)
+	data.Consolidate(ctx, TxnVersion{Index: 3, Incarnation: 2}, KV([]byte("a"), []byte("3-2")))
+	value, version, estimate = data.Read(ctx, []byte("a"), 4)
 	require.False(t, estimate)
 	require.Equal(t, []byte("3-2"), value)
 	require.Equal(t, TxnVersion{Index: 3, Incarnation: 2}, version)
 
 	// read estimate
 	data.ConvertWritesToEstimates(3)
-	_, version, estimate = data.Read([]byte("a"), 4)
+	_, version, estimate = data.Read(ctx, []byte("a"), 4)
 	require.True(t, estimate)
 	require.Equal(t, TxnIndex(3), version.Index)
 
 	// delete value
-	data.Delete([]byte("a"), 3)
-	value, version, estimate = data.Read([]byte("a"), 4)
+	data.deleteIndex(ctx, []byte("a"), 3)
+	value, version, estimate = data.Read(ctx, []byte("a"), 4)
 	require.False(t, estimate)
 	require.Equal(t, []byte("2"), value)
 	require.Equal(t, TxnVersion{Index: 2, Incarnation: 1}, version)
 
-	data.Delete([]byte("b"), 2)
-	value, _, estimate = data.Read([]byte("b"), 4)
+	data.deleteIndex(ctx, []byte("b"), 2)
+	value, _, estimate = data.Read(ctx, []byte("b"), 4)
 	require.False(t, estimate)
 	require.Nil(t, value)
 }
@@ -89,6 +92,7 @@ func TestReadErrConversion(t *testing.T) {
 }
 
 func TestSnapshot(t *testing.T) {
+	ctx := context.Background()
 	storage := NewMemDB()
 	// initial value
 	storage.Set([]byte("a"), []byte("0"))
@@ -96,21 +100,21 @@ func TestSnapshot(t *testing.T) {
 
 	data := NewMVData(10)
 	// read closest version
-	data.Consolidate(TxnVersion{Index: 1, Incarnation: 1}, KV([]byte("a"), []byte("1")))
-	data.Consolidate(TxnVersion{Index: 2, Incarnation: 1}, KV([]byte("a"), []byte("2")))
-	data.Consolidate(TxnVersion{Index: 3, Incarnation: 1}, KV([]byte("a"), []byte("3")))
-	data.Consolidate(TxnVersion{Index: 2, Incarnation: 1}, KV([]byte("a"), []byte("2"), []byte("b"), []byte("2"), []byte("d"), []byte("1")))
+	data.Consolidate(ctx, TxnVersion{Index: 1, Incarnation: 1}, KV([]byte("a"), []byte("1")))
+	data.Consolidate(ctx, TxnVersion{Index: 2, Incarnation: 1}, KV([]byte("a"), []byte("2")))
+	data.Consolidate(ctx, TxnVersion{Index: 3, Incarnation: 1}, KV([]byte("a"), []byte("3")))
+	data.Consolidate(ctx, TxnVersion{Index: 2, Incarnation: 1}, KV([]byte("a"), []byte("2"), []byte("b"), []byte("2"), []byte("d"), []byte("1")))
 	// delete the key "d" in tx 3
-	data.Consolidate(TxnVersion{Index: 3, Incarnation: 1}, KV([]byte("a"), []byte("3"), []byte("d"), nil))
+	data.Consolidate(ctx, TxnVersion{Index: 3, Incarnation: 1}, KV([]byte("a"), []byte("3"), []byte("d"), nil))
 	data.ConvertWritesToEstimates(2)
 
 	require.Equal(t, []KVPair{
 		{[]byte("a"), []byte("3")},
 		{[]byte("b"), []byte("2")},
 		{[]byte("d"), nil},
-	}, data.Snapshot())
+	}, data.Snapshot(ctx))
 
-	data.SnapshotToStore(storage)
+	data.SnapshotToStore(ctx, storage)
 	require.Equal(t, []byte("3"), storage.Get([]byte("a")))
 	require.Equal(t, []byte("2"), storage.Get([]byte("b")))
 	require.Nil(t, storage.Get([]byte("d")))

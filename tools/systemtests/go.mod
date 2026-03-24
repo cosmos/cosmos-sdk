@@ -4,7 +4,7 @@ module github.com/cosmos/cosmos-sdk/tools/systemtests
 
 require (
 	cosmossdk.io/math v1.5.3
-	github.com/cometbft/cometbft v0.39.0-rc2
+	github.com/cometbft/cometbft v0.39.0-rc3
 	github.com/cosmos/cosmos-sdk v0.53.6
 	github.com/creachadair/tomledit v0.0.29
 	github.com/stretchr/testify v1.11.1

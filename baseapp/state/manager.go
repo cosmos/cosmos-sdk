@@ -83,7 +83,7 @@ func (mgr *Manager) SetState(
 	logger log.Logger,
 	streamingManager storetypes.StreamingManager,
 ) {
-	ms := unbranchedStore.CommitBranch()
+	ms := unbranchedStore.CacheMultiStore()
 	headerInfo := header.Info{
 		Height:  h.Height,
 		Time:    h.Time,

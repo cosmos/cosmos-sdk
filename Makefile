@@ -550,7 +550,7 @@ test-sdk-system: build-v54 build-system-test-current
 # test-sdk-system-extended: full suite (~30 min). For local runs and CI on merges to main.
 test-sdk-system-extended: build-v54 build-system-test-current
 	mkdir -p ./tests/systemtests/binaries/v0.54 ./tests/systemtests/testnet
-	mv $(BUILDDIR)/simdv54 ./tests/systemtests/binaries/v0.54simd
+	mv $(BUILDDIR)/simdv54 ./tests/systemtests/binaries/v0.54/simd
 	$(MAKE) -C tests/systemtests test
 
 test-system: test-sdk-system

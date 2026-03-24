@@ -107,6 +107,8 @@ func (c *CommitTree) startCommit(ctx context.Context, updates iter.Seq[cachekv.U
 		done:               make(chan struct{}),
 		walDone:            make(chan error, 1),
 	}
+	// We start the commit go routine here.
+	// All the commit work happens in the background, and we must signal it to finalize or rollback.
 	go func() {
 		// Prevent context leak: WithCancel registers a child in the parent context's tree,
 		// and that registration is only cleaned up when cancel() is called.
@@ -118,6 +120,7 @@ func (c *CommitTree) startCommit(ctx context.Context, updates iter.Seq[cachekv.U
 		if err != nil {
 			committer.err.Store(err)
 		}
+		// At the end we close the committer.done channel to communicate that the commit go routine has completed.
 		close(committer.done)
 	}()
 	return committer
@@ -125,7 +128,9 @@ func (c *CommitTree) startCommit(ctx context.Context, updates iter.Seq[cachekv.U
 
 var rolledbackErr = errors.New("commit rolled back")
 
+// commit does the actual work of commiting a tree or rolling back if there is an error or if the caller cancels the context.
 func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[cachekv.Update[[]byte]], updateCount int) error {
+	// We lock the mutex because only one commit operation can happen at a time.
 	c.commitMutex.Lock()
 	defer c.commitMutex.Unlock()
 
@@ -139,8 +144,13 @@ func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[cache
 	)
 	defer span.End()
 
+	// prepareCommit does almost all the work of committing including
+	// - updating the tree,
+	// - computing hashes,
+	// - writing the WAL
 	prepareRes, err := c.prepareCommit(ctx, updates, updateCount)
 	if err != nil {
+		// if there was an error (either signaled by the user or otherwise) we rollback
 		rbErr := c.treeStore.RollbackWAL()
 		if rbErr != nil {
 			return fmt.Errorf("commit failed: %w; rollback failed: %w", err, rbErr)
@@ -148,15 +158,20 @@ func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[cache
 		return fmt.Errorf("%w; root cause %w", rolledbackErr, err)
 	}
 
-	// assign node IDs if needed
+	// At this point we are finalizing the commit, there is no rolling back from here forward.
 	root := prepareRes.root
-	// save the new root after the WAL is fully written so that all offsets are populated correctly
+	// This updates the in-memory tree root and version and also starts the checkpoint go routine
+	// if a checkpoint needs to be taken at this point.
+	// Checkpointing DOES NOT need to complete before the commit is finalized.
+	// Checkpointing is considered an optimization to make loading the tree from disk more efficient
+	// and it DOES NOT need the same level of durability as writing the WAL which we have already done.
 	err = c.treeStore.SaveRoot(
 		ctx,
 		root,
 		prepareRes.mutationCtx,
 	)
 	if err != nil {
+		// TODO: we should consider if a rollback is needed/possible here - in what conditions would we have an error here
 		return err
 	}
 
@@ -164,7 +179,7 @@ func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[cache
 
 	if root != nil {
 		if mem := root.Mem.Load(); mem != nil {
-			// instrument tree size, height and orphan count
+			// Instrument tree size, height and orphan count
 			span.SetAttributes(
 				attribute.Int64("size", mem.Size()),
 				attribute.Int64("height", int64(mem.Height())),
@@ -418,9 +433,11 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 	return &prepareCommitResult{
 		root:        root,
 		mutationCtx: mutationCtx,
-	}, ctx.Err()
+	}, ctx.Err() // we return ctx.Err() here because if we are rolling back it will definitely be non-nil at this point
 }
 
+// WaitForHash waits for the hash to be ready and returns it or an error.
+// We do not know whether the commit has been or will be finalized when WaitForHash returns.
 func (c *commitTreeFinalizer) WaitForHash() (storetypes.CommitID, error) {
 	select {
 	case <-c.hashReady:
@@ -433,25 +450,38 @@ func (c *commitTreeFinalizer) WaitForHash() (storetypes.CommitID, error) {
 	return c.workingHash, nil
 }
 
+// WaitForWAL waits for WAL writing to complete.
 func (c *commitTreeFinalizer) WaitForWAL() error {
+	// The sync.Once used here ensures that we drain the walDone channel exactly once
+	// so that multiple callers can call WaitForWAL, and they will all get the same result without
+	// blocking on the channel receive multiple times.
 	c.walOnce.Do(func() {
 		c.walErr = <-c.walDone
 	})
 	return c.walErr
 }
 
-func (c *commitTreeFinalizer) PrepareFinalize() (storetypes.CommitID, error) {
+// StartFinalize signals that the commit should proceed with finalization and
+// blocks until the hash is ready.
+func (c *commitTreeFinalizer) StartFinalize() (storetypes.CommitID, error) {
 	if err := c.SignalFinalize(); err != nil {
 		return storetypes.CommitID{}, err
 	}
 	return c.WaitForHash()
 }
 
+// Rollback rolls back the commit.
 func (c *commitTreeFinalizer) Rollback() error {
+	// Rollback works via context cancellation.
+	// We start by canceling the context which communicates to all worker go routines that they should
+	// stop any in-progress work and return.
 	c.cancel()
+	// We also close the finalizeOrRollback channel in case anyone is waiting for that channel to close,
+	// but only after context cancellation is used to trigger the rollback.
 	c.finalizeOnce.Do(func() {
 		close(c.finalizeOrRollback)
 	})
+	// We wait for
 	<-c.done
 	err := c.err.Load()
 	if err == nil {

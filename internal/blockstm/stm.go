@@ -10,7 +10,6 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 func ExecuteBlock(
@@ -85,13 +84,17 @@ func ExecuteBlockWithEstimates(
 		return errors.New("scheduler did not complete")
 	}
 
-	telemetry.IncrCounter(float32(scheduler.executedTxns.Load()), TelemetrySubsystem, KeyExecutedTxs)                    //nolint:staticcheck // TODO: switch to OpenTelemetry
-	telemetry.IncrCounter(float32(scheduler.validatedTxns.Load()), TelemetrySubsystem, KeyValidatedTxs)                  //nolint:staticcheck // TODO: switch to OpenTelemetry
-	telemetry.IncrCounter(float32(scheduler.decreaseCnt.Load()), TelemetrySubsystem, KeyDecreaseCount)                   //nolint:staticcheck // TODO: switch to OpenTelemetry
-	telemetry.SetGauge(float32(scheduler.executedTxns.Load())/float32(blockSize), TelemetrySubsystem, KeyExecutionRatio) //nolint:staticcheck // TODO: switch to OpenTelemetry
+	if inst != nil {
+		inst.ExecutedTxs.Add(ctx, scheduler.executedTxns.Load())
+		inst.ValidatedTxs.Add(ctx, scheduler.validatedTxns.Load())
+		inst.DecreaseCount.Add(ctx, int64(scheduler.decreaseCnt.Load()))
+		if blockSize > 0 {
+			inst.ExecutionRatio.Add(ctx, float64(scheduler.executedTxns.Load())/float64(blockSize))
+		}
+	}
 
 	// Write the snapshot into the storage
-	mvMemory.WriteSnapshot(storage)
+	mvMemory.WriteSnapshot(ctx, storage)
 	return nil
 }
 

@@ -1,11 +1,13 @@
 package blockstm
 
 import (
+	"context"
 	"time"
+
+	"go.opentelemetry.io/otel/metric"
 
 	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 var (
@@ -17,6 +19,7 @@ var (
 
 // GMVMemoryView wraps `MVMemory` for execution of a single transaction.
 type GMVMemoryView[V any] struct {
+	ctx       context.Context
 	storage   storetypes.GKVStore[V]
 	mvData    *GMVData[V]
 	scheduler *Scheduler
@@ -27,19 +30,20 @@ type GMVMemoryView[V any] struct {
 	writeSet *GMemDB[V]
 }
 
-func NewMVView(store int, storage storetypes.Store, mvData MVStore, scheduler *Scheduler, txn TxnIndex) MVView {
+func NewMVView(ctx context.Context, store int, storage storetypes.Store, mvData MVStore, scheduler *Scheduler, txn TxnIndex) MVView {
 	switch data := mvData.(type) {
 	case *GMVData[any]:
-		return NewGMVMemoryView(store, storage.(storetypes.ObjKVStore), data, scheduler, txn)
+		return NewGMVMemoryView(ctx, store, storage.(storetypes.ObjKVStore), data, scheduler, txn)
 	case *GMVData[[]byte]:
-		return NewGMVMemoryView(store, storage.(storetypes.KVStore), data, scheduler, txn)
+		return NewGMVMemoryView(ctx, store, storage.(storetypes.KVStore), data, scheduler, txn)
 	default:
 		panic("unsupported value type")
 	}
 }
 
-func NewGMVMemoryView[V any](store int, storage storetypes.GKVStore[V], mvData *GMVData[V], scheduler *Scheduler, txn TxnIndex) *GMVMemoryView[V] {
+func NewGMVMemoryView[V any](ctx context.Context, store int, storage storetypes.GKVStore[V], mvData *GMVData[V], scheduler *Scheduler, txn TxnIndex) *GMVMemoryView[V] {
 	return &GMVMemoryView[V]{
+		ctx:       ctx,
 		store:     store,
 		storage:   storage,
 		mvData:    mvData,
@@ -63,7 +67,7 @@ func (s *GMVMemoryView[V]) waitFor(txn TxnIndex) {
 }
 
 func (s *GMVMemoryView[V]) ApplyWriteSet(version TxnVersion) bool {
-	return s.mvData.Consolidate(version, s.writeSet)
+	return s.mvData.Consolidate(s.ctx, version, s.writeSet)
 }
 
 func (s *GMVMemoryView[V]) ReadSet() *ReadSet {
@@ -82,19 +86,19 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 	if s.writeSet != nil {
 		if value, found := s.writeSet.OverlayGet(key); found {
 			// value written by this txn
-			telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadWriteSet) //nolint:staticcheck // TODO: switch to OpenTelemetry
+			measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewReadWriteSet }, start)
 			// zero value means deleted
 			return value
 		}
 	}
 
 	for {
-		value, version, estimate := s.mvData.Read(key, s.txn)
+		value, version, estimate := s.mvData.Read(s.ctx, key, s.txn)
 		if estimate {
 			estimateStart := time.Now()
 			// read ESTIMATE mark, wait for the blocking txn to finish
 			s.waitFor(version.Index)
-			telemetry.MeasureSince(estimateStart, TelemetrySubsystem, KeyMVViewEstimateWait) //nolint:staticcheck // TODO: switch to OpenTelemetry
+			measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewEstimateWait }, estimateStart)
 			continue
 		}
 
@@ -103,10 +107,10 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 		s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{key, version})
 		if !version.Valid() {
 			result := s.storage.Get(key)
-			telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadStorage) //nolint:staticcheck // TODO: switch to OpenTelemetry
+			measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewReadStorage }, start)
 			return result
 		}
-		telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadMVData) //nolint:staticcheck // TODO: switch to OpenTelemetry
+		measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewReadMVData }, start)
 		return value
 	}
 }
@@ -116,7 +120,8 @@ func (s *GMVMemoryView[V]) Has(key []byte) bool {
 }
 
 func (s *GMVMemoryView[V]) Set(key []byte, value V) {
-	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVViewWrite) //nolint:staticcheck // TODO: switch to OpenTelemetry
+	start := time.Now()
+	defer measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewWrite }, start)
 	if s.mvData.isZero(value) {
 		panic("nil value is not allowed")
 	}
@@ -125,7 +130,8 @@ func (s *GMVMemoryView[V]) Set(key []byte, value V) {
 }
 
 func (s *GMVMemoryView[V]) Delete(key []byte) {
-	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVViewDelete) //nolint:staticcheck // TODO: switch to OpenTelemetry
+	start := time.Now()
+	defer measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewDelete }, start)
 	var empty V
 	s.init()
 	s.writeSet.OverlaySet(key, empty)
@@ -180,9 +186,10 @@ func (s *GMVMemoryView[V]) iterator(opts IteratorOptions) storetypes.GIterator[V
 			Reads:           reads,
 		})
 
-		// Measure iterator duration and track keys read
-		telemetry.MeasureSince(iterStart, TelemetrySubsystem, KeyMVViewIteratorKeys)             //nolint:staticcheck // TODO: switch to OpenTelemetry
-		telemetry.IncrCounter(float32(len(reads)), TelemetrySubsystem, KeyMVViewIteratorKeysCnt) //nolint:staticcheck // TODO: switch to OpenTelemetry
+		measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewIteratorKeys }, iterStart)
+		if inst != nil {
+			inst.MVViewIteratorKeysCnt.Add(s.ctx, int64(len(reads)))
+		}
 	}
 
 	// three-way merge iterator

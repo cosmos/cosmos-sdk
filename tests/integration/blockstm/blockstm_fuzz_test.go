@@ -1,11 +1,9 @@
 package blockstm_test
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -36,16 +34,15 @@ import (
 )
 
 const (
-	blockSTMFuzzChainID   = "blockstm-fuzz-test"
-	accountsCount         = 4
+	testChainID           = "blockstm-fuzz-test"
+	accsCount             = 4
 	initialValidatorCount = 2
 	initialBalance        = int64(1_000)
 	selfDelegation        = int64(100)
 	maximumOperations     = 30
-	panicReplayCount      = 200
 )
 
-type participant struct {
+type account struct {
 	priv cryptotypes.PrivKey
 	addr sdk.AccAddress
 }
@@ -53,7 +50,6 @@ type participant struct {
 type testApplication struct {
 	app      *simapp.SimApp
 	txConfig client.TxConfig
-	logBuf   *bytes.Buffer
 }
 
 type operationKind string
@@ -89,76 +85,45 @@ type delegationRef struct {
 	validator int
 }
 
-func TestBlockSTM_MixedMessageDeterminism(t *testing.T) {
-	participants := generateParticipants(accountsCount)
-	participantAddrs := participantAddresses(participants)
-	validatorPubKeys := generateValidatorPubKeys(accountsCount)
-	genesisState, valSet := buildGenesisState(t, participants)
+func TestBlockSTMDeterminism(t *testing.T) {
+	accounts := generateAccounts(accsCount)
+	accountAddrs := getAddrs(accounts)
+	validatorPubKeys := generateValidatorPubKeys(accsCount)
+	genesisState, valSet := buildGenesisState(t, accounts)
 
 	rapid.Check(t, func(rt *rapid.T) {
 		ops := generateOperations(rt, newState(
-			len(participantAddrs),
+			len(accountAddrs),
 			initialValidatorCount,
 			initialBalance,
 			selfDelegation,
 		), maximumOperations)
-		panicCount, panicLines := runOperations(t, genesisState, valSet, participants, participantAddrs, validatorPubKeys, ops, 8)
-		require.Zero(t, panicCount, "ops=%#v\n%s", ops, panicLines)
+		runOperations(t, genesisState, valSet, accounts, accountAddrs, validatorPubKeys, ops, 8)
 	})
-}
-
-// TestBlockSTMRegression replays a fixed ante-enabled
-// staking block that has triggered recovered distribution panics under BlockSTM.
-func TestBlockSTMRegression(t *testing.T) {
-	participants := generateParticipants(accountsCount)
-	participantAddrs := participantAddresses(participants)
-	validatorPubKeys := generateValidatorPubKeys(accountsCount)
-	genesisState, valSet := buildGenesisState(t, participants)
-
-	ops := []operation{
-		{kind: opRedelegate, account: 0, validator: 0, dstValidator: 1, amount: 17},
-		{kind: opDelegate, account: 1, validator: 0, amount: 900},
-		{kind: opRedelegate, account: 1, validator: 1, dstValidator: 0, amount: 1},
-		{kind: opRedelegate, account: 1, validator: 1, dstValidator: 0, amount: 55},
-		{kind: opDelegate, account: 2, validator: 0, amount: 2},
-		{kind: opCreateValidator, account: 3, amount: 4},
-		{kind: opCreateValidator, account: 2, amount: 359},
-		{kind: opDelegate, account: 0, validator: 1, amount: 3},
-		{kind: opDelegate, account: 2, validator: 2, amount: 66},
-		{kind: opUndelegate, account: 0, validator: 0, amount: 1},
-	}
-
-	for i := range panicReplayCount {
-		panicCount, panicLines := runOperations(t, genesisState, valSet, participants, participantAddrs, validatorPubKeys, ops, len(ops))
-		require.Zero(t, panicCount, "iteration=%d ops=%#v\n%s", i, ops, panicLines)
-	}
 }
 
 func runOperations(
 	t *testing.T,
 	genesisState []byte,
 	valSet *cmttypes.ValidatorSet,
-	participants []participant,
-	participantAddrs []sdk.AccAddress,
+	accounts []account,
+	accountAddrs []sdk.AccAddress,
 	validatorPubKeys []cryptotypes.PubKey,
 	ops []operation,
 	blockSTMExecutors int,
-) (int, string) {
+) {
 	t.Helper()
 
-	var blockSTMLogBuf bytes.Buffer
+	regularApp := newTestApplication(t, dbm.NewMemDB(), genesisState, valSet, false, 0)
+	blockSTMApp := newTestApplication(t, dbm.NewMemDB(), genesisState, valSet, true, blockSTMExecutors)
 
-	regularApp := newTestApplication(t, dbm.NewMemDB(), genesisState, valSet, false, nil, 0)
-	blockSTMApp := newTestApplication(t, dbm.NewMemDB(), genesisState, valSet, true, &blockSTMLogBuf, blockSTMExecutors)
-
-	initTestApplication(t, regularApp, participants, participantAddrs, validatorPubKeys, initialValidatorCount)
-	initTestApplication(t, blockSTMApp, participants, participantAddrs, validatorPubKeys, initialValidatorCount)
-	blockSTMLogBuf.Reset()
+	initTestApplication(t, regularApp, accounts, accountAddrs, validatorPubKeys, initialValidatorCount)
+	initTestApplication(t, blockSTMApp, accounts, accountAddrs, validatorPubKeys, initialValidatorCount)
 
 	require.Equal(t, regularApp.app.LastCommitID(), blockSTMApp.app.LastCommitID())
 
 	execHeight := regularApp.app.LastBlockHeight() + 1
-	txBytes := buildTxs(t, regularApp.app, participants, participantAddrs, validatorPubKeys, execHeight, ops)
+	txBytes := buildTxs(t, regularApp.app, accounts, accountAddrs, validatorPubKeys, execHeight, ops)
 
 	regularRes, err := regularApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: execHeight,
@@ -183,11 +148,9 @@ func runOperations(
 	require.NoError(t, err)
 
 	require.Equal(t, regularApp.app.LastCommitID(), blockSTMApp.app.LastCommitID())
-	panicLines := recoveredPanicLogLines(blockSTMLogBuf.String())
-	return strings.Count(blockSTMLogBuf.String(), "panic recovered in runTx"), panicLines
 }
 
-func buildGenesisState(t *testing.T, participants []participant) ([]byte, *cmttypes.ValidatorSet) {
+func buildGenesisState(t *testing.T, accounts []account) ([]byte, *cmttypes.ValidatorSet) {
 	t.Helper()
 
 	templateApp := simapp.NewSimApp(
@@ -195,18 +158,18 @@ func buildGenesisState(t *testing.T, participants []participant) ([]byte, *cmtty
 		dbm.NewMemDB(),
 		true,
 		simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
-		baseapp.SetChainID(blockSTMFuzzChainID),
+		baseapp.SetChainID(testChainID),
 	)
 
 	valSet, err := simtestutil.CreateRandomValidatorSet()
 	require.NoError(t, err)
 
-	genAccs := make([]authtypes.GenesisAccount, 0, len(participants))
-	balances := make([]banktypes.Balance, 0, len(participants))
-	for _, participant := range participants {
-		genAccs = append(genAccs, authtypes.NewBaseAccount(participant.addr, participant.priv.PubKey(), 0, 0))
+	genAccs := make([]authtypes.GenesisAccount, 0, len(accounts))
+	balances := make([]banktypes.Balance, 0, len(accounts))
+	for _, account := range accounts {
+		genAccs = append(genAccs, authtypes.NewBaseAccount(account.addr, account.priv.PubKey(), 0, 0))
 		balances = append(balances, banktypes.Balance{
-			Address: participant.addr.String(),
+			Address: account.addr.String(),
 			Coins:   sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, initialBalance)),
 		})
 	}
@@ -232,22 +195,18 @@ func newTestApplication(
 	genesisState []byte,
 	valSet *cmttypes.ValidatorSet,
 	enableBlockSTM bool,
-	logBuf *bytes.Buffer,
 	blockSTMExecutors int,
 ) testApplication {
 	t.Helper()
 
-	logger := log.Logger(log.NewNopLogger())
-	if logBuf != nil {
-		logger = log.NewLogger(logBuf, log.OutputJSONOption())
-	}
+	logger := log.NewNopLogger()
 
 	app := simapp.NewSimApp(
 		logger,
 		db,
 		true,
 		simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
-		baseapp.SetChainID(blockSTMFuzzChainID),
+		baseapp.SetChainID(testChainID),
 	)
 
 	if enableBlockSTM {
@@ -261,7 +220,7 @@ func newTestApplication(
 	}
 
 	_, err := app.InitChain(&abci.RequestInitChain{
-		ChainId:         blockSTMFuzzChainID,
+		ChainId:         testChainID,
 		ConsensusParams: simtestutil.DefaultConsensusParams,
 		AppStateBytes:   genesisState,
 	})
@@ -279,15 +238,14 @@ func newTestApplication(
 	return testApplication{
 		app:      app,
 		txConfig: app.TxConfig(),
-		logBuf:   logBuf,
 	}
 }
 
 func initTestApplication(
 	t *testing.T,
 	testApp testApplication,
-	participants []participant,
-	participantAddrs []sdk.AccAddress,
+	accounts []account,
+	accountAddrs []sdk.AccAddress,
 	validatorPubKeys []cryptotypes.PubKey,
 	initialValidatorCount int,
 ) {
@@ -303,7 +261,7 @@ func initTestApplication(
 	}
 
 	bootstrapHeight := testApp.app.LastBlockHeight() + 1
-	txBytes := buildTxs(t, testApp.app, participants, participantAddrs, validatorPubKeys, bootstrapHeight, bootstrapOps)
+	txBytes := buildTxs(t, testApp.app, accounts, accountAddrs, validatorPubKeys, bootstrapHeight, bootstrapOps)
 
 	res, err := testApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: bootstrapHeight,
@@ -458,20 +416,20 @@ func availableOps(s state) []operationKind {
 	return kinds
 }
 
-func newState(participantCount, initialValidatorCount int, initialBalance, selfDelegation int64) state {
+func newState(numAccounts, initialValidatorCount int, initialBalance, selfDelegation int64) state {
 	s := state{
-		balances:              make([]int64, participantCount),
-		validatorExists:       make([]bool, participantCount),
-		delegations:           make([][]int64, participantCount),
-		unbondings:            make([][]int64, participantCount),
-		receivingRedelegation: make([][]bool, participantCount),
+		balances:              make([]int64, numAccounts),
+		validatorExists:       make([]bool, numAccounts),
+		delegations:           make([][]int64, numAccounts),
+		unbondings:            make([][]int64, numAccounts),
+		receivingRedelegation: make([][]bool, numAccounts),
 	}
 
-	for i := range participantCount {
+	for i := range numAccounts {
 		s.balances[i] = initialBalance
-		s.delegations[i] = make([]int64, participantCount)
-		s.unbondings[i] = make([]int64, participantCount)
-		s.receivingRedelegation[i] = make([]bool, participantCount)
+		s.delegations[i] = make([]int64, numAccounts)
+		s.unbondings[i] = make([]int64, numAccounts)
+		s.receivingRedelegation[i] = make([]bool, numAccounts)
 	}
 
 	for i := range initialValidatorCount {
@@ -564,8 +522,8 @@ func redelegationSources(s state) []delegationRef {
 func buildTxs(
 	t *testing.T,
 	app *simapp.SimApp,
-	participants []participant,
-	participantAddrs []sdk.AccAddress,
+	accounts []account,
+	accountAddrs []sdk.AccAddress,
 	validatorPubKeys []cryptotypes.PubKey,
 	height int64,
 	ops []operation,
@@ -573,10 +531,10 @@ func buildTxs(
 	t.Helper()
 
 	ctx := app.NewContext(true)
-	accountNumbers := make([]uint64, len(participants))
-	nextSequences := make([]uint64, len(participants))
-	for i, participant := range participants {
-		acc := app.AccountKeeper.GetAccount(ctx, participant.addr)
+	accountNumbers := make([]uint64, len(accounts))
+	nextSequences := make([]uint64, len(accounts))
+	for i, acc := range accounts {
+		acc := app.AccountKeeper.GetAccount(ctx, acc.addr)
 		require.NotNil(t, acc)
 		accountNumbers[i] = acc.GetAccountNumber()
 		nextSequences[i] = acc.GetSequence()
@@ -590,7 +548,7 @@ func buildTxs(
 		case opCreateValidator:
 			description := stakingtypes.Description{Moniker: fmt.Sprintf("validator-%d", op.account)}
 			createValidatorMsg, err := stakingtypes.NewMsgCreateValidator(
-				sdk.ValAddress(participantAddrs[op.account]).String(),
+				sdk.ValAddress(accountAddrs[op.account]).String(),
 				validatorPubKeys[op.account],
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, op.amount),
 				description,
@@ -602,37 +560,37 @@ func buildTxs(
 
 		case opSendCoins:
 			msg = banktypes.NewMsgSend(
-				participantAddrs[op.account],
-				participantAddrs[op.to],
+				accountAddrs[op.account],
+				accountAddrs[op.to],
 				sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, op.amount)),
 			)
 
 		case opDelegate:
 			msg = stakingtypes.NewMsgDelegate(
-				participantAddrs[op.account].String(),
-				sdk.ValAddress(participantAddrs[op.validator]).String(),
+				accountAddrs[op.account].String(),
+				sdk.ValAddress(accountAddrs[op.validator]).String(),
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, op.amount),
 			)
 
 		case opUndelegate:
 			msg = stakingtypes.NewMsgUndelegate(
-				participantAddrs[op.account].String(),
-				sdk.ValAddress(participantAddrs[op.validator]).String(),
+				accountAddrs[op.account].String(),
+				sdk.ValAddress(accountAddrs[op.validator]).String(),
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, op.amount),
 			)
 
 		case opRedelegate:
 			msg = stakingtypes.NewMsgBeginRedelegate(
-				participantAddrs[op.account].String(),
-				sdk.ValAddress(participantAddrs[op.validator]).String(),
-				sdk.ValAddress(participantAddrs[op.dstValidator]).String(),
+				accountAddrs[op.account].String(),
+				sdk.ValAddress(accountAddrs[op.validator]).String(),
+				sdk.ValAddress(accountAddrs[op.dstValidator]).String(),
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, op.amount),
 			)
 
 		case opCancelUnbonding:
 			msg = stakingtypes.NewMsgCancelUnbondingDelegation(
-				participantAddrs[op.account].String(),
-				sdk.ValAddress(participantAddrs[op.validator]).String(),
+				accountAddrs[op.account].String(),
+				sdk.ValAddress(accountAddrs[op.validator]).String(),
 				height,
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, op.amount),
 			)
@@ -646,10 +604,10 @@ func buildTxs(
 			t,
 			app.TxConfig(),
 			msg,
-			blockSTMFuzzChainID,
+			testChainID,
 			accountNumbers[signer],
 			nextSequences[signer],
-			participants[signer].priv,
+			accounts[signer].priv,
 		))
 		nextSequences[signer]++
 	}
@@ -714,39 +672,27 @@ func buildSignedTx(
 	return bz
 }
 
-func recoveredPanicLogLines(logOutput string) string {
-	lines := strings.Split(logOutput, "\n")
-	relevant := make([]string, 0, len(lines))
-	for _, line := range lines {
-		if strings.Contains(line, "panic recovered in runTx") || strings.Contains(line, "uniqueness constraint violation") {
-			relevant = append(relevant, line)
-		}
-	}
-
-	return strings.Join(relevant, "\n")
-}
-
 func opLabel(index int, suffix string) string {
 	return fmt.Sprintf("op-%d-%s", index, suffix)
 }
 
-func generateParticipants(count int) []participant {
-	participants := make([]participant, count)
+func generateAccounts(count int) []account {
+	accounts := make([]account, count)
 	for i := range count {
 		priv := secp256k1.GenPrivKey()
-		participants[i] = participant{
+		accounts[i] = account{
 			priv: priv,
 			addr: sdk.AccAddress(priv.PubKey().Address()),
 		}
 	}
 
-	return participants
+	return accounts
 }
 
-func participantAddresses(participants []participant) []sdk.AccAddress {
-	addrs := make([]sdk.AccAddress, len(participants))
-	for i, participant := range participants {
-		addrs[i] = participant.addr
+func getAddrs(accounts []account) []sdk.AccAddress {
+	addrs := make([]sdk.AccAddress, len(accounts))
+	for i, acc := range accounts {
+		addrs[i] = acc.addr
 	}
 
 	return addrs

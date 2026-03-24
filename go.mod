@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/core v1.1.0
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/errors v1.1.0
-	cosmossdk.io/log/v2 v2.0.1
+	cosmossdk.io/log/v2 v2.1.0-rc.0
 	cosmossdk.io/math v1.5.3
 	github.com/99designs/keyring v1.2.1
 	github.com/RoaringBitmap/roaring/v2 v2.16.0
@@ -335,10 +335,7 @@ require (
 
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
-replace (
-	cosmossdk.io/log/v2 => ./log
-	github.com/cosmos/cosmos-sdk/store/v2 => ./store
-)
+replace github.com/cosmos/cosmos-sdk/store/v2 => ./store
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

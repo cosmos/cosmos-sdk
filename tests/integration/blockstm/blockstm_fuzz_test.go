@@ -1,55 +1,59 @@
 package blockstm_test
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
+	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/client"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
+	blockSTMFuzzChainID   = "blockstm-fuzz-test"
 	accountsCount         = 4
 	initialValidatorCount = 2
 	initialBalance        = int64(1_000)
 	selfDelegation        = int64(100)
 	maximumOperations     = 30
+	panicReplayCount      = 200
 )
 
+type participant struct {
+	priv cryptotypes.PrivKey
+	addr sdk.AccAddress
+}
+
 type testApplication struct {
-	app           *baseapp.BaseApp
-	bankKeeper    bankkeeper.BaseKeeper
-	stakingKeeper *stakingkeeper.Keeper
-	txConfig      client.TxConfig
+	app      *simapp.SimApp
+	txConfig client.TxConfig
+	logBuf   *bytes.Buffer
 }
 
 type operationKind string
@@ -86,203 +90,229 @@ type delegationRef struct {
 }
 
 func TestBlockSTM_MixedMessageDeterminism(t *testing.T) {
-	participantAddrs := generateAddrs(accountsCount)
+	participants := generateParticipants(accountsCount)
+	participantAddrs := participantAddresses(participants)
 	validatorPubKeys := generateValidatorPubKeys(accountsCount)
+	genesisState, valSet := buildGenesisState(t, participants)
 
 	rapid.Check(t, func(rt *rapid.T) {
-		regularApp := newTestApplication(t, dbm.NewMemDB(), false)
-		blockSTMApp := newTestApplication(t, dbm.NewMemDB(), true)
-
-		initTestApplication(t, regularApp, participantAddrs, validatorPubKeys, initialValidatorCount)
-		initTestApplication(t, blockSTMApp, participantAddrs, validatorPubKeys, initialValidatorCount)
-
-		require.Equal(t, regularApp.app.LastCommitID(), blockSTMApp.app.LastCommitID())
-
 		ops := generateOperations(rt, newState(
 			len(participantAddrs),
 			initialValidatorCount,
 			initialBalance,
 			selfDelegation,
 		), maximumOperations)
-		execHeight := regularApp.app.LastBlockHeight() + 1
-		txBytes := buildTxs(t, regularApp.txConfig, participantAddrs, validatorPubKeys, execHeight, ops)
-
-		regularRes, err := regularApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-			Height: execHeight,
-			Txs:    txBytes,
-		})
-		require.NoError(t, err)
-
-		blockSTMRes, err := blockSTMApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-			Height: execHeight,
-			Txs:    txBytes,
-		})
-		require.NoError(t, err)
-
-		require.Equal(t, regularRes.TxResults, blockSTMRes.TxResults)
-		require.Equal(t, regularRes.AppHash, blockSTMRes.AppHash)
-
-		_, err = regularApp.app.Commit()
-		require.NoError(t, err)
-		_, err = blockSTMApp.app.Commit()
-		require.NoError(t, err)
-
-		require.Equal(t, regularApp.app.LastCommitID(), blockSTMApp.app.LastCommitID())
+		panicCount, panicLines := runOperations(t, genesisState, valSet, participants, participantAddrs, validatorPubKeys, ops, 8)
+		require.Zero(t, panicCount, "ops=%#v\n%s", ops, panicLines)
 	})
 }
 
-func newTestApplication(t *testing.T, db dbm.DB, enableBlockSTM bool) testApplication {
-	t.Helper()
+// TestBlockSTMRegression replays a fixed ante-enabled
+// staking block that has triggered recovered distribution panics under BlockSTM.
+func TestBlockSTMRegression(t *testing.T) {
+	participants := generateParticipants(accountsCount)
+	participantAddrs := participantAddresses(participants)
+	validatorPubKeys := generateValidatorPubKeys(accountsCount)
+	genesisState, valSet := buildGenesisState(t, participants)
 
-	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey)
-	encCfg := moduletestutil.MakeTestEncodingConfig(
-		auth.AppModuleBasic{},
-		bank.AppModuleBasic{},
-		staking.AppModuleBasic{},
-	)
-	cdc := encCfg.Codec
-
-	bApp := baseapp.NewBaseApp(
-		"test",
-		log.NewNopLogger(),
-		db,
-		encCfg.TxConfig.TxDecoder(),
-		baseapp.SetChainID("test"),
-	)
-	bApp.MountKVStores(keys)
-	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-
-	authority := authtypes.NewModuleAddress("gov")
-
-	maccPerms := map[string][]string{
-		minttypes.ModuleName:           {authtypes.Minter},
-		stakingtypes.ModuleName:        {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+	ops := []operation{
+		{kind: opRedelegate, account: 0, validator: 0, dstValidator: 1, amount: 17},
+		{kind: opDelegate, account: 1, validator: 0, amount: 900},
+		{kind: opRedelegate, account: 1, validator: 1, dstValidator: 0, amount: 1},
+		{kind: opRedelegate, account: 1, validator: 1, dstValidator: 0, amount: 55},
+		{kind: opDelegate, account: 2, validator: 0, amount: 2},
+		{kind: opCreateValidator, account: 3, amount: 4},
+		{kind: opCreateValidator, account: 2, amount: 359},
+		{kind: opDelegate, account: 0, validator: 1, amount: 3},
+		{kind: opDelegate, account: 2, validator: 2, amount: 66},
+		{kind: opUndelegate, account: 0, validator: 0, amount: 1},
 	}
 
-	accountKeeper := authkeeper.NewAccountKeeper(
-		cdc,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
-		authtypes.ProtoBaseAccount,
-		maccPerms,
-		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
-		sdk.Bech32MainPrefix,
-		authority.String(),
-	)
+	for i := range panicReplayCount {
+		panicCount, panicLines := runOperations(t, genesisState, valSet, participants, participantAddrs, validatorPubKeys, ops, len(ops))
+		require.Zero(t, panicCount, "iteration=%d ops=%#v\n%s", i, ops, panicLines)
+	}
+}
 
-	bankKeeper := bankkeeper.NewBaseKeeper(
-		cdc,
-		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
-		accountKeeper,
-		map[string]bool{accountKeeper.GetAuthority(): false},
-		authority.String(),
+func runOperations(
+	t *testing.T,
+	genesisState []byte,
+	valSet *cmttypes.ValidatorSet,
+	participants []participant,
+	participantAddrs []sdk.AccAddress,
+	validatorPubKeys []cryptotypes.PubKey,
+	ops []operation,
+	blockSTMExecutors int,
+) (int, string) {
+	t.Helper()
+
+	var blockSTMLogBuf bytes.Buffer
+
+	regularApp := newTestApplication(t, dbm.NewMemDB(), genesisState, valSet, false, nil, 0)
+	blockSTMApp := newTestApplication(t, dbm.NewMemDB(), genesisState, valSet, true, &blockSTMLogBuf, blockSTMExecutors)
+
+	initTestApplication(t, regularApp, participants, participantAddrs, validatorPubKeys, initialValidatorCount)
+	initTestApplication(t, blockSTMApp, participants, participantAddrs, validatorPubKeys, initialValidatorCount)
+	blockSTMLogBuf.Reset()
+
+	require.Equal(t, regularApp.app.LastCommitID(), blockSTMApp.app.LastCommitID())
+
+	execHeight := regularApp.app.LastBlockHeight() + 1
+	txBytes := buildTxs(t, regularApp.app, participants, participantAddrs, validatorPubKeys, execHeight, ops)
+
+	regularRes, err := regularApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: execHeight,
+		Hash:   regularApp.app.LastCommitID().Hash,
+		Txs:    txBytes,
+	})
+	require.NoError(t, err)
+
+	blockSTMRes, err := blockSTMApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: execHeight,
+		Hash:   blockSTMApp.app.LastCommitID().Hash,
+		Txs:    txBytes,
+	})
+	require.NoError(t, err)
+
+	require.Equal(t, regularRes.TxResults, blockSTMRes.TxResults)
+	require.Equal(t, regularRes.AppHash, blockSTMRes.AppHash)
+
+	_, err = regularApp.app.Commit()
+	require.NoError(t, err)
+	_, err = blockSTMApp.app.Commit()
+	require.NoError(t, err)
+
+	require.Equal(t, regularApp.app.LastCommitID(), blockSTMApp.app.LastCommitID())
+	panicLines := recoveredPanicLogLines(blockSTMLogBuf.String())
+	return strings.Count(blockSTMLogBuf.String(), "panic recovered in runTx"), panicLines
+}
+
+func buildGenesisState(t *testing.T, participants []participant) ([]byte, *cmttypes.ValidatorSet) {
+	t.Helper()
+
+	templateApp := simapp.NewSimApp(
 		log.NewNopLogger(),
+		dbm.NewMemDB(),
+		true,
+		simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
+		baseapp.SetChainID(blockSTMFuzzChainID),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(
-		cdc,
-		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
-		accountKeeper,
-		bankKeeper,
-		authority.String(),
-		addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
-		addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
+	valSet, err := simtestutil.CreateRandomValidatorSet()
+	require.NoError(t, err)
+
+	genAccs := make([]authtypes.GenesisAccount, 0, len(participants))
+	balances := make([]banktypes.Balance, 0, len(participants))
+	for _, participant := range participants {
+		genAccs = append(genAccs, authtypes.NewBaseAccount(participant.addr, participant.priv.PubKey(), 0, 0))
+		balances = append(balances, banktypes.Balance{
+			Address: participant.addr.String(),
+			Coins:   sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, initialBalance)),
+		})
+	}
+
+	genesisState, err := simtestutil.GenesisStateWithValSet(
+		templateApp.AppCodec(),
+		templateApp.DefaultGenesis(),
+		valSet,
+		genAccs,
+		balances...,
 	)
+	require.NoError(t, err)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
+	stateBytes, err := json.Marshal(genesisState)
+	require.NoError(t, err)
 
-	bApp.SetInitChainer(func(ctx sdk.Context, _ *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
-		authModule.InitGenesis(ctx, cdc, authModule.DefaultGenesis(cdc))
-		bankModule.InitGenesis(ctx, cdc, bankModule.DefaultGenesis(cdc))
-		stakingModule.InitGenesis(ctx, cdc, stakingModule.DefaultGenesis(cdc))
-		return &abci.ResponseInitChain{}, nil
-	})
+	return stateBytes, valSet
+}
 
-	bApp.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
-		return sdk.BeginBlock{}, stakingModule.BeginBlock(ctx)
-	})
+func newTestApplication(
+	t *testing.T,
+	db dbm.DB,
+	genesisState []byte,
+	valSet *cmttypes.ValidatorSet,
+	enableBlockSTM bool,
+	logBuf *bytes.Buffer,
+	blockSTMExecutors int,
+) testApplication {
+	t.Helper()
 
-	bApp.SetEndBlocker(func(ctx sdk.Context) (sdk.EndBlock, error) {
-		if err := bankModule.EndBlock(ctx); err != nil {
-			return sdk.EndBlock{}, err
-		}
+	logger := log.Logger(log.NewNopLogger())
+	if logBuf != nil {
+		logger = log.NewLogger(logBuf, log.OutputJSONOption())
+	}
 
-		validatorUpdates, err := stakingModule.EndBlock(ctx)
-		if err != nil {
-			return sdk.EndBlock{}, err
-		}
-
-		return sdk.EndBlock{ValidatorUpdates: validatorUpdates}, nil
-	})
-
-	banktypes.RegisterMsgServer(bApp.MsgServiceRouter(), bankkeeper.NewMsgServerImpl(bankKeeper))
-	stakingtypes.RegisterMsgServer(bApp.MsgServiceRouter(), stakingkeeper.NewMsgServerImpl(stakingKeeper))
+	app := simapp.NewSimApp(
+		logger,
+		db,
+		true,
+		simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
+		baseapp.SetChainID(blockSTMFuzzChainID),
+	)
 
 	if enableBlockSTM {
-		bApp.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(
-			encCfg.TxConfig.TxDecoder(),
-			[]storetypes.StoreKey{
-				keys[authtypes.StoreKey],
-				keys[banktypes.StoreKey],
-				keys[stakingtypes.StoreKey],
-			},
-			8,
+		app.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(
+			app.TxConfig().TxDecoder(),
+			app.GetStoreKeys(),
+			blockSTMExecutors,
 			false,
 			func(_ storetypes.MultiStore) string { return sdk.DefaultBondDenom },
 		))
 	}
 
+	_, err := app.InitChain(&abci.RequestInitChain{
+		ChainId:         blockSTMFuzzChainID,
+		ConsensusParams: simtestutil.DefaultConsensusParams,
+		AppStateBytes:   genesisState,
+	})
+	require.NoError(t, err)
+
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height:             app.LastBlockHeight() + 1,
+		Hash:               app.LastCommitID().Hash,
+		NextValidatorsHash: valSet.Hash(),
+	})
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
+
 	return testApplication{
-		app:           bApp,
-		bankKeeper:    bankKeeper,
-		stakingKeeper: stakingKeeper,
-		txConfig:      encCfg.TxConfig,
+		app:      app,
+		txConfig: app.TxConfig(),
+		logBuf:   logBuf,
 	}
 }
 
 func initTestApplication(
 	t *testing.T,
 	testApp testApplication,
+	participants []participant,
 	participantAddrs []sdk.AccAddress,
 	validatorPubKeys []cryptotypes.PubKey,
 	initialValidatorCount int,
 ) {
 	t.Helper()
 
-	require.NoError(t, testApp.app.LoadLatestVersion())
-
-	_, err := testApp.app.InitChain(&abci.RequestInitChain{ChainId: "test"})
-	require.NoError(t, err)
-
-	_, err = testApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: testApp.app.LastBlockHeight() + 1})
-	require.NoError(t, err)
-
-	ctx := testApp.app.NewContext(false)
-
-	for _, addr := range participantAddrs {
-		require.NoError(t, banktestutil.FundAccount(
-			ctx,
-			testApp.bankKeeper,
-			addr,
-			sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, initialBalance)),
-		))
-	}
-
-	stakingHelper := stakingtestutil.NewHelper(t, ctx, testApp.stakingKeeper)
+	bootstrapOps := make([]operation, 0, initialValidatorCount)
 	for i := range initialValidatorCount {
-		stakingHelper.CreateValidator(
-			sdk.ValAddress(participantAddrs[i]),
-			validatorPubKeys[i],
-			math.NewInt(selfDelegation),
-			true,
-		)
+		bootstrapOps = append(bootstrapOps, operation{
+			kind:    opCreateValidator,
+			account: i,
+			amount:  selfDelegation,
+		})
 	}
 
-	_, err = testApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: testApp.app.LastBlockHeight() + 1})
+	bootstrapHeight := testApp.app.LastBlockHeight() + 1
+	txBytes := buildTxs(t, testApp.app, participants, participantAddrs, validatorPubKeys, bootstrapHeight, bootstrapOps)
+
+	res, err := testApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: bootstrapHeight,
+		Hash:   testApp.app.LastCommitID().Hash,
+		Txs:    txBytes,
+	})
 	require.NoError(t, err)
+	requireSuccessfulTxResults(t, res.TxResults)
+
 	_, err = testApp.app.Commit()
 	require.NoError(t, err)
 }
@@ -533,13 +563,24 @@ func redelegationSources(s state) []delegationRef {
 
 func buildTxs(
 	t *testing.T,
-	txConfig client.TxConfig,
+	app *simapp.SimApp,
+	participants []participant,
 	participantAddrs []sdk.AccAddress,
 	validatorPubKeys []cryptotypes.PubKey,
 	height int64,
 	ops []operation,
 ) [][]byte {
 	t.Helper()
+
+	ctx := app.NewContext(true)
+	accountNumbers := make([]uint64, len(participants))
+	nextSequences := make([]uint64, len(participants))
+	for i, participant := range participants {
+		acc := app.AccountKeeper.GetAccount(ctx, participant.addr)
+		require.NotNil(t, acc)
+		accountNumbers[i] = acc.GetAccountNumber()
+		nextSequences[i] = acc.GetSequence()
+	}
 
 	txBytes := make([][]byte, 0, len(ops))
 	for i, op := range ops {
@@ -600,20 +641,115 @@ func buildTxs(
 			t.Fatalf("unsupported operation at index %d: %q", i, op.kind)
 		}
 
-		txBuilder := txConfig.NewTxBuilder()
-		require.NoError(t, txBuilder.SetMsgs(msg))
-
-		bz, err := txConfig.TxEncoder()(txBuilder.GetTx())
-		require.NoError(t, err)
-
-		txBytes = append(txBytes, bz)
+		signer := op.account
+		txBytes = append(txBytes, buildSignedTx(
+			t,
+			app.TxConfig(),
+			msg,
+			blockSTMFuzzChainID,
+			accountNumbers[signer],
+			nextSequences[signer],
+			participants[signer].priv,
+		))
+		nextSequences[signer]++
 	}
 
 	return txBytes
 }
 
+func buildSignedTx(
+	t *testing.T,
+	txConfig client.TxConfig,
+	msg sdk.Msg,
+	chainID string,
+	accountNumber uint64,
+	sequence uint64,
+	priv cryptotypes.PrivKey,
+) []byte {
+	t.Helper()
+
+	signMode, err := authsign.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
+	require.NoError(t, err)
+
+	sig := txsigning.SignatureV2{
+		PubKey: priv.PubKey(),
+		Data: &txsigning.SingleSignatureData{
+			SignMode: signMode,
+		},
+		Sequence: sequence,
+	}
+
+	txBuilder := txConfig.NewTxBuilder()
+	require.NoError(t, txBuilder.SetMsgs(msg))
+	txBuilder.SetFeeAmount(sdk.NewCoins())
+	txBuilder.SetGasLimit(simtestutil.DefaultGenTxGas)
+	require.NoError(t, txBuilder.SetSignatures(sig))
+
+	signerData := authsign.SignerData{
+		Address:       sdk.AccAddress(priv.PubKey().Address()).String(),
+		ChainID:       chainID,
+		AccountNumber: accountNumber,
+		Sequence:      sequence,
+		PubKey:        priv.PubKey(),
+	}
+
+	signBytes, err := authsign.GetSignBytesAdapter(
+		context.Background(),
+		txConfig.SignModeHandler(),
+		signMode,
+		signerData,
+		txBuilder.GetTx(),
+	)
+	require.NoError(t, err)
+
+	signature, err := priv.Sign(signBytes)
+	require.NoError(t, err)
+
+	sig.Data.(*txsigning.SingleSignatureData).Signature = signature
+	require.NoError(t, txBuilder.SetSignatures(sig))
+
+	bz, err := txConfig.TxEncoder()(txBuilder.GetTx())
+	require.NoError(t, err)
+
+	return bz
+}
+
+func recoveredPanicLogLines(logOutput string) string {
+	lines := strings.Split(logOutput, "\n")
+	relevant := make([]string, 0, len(lines))
+	for _, line := range lines {
+		if strings.Contains(line, "panic recovered in runTx") || strings.Contains(line, "uniqueness constraint violation") {
+			relevant = append(relevant, line)
+		}
+	}
+
+	return strings.Join(relevant, "\n")
+}
+
 func opLabel(index int, suffix string) string {
 	return fmt.Sprintf("op-%d-%s", index, suffix)
+}
+
+func generateParticipants(count int) []participant {
+	participants := make([]participant, count)
+	for i := range count {
+		priv := secp256k1.GenPrivKey()
+		participants[i] = participant{
+			priv: priv,
+			addr: sdk.AccAddress(priv.PubKey().Address()),
+		}
+	}
+
+	return participants
+}
+
+func participantAddresses(participants []participant) []sdk.AccAddress {
+	addrs := make([]sdk.AccAddress, len(participants))
+	for i, participant := range participants {
+		addrs[i] = participant.addr
+	}
+
+	return addrs
 }
 
 func generateValidatorPubKeys(count int) []cryptotypes.PubKey {

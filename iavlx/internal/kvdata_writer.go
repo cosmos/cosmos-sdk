@@ -10,9 +10,14 @@ import (
 
 // KVDataWriter writes data to a key-value data file which can be either
 // a WAL file or a KV data blob file.
+// The same writer is shared for both of these since both of these files
+// write varint length prefixed blobs and use a key cache to deduplicate
+// key entries on disk.
 type KVDataWriter struct {
 	*FileWriter
-	keyCache sync.Map // map[string]uint64 - raw offsets without location flag
+	// keyCache is a map of keys to offsets on disk
+	// this is used to deduplicate key bytes on disk when the same keys are updated frequently.
+	keyCache sync.Map
 }
 
 // NewKVDataWriter creates a new KVDataWriter.
@@ -24,16 +29,21 @@ func NewKVDataWriter(file *os.File) *KVDataWriter {
 	}
 }
 
+// The following constants are aligned with values previously chosen in the Cosmos SDK's store package.
+// They're likely larger than needed, and no real-world application should likely use values > 2^16 (64kb) for keys
+// and greater than 2^24 (16mb) for values.
+// Future maintainers should consider if they want to be more restrictive.
 const (
-	// MaxKeyLength is 128K - 1
+	// MaxKeyLength is 128K - 1.
 	MaxKeyLength = (1 << 17) - 1
 	// MaxValueLength is 2G - 1
 	MaxValueLength = (1 << 31) - 1
 )
 
 // WriteKeyBlob writes a key blob and returns its raw offset in the file.
+// If the key was previously written to the same data file, the offset of the existing
+// entry will be returned from the cache instead of writing the key to disk twice.
 // This should be used for writing keys outside of WAL entries to take advantage of key caching.
-// Use IsKVData() to determine the location flag when constructing a KVOffset.
 func (kvs *KVDataWriter) WriteKeyBlob(key UnsafeBytes) (offset uint64, err error) {
 	unsafeKey := key.UnsafeBytes()
 	keyLen := len(unsafeKey)
@@ -62,7 +72,9 @@ func (kvs *KVDataWriter) WriteKeyBlob(key UnsafeBytes) (offset uint64, err error
 
 // WriteKeyValueBlobs writes a key blob and a value blob and returns their raw offsets in the file.
 // This should be used for writing key-value pairs in changesets where the WAL has been dropped.
-// Use IsKVData() to determine the location flag when constructing KVOffsets.
+// Keys that have already been written to this file will not be written twice, and instead the
+// cached offset of the key earlier in the file will be returned.
+// Values don't benefit from any such caching as they could potentially use larger amounts of memory.
 func (kvs *KVDataWriter) WriteKeyValueBlobs(key, value UnsafeBytes) (keyOffset, valueOffset uint64, err error) {
 	keyOffset, err = kvs.WriteKeyBlob(key)
 	if err != nil {
@@ -95,6 +107,7 @@ func (kvs *KVDataWriter) addKeyToCache(key UnsafeBytes, offset uint64) {
 	kvs.keyCache.Store(unsafeBytesToString(key.SafeCopy()), offset)
 }
 
+// writeLenPrefixedBytes writes the length of bz as a varint followed by the actual bytes.
 func (kvs *KVDataWriter) writeLenPrefixedBytes(bz []byte) (offset uint64, err error) {
 	sz := kvs.Size()
 	if sz > MaxUint40 {
@@ -115,6 +128,7 @@ func (kvs *KVDataWriter) writeLenPrefixedBytes(bz []byte) (offset uint64, err er
 	return offset, nil
 }
 
+// writeVarUint writes the integer to disk with varint encoding.
 func (kvs *KVDataWriter) writeVarUint(x uint64) error {
 	var buf [binary.MaxVarintLen64]byte
 	n := binary.PutUvarint(buf[:], x)
@@ -122,6 +136,8 @@ func (kvs *KVDataWriter) writeVarUint(x uint64) error {
 	return err
 }
 
+// writeLEU40 writes the value as a 40-bit little endian integer occupying 5 bytes on disk.
+// The caller must ensure that the value is within the proper range.
 func (kvs *KVDataWriter) writeLEU40(x uint64) error {
 	var buf [5]byte
 	buf[0] = byte(x)
@@ -133,6 +149,7 @@ func (kvs *KVDataWriter) writeLEU40(x uint64) error {
 	return err
 }
 
+// WriteValueBlob writes the value bytes to disk without doing any kind of caching (as value bytes could consume significant amounts of memory).
 func (kvs *KVDataWriter) WriteValueBlob(value UnsafeBytes) (offset uint64, err error) {
 	unsafeValue := value.UnsafeBytes()
 	valueLen := len(unsafeValue)

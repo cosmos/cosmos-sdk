@@ -45,6 +45,7 @@ func NewTxCommand(pubkeyFactory map[string]func(codec.Codec, []byte) *codectypes
 	txCmd.AddCommand(
 		NewUpdateParamsCmd(),
 		NewCreateValidatorCmd(pubkeyFactory),
+		NewEditValidatorCmd(),
 		NewUpdateValidatorsCmd(),
 		NewWithdrawFeesCmd(),
 	)
@@ -210,6 +211,74 @@ func NewCreateValidatorCmd(pubkeyFactory map[string]func(codec.Codec, []byte) *c
 	}
 
 	cmd.Flags().String(flagDescription, "", "validator description")
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewEditValidatorCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "edit-validator",
+		Short: "Edit an existing validator's metadata",
+		Long:  "Edit a validator's moniker, description, or operator address. The tx signer must be the current operator. Only the flags you pass will be changed; all other fields keep their current values.",
+		Args:  cobra.NoArgs,
+		Example: fmt.Sprintf(
+			"%s tx poa edit-validator --moniker new-moniker --description \"Updated description\"",
+			version.AppName,
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			sender := clientCtx.GetFromAddress().String()
+
+			// Query current validator state to fill in unchanged fields
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.Validator(cmd.Context(), &types.QueryValidatorRequest{Address: sender})
+			if err != nil {
+				return fmt.Errorf("failed to query validator: %w", err)
+			}
+			if res.Validator.Metadata == nil {
+				return fmt.Errorf("validator %s has no metadata", sender)
+			}
+			md := res.Validator.Metadata
+
+			if cmd.Flags().Changed("moniker") {
+				moniker, err := cmd.Flags().GetString("moniker")
+				if err != nil {
+					return err
+				}
+				md.Moniker = moniker
+			}
+			if cmd.Flags().Changed("description") {
+				desc, err := cmd.Flags().GetString("description")
+				if err != nil {
+					return err
+				}
+				md.Description = desc
+			}
+			if cmd.Flags().Changed("new-operator") {
+				newOp, err := cmd.Flags().GetString("new-operator")
+				if err != nil {
+					return err
+				}
+				md.OperatorAddress = newOp
+			}
+
+			msg := &types.MsgEditValidator{
+				Sender:   sender,
+				Metadata: *md,
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String("moniker", "", "validator moniker")
+	cmd.Flags().String("description", "", "validator description")
+	cmd.Flags().String("new-operator", "", "new operator address (transfers ownership)")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

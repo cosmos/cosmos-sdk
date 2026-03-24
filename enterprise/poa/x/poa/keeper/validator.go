@@ -153,6 +153,28 @@ func (k *Keeper) CreateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, v
 	return k.validators.Set(ctx, consAddress, validator)
 }
 
+// EditValidatorMetadata updates a validator's metadata (moniker, description, operator address).
+// Power and pubkey are not changed. The sender must be the current operator.
+func (k *Keeper) EditValidatorMetadata(ctx sdk.Context, senderAddr sdk.AccAddress, metadata types.ValidatorMetadata) error {
+	compositeKey, err := k.validators.Indexes.OperatorAddress.MatchExact(ctx, senderAddr.String())
+	if err != nil {
+		return types.ErrUnknownValidator
+	}
+
+	validator, err := k.validators.Get(ctx, compositeKey)
+	if err != nil {
+		return err
+	}
+
+	if err := k.ValidateOperatorAndConsensusPubKeyDifferent(metadata.OperatorAddress, validator.PubKey); err != nil {
+		return err
+	}
+
+	validator.Metadata = &metadata
+
+	return k.validators.Set(ctx, compositeKey, validator)
+}
+
 // GetValidatorByOperatorAddress retrieves a validator by operator address using the secondary index.
 func (k *Keeper) GetValidatorByOperatorAddress(ctx sdk.Context, operatorAddr sdk.AccAddress) (types.Validator, error) {
 	consAddr, err := k.validators.Indexes.OperatorAddress.MatchExact(ctx, operatorAddr.String())

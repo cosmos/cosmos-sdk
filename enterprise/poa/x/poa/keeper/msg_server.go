@@ -128,6 +128,39 @@ func (s *MsgServer) CreateValidator(
 	return &types.MsgCreateValidatorResponse{}, nil
 }
 
+// EditValidator allows a validator operator to update their metadata.
+// The sender must be the current operator. Metadata includes moniker,
+// description, and operator address (which can be changed to transfer ownership).
+func (s *MsgServer) EditValidator(
+	ctx context.Context, req *types.MsgEditValidator,
+) (*types.MsgEditValidatorResponse, error) {
+	if err := req.Validate(s.keeper.authKeeper.AddressCodec()); err != nil {
+		return nil, err
+	}
+
+	addrBz, err := s.keeper.authKeeper.AddressCodec().StringToBytes(req.Sender)
+	if err != nil {
+		return nil, err
+	}
+	senderAddr := sdk.AccAddress(addrBz)
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if err := s.keeper.EditValidatorMetadata(sdkCtx, senderAddr, req.Metadata); err != nil {
+		return nil, err
+	}
+
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeEditValidator,
+			sdk.NewAttribute(types.AttributeKeyOperatorAddress, req.Metadata.OperatorAddress),
+			sdk.NewAttribute(types.AttributeKeyMoniker, req.Metadata.Moniker),
+		),
+	)
+
+	return &types.MsgEditValidatorResponse{}, nil
+}
+
 // UpdateValidators updates one or more validators. Only the admin can update validators.
 func (s *MsgServer) UpdateValidators(
 	ctx context.Context, req *types.MsgUpdateValidators,

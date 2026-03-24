@@ -903,6 +903,162 @@ func TestMsgCreateValidatorValidate(t *testing.T) {
 	}
 }
 
+func TestMsgEditValidatorValidate(t *testing.T) {
+	ac := address.NewBech32Codec("cosmos")
+
+	validAddr := "cosmos1w3jhxarpv3j8yvg4ufs4x"
+
+	tests := []struct {
+		name    string
+		msg     *MsgEditValidator
+		wantErr bool
+	}{
+		{
+			name: "valid message",
+			msg: &MsgEditValidator{
+				Sender: validAddr,
+				Metadata: ValidatorMetadata{
+					Moniker:         "test-moniker",
+					Description:     "test-description",
+					OperatorAddress: validAddr,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid with different operator (transfer)",
+			msg: &MsgEditValidator{
+				Sender: validAddr,
+				Metadata: ValidatorMetadata{
+					Moniker:         "test-moniker",
+					Description:     "test-description",
+					OperatorAddress: sdk.AccAddress("newoperator12345").String(),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty sender",
+			msg: &MsgEditValidator{
+				Sender: "",
+				Metadata: ValidatorMetadata{
+					Moniker:         "test-moniker",
+					Description:     "test-description",
+					OperatorAddress: validAddr,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid sender address",
+			msg: &MsgEditValidator{
+				Sender: "notanaddress",
+				Metadata: ValidatorMetadata{
+					Moniker:         "test-moniker",
+					Description:     "test-description",
+					OperatorAddress: validAddr,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty moniker",
+			msg: &MsgEditValidator{
+				Sender: validAddr,
+				Metadata: ValidatorMetadata{
+					Moniker:         "",
+					Description:     "test-description",
+					OperatorAddress: validAddr,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "moniker too long",
+			msg: &MsgEditValidator{
+				Sender: validAddr,
+				Metadata: ValidatorMetadata{
+					Moniker:         strings.Repeat("a", 257),
+					Description:     "test-description",
+					OperatorAddress: validAddr,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "moniker at max length (256)",
+			msg: &MsgEditValidator{
+				Sender: validAddr,
+				Metadata: ValidatorMetadata{
+					Moniker:         strings.Repeat("a", 256),
+					Description:     "test-description",
+					OperatorAddress: validAddr,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty description is valid",
+			msg: &MsgEditValidator{
+				Sender: validAddr,
+				Metadata: ValidatorMetadata{
+					Moniker:         "test-moniker",
+					Description:     "",
+					OperatorAddress: validAddr,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "description too long",
+			msg: &MsgEditValidator{
+				Sender: validAddr,
+				Metadata: ValidatorMetadata{
+					Moniker:         "test-moniker",
+					Description:     strings.Repeat("a", 257),
+					OperatorAddress: validAddr,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty operator address in metadata",
+			msg: &MsgEditValidator{
+				Sender: validAddr,
+				Metadata: ValidatorMetadata{
+					Moniker:         "test-moniker",
+					Description:     "test-description",
+					OperatorAddress: "",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid operator address in metadata",
+			msg: &MsgEditValidator{
+				Sender: validAddr,
+				Metadata: ValidatorMetadata{
+					Moniker:         "test-moniker",
+					Description:     "test-description",
+					OperatorAddress: "notanaddress",
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.msg.Validate(ac)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestValidatorFeesValidateBasic(t *testing.T) {
 	tests := []struct {
 		name    string

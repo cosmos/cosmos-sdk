@@ -23,6 +23,17 @@ HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 
+# Required for scripts (e.g. build-v54.sh)
+SH := $(shell command -v sh 2>/dev/null || true)
+ifeq ($(SH),)
+$(error sh not found. Required for build-v54 and other scripts. Install a POSIX shell.)
+endif
+# build-v54.sh uses bash-specific features (BASH_SOURCE, local)
+BASH := $(shell command -v bash 2>/dev/null || true)
+ifeq ($(BASH),)
+$(error bash not found. Required for build-v54. Install bash.)
+endif
+
 # process build tags
 build_tags = netgo
 ifeq ($(LEDGER_ENABLED),true)
@@ -118,6 +129,12 @@ build-linux-amd64:
 build-linux-arm64:
 	GOOS=linux GOARCH=arm64 LEDGER_ENABLED=false $(MAKE) build
 
+build-darwin-amd64:
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 LEDGER_ENABLED=false $(MAKE) build
+
+build-darwin-arm64:
+	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 LEDGER_ENABLED=false $(MAKE) build
+
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 	cd ${CURRENT_DIR}/simapp && go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
 
@@ -130,7 +147,7 @@ cosmovisor:
 confix:
 	$(MAKE) -C tools/confix confix
 
-.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor confix
+.PHONY: build build-linux-amd64 build-linux-arm64 build-darwin-amd64 build-darwin-arm64 cosmovisor confix
 
 #? mocks: Generate mock file
 mocks: $(MOCKS_DIR)
@@ -523,46 +540,22 @@ build-system-test-current: build
 	mkdir -p ./tests/systemtests/binaries/
 	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
 
-test-system: build-v53 build-system-test-current
-	mkdir -p ./tests/systemtests/binaries/
-	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
-	mkdir -p ./tests/systemtests/binaries/v0.53
-	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
+# test-sdk-system runs only the core SDK system tests (tests/systemtests), not enterprise.
+# Used by CI to avoid redundant runs when test-poa-system and test-group-system exist.
+test-sdk-system: build-v54 build-system-test-current
+	mkdir -p ./tests/systemtests/binaries/v0.54 ./tests/systemtests/testnet
+	mv $(BUILDDIR)/simdv54 ./tests/systemtests/binaries/v0.54/simd
 	$(MAKE) -C tests/systemtests test
+
+test-system: test-sdk-system
 	$(MAKE) -C enterprise/poa/ test-system
 	$(MAKE) -C enterprise/group/ test-system
 
-.PHONY: test-system build-system-test-current
+.PHONY: test-system test-sdk-system build-system-test-current
 
-# build-v53 checks out the v0.53.x branch, builds the binary, and renames it to simdv53.
-build-v53:
-	@echo "Starting v53 build process..."
-	git_status=$$(git status --porcelain) && \
-	has_changes=false && \
-	if [ -n "$$git_status" ]; then \
-		echo "Stashing uncommitted changes..." && \
-		git stash push -m "Temporary stash for v53 build" && \
-		has_changes=true; \
-	else \
-		echo "No changes to stash"; \
-	fi && \
-	echo "Saving current reference..." && \
-	CURRENT_REF=$$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse HEAD) && \
-	echo "Checking out release branch..." && \
-	git checkout release/v0.53.x && \
-	echo "Building v53 binary..." && \
-	make build && \
-	mv build/simd build/simdv53 && \
-	echo "Returning to original branch..." && \
-	if [ "$$CURRENT_REF" = "HEAD" ]; then \
-		git checkout $$(git rev-parse HEAD); \
-	else \
-		git checkout $$CURRENT_REF; \
-	fi && \
-	if [ "$$has_changes" = "true" ]; then \
-		echo "Reapplying stashed changes..." && \
-		git stash pop || echo "Warning: Could not pop stash, your changes may be in the stash list"; \
-	else \
-		echo "No changes to reapply"; \
-	fi
-.PHONY: build-v53
+# build-v54 fetches the v0.54 simd binary for system tests from the v0.54 nightlies channel.
+# Skips if $(BUILDDIR)/simdv54 exists (e.g. local dev reuse).
+build-v54:
+	@if [ -f $(BUILDDIR)/simdv54 ]; then echo "build/simdv54 exists, skipping"; else \
+		BUILDDIR=$(BUILDDIR) bash scripts/build-v54.sh; fi
+.PHONY: build-v54

@@ -42,6 +42,8 @@ type Keeper struct {
 	totalPower collections.Item[int64]
 	// totalAllocatedFees tracks the sum of all allocated fees across validators
 	totalAllocatedFees collections.Item[types.ValidatorFees]
+	// validatorAllocatedFees tracks per-validator allocated fees, keyed by consensus address
+	validatorAllocatedFees collections.Map[string, types.ValidatorFees]
 	// queuedUpdates stores pending validator updates for the block in transient store.
 	// The store gets wiped every block, so this is only used for same-block updates.
 	queuedUpdates collections.Vec[abci.ValidatorUpdate]
@@ -122,6 +124,13 @@ func NewKeeper(cdc codec.Codec, storeService store.KVStoreService, transientStor
 			sb,
 			types.TotalAllocatedKey,
 			"total_allocated",
+			codec.CollValue[types.ValidatorFees](cdc),
+		),
+		validatorAllocatedFees: collections.NewMap(
+			sb,
+			types.ValidatorAllocatedFeesKey,
+			"validator_allocated_fees",
+			collections.StringKey,
 			codec.CollValue[types.ValidatorFees](cdc),
 		),
 		queuedUpdates: collections.NewVec(

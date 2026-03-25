@@ -13,7 +13,7 @@ require (
 	github.com/cometbft/cometbft v0.39.0-rc3
 	github.com/cosmos/cosmos-db v1.1.3
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.54.0-rc.2
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.3
 	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-rc.0
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/spf13/cast v1.10.0

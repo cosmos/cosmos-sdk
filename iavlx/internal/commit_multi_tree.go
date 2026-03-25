@@ -54,6 +54,36 @@ type CommitMultiTree struct {
 	logger           log.Logger
 }
 
+func (db *CommitMultiTree) Commit() storetypes.CommitID {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (db *CommitMultiTree) WorkingHash() []byte {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (db *CommitMultiTree) SetInterBlockCache(cache storetypes.MultiStorePersistentCache) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (db *CommitMultiTree) SetIAVLCacheSize(size int) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (db *CommitMultiTree) SetIAVLDisableFastNode(disable bool) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (db *CommitMultiTree) SetIAVLSyncPruning(sync bool) {
+	//TODO implement me
+	panic("implement me")
+}
+
 type storeData struct {
 	key   storetypes.StoreKey
 	typ   storetypes.StoreType
@@ -64,8 +94,8 @@ func (db *CommitMultiTree) GetCommitInfo(ver int64) (*storetypes.CommitInfo, err
 	return loadCommitInfo(db.dir, ver)
 }
 
-func (db *CommitMultiTree) CommitBranch() storetypes.CommitBranch {
-	return &commitBranch{
+func (db *CommitMultiTree) CommitBranch() *CommitBranch {
+	return &CommitBranch{
 		MultiTree: db.rootCacheMultiStore(),
 		db:        db,
 	}
@@ -345,7 +375,7 @@ func (db *CommitMultiTree) CacheWrap() storetypes.CacheWrap {
 	panic("TODO")
 }
 
-func (db *CommitMultiTree) RootCacheMultiStore() storetypes.MultiStore {
+func (db *CommitMultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 	return db.rootCacheMultiStore()
 }
 
@@ -357,10 +387,10 @@ func (db *CommitMultiTree) rootCacheMultiStore() *MultiTree {
 	return db.cacheMultiStore(cd.commitId.Version)
 }
 
-func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes.MultiStore, error) {
+func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes.CacheMultiStore, error) {
 	if version == 0 {
 		// use latest version
-		return db.RootCacheMultiStore(), nil
+		return db.CacheMultiStore(), nil
 	}
 	// check if we actually have CommitInfo for this version - basically fail fast when we don't
 	_, err := loadCommitInfo(db.dir, version)
@@ -634,3 +664,5 @@ func validateCommitInfoHash(commitInfo *storetypes.CommitInfo, storeName string)
 
 	return errorsmod.Wrapf(storetypes.ErrInvalidRequest, "proof store %s is missing from commit info at height %d", storeName, commitInfo.Version)
 }
+
+var _ storetypes.CommitMultiStore = (*CommitMultiTree)(nil)

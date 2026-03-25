@@ -13,9 +13,9 @@ import (
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/log/v2"
-	storeiavl "github.com/cosmos/cosmos-sdk/store/v2/legacy/iavl"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
+	storeiavl "github.com/cosmos/cosmos-sdk/store/v2/iavl"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
 	store "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
@@ -234,16 +234,16 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 		require.NoError(t, committer.Rollback())
 	}
 
-	cb1 := sim.mtV1.CommitBranch()
+	cacheMs1 := sim.mtV1.CacheMultiStore()
 	cb2 := sim.mtV2.CommitBranch()
 
-	sim.applyVersionUpdates(t, cb1, cb2)
+	sim.applyVersionUpdates(t, cacheMs1, cb2)
 
-	committer1, err := cb1.StartCommit(context.Background(), cmtproto.Header{})
-	require.NoError(t, err)
-	commitId1, err := committer1.Finalize()
-	require.NoError(t, err)
+	// follow old workflow with store v1
+	cacheMs1.Write()
+	commitId1 := sim.mtV1.Commit()
 
+	// follow new workflow with store v2
 	committer2, err := cb2.StartCommit(context.Background(), cmtproto.Header{})
 	require.NoError(t, err)
 	commitId2, err := committer2.Finalize()

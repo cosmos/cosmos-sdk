@@ -13,13 +13,13 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
-type commitBranch struct {
+type CommitBranch struct {
 	// MultiTree is the cache layer with staged writes
 	*MultiTree
 	db *CommitMultiTree
 }
 
-func (cb *commitBranch) StartCommit(ctx context.Context, header cmtproto.Header) (storetypes.CommitFinalizer, error) {
+func (cb *CommitBranch) StartCommit(ctx context.Context, header cmtproto.Header) (*MultiTreeFinalizer, error) {
 	db := cb.db
 	ctx, span := tracer.Start(ctx, "CommitMultiTree.commit",
 		trace.WithAttributes(
@@ -58,7 +58,7 @@ func (cb *commitBranch) StartCommit(ctx context.Context, header cmtproto.Header)
 		storeInfos[i].Name = si.key.Name()
 	}
 	ctx, cancel := context.WithCancel(ctx)
-	finalizer := &multiTreeFinalizer{
+	finalizer := &MultiTreeFinalizer{
 		CommitMultiTree:    db,
 		cacheMs:            multiTree,
 		ctx:                ctx,

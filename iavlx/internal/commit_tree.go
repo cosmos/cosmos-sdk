@@ -24,7 +24,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/types/kv"
+	"github.com/cosmos/cosmos-sdk/iavlx/internal/store/kv"
 )
 
 type CommitTree struct {

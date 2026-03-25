@@ -16,7 +16,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
-type multiTreeFinalizer struct {
+type MultiTreeFinalizer struct {
 	*CommitMultiTree
 	ctx                context.Context
 	cancel             context.CancelFunc
@@ -31,7 +31,7 @@ type multiTreeFinalizer struct {
 	err                atomic.Value
 }
 
-func (db *multiTreeFinalizer) commit(ctx context.Context, span trace.Span) error {
+func (db *MultiTreeFinalizer) commit(ctx context.Context, span trace.Span) error {
 	// we pass the span from StartCommit into here and finish it here so that all sub-tree commits
 	// are nested under this span
 	defer span.End()
@@ -101,7 +101,7 @@ func (db *multiTreeFinalizer) commit(ctx context.Context, span trace.Span) error
 	return nil
 }
 
-func (db *multiTreeFinalizer) writeCommitInfo(headerDone chan error) {
+func (db *MultiTreeFinalizer) writeCommitInfo(headerDone chan error) {
 	// in order to not block on fsync until AFTER we have computed all hashes, which SHOULD be the slowest operation (WAL writing should complete before that)
 	// we write and fsync the first part of the commit info (store names) as soon as we know finalization will happen,
 	// and then append hashes at the end once they are ready, without fsyncing again since they aren't needed for durability
@@ -138,7 +138,7 @@ func (db *multiTreeFinalizer) writeCommitInfo(headerDone chan error) {
 	}
 }
 
-func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
+func (db *MultiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 	var headerBuf bytes.Buffer
 	info := db.workingCommitInfo
 	err := writeCommitInfoHeader(&headerBuf, info)
@@ -225,7 +225,7 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 	return file, nil
 }
 
-func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
+func (db *MultiTreeFinalizer) prepareCommit(ctx context.Context) error {
 	// start writing commit info in background
 	commitInfoSynced := make(chan error, 1)
 	go func() {
@@ -275,7 +275,7 @@ func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
 	return nil
 }
 
-func (db *multiTreeFinalizer) StartFinalize() (storetypes.CommitID, error) {
+func (db *MultiTreeFinalizer) StartFinalize() (storetypes.CommitID, error) {
 	if err := db.SignalFinalize(); err != nil {
 		return storetypes.CommitID{}, err
 	}
@@ -290,14 +290,14 @@ func (db *multiTreeFinalizer) StartFinalize() (storetypes.CommitID, error) {
 	return db.workingCommitId, nil
 }
 
-func (db *multiTreeFinalizer) SignalFinalize() error {
+func (db *MultiTreeFinalizer) SignalFinalize() error {
 	db.finalizeOnce.Do(func() {
 		close(db.finalizeOrRollback)
 	})
 	return nil
 }
 
-func (db *multiTreeFinalizer) Finalize() (storetypes.CommitID, error) {
+func (db *MultiTreeFinalizer) Finalize() (storetypes.CommitID, error) {
 	if err := db.SignalFinalize(); err != nil {
 		return storetypes.CommitID{}, err
 	}
@@ -310,7 +310,7 @@ func (db *multiTreeFinalizer) Finalize() (storetypes.CommitID, error) {
 	return db.workingCommitId, nil
 }
 
-func (db *multiTreeFinalizer) Rollback() error {
+func (db *MultiTreeFinalizer) Rollback() error {
 	db.startRollback()
 	<-db.done
 	err := db.err.Load()
@@ -323,7 +323,7 @@ func (db *multiTreeFinalizer) Rollback() error {
 	return nil
 }
 
-func (db *multiTreeFinalizer) startRollback() {
+func (db *MultiTreeFinalizer) startRollback() {
 	// we must propagate cancellation to any background operations
 	db.cancel()
 	db.finalizeOnce.Do(func() {

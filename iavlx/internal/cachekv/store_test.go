@@ -6,11 +6,11 @@ import (
 
 	"cosmossdk.io/math/unsafe"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/iavlx/internal/cachekv"
 )
 
 func newStoreWithParent() (*cachekv.Store, dbadapter.Store) {

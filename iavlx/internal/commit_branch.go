@@ -50,7 +50,7 @@ func (cb *CommitBranch) StartCommit(ctx context.Context, header cmtproto.Header)
 		if cachedStore != nil {
 			cacheKv, ok := cachedStore.(*cachekv.Store)
 			if !ok {
-				return nil, fmt.Errorf("expected %T, got %T", cachekv.Store{}, cachedStore)
+				return nil, fmt.Errorf("expected %T, got %T", &cachekv.Store{}, cachedStore)
 			}
 			updates, updateCount = cacheKv.Updates()
 		}

@@ -169,14 +169,14 @@ func buildGenesisState(t *testing.T, accounts []account) ([]byte, *cmttypes.Vali
 }
 
 func newTestApplication(
-	t testing.TB,
+	tb testing.TB,
 	db dbm.DB,
 	genesisState []byte,
 	valSet *cmttypes.ValidatorSet,
 	enableBlockSTM bool,
 	blockSTMExecutors int,
 ) testApplication {
-	t.Helper()
+	tb.Helper()
 
 	logger := log.NewNopLogger()
 
@@ -184,7 +184,7 @@ func newTestApplication(
 		logger,
 		db,
 		true,
-		simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
+		simtestutil.NewAppOptionsWithFlagHome(tb.TempDir()),
 		baseapp.SetChainID(testChainID),
 	)
 
@@ -201,15 +201,15 @@ func newTestApplication(
 		ConsensusParams: simtestutil.DefaultConsensusParams,
 		AppStateBytes:   genesisState,
 	})
-	require.NoError(t, err)
+	require.NoError(tb, err)
 
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height:             app.LastBlockHeight() + 1,
 		Hash:               app.LastCommitID().Hash,
 		NextValidatorsHash: valSet.Hash(),
 	})
-	require.NoError(t, err)
-	_ = commitBlock(t, app)
+	require.NoError(tb, err)
+	_ = commitBlock(tb, app)
 
 	return testApplication{
 		app:      app,
@@ -218,14 +218,14 @@ func newTestApplication(
 }
 
 func initTestApplication(
-	t testing.TB,
+	tb testing.TB,
 	testApp testApplication,
 	accounts []account,
 	accountAddrs []sdk.AccAddress,
 	validatorPubKeys []cryptotypes.PubKey,
 	initialValidatorCount int,
 ) {
-	t.Helper()
+	tb.Helper()
 
 	bootstrapOps := make([]operation, 0, initialValidatorCount)
 	for i := range initialValidatorCount {
@@ -237,12 +237,12 @@ func initTestApplication(
 	}
 
 	bootstrapHeight := testApp.app.LastBlockHeight() + 1
-	txBytes := buildTxs(t, testApp.app, accounts, accountAddrs, validatorPubKeys, bootstrapHeight, bootstrapOps)
+	txBytes := buildTxs(tb, testApp.app, accounts, accountAddrs, validatorPubKeys, bootstrapHeight, bootstrapOps)
 
-	res := finalizeNextBlock(t, testApp.app, txBytes)
-	requireSuccessfulTxResults(t, res.TxResults)
+	res := finalizeNextBlock(tb, testApp.app, txBytes)
+	requireSuccessfulTxResults(tb, res.TxResults)
 
-	_ = commitBlock(t, testApp.app)
+	_ = commitBlock(tb, testApp.app)
 }
 
 func generateOperations(rt *rapid.T, s state, maxOps int) []operation {
@@ -490,7 +490,7 @@ func redelegationSources(s state) []delegationRef {
 }
 
 func buildTxs(
-	t rapid.TB,
+	tb rapid.TB,
 	app *simapp.SimApp,
 	accounts []account,
 	accountAddrs []sdk.AccAddress,
@@ -498,14 +498,14 @@ func buildTxs(
 	height int64,
 	ops []operation,
 ) [][]byte {
-	t.Helper()
+	tb.Helper()
 
 	ctx := app.NewContext(true)
 	accountNumbers := make([]uint64, len(accounts))
 	nextSequences := make([]uint64, len(accounts))
 	for i, acc := range accounts {
 		acc := app.AccountKeeper.GetAccount(ctx, acc.addr)
-		require.NotNil(t, acc)
+		require.NotNil(tb, acc)
 		accountNumbers[i] = acc.GetAccountNumber()
 		nextSequences[i] = acc.GetSequence()
 	}
@@ -525,7 +525,7 @@ func buildTxs(
 				stakingtestutil.ZeroCommission(),
 				math.OneInt(),
 			)
-			require.NoError(t, err)
+			require.NoError(tb, err)
 			msg = createValidatorMsg
 
 		case opSendCoins:
@@ -566,12 +566,12 @@ func buildTxs(
 			)
 
 		default:
-			t.Fatalf("unsupported operation at index %d: %q", i, op.kind)
+			tb.Fatalf("unsupported operation at index %d: %q", i, op.kind)
 		}
 
 		signer := op.account
 		txBytes = append(txBytes, buildSignedTx(
-			t,
+			tb,
 			app.TxConfig(),
 			msg,
 			testChainID,
@@ -586,7 +586,7 @@ func buildTxs(
 }
 
 func buildSignedTx(
-	t rapid.TB,
+	tb rapid.TB,
 	txConfig client.TxConfig,
 	msg sdk.Msg,
 	chainID string,
@@ -594,10 +594,10 @@ func buildSignedTx(
 	sequence uint64,
 	priv cryptotypes.PrivKey,
 ) []byte {
-	t.Helper()
+	tb.Helper()
 
 	signMode, err := authsign.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
-	require.NoError(t, err)
+	require.NoError(tb, err)
 
 	sig := txsigning.SignatureV2{
 		PubKey: priv.PubKey(),
@@ -608,10 +608,10 @@ func buildSignedTx(
 	}
 
 	txBuilder := txConfig.NewTxBuilder()
-	require.NoError(t, txBuilder.SetMsgs(msg))
+	require.NoError(tb, txBuilder.SetMsgs(msg))
 	txBuilder.SetFeeAmount(sdk.NewCoins())
 	txBuilder.SetGasLimit(simtestutil.DefaultGenTxGas)
-	require.NoError(t, txBuilder.SetSignatures(sig))
+	require.NoError(tb, txBuilder.SetSignatures(sig))
 
 	signerData := authsign.SignerData{
 		Address:       sdk.AccAddress(priv.PubKey().Address()).String(),
@@ -628,16 +628,16 @@ func buildSignedTx(
 		signerData,
 		txBuilder.GetTx(),
 	)
-	require.NoError(t, err)
+	require.NoError(tb, err)
 
 	signature, err := priv.Sign(signBytes)
-	require.NoError(t, err)
+	require.NoError(tb, err)
 
 	sig.Data.(*txsigning.SingleSignatureData).Signature = signature
-	require.NoError(t, txBuilder.SetSignatures(sig))
+	require.NoError(tb, txBuilder.SetSignatures(sig))
 
 	bz, err := txConfig.TxEncoder()(txBuilder.GetTx())
-	require.NoError(t, err)
+	require.NoError(tb, err)
 
 	return bz
 }

@@ -21,7 +21,7 @@ require (
 	github.com/cosmos/btree v1.0.0
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-beta.0
+	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-rc.0
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.7.2
@@ -335,7 +335,6 @@ require (
 
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
-replace github.com/cosmos/cosmos-sdk/store/v2 => ./store
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

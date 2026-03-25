@@ -147,6 +147,10 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 	}
 
 	// wait for finalization signal
+	// TODO this wait can be moved down to right before the rename and that would be more efficient -
+	// we would do all of the IO heavy work (specifically fsync) while waiting for the finalization signal.
+	// That would mean even less chance that we introduce any latency here. We would just need to make sure
+	// the .pending.* file gets cleaned up correctly.
 	select {
 	case <-db.finalizeOrRollback:
 	case <-db.ctx.Done():

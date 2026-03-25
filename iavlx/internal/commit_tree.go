@@ -150,7 +150,8 @@ func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[cache
 	// - writing the WAL
 	prepareRes, err := c.prepareCommit(ctx, updates, updateCount)
 	if err != nil {
-		// if there was an error (either signaled by the user or otherwise) we rollback
+		// If there was an error (either signaled by the user or otherwise) we rollback.
+		// Even if we already rolled back the WAL due to an error, it's idempotent to call rollback again.
 		rbErr := c.treeStore.RollbackWAL()
 		if rbErr != nil {
 			return fmt.Errorf("commit failed: %w; rollback failed: %w", err, rbErr)

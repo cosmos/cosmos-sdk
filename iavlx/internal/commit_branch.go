@@ -14,6 +14,7 @@ import (
 )
 
 type commitBranch struct {
+	// MultiTree is the cache layer with staged writes
 	*MultiTree
 	db *CommitMultiTree
 }

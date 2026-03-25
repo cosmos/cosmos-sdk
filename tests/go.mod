@@ -15,7 +15,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.54.0-rc.1.0.20251127205138-44ca1c39b279
-	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-beta.0
+	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-rc.0
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/spf13/cobra v1.10.2
@@ -337,7 +337,6 @@ require (
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
 	github.com/cosmos/cosmos-sdk/enterprise/group => ../enterprise/group
-	github.com/cosmos/cosmos-sdk/store/v2 => ../store
 )
 
 // Below are the long-lived replace for tests.

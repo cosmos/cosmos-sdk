@@ -13,7 +13,7 @@ require (
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-sdk v0.54.0-rc.1.0.20251127205138-44ca1c39b279
 	github.com/cosmos/cosmos-sdk/enterprise/poa v0.0.1
-	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-beta.0
+	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-rc.0
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
@@ -297,7 +297,6 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../../../.
-	github.com/cosmos/cosmos-sdk/store/v2 => ../../../store
 	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1

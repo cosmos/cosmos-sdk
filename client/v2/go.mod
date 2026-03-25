@@ -279,4 +279,3 @@ require (
 // replace (
 // 	<temporary replace>
 // )
-replace github.com/cosmos/cosmos-sdk => ../../.

@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/client"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -60,11 +59,7 @@ func TestBlockSTM_AccountCreationPanics(t *testing.T) {
 	logBuf.Reset()
 
 	// Execute the block with BlockSTM - all transactions create new accounts in parallel.
-	blockRes, err := blockSTMApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: blockSTMApp.app.LastBlockHeight() + 1,
-		Txs:    txBytes,
-	})
-	require.NoError(t, err)
+	blockRes := finalizeNextBlock(t, blockSTMApp.app, txBytes)
 	requireSuccessfulTxResults(t, blockRes.TxResults)
 
 	// Check the log output for evidence of panics from the uniqueness constraint violation.
@@ -102,30 +97,18 @@ func TestBlockSTM_DeterministicAppHash(t *testing.T) {
 	txBytes := buildSendTxs(t, sequentialApp.txConfig, senderAddrs, recipientAddrs)
 	baseVersion := sequentialApp.app.LastCommitID().Version
 
-	sequentialRes, err := sequentialApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: sequentialApp.app.LastBlockHeight() + 1,
-		Txs:    txBytes,
-	})
-	require.NoError(t, err)
+	sequentialRes := finalizeNextBlock(t, sequentialApp.app, txBytes)
 	requireSuccessfulTxResults(t, sequentialRes.TxResults)
 
-	_, err = sequentialApp.app.Commit()
-	require.NoError(t, err)
-	sequentialCommitID := sequentialApp.app.LastCommitID()
+	sequentialCommitID := commitBlock(t, sequentialApp.app)
 
 	blockSTMApp := newBlockSTMTestApp(t, db, log.NewNopLogger(), true)
 	require.NoError(t, blockSTMApp.app.LoadVersion(baseVersion))
 
-	blockSTMRes, err := blockSTMApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: baseVersion + 1,
-		Txs:    txBytes,
-	})
-	require.NoError(t, err)
+	blockSTMRes := finalizeNextBlock(t, blockSTMApp.app, txBytes)
 	requireSuccessfulTxResults(t, blockSTMRes.TxResults)
 
-	_, err = blockSTMApp.app.Commit()
-	require.NoError(t, err)
-	blockSTMCommitID := blockSTMApp.app.LastCommitID()
+	blockSTMCommitID := commitBlock(t, blockSTMApp.app)
 
 	require.NotEmpty(t, sequentialRes.AppHash)
 	require.NotEmpty(t, sequentialCommitID.Hash)
@@ -181,12 +164,10 @@ func newBlockSTMTestApp(t *testing.T, db dbm.DB, logger log.Logger, enableBlockS
 	banktypes.RegisterMsgServer(bApp.MsgServiceRouter(), bankkeeper.NewMsgServerImpl(bankKeeper))
 
 	if enableBlockSTM {
-		bApp.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(
+		bApp.SetBlockSTMTxRunner(newTestSTMRunner(
 			encCfg.TxConfig.TxDecoder(),
 			[]storetypes.StoreKey{keys[authtypes.StoreKey], keys[banktypes.StoreKey]},
 			8,
-			false,
-			func(_ storetypes.MultiStore) string { return sdk.DefaultBondDenom },
 		))
 	}
 
@@ -205,18 +186,14 @@ func initChainAndFundAccounts(t *testing.T, testApp blockSTMTestApp, senderAddrs
 	_, err := testApp.app.InitChain(&abci.RequestInitChain{ChainId: "blockstm-test"})
 	require.NoError(t, err)
 
-	_, err = testApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: testApp.app.LastBlockHeight() + 1})
-	require.NoError(t, err)
+	_ = finalizeNextBlock(t, testApp.app, nil)
 
 	ctx := testApp.app.NewContext(false)
 	for _, addr := range senderAddrs {
 		require.NoError(t, testutil.FundAccount(ctx, testApp.bankKeeper, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 1000))))
 	}
 
-	_, err = testApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: testApp.app.LastBlockHeight() + 1})
-	require.NoError(t, err)
-	_, err = testApp.app.Commit()
-	require.NoError(t, err)
+	_, _ = finalizeAndCommitNextBlock(t, testApp.app, nil)
 }
 
 func buildSendTxs(t *testing.T, txConfig client.TxConfig, senderAddrs, recipientAddrs []sdk.AccAddress) [][]byte {

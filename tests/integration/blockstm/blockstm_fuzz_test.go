@@ -17,12 +17,10 @@ import (
 	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -122,32 +120,12 @@ func runOperations(
 
 	require.Equal(t, regularApp.app.LastCommitID(), blockSTMApp.app.LastCommitID())
 
-	execHeight := regularApp.app.LastBlockHeight() + 1
-	txBytes := buildTxs(t, regularApp.app, accounts, accountAddrs, validatorPubKeys, execHeight, ops)
+	txBytes := buildTxs(t, regularApp.app, accounts, accountAddrs, validatorPubKeys, regularApp.app.LastBlockHeight()+1, ops)
 
-	regularRes, err := regularApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: execHeight,
-		Hash:   regularApp.app.LastCommitID().Hash,
-		Txs:    txBytes,
-	})
-	require.NoError(t, err)
+	regularRes, regularCommitID := finalizeAndCommitNextBlock(t, regularApp.app, txBytes)
+	blockSTMRes, blockSTMCommitID := finalizeAndCommitNextBlock(t, blockSTMApp.app, txBytes)
 
-	blockSTMRes, err := blockSTMApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: execHeight,
-		Hash:   blockSTMApp.app.LastCommitID().Hash,
-		Txs:    txBytes,
-	})
-	require.NoError(t, err)
-
-	require.Equal(t, regularRes.TxResults, blockSTMRes.TxResults)
-	require.Equal(t, regularRes.AppHash, blockSTMRes.AppHash)
-
-	_, err = regularApp.app.Commit()
-	require.NoError(t, err)
-	_, err = blockSTMApp.app.Commit()
-	require.NoError(t, err)
-
-	require.Equal(t, regularApp.app.LastCommitID(), blockSTMApp.app.LastCommitID())
+	requireEquivalentBlockOutcome(t, regularRes, blockSTMRes, regularCommitID, blockSTMCommitID)
 }
 
 func buildGenesisState(t *testing.T, accounts []account) ([]byte, *cmttypes.ValidatorSet) {
@@ -210,12 +188,10 @@ func newTestApplication(
 	)
 
 	if enableBlockSTM {
-		app.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(
+		app.SetBlockSTMTxRunner(newTestSTMRunner(
 			app.TxConfig().TxDecoder(),
 			app.GetStoreKeys(),
 			blockSTMExecutors,
-			false,
-			func(_ storetypes.MultiStore) string { return sdk.DefaultBondDenom },
 		))
 	}
 
@@ -232,8 +208,7 @@ func newTestApplication(
 		NextValidatorsHash: valSet.Hash(),
 	})
 	require.NoError(t, err)
-	_, err = app.Commit()
-	require.NoError(t, err)
+	_ = commitBlock(t, app)
 
 	return testApplication{
 		app:      app,
@@ -263,16 +238,10 @@ func initTestApplication(
 	bootstrapHeight := testApp.app.LastBlockHeight() + 1
 	txBytes := buildTxs(t, testApp.app, accounts, accountAddrs, validatorPubKeys, bootstrapHeight, bootstrapOps)
 
-	res, err := testApp.app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: bootstrapHeight,
-		Hash:   testApp.app.LastCommitID().Hash,
-		Txs:    txBytes,
-	})
-	require.NoError(t, err)
+	res := finalizeNextBlock(t, testApp.app, txBytes)
 	requireSuccessfulTxResults(t, res.TxResults)
 
-	_, err = testApp.app.Commit()
-	require.NoError(t, err)
+	_ = commitBlock(t, testApp.app)
 }
 
 func generateOperations(rt *rapid.T, s state, maxOps int) []operation {

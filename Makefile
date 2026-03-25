@@ -407,7 +407,7 @@ lint-fix:
 ###############################################################################
 
 protoVer=0.16.0
-protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
+protoImageName=ghcr.io/agoric-labs/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
 proto-all: proto-format proto-lint proto-gen

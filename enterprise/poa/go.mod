@@ -8,9 +8,9 @@ require (
 	cosmossdk.io/core v1.1.0
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/errors v1.1.0
-	cosmossdk.io/log/v2 v2.0.1
+	cosmossdk.io/log/v2 v2.1.0-rc.0
 	cosmossdk.io/math v1.5.3
-	github.com/cometbft/cometbft v0.39.0-rc1
+	github.com/cometbft/cometbft v0.39.0-rc3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.54.0-rc.1.0.20251127205138-44ca1c39b279
 	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-beta.0
@@ -276,7 +276,6 @@ require (
 
 // Below are the long-lived replace of the SimApp
 replace (
-	cosmossdk.io/log/v2 => ../../log
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

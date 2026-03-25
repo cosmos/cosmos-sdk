@@ -13,8 +13,8 @@ import (
 	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 

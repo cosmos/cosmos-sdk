@@ -162,13 +162,15 @@ func NewUpdateValidatorsCmd() *cobra.Command {
 
 func NewCreateValidatorCmd(pubkeyFactory map[string]func(codec.Codec, []byte) *codectypes.Any) *cobra.Command {
 	const flagDescription = "description"
+	const flagOperator = "operator-address"
+	const flagPower = "power"
 	cmd := &cobra.Command{
 		Use:   "create-validator",
 		Short: "Create a new validator",
-		Long:  "Create a new validator with the specified moniker, pubkey info, and optional validator description. The operator_address will be set to the signer of the tx.",
+		Long:  "Create a new validator with the specified moniker, pubkey info, and optional validator description. Only the admin signer can execute this message, and power must be positive.",
 		Args:  cobra.ExactArgs(3),
 		Example: fmt.Sprintf(
-			"%s tx poa create-validator moniker pubkey_base64 pubkey_type --description \"My validator\" ",
+			"%s tx poa create-validator moniker pubkey_base64 pubkey_type --description \"My validator\" --operator-address cosmos1... --power 1",
 			version.AppName,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -178,6 +180,14 @@ func NewCreateValidatorCmd(pubkeyFactory map[string]func(codec.Codec, []byte) *c
 			}
 
 			desc, err := cmd.Flags().GetString(flagDescription)
+			if err != nil {
+				return err
+			}
+			operatorAddr, err := cmd.Flags().GetString(flagOperator)
+			if err != nil {
+				return err
+			}
+			power, err := cmd.Flags().GetInt64(flagPower)
 			if err != nil {
 				return err
 			}
@@ -202,7 +212,9 @@ func NewCreateValidatorCmd(pubkeyFactory map[string]func(codec.Codec, []byte) *c
 				PubKey:          pkAny,
 				Moniker:         moniker,
 				Description:     desc,
-				OperatorAddress: clientCtx.GetFromAddress().String(),
+				OperatorAddress: operatorAddr,
+				Power:           power,
+				Admin:           clientCtx.GetFromAddress().String(),
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -210,6 +222,10 @@ func NewCreateValidatorCmd(pubkeyFactory map[string]func(codec.Codec, []byte) *c
 	}
 
 	cmd.Flags().String(flagDescription, "", "validator description")
+	cmd.Flags().String(flagOperator, "", "validator operator address")
+	cmd.Flags().Int64(flagPower, 0, "initial validator power (must be > 0)")
+	_ = cmd.MarkFlagRequired(flagOperator)
+	_ = cmd.MarkFlagRequired(flagPower)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

@@ -5,7 +5,7 @@ module github.com/cosmos/cosmos-sdk/tools/systemtests
 require (
 	cosmossdk.io/math v1.5.3
 	github.com/cometbft/cometbft v0.39.0-rc3
-	github.com/cosmos/cosmos-sdk v0.53.6
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.3
 	github.com/creachadair/tomledit v0.0.29
 	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.18.0
@@ -285,5 +285,4 @@ replace (
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/errors => ../../errors
 	cosmossdk.io/math => ../../math
-	github.com/cosmos/cosmos-sdk => ../..
 )

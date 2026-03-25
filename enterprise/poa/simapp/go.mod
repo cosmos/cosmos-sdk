@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/tools/confix v0.1.2
 	github.com/cometbft/cometbft v0.39.0-rc3
 	github.com/cosmos/cosmos-db v1.1.3
-	github.com/cosmos/cosmos-sdk v0.54.0-rc.1.0.20251127205138-44ca1c39b279
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.3
 	github.com/cosmos/cosmos-sdk/enterprise/poa v0.0.1
 	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-rc.0
 	github.com/cosmos/gogoproto v1.7.2
@@ -283,11 +283,6 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-// Here are the short-lived replace from the SimApp
-// Replace here are pending PRs, or version to be tagged
-// replace (
-// 	<temporary replace>
-// )
 replace github.com/cosmos/cosmos-sdk/enterprise/poa => ..
 
 // Below are the long-lived replace of the SimApp

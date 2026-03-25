@@ -275,7 +275,3 @@ require (
 	nhooyr.io/websocket v1.8.17 // indirect
 	pgregory.net/rapid v1.2.0 // indirect
 )
-
-// replace (
-// 	<temporary replace>
-// )

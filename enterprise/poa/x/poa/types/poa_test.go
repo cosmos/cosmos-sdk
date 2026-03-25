@@ -586,6 +586,27 @@ func TestMsgUpdateValidatorsValidateBasic(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "single zero power validator is valid (removal)",
+			msg: func() *MsgUpdateValidators {
+				pubKey := ed25519.GenPrivKey().PubKey()
+				pubKeyAny, _ := codectypes.NewAnyWithValue(pubKey)
+				return &MsgUpdateValidators{
+					Validators: []Validator{
+						{
+							PubKey: pubKeyAny,
+							Power:  0,
+							Metadata: &ValidatorMetadata{
+								OperatorAddress: "cosmos1operator",
+								Moniker:         "test-validator",
+								Description:     "Test validator description",
+							},
+						},
+					},
+				}
+			}(),
+			wantErr: false,
+		},
+		{
 			name: "empty validators list",
 			msg: &MsgUpdateValidators{
 				Validators: []Validator{},
@@ -593,7 +614,7 @@ func TestMsgUpdateValidatorsValidateBasic(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "all zero power validators",
+			name: "all zero power validators is valid for updates (removal)",
 			msg: func() *MsgUpdateValidators {
 				pubKey1 := ed25519.GenPrivKey().PubKey()
 				pubKeyAny1, _ := codectypes.NewAnyWithValue(pubKey1)
@@ -622,7 +643,7 @@ func TestMsgUpdateValidatorsValidateBasic(t *testing.T) {
 					},
 				}
 			}(),
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "invalid validator",
@@ -717,7 +738,6 @@ func TestMsgUpdateValidatorsValidateBasic(t *testing.T) {
 				pubKeyAny1, _ := codectypes.NewAnyWithValue(pubKey1)
 				pubKey2 := ed25519.GenPrivKey().PubKey()
 				pubKeyAny2, _ := codectypes.NewAnyWithValue(pubKey2)
-				// Two validators whose powers sum to > math.MaxInt64
 				power1 := int64(math.MaxInt64/2 + 1)
 				power2 := int64(math.MaxInt64/2 + 1)
 				return &MsgUpdateValidators{

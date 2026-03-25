@@ -7,7 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/tidwall/btree"
+	"github.com/cosmos/btree"
 )
 
 type Checkpointer struct {

@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 	"unsafe"
 
+	"github.com/cosmos/btree"
 	"github.com/jellydator/ttlcache/v3"
-	"github.com/tidwall/btree"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 

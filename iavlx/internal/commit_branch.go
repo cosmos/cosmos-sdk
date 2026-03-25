@@ -9,8 +9,9 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+
+	"github.com/cosmos/cosmos-sdk/iavlx/internal/cachekv"
 )
 
 type CommitBranch struct {
@@ -44,7 +45,7 @@ func (cb *CommitBranch) StartCommit(ctx context.Context, header cmtproto.Header)
 	for i, si := range db.iavlStores {
 		commitStore := si.store.(*CommitTree)
 		cachedStore := multiTree.GetCacheWrapIfExists(si.key)
-		var updates iter.Seq[cachekv.Update[[]byte]]
+		var updates iter.Seq[KVUpdate]
 		var updateCount int
 		if cachedStore != nil {
 			cacheKv, ok := cachedStore.(*cachekv.Store)

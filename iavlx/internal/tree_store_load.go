@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/tidwall/btree"
+	"github.com/cosmos/btree"
 )
 
 func (ts *TreeStore) load() error {

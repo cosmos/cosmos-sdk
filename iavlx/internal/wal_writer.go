@@ -19,7 +19,7 @@ type WALWriter struct {
 	lastVersionOffset uint64
 	// currentUpdates holds the current batch of updates that have just been written,
 	// in case we need to roll back
-	currentUpdates []KVUpdate
+	currentUpdates []NodeUpdate
 }
 
 // NewWALWriter creates a new WALWriter for the provided file.
@@ -43,7 +43,7 @@ var WALWriteAbortedErr = fmt.Errorf("WAL write aborted and rolled back")
 // Use errors.Is() to test this.
 // If there was an error and then an error rolling back, then the error will not be wrapped in WALWriteAbortedErr.
 // If the context passed in is cancelled at any point during writing the WAL, a rollback will be attempted automatically.
-func (kvs *WALWriter) WriteWALVersion(ctx context.Context, version uint64, updates []KVUpdate, checkpoint bool) error {
+func (kvs *WALWriter) WriteWALVersion(ctx context.Context, version uint64, updates []NodeUpdate, checkpoint bool) error {
 	// Keep track of the current file offset so that we can rollback to it if needed.
 	kvs.lastVersionOffset = uint64(kvs.writer.Size())
 	// Keep track of this batch of updates so that we can leave the key cache in a clean state after a rollback.
@@ -61,7 +61,7 @@ func (kvs *WALWriter) WriteWALVersion(ctx context.Context, version uint64, updat
 }
 
 // doWriteWALVersion does the mechanical writing of a WAL version but doesn't deal with rollback as WriteWALVersion above does.
-func (kvs *WALWriter) doWriteWALVersion(ctx context.Context, version uint64, updates []KVUpdate, checkpoint bool) error {
+func (kvs *WALWriter) doWriteWALVersion(ctx context.Context, version uint64, updates []NodeUpdate, checkpoint bool) error {
 	// Write the start version entry only if this is the first version in this WAL file.
 	if err := kvs.writeStartVersion(version); err != nil {
 		return err
@@ -99,7 +99,7 @@ func (kvs *WALWriter) writeStartVersion(version uint64) error {
 }
 
 // WriteWALUpdates writes a batch of WAL updates.
-func (kvs *WALWriter) writeWALUpdates(ctx context.Context, updates []KVUpdate) error {
+func (kvs *WALWriter) writeWALUpdates(ctx context.Context, updates []NodeUpdate) error {
 	for _, update := range updates {
 		// Check for context cancellation before writing every update so we can fail fast
 		// and avoid writing partial updates to the WAL if the context is cancelled.

@@ -89,7 +89,7 @@ package internal
 //		key:   oldKey,
 //		value: reinsertedValue,
 //	}
-//	err = writer.WriteWALUpdates([]KVUpdate{
+//	err = writer.WriteWALUpdates([]NodeUpdate{
 //		{
 //			SetNode: memNode1,
 //		},
@@ -125,10 +125,10 @@ package internal
 //	require.NotEqual(t, shortKeyOffset, blobKeyOffset2)
 //
 //	// write invalid updates, should error
-//	require.Error(t, writer.WriteWALUpdates([]KVUpdate{
+//	require.Error(t, writer.WriteWALUpdates([]NodeUpdate{
 //		{},
 //	}))
-//	require.Error(t, writer.WriteWALUpdates([]KVUpdate{
+//	require.Error(t, writer.WriteWALUpdates([]NodeUpdate{
 //		{
 //			DeleteKey: shortKey,
 //			SetNode: &MemNode{
@@ -145,7 +145,7 @@ package internal
 //	emptyKey := []byte{}
 //	emptyValue := []byte{}
 //	emptyMemNode := &MemNode{key: emptyKey, value: emptyValue}
-//	err = writer.WriteWALUpdates([]KVUpdate{
+//	err = writer.WriteWALUpdates([]NodeUpdate{
 //		{DeleteKey: emptyKey},
 //		{SetNode: emptyMemNode},
 //	})
@@ -367,7 +367,7 @@ package internal
 //	require.Error(t, writer.WriteWALDelete(key1))
 //	_, _, err = writer.WriteWALSet(key1, value1)
 //	require.Error(t, err)
-//	require.Error(t, writer.WriteWALUpdates([]KVUpdate{}))
+//	require.Error(t, writer.WriteWALUpdates([]NodeUpdate{}))
 //	require.Error(t, writer.WriteWALCommit(1))
 //
 //	// open reader

@@ -181,7 +181,7 @@ func (ts *TreeStore) SaveRoot(ctx context.Context, newRoot *NodePointer, mutatio
 	return nil
 }
 
-func (ts *TreeStore) WriteWALUpdates(ctx context.Context, updates []KVUpdate, fsync bool) error {
+func (ts *TreeStore) WriteWALUpdates(ctx context.Context, updates []NodeUpdate, fsync bool) error {
 	version := ts.StagedVersion()
 	walWriter := ts.currentWriter.WALWriter()
 

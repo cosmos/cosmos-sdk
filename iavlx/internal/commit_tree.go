@@ -22,8 +22,8 @@ import (
 
 	"cosmossdk.io/log/v2"
 
-	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+
 	"github.com/cosmos/cosmos-sdk/iavlx/internal/store/kv"
 )
 
@@ -97,7 +97,7 @@ type commitTreeFinalizer struct {
 	walErr             error
 }
 
-func (c *CommitTree) startCommit(ctx context.Context, updates iter.Seq[cachekv.Update[[]byte]], updateCount int) *commitTreeFinalizer {
+func (c *CommitTree) startCommit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) *commitTreeFinalizer {
 	cancelCtx, cancel := context.WithCancel(ctx)
 	committer := &commitTreeFinalizer{
 		CommitTree:         c,
@@ -129,7 +129,7 @@ func (c *CommitTree) startCommit(ctx context.Context, updates iter.Seq[cachekv.U
 var rolledbackErr = errors.New("commit rolled back")
 
 // commit does the actual work of commiting a tree or rolling back if there is an error or if the caller cancels the context.
-func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[cachekv.Update[[]byte]], updateCount int) error {
+func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) error {
 	// We lock the mutex because only one commit operation can happen at a time.
 	c.commitMutex.Lock()
 	defer c.commitMutex.Unlock()
@@ -198,7 +198,7 @@ type prepareCommitResult struct {
 
 // prepareCommit does most of the work for updating the tree and committing its new state,
 // while still allowing it to be cleanly rolled back
-func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Seq[cachekv.Update[[]byte]], updateCount int) (*prepareCommitResult, error) {
+func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) (*prepareCommitResult, error) {
 	ctx, span := tracer.Start(ctx, "PrepareCommit")
 	defer span.End()
 
@@ -208,19 +208,19 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 	// This is okay because nodes from this version will not be shared until the commit is done.
 	mutationCtx := NewMutationContext(stagedVersion, stagedVersion)
 
-	// We start by creating a KVUpdate for every update in the commit.
-	// The main difference between KVUpdate and Update, is that KVUpdate actually creates the leaf MemNode's
+	// We start by creating a NodeUpdate for every update in the commit.
+	// The main difference between NodeUpdate and Update, is that NodeUpdate actually creates the leaf MemNode's
 	// that will end up in the new version of the tree.
 	// TODO pre-allocate a decent sized slice that we reuse and reset across commits
-	nodeUpdates := make([]KVUpdate, 0, updateCount)
+	nodeUpdates := make([]NodeUpdate, 0, updateCount)
 	if updates != nil { // updates can be nil for empty commits
 		for update := range updates {
 			if update.Delete {
-				nodeUpdates = append(nodeUpdates, KVUpdate{DeleteKey: update.Key})
+				nodeUpdates = append(nodeUpdates, NodeUpdate{DeleteKey: update.Key})
 			} else {
 				nodeUpdates = append(
 					nodeUpdates,
-					KVUpdate{
+					NodeUpdate{
 						// This actually creates a new leaf MemNode that will end up in the new tree once all updates have been applied.
 						SetNode: mutationCtx.NewLeafNode(update.Key, update.Value),
 					},
@@ -282,7 +282,7 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 			start := i * bucketSize
 			end := min(start+bucketSize, n)
 			wg.Add(1)
-			go func(updates []KVUpdate) {
+			go func(updates []NodeUpdate) {
 				defer wg.Done()
 				if ctx.Err() != nil {
 					return

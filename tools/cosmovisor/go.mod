@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/log/v2 v2.1.0-rc.0
 	github.com/cometbft/cometbft v0.39.0-rc3
 	github.com/cometbft/cometbft-db v0.14.3
-	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.3
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/otiai10/copy v1.14.1
 	github.com/pelletier/go-toml/v2 v2.2.4
@@ -255,9 +255,4 @@ require (
 	nhooyr.io/websocket v1.8.17 // indirect
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
-)
-
-replace (
-	cosmossdk.io/x/upgrade => ../../x/upgrade
-	github.com/cosmos/cosmos-sdk => ../..
 )

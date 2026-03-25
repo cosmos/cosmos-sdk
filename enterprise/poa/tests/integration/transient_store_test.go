@@ -86,6 +86,7 @@ func initFixture(tb testing.TB) *fixture {
 
 	maccPerms := map[string][]string{
 		authtypes.FeeCollectorName: nil,
+		poatypes.ModuleName:        nil,
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -98,9 +99,9 @@ func initFixture(tb testing.TB) *fixture {
 		authority.String(),
 	)
 
-	// Create fee collector module account
-	feeCollectorAcc := authtypes.NewEmptyModuleAccount(authtypes.FeeCollectorName)
-	accountKeeper.SetModuleAccount(newCtx, feeCollectorAcc)
+	// Create module accounts (GetModuleAccount auto-creates with proper account numbering)
+	accountKeeper.GetModuleAccount(newCtx, authtypes.FeeCollectorName)
+	accountKeeper.GetModuleAccount(newCtx, poatypes.ModuleName)
 
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,

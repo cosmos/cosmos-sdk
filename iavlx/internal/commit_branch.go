@@ -86,3 +86,33 @@ func (cb *CommitBranch) StartCommit(ctx context.Context, header cmtproto.Header)
 	}()
 	return finalizer, nil
 }
+
+// commitBranchCacheCompatWrapper is a wrapper around a CommitBranch
+// which allows the CacheMultiStore.Write() method to be used as a way to
+// start a background commit in a way that is compatible with store v1 and v2.
+type commitBranchCacheCompatWrapper struct {
+	*CommitBranch
+}
+
+// Write starts a background commit by calling StartCommit and then immediately signaling finalization.
+func (wrapper *commitBranchCacheCompatWrapper) Write() {
+	wrapper.db.compatFinalizerMu.Lock()
+	defer wrapper.db.compatFinalizerMu.Unlock()
+
+	if wrapper.db.compatFinalizer != nil {
+		panic("Write has already been called on this CacheMultiStore, it cannot be called twice when using iavlx")
+	}
+	finalizer, err := wrapper.StartCommit(context.Background(), cmtproto.Header{})
+	if err != nil {
+		panic(err)
+	}
+	// We signal finalization because in the store/v1 CommitMultiStore calling Write is a point of no return anyway,
+	// so this gives us a bit of a speed up.
+	err = finalizer.SignalFinalize()
+	if err != nil {
+		panic(err)
+	}
+	wrapper.db.compatFinalizer = finalizer
+}
+
+var _ storetypes.CacheMultiStore = (*commitBranchCacheCompatWrapper)(nil)

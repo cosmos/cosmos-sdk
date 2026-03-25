@@ -52,36 +52,13 @@ type CommitMultiTree struct {
 	compactionDone   chan struct{}
 	pruningOptions   pruningtypes.PruningOptions
 	logger           log.Logger
-}
 
-func (db *CommitMultiTree) Commit() storetypes.CommitID {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (db *CommitMultiTree) WorkingHash() []byte {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (db *CommitMultiTree) SetInterBlockCache(cache storetypes.MultiStorePersistentCache) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (db *CommitMultiTree) SetIAVLCacheSize(size int) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (db *CommitMultiTree) SetIAVLDisableFastNode(disable bool) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (db *CommitMultiTree) SetIAVLSyncPruning(sync bool) {
-	//TODO implement me
-	panic("implement me")
+	// compatFinalizer is a HACK to make iavlx work with the existing store/v1 and store/v2 CommitMultiStore interfaces.
+	// Essentially we have a way of tracking that someone called Write on the root CacheMultiStore and started a
+	// background commit. With this compatFinalizer type we then can allow the caller to call WorkingHash() and
+	// Commit() as if this were a v1 or v2 store.
+	compatFinalizer   *MultiTreeFinalizer
+	compatFinalizerMu sync.RWMutex
 }
 
 type storeData struct {
@@ -376,7 +353,10 @@ func (db *CommitMultiTree) CacheWrap() storetypes.CacheWrap {
 }
 
 func (db *CommitMultiTree) CacheMultiStore() storetypes.CacheMultiStore {
-	return db.rootCacheMultiStore()
+	cb := db.CommitBranch()
+	// Here we wrap our CommitBranch in a wrapper which allows the CacheMultiStore.Write()
+	// method be used as a workaround for store/v1 and store/v2 compatibility.
+	return &commitBranchCacheCompatWrapper{CommitBranch: cb}
 }
 
 func (db *CommitMultiTree) rootCacheMultiStore() *MultiTree {
@@ -426,6 +406,50 @@ func (db *CommitMultiTree) cacheMultiStore(version int64) *MultiTree {
 			panic(fmt.Sprintf("store %s of type %T does not support caching", key.Name(), tree))
 		}
 	})
+}
+
+func (db *CommitMultiTree) WorkingHash() []byte {
+	db.compatFinalizerMu.RLock()
+	defer db.compatFinalizerMu.RUnlock()
+
+	if db.compatFinalizer == nil {
+		panic("no commit in progress")
+	}
+	return db.compatFinalizer.WorkingHash()
+}
+
+func (db *CommitMultiTree) Commit() storetypes.CommitID {
+	db.compatFinalizerMu.Lock()
+	defer db.compatFinalizerMu.Unlock()
+
+	if db.compatFinalizer == nil {
+		panic("no commit in progress")
+	}
+	cid, err := db.compatFinalizer.Finalize()
+	if err != nil {
+		panic(err)
+	}
+
+	// Clear the finalizer to allow another commit to happen in the future.
+	db.compatFinalizer = nil
+
+	return cid
+}
+
+func (db *CommitMultiTree) SetInterBlockCache(cache storetypes.MultiStorePersistentCache) {
+	db.logger.Warn("SetInterBlockCache is a no-op for iavlx")
+}
+
+func (db *CommitMultiTree) SetIAVLCacheSize(int) {
+	db.logger.Warn("SetIAVLCacheSize is a no-op for iavlx")
+}
+
+func (db *CommitMultiTree) SetIAVLDisableFastNode(bool) {
+	db.logger.Warn("SetIAVLDisableFastNode is a no-op for iavlx")
+}
+
+func (db *CommitMultiTree) SetIAVLSyncPruning(bool) {
+	db.logger.Warn("SetIAVLSyncPruning is a no-op for iavlx")
 }
 
 func (db *CommitMultiTree) compactIfNeeded() {
@@ -664,5 +688,3 @@ func validateCommitInfoHash(commitInfo *storetypes.CommitInfo, storeName string)
 
 	return errorsmod.Wrapf(storetypes.ErrInvalidRequest, "proof store %s is missing from commit info at height %d", storeName, commitInfo.Version)
 }
-
-var _ storetypes.CommitMultiStore = (*CommitMultiTree)(nil)

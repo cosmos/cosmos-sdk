@@ -103,4 +103,4 @@ func (t *MultiTree) LatestVersion() int64 {
 	return t.latestVersion
 }
 
-var _ storetypes.MultiStore = &MultiTree{}
+var _ storetypes.CacheMultiStore = &MultiTree{}

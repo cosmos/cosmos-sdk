@@ -263,7 +263,6 @@ func TestUpdateValidators(t *testing.T) {
 		}]`, pubKeyType, pubKeyKey, newPower, moniker, operatorAddr)
 
 		validatorsFile := systemtests.StoreTempFile(t, []byte(updatedValidatorJSON))
-	
 
 		rsp := cli.Run(
 			"tx", poaModule, "update-validators",
@@ -302,7 +301,6 @@ func TestUpdateValidators(t *testing.T) {
 		}]`, pubKeyType, pubKeyKey, newPower, moniker, operatorAddr)
 
 		validatorsFile := systemtests.StoreTempFile(t, []byte(updatedValidatorJSON))
-	
 
 		rsp, _ := cli.WithRunErrorsIgnored().RunOnly(
 			"tx", poaModule, "update-validators",
@@ -488,7 +486,6 @@ func TestCreateValidator(t *testing.T) {
 		)
 
 		validatorsFile := systemtests.StoreTempFile(t, []byte(validatorsJSON))
-	
 
 		rsp, ok := cli.RunOnly(
 			"tx", poaModule, "update-validators",
@@ -653,7 +650,6 @@ func TestPOAGovernance(t *testing.T) {
 }`, govAddr)
 
 	propFile := systemtests.StoreTempFile(t, []byte(proposal))
-
 
 	rsp = cli.Run(
 		"tx", "gov", "submit-proposal",
@@ -824,7 +820,6 @@ func TestReplaceAllValidatorsInOneBlock(t *testing.T) {
 	}
 	validatorsFile := systemtests.StoreTempFile(t, []byte("["+strings.Join(entries, ",")+"]"))
 
-
 	rsp = cli.Run("tx", poaModule, "update-validators",
 		validatorsFile.Name(),
 		"--from="+adminKeyName, "--gas=auto",
@@ -927,7 +922,6 @@ func TestCreateZeroThenReplaceActiveSet(t *testing.T) {
 		validatorUpdateJSON(newVal2Info, 0)+
 		"]"))
 
-
 	rsp = cli.Run("tx", poaModule, "update-validators",
 		zeroFile.Name(),
 		"--from="+adminKeyName, "--gas=auto",
@@ -963,7 +957,6 @@ func TestCreateZeroThenReplaceActiveSet(t *testing.T) {
 	}
 
 	swapFile := systemtests.StoreTempFile(t, []byte("["+strings.Join(swapEntries, ",")+"]"))
-
 
 	rsp = cli.Run("tx", poaModule, "update-validators",
 		swapFile.Name(),
@@ -1025,7 +1018,6 @@ func TestRemoveValidatorsOneByOneDisallowLast(t *testing.T) {
 		systemtests.RequireTxSuccess(t, rsp)
 		sut.AwaitNextBlock(t)
 
-
 		rsp = cli.CustomQuery("q", poaModule, "validator", v.OperatorAddr)
 		assert.Equal(t, int64(0), gjson.Get(rsp, "validator.power").Int(),
 			"validator %s should have 0 power after removal", v.Moniker)
@@ -1040,7 +1032,6 @@ func TestRemoveValidatorsOneByOneDisallowLast(t *testing.T) {
 	// Attempt to remove the last validator — should fail
 	entry := validatorUpdateJSON(lastVal, 0)
 	validatorsFile := systemtests.StoreTempFile(t, []byte("["+entry+"]"))
-
 
 	rsp, _ = cli.WithRunErrorsIgnored().RunOnly("tx", poaModule, "update-validators",
 		validatorsFile.Name(),

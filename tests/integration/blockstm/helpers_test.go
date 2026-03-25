@@ -1,10 +1,9 @@
 package blockstm_test
 
 import (
-	"testing"
-
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
+	"pgregory.net/rapid"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
@@ -28,7 +27,7 @@ func newTestSTMRunner(txDecoder sdk.TxDecoder, storeKeys []storetypes.StoreKey, 
 	)
 }
 
-func finalizeNextBlock(t *testing.T, app blockExecutor, txs [][]byte) *abci.ResponseFinalizeBlock {
+func finalizeNextBlock(t rapid.TB, app blockExecutor, txs [][]byte) *abci.ResponseFinalizeBlock {
 	t.Helper()
 
 	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
@@ -41,7 +40,7 @@ func finalizeNextBlock(t *testing.T, app blockExecutor, txs [][]byte) *abci.Resp
 	return res
 }
 
-func commitBlock(t *testing.T, app blockExecutor) storetypes.CommitID {
+func commitBlock(t rapid.TB, app blockExecutor) storetypes.CommitID {
 	t.Helper()
 
 	_, err := app.Commit()
@@ -50,7 +49,7 @@ func commitBlock(t *testing.T, app blockExecutor) storetypes.CommitID {
 	return app.LastCommitID()
 }
 
-func finalizeAndCommitNextBlock(t *testing.T, app blockExecutor, txs [][]byte) (*abci.ResponseFinalizeBlock, storetypes.CommitID) {
+func finalizeAndCommitNextBlock(t rapid.TB, app blockExecutor, txs [][]byte) (*abci.ResponseFinalizeBlock, storetypes.CommitID) {
 	t.Helper()
 
 	res := finalizeNextBlock(t, app, txs)
@@ -60,7 +59,7 @@ func finalizeAndCommitNextBlock(t *testing.T, app blockExecutor, txs [][]byte) (
 }
 
 func requireEquivalentBlockOutcome(
-	t *testing.T,
+	t rapid.TB,
 	expectedRes, actualRes *abci.ResponseFinalizeBlock,
 	expectedCommitID, actualCommitID storetypes.CommitID,
 ) {

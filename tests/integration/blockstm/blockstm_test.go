@@ -8,6 +8,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
+	"pgregory.net/rapid"
 
 	"cosmossdk.io/log/v2"
 
@@ -224,7 +225,7 @@ func generateAddrs(count int) []sdk.AccAddress {
 	return addrs
 }
 
-func requireSuccessfulTxResults(t *testing.T, txResults []*abci.ExecTxResult) {
+func requireSuccessfulTxResults(t rapid.TB, txResults []*abci.ExecTxResult) {
 	t.Helper()
 
 	for i, result := range txResults {

@@ -96,12 +96,13 @@ func TestBlockSTMDeterminism(t *testing.T) {
 			initialBalance,
 			selfDelegation,
 		), maximumOperations)
-		runOperations(t, genesisState, valSet, accounts, accountAddrs, validatorPubKeys, ops, 8)
+		runOperations(t, rt, genesisState, valSet, accounts, accountAddrs, validatorPubKeys, ops, 8)
 	})
 }
 
 func runOperations(
-	t *testing.T,
+	tb testing.TB,
+	rt *rapid.T,
 	genesisState []byte,
 	valSet *cmttypes.ValidatorSet,
 	accounts []account,
@@ -110,22 +111,22 @@ func runOperations(
 	ops []operation,
 	blockSTMExecutors int,
 ) {
-	t.Helper()
+	tb.Helper()
 
-	regularApp := newTestApplication(t, dbm.NewMemDB(), genesisState, valSet, false, 0)
-	blockSTMApp := newTestApplication(t, dbm.NewMemDB(), genesisState, valSet, true, blockSTMExecutors)
+	regularApp := newTestApplication(tb, dbm.NewMemDB(), genesisState, valSet, false, 0)
+	blockSTMApp := newTestApplication(tb, dbm.NewMemDB(), genesisState, valSet, true, blockSTMExecutors)
 
-	initTestApplication(t, regularApp, accounts, accountAddrs, validatorPubKeys, initialValidatorCount)
-	initTestApplication(t, blockSTMApp, accounts, accountAddrs, validatorPubKeys, initialValidatorCount)
+	initTestApplication(tb, regularApp, accounts, accountAddrs, validatorPubKeys, initialValidatorCount)
+	initTestApplication(tb, blockSTMApp, accounts, accountAddrs, validatorPubKeys, initialValidatorCount)
 
-	require.Equal(t, regularApp.app.LastCommitID(), blockSTMApp.app.LastCommitID())
+	require.Equal(rt, regularApp.app.LastCommitID(), blockSTMApp.app.LastCommitID())
 
-	txBytes := buildTxs(t, regularApp.app, accounts, accountAddrs, validatorPubKeys, regularApp.app.LastBlockHeight()+1, ops)
+	txBytes := buildTxs(rt, regularApp.app, accounts, accountAddrs, validatorPubKeys, regularApp.app.LastBlockHeight()+1, ops)
 
-	regularRes, regularCommitID := finalizeAndCommitNextBlock(t, regularApp.app, txBytes)
-	blockSTMRes, blockSTMCommitID := finalizeAndCommitNextBlock(t, blockSTMApp.app, txBytes)
+	regularRes, regularCommitID := finalizeAndCommitNextBlock(rt, regularApp.app, txBytes)
+	blockSTMRes, blockSTMCommitID := finalizeAndCommitNextBlock(rt, blockSTMApp.app, txBytes)
 
-	requireEquivalentBlockOutcome(t, regularRes, blockSTMRes, regularCommitID, blockSTMCommitID)
+	requireEquivalentBlockOutcome(rt, regularRes, blockSTMRes, regularCommitID, blockSTMCommitID)
 }
 
 func buildGenesisState(t *testing.T, accounts []account) ([]byte, *cmttypes.ValidatorSet) {
@@ -168,7 +169,7 @@ func buildGenesisState(t *testing.T, accounts []account) ([]byte, *cmttypes.Vali
 }
 
 func newTestApplication(
-	t *testing.T,
+	t testing.TB,
 	db dbm.DB,
 	genesisState []byte,
 	valSet *cmttypes.ValidatorSet,
@@ -217,7 +218,7 @@ func newTestApplication(
 }
 
 func initTestApplication(
-	t *testing.T,
+	t testing.TB,
 	testApp testApplication,
 	accounts []account,
 	accountAddrs []sdk.AccAddress,
@@ -489,7 +490,7 @@ func redelegationSources(s state) []delegationRef {
 }
 
 func buildTxs(
-	t *testing.T,
+	t rapid.TB,
 	app *simapp.SimApp,
 	accounts []account,
 	accountAddrs []sdk.AccAddress,
@@ -585,7 +586,7 @@ func buildTxs(
 }
 
 func buildSignedTx(
-	t *testing.T,
+	t rapid.TB,
 	txConfig client.TxConfig,
 	msg sdk.Msg,
 	chainID string,

@@ -41,11 +41,6 @@ import (
 
 var FlagEnableStreamingValue bool
 
-const (
-	simulationMinTimePerBlock int64 = 10000 / 2
-	simulationMaxTimePerBlock int64 = 10000
-)
-
 // Get flags every time the simulator is run
 func init() {
 	simcli.GetSimulatorFlags()

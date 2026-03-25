@@ -263,7 +263,6 @@ func TestUpdateValidators(t *testing.T) {
 		}]`, pubKeyType, pubKeyKey, newPower, moniker, operatorAddr)
 
 		validatorsFile := systemtests.StoreTempFile(t, []byte(updatedValidatorJSON))
-		defer validatorsFile.Close()
 
 		rsp := cli.Run(
 			"tx", poaModule, "update-validators",
@@ -302,7 +301,6 @@ func TestUpdateValidators(t *testing.T) {
 		}]`, pubKeyType, pubKeyKey, newPower, moniker, operatorAddr)
 
 		validatorsFile := systemtests.StoreTempFile(t, []byte(updatedValidatorJSON))
-		defer validatorsFile.Close()
 
 		rsp, _ := cli.WithRunErrorsIgnored().RunOnly(
 			"tx", poaModule, "update-validators",
@@ -488,7 +486,6 @@ func TestCreateValidator(t *testing.T) {
 		)
 
 		validatorsFile := systemtests.StoreTempFile(t, []byte(validatorsJSON))
-		defer validatorsFile.Close()
 
 		rsp, ok := cli.RunOnly(
 			"tx", poaModule, "update-validators",
@@ -653,7 +650,6 @@ func TestPOAGovernance(t *testing.T) {
 }`, govAddr)
 
 	propFile := systemtests.StoreTempFile(t, []byte(proposal))
-	defer propFile.Close()
 
 	rsp = cli.Run(
 		"tx", "gov", "submit-proposal",
@@ -724,4 +720,325 @@ func TestPOAGovernance(t *testing.T) {
 		assert.Empty(t, votesAfter, "votes should be removed after tally")
 		t.Logf("Votes after tally: %d", len(votesAfter))
 	})
+}
+
+// validatorInfo holds the parsed fields of a POA validator for easy reuse.
+type validatorInfo struct {
+	PubKeyType   string
+	PubKeyKey    string
+	OperatorAddr string
+	Moniker      string
+	Power        int64
+}
+
+// getValidators queries the POA validators and returns parsed validatorInfo for each.
+func getValidators(t *testing.T, cli *systemtests.CLIWrapper) []validatorInfo {
+	t.Helper()
+	rsp := cli.CustomQuery("q", poaModule, "validators")
+	validators := gjson.Get(rsp, "validators").Array()
+	out := make([]validatorInfo, 0, len(validators))
+	for _, v := range validators {
+		out = append(out, validatorInfo{
+			PubKeyType:   gjson.Get(v.Raw, "pub_key.type").String(),
+			PubKeyKey:    gjson.Get(v.Raw, "pub_key.value").String(),
+			OperatorAddr: gjson.Get(v.Raw, "metadata.operator_address").String(),
+			Moniker:      gjson.Get(v.Raw, "metadata.moniker").String(),
+			Power:        gjson.Get(v.Raw, "power").Int(),
+		})
+	}
+	return out
+}
+
+// validatorUpdateJSON builds the JSON for a single validator entry in an update-validators call.
+func validatorUpdateJSON(v validatorInfo, power int64) string {
+	return fmt.Sprintf(`{
+		"pub_key": {"@type": "%s", "key": "%s"},
+		"power": %d,
+		"metadata": {"moniker": "%s", "operator_address": "%s"}
+	}`, v.PubKeyType, v.PubKeyKey, power, v.Moniker, v.OperatorAddr)
+}
+
+func TestReplaceAllValidatorsInOneBlock(t *testing.T) {
+	// Scenario:
+	// - Start chain, add 2 fullnodes (real CometBFT processes)
+	// - Admin creates validators backed by those fullnodes with initial power
+	// - Admin sets all genesis validators to 0 in a single update-validators tx
+	// - Chain keeps producing blocks because fullnodes are now the active set
+
+	sut := systemtests.Sut
+	sut.ResetChain(t)
+
+	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
+
+	newVal1OperatorAddr := cli.AddKey("replaceval1")
+	newVal2OperatorAddr := cli.AddKey("replaceval2")
+
+	sut.ModifyGenesisCLI(t,
+		[]string{"genesis", "add-genesis-account", newVal1OperatorAddr, "10000000stake"},
+		[]string{"genesis", "add-genesis-account", newVal2OperatorAddr, "10000000stake"},
+	)
+
+	sut.StartChain(t)
+
+	fullnode1 := sut.AddFullnode(t)
+	sut.AwaitNodeUp(t, fullnode1.RPCAddr())
+	fullnode2 := sut.AddFullnode(t)
+	sut.AwaitNodeUp(t, fullnode2.RPCAddr())
+
+	fn1PubKey := systemtests.LoadValidatorPubKeyForNode(t, sut, sut.NodesCount()-2)
+	fn1PkStr := base64.StdEncoding.EncodeToString(fn1PubKey.Bytes())
+	fn2PubKey := systemtests.LoadValidatorPubKeyForNode(t, sut, sut.NodesCount()-1)
+	fn2PkStr := base64.StdEncoding.EncodeToString(fn2PubKey.Bytes())
+
+	_, adminKeyName := getAdmin(t, cli)
+
+	genesisVals := getValidators(t, cli)
+	require.NotEmpty(t, genesisVals)
+	t.Logf("Genesis validators: %d", len(genesisVals))
+
+	// Admin creates validators backed by the fullnodes — they get power immediately
+	rsp := cli.Run("tx", poaModule, "create-validator",
+		"replace-val-1", fn1PkStr, "ed25519",
+		"--operator-address="+newVal1OperatorAddr,
+		"--power=5000",
+		"--from="+adminKeyName, "--gas=auto",
+	)
+	systemtests.RequireTxSuccess(t, rsp)
+
+	rsp = cli.Run("tx", poaModule, "create-validator",
+		"replace-val-2", fn2PkStr, "ed25519",
+		"--operator-address="+newVal2OperatorAddr,
+		"--power=5000",
+		"--from="+adminKeyName, "--gas=auto",
+	)
+	systemtests.RequireTxSuccess(t, rsp)
+
+	// Remove all genesis validators in one tx
+	var entries []string
+	for _, v := range genesisVals {
+		entries = append(entries, validatorUpdateJSON(v, 0))
+	}
+	validatorsFile := systemtests.StoreTempFile(t, []byte("["+strings.Join(entries, ",")+"]"))
+
+	rsp = cli.Run("tx", poaModule, "update-validators",
+		validatorsFile.Name(),
+		"--from="+adminKeyName, "--gas=auto",
+	)
+	systemtests.RequireTxSuccess(t, rsp)
+
+	sut.AwaitNBlocks(t, 3)
+
+	// Verify new validators are active
+	rsp = cli.CustomQuery("q", poaModule, "validator", newVal1OperatorAddr)
+	assert.Equal(t, int64(5000), gjson.Get(rsp, "validator.power").Int())
+	rsp = cli.CustomQuery("q", poaModule, "validator", newVal2OperatorAddr)
+	assert.Equal(t, int64(5000), gjson.Get(rsp, "validator.power").Int())
+
+	// Verify old validators have 0 power
+	for _, v := range genesisVals {
+		rsp = cli.CustomQuery("q", poaModule, "validator", v.OperatorAddr)
+		assert.Equal(t, int64(0), gjson.Get(rsp, "validator.power").Int(),
+			"old validator %s should have 0 power", v.Moniker)
+	}
+
+	// Verify total power
+	rsp = cli.CustomQuery("q", poaModule, "total-power")
+	assert.Equal(t, int64(10000), gjson.Get(rsp, "total_power").Int())
+}
+
+func TestCreateZeroThenReplaceActiveSet(t *testing.T) {
+	// Scenario:
+	// - Start chain, add 2 fullnodes
+	// - Admin creates validators backed by fullnodes (with power)
+	// - Admin zeros out the new validators
+	// - In a single update-validators tx, bring the zeroed validators back to
+	//   non-zero power AND set all genesis validators to 0
+	// - Verifies that previously-zeroed validators can be resurrected atomically
+	//   while the entire active set is swapped out
+
+	sut := systemtests.Sut
+	sut.ResetChain(t)
+
+	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
+
+	newVal1OperatorAddr := cli.AddKey("newval1")
+	newVal2OperatorAddr := cli.AddKey("newval2")
+
+	sut.ModifyGenesisCLI(t,
+		[]string{"genesis", "add-genesis-account", newVal1OperatorAddr, "10000000stake"},
+		[]string{"genesis", "add-genesis-account", newVal2OperatorAddr, "10000000stake"},
+	)
+
+	sut.StartChain(t)
+
+	fullnode1 := sut.AddFullnode(t)
+	sut.AwaitNodeUp(t, fullnode1.RPCAddr())
+	fullnode2 := sut.AddFullnode(t)
+	sut.AwaitNodeUp(t, fullnode2.RPCAddr())
+
+	fn1PubKey := systemtests.LoadValidatorPubKeyForNode(t, sut, sut.NodesCount()-2)
+	fn1PkStr := base64.StdEncoding.EncodeToString(fn1PubKey.Bytes())
+	fn2PubKey := systemtests.LoadValidatorPubKeyForNode(t, sut, sut.NodesCount()-1)
+	fn2PkStr := base64.StdEncoding.EncodeToString(fn2PubKey.Bytes())
+
+	_, adminKeyName := getAdmin(t, cli)
+
+	// Step 1: Admin creates validators with initial power
+	rsp := cli.Run("tx", poaModule, "create-validator",
+		"new-val-1", fn1PkStr, "ed25519",
+		"--operator-address="+newVal1OperatorAddr,
+		"--power=5000",
+		"--from="+adminKeyName, "--gas=auto",
+	)
+	systemtests.RequireTxSuccess(t, rsp)
+
+	rsp = cli.Run("tx", poaModule, "create-validator",
+		"new-val-2", fn2PkStr, "ed25519",
+		"--operator-address="+newVal2OperatorAddr,
+		"--power=5000",
+		"--from="+adminKeyName, "--gas=auto",
+	)
+	systemtests.RequireTxSuccess(t, rsp)
+	sut.AwaitNextBlock(t)
+
+	// Verify they were created with power
+	rsp = cli.CustomQuery("q", poaModule, "validator", newVal1OperatorAddr)
+	require.Equal(t, int64(5000), gjson.Get(rsp, "validator.power").Int())
+	rsp = cli.CustomQuery("q", poaModule, "validator", newVal2OperatorAddr)
+	require.Equal(t, int64(5000), gjson.Get(rsp, "validator.power").Int())
+
+	// Step 2: Zero them out — they become inactive
+	newVal1Info := validatorInfo{
+		PubKeyType: "/cosmos.crypto.ed25519.PubKey", PubKeyKey: fn1PkStr,
+		OperatorAddr: newVal1OperatorAddr, Moniker: "new-val-1",
+	}
+	newVal2Info := validatorInfo{
+		PubKeyType: "/cosmos.crypto.ed25519.PubKey", PubKeyKey: fn2PkStr,
+		OperatorAddr: newVal2OperatorAddr, Moniker: "new-val-2",
+	}
+
+	zeroFile := systemtests.StoreTempFile(t, []byte("["+
+		validatorUpdateJSON(newVal1Info, 0)+","+
+		validatorUpdateJSON(newVal2Info, 0)+
+		"]"))
+
+	rsp = cli.Run("tx", poaModule, "update-validators",
+		zeroFile.Name(),
+		"--from="+adminKeyName, "--gas=auto",
+	)
+	systemtests.RequireTxSuccess(t, rsp)
+	sut.AwaitNextBlock(t)
+
+	// Confirm they are at 0
+	rsp = cli.CustomQuery("q", poaModule, "validator", newVal1OperatorAddr)
+	require.Equal(t, int64(0), gjson.Get(rsp, "validator.power").Int())
+	rsp = cli.CustomQuery("q", poaModule, "validator", newVal2OperatorAddr)
+	require.Equal(t, int64(0), gjson.Get(rsp, "validator.power").Int())
+
+	// Step 3: In ONE tx, resurrect the zeroed validators and remove the entire
+	// genesis active set. Order matters: Keeper.UpdateValidators iterates the
+	// slice sequentially, calling AdjustTotalPower per entry inside a cacheCtx.
+	// If total power hits 0 on any intermediate step the whole batch reverts.
+	// Listing the power-gaining entries first avoids that.
+	genesisVals := getValidators(t, cli)
+	var activeGenesis []validatorInfo
+	for _, v := range genesisVals {
+		if v.Power > 0 {
+			activeGenesis = append(activeGenesis, v)
+		}
+	}
+	require.NotEmpty(t, activeGenesis)
+
+	var swapEntries []string
+	swapEntries = append(swapEntries, validatorUpdateJSON(newVal1Info, 8000))
+	swapEntries = append(swapEntries, validatorUpdateJSON(newVal2Info, 8000))
+	for _, v := range activeGenesis {
+		swapEntries = append(swapEntries, validatorUpdateJSON(v, 0))
+	}
+
+	swapFile := systemtests.StoreTempFile(t, []byte("["+strings.Join(swapEntries, ",")+"]"))
+
+	rsp = cli.Run("tx", poaModule, "update-validators",
+		swapFile.Name(),
+		"--from="+adminKeyName, "--gas=auto",
+	)
+	systemtests.RequireTxSuccess(t, rsp)
+
+	sut.AwaitNBlocks(t, 3)
+
+	// Verify resurrected validators are active
+	rsp = cli.CustomQuery("q", poaModule, "validator", newVal1OperatorAddr)
+	assert.Equal(t, int64(8000), gjson.Get(rsp, "validator.power").Int())
+	rsp = cli.CustomQuery("q", poaModule, "validator", newVal2OperatorAddr)
+	assert.Equal(t, int64(8000), gjson.Get(rsp, "validator.power").Int())
+
+	// Verify all genesis validators are at 0
+	for _, v := range activeGenesis {
+		rsp = cli.CustomQuery("q", poaModule, "validator", v.OperatorAddr)
+		assert.Equal(t, int64(0), gjson.Get(rsp, "validator.power").Int(),
+			"genesis validator %s should have 0 power", v.Moniker)
+	}
+
+	// Verify total power
+	rsp = cli.CustomQuery("q", poaModule, "total-power")
+	assert.Equal(t, int64(16000), gjson.Get(rsp, "total_power").Int())
+}
+
+func TestRemoveValidatorsOneByOneDisallowLast(t *testing.T) {
+	// Scenario:
+	// - Start with all genesis validators
+	// - Remove validators one at a time by setting power to 0
+	// - When only 1 validator remains, attempting to remove it should fail
+	//   because total power cannot be zero
+
+	sut := systemtests.Sut
+	sut.ResetChain(t)
+	sut.StartChain(t)
+
+	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
+
+	_, adminKeyName := getAdmin(t, cli)
+
+	vals := getValidators(t, cli)
+	require.True(t, len(vals) >= 2, "need at least 2 validators for this test")
+	t.Logf("Starting with %d validators", len(vals))
+
+	// Remove all but the last validator, one by one
+	for i := 0; i < len(vals)-1; i++ {
+		v := vals[i]
+		t.Logf("Removing validator %d/%d: %s", i+1, len(vals)-1, v.Moniker)
+
+		entry := validatorUpdateJSON(v, 0)
+		validatorsFile := systemtests.StoreTempFile(t, []byte("["+entry+"]"))
+
+		rsp := cli.Run("tx", poaModule, "update-validators",
+			validatorsFile.Name(),
+			"--from="+adminKeyName, "--gas=auto",
+		)
+		systemtests.RequireTxSuccess(t, rsp)
+		sut.AwaitNextBlock(t)
+
+		rsp = cli.CustomQuery("q", poaModule, "validator", v.OperatorAddr)
+		assert.Equal(t, int64(0), gjson.Get(rsp, "validator.power").Int(),
+			"validator %s should have 0 power after removal", v.Moniker)
+	}
+
+	// Verify exactly 1 active validator remains
+	rsp := cli.CustomQuery("q", poaModule, "total-power")
+	lastVal := vals[len(vals)-1]
+	assert.Equal(t, lastVal.Power, gjson.Get(rsp, "total_power").Int(),
+		"total power should equal last validator's power")
+
+	// Attempt to remove the last validator — should fail
+	entry := validatorUpdateJSON(lastVal, 0)
+	validatorsFile := systemtests.StoreTempFile(t, []byte("["+entry+"]"))
+
+	rsp, _ = cli.WithRunErrorsIgnored().RunOnly("tx", poaModule, "update-validators",
+		validatorsFile.Name(),
+		"--from="+adminKeyName, "--fees=1stake", "--gas=auto",
+	)
+	require.True(t,
+		strings.Contains(rsp, "total power cannot be zero") || strings.Contains(rsp, "invalid total power"),
+		"removing last validator should fail with total power error, got: %s", rsp,
+	)
 }

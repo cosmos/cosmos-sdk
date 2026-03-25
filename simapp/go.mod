@@ -4,7 +4,7 @@ go 1.25.8
 
 require (
 	cosmossdk.io/api v1.0.0
-	cosmossdk.io/client/v2 v2.0.0-beta.11
+	cosmossdk.io/client/v2 v2.11.0-rc.0
 	cosmossdk.io/core v1.1.0
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/log/v2 v2.1.0-rc.0
@@ -334,7 +334,6 @@ require (
 )
 
 // short-lived replaces, should be removed after tags are cut
-replace cosmossdk.io/client/v2 => ../client/v2
 
 // long-lived replaces
 replace (

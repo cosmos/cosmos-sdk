@@ -820,7 +820,6 @@ func TestReplaceAllValidatorsInOneBlock(t *testing.T) {
 	}
 	validatorsFile := systemtests.StoreTempFile(t, []byte("["+strings.Join(entries, ",")+"]"))
 
-
 	rsp = cli.Run("tx", poaModule, "update-validators",
 		validatorsFile.Name(),
 		"--from="+adminKeyName, "--gas=auto",

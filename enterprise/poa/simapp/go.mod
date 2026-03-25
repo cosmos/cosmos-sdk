@@ -4,7 +4,7 @@ go 1.25.8
 
 require (
 	cosmossdk.io/api v1.0.0
-	cosmossdk.io/client/v2 v2.0.0-beta.11
+	cosmossdk.io/client/v2 v2.11.0-rc.0
 	cosmossdk.io/core v1.1.0
 	cosmossdk.io/log/v2 v2.1.0-rc.0
 	cosmossdk.io/math v1.5.3
@@ -292,7 +292,6 @@ replace github.com/cosmos/cosmos-sdk/enterprise/poa => ..
 
 // Below are the long-lived replace of the SimApp
 replace (
-	cosmossdk.io/client/v2 => ../../../client/v2
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

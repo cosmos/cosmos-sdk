@@ -14,13 +14,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/iavlx/internal/cachekv"
 )
 
+// CommitBranch is a wrapper and a CacheMultiStore that let's us start and finalize a commit directly
+// with support for committing optimistically and rolling back if the preconditions for finalizing the
+// commit are not met.
 type CommitBranch struct {
 	// MultiTree is the cache layer with staged writes
 	*MultiTree
 	db *CommitMultiTree
 }
 
-func (cb *CommitBranch) StartCommit(ctx context.Context, header cmtproto.Header) (*MultiTreeFinalizer, error) {
+func (cb *CommitBranch) StartCommit(ctx context.Context, header cmtproto.Header) (*CommitFinalizer, error) {
 	db := cb.db
 	ctx, span := tracer.Start(ctx, "CommitMultiTree.commit",
 		trace.WithAttributes(
@@ -59,7 +62,7 @@ func (cb *CommitBranch) StartCommit(ctx context.Context, header cmtproto.Header)
 		storeInfos[i].Name = si.key.Name()
 	}
 	ctx, cancel := context.WithCancel(ctx)
-	finalizer := &MultiTreeFinalizer{
+	finalizer := &CommitFinalizer{
 		CommitMultiTree:    db,
 		cacheMs:            multiTree,
 		ctx:                ctx,

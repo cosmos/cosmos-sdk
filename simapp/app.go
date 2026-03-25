@@ -12,10 +12,12 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"cosmossdk.io/core/appmodule"
+
 	"cosmossdk.io/client/v2/autocli"
 	clienthelpers "cosmossdk.io/client/v2/helpers"
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log/v2"
+	"github.com/cosmos/cosmos-sdk/iavlx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -233,6 +235,14 @@ func NewSimApp(
 	baseAppOptions = append(baseAppOptions, voteExtOp, baseapp.SetOptimisticExecution())
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
+
+	logger.Info("Initializing IAVLX CommitMultiTree")
+	iavlxCms, err := iavlx.LoadCommitMultiTree("", iavlx.Options{}, logger)
+	if err != nil {
+		panic(err)
+	}
+	bApp.SetCMS(iavlxCms)
+
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetTxEncoder(txConfig.TxEncoder())
@@ -304,7 +314,7 @@ func NewSimApp(
 		EnabledSignModes:           enabledSignModes,
 		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
 	}
-	txConfig, err := authtx.NewTxConfigWithOptions(
+	txConfig, err = authtx.NewTxConfigWithOptions(
 		appCodec,
 		txConfigOpts,
 	)
@@ -426,7 +436,7 @@ func NewSimApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			// register the governance hooks
 		),
 	)
 
@@ -451,7 +461,7 @@ func NewSimApp(
 
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-		// insert epoch hooks receivers here
+			// insert epoch hooks receivers here
 		),
 	)
 

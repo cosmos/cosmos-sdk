@@ -29,10 +29,10 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
-type commitData struct {
-	commitInfo *storetypes.CommitInfo
-	commitId   storetypes.CommitID
-}
+var (
+	_ storetypes.CommitMultiStore = &CommitMultiTree{}
+	_ storetypes.Queryable        = &CommitMultiTree{}
+)
 
 type CommitMultiTree struct {
 	dir         string
@@ -57,8 +57,13 @@ type CommitMultiTree struct {
 	// Essentially we have a way of tracking that someone called Write on the root CacheMultiStore and started a
 	// background commit. With this compatFinalizer type we then can allow the caller to call WorkingHash() and
 	// Commit() as if this were a v1 or v2 store.
-	compatFinalizer   *MultiTreeFinalizer
+	compatFinalizer   *CommitFinalizer
 	compatFinalizerMu sync.RWMutex
+}
+
+type commitData struct {
+	commitInfo *storetypes.CommitInfo
+	commitId   storetypes.CommitID
 }
 
 type storeData struct {
@@ -585,11 +590,6 @@ func (db *CommitMultiTree) Describe() MultiTreeDescription {
 		Trees:   descriptions,
 	}
 }
-
-var (
-	_ storetypes.CommitMultiStore = &CommitMultiTree{}
-	_ storetypes.Queryable        = &CommitMultiTree{}
-)
 
 // Query routes a query request to a sub-store by name and appends the multi-store proof when requested.
 func (db *CommitMultiTree) Query(req *storetypes.RequestQuery) (*storetypes.ResponseQuery, error) {

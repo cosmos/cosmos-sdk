@@ -159,14 +159,35 @@ func (m *MsgUpdateParams) Validate(ac address.Codec) error {
 }
 
 // ValidateBasic performs basic validation on MsgUpdateValidators.
-// It delegates to ValidateValidatorSet() to validate the validators list.
-// This ensures that:
-//   - All validators pass basic validation
-//   - No duplicate operator addresses exist across validators
-//
-// Returns an error with the validator index if validation fails.
+// Unlike ValidateValidatorSet (used for genesis), this does NOT require total
+// power > 0 because updates may set individual validators to 0 power (removal).
+// The keeper's AdjustTotalPower enforces that the on-chain total stays positive.
 func (m *MsgUpdateValidators) ValidateBasic() error {
-	return ValidateValidatorSet(m.Validators)
+	if len(m.Validators) == 0 {
+		return fmt.Errorf("validators list cannot be empty")
+	}
+
+	operatorAddresses := make(map[string]struct{})
+	var totalPower int64
+
+	for i, validator := range m.Validators {
+		if err := validator.ValidateBasic(); err != nil {
+			return fmt.Errorf("validator at index %d: %w", i, err)
+		}
+
+		operatorAddr := validator.Metadata.OperatorAddress
+		if _, found := operatorAddresses[operatorAddr]; found {
+			return fmt.Errorf("duplicate operator address %s found in validators", operatorAddr)
+		}
+		operatorAddresses[operatorAddr] = struct{}{}
+
+		if totalPower > math.MaxInt64-validator.Power {
+			return ErrTotalPowerOverflow
+		}
+		totalPower += validator.Power
+	}
+
+	return nil
 }
 
 // Validate performs validation on MsgCreateValidator.

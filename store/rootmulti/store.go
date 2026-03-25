@@ -1,7 +1,6 @@
 package rootmulti
 
 import (
-	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -9,7 +8,6 @@ import (
 	"math"
 	"sort"
 	"strings"
-	"sync"
 	"sync/atomic"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -23,7 +21,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/v2/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/iavl"
+	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
 	"github.com/cosmos/cosmos-sdk/store/v2/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/v2/mem"
 	"github.com/cosmos/cosmos-sdk/store/v2/pruning"
@@ -134,9 +132,10 @@ func (rs *Store) SetIAVLDisableFastNode(disableFastNode bool) {
 }
 
 // SetIAVLSyncPruning set sync/async pruning on iavl.
-// It is not recommended to use this option.
-// It is here to enable the prune command to force this to true, allowing the command to wait
-// for the pruning to finish before returning.
+//
+// It is not recommended to use this option. It is here to enable the prune
+// command to force this to true, allowing the command to wait for the pruning
+// to finish before returning.
 func (rs *Store) SetIAVLSyncPruning(syncPruning bool) {
 	rs.iavlSyncPruning = syncPruning
 }
@@ -529,119 +528,14 @@ func (rs *Store) WorkingHash() []byte {
 	return types.CommitInfo{StoreInfos: storeInfos}.Hash()
 }
 
-type commitState int
-
-const (
-	commitPending commitState = iota
-	commitPrepared
-	commitFinalized
-	commitRolledBack
-)
-
-type commitFinalizer struct {
-	ctx        context.Context
-	rs         *Store
-	cacheStore types.CacheMultiStore
-	mu         sync.Mutex
-	state      commitState
-	hash       types.CommitID
-	header     cmtproto.Header
-}
-
-func newCommitFinalizer(ctx context.Context, header cmtproto.Header, rs *Store, cacheStore types.CacheMultiStore) *commitFinalizer {
-	return &commitFinalizer{
-		state:      commitPending,
-		ctx:        ctx,
-		header:     header,
-		rs:         rs,
-		cacheStore: cacheStore,
-	}
-}
-
-func (c *commitFinalizer) StartFinalize() (types.CommitID, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.doStartFinalize()
-}
-
-// doStartFinalize performs the finalization start logic. Caller must hold c.mu.
-func (c *commitFinalizer) doStartFinalize() (types.CommitID, error) {
-	switch c.state {
-	case commitPrepared, commitFinalized:
-		// already done
-		return c.hash, nil
-	case commitRolledBack:
-		return types.CommitID{}, errors.New("cannot finalize after rollback")
-	case commitPending:
-		// compute the hash work now
-	}
-
-	if err := c.ctx.Err(); err != nil {
-		c.state = commitRolledBack
-		return types.CommitID{}, fmt.Errorf("rolled back: %w", err)
-	}
-
-	c.rs.SetCommitHeader(c.header)
-	c.cacheStore.Write()
-	c.hash.Hash = c.rs.WorkingHash()
-	c.hash.Version = c.rs.LatestVersion() + 1
-	c.state = commitPrepared
-	return c.hash, nil
-}
-
-func (c *commitFinalizer) Rollback() error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	switch c.state {
-	case commitPending:
-		// can roll back
-		c.state = commitRolledBack
-		return nil
-	case commitRolledBack:
-		// already rolled back
-		return nil
-	default:
-		// cannot rollback
-		return errors.New("cannot rollback after finalization has started")
-	}
-}
-
-func (c *commitFinalizer) Finalize() (types.CommitID, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	switch c.state {
-	case commitFinalized:
-		// already done
-		return c.hash, nil
-	case commitRolledBack:
-		return types.CommitID{}, errors.New("cannot finalize after rollback")
-	case commitPending:
-		// need to write store changes and compute working hash
-		if _, err := c.doStartFinalize(); err != nil {
-			return types.CommitID{}, err
-		}
-		// fall through to commit
-	case commitPrepared:
-		// store changes written, have hash computed, now commit
-	}
-
-	c.hash = c.rs.Commit()
-	c.state = commitFinalized
-	return c.hash, nil
-}
-
 // CacheWrap implements CacheWrapper/Store/CommitStore.
 func (rs *Store) CacheWrap() types.CacheWrap {
-	return rs.RootCacheMultiStore().(types.CacheWrap)
+	return rs.CacheMultiStore().(types.CacheWrap)
 }
 
-func (rs *Store) RootCacheMultiStore() types.MultiStore {
-	return rs.cacheMultiStore()
-}
-
-func (rs *Store) cacheMultiStore() types.CacheMultiStore {
+// CacheMultiStore creates ephemeral branch of the multi-store and returns a CacheMultiStore.
+// It implements the MultiStore interface.
+func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for k, v := range rs.stores {
 		store := types.CacheWrapper(v)
@@ -657,33 +551,11 @@ func (rs *Store) cacheMultiStore() types.CacheMultiStore {
 	return cachemulti.NewStore(stores)
 }
 
-func (rs *Store) CommitBranch() types.CommitBranch {
-	ms := rs.cacheMultiStore()
-	return &commitBranch{
-		MultiStore: ms,
-		inner:      ms,
-		rs:         rs,
-	}
-}
-
-type commitBranch struct {
-	// we embed MultiStore so that CommitBranch implements MultiStore methods directly
-	types.MultiStore
-	// inner is the same as the embedded MultiStore but is the type that we want to call Write against (we don't want to expose Write via embedding)
-	inner types.CacheMultiStore
-	// rs is the Store that we are committing the changes in the CacheMultiStore against
-	rs *Store
-}
-
-func (c *commitBranch) StartCommit(ctx context.Context, header cmtproto.Header) (types.CommitFinalizer, error) {
-	return newCommitFinalizer(ctx, header, c.rs, c.inner), nil
-}
-
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
 // attempts to load stores at a given version (height). An error is returned if
 // any store cannot be loaded. This should only be used for querying and
 // iterating at past heights.
-func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.MultiStore, error) {
+func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
 	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
 	var commitInfo *types.CommitInfo
 	storeInfos := map[string]bool{}
@@ -1416,8 +1288,4 @@ func flushLatestVersion(batch dbm.Batch, version int64) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func (rs *Store) Close() error {
-	return nil
 }

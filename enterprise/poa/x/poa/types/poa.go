@@ -38,6 +38,10 @@ func (v *Validator) ValidateBasic() error {
 		return ErrNegativeValidatorPower
 	}
 
+	if v.Metadata == nil {
+		return sdkerrors.Wrap(ErrInvalidMetadata, "metadata cannot be nil")
+	}
+
 	if err := v.Metadata.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(ErrInvalidMetadata, err.Error())
 	}
@@ -102,7 +106,7 @@ func ValidateValidatorSet(vs []Validator) error {
 // It ensures that:
 //   - OperatorAddress is not empty
 //   - Moniker is not empty and does not exceed 256 characters
-//   - Description is not empty and does not exceed 256 characters
+//   - Description does not exceed 256 characters (it may be empty)
 func (m *ValidatorMetadata) ValidateBasic() error {
 	if m.OperatorAddress == "" {
 		return ErrMissingOperatorAddress
@@ -169,6 +173,7 @@ func (m *MsgUpdateValidators) ValidateBasic() error {
 // It ensures that:
 //   - Metadata passes basic validation (operator address, moniker, and description are valid)
 //   - Operator address is a valid address format according to the address codec
+//   - Admin (signer) is a valid address format
 //   - PubKey is not nil
 //
 // The address codec is used to validate the operator address format.
@@ -184,6 +189,12 @@ func (m *MsgCreateValidator) Validate(ac address.Codec) error {
 
 	if _, err := ac.StringToBytes(m.OperatorAddress); err != nil {
 		return sdkerrors.Wrap(ErrInvalidMetadata, "operator address is invalid")
+	}
+	if _, err := ac.StringToBytes(m.Admin); err != nil {
+		return sdkerrors.Wrap(ErrInvalidAdminAddress, "invalid signer address: "+err.Error())
+	}
+	if m.Power <= 0 {
+		return sdkerrors.Wrap(ErrInvalidValidatorPower, "validator power must be greater than zero")
 	}
 
 	// Check that pubkey is not nil

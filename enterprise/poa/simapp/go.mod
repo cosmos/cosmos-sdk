@@ -4,16 +4,16 @@ go 1.25.8
 
 require (
 	cosmossdk.io/api v1.0.0
-	cosmossdk.io/client/v2 v2.0.0-beta.11
+	cosmossdk.io/client/v2 v2.11.0-rc.0
 	cosmossdk.io/core v1.1.0
-	cosmossdk.io/log/v2 v2.0.1
+	cosmossdk.io/log/v2 v2.1.0-rc.0
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/tools/confix v0.1.2
-	github.com/cometbft/cometbft v0.39.0-rc1
+	github.com/cometbft/cometbft v0.39.0-rc3
 	github.com/cosmos/cosmos-db v1.1.3
-	github.com/cosmos/cosmos-sdk v0.54.0-rc.1.0.20251127205138-44ca1c39b279
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.3
 	github.com/cosmos/cosmos-sdk/enterprise/poa v0.0.1
-	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-beta.0
+	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-rc.0
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
@@ -283,22 +283,14 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-// Here are the short-lived replace from the SimApp
-// Replace here are pending PRs, or version to be tagged
-// replace (
-// 	<temporary replace>
-// )
 replace github.com/cosmos/cosmos-sdk/enterprise/poa => ..
 
 // Below are the long-lived replace of the SimApp
 replace (
-	cosmossdk.io/client/v2 => ../../../client/v2
-	cosmossdk.io/log/v2 => ../../../log
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../../../.
-	github.com/cosmos/cosmos-sdk/store/v2 => ../../../store
 	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1

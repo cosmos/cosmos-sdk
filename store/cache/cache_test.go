@@ -11,8 +11,8 @@ import (
 	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/store/v2/cache"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/cachekv"
-	iavlstore "github.com/cosmos/cosmos-sdk/store/v2/legacy/iavl"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	iavlstore "github.com/cosmos/cosmos-sdk/store/v2/iavl"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/wrapper"
 )
@@ -98,5 +98,5 @@ func TestCacheWrap(t *testing.T) {
 	store := iavlstore.UnsafeNewStore(tree)
 
 	cacheWrapper := mngr.GetStoreCache(sKey, store).CacheWrap()
-	require.IsType(t, &cachekv.GStore[[]byte]{}, cacheWrapper)
+	require.IsType(t, &cachekv.Store{}, cacheWrapper)
 }

@@ -6,14 +6,14 @@ require (
 	cosmossdk.io/api v1.0.0
 	cosmossdk.io/client/v2 v2.0.0-beta.11
 	cosmossdk.io/core v1.1.0
-	cosmossdk.io/log/v2 v2.0.1
+	cosmossdk.io/log/v2 v2.1.0-rc.0
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/tools/confix v0.1.2
-	github.com/cometbft/cometbft v0.39.0-rc1
+	github.com/cometbft/cometbft v0.39.0-rc3
 	github.com/cosmos/cosmos-db v1.1.3
-	github.com/cosmos/cosmos-sdk v0.54.0-rc.1.0.20251127205138-44ca1c39b279
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.3
 	github.com/cosmos/cosmos-sdk/enterprise/poa v0.0.1
-	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-beta.0
+	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-rc.0
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
@@ -72,7 +72,6 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.8.0 // indirect
 	github.com/ebitengine/purego v0.10.0 // indirect
-	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/emicklei/dot v1.11.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -119,7 +118,6 @@ require (
 	github.com/ipfs/go-cid v0.5.0 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2 // indirect
 	github.com/jbenet/go-temp-err-catcher v0.1.0 // indirect
-	github.com/jellydator/ttlcache/v3 v3.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
@@ -163,8 +161,6 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20251114093237-2ab5a27a1729 // indirect
 	github.com/oklog/run v1.2.0 // indirect
-	github.com/otiai10/copy v1.14.1 // indirect
-	github.com/otiai10/mint v1.6.3 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/petermattis/goid v0.0.0-20260113132338-7c7de50cc741 // indirect

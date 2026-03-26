@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
+	"path/filepath"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -17,6 +18,7 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/log/v2"
+
 	"github.com/cosmos/cosmos-sdk/iavlx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -237,7 +239,8 @@ func NewSimApp(
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 
 	logger.Info("Initializing IAVLX CommitMultiTree")
-	iavlxCms, err := iavlx.LoadCommitMultiTree("", iavlx.Options{}, logger)
+	iavlxDir := filepath.Join(appOpts.Get(flags.FlagHome).(string), "data", "iavlx")
+	iavlxCms, err := iavlx.LoadCommitMultiTree(iavlxDir, iavlx.Options{}, logger)
 	if err != nil {
 		panic(err)
 	}

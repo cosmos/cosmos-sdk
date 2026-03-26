@@ -420,7 +420,11 @@ func (db *CommitMultiTree) WorkingHash() []byte {
 	if db.compatFinalizer == nil {
 		panic("no commit in progress")
 	}
-	return db.compatFinalizer.WorkingHash()
+	cid, err := db.compatFinalizer.StartFinalize()
+	if err != nil {
+		panic(err)
+	}
+	return cid.Hash
 }
 
 func (db *CommitMultiTree) Commit() storetypes.CommitID {

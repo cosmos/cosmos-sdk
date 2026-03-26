@@ -9,7 +9,7 @@ replace github.com/cosmos/cosmos-sdk/tools/systemtests => ../../tools/systemtest
 
 require (
 	cosmossdk.io/math v1.5.3
-	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.3
 	github.com/cosmos/cosmos-sdk/tools/systemtests v0.0.0-00010101000000-000000000000
 	github.com/creachadair/tomledit v0.0.29
 	github.com/stretchr/testify v1.11.1
@@ -24,7 +24,7 @@ require (
 	cosmossdk.io/core v1.1.0 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.1.0 // indirect
-	cosmossdk.io/log/v2 v2.0.1 // indirect
+	cosmossdk.io/log/v2 v2.1.0-rc.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -49,13 +49,13 @@ require (
 	github.com/cockroachdb/pebble v1.1.5 // indirect
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
-	github.com/cometbft/cometbft v0.39.0-rc1 // indirect
+	github.com/cometbft/cometbft v0.39.0-rc3 // indirect
 	github.com/cometbft/cometbft-db v0.14.3 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/btree v1.0.0 // indirect
 	github.com/cosmos/cosmos-db v1.1.3 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
-	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-beta.0 // indirect
+	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-rc.0 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.7.2 // indirect
@@ -73,7 +73,6 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.8.0 // indirect
 	github.com/ebitengine/purego v0.10.0 // indirect
-	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/emicklei/dot v1.11.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -120,7 +119,6 @@ require (
 	github.com/ipfs/go-cid v0.5.0 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2 // indirect
 	github.com/jbenet/go-temp-err-catcher v0.1.0 // indirect
-	github.com/jellydator/ttlcache/v3 v3.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
@@ -162,8 +160,6 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20251114093237-2ab5a27a1729 // indirect
 	github.com/oklog/run v1.2.0 // indirect
-	github.com/otiai10/copy v1.14.1 // indirect
-	github.com/otiai10/mint v1.6.3 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/petermattis/goid v0.0.0-20260113132338-7c7de50cc741 // indirect
@@ -287,9 +283,4 @@ require (
 	nhooyr.io/websocket v1.8.17 // indirect
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
-)
-
-replace (
-	cosmossdk.io/log/v2 => ../../log
-	github.com/cosmos/cosmos-sdk/store/v2 => ../../store
 )

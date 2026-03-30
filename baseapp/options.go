@@ -145,6 +145,13 @@ func (app *BaseApp) SetBlockSTMTxRunner(txRunner sdk.TxRunner) {
 	app.txRunner = txRunner
 }
 
+// SetBlockSTMDebugDir enables persisting BlockSTM execution traces to the given directory
+// after every FinalizeBlock. When a CometBFT app hash mismatch causes a crash, the most
+// recent execution trace will already be on disk for post-mortem analysis.
+func (app *BaseApp) SetBlockSTMDebugDir(dir string) {
+	app.blockSTMDebugDir = dir
+}
+
 // DisableBlockGasMeter disables the block gas meter.
 func DisableBlockGasMeter() func(*BaseApp) {
 	return func(app *BaseApp) { app.SetDisableBlockGasMeter(true) }

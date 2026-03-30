@@ -191,6 +191,11 @@ type BaseApp struct {
 
 	// Optional alternative tx runner, used for block-stm parallel transaction execution. If nil, default txRunner is used.
 	txRunner sdk.TxRunner
+
+	// blockSTMDebugDir, when set, causes the last block's STM execution trace to be
+	// persisted to this directory after every FinalizeBlock. This ensures the data
+	// survives a crash so it can be inspected when CometBFT detects an app hash mismatch.
+	blockSTMDebugDir string
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

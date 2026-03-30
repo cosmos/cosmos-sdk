@@ -888,6 +888,8 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		return nil, err
 	}
 
+	app.saveBlockSTMDebug(req.Height)
+
 	var (
 		blockGasUsed   uint64
 		blockGasWanted uint64
@@ -936,6 +938,22 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
 	}, nil
+}
+
+// saveBlockSTMDebug persists the last BlockSTM execution trace to disk if the
+// txRunner is an STMRunner and a debug directory has been configured.
+func (app *BaseApp) saveBlockSTMDebug(height int64) {
+	if app.blockSTMDebugDir == "" {
+		return
+	}
+	runner, ok := app.txRunner.(*txnrunner.STMRunner)
+	if !ok || runner == nil {
+		return
+	}
+	path := app.blockSTMDebugDir + "/blockstm_last_execution.json"
+	if err := runner.SaveLastDebug(path); err != nil {
+		app.logger.Error("failed to save BlockSTM debug trace", "height", height, "err", err)
+	}
 }
 
 func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, ms storetypes.MultiStore, txs [][]byte) ([]*abci.ExecTxResult, error) {

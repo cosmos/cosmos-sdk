@@ -3,9 +3,11 @@
 package simapp
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"math/rand"
 	"strings"
 	"sync"
@@ -20,6 +22,7 @@ import (
 	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/v2"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
@@ -232,6 +235,70 @@ func TestAppStateDeterminism(t *testing.T) {
 	}
 	// run simulations
 	sims.RunWithSeeds(t, interBlockCachingAppFactory, setupStateFactory, seeds, []byte{}, captureAndCheckHash)
+}
+
+func TestAppStateDeterminismBSTMEquivalence(t *testing.T) {
+	config := simcli.NewConfigFromFlags()
+	config.ChainID = sims.SimAppChainID
+	seed := config.Seed
+
+	t.Run(fmt.Sprintf("seed:%d", seed), func(t *testing.T) {
+		regularTrace := runSimulationAndCollectFinalizeHashes(t, config, seed, false)
+		blockSTMTrace := runSimulationAndCollectFinalizeHashes(t, config, seed, true)
+
+		require.Equal(t, regularTrace.commitCount, blockSTMTrace.commitCount)
+		require.Equal(t, regularTrace.finalizeHashes, blockSTMTrace.finalizeHashes)
+	})
+}
+
+type finalizeHashTrace struct {
+	finalizeHashes [][]byte
+	commitCount    int
+}
+
+func (t *finalizeHashTrace) ListenFinalizeBlock(_ context.Context, _ abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
+	t.finalizeHashes = append(t.finalizeHashes, append([]byte(nil), res.AppHash...))
+	return nil
+}
+
+func (t *finalizeHashTrace) ListenCommit(_ context.Context, _ abci.ResponseCommit, _ []*storetypes.StoreKVPair) error {
+	t.commitCount++
+	return nil
+}
+
+func runSimulationAndCollectFinalizeHashes(tb testing.TB, cfg simtypes.Config, seed int64, enableBlockSTM bool) *finalizeHashTrace {
+	tb.Helper()
+
+	trace := &finalizeHashTrace{}
+	appFactory := func(
+		logger log.Logger,
+		db dbm.DB,
+		loadLatest bool,
+		appOpts servertypes.AppOptions,
+		baseAppOptions ...func(*baseapp.BaseApp),
+	) *SimApp {
+		streamingOpt := func(bapp *baseapp.BaseApp) {
+			bapp.SetStreamingManager(storetypes.StreamingManager{
+				ABCIListeners: []storetypes.ABCIListener{trace},
+			})
+		}
+
+		app := NewSimApp(logger, db, loadLatest, appOpts, append(baseAppOptions, interBlockCacheOpt(), streamingOpt)...)
+		if enableBlockSTM {
+			app.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(
+				app.TxConfig().TxDecoder(),
+				app.GetStoreKeys(),
+				8,
+				false,
+				func(storetypes.MultiStore) string { return sdk.DefaultBondDenom },
+			))
+		}
+
+		return app
+	}
+
+	sims.RunWithSeed(tb, cfg, appFactory, setupStateFactory, seed, nil)
+	return trace
 }
 
 type ComparableStoreApp interface {

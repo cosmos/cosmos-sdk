@@ -1,5 +1,15 @@
 package internal
 
+// Iterator performs an in-order traversal of a range of keys in the IAVL tree.
+//
+// It uses an explicit stack (not recursion) to traverse the tree lazily — nodes are only resolved
+// from disk when Next() is called, not upfront. This is important for large range scans where we
+// don't want to load the entire subtree into memory.
+//
+// The traversal is a standard iterative in-order walk: push right child then left child (ascending)
+// or left then right (descending) onto the stack, so the next pop gives us the correct ordering.
+// Branch nodes are expanded (children pushed) and leaf nodes in range produce key/value pairs.
+// Nodes outside the [start, end) range are pruned — their subtrees are not pushed onto the stack.
 type Iterator struct {
 	// domain of iteration, end is exclusive
 	start, end []byte

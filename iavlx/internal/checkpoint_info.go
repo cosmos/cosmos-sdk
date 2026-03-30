@@ -14,7 +14,13 @@ func init() {
 
 const CheckpointInfoSize = 64
 
-// CheckpointInfo holds metadata about a single checkpoint (a persisted tree state).
+// CheckpointInfo holds metadata about a single checkpoint (a persisted snapshot of the tree).
+// It is a fixed-size (64 bytes) struct stored in checkpoints.dat, one entry per checkpoint.
+//
+// A checkpoint captures the tree state at a specific version. The Checkpoint number is an
+// incrementing counter separate from the Version — multiple versions may pass between checkpoints
+// (controlled by CheckpointInterval), and the checkpoint number is what NodeIDs reference
+// to locate their data on disk.
 type CheckpointInfo struct {
 	Leaves   NodeSetInfo `json:"leaves"`
 	Branches NodeSetInfo `json:"branches"`
@@ -34,12 +40,25 @@ type CheckpointInfo struct {
 	CRC32 uint32 `json:"crc32"`
 }
 
+// NodeSetInfo describes where a checkpoint's leaf or branch nodes live in the data file.
+//
+// There are two coordinate systems at play:
+//   - File offsets (StartOffset, Count): position in the data file. StartOffset is the 0-based
+//     offset (in number of nodes, not bytes) into leaves.dat or branches.dat. Count is how many
+//     nodes belong to this checkpoint in the file.
+//   - Node indices (StartIndex, EndIndex): the 1-based NodeID indices of the first and last
+//     retained nodes. These may have gaps after compaction (pruned nodes are removed, so
+//     Count may be less than EndIndex - StartIndex + 1).
+//
+// When looking up a node by NodeID, the index is used to locate it within the file offset range.
+// When nodes are contiguous (no compaction gaps), it's a direct O(1) calculation.
+// With gaps, interpolation search is used (see NodeMmap.FindByID).
 type NodeSetInfo struct {
 	// StartOffset is the starting offset (in number of nodes) of this node set in the corresponding data file.
 	StartOffset uint32 `json:"start_offset"`
 	// Count is the total number of retained nodes in this node set.
 	Count uint32 `json:"count"`
-	// StartIndex is the 1-based indexe of the first retained node in this node set.
+	// StartIndex is the 1-based index of the first retained node in this node set.
 	StartIndex uint32 `json:"start_index"`
 	// EndIndex is the 1-based index of the last retained node in this node set.
 	EndIndex uint32 `json:"end_index"`

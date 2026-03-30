@@ -9,6 +9,20 @@ import (
 	"cosmossdk.io/log/v2"
 )
 
+// Importer builds an iavlx tree from a stream of ExportNodes in post-order (left subtree,
+// right subtree, parent). This is the same order produced by TreeReader.Export and by iavl/v1's
+// Exporter, making it compatible with both iavlx-to-iavlx and v1-to-iavlx migration.
+//
+// The import algorithm uses a stack:
+//   - Leaf nodes are pushed directly onto the stack.
+//   - Branch nodes pop their two children (left = stack[-2], right = stack[-1]), wire them up,
+//     write them to disk, and push the branch onto the stack.
+//   - When Finalize is called, exactly one node should remain on the stack — the root.
+//
+// The result is a single changeset directory containing one checkpoint with the full tree.
+// After import, the tree can be opened normally via NewTreeStore/load().
+//
+// Used by the `iavlx import` CLI for one-time offline migration from iavl/v1.
 type Importer struct {
 	logger log.Logger
 

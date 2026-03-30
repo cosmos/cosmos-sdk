@@ -9,6 +9,10 @@ type NodeLayout interface {
 	GetNodeID() NodeID
 }
 
+// NodeMmap extends StructMmap with node-specific lookup by NodeID.
+// It provides FindByID which uses interpolation search to locate a node within a checkpoint's
+// offset range — faster than binary search when node indices are roughly evenly distributed
+// (which they are in post-order traversal).
 type NodeMmap[T NodeLayout] struct {
 	*StructMmap[T]
 }
@@ -21,6 +25,13 @@ func NewNodeReader[T NodeLayout](file *os.File) (*NodeMmap[T], error) {
 	return &NodeMmap[T]{StructMmap: sf}, nil
 }
 
+// FindByID locates a node by its NodeID within the offset range defined by a checkpoint's NodeSetInfo.
+// It uses interpolation search: instead of always probing the midpoint (like binary search), it
+// estimates where the target should be based on its index relative to the range. This works well
+// because node indices from post-order traversal tend to be dense and roughly sequential.
+// When nodes are perfectly contiguous (no gaps from compaction), it's O(1) — direct offset calculation.
+// With gaps, average case is O(log log n) (vs O(log n) for binary search) because the indices are
+// roughly uniformly distributed. Worst case is O(log n) if the distribution is highly skewed.
 func (nf *NodeMmap[T]) FindByID(id NodeID, info *NodeSetInfo) (*T, error) {
 	// binary search with interpolation
 	lowOffset := info.StartOffset

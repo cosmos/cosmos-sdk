@@ -6,16 +6,45 @@ import (
 	"sync/atomic"
 )
 
-// Changeset represents the WAL log and saved checkpoints for a given range of versions in a tree.
-// It manages the lifecycle of the changeset files and readers, and tracks when it has been compacted into a new changeset.
+// Changeset represents the WAL log and saved checkpoints for a range of tree versions, stored
+// in a single directory on disk (see ChangesetFiles for the file layout).
+//
+// A Changeset goes through a well-defined lifecycle:
+//
+//  1. Active: the current changeset being written to. Commits append WAL entries, the checkpointer
+//     writes checkpoint data, the orphan processor writes orphan entries. Not yet sealed.
+//
+//  2. Sealed: the changeset is full (hit the rollover size threshold) and a new one has been created.
+//     No more writes will happen. The compactor can now process it.
+//
+//  3. Compacted: the compactor has merged this changeset into a new, compacted changeset.
+//     The `compacted` pointer is set, the reader is evicted, and readers are redirected to the
+//     new changeset via TryPinReader (which follows the compacted pointer). The changeset is
+//     queued for deletion once all pinned readers are done.
+//     Note: compacted changesets can themselves be re-compacted into an even newer changeset
+//     in a subsequent compaction run. The compacted pointer forms a chain that TryPinReader
+//     follows recursively until it finds a live reader.
+//
+//  4. Deleted: all readers have unpinned, the cleanup proc deletes the directory from disk.
+//
+// Important: reader eviction and file deletion ONLY happen after compaction (step 3).
+// A sealed-but-not-compacted changeset keeps its reader alive indefinitely — it's still needed
+// for resolving nodes and replaying WAL entries.
+//
+// Reader management: the Changeset holds a ChangesetReaderRef which wraps a ChangesetReader
+// with reference counting. Callers must "pin" a reader (TryPinReader) before using it and
+// "unpin" when done. This ensures the underlying mmap'd files aren't closed while in use.
+// When a new checkpoint is written, openNewReader swaps in a fresh reader (with updated mmaps)
+// and evicts the old one. Evicted readers are disposed by the cleanup proc once their refcount
+// hits zero.
 type Changeset struct {
 	files             *ChangesetFiles
 	treeStore         *TreeStore
-	readerRef         atomic.Pointer[ChangesetReaderRef]
-	activeReaderCount atomic.Int32
-	sealed            atomic.Bool
-	compacted         atomic.Pointer[Changeset]
-	orphanWriter      *StructWriter[OrphanEntry]
+	readerRef         atomic.Pointer[ChangesetReaderRef] // current reader, swapped on checkpoint writes
+	activeReaderCount atomic.Int32                       // total readers ever created (decremented on dispose)
+	sealed            atomic.Bool                        // true once no more writes will happen
+	compacted         atomic.Pointer[Changeset]          // points to the compacted replacement, if any
+	orphanWriter      *StructWriter[OrphanEntry]         // nil after compaction (orphans go to the new changeset)
 }
 
 // NewChangeset creates a new Changeset with the given TreeStore and ChangesetFiles.

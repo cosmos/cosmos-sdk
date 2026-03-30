@@ -10,6 +10,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/iavlx/internal/cachekv"
 )
 
+// TreeReader provides read-only access to a specific version of an IAVL tree.
+//
+// It implements storetypes.KVStore (Get, Has, Set/Delete panic) and is the primary interface
+// for reading tree data. It's created by CommitTree.Latest() or CommitTree.GetVersion() for
+// historical queries.
+//
+// TreeReader also provides ICS-23 proof generation (GetMembershipProof, GetNonMembershipProof)
+// for on-chain light client verification.
+//
+// All read operations go through NodePointer.Resolve, which transparently handles the
+// in-memory vs on-disk resolution (see node_pointer.go).
 type TreeReader struct {
 	version uint32
 	root    *NodePointer

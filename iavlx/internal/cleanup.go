@@ -9,6 +9,21 @@ import (
 	"cosmossdk.io/log/v2"
 )
 
+// cleanupProc handles deferred cleanup of changeset resources in a background goroutine.
+//
+// There are two kinds of cleanup, processed in order:
+//
+//  1. Disposals (ChangesetReaderRef): when a ChangesetReader is replaced by a newer one
+//     (after a checkpoint write or compaction), the old reader is "evicted" and queued here.
+//     The cleanup proc periodically tries to dispose it — closing its mmaps once the refcount
+//     drops to zero (all pinned readers have unpinned).
+//
+//  2. Deletions (Changeset): after compaction, the original changeset is queued for deletion.
+//     Deletion can only proceed after ALL of its readers have been disposed (activeReaderCount
+//     drops to zero). Once that happens, the changeset's directory is deleted from disk.
+//
+// Disposals are processed before deletions because a changeset can't be deleted until its
+// readers are disposed. The sweep runs every second and retries pending items until they succeed.
 type cleanupProc struct {
 	logger           log.Logger
 	mtx              sync.Mutex

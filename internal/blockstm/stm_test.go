@@ -31,7 +31,7 @@ func TestExecuteBlock_CancelWakesSuspendedExecutors(t *testing.T) {
 		cancel()
 	}()
 
-	err := ExecuteBlockWithEstimates(ctx, 2, stores, storage, 2, estimates,
+	_, err := ExecuteBlockWithEstimates(ctx, 2, stores, storage, 2, estimates,
 		func(txn TxnIndex, store MultiStore) {
 			if txn == 0 {
 				time.Sleep(250 * time.Millisecond)
@@ -150,11 +150,10 @@ func TestSTM(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			storage := NewMultiMemDB(stores)
-			require.NoError(t,
-				ExecuteBlock(context.Background(), tc.blk.Size(), stores, storage, tc.executors, func(txn TxnIndex, store MultiStore) {
-					tc.blk.ExecuteTx(txn, store, nil)
-				}),
-			)
+			_, err := ExecuteBlock(context.Background(), tc.blk.Size(), stores, storage, tc.executors, func(txn TxnIndex, store MultiStore) {
+				tc.blk.ExecuteTx(txn, store, nil)
+			})
+			require.NoError(t, err)
 			for _, err := range tc.blk.Results {
 				require.NoError(t, err)
 			}
@@ -202,11 +201,10 @@ func TestSTMHighContentionStress(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			for i := 0; i < 200; i++ {
 				storage := NewMultiMemDB(stores)
-				require.NoError(t,
-					ExecuteBlock(context.Background(), tc.blk.Size(), stores, storage, tc.executors, func(txn TxnIndex, store MultiStore) {
-						tc.blk.ExecuteTx(txn, store, nil)
-					}),
-				)
+				_, err := ExecuteBlock(context.Background(), tc.blk.Size(), stores, storage, tc.executors, func(txn TxnIndex, store MultiStore) {
+					tc.blk.ExecuteTx(txn, store, nil)
+				})
+				require.NoError(t, err)
 				for _, err := range tc.blk.Results {
 					require.NoError(t, err)
 				}

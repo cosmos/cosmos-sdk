@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ sdk.TxRunner = STMRunner{}
+var _ sdk.TxRunner = (*STMRunner)(nil)
 
 func NewSTMRunner(
 	txDecoder sdk.TxDecoder,
@@ -37,9 +37,12 @@ type STMRunner struct {
 	workers   int
 	estimate  bool
 	coinDenom func(storetypes.MultiStore) string
+
+	// lastDebug holds the debug data from the most recent block execution.
+	lastDebug atomic.Pointer[BlockExecutionDebug]
 }
 
-func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]byte, deliverTx sdk.DeliverTxFunc) ([]*abci.ExecTxResult, error) {
+func (e *STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]byte, deliverTx sdk.DeliverTxFunc) ([]*abci.ExecTxResult, error) {
 	var authStore, bankStore int
 	index := make(map[storetypes.StoreKey]int, len(e.stores))
 	for i, k := range e.stores {
@@ -72,7 +75,7 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 		memTxs, estimates = preEstimates(txs, e.workers, authStore, bankStore, e.coinDenom(ms), e.txDecoder)
 	}
 
-	if err := ExecuteBlockWithEstimates(
+	debug, err := ExecuteBlockWithEstimates(
 		ctx,
 		blockSize,
 		index,
@@ -99,11 +102,30 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 				incarnationCache[txn].Store(v)
 			}
 		},
-	); err != nil {
+	)
+	if debug != nil {
+		e.lastDebug.Store(debug)
+	}
+	if err != nil {
 		return nil, err
 	}
 
 	return results, nil
+}
+
+// LastDebug returns the debug data from the most recent block execution, or nil if none.
+func (e *STMRunner) LastDebug() *BlockExecutionDebug {
+	return e.lastDebug.Load()
+}
+
+// SaveLastDebug persists the most recent block execution debug data to a file.
+// Returns nil if there is no debug data available.
+func (e *STMRunner) SaveLastDebug(path string) error {
+	debug := e.lastDebug.Load()
+	if debug == nil {
+		return nil
+	}
+	return debug.SaveToFile(path)
 }
 
 // preEstimates returns a static estimation of the written keys for each transaction.

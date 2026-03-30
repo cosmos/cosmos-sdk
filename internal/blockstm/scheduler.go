@@ -5,7 +5,6 @@ import (
 	"runtime"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 type TaskKind int
@@ -52,7 +51,9 @@ type Scheduler struct {
 	// metrics
 	executedTxns  atomic.Int64
 	validatedTxns atomic.Int64
-	sequencing    atomic.Pointer[sequenceDebugging]
+
+	// debug tracing data for the block execution
+	debug *BlockExecutionDebug
 }
 
 func NewScheduler(blockSize int) *Scheduler {
@@ -60,11 +61,14 @@ func NewScheduler(blockSize int) *Scheduler {
 		blockSize:     blockSize,
 		txnDependency: make([]TxDependency, blockSize),
 		txnStatus:     make([]StatusEntry, blockSize),
+		debug:         NewBlockExecutionDebug(blockSize),
 	}
-	sched.sequencing.Store(&sequenceDebugging{
-		make([]*sequenceData, blockSize),
-	})
 	return sched
+}
+
+// Debug returns the debug tracing data collected during execution.
+func (s *Scheduler) Debug() *BlockExecutionDebug {
+	return s.debug
 }
 
 func (s *Scheduler) Done() bool {
@@ -154,21 +158,13 @@ func (s *Scheduler) NextTask() (TxnVersion, TaskKind) {
 }
 
 func (s *Scheduler) WaitForDependency(txn, blockingTxn TxnIndex) *Condvar {
-	start := time.Now()
-	suspension := suspendData{
-		suspend: start,
-	}
-	// TODO
-	seq := s.sequencing.Load().sequencing[txn].suspensions
-	seq[txn].suspensions = append(seq[txn].suspensions, suspension)
-	s.sequencing.Store(seq)
 	cond := NewCondvar()
 	entry := &s.txnDependency[blockingTxn]
 	entry.Lock()
 
 	// thread holds 2 locks
 	if _, ok := s.txnStatus[blockingTxn].IsExecuted(); ok {
-		// dependency resolved before entry.Lock() (https://github.com/cosmos/cosmos-sdk/blob/825fd620889acac4d0fd1bf0f9370651d2ee6610/blockstm/scheduler.go#L152) was acquired
+		// dependency resolved before entry.Lock() was acquired
 		entry.Unlock()
 		return nil
 	}

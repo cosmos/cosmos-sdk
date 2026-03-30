@@ -17,11 +17,12 @@ func executeBlock(stores map[storetypes.StoreKey]int, storage MultiStore, worker
 		m := make(map[string]any)
 		incarnationCache[i].Store(&m)
 	}
-	return ExecuteBlock(context.Background(), block.Size(), stores, storage, worker, func(txn TxnIndex, store MultiStore) {
+	_, err := ExecuteBlock(context.Background(), block.Size(), stores, storage, worker, func(txn TxnIndex, store MultiStore) {
 		cache := incarnationCache[txn].Swap(nil)
 		block.ExecuteTx(txn, store, *cache)
 		incarnationCache[txn].Store(cache)
 	})
+	return err
 }
 
 func BenchmarkBlockSTM(b *testing.B) {

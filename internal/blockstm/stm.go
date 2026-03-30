@@ -20,7 +20,7 @@ func ExecuteBlock(
 	storage MultiStore,
 	executors int,
 	txExecutor TxExecutor,
-) error {
+) (*BlockExecutionDebug, error) {
 	return ExecuteBlockWithEstimates(
 		ctx, blockSize, stores, storage, executors,
 		nil, txExecutor,
@@ -35,13 +35,13 @@ func ExecuteBlockWithEstimates(
 	executors int,
 	estimates []MultiLocations, // txn -> multi-locations
 	txExecutor TxExecutor,
-) error {
+) (*BlockExecutionDebug, error) {
 	if blockSize > math.MaxUint32 {
-		return fmt.Errorf("block size overflows uint32: %d", blockSize)
+		return nil, fmt.Errorf("block size overflows uint32: %d", blockSize)
 	}
 
 	if executors < 0 {
-		return fmt.Errorf("invalid number of executors: %d", executors)
+		return nil, fmt.Errorf("invalid number of executors: %d", executors)
 	}
 	if executors == 0 {
 		executors = maxParallelism()
@@ -74,15 +74,16 @@ func ExecuteBlockWithEstimates(
 
 	err := wg.Wait()
 	close(cancelDone)
+	debug := scheduler.Debug()
 	if err != nil {
-		return err
+		return debug, err
 	}
 
 	if !scheduler.Done() {
 		if ctx.Err() != nil {
-			return ctx.Err()
+			return debug, ctx.Err()
 		}
-		return errors.New("scheduler did not complete")
+		return debug, errors.New("scheduler did not complete")
 	}
 
 	telemetry.IncrCounter(float32(scheduler.executedTxns.Load()), TelemetrySubsystem, KeyExecutedTxs)                    //nolint:staticcheck // TODO: switch to OpenTelemetry
@@ -92,7 +93,7 @@ func ExecuteBlockWithEstimates(
 
 	// Write the snapshot into the storage
 	mvMemory.WriteSnapshot(storage)
-	return nil
+	return debug, nil
 }
 
 func maxParallelism() int {

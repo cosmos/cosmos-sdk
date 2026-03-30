@@ -56,13 +56,12 @@ func (s *GMVMemoryView[V]) init() {
 }
 
 func (s *GMVMemoryView[V]) waitFor(txn TxnIndex) {
+	suspIdx := s.scheduler.debug.RecordSuspend(s.txn, txn)
 	cond := s.scheduler.WaitForDependency(s.txn, txn)
 	if cond != nil {
 		cond.Wait()
 	}
-	seq := s.scheduler.sequencing.Load()
-	seq.sequencing[txn].suspensions[len(seq.sequencing[txn].suspensions)].resume = time.Now()
-	s.scheduler.sequencing.Store(seq)
+	s.scheduler.debug.RecordResume(s.txn, suspIdx)
 }
 
 func (s *GMVMemoryView[V]) ApplyWriteSet(version TxnVersion) bool {

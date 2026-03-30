@@ -6,7 +6,7 @@ import (
 
 	"github.com/cenkalti/backoff/v5"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 )
 
 type RetryBackoffManager struct {

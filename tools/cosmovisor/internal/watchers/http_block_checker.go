@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 )
 
 // blockEndpoints lists the RPC endpoints to try for getting the latest block height

@@ -17,12 +17,10 @@ import (
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/log"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
-
+	"cosmossdk.io/log/v2"
+	cosmovisor "cosmossdk.io/tools/cosmovisor/v2"
 	"cosmossdk.io/tools/cosmovisor/v2/internal/watchers"
-
-	"github.com/cosmos/cosmos-sdk/server"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 func main() {
@@ -45,7 +43,7 @@ x/upgrade upgrade-info.json behavior.`,
 	var upgradeInfoEncodingJson bool
 	cmd.Flags().DurationVar(&blockTime, "block-time", 0, "Duration of time between blocks. This is required to simulate a progression of blocks over time.")
 	cmd.Flags().StringVar(&upgradePlan, "upgrade-plan", "", "upgrade-info.json to create after the halt duration is reached. Either this flag or --halt-height must be specified but not both.")
-	cmd.Flags().Uint64Var(&haltHeight, server.FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node. E")
+	cmd.Flags().Uint64Var(&haltHeight, cosmovisor.FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node. E")
 	cmd.Flags().StringVar(&homePath, "home", "", "Home directory for the mock node. upgrade-info.json will be written to the data sub-directory of this directory. Defaults to the current directory.")
 	cmd.Flags().StringVar(&httpAddr, "http-addr", ":26657", "HTTP server address to serve block information. Defaults to :26657.")
 	cmd.Flags().StringVar(&blockUrl, "block-url", "/block", "URL at which the latest block information is served. Defaults to /block.")

@@ -10,7 +10,7 @@ import (
 
 	"github.com/otiai10/copy"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 
 	"cosmossdk.io/tools/cosmovisor/v2"
 

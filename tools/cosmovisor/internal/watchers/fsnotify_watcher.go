@@ -9,7 +9,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 )
 
 type FSNotifyWatcher struct {

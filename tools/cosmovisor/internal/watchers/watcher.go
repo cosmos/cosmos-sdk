@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 )
 
 // Watcher is an interface that defines a generic watcher that emits updates of type T.

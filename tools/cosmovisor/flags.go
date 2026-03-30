@@ -7,4 +7,5 @@ const (
 	FlagForce             = "force"
 	FlagUpgradeHeight     = "upgrade-height"
 	FlagCosmovisorConfig  = "cosmovisor-config"
+	FlagHaltHeight        = "halt-height"
 )

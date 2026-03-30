@@ -9,6 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/iavlx/internal"
 )
 
+// newImportCmd creates the offline import command for one-time migration from iavl/v1.
+// It reads the v1 LevelDB database, exports each store's tree, and imports it into
+// iavlx format using the Importer (see internal/importer.go).
 func newImportCmd() *cobra.Command {
 	var from, to, format string
 	cmd := &cobra.Command{

@@ -15,6 +15,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/iavlx/internal"
 )
 
+// The TUI uses a view stack architecture (BubbleTea):
+// - Each screen (trees, changesets, checkpoints, leaves, branches, orphans, WAL, commit info) is a viewModel
+// - Selecting an item pushes a new view onto the stack (pushViewMsg)
+// - Pressing Esc/q pops back to the previous view
+// - The root model (model struct below) manages the stack, global keybindings, and the help overlay
+// - Views that implement helpDocer get context-sensitive documentation in the help modal
+
 // viewModel is implemented by every per-view type.
 type viewModel interface {
 	Update(msg tea.Msg) (viewModel, tea.Cmd)

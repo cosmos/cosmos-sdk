@@ -6,6 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/iavlx/internal"
 )
 
+// Options configures the behavior of an iavlx tree store.
+// Zero values use sensible defaults for all fields.
 type Options struct {
 	// ChangesetRolloverSize is the size in bytes at which a changeset is rolled over to a new changeset.
 	// By default this is set to 2GB.

@@ -15,6 +15,9 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
+// ImportIAVLV1MultiStore performs a one-time offline migration of an iavl/v1 LevelDB-backed
+// multi-store into iavlx format. It reads from the "application" GoLevelDB database at dataDir,
+// exports each store's tree in post-order, and imports it into the iavlx directory at outDir.
 func ImportIAVLV1MultiStore(dataDir, outDir string, logger log.Logger) error {
 	logger.Info("Starting import of IAVL v1 multi-store", "sourceDir", dataDir, "destDir", outDir)
 	v1Db, err := dbm.NewGoLevelDB("application", dataDir, nil)
@@ -64,6 +67,9 @@ func ImportIAVLV1MultiStore(dataDir, outDir string, logger log.Logger) error {
 	return nil
 }
 
+// importIAVLV1Store imports a single store's IAVL tree from v1 format by exporting all nodes
+// from the LevelDB-backed tree (keyed under the "s/k:<store>/" prefix) and feeding them
+// into an Importer to produce an iavlx changeset directory.
 func importIAVLV1Store(v1Db dbm.DB, store, multiStoreDir string, logger log.Logger) error {
 	treeDir := filepath.Join(multiStoreDir, "stores", fmt.Sprintf("%s.iavl", store))
 	err := os.MkdirAll(treeDir, 0700)

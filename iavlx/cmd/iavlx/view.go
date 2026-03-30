@@ -20,6 +20,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/iavlx/internal"
 )
 
+// newViewCmd creates the interactive TUI for browsing iavlx data.
+// It opens changeset files directly via mmap (read-only) — the node does NOT need to be running.
+// Navigation is a view stack: selecting an item pushes a detail view, 'q'/Esc pops back.
 func newViewCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "view [dir]",

@@ -9,6 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/iavlx/internal"
 )
 
+// newRollbackCmd creates the offline rollback command.
+// This operates directly on the filesystem while the node is stopped — it truncates WALs,
+// rolls back checkpoints, and removes commit info files beyond the target version.
+// Original files are moved to a backup directory (not deleted) so the rollback can be undone.
 func newRollbackCmd() *cobra.Command {
 	var backupDir string
 	var targetVersion uint64

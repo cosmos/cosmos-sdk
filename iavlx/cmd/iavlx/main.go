@@ -1,3 +1,5 @@
+// iavlx CLI — offline inspection and management tool for iavlx data directories.
+// See README.md in this directory for usage and code quality notes.
 package main
 
 import (

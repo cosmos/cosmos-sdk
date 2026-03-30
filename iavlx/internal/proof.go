@@ -8,16 +8,24 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 )
 
+// proofInnerNode captures the data needed from each branch node on the path from root to a leaf
+// for ICS-23 proof generation. One of Left or Right will be nil — the non-nil one is the sibling
+// hash that the verifier needs to reconstruct the parent hash.
 type proofInnerNode struct {
 	Height  int8   `json:"height"`
 	Size    int64  `json:"size"`
 	Version int64  `json:"version"`
-	Left    []byte `json:"left"`
-	Right   []byte `json:"right"`
+	Left    []byte `json:"left"`  // sibling hash if the path went right
+	Right   []byte `json:"right"` // sibling hash if the path went left
 }
 
+// leafPath is the path from root to a target leaf, collected during pathToLeaf traversal.
+// The first element is the root's proof node, the last is the leaf's parent.
+// convertInnerOps reverses this to build ICS-23 InnerOps (leaf-to-root order).
 type leafPath []proofInnerNode
 
+// createExistenceProof builds an ICS-23 existence proof for a key that IS in the tree.
+// It walks from root to the leaf via pathToLeaf, collecting sibling hashes along the way.
 func createExistenceProof(root Node, key []byte) (*ics23.ExistenceProof, error) {
 	path := new(leafPath)
 	leafVersion := root.Version()

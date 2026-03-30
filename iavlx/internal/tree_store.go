@@ -16,6 +16,20 @@ import (
 	"cosmossdk.io/log/v2"
 )
 
+// TreeStore is the storage engine for a single IAVL tree. It manages:
+//   - The current in-memory root (atomic pointer, swapped on each commit via SaveRoot)
+//   - Changesets: the on-disk data directories containing WAL, checkpoint, and node data files.
+//     Changesets are organized by version range and may be compacted together over time.
+//   - The ChangesetWriter: writes WAL entries, checkpoints, and node data for new commits
+//   - The Checkpointer: background goroutine that writes periodic tree snapshots to disk
+//   - The cleanup proc: background goroutine that disposes old readers and deletes compacted changesets
+//   - A root-by-version cache: caches historical tree roots for repeated historical queries
+//
+// On startup, load() (in tree_store_load.go) reconstructs the tree by loading changesets,
+// finding the latest checkpoint, and replaying WAL entries forward to the committed version.
+//
+// TreeStore is the lower-level type — CommitTree wraps it to provide the commit/rollback
+// protocol used by CommitBranch and CommitFinalizer.
 type TreeStore struct {
 	dir    string
 	opts   TreeOptions

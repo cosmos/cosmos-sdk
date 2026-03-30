@@ -27,6 +27,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/iavlx/internal/store/kv"
 )
 
+// CommitTree is the public-facing wrapper around TreeStore for a single IAVL tree.
+// It provides:
+//   - The optimistic commit protocol: startCommit returns a commitTreeFinalizer that lets the
+//     caller compute hashes, wait for WAL writes, and then finalize or rollback. This is
+//     orchestrated by CommitBranch/CommitFinalizer at the multi-tree level.
+//   - Read access: Latest() and GetVersion() return TreeReaders for querying the tree.
+//   - Queries: implements storetypes.Queryable for ABCI query handling (/key, /subspace).
+//   - ICS-23 proofs: via TreeReader.GetMembershipProof/GetNonMembershipProof.
+//
+// CommitMultiTree holds one CommitTree per IAVL store (e.g. bank, staking, etc.).
 type CommitTree struct {
 	commitMutex sync.Mutex
 

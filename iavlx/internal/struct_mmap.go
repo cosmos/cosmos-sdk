@@ -7,6 +7,20 @@ import (
 	"unsafe"
 )
 
+// StructMmap provides zero-copy read access to an array of fixed-size structs stored in a
+// memory-mapped file. The mmap'd bytes are cast directly to a []T slice via unsafe, so reads
+// are just pointer dereferences with no deserialization. This is the read counterpart to StructWriter.
+//
+// TODO: the on-disk format is the native memory layout, which means it is endian-dependent.
+// In practice this is fine — all mainstream server hardware (x86, ARM, RISC-V) is little-endian,
+// and big-endian systems are essentially non-existent in the Cosmos ecosystem. However, it would
+// be unsafe to copy data files between systems of different endianness. We could add a magic
+// number file to each tree's data directory (written on creation, checked on load) to detect
+// endianness mismatches and produce a clear error instead of silent data corruption.
+//
+// Alignment is enforced at construction time — the mmap buffer must be aligned to T's alignment
+// and its size must be a multiple of sizeof(T) (unless debugBadBuffers is set, which truncates
+// trailing bytes for crash recovery scenarios).
 type StructMmap[T any] struct {
 	items []T
 	file  *Mmap

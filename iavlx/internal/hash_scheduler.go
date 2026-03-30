@@ -2,10 +2,24 @@ package internal
 
 import "context"
 
+// HashScheduler controls how child node hashes are computed during tree hashing.
+// The tree hash is computed bottom-up: each branch node's hash depends on its children's hashes.
+// ComputeHashes takes a branch's left and right children and returns both hashes.
+//
+// Two implementations:
+//   - SyncHashScheduler: computes both hashes sequentially in the current goroutine.
+//     Used for leaf hash pre-computation and anywhere parallelism isn't beneficial.
+//   - AsyncHashScheduler: computes left and right hashes in parallel goroutines when both
+//     subtrees are tall enough (height >= 4) to justify the goroutine overhead.
+//     Uses a semaphore to cap concurrency at NumCPU. Falls back to sync when the semaphore
+//     is full or subtrees are too shallow.
 type HashScheduler interface {
 	ComputeHashes(*MemNode, *MemNode) ([]byte, []byte, error)
 }
 
+// AsyncHashScheduler parallelizes hash computation across subtrees using a bounded goroutine pool.
+// It only spawns a goroutine when both children have height >= 4 (enough work to offset the
+// overhead) AND the semaphore has capacity. Otherwise it falls back to synchronous computation.
 type AsyncHashScheduler struct {
 	semaphore chan struct{}
 	ctx       context.Context

@@ -77,12 +77,12 @@ func (r *Runner) Start(ctx context.Context, args []string) error {
 		// Now we actually run the process
 		action, err := r.RunProcess(ctx, cmd, haltHeight)
 		switch action {
-		case ActionRestart:
+		case ResultNeedRestart:
 			r.logger.Info("Process shutdown complete, restart needed")
-		case ActionDone:
+		case ResultDone:
 			r.logger.Info("Shutting down Cosmovisor process gracefully")
 			return nil
-		case ActionContinue:
+		case ResultProcessExited:
 			if err != nil {
 				r.logger.Error("Process exited with error, attempting to restart", "error", err)
 			} else {
@@ -92,17 +92,17 @@ func (r *Runner) Start(ctx context.Context, args []string) error {
 	}
 }
 
-// RunAction indicates what the run loop should do after RunProcess returns.
-type RunAction int
+// RunResult indicates what happened when RunProcess returned.
+type RunResult int
 
 const (
-	// ActionRestart indicates that the process should be restarted.
-	ActionRestart RunAction = iota
-	// ActionDone indicates that cosmovisor should shut down gracefully.
-	ActionDone
-	// ActionContinue indicates the process exited on its own (possibly with an error)
+	// ResultNeedRestart indicates that an upgrade or config change requires a restart.
+	ResultNeedRestart RunResult = iota
+	// ResultDone indicates that cosmovisor should shut down gracefully.
+	ResultDone
+	// ResultProcessExited indicates the process exited on its own (possibly with an error)
 	// and the run loop should decide whether to retry.
-	ActionContinue
+	ResultProcessExited
 )
 
 var ErrUpgradeNoDaemonRestart = errors.New("upgrade completed, but DAEMON_RESTART_AFTER_UPGRADE is disabled")
@@ -142,8 +142,8 @@ func (r *Runner) ComputeRunPlan(args []string) (cmd *exec.Cmd, haltHeight uint64
 
 // RunProcess runs the given command until either an upgrade is detected or the process exits.
 // It returns a RunAction indicating what the caller should do next, and an error if the process
-// exited with one (only meaningful when action is ActionContinue).
-func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64) (RunAction, error) {
+// exited with one (only meaningful when action is ResultProcessExited).
+func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64) (RunResult, error) {
 	currentBinaryUpgradeName := r.cfg.CurrentBinaryUpgradeName()
 	// start the fsnotify watcher to watch for changes in the upgrade info directory
 	dirWatcher, err := watchers.NewFSNotifyWatcher(ctx, r.logger, r.cfg.UpgradeInfoDir(), []string{
@@ -180,7 +180,7 @@ func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint6
 	r.logger.Info("Starting process", "path", cmd.Path, "args", cmd.Args)
 	processRunner, err := RunProcess(cmd)
 	if err != nil {
-		return ActionContinue, fmt.Errorf("failed to start process: %w", err)
+		return ResultProcessExited, fmt.Errorf("failed to start process: %w", err)
 	}
 	defer func() {
 		// always check for the latest block height before shutting down so that we have it in the last known height file
@@ -194,43 +194,43 @@ func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint6
 		// listen to the parent context's cancellation
 		case <-parentCtx.Done():
 			r.logger.Info("Parent context canceled, shutting down")
-			return ActionDone, nil
+			return ResultDone, nil
 		case upgradePlan, ok := <-upgradePlanWatcher.Updated():
 			// TODO check skip upgrade heights?? (although not sure why we need this as the node should not emit an upgrade plan if skip heights is enabled)
 			if !ok {
-				return ActionContinue, nil
+				return ResultProcessExited, nil
 			}
 			r.logger.Info("Received upgrade-info.json")
 			if upgradePlan.Name != currentBinaryUpgradeName {
 				// only restart if we have a different upgrade name than the current binary's upgrade name
-				return ActionRestart, nil
+				return ResultNeedRestart, nil
 			}
 		case manualUpgrades, ok := <-manualUpgradesWatcher.Updated():
 			if !ok {
-				return ActionContinue, nil
+				return ResultProcessExited, nil
 			}
 			r.logger.Info("Received updates to upgrade-info.json.batch")
 			if haltHeight == 0 && len(manualUpgrades) > 0 {
 				// shutdown, no halt height set
 				r.logger.Info("No halt height set, but manual upgrades found, restarting process")
-				return ActionRestart, nil
+				return ResultNeedRestart, nil
 			} else {
 				// restart if we need to change the halt height based on the upgrade
 				firstUpgrade := manualUpgrades.FirstUpgrade()
 				if firstUpgrade == nil {
 					// if we have no longer have an upgrade then we need to remove halt height
 					r.logger.Info("No upgrade found, removing halt height")
-					return ActionRestart, nil
+					return ResultNeedRestart, nil
 				}
 				if uint64(firstUpgrade.Height) < haltHeight {
 					// if we have an earlier halt height then we need to change the halt height
 					r.logger.Info("Earlier manual upgrade found, changing halt height", "current_halt_height", haltHeight, "needed_halt_height", firstUpgrade.Height)
-					return ActionRestart, nil
+					return ResultNeedRestart, nil
 				}
 			}
 		case err := <-processRunner.Done():
 			// we just return the error or absence of an error here, which will cause the process to restart with a backoff retry algorithm
-			return ActionContinue, err
+			return ResultProcessExited, err
 		case actualHeight := <-heightWatcher.Updated():
 			r.logger.Debug("Got height update from watcher", "height", actualHeight)
 			if haltHeight == 0 {
@@ -248,20 +248,20 @@ func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint6
 				if firstUpgrade == nil {
 					// no upgrade found, so we shouldn't have a halt height
 					r.logger.Warn("No upgrade found, but halt height is set, removing halt height. This is unexpected because we didn't receive an update to upgrade-info.json.batch")
-					return ActionRestart, nil
+					return ResultNeedRestart, nil
 				}
 				if uint64(firstUpgrade.Height) == haltHeight {
 					correctHeightConfirmed = true
 				} else {
 					// we're at the wrong halt height so we need to restart
 					r.logger.Info("We're at a different height expected, so we need to set a different halt height", "current_halt_height", haltHeight, "needed_halt_height", firstUpgrade.Height)
-					return ActionRestart, nil
+					return ResultNeedRestart, nil
 				}
 			}
 			// signal a restart if we're at or past the halt height
 			if actualHeight >= haltHeight {
 				r.logger.Info("Reached halt height, restarting process for upgrade")
-				return ActionRestart, nil
+				return ResultNeedRestart, nil
 			}
 		}
 	}

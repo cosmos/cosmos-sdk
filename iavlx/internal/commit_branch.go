@@ -14,15 +14,36 @@ import (
 	"github.com/cosmos/cosmos-sdk/iavlx/internal/cachekv"
 )
 
-// CommitBranch is a wrapper and a CacheMultiStore that let's us start and finalize a commit directly
-// with support for committing optimistically and rolling back if the preconditions for finalizing the
-// commit are not met.
+// CommitBranch is the bridge between a MultiTree (an in-memory cache of pending writes) and a
+// CommitMultiTree (the persistent, committed state of all IAVL trees).
+//
+// The idea is that during block execution, all store mutations happen against the MultiTree cache.
+// When the block is done, CommitBranch.StartCommit kicks off background commits for every individual
+// IAVL tree in parallel, returning a CommitFinalizer that the caller can use to either finalize
+// (make the commit permanent) or rollback (discard everything) — this is the "optimistic commit" pattern.
+//
+// The optimistic part: we start doing expensive commit work (tree mutations, WAL writes, hashing)
+// before we know for sure that this block will be accepted. If consensus rejects the block,
+// we can roll everything back cheaply. If it accepts, we've already done most of the work.
 type CommitBranch struct {
-	// MultiTree is the cache layer with staged writes
+	// MultiTree holds the cached writes from block execution that haven't been committed yet.
 	*MultiTree
+	// db is the underlying persistent multi-tree that we're committing to.
 	db *CommitMultiTree
 }
 
+// StartCommit begins the optimistic commit process for all IAVL trees in parallel.
+//
+// Here's the high-level flow:
+//  1. Sanity-check that our cache is based on the latest committed version (no stale reads).
+//  2. For each IAVL store, extract the pending writes from the cache and kick off a background
+//     commit via CommitTree.startCommit. Each tree commit runs independently and in parallel.
+//  3. Spin up a top-level goroutine that coordinates waiting for all per-tree commits,
+//     computing the combined hash, and handling finalize/rollback signals.
+//  4. Return a CommitFinalizer that the caller uses to either finalize or rollback.
+//
+// At this point, all the expensive work (tree mutations, WAL writes, hashing) is happening in the
+// background. The caller can do other work (like returning a hash to CometBFT) while commits proceed.
 func (cb *CommitBranch) StartCommit(ctx context.Context, header cmtproto.Header) (*CommitFinalizer, error) {
 	db := cb.db
 	ctx, span := tracer.Start(ctx, "CommitMultiTree.commit",
@@ -31,6 +52,7 @@ func (cb *CommitBranch) StartCommit(ctx context.Context, header cmtproto.Header)
 		),
 	)
 
+	// Guard against committing stale state: the cache must have been created from the latest version.
 	latestVersion := db.LatestVersion()
 	multiTree := cb.MultiTree
 	if multiTree.LatestVersion() != latestVersion {
@@ -45,12 +67,18 @@ func (cb *CommitBranch) StartCommit(ctx context.Context, header cmtproto.Header)
 		Timestamp:  header.Time,
 		Version:    db.stagedVersion(),
 	}
+
+	// For each IAVL store, pull pending writes from the cache and start committing in the background.
+	// Each CommitTree.startCommit returns a commitTreeFinalizer which lets us wait for the hash,
+	// signal finalization, or trigger a rollback — all independently per tree.
 	for i, si := range db.iavlStores {
 		commitStore := si.store.(*CommitTree)
 		cachedStore := multiTree.GetCacheWrapIfExists(si.key)
 		var updates iter.Seq[KVUpdate]
 		var updateCount int
 		if cachedStore != nil {
+			// Only stores that were actually touched during block execution will have a cache entry.
+			// Untouched stores get nil updates, meaning an empty commit (just a version bump).
 			cacheKv, ok := cachedStore.(*cachekv.Store)
 			if !ok {
 				return nil, fmt.Errorf("expected %T, got %T", &cachekv.Store{}, cachedStore)
@@ -61,6 +89,13 @@ func (cb *CommitBranch) StartCommit(ctx context.Context, header cmtproto.Header)
 		finalizers[i] = finalizer
 		storeInfos[i].Name = si.key.Name()
 	}
+
+	// Create a cancellable context for the CommitFinalizer's own coordination logic
+	// (prepareCommit, writeCommitInfo, etc.).
+	// Note: this is a sibling of the per-tree cancel contexts, NOT their parent.
+	// Canceling this context does NOT directly cancel per-tree commits.
+	// Instead, when this context is canceled (via Rollback), the commit() goroutine notices,
+	// and explicitly calls Rollback() on each per-tree finalizer, which cancels their individual contexts.
 	ctx, cancel := context.WithCancel(ctx)
 	finalizer := &CommitFinalizer{
 		CommitMultiTree:    db,
@@ -73,6 +108,10 @@ func (cb *CommitBranch) StartCommit(ctx context.Context, header cmtproto.Header)
 		hashReady:          make(chan struct{}),
 		finalizeOrRollback: make(chan struct{}),
 	}
+
+	// The commit coordinator goroutine: waits for all per-tree commits to produce hashes,
+	// computes the combined multi-tree hash, then waits for the finalize/rollback signal.
+	// See CommitFinalizer.commit for the details.
 	go func() {
 		// Prevent context leak: WithCancel registers a child in the parent context's tree,
 		// and that registration is only cleaned up when cancel() is called.

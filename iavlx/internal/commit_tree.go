@@ -160,12 +160,17 @@ func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[KVUpd
 	}
 
 	// At this point we are finalizing the commit, there is no rolling back from here forward.
+	// The WAL for this tree has already been fsynced (that happened in prepareCommit), and the
+	// CommitFinalizer has verified that the multi-tree commit info file is durable on disk.
+	// So even if we crash right now, recovery can replay the WAL to reconstruct this tree.
+	//
+	// What SaveRoot does is purely about making the new version visible to the running process:
+	// - Atomically swaps the in-memory root pointer so readers see the new tree
+	// - Kicks off a background checkpoint goroutine if one is due (checkpoints are an optimization
+	//   that snapshot the tree to disk so future startups don't need to replay the entire WAL,
+	//   but they are NOT required for correctness or durability)
+	// - Queues orphaned nodes for later cleanup
 	root := prepareRes.root
-	// This updates the in-memory tree root and version and also starts the checkpoint go routine
-	// if a checkpoint needs to be taken at this point.
-	// Checkpointing DOES NOT need to complete before the commit is finalized.
-	// Checkpointing is considered an optimization to make loading the tree from disk more efficient
-	// and it DOES NOT need the same level of durability as writing the WAL which we have already done.
 	err = c.treeStore.SaveRoot(
 		ctx,
 		root,

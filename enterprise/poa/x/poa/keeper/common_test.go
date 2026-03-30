@@ -105,7 +105,7 @@ func setupTest(t *testing.T) *testFixture {
 	maccPerms := map[string][]string{
 		govtypes.ModuleName:        {},
 		authtypes.FeeCollectorName: {authtypes.Minter},
-		poatypes.ModuleName:        {},
+		poatypes.ModuleName:        {authtypes.Minter},
 	}
 	authKeeper := authkeeper.NewAccountKeeper(
 		cdc,

@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/contrib/x/crisis"
-	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/migrations/v2"
+	v2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"

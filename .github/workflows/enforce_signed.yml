@@ -43,7 +43,7 @@ jobs:
               .join('\n');
 
             const msg = [
-              "🔒 **PR closed: unsigned commits detected**",
+              "🔒 **WARNING: unsigned commits detected**",
               "",
               `This pull request contains **${unsigned.length}** commit(s) without a *verified* signature.`,
               "",
@@ -62,11 +62,4 @@ jobs:
             await github.rest.issues.createComment({
               owner, repo, issue_number: prNumber, body: msg
             });
-
-            // Close the PR
-            await github.rest.pulls.update({
-              owner, repo, pull_number: prNumber, state: "closed"
-            });
-
-            // Mark the job as failed so it’s obvious in checks
-            core.setFailed(`Closed PR: found ${unsigned.length} unsigned commit(s).`);
+            

@@ -9,9 +9,9 @@ import (
 
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv/internal"
 	"github.com/cosmos/cosmos-sdk/store/v2/internal/btree"
 	"github.com/cosmos/cosmos-sdk/store/v2/internal/conv"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/cachekv/internal"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 

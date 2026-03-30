@@ -3,10 +3,10 @@ module cosmossdk.io/tools/cosmovisor
 go 1.25.8
 
 require (
-	cosmossdk.io/log/v2 v2.0.1
-	github.com/cometbft/cometbft v0.39.0-rc1
+	cosmossdk.io/log/v2 v2.1.0-rc.0
+	github.com/cometbft/cometbft v0.39.0-rc3
 	github.com/cometbft/cometbft-db v0.14.3
-	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.3
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/otiai10/copy v1.14.1
 	github.com/pelletier/go-toml/v2 v2.2.4
@@ -83,7 +83,7 @@ require (
 	github.com/cosmos/btree v1.0.0 // indirect
 	github.com/cosmos/cosmos-db v1.1.3 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
-	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-beta.0 // indirect
+	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-rc.0 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.7.2 // indirect
@@ -255,10 +255,4 @@ require (
 	nhooyr.io/websocket v1.8.17 // indirect
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
-)
-
-replace (
-	cosmossdk.io/x/upgrade => ../../x/upgrade
-	github.com/cosmos/cosmos-sdk => ../..
-	github.com/cosmos/cosmos-sdk/store/v2 => ../../store
 )

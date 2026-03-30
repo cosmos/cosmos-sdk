@@ -282,6 +282,11 @@ test-sim-nondeterminism:
 	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=30m -tags='sims' -run TestAppStateDeterminism \
 		-NumBlocks=100 -BlockSize=200 -Period=0
 
+
+test-sim-blockstm:
+	@echo "Running blockstm-determinism test..."
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=30m -tags='sims' -run TestAppStateDeterminismBSTMEquivalence \
+		-NumBlocks=100 -BlockSize=200 -Period=0
 # Requires an exported plugin. See store/streaming/README.md for documentation.
 #
 # example:
@@ -330,6 +335,7 @@ test-sim-multi-seed-short:
 
 .PHONY: \
 test-sim-nondeterminism \
+test-sim-blockstm \
 test-sim-nondeterminism-streaming \
 test-sim-custom-genesis-fast \
 test-sim-import-export \

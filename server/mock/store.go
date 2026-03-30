@@ -15,21 +15,11 @@ type multiStore struct {
 	kv map[storetypes.StoreKey]kvStore
 }
 
-func (ms multiStore) RootCacheMultiStore() storetypes.MultiStore {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (ms multiStore) CommitBranch() storetypes.CommitBranch {
-	// TODO implement me
-	panic("implement me")
-}
-
 func (ms multiStore) CacheMultiStore() storetypes.CacheMultiStore {
 	panic("not implemented")
 }
 
-func (ms multiStore) CacheMultiStoreWithVersion(_ int64) (storetypes.MultiStore, error) {
+func (ms multiStore) CacheMultiStoreWithVersion(_ int64) (storetypes.CacheMultiStore, error) {
 	panic("not implemented")
 }
 
@@ -50,6 +40,10 @@ func (ms multiStore) ListeningEnabled(key storetypes.StoreKey) bool {
 }
 
 func (ms multiStore) PopStateCache() []*storetypes.StoreKVPair {
+	panic("not implemented")
+}
+
+func (ms multiStore) Commit() storetypes.CommitID {
 	panic("not implemented")
 }
 
@@ -109,6 +103,22 @@ func (ms multiStore) SetSnapshotInterval(snapshotInterval uint64) {
 	panic("not implemented")
 }
 
+func (ms multiStore) SetInterBlockCache(_ storetypes.MultiStorePersistentCache) {
+	panic("not implemented")
+}
+
+func (ms multiStore) SetIAVLCacheSize(size int) {
+	panic("not implemented")
+}
+
+func (ms multiStore) SetIAVLDisableFastNode(disable bool) {
+	panic("not implemented")
+}
+
+func (ms multiStore) SetIAVLSyncPruning(syncPruning bool) {
+	panic("not implemented")
+}
+
 func (ms multiStore) SetInitialVersion(version int64) error {
 	panic("not implemented")
 }
@@ -135,11 +145,7 @@ func (ms multiStore) EarliestVersion() int64 {
 	panic("not implemented")
 }
 
-func (ms multiStore) GetCommitInfo(ver int64) (*storetypes.CommitInfo, error) {
-	panic("not implemented")
-}
-
-func (ms multiStore) Close() error {
+func (ms multiStore) WorkingHash() []byte {
 	panic("not implemented")
 }
 

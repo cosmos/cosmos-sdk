@@ -139,7 +139,7 @@ jobs:
             "${{ steps.channel.outputs.channel }}" \
             "${{ steps.channel.outputs.is_main }}"
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
       - uses: actions/upload-pages-artifact@v4
         with:

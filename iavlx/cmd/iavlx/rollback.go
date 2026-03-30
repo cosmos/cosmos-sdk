@@ -14,8 +14,7 @@ func newRollbackCmd() *cobra.Command {
 	var targetVersion uint64
 	cmd := &cobra.Command{
 		Use:     "rollback [dir] --version [version]",
-		Aliases: []string{"v"},
-		Short:   "Interactively browse IAVL store data",
+		Short:   "Roll back an iavlx multi-tree to a specific version (offline only — the node must be stopped)",
 		Args:    cobra.ExactArgs(1),
 	}
 	cmd.Flags().StringVar(&backupDir, "backup-dir", "", "The directory to store the backup of the current data before rolling back, defaults to [dir]/bak-[timestamp]")

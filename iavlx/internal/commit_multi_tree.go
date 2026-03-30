@@ -256,39 +256,42 @@ func (db *CommitMultiTree) SetInitialVersion(version int64) error {
 	return fmt.Errorf("SetInitialVersion has not been implemented yet")
 }
 
+// RollbackToVersion performs a filesystem-level rollback and then POISONS this CommitMultiTree.
+//
+// After this method returns, the in-memory state is intentionally destroyed (stores set to nil).
+// Any subsequent use of this CommitMultiTree will panic. The caller MUST restart the process
+// after rollback — there is no way to continue using a rolled-back store in the same process.
+//
+// This is by design: live rollback is an extremely rare operator-initiated action (not something
+// that happens during normal consensus), and the complexity of safely reinitializing all in-memory
+// state is not worth it. The node should be restarted after rollback, at which point the normal
+// load() path will reconstruct the trees at the target version from the rolled-back files on disk.
+//
+// For a fully offline rollback (without loading the store first), use the `iavlx rollback` CLI tool.
 func (db *CommitMultiTree) RollbackToVersion(version int64) error {
-	//db.commitMutex.Lock()
-	//defer db.commitMutex.Unlock()
-	//
-	//latestVersion := db.LatestVersion()
-	//_, span := tracer.Start(context.Background(), "CommitMultiTree.RollbackToVersion",
-	//	trace.WithAttributes(
-	//		attribute.Int64("currentVersion", latestVersion),
-	//		attribute.Int64("targetVersion", version),
-	//	),
-	//)
-	//defer span.End()
-	//
-	//
-	//// save constructor args to re-open tree
-	//path, opts, logger := db.dir, db.opts, db.logger
-	//err := db.Close()
-	//if err != nil {
-	//	return fmt.Errorf("failed to close db during rollback: %w", err)
-	//}
-	//
-	//err = RollbackMultiTree(path, uint64(version), logger, "")
-	//if err != nil {
-	//	return fmt.Errorf("failed to rollback multi tree to version %d: %w", version, err)
-	//}
+	db.commitMutex.Lock()
+	defer db.commitMutex.Unlock()
 
-	//newDb, err := LoadCommitMultiTree(path, opts, logger)
-	//if err != nil {
-	//	return fmt.Errorf("failed to reload multi tree after rollback: %w", err)
-	//}
-	//
-	//*db = *newDb
-	panic("TODO: how do we reopen?")
+	// Close all stores first so we release file handles, mmaps, etc.
+	if err := db.Close(); err != nil {
+		return fmt.Errorf("failed to close stores before rollback: %w", err)
+	}
+
+	// Perform the filesystem-level rollback (WAL truncation, checkpoint rollback, commit info cleanup).
+	if err := RollbackMultiTree(db.dir, uint64(version), db.logger, ""); err != nil {
+		return fmt.Errorf("failed to rollback to version %d: %w", version, err)
+	}
+
+	// Poison the in-memory state. Setting stores to nil ensures any subsequent use
+	// of this CommitMultiTree will panic with a nil pointer dereference, making it
+	// obvious that the process needs to be restarted.
+	db.stores = nil
+	db.iavlStores = nil
+	db.otherStores = nil
+	db.storesByKey = nil
+
+	db.logger.Info("rollback complete — the node MUST be restarted", "targetVersion", version)
+	return nil
 }
 
 func (db *CommitMultiTree) ListeningEnabled(key storetypes.StoreKey) bool {

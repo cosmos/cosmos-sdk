@@ -8,8 +8,8 @@ import (
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:   "iavl",
-		Short: "IAVL tree inspection and management tool",
+		Use:   "iavlx",
+		Short: "iavlx tree inspection and management tool",
 	}
 
 	rootCmd.AddCommand(

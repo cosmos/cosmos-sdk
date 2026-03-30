@@ -3,10 +3,14 @@ package internal
 import "fmt"
 
 // rollbackToVersion rolls a single tree back to a specific version.
-// This is an EXPLICIT rollback initiated by a node operator (e.g. via CLI tooling to recover from
-// a bad block or state corruption), as opposed to crash recovery which happens automatically during load().
 //
-// This is more destructive than crash recovery — it deletes changeset directories and truncates
+// NOTE: This method is currently UNUSED. In-process rollback (CommitMultiTree.RollbackToVersion)
+// uses the filesystem-level RollbackMultiTree/RollbackTree functions from rollback.go instead,
+// then poisons the in-memory state and requires a restart. This method attempted to do an in-memory
+// rollback that could continue serving, but that path was never completed.
+//
+// This code is kept for reference and potential future use.
+// It is more destructive than crash recovery — it deletes changeset directories and truncates
 // checkpoint files, not just WAL entries. The tree must not be actively committing when this is called.
 //
 // The rollback proceeds in layers, from coarsest to finest:

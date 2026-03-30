@@ -12,6 +12,18 @@ import (
 	cp "github.com/otiai10/copy"
 )
 
+// RollbackMultiTree performs an OFFLINE rollback of an entire multi-tree to a target version.
+// This is designed to be run while the node is stopped, via the `iavl rollback` CLI tool.
+//
+// The rollback:
+//  1. Backs up and removes commit info files for versions beyond the target.
+//  2. For each IAVL tree store, calls RollbackTree to truncate WALs and checkpoint data.
+//
+// After rollback, the node can be restarted normally — the standard load() path will reconstruct
+// each tree from the remaining checkpoints + WAL replay.
+//
+// All original files are moved to backupDir (not deleted) so the rollback can be undone manually
+// if needed by moving them back.
 func RollbackMultiTree(multiTreeDir string, targetVersion uint64, logger log.Logger, backupDir string) error {
 	if backupDir == "" {
 		backupDir = filepath.Join(multiTreeDir, fmt.Sprintf("bak-%s", time.Now().Format("20260102150405")))
@@ -51,6 +63,13 @@ func RollbackMultiTree(multiTreeDir string, targetVersion uint64, logger log.Log
 	return nil
 }
 
+// RollbackTree performs an offline rollback of a single IAVL tree to a target version.
+// It operates directly on the filesystem — no tree stores or in-memory structures are involved:
+//  1. Moves changeset directories with startVersion > targetVersion to backupDir.
+//  2. Backs up and then truncates the latest changeset's WAL (removes entries beyond targetVersion).
+//  3. Truncates checkpoint data files to remove checkpoints beyond targetVersion.
+//
+// The tree will be reconstructed from the truncated files on next startup via load().
 func RollbackTree(treeDir string, targetVersion uint64, logger log.Logger, backupDir string) error {
 	logger.Info("Rolling back tree", "dir", treeDir, "targetVersion", targetVersion)
 	dirs, err := os.ReadDir(treeDir)
@@ -155,6 +174,10 @@ func rollbackCommitInfos(multiTreeDir string, targetVersion uint64, logger log.L
 	return nil
 }
 
+// rollbackCheckpoints truncates checkpoint data files to remove all checkpoints beyond targetVersion.
+// It reads checkpoints.dat to find the last checkpoint at or before targetVersion, then truncates
+// branches.dat, leaves.dat, kv.dat, and checkpoints.dat to the offsets recorded in that checkpoint.
+// If no valid checkpoint exists at or before targetVersion, all files are truncated to zero.
 func rollbackCheckpoints(files *ChangesetFiles, targetVersion uint32, logger log.Logger) error {
 	cpInfos, err := NewStructMmap[CheckpointInfo](files.CheckpointsFile())
 	if err != nil {

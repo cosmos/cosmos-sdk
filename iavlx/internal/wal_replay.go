@@ -12,9 +12,21 @@ import (
 )
 
 // ReplayWALForStartup replays WAL entries from walFile starting from root at rootVersion up to expectedVersion.
-// It returns the new root node pointer at the expected version if possible, the actual version reached, a bool indicating whether a rollback was needed, and any error encountered.
-// If autoRepair is true, it will attempt to roll back the WAL file to the last good offset if it encounters entries beyond the expected version,
-// which can happen if there was a crash during a commit that caused partial writes to the WAL.
+// It returns the new root node pointer at the expected version if possible, the actual version reached,
+// a bool indicating whether a rollback/truncation was needed, and any error encountered.
+//
+// Auto-repair behavior (when autoRepair is true):
+//   - If entries exist for exactly expectedVersion+1 (one version beyond expected), they are
+//     truncated away. This is the normal crash recovery case: the process crashed while writing
+//     WAL entries for the next commit, before the commit info file was renamed to make it durable.
+//     Since commits are sequential, at most one uncommitted version can exist in the WAL.
+//   - If entries exist for expectedVersion+2 or beyond, this is treated as unrecoverable corruption
+//     and returns an error. This should never happen because only one commit can be in-flight at a
+//     time — seeing two uncommitted versions means something unexpected happened (mismatched data
+//     directories, disk corruption, etc.).
+//
+// When autoRepair is false, ANY entries beyond expectedVersion cause an error — even the N+1 case.
+// This is useful for detecting issues without silently modifying data on disk.
 func ReplayWALForStartup(ctx context.Context, root *NodePointer, walFile *os.File, rootVersion, expectedVersion uint32, logger log.Logger, autoRepair bool) (*NodePointer, uint32, bool, error) {
 	_, span := tracer.Start(ctx, "ReplayWALForStartup",
 		trace.WithAttributes(
@@ -47,13 +59,16 @@ func ReplayWALForStartup(ctx context.Context, root *NodePointer, walFile *os.Fil
 		}
 		if expectedVersion != 0 {
 			if entry.Version == uint64(expectedVersion)+1 {
-				// we will need to rollback these entries but this isn't an error quite yet
+				// Exactly one version beyond expected — this is the normal crash case.
+				// The process was mid-commit for this version when it crashed.
+				// We skip these entries and will truncate them at the end.
 				needRollback = true
 				continue
 			}
 			if entry.Version > uint64(expectedVersion)+1 {
-				// this means we've gone more than 1 version beyond the expected version
-				// this is an unrecoverable error (some unexpected data corruption)
+				// Two or more versions beyond expected — this should be impossible in normal
+				// operation because commits are sequential and only one can be in-flight.
+				// Treat as unrecoverable corruption.
 				return nil, 0, false, fmt.Errorf("WAL commit version %d is more than 1 version beyond expected version %d, WAL is corrupted", entry.Version, expectedVersion)
 			}
 		}

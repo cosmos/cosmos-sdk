@@ -178,7 +178,20 @@ func (ch *Changeset) TryDelete(ctx context.Context) (bool, error) {
 	return true, ch.files.DeleteFiles()
 }
 
-// VerifyAndFix performs integrity checks on the changeset data and attempts to fix any issues that it can.
+// VerifyAndFix checks the integrity of this changeset's checkpoint data and attempts to repair it
+// if autoRepair is true. This is called during startup (in tree_store_load.go) for every changeset.
+//
+// Why checkpoints can be corrupt: checkpoints are written in the background by a goroutine that
+// runs after a commit is finalized (see SaveRoot in tree_store.go). A crash during checkpoint writing
+// can leave partially-written data in the checkpoint files (branches.dat, leaves.dat, kv.dat,
+// checkpoints.dat). The WAL is NOT affected by this — WAL durability is handled separately and
+// is always intact by the time checkpoints start.
+//
+// The repair strategy is simple: roll back the last checkpoint. Since checkpoints are an optimization
+// (they let us skip WAL replay on startup), losing the most recent one just means we'll replay a
+// few more WAL entries to reach the same version. No committed data is lost.
+//
+// If autoRepair is false, verification failure returns an error without modifying anything on disk.
 func (ch *Changeset) VerifyAndFix(autoRepair bool) error {
 	cr, pin := ch.TryPinUncompactedReader()
 	defer pin.Unpin()
@@ -201,8 +214,19 @@ func (ch *Changeset) VerifyAndFix(autoRepair bool) error {
 	return nil
 }
 
-// RollbackLastCheckpoint rolls back the most recent checkpoint in this changeset,
-// truncating checkpoints.dat, branches.dat, leaves.dat, and kv.dat to the previous checkpoint's offsets.
+// RollbackLastCheckpoint rolls back the most recent checkpoint in this changeset by truncating
+// all checkpoint-related files back to the offsets recorded in the previous checkpoint.
+//
+// A checkpoint consists of data spread across four files:
+//   - checkpoints.dat: fixed-size checkpoint metadata entries (version, CRC32, offsets into the other files)
+//   - branches.dat: serialized branch (inner) nodes of the tree
+//   - leaves.dat: serialized leaf nodes of the tree
+//   - kv.dat: the actual key-value data referenced by leaf nodes
+//
+// Each checkpoint entry in checkpoints.dat records the end offsets for branches.dat, leaves.dat,
+// and kv.dat at the time that checkpoint was written. Rolling back simply truncates all four files
+// to the offsets from the second-to-last checkpoint (or to zero if there's only one checkpoint).
+//
 // The caller must provide a pinned ChangesetReader for the current state.
 func (ch *Changeset) RollbackLastCheckpoint(cr *ChangesetReader) error {
 	cpCount := cr.checkpointsInfo.Count()
@@ -216,12 +240,14 @@ func (ch *Changeset) RollbackLastCheckpoint(cr *ChangesetReader) error {
 		return fmt.Errorf("failed to truncate checkpoint info file: %w", err)
 	}
 
+	// Use the previous checkpoint's end offsets as the truncation points.
+	// If there is no previous checkpoint (we're rolling back the only one), truncate to zero.
 	var newBranchesOffset, newLeavesOffset, newKVDataOffset int64
 	if newCpCount > 0 {
-		// if we have another checkpoint, use its offsets
-		// otherwise everything goes to zero
 		lastGoodInfo := cr.checkpointsInfo.UnsafeItem(newCpCount - 1)
 		if !lastGoodInfo.VerifyCRC32() {
+			// If the previous checkpoint is also corrupt, we can't determine safe truncation offsets.
+			// This would require rolling back two checkpoints, which we don't currently support.
 			return fmt.Errorf("previous checkpoint also has invalid CRC32, cannot fix changeset: %s",
 				ch.files.Dir())
 		}

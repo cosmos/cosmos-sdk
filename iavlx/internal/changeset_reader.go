@@ -299,6 +299,20 @@ func (cr *ChangesetReader) CheckpointForVersion(targetVersion uint32) Checkpoint
 	return cr.latestValidCheckpoint(floorIdx)
 }
 
+// Verify checks the integrity of the latest checkpoint in this changeset.
+//
+// It validates two things:
+//  1. CRC32 integrity: the checkpoint metadata entry has a CRC32 checksum covering its fields.
+//     If this doesn't match, the checkpoint entry itself was partially written (crash mid-write).
+//  2. File size consistency: the checkpoint metadata records how many branches, leaves, and bytes
+//     of KV data should exist. If the actual files are smaller, checkpoint writing was interrupted
+//     before all data was flushed.
+//
+// Only the LAST checkpoint is verified because that's the only one that could be incomplete —
+// earlier checkpoints were fully written before any subsequent commit started.
+//
+// If verification fails, the caller (VerifyAndFix) can repair by rolling back the last checkpoint,
+// which truncates the data files back to the previous checkpoint's offsets.
 func (cr *ChangesetReader) Verify() error {
 	n := cr.checkpointsInfo.Count()
 	if n == 0 {
@@ -311,17 +325,16 @@ func (cr *ChangesetReader) Verify() error {
 		return fmt.Errorf("changeset checkpoint info failed CRC32 check during verification: checkpoint %d, expected CRC32 %08x, actual CRC32 %08x",
 			lastInfo.Checkpoint, lastInfo.CRC32, lastInfo.ComputeCRC32())
 	}
-	// check leaves size
+	// Check that the data files are at least as large as the checkpoint claims.
+	// A crash during checkpoint writing could leave these files truncated.
 	expectedLeafCount := lastInfo.Leaves.StartOffset + lastInfo.Leaves.Count
 	if expectedLeafCount > uint32(cr.leavesData.Count()) {
 		return fmt.Errorf("changeset leaves data count mismatch during verification: expected %d, actual %d", expectedLeafCount, cr.leavesData.Count())
 	}
-	// check branches size
 	expectedBranchCount := lastInfo.Branches.StartOffset + lastInfo.Branches.Count
 	if expectedBranchCount > uint32(cr.branchesData.Count()) {
 		return fmt.Errorf("changeset branches data count mismatch during verification: expected %d, actual %d", expectedBranchCount, cr.branchesData.Count())
 	}
-	// check kv.dat size
 	expectedKVDataSize := lastInfo.KVEndOffset
 	if expectedKVDataSize > uint64(cr.kvDataReader.Len()) {
 		return fmt.Errorf("changeset KV data size mismatch during verification: expected at least %d bytes, actual %d bytes", expectedKVDataSize, cr.kvDataReader.Len())

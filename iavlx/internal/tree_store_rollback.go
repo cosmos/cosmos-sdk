@@ -2,13 +2,28 @@ package internal
 
 import "fmt"
 
+// rollbackToVersion rolls a single tree back to a specific version.
+// This is an EXPLICIT rollback initiated by a node operator (e.g. via CLI tooling to recover from
+// a bad block or state corruption), as opposed to crash recovery which happens automatically during load().
+//
+// This is more destructive than crash recovery — it deletes changeset directories and truncates
+// checkpoint files, not just WAL entries. The tree must not be actively committing when this is called.
+//
+// The rollback proceeds in layers, from coarsest to finest:
+//  1. Delete entire changeset directories that start after the target version (they're wholly invalid).
+//  2. Roll back checkpoints that are ahead of the target version (truncate checkpoint data files
+//     back to the previous checkpoint's offsets, one checkpoint at a time).
+//  3. Truncate the WAL in the target version's changeset to remove entries beyond the target version.
+//  4. Reconstruct the in-memory root by loading from the latest valid checkpoint + WAL replay.
+//  5. Initialize a fresh writer for future commits.
 func (ts *TreeStore) rollbackToVersion(version uint32) error {
-	// seal the current writer
+	// Seal the current writer so no more writes can happen to the current changeset.
 	if err := ts.currentWriter.Seal(); err != nil {
 		return fmt.Errorf("sealing current writer after rollback: %w", err)
 	}
 
-	// delete all changeset that are actually newer than the target version, since they will be invalid after the rollback
+	// Step 1: Delete changeset directories that start after the target version.
+	// These contain data exclusively for versions we're rolling back, so they're entirely invalid.
 	ts.changesetsLock.Lock()
 	var err error
 	ts.changesetsByVersion.AscendMut(version, func(csVersion uint32, cs *Changeset) bool {
@@ -19,7 +34,6 @@ func (ts *TreeStore) rollbackToVersion(version uint32) error {
 			if rdr != nil {
 				firstCheckpoint := rdr.FirstCheckpoint()
 				if firstCheckpoint != 0 {
-					// also clear it from the checkpointer map
 					ts.checkpointer.changesetLock.Lock()
 					ts.checkpointer.changesetsByCheckpoint.Delete(firstCheckpoint)
 					ts.checkpointer.changesetLock.Unlock()
@@ -27,15 +41,15 @@ func (ts *TreeStore) rollbackToVersion(version uint32) error {
 			}
 			pin.Unpin()
 
-			err = cs.Close() // close the changeset to release any resources
+			err = cs.Close()
 			if err != nil {
 				ts.logger.Error("failed to close changeset during rollback cleanup", "changesetVersion", csVersion, "error", err)
-				return false // stop iteration on error
+				return false
 			}
 			err = cs.Files().DeleteFiles()
 			if err != nil {
 				ts.logger.Error("failed to delete changeset files during rollback cleanup", "changesetVersion", csVersion, "error", err)
-				return false // stop iteration on error
+				return false
 			}
 		}
 		return true
@@ -45,7 +59,7 @@ func (ts *TreeStore) rollbackToVersion(version uint32) error {
 		return fmt.Errorf("failed to delete old changesets during rollback: %w", err)
 	}
 
-	// refresh last checkpoint version
+	// Refresh checkpoint bookkeeping after potentially deleting changesets that contained checkpoints.
 	if cpInfo, cpErr := ts.checkpointer.LatestCheckpointRoot(); cpErr == nil {
 		ts.lastCheckpointVersion = cpInfo.Version
 		ts.lastCheckpoint.Store(cpInfo.Checkpoint)
@@ -56,7 +70,10 @@ func (ts *TreeStore) rollbackToVersion(version uint32) error {
 		ts.checkpointer.savedCheckpoint.Store(0)
 	}
 
-	// rollback any checkpoints after the target version, since they will be invalid after the rollback
+	// Step 2: Roll back checkpoints that are ahead of the target version.
+	// Each rollbackLastCheckpoint call truncates the checkpoint data files (branches.dat, leaves.dat,
+	// kv.dat, checkpoints.dat) back by one checkpoint. We repeat until the latest checkpoint
+	// is at or before the target version.
 	for ts.lastCheckpointVersion > version {
 		_, err := ts.rollbackLastCheckpoint()
 		if err != nil {
@@ -64,18 +81,22 @@ func (ts *TreeStore) rollbackToVersion(version uint32) error {
 		}
 	}
 
-	// now find the changeset which is the latest one that is <= the target version, and roll it back to the target version if necessary
+	// Step 3: Find the changeset that contains the target version and truncate its WAL.
+	// The WAL may contain entries for versions after the target (written during commits that
+	// we're now rolling back). RollbackWAL scans for the last commit entry at or before the
+	// target version and truncates everything after it.
 	cs := ts.changesetForVersion(version)
 	if cs == nil {
 		return fmt.Errorf("cannot find changeset for target version %d during rollback", version)
 	}
 
-	// rollback the WAL
 	err = RollbackWAL(cs.Files().WALFile(), uint64(version))
 	if err != nil {
 		return fmt.Errorf("failed to roll back WAL during rollback to version: %w", err)
 	}
 
+	// Step 4: Reconstruct the in-memory root at the target version.
+	// This uses the same checkpoint + WAL replay mechanism as normal startup.
 	root, err := ts.RootAtVersion(version)
 	if err != nil {
 		return fmt.Errorf("failed to get root at target version %d during rollback: %w", version, err)
@@ -86,7 +107,7 @@ func (ts *TreeStore) rollbackToVersion(version uint32) error {
 		root:    root,
 	})
 
-	// initialize a new writer
+	// Step 5: Initialize a fresh writer so new commits can proceed.
 	if err := ts.initNewWriter(); err != nil {
 		return fmt.Errorf("reinitializing writer after rollback: %w", err)
 	}

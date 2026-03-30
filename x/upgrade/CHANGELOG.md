@@ -32,7 +32,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#24821](https://github.com/cosmos/cosmos-sdk/pull/24821) Add support for executing upgrade logic for manual upgrades via the `SetManualUpgrade` and `GetManualUpgrade` methods in the `Keeper`.
 
 ### Breaking Changes
-* [#24821](https://github.com/cosmos/cosmos-sdk/pull/24821) Upgrade plans are now saved to disk using the app's JSON codec rather than encoding/json which is the correct behavior for emitting JSON for protobuf generated types. This will likely result in the height field being rendered as a JSON string rather than an integer.
+* [#24821](https://github.com/cosmos/cosmos-sdk/pull/24821) Upgrade plans are now saved to disk using the app's JSON codec rather than encoding/json which is the correct behavior for emitting JSON for protobuf generated types. This results in the height field being rendered as a JSON string rather than an integer.
 
 
 ## [v0.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.2.0) - 2025-04-24

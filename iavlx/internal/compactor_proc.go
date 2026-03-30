@@ -8,12 +8,34 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// CompactorProc orchestrates a single compaction run across all sealed changesets in a tree.
+//
+// It iterates changesets in version order, feeding each into a Compactor. When the compacted
+// output reaches CompactionRolloverSize, it seals the current Compactor and starts a new one.
+// This prevents compacted changesets from growing unboundedly.
+//
+// The retain criteria is derived from the RetainVersion option: we find the checkpoint at or
+// before that version, and keep any node orphaned at or after that checkpoint's version.
+// Everything older is prunable.
 type CompactorProc struct {
 	treeStore    *TreeStore
 	curCompactor *Compactor
 	options      CompactionOptions
 }
 
+// RunCompactor runs a single compaction pass over all sealed changesets in the tree store.
+// Called from the background compaction goroutine (see compactIfNeeded in commit_multi_tree.go).
+//
+// TODO: we could optimize this by pre-scanning each changeset's orphan file to estimate how many
+// nodes would be pruned, and skip changesets where the prune count is too low to justify the IO.
+// The building block already exists: OrphanRewriter.Preprocess (called in Compactor.doAddChangeset)
+// reads the orphan file and returns a deleteMap of prunable nodes. To implement this optimization:
+//  1. Before calling compactOne, call OrphanRewriter.Preprocess on the changeset's orphan file
+//     with the same RetainCriteria to get len(deleteMap) — the exact prune count.
+//  2. Compare that against the total node count (leaves + branches across all checkpoints).
+//  3. Skip the changeset if the ratio is below some threshold (e.g. <5% prunable).
+//  4. Pass the already-computed deleteMap into doAddChangeset to avoid scanning orphans twice.
+// The orphan file is fixed-size entries so scanning it is cheap relative to the full compaction.
 func RunCompactor(ctx context.Context, treeStore *TreeStore, options CompactionOptions) error {
 	cp := newCompactorProc(treeStore, options)
 	return cp.startCompactionRun(ctx)

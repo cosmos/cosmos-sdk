@@ -9,6 +9,26 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// OrphanProcessor writes orphan entries to disk in the background.
+//
+// When a tree is mutated (set or delete), some existing nodes are replaced by new ones.
+// The replaced nodes are "orphans" — they're no longer part of the current tree but may still
+// be needed for historical queries at older versions. The MutationContext tracks these orphans
+// during a commit (see mutation_context.go).
+//
+// After a commit finalizes, the orphans are sent here via QueueOrphans (called from the
+// Checkpointer). The OrphanProcessor writes each orphan as a fixed-size OrphanEntry
+// (NodeID + version it was orphaned at) to the appropriate changeset's orphans.dat file.
+// It also evicts orphaned nodes from memory since they won't be needed on the hot path.
+//
+// Later, during compaction, the OrphanRewriter reads these entries to decide which nodes
+// can be pruned from the data files (see orpan_rewriter.go and compactor.go).
+//
+// The processor uses a two-lock design:
+//   - queueMu: protects the work queue. AddOrphans only takes this lock, so the commit path
+//     never blocks on orphan processing or compaction.
+//   - mtx: held during actual orphan writes (procOne) and by compaction during the critical
+//     switchover. This prevents orphan writes from going to a changeset that's being replaced.
 type OrphanProcessor struct {
 	checkpointer *Checkpointer
 

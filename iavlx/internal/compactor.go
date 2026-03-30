@@ -6,12 +6,47 @@ import (
 	"fmt"
 )
 
+// Compaction merges one or more sealed changesets into a single new changeset, pruning orphaned
+// nodes along the way. This serves two purposes:
+//
+//  1. Disk reclamation: nodes that were replaced or deleted in newer versions (orphans) can be
+//     removed from the data files, freeing disk space.
+//  2. File consolidation: multiple small changeset directories are merged into fewer, larger ones,
+//     which reduces the number of open file handles and simplifies the version-to-changeset lookup.
+//
+// The compaction process for each changeset being merged:
+//   - Rewrite the WAL: copy WAL entries starting from WALStartVersion into the new WAL file,
+//     recording how key/value offsets shifted so we can remap node references.
+//   - Process orphans: read the orphan log and use RetainCriteria to decide which orphaned nodes
+//     to keep (still needed for historical queries) vs delete (prunable). Build a deleteMap.
+//   - Copy checkpoint data: iterate each checkpoint's leaves and branches, skipping nodes in the
+//     deleteMap. For surviving nodes, remap their key/value offsets (which may now point into the
+//     new WAL or new kv.dat), and remap branch child offsets to reflect new file positions.
+//   - Track new file positions in offsetCache so branch nodes can find their children.
+//
+// After all changesets are processed, Seal() finalizes the new changeset, atomically swaps it
+// in for the originals, and marks the old changesets for deletion.
+//
+// Compaction runs in the background (see compactIfNeeded in commit_multi_tree.go) and does not
+// block commits. The orphan processor lock is held only briefly during orphan preprocessing and
+// during the final switchover, to prevent orphan writes from going to a changeset that's about
+// to be replaced.
+
 type CompactorOptions struct {
-	RetainCriteria  RetainCriteria
-	CompactedAt     uint32 // version at which compaction is done
+	// RetainCriteria decides whether an orphaned node should be kept.
+	// It receives the checkpoint the node was created in and the version it was orphaned at.
+	// Returns true to retain (keep the node in the compacted output), false to prune it.
+	RetainCriteria RetainCriteria
+	// CompactedAt is stamped into the new changeset directory name so we can tell when it was compacted.
+	CompactedAt uint32
+	// WALStartVersion is the first version whose WAL entries are copied to the new WAL.
+	// Earlier WAL entries are dropped because their state is already captured in checkpoints.
 	WALStartVersion uint32
 }
 
+// RetainCriteria decides whether an orphaned node should be kept during compaction.
+// createCheckpoint is the checkpoint the node was originally written in.
+// orphanVersion is the version at which the node became orphaned (was replaced or deleted).
 type RetainCriteria func(createCheckpoint, orphanVersion uint32) bool
 
 type Compactor struct {
@@ -21,6 +56,7 @@ type Compactor struct {
 	processedChangesets []pendingCompactionEntry
 	treeStore           *TreeStore
 
+	// Output files: the new compacted changeset being built.
 	files          *ChangesetFiles
 	leavesWriter   *StructWriter[LeafLayout]
 	branchesWriter *StructWriter[BranchLayout]
@@ -31,8 +67,10 @@ type Compactor struct {
 
 	endVersion uint32
 
-	// offsetCache holds the updated 1-based offsets of nodes affected by compacting.
-	// these are then used to update BranchLayout's left and right offsets.
+	// offsetCache maps NodeID → new 1-based file offset in the compacted output.
+	// When a node is written to the new leaves or branches file, its new offset is recorded here.
+	// Branch nodes use this to update their left/right child offsets, since the children may have
+	// moved to different file positions during compaction.
 	offsetCache map[NodeID]uint32
 
 	ctx context.Context
@@ -93,7 +131,27 @@ func (c *Compactor) AddChangeset(reader *ChangesetReader) error {
 	return nil
 }
 
+// doAddChangeset processes a single source changeset and writes its surviving data to the compacted output.
+// This is the core of the compaction algorithm:
+//
+// Step 1: Rewrite the WAL — copy entries from walStartVersion onward into the new WAL file.
+//
+//	The rewrite returns offset remapping tables so we can update node key/value references.
+//
+// Step 2: Process orphans — read the source changeset's orphan log to determine which nodes
+//
+//	have been replaced/deleted. The RetainCriteria function decides: nodes orphaned before
+//	the retain version are prunable (added to deleteMap), nodes orphaned after are kept
+//	(copied to the new orphan log for future compaction cycles).
+//
+// Step 3: Copy checkpoint data — for each checkpoint in the source changeset, iterate its leaves
+//
+//	and branches. Skip any node in the deleteMap. For surviving nodes, remap their key/value
+//	offsets (from old WAL/kv.dat positions to new ones) and remap branch child offsets
+//	(from old file positions to new ones via offsetCache).
 func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
+	// Step 1: Rewrite WAL entries starting from walStartVersion.
+	// RewriteWAL returns remapping tables that tell us where each key/value ended up in the new WAL.
 	walRewriteInfo, err := RewriteWAL(c.walWriter, reader.changeset.files.WALFile(), uint64(c.walStartVersion))
 	if err != nil {
 		return fmt.Errorf("failed to rewrite WAL during compaction: %w", err)
@@ -110,6 +168,9 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 	leavesData := reader.leavesData
 	branchesData := reader.branchesData
 
+	// Step 2: Process orphans to build a deleteMap of nodes to prune.
+	// We hold the orphan proc lock briefly here to prevent the live orphan processor from
+	// writing to the source changeset's orphan file while we're reading it.
 	// TODO the deleteMap from the orphan rewriter contains the exact number of nodes that will be pruned
 	// so we could use this to implement threshold based pruning and only prune based on whether we
 	// are pruning enough orphans
@@ -127,6 +188,9 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 	}
 	c.treeStore.UnlockOrphanProc()
 
+	// Step 3: Copy checkpoint data, skipping pruned nodes and remapping offsets.
+	// We iterate checkpoints in order. For each checkpoint, we iterate its leaves first,
+	// then branches (branches reference leaves, so leaves must be written first to populate offsetCache).
 	c.treeStore.logger.DebugContext(c.ctx, "processing changeset for compaction", "numCheckpoints", numCheckpoints)
 	for i := 0; i < numCheckpoints; i++ {
 		cpInfo := cpInfo.UnsafeItem(i) // copy
@@ -273,6 +337,15 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 	return nil
 }
 
+// remapBlob translates a key or value reference from the old changeset to the new compacted one.
+//
+// A node's key/value can live in one of two places: the WAL file or the kv.dat file.
+// During compaction, both files are being rewritten, so offsets change. The logic:
+//   - If the blob was in the OLD WAL: look up its new offset in the WAL rewrite remapping table.
+//     If found, the blob is still in the new WAL. If not found (the WAL entry was before
+//     walStartVersion and was dropped), we need to read the actual bytes and write them to kv.dat.
+//   - If the blob was in kv.dat: read the actual bytes and write them to the NEW kv.dat
+//     (since the old kv.dat file won't exist after compaction).
 func (c *Compactor) remapBlob(origIsInKVData bool, origOffset uint64, walRewriteInfo *WALRewriteInfo, isKey bool, node Node) (newOffset uint64, newInKVData bool, err error) {
 	newInKVData = origIsInKVData
 	if !origIsInKVData {
@@ -341,6 +414,19 @@ func (c *Compactor) Seal() (*Changeset, error) {
 	return cs, nil
 }
 
+// switchoverChangesets atomically replaces the old changesets with the new compacted one.
+// This is the critical section of compaction — it holds the orphan proc lock to ensure no
+// orphan writes land in the old changesets between when we finalize and when we mark them
+// as compacted.
+//
+// The sequence is:
+//  1. finalize: finish writing orphan data, rename the -tmp directory to its final name,
+//     open it as a proper Changeset.
+//  2. markCompacted: point each old changeset to the new compacted one, so any future readers
+//     get redirected. After this point the old changesets are queued for deletion.
+//
+// IMPORTANT: after markCompacted, we cannot abort — the old changesets are already marked
+// for deletion. If we deleted the compacted output too, we'd lose data.
 func (c *Compactor) switchoverChangesets() (*Changeset, error) {
 	c.treeStore.LockOrphanProc()
 	defer c.treeStore.UnlockOrphanProc()

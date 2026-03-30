@@ -8,10 +8,28 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// Evictor controls which in-memory tree nodes are evicted after a checkpoint is saved.
+//
+// After a checkpoint is written to disk, all nodes from that checkpoint can be resolved from
+// disk instead of memory. Evicting them frees heap memory at the cost of future disk reads
+// (which may hit the OS mmap cache and still be fast).
+//
+// Eviction is depth-based: nodes deeper than a configured threshold are evicted, while nodes
+// near the root are kept in memory. This is a good heuristic because:
+//   - Shallow nodes are accessed on every read/write (they're on the path from root to any key).
+//   - Deep nodes are only accessed for specific key ranges and can be loaded on demand.
+//   - Leaf nodes can be evicted more aggressively than branch nodes because branch nodes
+//     are needed just to navigate to the right subtree, while leaf nodes are only needed
+//     for the final key/value read.
+//
+// The eviction depths are configured via TreeOptions.LeafEvictDepth and BranchEvictDepth.
+// Higher values retain more nodes in memory (better read performance, more memory usage).
 type Evictor interface {
 	Evict(root *NodePointer, checkpoint uint32)
 }
 
+// BasicEvictor evicts nodes beyond a configurable depth threshold after each checkpoint.
+// It runs asynchronously in a goroutine to avoid blocking the commit path.
 type BasicEvictor struct {
 	leafEvictDepth   uint8
 	branchEvictDepth uint8

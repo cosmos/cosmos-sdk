@@ -5,17 +5,45 @@ import (
 	"fmt"
 )
 
+// ChangesetReader provides read access to a changeset's on-disk data via memory-mapped files.
+//
+// A changeset contains the persisted state for a range of tree versions. The reader mmaps all
+// of the changeset's data files and provides methods to:
+//   - Resolve nodes by ID or by file index (for reading tree structure from disk)
+//   - Look up checkpoint metadata (for finding roots at specific versions)
+//   - Read key/value blobs from either the WAL or kv.dat
+//   - Verify checkpoint integrity (for crash recovery)
+//
+// Node resolution: there are two ways to find a node in the data files:
+//   - By file index (ResolveLeafByIndex/ResolveBranchByIndex): O(1) lookup using the 1-based
+//     offset stored in a parent branch's LeftOffset/RightOffset. This is the fast path used
+//     when traversing the tree from a parent that was written in the same changeset.
+//   - By NodeID (ResolveLeafByID/ResolveBranchByID): looks up the checkpoint's NodeSetInfo
+//     to find the offset range, then searches within that range. Used when the parent was
+//     written in a different changeset or when navigating from a checkpoint root.
+//
+// Checkpoint lookup: checkpoints may be contiguous (checkpoint N, N+1, N+2...) or have gaps
+// (after compaction removes some). When contiguous, lookup is O(1) by index arithmetic.
+// When non-contiguous, we fall back to binary search.
 type ChangesetReader struct {
 	changeset *Changeset // we keep a reference to the parent changeset handle
 
-	walReader             *KVDataReader
-	kvDataReader          *KVDataReader
-	branchesData          *NodeMmap[BranchLayout]
-	leavesData            *NodeMmap[LeafLayout]
+	// walReader and kvDataReader provide access to key/value blob data.
+	// A node's key or value may be in either file — the node's layout flags indicate which.
+	walReader    *KVDataReader
+	kvDataReader *KVDataReader
+	// branchesData and leavesData are mmapped arrays of fixed-size node records.
+	// Nodes are addressed by 1-based file index (for O(1) parent→child navigation)
+	// or by NodeID (which requires a checkpoint lookup first).
+	branchesData *NodeMmap[BranchLayout]
+	leavesData   *NodeMmap[LeafLayout]
+	// Checkpoint bookkeeping: the range of checkpoint numbers in this changeset.
 	firstCheckpoint       uint32
 	lastCheckpoint        uint32
 	checkpointsContiguous bool // true if checkpoint numbers are contiguous (no gaps from compaction)
-	checkpointsInfo       *StructMmap[CheckpointInfo]
+	// checkpointsInfo is the mmapped array of CheckpointInfo entries — one per checkpoint.
+	// Each entry records the version, root NodeID, node count/offset ranges, and CRC32.
+	checkpointsInfo *StructMmap[CheckpointInfo]
 }
 
 func NewChangesetReader(changeset *Changeset) (*ChangesetReader, error) {
@@ -74,6 +102,9 @@ func (cr *ChangesetReader) Changeset() *Changeset {
 	return cr.changeset
 }
 
+// ResolveLeafByIndex returns a leaf node by its 1-based file offset.
+// This is the fast O(1) path used when a parent branch has a LeftOffset/RightOffset
+// pointing to a child in the same changeset.
 func (cr *ChangesetReader) ResolveLeafByIndex(fileIdx uint32) (*LeafLayout, error) {
 	if fileIdx == 0 || fileIdx > uint32(cr.leavesData.Count()) {
 		return nil, fmt.Errorf("leaf file index %d out of range (have 1..%d)", fileIdx, cr.leavesData.Count())
@@ -92,6 +123,9 @@ func (cr *ChangesetReader) ResolveBranchByIndex(fileIdx uint32) (*BranchLayout, 
 	return cr.branchesData.UnsafeItem(int(fileIdx)), nil
 }
 
+// ResolveLeafByID finds a leaf node by its NodeID. This requires looking up the checkpoint's
+// NodeSetInfo to determine the offset range where this leaf could be, then searching within it.
+// Slower than ResolveLeafByIndex but works across changeset boundaries.
 func (cr *ChangesetReader) ResolveLeafByID(id NodeID) (*LeafLayout, error) {
 	if !id.IsLeaf() {
 		return nil, fmt.Errorf("node ID %s is not a leaf", id.String())
@@ -115,6 +149,8 @@ func (cr *ChangesetReader) ResolveBranchByID(id NodeID) (*BranchLayout, error) {
 	return cr.branchesData.FindByID(id, &info.Branches)
 }
 
+// GetCheckpointInfo returns the metadata for a specific checkpoint number.
+// Uses O(1) index arithmetic when checkpoints are contiguous, falls back to binary search otherwise.
 func (cr *ChangesetReader) GetCheckpointInfo(checkpoint uint32) (*CheckpointInfo, error) {
 	if checkpoint < cr.firstCheckpoint || checkpoint > cr.lastCheckpoint {
 		return nil, fmt.Errorf("checkpoint %d out of range for changeset %s (have %d..%d)",

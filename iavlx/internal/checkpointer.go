@@ -10,6 +10,24 @@ import (
 	"github.com/cosmos/btree"
 )
 
+// Checkpointer manages background checkpoint writing and orchestrates the post-commit pipeline.
+//
+// After a commit finalizes and SaveRoot updates the in-memory root, it sends a request to the
+// Checkpointer via the Checkpoint or QueueOrphans methods. The Checkpointer's background
+// goroutine (proc) processes these requests sequentially:
+//
+//  1. Send orphans to the OrphanProcessor (always, even if no checkpoint is being written).
+//  2. If a checkpoint is requested: wait for NodeID assignment to complete, then call
+//     ChangesetWriter.SaveCheckpoint to persist the tree to disk.
+//  3. Create/update the ChangesetReader so the persisted data is queryable.
+//  4. If the changeset needs to be sealed (rollover), seal it.
+//  5. Register the changeset in the checkpoint lookup map.
+//  6. Notify the Evictor to free memory for nodes that are now on disk.
+//
+// Not every commit produces a checkpoint — the CheckpointInterval option controls how often
+// checkpoints are written. Between checkpoints, only orphan processing happens (step 1).
+// The WAL provides durability regardless; checkpoints are an optimization to reduce WAL replay
+// time on startup.
 type Checkpointer struct {
 	savedCheckpoint        atomic.Uint32
 	reqChan                chan checkpointReq

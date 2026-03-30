@@ -230,6 +230,12 @@ func (ts *TreeStore) LatestVersion() uint32 {
 	return ts.root.Load().version
 }
 
+// RootAtVersion returns the root NodePointer for a historical version of the tree.
+// This is used for historical queries (CacheMultiStoreWithVersion) and during rollback.
+//
+// The algorithm: find the latest checkpoint at or before targetVersion, then replay WAL
+// entries forward from that checkpoint to reach the exact target version.
+// Results are cached (rootByVersionCache) to avoid repeated WAL replay for popular versions.
 func (ts *TreeStore) RootAtVersion(targetVersion uint32) (*NodePointer, error) {
 	latest := ts.root.Load()
 	if latest == nil && targetVersion == 0 {
@@ -267,6 +273,14 @@ func (ts *TreeStore) RootAtVersion(targetVersion uint32) (*NodePointer, error) {
 	return root, nil
 }
 
+// loadRootAtVersion reconstructs the tree root at a specific historical version by:
+//  1. Finding the latest checkpoint at or before targetVersion (via checkpointForVersion).
+//  2. If the checkpoint IS the target version, return its root directly.
+//  3. Otherwise, replay WAL entries forward from the checkpoint version through successive
+//     changesets until we reach the target version.
+//
+// This may cross changeset boundaries — if a changeset's WAL doesn't reach the target version,
+// we move to the next changeset and continue replaying.
 func (ts *TreeStore) loadRootAtVersion(ctx context.Context, targetVersion uint32) (*NodePointer, error) {
 	// find the latest checkpoint root that is <= targetVersion
 	res, err := ts.checkpointForVersion(targetVersion)
@@ -302,6 +316,12 @@ func (ts *TreeStore) loadRootAtVersion(ctx context.Context, targetVersion uint32
 	}
 }
 
+// checkpointForVersion finds the latest checkpoint root at or before the given version.
+// It searches backwards through changesets: for each changeset, it asks the ChangesetReader
+// for the best checkpoint at or before the version. If no checkpoint is found in that changeset,
+// it tries the previous one (by looking at startVersion - 1).
+// If we reach the beginning of history (startVersion <= 1) with no checkpoint, we return a
+// zero-value (empty tree at version 0) so the caller can replay the WAL from scratch.
 func (ts *TreeStore) checkpointForVersion(version uint32) (CheckpointRootInfo, error) {
 	for {
 		changeset := ts.changesetForVersion(version)

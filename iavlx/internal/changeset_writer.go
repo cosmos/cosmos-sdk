@@ -5,6 +5,26 @@ import (
 	"fmt"
 )
 
+// ChangesetWriter writes tree data (nodes, WAL entries, key/value blobs) to a changeset directory.
+//
+// A changeset directory contains several files that together represent a range of tree versions:
+//   - wal.dat: the write-ahead log of all set/delete operations (source of truth for durability)
+//   - kv.dat: key/value blob storage for data that outlives its original WAL segment
+//   - leaves.dat: fixed-size leaf node records (LeafLayout), one per leaf per checkpoint
+//   - branches.dat: fixed-size branch node records (BranchLayout), one per inner node per checkpoint
+//   - checkpoints.dat: fixed-size checkpoint metadata (CheckpointInfo), one per checkpoint
+//   - orphans.dat: records of nodes that were replaced/deleted, used during compaction
+//
+// During normal operation, SaveRoot (in tree_store.go) triggers a checkpoint write via the
+// Checkpointer, which calls SaveCheckpoint on this writer. SaveCheckpoint does a post-order
+// traversal of the tree, writing leaf and branch nodes to their respective files. Only nodes
+// from the current checkpoint are written — nodes from earlier checkpoints are already persisted
+// and are skipped.
+//
+// Key/value data for each node can live in either the WAL (if the WAL writer recorded it during
+// the commit) or kv.dat (if we need to persist it beyond the WAL's lifetime). The writer checks
+// the WAL's key cache first; if the key is found there, it stores the WAL offset. Otherwise it
+// writes the blob to kv.dat.
 type ChangesetWriter struct {
 	// checkpoint is the current checkpoint number being written
 	checkpoint uint32
@@ -22,7 +42,9 @@ type ChangesetWriter struct {
 	changeset *Changeset
 
 	lastBranchIdx, lastLeafIdx uint32
-	memUsage                   int64
+	// memUsage tracks the total estimated memory of nodes written in this checkpoint,
+	// used by the evictor to decide how much memory can be reclaimed.
+	memUsage int64
 }
 
 func NewChangesetWriter(treeDir string, stagedVersion uint32, treeStore *TreeStore) (*ChangesetWriter, error) {
@@ -134,7 +156,14 @@ func (cs *ChangesetWriter) writeNode(np *NodePointer) error {
 }
 
 func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
-	// recursively write children in post-order traversal
+	// Write children before the parent (post-order traversal). This ordering is critical because:
+	// 1. It means a child's file offset (fileIdx) is known BEFORE its parent is written,
+	//    so we can store the child's offset directly in the parent's BranchLayout (LeftOffset/RightOffset).
+	//    This gives us O(1) child lookups when reading from disk — no index needed.
+	// 2. It matches the import/export format (see importer.go and export.go), so a tree can be
+	//    exported and re-imported with the same traversal order.
+	// 3. Related nodes end up physically adjacent on disk, which improves read locality for
+	//    subtree traversals (iterators, proofs, etc.).
 	err := cs.writeNode(node.left)
 	if err != nil {
 		return err

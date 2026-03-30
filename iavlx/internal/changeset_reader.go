@@ -252,43 +252,67 @@ func (cr *ChangesetReader) LatestCheckpointRoot() CheckpointRootInfo {
 	return cr.latestValidCheckpoint(count - 1)
 }
 
-// latestValidCheckpoint finds the latest checkpoint at or before startIdx that has a root.
+// latestValidCheckpoint walks backwards from startIdx to find the latest checkpoint whose
+// root node is actually present in this changeset's data files.
+//
+// This is more complex than it might seem because of three subtleties:
+//
+//  1. Empty tree sentinel: a checkpoint can record that the tree was empty at that version.
+//     This is a valid result (Root=nil, Version set) — it means "the tree existed but had no keys".
+//
+//  2. Zero-value RootID (IsEmpty): means the checkpoint entry has no root information at all.
+//     This is distinct from IsEmptyTree (which means "the tree has zero keys"). No current code
+//     path produces a zero-value RootID — SaveCheckpoint always sets either a real root or the
+//     empty-tree sentinel, and compaction copies RootID through. This check is defensive; if we
+//     encounter it, we skip to an earlier checkpoint.
+//
+//  3. Root from a different checkpoint: when no keys change between versions, the new checkpoint
+//     re-uses the same root node from an earlier checkpoint. For example, checkpoint 100 might
+//     have a RootID whose checkpoint field is 99 — meaning "the root is the same node that was
+//     written in checkpoint 99". To verify the root still exists, we need to check the NODE SET
+//     bounds of checkpoint 99 (not 100), because that's where the node lives on disk.
+//     If checkpoint 99 was compacted away, the root is gone and we must keep looking backwards.
+//
 // startIdx is a 0-based index into the checkpoints info array.
-// A valid checkpoint is considered to be one that has a root retained in the changeset,
-// where the root ID's checkpoint corresponds to the actual checkpoint.
-// If for example we have checkpoint 100, but its root ID has checkpoint number 99,
-// we actually need to navigate to checkpoint 99 to confirm that the root was retained.
-// If there is no available checkpoint, CheckpointRootInfo.Version will be zero.
+// If no valid checkpoint is found, CheckpointRootInfo.Version will be zero.
 func (cr *ChangesetReader) latestValidCheckpoint(startIdx int) CheckpointRootInfo {
 	for i := startIdx; i >= 0; i-- {
 		info := cr.checkpointsInfo.UnsafeItem(i)
 		rootID := info.RootID
+
+		// Case 1: the tree was explicitly empty at this checkpoint — valid result, no root node.
 		if rootID.IsEmptyTree() {
 			return CheckpointRootInfo{
 				Version:    info.Version,
 				Checkpoint: info.Checkpoint,
 			}
-		} else if rootID.IsEmpty() {
-			// no information about the root, keep looking for an earlier checkpoint with root information
+		}
+
+		// Case 2: zero-value RootID — no root information available (defensive; shouldn't happen
+		// in practice since SaveCheckpoint always sets a root or empty-tree sentinel).
+		if rootID.IsEmpty() {
 			continue
 		}
 
-		// check if the root was retained in this changeset by looking at the bounds
-		// of the checkpoint where the root was actually created
+		// Case 3: we have a RootID — but we need to verify the actual node still exists in this
+		// changeset's data files. The root may have been written in a DIFFERENT checkpoint than
+		// this one (if no tree changes happened at this version), so we look up the source
+		// checkpoint to check its node set bounds.
 		rootCheckpoint := rootID.Checkpoint()
 		sourceInfo := info
 		if rootCheckpoint != info.Checkpoint {
-			// root is from a different checkpoint (no tree changes at this checkpoint),
-			// look up bounds from the root's source checkpoint
+			// Root points to a node created in an earlier checkpoint.
+			// Look up that checkpoint's metadata to get the node offset ranges.
 			var err error
 			sourceInfo, err = cr.GetCheckpointInfo(rootCheckpoint)
 			if err != nil {
-				// root's source checkpoint is not in this changeset (compacted away or pruned)
-				// keep looking at earlier checkpoints just in case
+				// The source checkpoint was compacted away — this root is no longer resolvable.
 				continue
 			}
 		}
 
+		// Check whether the root node's index falls within the node set bounds for its checkpoint.
+		// After compaction, some nodes may have been pruned, shrinking the index range.
 		var nodeSetInfo *NodeSetInfo
 		if rootID.IsLeaf() {
 			nodeSetInfo = &sourceInfo.Leaves
@@ -297,8 +321,7 @@ func (cr *ChangesetReader) latestValidCheckpoint(startIdx int) CheckpointRootInf
 		}
 		idx := rootID.Index()
 		if idx < nodeSetInfo.StartIndex || idx > nodeSetInfo.EndIndex {
-			// root node was compacted away
-			// keep looking for an earlier checkpoint with a root that was retained
+			// Root node was pruned during compaction — keep looking backwards.
 			continue
 		}
 		return CheckpointRootInfo{

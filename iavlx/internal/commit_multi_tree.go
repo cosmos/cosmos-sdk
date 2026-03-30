@@ -29,6 +29,30 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
+// CommitMultiTree implements storetypes.CommitMultiStore for iavlx.
+//
+// Implementation status of the CommitMultiStore interface:
+//
+// Fully implemented:
+//   - Commit path: CacheMultiStore, CacheMultiStoreWithVersion, CommitBranch, WorkingHash, Commit
+//   - Read path: GetCommitInfo, LastCommitID, LatestVersion, EarliestVersion, Query
+//   - Lifecycle: MountStoreWithDB, LoadLatestVersion, Close
+//   - Pruning: SetPruning, GetPruning (with background compaction)
+//   - Rollback: RollbackToVersion (performs filesystem rollback, then poisons in-memory state;
+//     requires restart — see also the offline `iavlx rollback` CLI tool)
+//
+// Not yet implemented:
+//   - Snapshots / state sync: Snapshot, Restore, PruneSnapshotHeight, SetSnapshotInterval
+//     (export.go and importer.go have the per-tree primitives, but they are not wired into
+//     the CommitMultiStore snapshot interface yet)
+//   - Store upgrades: LoadLatestVersionAndUpgrade, LoadVersionAndUpgrade, LoadVersion
+//   - SetInitialVersion
+//   - Listeners: ListeningEnabled, AddListeners, PopStateCache
+//
+// Import from iavl/v1:
+//   The `iavlx import` CLI tool can import an existing iavl/v1 LevelDB-backed multi-store
+//   into iavlx format. See ImportIAVLV1MultiStore in import_v1.go and the Importer type
+//   in importer.go. This is a one-time offline migration, not part of the CommitMultiStore interface.
 var (
 	_ storetypes.CommitMultiStore = &CommitMultiTree{}
 	_ storetypes.Queryable        = &CommitMultiTree{}
@@ -120,18 +144,21 @@ func (db *CommitMultiTree) GetObjKVStore(storetypes.StoreKey) storetypes.ObjKVSt
 	panic("cannot call GetObjKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
 }
 
+// Snapshot is not yet wired up to the CometBFT state sync protocol.
+// The per-tree primitives exist: TreeReader.Export (export.go) for serialization, Importer
+// (importer.go) for deserialization. What remains is the multi-store orchestration and the
+// snapshot framing format.
 func (db *CommitMultiTree) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	return fmt.Errorf("snapshotting has not been implemented yet")
 }
 
 func (db *CommitMultiTree) PruneSnapshotHeight(height int64) {
-	db.logger.Warn("PruneSnapshotHeight is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) SetSnapshotInterval(snapshotInterval uint64) {
-	db.logger.Warn("SetSnapshotInterval is not implemented for CommitMultiTree")
 }
 
+// Restore is not yet wired up. See Snapshot.
 func (db *CommitMultiTree) Restore(height uint64, format uint32, protoReader protoio.Reader) (snapshottypes.SnapshotItem, error) {
 	return snapshottypes.SnapshotItem{}, fmt.Errorf("restoring from snapshot has not been implemented yet")
 }

@@ -34,7 +34,7 @@ func exportSubTree(ptr *NodePointer, yield func(ExportNode, error) bool) bool {
 	}
 
 	if node.IsLeaf() {
-		value, err := node.Key()
+		value, err := node.Value()
 		if err != nil {
 			yield(ExportNode{}, err)
 			return false

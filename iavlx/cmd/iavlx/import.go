@@ -13,8 +13,7 @@ func newImportCmd() *cobra.Command {
 	var from, to, format string
 	cmd := &cobra.Command{
 		Use:     "import --from [from] --to [to] --format [v1-leveldb]",
-		Aliases: []string{"v"},
-		Short:   "Interactively browse IAVL store data",
+		Short:   "Import an iavl/v1 LevelDB multi-store into iavlx format (one-time offline migration)",
 		Args:    cobra.ExactArgs(0),
 	}
 	cmd.Flags().StringVar(&from, "from", "", "The source directory to import from")

@@ -20,7 +20,7 @@ It improves upon the earlier iavl design with:
 - **WAL-based durability and atomicity** — commits are durable once the WAL is fsynced and
   the commit info file is atomically renamed; crash recovery replays from the latest checkpoint.
   Unlike iavl/v1 which relied on the external database for durability and had no atomic
-  multi-tree commit, iavlx commits all trees atomically via a single commit info file
+  multi-tree commit, iavlx commits all trees atomically via a single commit info file.
 
 ## Usage
 
@@ -92,6 +92,11 @@ iavlx was rigorously benchmarked against iavl/v1, memiavl and iavl/v2 to inform 
 Its performance scales horizontally across threads for both reads and writes:
 - more CPUs and more memory generally means faster write performance
 - more read threads means faster read performance
+
+Compared to iavl/v1, iavlx generally offers a 10x or more performance improvement.
+Compared to earlier rewrites such as memiavl and iavl/v2, iavlx generally offers improved
+and more consistent performance, better scalability across different tree sizes, as well
+as the ability to take better advantage of CPU cores for horizontal scaling.
 
 See [PERFORMANCE.md](./PERFORMANCE.md) for more detailed benchmark numbers.
 

@@ -236,15 +236,16 @@ func NewSimApp(
 	}
 	baseAppOptions = append(baseAppOptions, voteExtOp, baseapp.SetOptimisticExecution())
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
-
 	logger.Info("Initializing IAVLX CommitMultiTree")
 	iavlxDir := filepath.Join(appOpts.Get(flags.FlagHome).(string), "data", "iavlx")
 	iavlxCms, err := iavlx.LoadCommitMultiTree(iavlxDir, iavlx.Options{}, logger)
 	if err != nil {
 		panic(err)
 	}
-	bApp.SetCMS(iavlxCms)
+	// Prepend SetCMS so that pruning (and any other options) get applied to the iavlx store and not the default store.
+	baseAppOptions = append([]func(*baseapp.BaseApp){func(app *baseapp.BaseApp) { app.SetCMS(iavlxCms) }}, baseAppOptions...)
+
+	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)

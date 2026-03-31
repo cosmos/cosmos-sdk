@@ -90,4 +90,44 @@ The remaining TODOs are mostly operational support methods, specifically:
 
 ## Future Optimizations
 
-- a low hanging fruit optimization is checking orphan metrics before compacting CHANGESETs
+- **Smarter compaction skipping** — currently every sealed changeset is compacted. A low-hanging
+  optimization is pre-scanning the orphan file to count prunable nodes before committing to
+  the full compaction IO. `OrphanRewriter.Preprocess` already computes the exact prune count
+  (the `deleteMap`) — this could be called as a pre-check and changesets with few prunable
+  orphans could be skipped entirely. See the TODO in `compactor_proc.go`.
+
+- **Memory-aware eviction** — the scaffolding for tracking in-memory tree size is partially in
+  place but not wired up. `TreeStore.rootMemUsage` (atomic counter) exists but is never
+  incremented or read. `ChangesetWriter.memUsage` accumulates the estimated memory of nodes
+  written per checkpoint but nothing reads it. The orphan processor has a TODO to decrement
+  `rootMemUsage` when orphans are evicted. The intended design: track memory added during
+  commits, track memory freed by eviction and orphan clearing, and use this to make adaptive
+  eviction decisions (e.g. evict more aggressively when memory exceeds a budget, or choose
+  eviction depth dynamically instead of using a fixed threshold). Currently the `BasicEvictor`
+  uses a fixed depth and is completely unaware of memory pressure.
+  Implementation note: eviction counts must use atomic swap (not load/store) to avoid races
+  between the evictor goroutine and orphan processor both decrementing the counter.
+  More broadly, memory-aware eviction will require careful tuning and benchmarking — monitoring
+  memory pressure accurately is non-trivial (Go's runtime stats, OS RSS, mmap cache effects all
+  interact), and overly aggressive eviction can hurt read performance more than it helps memory.
+
+- **Hash algorithm** — we currently use Go's `crypto/sha256` (required for iavl/v1 hash
+  compatibility). There's a TODO in `node_hash.go` to benchmark `minio/sha256-simd` which uses
+  hardware SHA extensions (SHA-NI on x86, crypto extensions on ARM) — early tests showed no
+  improvement but this is hardware-dependent and worth revisiting on newer CPUs. Longer term,
+  if hash compatibility with iavl/v1 is no longer required, a faster hash like BLAKE3 could
+  significantly reduce hashing time (BLAKE3 is ~3-5x faster than SHA-256 on modern hardware).
+
+- **Hash concurrency tuning** — the `AsyncHashScheduler` currently uses a fixed height >= 4
+  threshold for deciding when to parallelize subtree hashing, and caps concurrency at NumCPU
+  **per tree**. Since all trees commit in parallel, a multi-tree with many stores can massively
+  oversubscribe the CPU (e.g. 20 stores × NumCPU goroutines each). A shared work pool or
+  work-stealing scheduler across all trees would give better CPU utilization — large trees
+  that need more hashing would naturally consume more of the pool while small trees finish
+  quickly. The height threshold and concurrency cap could also be adaptive based on tree shape
+  and whether hashing or tree mutation is the current bottleneck.
+
+- **Leaf hash pre-computation batching** — the current algorithm for parallel leaf hashing in
+  `prepareCommit` divides leaves into equal-sized buckets across workers. This assumes uniform
+  hash cost per leaf, but leaves with very large keys or values take longer to hash. A work-
+  stealing approach or dynamic batch sizing could reduce tail latency when leaf sizes vary.

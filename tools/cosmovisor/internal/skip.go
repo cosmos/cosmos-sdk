@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"cosmossdk.io/tools/cosmovisor/v2"
-
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 

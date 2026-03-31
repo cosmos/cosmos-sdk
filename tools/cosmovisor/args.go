@@ -17,7 +17,6 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/log/v2"
-
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )

@@ -11,9 +11,7 @@ import (
 	"github.com/otiai10/copy"
 
 	"cosmossdk.io/log/v2"
-
 	"cosmossdk.io/tools/cosmovisor/v2"
-
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 

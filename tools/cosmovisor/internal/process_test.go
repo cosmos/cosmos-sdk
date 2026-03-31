@@ -16,10 +16,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
-
-	upgradetypes "cosmossdk.io/x/upgrade/types"
-
 	"cosmossdk.io/tools/cosmovisor/v2"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 var workDir string

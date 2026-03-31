@@ -16,7 +16,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log/v2"
-
 	"cosmossdk.io/tools/cosmovisor/v2"
 )
 

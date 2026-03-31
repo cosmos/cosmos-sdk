@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/tools/cosmovisor/v2"
-
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 

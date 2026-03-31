@@ -4,6 +4,35 @@ iavlx was rigorously benchmarked against iavl/v1, memiavl, and iavl/v2 during it
 validate its design.
 
 All of the benchmark numbers below were collected on a Hetzner AX102 instance in early 2026 with an AMD RYZEN 9 7950X3D, 128 GB DDR5 ECC and 2 x 1.92 TB NVMe SSD Datacenter Edition (Gen4).
+The benchmarks were conducted using https://github.com/cosmos/iavl-bench on the aaronc/iavlx2 branch.
+Unfortunately, there is a pretty big diff between main and this branch and also it is no longer possible to
+build the store/v1 (iavl/v1) and memiavl benchmark runners on this branch due to store/v2.
+The fixes, however, should be relatively straightforward import and dependency fixes if anyone wants to pick
+this work up again.
+
+## Write Performance
+
+The following benchmarks show at a high-level the number of write operations per second achieved against a single
+tree with 100k, 1m, and 10m bank-like leaf-nodes for iavlx, iavl/v1 and memiavl:
+
+
+## Write Scaling
+
+iavlx allows write performance to scale across threads when there are multiple trees. Meaning, you get more
+bank for your buck for having 2 or more trees side by side in a multi-tree. The following numbers show how
+iavlx performance scales with 1, 2 4, 8 and 16 parallel trees in the multi-tree. Each tree has 1 million bank-like leaf nodes.
+
+| trees | ops/sec |
+|-------|------------|
+| 1 | 281,471 |
+| 2 | 490,452 |
+| 4 | 773,545 |
+| 8 | 1,100,000 |
+| 16 | 1,270,000 |
+
+Note that we don't show the numbers for memiavl or iavl/v1 because they don't do any concurrency when there are multiple
+trees, so the numbers don't show any scaling. For memiavl, I am not sure if there is any inherent limitation, but the
+iavl/v1 does not support concurrency in any form.
 
 ## Read Performance Analysis
 
@@ -91,3 +120,50 @@ generally perform better than memiavl.
 
 ## Performance Tuning
 
+The defaults are intended to work well out of the box, but operators with large trees or
+specific hardware can tune via `iavlx.Options`:
+
+**Eviction depths** (`LeafEvictDepth`, `BranchEvictDepth`) — the most impactful tuning knob.
+These control how many nodes are kept in memory after a checkpoint. The default keeps up to
+2^20 (~1M) leaf nodes and 2^24 (~16M) branch nodes in memory. For large trees on machines
+with plenty of RAM, increasing these values keeps more of the tree in memory and avoids
+expensive disk reads during tree mutation. Branch depth should always be >= leaf depth since
+evicting a branch makes its children unreachable without a disk read. As shown in the read
+performance benchmarks above, the difference between an in-memory read and a disk read can
+be 200x, so this setting matters a lot for large trees.
+
+**CheckpointInterval** (default 100) — how many versions pass between checkpoints. Lower values
+mean faster startup (less WAL to replay) but more IO during normal operation. Higher values
+reduce IO but increase startup time. On fast storage, 100 is a good balance. If your chain
+produces blocks very quickly, consider increasing this.
+
+**ChangesetRolloverSize** (default 2GB) — when a changeset's WAL reaches this size, a new
+changeset directory is created. Smaller values mean more changeset directories (more file
+handles, more compaction work) but keep individual files smaller. Larger values reduce
+compaction frequency but create larger files.
+
+**CompactionRolloverSize** (default 4GB) — similar to above but for compacted changesets.
+This caps how large a single compacted changeset can grow before the compactor starts a
+new output file.
+
+**DisableWALFsync** — not recommended. On a modern NVMe SSD, WAL fsync adds negligible
+latency because the WAL is append-only (sequential writes) and the CPU-intensive work
+(tree mutation, hashing) almost always takes longer. Only consider this if profiling
+shows WAL fsync as a genuine bottleneck, which would indicate very slow storage.
+
+**RootCacheSize** (default 3) and **RootCacheExpiry** (default 1s) — controls caching of
+historical tree roots for repeated queries at the same version. The default of 3 cached
+roots is sufficient for most workloads. Increase if your application frequently queries
+many different historical versions concurrently.
+
+**Pruning** — configured via the standard `CommitMultiStore.SetPruning()` method (typically
+set by BaseApp from the node's pruning config). Pruning drives background compaction which
+is essential for keeping disk usage under control. Without pruning enabled, the tree grows
+without bound as orphaned nodes are never cleaned up. The pruning options are:
+- `KeepRecent`: how many recent versions to retain for historical queries. Orphaned nodes
+  older than this are pruned during compaction, reclaiming disk space.
+- `Interval`: how often (in versions) to trigger a compaction run. Setting this to 0 or
+  using `PruningNothing` disables compaction entirely.
+
+Operators should tune these based on their needs — validators that don't serve historical
+queries can prune aggressively, while RPC nodes may need to keep more history.

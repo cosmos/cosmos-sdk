@@ -27,13 +27,28 @@ It improves upon the earlier iavl design with:
 iavlx implements the `store/v2/types.CommitMultiStore` interface, so it can be used as a
 drop-in replacement in any Cosmos SDK app.
 
+### go.mod setup
+
+iavlx is its own Go module (`github.com/cosmos/cosmos-sdk/iavlx`) on the `aaronc/iavlx2` branch.
+To depend on it, add a require and replace pointing to the branch:
+
+```
+require github.com/cosmos/cosmos-sdk/iavlx v0.0.0
+
+replace github.com/cosmos/cosmos-sdk/iavlx => github.com/cosmos/cosmos-sdk/iavlx aaronc/iavlx2
+```
+
 ### Basic integration (app.go)
 
 ```go
-import "github.com/cosmos/cosmos-sdk/iavlx"
+import (
+    "github.com/cosmos/cosmos-sdk/iavlx"
+    "github.com/cosmos/cosmos-sdk/server/flags"
+)
 
 // In your app constructor, before creating BaseApp:
-iavlxDir := filepath.Join(homePath, "data", "iavlx")
+// appOpts is the server.AppOptions passed to your app's constructor.
+iavlxDir := filepath.Join(appOpts.Get(flags.FlagHome).(string), "data", "iavlx")
 cms, err := iavlx.LoadCommitMultiTree(iavlxDir, iavlx.Options{}, logger)
 if err != nil {
     panic(err)
@@ -43,6 +58,8 @@ baseAppOptions = append(
     []func(*baseapp.BaseApp){func(app *baseapp.BaseApp) { app.SetCMS(cms) }},
     baseAppOptions...,
 )
+
+bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 ```
 
 See `simapp/app.go` for a working example.
@@ -76,6 +93,8 @@ The `iavlx` CLI (`cmd/iavlx/`) provides offline inspection and management:
 ## Production Readiness
 
 I consider this code base mostly done. It was tested in multi-day devnets with pruning enabled and ran without error.
+Property-based testing in this code-base checks that each individual tree and the whole multi-tree match iavl/v1
+in observable hashing and data.
 
 The remaining TODOs are mostly operational support methods, specifically:
 - **Snapshot / state sync**: the per-tree primitives exist (`TreeReader.Export` for serialization,

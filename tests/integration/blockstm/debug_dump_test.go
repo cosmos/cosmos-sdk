@@ -2,6 +2,7 @@ package blockstm_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -46,9 +47,23 @@ type debugTxnData struct {
 }
 
 type debugExecution struct {
-	Incarnation uint      `json:"incarnation"`
-	Start       time.Time `json:"start"`
-	End         time.Time `json:"end"`
+	Incarnation uint                      `json:"incarnation"`
+	Start       time.Time                 `json:"start"`
+	End         time.Time                 `json:"end"`
+	ReadSets    map[string][]debugRead    `json:"read_sets,omitempty"`
+	WriteSets   map[string][]debugWrite   `json:"write_sets,omitempty"`
+}
+
+type debugRead struct {
+	Key     string `json:"key"`
+	FromTxn int    `json:"from_txn"`
+	FromInc uint   `json:"from_incarnation"`
+}
+
+type debugWrite struct {
+	Key      string `json:"key"`
+	ValueLen int    `json:"value_len"`
+	IsDelete bool   `json:"is_delete"`
 }
 
 type debugValidation struct {
@@ -249,35 +264,66 @@ func TestBlockSTM_DebugDumpOnAppHashMismatch(t *testing.T) {
 		}
 	}
 
-	// --- Log detailed trace for a sample transaction ---
-	t.Logf("=== Transaction 0 detail ===")
-	txn0 := snap.Transactions[0]
-	for j, exec := range txn0.Executions {
-		t.Logf("  exec[%d] incarnation=%d duration=%v", j, exec.Incarnation, exec.End.Sub(exec.Start))
-	}
-	for j, val := range txn0.Validations {
-		t.Logf("  val[%d]  incarnation=%d valid=%v aborted=%v", j, val.Incarnation, val.Valid, val.Aborted)
-	}
-	for j, sus := range txn0.Suspensions {
-		t.Logf("  sus[%d]  blocked_by=%d wait=%v", j, sus.BlockedBy, sus.Resume.Sub(sus.Suspend))
-	}
-
-	// --- Log a high-incarnation transaction showing conflict resolution ---
+	// Verify read/write sets are captured on every execution record
+	totalReads := 0
+	totalWrites := 0
 	for i, txn := range snap.Transactions {
-		for _, exec := range txn.Executions {
-			if exec.Incarnation > 1 {
-				t.Logf("=== High-incarnation transaction %d ===", i)
-				for j, e := range txn.Executions {
-					t.Logf("  exec[%d] incarnation=%d duration=%v", j, e.Incarnation, e.End.Sub(e.Start))
+		for j, exec := range txn.Executions {
+			require.NotEmpty(t, exec.ReadSets,
+				"txn %d exec %d should have read sets", i, j)
+			require.NotEmpty(t, exec.WriteSets,
+				"txn %d exec %d should have write sets", i, j)
+			for _, reads := range exec.ReadSets {
+				totalReads += len(reads)
+				for _, rd := range reads {
+					require.NotEmpty(t, rd.Key, "read key should not be empty")
 				}
-				for j, v := range txn.Validations {
-					t.Logf("  val[%d]  incarnation=%d valid=%v aborted=%v", j, v.Incarnation, v.Valid, v.Aborted)
+			}
+			for _, writes := range exec.WriteSets {
+				totalWrites += len(writes)
+				for _, wr := range writes {
+					require.NotEmpty(t, wr.Key, "write key should not be empty")
 				}
-				for j, s := range txn.Suspensions {
-					t.Logf("  sus[%d]  blocked_by=%d wait=%v", j, s.BlockedBy, s.Resume.Sub(s.Suspend))
-				}
-				break
 			}
 		}
+	}
+	t.Logf("  Total read entries:  %d", totalReads)
+	t.Logf("  Total write entries: %d", totalWrites)
+	require.Greater(t, totalReads, 0, "should have captured reads")
+	require.Greater(t, totalWrites, 0, "should have captured writes")
+
+	// --- Log detailed trace for a re-executed transaction ---
+	for i, txn := range snap.Transactions {
+		if len(txn.Executions) < 2 {
+			continue
+		}
+		t.Logf("=== Transaction %d (re-executed, %d incarnations) ===", i, len(txn.Executions))
+		for j, exec := range txn.Executions {
+			t.Logf("  exec[%d] incarnation=%d duration=%v", j, exec.Incarnation, exec.End.Sub(exec.Start))
+			for store, reads := range exec.ReadSets {
+				t.Logf("    store %s: %d reads", store, len(reads))
+				for k, rd := range reads {
+					src := "storage"
+					if rd.FromTxn >= 0 {
+						src = fmt.Sprintf("txn %d inc %d", rd.FromTxn, rd.FromInc)
+					}
+					if k < 5 { // limit output
+						t.Logf("      read key=%s from=%s", rd.Key, src)
+					}
+				}
+			}
+			for store, writes := range exec.WriteSets {
+				t.Logf("    store %s: %d writes", store, len(writes))
+				for k, wr := range writes {
+					if k < 5 {
+						t.Logf("      write key=%s len=%d delete=%v", wr.Key, wr.ValueLen, wr.IsDelete)
+					}
+				}
+			}
+		}
+		for j, v := range txn.Validations {
+			t.Logf("  val[%d] incarnation=%d valid=%v aborted=%v", j, v.Incarnation, v.Valid, v.Aborted)
+		}
+		break // just show one example
 	}
 }

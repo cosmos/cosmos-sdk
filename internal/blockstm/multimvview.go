@@ -93,3 +93,16 @@ func (mv *MultiMVMemoryView) CountWrites() int {
 	}
 	return count
 }
+
+// StoreReadWriteSets returns the read sets and write descriptors for all touched stores,
+// keyed by store index.
+func (mv *MultiMVMemoryView) StoreReadWriteSets() (reads map[int]*ReadSet, writes map[int][]WriteDescriptor) {
+	reads = make(map[int]*ReadSet, len(mv.views))
+	writes = make(map[int][]WriteDescriptor, len(mv.views))
+	for key, view := range mv.views {
+		idx := mv.stores[key]
+		reads[idx] = view.ReadSet()
+		writes[idx] = view.WriteDescriptors()
+	}
+	return reads, writes
+}

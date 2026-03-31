@@ -104,6 +104,13 @@ type MVStore interface {
 	SnapshotToStore(storetypes.Store)
 }
 
+// WriteDescriptor describes a single key written by a transaction.
+type WriteDescriptor struct {
+	Key      Key
+	ValueLen int
+	IsDelete bool
+}
+
 // MVView is a value type agnostic interface for `MVMemoryView`, to keep `MultiMVMemoryView` value type agnostic.
 type MVView interface {
 	storetypes.Store
@@ -111,4 +118,5 @@ type MVView interface {
 	ApplyWriteSet(TxnVersion) bool
 	ReadSet() *ReadSet
 	WriteCount() int
+	WriteDescriptors() []WriteDescriptor
 }

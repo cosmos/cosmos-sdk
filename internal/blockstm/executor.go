@@ -77,7 +77,8 @@ func (e *Executor) TryExecute(version TxnVersion) (TxnVersion, TaskKind) {
 	view := e.execute(version.Index)
 	finish := time.Now()
 
-	e.scheduler.debug.RecordExecution(version.Index, version.Incarnation, start, finish)
+	reads, writes := view.StoreReadWriteSets()
+	e.scheduler.debug.RecordExecution(version.Index, version.Incarnation, start, finish, reads, writes)
 
 	// Track read and write counts
 	readCount := view.CountReads()

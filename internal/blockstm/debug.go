@@ -1,6 +1,7 @@
 package blockstm
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -24,9 +25,25 @@ type TxnDebugData struct {
 
 // ExecutionRecord captures a single execution attempt for a transaction.
 type ExecutionRecord struct {
-	Incarnation Incarnation `json:"incarnation"`
-	Start       time.Time   `json:"start"`
-	End         time.Time   `json:"end"`
+	Incarnation Incarnation          `json:"incarnation"`
+	Start       time.Time            `json:"start"`
+	End         time.Time            `json:"end"`
+	ReadSets    map[int][]DebugRead  `json:"read_sets,omitempty"`
+	WriteSets   map[int][]DebugWrite `json:"write_sets,omitempty"`
+}
+
+// DebugRead records a single key read during execution.
+type DebugRead struct {
+	Key          string `json:"key"`                    // hex-encoded key
+	FromTxn      int    `json:"from_txn"`               // txn index the value was read from (-1 = storage)
+	FromInc      uint   `json:"from_incarnation"`       // incarnation of the txn the value was read from
+}
+
+// DebugWrite records a single key written during execution.
+type DebugWrite struct {
+	Key      string `json:"key"`       // hex-encoded key
+	ValueLen int    `json:"value_len"` // length of the value written (0 for deletes)
+	IsDelete bool   `json:"is_delete"`
 }
 
 // ValidationRecord captures a single validation attempt for a transaction.
@@ -52,15 +69,60 @@ func NewBlockExecutionDebug(blockSize int) *BlockExecutionDebug {
 	return &BlockExecutionDebug{txns: txns}
 }
 
-// RecordExecution records an execution run for the given transaction.
-func (d *BlockExecutionDebug) RecordExecution(txn TxnIndex, incarnation Incarnation, start, end time.Time) {
+// RecordExecution records an execution run with its read/write sets for the given transaction.
+func (d *BlockExecutionDebug) RecordExecution(
+	txn TxnIndex, incarnation Incarnation, start, end time.Time,
+	reads map[int]*ReadSet, writes map[int][]WriteDescriptor,
+) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	d.txns[txn].Executions = append(d.txns[txn].Executions, ExecutionRecord{
+
+	rec := ExecutionRecord{
 		Incarnation: incarnation,
 		Start:       start,
 		End:         end,
-	})
+	}
+
+	if len(reads) > 0 {
+		rec.ReadSets = make(map[int][]DebugRead, len(reads))
+		for store, rs := range reads {
+			var debugReads []DebugRead
+			for _, rd := range rs.Reads {
+				debugReads = append(debugReads, DebugRead{
+					Key:     hex.EncodeToString(rd.Key),
+					FromTxn: int(rd.Version.Index),
+					FromInc: uint(rd.Version.Incarnation),
+				})
+			}
+			for _, iter := range rs.Iterators {
+				for _, rd := range iter.Reads {
+					debugReads = append(debugReads, DebugRead{
+						Key:     hex.EncodeToString(rd.Key),
+						FromTxn: int(rd.Version.Index),
+						FromInc: uint(rd.Version.Incarnation),
+					})
+				}
+			}
+			rec.ReadSets[store] = debugReads
+		}
+	}
+
+	if len(writes) > 0 {
+		rec.WriteSets = make(map[int][]DebugWrite, len(writes))
+		for store, wds := range writes {
+			debugWrites := make([]DebugWrite, len(wds))
+			for i, wd := range wds {
+				debugWrites[i] = DebugWrite{
+					Key:      hex.EncodeToString(wd.Key),
+					ValueLen: wd.ValueLen,
+					IsDelete: wd.IsDelete,
+				}
+			}
+			rec.WriteSets[store] = debugWrites
+		}
+	}
+
+	d.txns[txn].Executions = append(d.txns[txn].Executions, rec)
 }
 
 // RecordValidation records a validation run for the given transaction.
@@ -111,7 +173,8 @@ func (d *BlockExecutionDebug) ToSnapshot() *Snapshot {
 	txns := make([]*TxnDebugData, len(d.txns))
 	for i, t := range d.txns {
 		cp := *t
-		cp.Executions = append([]ExecutionRecord(nil), t.Executions...)
+		cp.Executions = make([]ExecutionRecord, len(t.Executions))
+		copy(cp.Executions, t.Executions)
 		cp.Validations = append([]ValidationRecord(nil), t.Validations...)
 		cp.Suspensions = append([]SuspensionRecord(nil), t.Suspensions...)
 		txns[i] = &cp

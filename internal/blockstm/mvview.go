@@ -79,6 +79,22 @@ func (s *GMVMemoryView[V]) WriteCount() int {
 	return s.writeSet.Len()
 }
 
+func (s *GMVMemoryView[V]) WriteDescriptors() []WriteDescriptor {
+	if s.writeSet == nil {
+		return nil
+	}
+	var descs []WriteDescriptor
+	s.writeSet.Scan(func(key Key, value V) bool {
+		descs = append(descs, WriteDescriptor{
+			Key:      append(Key(nil), key...),
+			ValueLen: s.mvData.valueLen(value),
+			IsDelete: s.mvData.isZero(value),
+		})
+		return true
+	})
+	return descs
+}
+
 func (s *GMVMemoryView[V]) Get(key []byte) V {
 	start := time.Now()
 	if s.writeSet != nil {

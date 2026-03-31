@@ -20,8 +20,8 @@ any leaf can be looked up by its file offset in O(1) without an index.
   12       5   KeyOffset        — Uint40, byte offset of the key blob
   17       5   ValueOffset      — Uint40, byte offset of the value blob
   22       1   flags            — bit flags:
-                 ├── bit 0: key is in kv.dat (1) vs wal.dat (0)
-                 └── bit 1: value is in kv.dat (1) vs wal.dat (0)
+                 ├── bit 0: key is in kv.dat (1) vs wal.log (0)
+                 └── bit 1: value is in kv.dat (1) vs wal.log (0)
   23      32   Hash             — SHA-256 hash of this leaf node
   55       1   (padding)
 ```
@@ -34,7 +34,7 @@ A leaf's key and value data are NOT stored inline in the leaf record — the rec
 holds offsets pointing to where the actual bytes live. The `flags` field tells you which
 file to look in:
 
-- **wal.dat**: if the blob was written during the WAL phase of a commit, its offset points
+- **wal.log**: if the blob was written during the WAL phase of a commit, its offset points
   into the WAL file. This is the common case for recently committed data.
 - **kv.dat**: if the blob wasn't in the WAL (e.g. after compaction rewrote the WAL and
   dropped old entries), it gets copied to kv.dat and the offset points there instead.

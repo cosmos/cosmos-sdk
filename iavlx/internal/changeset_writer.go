@@ -8,7 +8,7 @@ import (
 // ChangesetWriter writes tree data (nodes, WAL entries, key/value blobs) to a changeset directory.
 //
 // A changeset directory contains several files that together represent a range of tree versions:
-//   - wal.dat: the write-ahead log of all set/delete operations (source of truth for durability)
+//   - wal.log: the write-ahead log of all set/delete operations (source of truth for durability)
 //   - kv.dat: key/value blob storage for data that outlives its original WAL segment
 //   - leaves.dat: fixed-size leaf node records (LeafLayout), one per leaf per checkpoint
 //   - branches.dat: fixed-size branch node records (BranchLayout), one per inner node per checkpoint

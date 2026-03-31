@@ -6,7 +6,7 @@ lookups: the key that separates the left and right subtrees, the subtree height 
 balancing, and the subtree size for index-based access.
 
 Unlike leaf nodes, branches don't store values — only the key used as the split point.
-The key is stored externally (in `wal.dat` or `kv.dat`) and referenced by offset, but
+The key is stored externally (in `wal.log` or `kv.dat`) and referenced by offset, but
 the first 8 bytes are also inlined in the record for fast prefix comparisons that can
 skip the external read in many cases.
 
@@ -31,7 +31,7 @@ so the parent can store the child's offset directly for O(1) lookups.
   36       5   KeyOffset        — Uint40, byte offset of the key blob
   41       1   Height           — AVL tree height of this subtree
   42       1   flags            — bit fields:
-                 ├── bit 7: key is in kv.dat (1) vs wal.dat (0)
+                 ├── bit 7: key is in kv.dat (1) vs wal.log (0)
                  └── bits 0-4: inline key prefix length (0-31)
   43       5   Size             — Uint40, number of leaf nodes in this subtree
   48       8   InlineKeyPrefix  — first 8 bytes of the key (for fast prefix comparisons)
@@ -66,7 +66,7 @@ The `InlineKeyPrefix` field stores the first 8 bytes of the branch's key directl
 the record. The `flags` field encodes the actual key length (up to 31) in its lower 5 bits.
 
 This allows many key comparisons to be resolved without reading the full key from
-`wal.dat` or `kv.dat`. For keys shorter than 8 bytes, the entire key is inline and no
+`wal.log` or `kv.dat`. For keys shorter than 8 bytes, the entire key is inline and no
 external read is ever needed. For longer keys, the inline prefix can eliminate most
 comparisons (only keys sharing the same 8-byte prefix require the full read).
 

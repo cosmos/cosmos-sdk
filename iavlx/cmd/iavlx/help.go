@@ -41,14 +41,15 @@ const sidebarW = 16
 
 // allDocs is the fixed list of help topics in sidebar order.
 var allDocs = []docEntry{
-	{key: "multitree.md", label: "Trees"},
+	{key: "commit-lifecycle.md", label: "Commit"},
+	{key: "multitree.md", label: "Multi-Tree"},
 	{key: "changeset.md", label: "Changesets"},
 	{key: "checkpoint.md", label: "Checkpoints"},
 	{key: "leaves.md", label: "Leaves"},
 	{key: "branches.md", label: "Branches"},
+	{key: "node-id.md", label: "Node IDs"},
 	{key: "orphans.md", label: "Orphans"},
-	{key: "wal-analysis.md", label: "WAL Analysis"},
-	{key: "wal-entries.md", label: "WAL Entries"},
+	{key: "wal.md", label: "WAL"},
 	{key: "commit-info.md", label: "Commit Info"},
 }
 

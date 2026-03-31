@@ -24,12 +24,12 @@ func TestPollWatcher(t *testing.T) {
 	go func() {
 		// write some dummy data to the file
 		time.Sleep(time.Second)
-		err = os.WriteFile(filename, []byte("unexpected content - should be updated later"), 0o644)
+		err = os.WriteFile(filename, []byte("unexpected content - should be updated later"), 0o600)
 		require.NoError(t, err)
 
 		// write the expected content to the file
 		time.Sleep(time.Second)
-		err := os.WriteFile(filename, expectedContent, 0o644)
+		err := os.WriteFile(filename, expectedContent, 0o600)
 		require.NoError(t, err)
 
 		// wait a bit to ensure the watcher has time to pick up the change

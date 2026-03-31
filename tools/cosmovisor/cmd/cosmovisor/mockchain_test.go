@@ -87,7 +87,7 @@ func (m MockChainSetup) Setup(t *testing.T) (string, string) {
 	require.NoError(t, os.MkdirAll(genDir, 0o755))
 	mockdPath := filepath.Join(genDir, "mockd")
 	require.NoError(t,
-		os.WriteFile(mockdPath, []byte(mockNodeWrapper(m.Genesis)), 0o755),
+		os.WriteFile(mockdPath, []byte(mockNodeWrapper(m.Genesis)), 0o755), //nolint:gosec // executable wrapper
 	)
 	// create gov upgrade wrappers
 	for name, args := range m.GovUpgrades {
@@ -95,7 +95,7 @@ func (m MockChainSetup) Setup(t *testing.T) (string, string) {
 		require.NoError(t, os.MkdirAll(upgradeDir, 0o755))
 		require.NoError(t,
 			os.WriteFile(filepath.Join(upgradeDir, "mockd"),
-				[]byte(mockNodeWrapper(args)), 0o755),
+				[]byte(mockNodeWrapper(args)), 0o755), //nolint:gosec // executable wrapper
 		)
 	}
 	// create manual upgrade wrappers
@@ -103,7 +103,7 @@ func (m MockChainSetup) Setup(t *testing.T) (string, string) {
 	require.NoError(t, os.MkdirAll(manualUpgradeDir, 0o755))
 	for name, args := range m.ManualUpgrades {
 		filename := filepath.Join(manualUpgradeDir, name)
-		require.NoError(t, os.WriteFile(filename, []byte(mockNodeWrapper(args)), 0o755))
+		require.NoError(t, os.WriteFile(filename, []byte(mockNodeWrapper(args)), 0o755)) //nolint:gosec // executable wrapper
 	}
 
 	// update config and save it

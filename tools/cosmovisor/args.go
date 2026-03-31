@@ -512,7 +512,7 @@ func (cfg Config) ReadLastKnownHeight() uint64 {
 
 func (cfg Config) WriteLastKnownHeight(height uint64) error {
 	filename := filepath.Join(cfg.UpgradeInfoDir(), LastKnownHeightFile)
-	return os.WriteFile(filename, []byte(strconv.FormatUint(height, 10)), 0o644)
+	return os.WriteFile(filename, []byte(strconv.FormatUint(height, 10)), 0o600)
 }
 
 // BooleanOption checks and validate env option

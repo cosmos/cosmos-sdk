@@ -149,7 +149,7 @@ func (n *MockNode) Run(ctx context.Context) error {
 		case <-ticker.C:
 			n.height++
 			// Write the current height to the actual-height file
-			err := os.WriteFile(actualHeightFile, []byte(fmt.Sprintf("%d", n.height)), 0o644)
+			err := os.WriteFile(actualHeightFile, []byte(fmt.Sprintf("%d", n.height)), 0o600)
 			if err != nil {
 				return fmt.Errorf("failed to write actual height to file: %w", err)
 			}
@@ -179,7 +179,7 @@ func (n *MockNode) Run(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to create directory for upgrade-info.json: %w", err)
 		}
-		err = os.WriteFile(upgradeInfoPath, []byte(out), 0o644)
+		err = os.WriteFile(upgradeInfoPath, []byte(out), 0o600)
 		if err != nil {
 			return fmt.Errorf("failed to write upgrade-info.json: %w", err)
 		}

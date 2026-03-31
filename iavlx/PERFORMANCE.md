@@ -15,12 +15,22 @@ this work up again.
 The following benchmarks show at a high-level the number of write operations per second achieved against a single
 tree with 100k, 1m, and 10m bank-like leaf-nodes for iavlx, iavl/v1 and memiavl:
 
+| leaf nodes | iavlx (ops/s) | iavl/v1 (ops/s) | memiavl (ops/s) |
+|------------|--------------|-----------------|-----------------|
+| 100,000 | 572,827 | 49,394 | 502,953 |
+| 1,000,000 | 281,849 | 11,146 | 233,059 |
+| 10,000,000 | 152,260 | 9,751 | 153,879 |
+
+iavlx generally provides a 10x or more improvement over iavl/v1 in terms of raw write performance, but
+that scales to even more of a difference if we use multiple trees as shown below.
+Compared to memiavl, iavlx usually performs a bit better but is also more scalable and consistent (memiavl's long
+snapshot times can lead to blocking pauses and out-of-memory issues).
 
 ## Write Scaling
 
 iavlx allows write performance to scale across threads when there are multiple trees. Meaning, you get more
 bank for your buck for having 2 or more trees side by side in a multi-tree. The following numbers show how
-iavlx performance scales with 1, 2 4, 8 and 16 parallel trees in the multi-tree. Each tree has 1 million bank-like leaf nodes.
+iavlx performance scales with 1, 2, 4, 8 and 16 parallel trees in the multi-tree. Each tree has 1 million bank-like leaf nodes.
 
 | trees | ops/sec |
 |-------|------------|
@@ -31,7 +41,7 @@ iavlx performance scales with 1, 2 4, 8 and 16 parallel trees in the multi-tree.
 | 16 | 1,270,000 |
 
 Note that we don't show the numbers for memiavl or iavl/v1 because they don't do any concurrency when there are multiple
-trees, so the numbers don't show any scaling. For memiavl, I am not sure if there is any inherent limitation, but the
+trees, so the numbers don't show any scaling. For memiavl, I am not sure if there is any inherent limitation, but
 iavl/v1 does not support concurrency in any form.
 
 ## Read Performance Analysis
@@ -90,7 +100,7 @@ Inlining of the first 8 bytes of a key was benchmarked specifically after the ab
 
 ## Multi-threaded Read Performance
 
-Compared to iavl/v1, iavlx supported concurrent readers.
+Compared to iavl/v1, iavlx supports concurrent readers.
 In iavl/v1, trying to read from multiple threads is actually slower than reading from a single thread due to mutex contention.
 In iavlx, read performance generally scales with threads.
 
@@ -102,7 +112,6 @@ The following benchmark numbers compare the number of reads/second when querying
 | 2 | 169,217 | 924,373 |
 | 8 | 164,364 | 3,380,000 |
 | 16 | 160,450 | 6,320,000 |
-
 
 ## Comparison with other IAVL implementations
 
@@ -136,6 +145,10 @@ be 200x, so this setting matters a lot for large trees.
 mean faster startup (less WAL to replay) but more IO during normal operation. Higher values
 reduce IO but increase startup time. On fast storage, 100 is a good balance. If your chain
 produces blocks very quickly, consider increasing this.
+
+NOTE: iavlx can be tuned to operate with very low memory by setting the eviction depths and
+checkpoint intervals to very low numbers (such as 1). Performance will be much slower,
+but memory usage will also be much lower.
 
 **ChangesetRolloverSize** (default 2GB) — when a changeset's WAL reaches this size, a new
 changeset directory is created. Smaller values mean more changeset directories (more file

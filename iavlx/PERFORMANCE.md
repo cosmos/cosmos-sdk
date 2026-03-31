@@ -3,7 +3,7 @@
 iavlx was rigorously benchmarked against iavl/v1, memiavl, and iavl/v2 during its development to inform and
 validate its design.
 
-## Commit Performance
+All of the benchmark numbers below were collected on a Hetzner AX102 instance in early 2026 with an AMD RYZEN 9 7950X3D, 128 GB DDR5 ECC and 2 x 1.92 TB NVMe SSD Datacenter Edition (Gen4).
 
 ## Read Performance Analysis
 
@@ -43,7 +43,7 @@ iavlx's disk format has many optimizations to reduce disk read overhead:
 * O(log log n) interpolation search between changesets
 * inlining of the first 8 bytes of a key in node structs
 
-Inlining of the first 8 bytes of a key was benchmarked specifically after the above benchmarks were taken and resulted in generally 2x better read performance than before it was added:
+Inlining of the first 8 bytes of a key was benchmarked specifically after the above benchmarks were taken and resulted in up to ~2x better disk read performance for medium-to-large trees:
 
 | leaf nodes | disk (reads/s) | disk w/ inline key prefix (reads/s) |
 |------------|----------------|--------------------------------------|
@@ -61,6 +61,20 @@ Inlining of the first 8 bytes of a key was benchmarked specifically after the ab
 
 ## Multi-threaded Read Performance
 
+Compared to iavl/v1, iavlx supported concurrent readers.
+In iavl/v1, trying to read from multiple threads is actually slower than reading from a single thread due to mutex contention.
+In iavlx, read performance generally scales with threads.
+
+The following benchmark numbers compare the number of reads/second when querying a tree with 1 million bank-like nodes with 1, 2, 8 and 16 concurrent read threads:
+
+| threads | iavl/v1 (reads/s) | iavlx (reads/s) |
+|---------|-------------------|-----------------|
+| 1 | 175,073 | 486,836 |
+| 2 | 169,217 | 924,373 |
+| 8 | 164,364 | 3,380,000 |
+| 16 | 160,450 | 6,320,000 |
+
+
 ## Comparison with other IAVL implementations
 
 When iavlx was designed, memiavl already existed as a production alternative, and iavl/v2 had been built, but not
@@ -69,8 +83,11 @@ Sqlite and memiavl, like iavlx, had its own custom storage engine.
 
 In early benchmarks, memiavl generally showed superior performance to other alternatives except when tree size
 became rather large, at which point snapshot writing started to take so long that it blocked normal block processing
-and the node consumed so much memory that it crashes. Basically, memiavl's disk persistence mechanism is an
+and the node consumed so much memory that it crashed. Basically, memiavl's disk persistence mechanism is an
 all or nothing snapshot. This works well when the tree is small but it doesn't scale.
 iavlx takes inspiration from memiavl's design but uses partial checkpoints (inspired by iavl/v2) so that it
 doesn't have this scaling problem. On top of that, iavlx makes other concurrency optimizations which allow it to
 generally perform better than memiavl.
+
+## Performance Tuning
+

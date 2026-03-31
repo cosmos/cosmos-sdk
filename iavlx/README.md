@@ -88,6 +88,13 @@ The `iavlx` CLI (`cmd/iavlx/`) provides offline inspection and management:
 
 ## Performance
 
+iavlx was rigorously benchmarked against iavl/v1, memiavl and iavl/v2 to inform and validate its design.
+Its performance scales horizontally across threads for both reads and writes:
+- more CPUs and more memory generally means faster write performance
+- more read threads means faster read performance
+
+See [PERFORMANCE.md](./PERFORMANCE.md) for more detailed benchmark numbers.
+
 ## Production Readiness
 
 I consider this code base mostly done. It was tested in multi-day devnets with pruning enabled and ran without error.

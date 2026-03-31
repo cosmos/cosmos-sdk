@@ -29,13 +29,11 @@ drop-in replacement in any Cosmos SDK app.
 
 ### go.mod setup
 
-iavlx is its own Go module (`github.com/cosmos/cosmos-sdk/iavlx`) on the `aaronc/iavlx2` branch.
-To depend on it, add a require and replace pointing to the branch:
+iavlx is its own Go module (`github.com/cosmos/cosmos-sdk/iavlx`) on the `feat/iavlx` branch.
+To depend on it, point `go get` at the branch and it will resolve to a pseudo-version:
 
-```
-require github.com/cosmos/cosmos-sdk/iavlx v0.0.0
-
-replace github.com/cosmos/cosmos-sdk/iavlx => github.com/cosmos/cosmos-sdk/iavlx aaronc/iavlx2
+```sh
+go get github.com/cosmos/cosmos-sdk/iavlx@feat/iavlx
 ```
 
 ### Basic integration (app.go)

@@ -8,6 +8,10 @@ import (
 	"os"
 )
 
+// ReadWAL returns an iterator over all WAL entries in the given file. The iterator
+// yields entries sequentially; the file is closed when iteration completes or the
+// caller stops iterating. An incomplete final version (no commit entry) is treated
+// as corruption and yields an error.
 func ReadWAL(file *os.File) iter.Seq2[WALEntry, error] {
 	kvr, err := NewKVDataReader(file)
 	if err != nil {

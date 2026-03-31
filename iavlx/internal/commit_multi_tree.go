@@ -174,6 +174,10 @@ func (db *CommitMultiTree) MountStoreWithDB(key storetypes.StoreKey, typ storety
 	})
 }
 
+// LoadLatestVersion initializes all mounted stores by loading their on-disk data.
+// It reads the latest commit info to determine the expected version, then loads each
+// store (creating directories as needed for new stores). Must be called after all
+// MountStoreWithDB calls and before any reads or commits.
 func (db *CommitMultiTree) LoadLatestVersion() error {
 	// sort treeKeys to ensure deterministic order
 	// we assume that MountStoreWithDB has been called for all stores before this
@@ -191,13 +195,6 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 	if ci != nil {
 		// should be nil on initial creation
 		version = ci.Version
-		db.commitData.Store(&commitData{
-			commitId: storetypes.CommitID{
-				Version: version,
-				Hash:    ci.Hash(),
-			},
-			commitInfo: ci,
-		})
 		db.earliestVersion.Store(earliestVersion)
 	}
 
@@ -217,7 +214,33 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 		}
 	}
 
-	// db.startDebugServer()
+	if ci != nil {
+		// The commit info hash footer is not fsynced, so after a crash per-store
+		// hashes may be missing. Recompute any empty ones from the loaded trees
+		// so the app hash matches what CometBFT expects.
+		for i, si := range ci.StoreInfos {
+			// If we have a valid hash, no need to recompute.
+			if len(si.CommitId.Hash) != 0 {
+				continue
+			}
+			// We don't have the store key in StoreInfos, so we need to search all iavl stores.
+			for _, sd := range db.iavlStores {
+				if sd.key.Name() == si.Name {
+					_, rootPtr := sd.store.(*CommitTree).treeStore.Latest()
+					hash, err := rootHash(context.Background(), rootPtr)
+					if err != nil {
+						return fmt.Errorf("recomputing root hash for store %s: %w", si.Name, err)
+					}
+					ci.StoreInfos[i].CommitId = storetypes.CommitID{Version: ci.Version, Hash: hash}
+					break
+				}
+			}
+		}
+		db.commitData.Store(&commitData{
+			commitId:   storetypes.CommitID{Version: version, Hash: ci.Hash()},
+			commitInfo: ci,
+		})
+	}
 
 	return nil
 }
@@ -335,6 +358,8 @@ func (db *CommitMultiTree) PopStateCache() []*storetypes.StoreKVPair {
 	panic("implement me")
 }
 
+// LoadCommitMultiTree creates a new CommitMultiTree rooted at path. The caller must then
+// mount stores via MountStoreWithDB and call LoadLatestVersion to initialize them.
 func LoadCommitMultiTree(path string, opts Options, logger log.Logger) (*CommitMultiTree, error) {
 	db := &CommitMultiTree{
 		dir:            path,
@@ -358,6 +383,7 @@ func (db *CommitMultiTree) LatestVersion() int64 {
 	return cd.commitId.Version
 }
 
+// Close cancels any in-progress compaction, waits for it to finish, and closes all stores.
 func (db *CommitMultiTree) Close() error {
 	db.compactionMu.Lock()
 	cancel := db.cancelCompaction
@@ -608,21 +634,6 @@ func deleteCommitInfos(multiTreeDir string, retain func(uint64) bool) error {
 		}
 	}
 	return nil
-}
-
-func (db *CommitMultiTree) Describe() MultiTreeDescription {
-	descriptions := make(map[string]TreeDescription)
-	for _, si := range db.iavlStores {
-		ct, ok := si.store.(*CommitTree)
-		if !ok {
-			continue
-		}
-		descriptions[si.key.Name()] = ct.treeStore.Describe()
-	}
-	return MultiTreeDescription{
-		Version: uint64(db.LatestVersion()),
-		Trees:   descriptions,
-	}
 }
 
 // Query routes a query request to a sub-store by name and appends the multi-store proof when requested.

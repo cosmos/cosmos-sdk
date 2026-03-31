@@ -34,6 +34,10 @@ type Importer struct {
 	writer *ChangesetWriter
 }
 
+// NewImporter creates a new Importer that will write into treeDir. stagedVersion is the
+// version of the tree being imported (e.g. the latest version from the source iavl/v1 tree);
+// importing nodes with a version greater than stagedVersion is an error. The tree directory
+// must be empty (no prior data).
 func NewImporter(stagedVersion uint32, treeDir string, logger log.Logger) (*Importer, error) {
 	ts, err := NewTreeStore(treeDir, TreeOptions{}, logger)
 	if err != nil {
@@ -60,6 +64,9 @@ func NewImporter(stagedVersion uint32, treeDir string, logger log.Logger) (*Impo
 	}, nil
 }
 
+// ExportNode is a single node in the post-order export stream produced by TreeReader.Export
+// and consumed by Importer.Add. Leaf nodes have Height == 0 and a non-nil Value; branch
+// nodes have Height > 0 and a nil Value.
 type ExportNode = struct {
 	Key     []byte
 	Value   []byte
@@ -67,6 +74,9 @@ type ExportNode = struct {
 	Height  int8
 }
 
+// Add processes one ExportNode in post-order sequence. Leaf nodes are pushed onto the
+// stack; branch nodes pop their two children, wire them up, write them to disk, and push
+// the assembled branch. Nodes must arrive in the same order produced by TreeReader.Export.
 func (i *Importer) Add(exportNode *ExportNode) error {
 	if exportNode == nil {
 		return errors.New("node cannot be nil")
@@ -144,6 +154,9 @@ func (i *Importer) Add(exportNode *ExportNode) error {
 	return nil
 }
 
+// Finalize validates that exactly one root node remains on the stack, writes the final
+// checkpoint, seals and syncs all changeset files. After Finalize, the tree can be opened
+// normally via NewTreeStore/load().
 func (i *Importer) Finalize() error {
 	var cpInfo CheckpointInfo
 	cpInfo.Version = i.stagedVersion
@@ -242,6 +255,8 @@ func (i *Importer) writeNode(np *NodePointer) error {
 	return nil
 }
 
+// importExporter drains an iavl/v1 Exporter, feeding each exported node into Add until
+// the exporter signals completion via ErrorExportDone.
 func (i *Importer) importExporter(exporter *iavl.Exporter) error {
 	for {
 		exportNode, err := exporter.Next()

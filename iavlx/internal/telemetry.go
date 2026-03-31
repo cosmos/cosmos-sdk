@@ -6,11 +6,19 @@ import (
 )
 
 var (
-	tracer          = otel.Tracer("iavl")
-	meter           = otel.Meter("iavl")
+	// tracer provides distributed tracing spans for commit, hash, and WAL operations.
+	tracer = otel.Tracer("iavl")
+	// meter provides metrics instrumentation for latency histograms.
+	meter = otel.Meter("iavl")
+	// leafHashLatency records how long commit had to wait for leaf hashing to complete
+	// before computing the root hash. Ideally zero; nonzero values suggest hash computation
+	// is the bottleneck.
 	leafHashLatency metric.Int64Histogram
+	// walWriteLatency records how long commit had to wait for WAL writes to complete.
+	// Ideally zero; nonzero values suggest storage is the bottleneck.
 	walWriteLatency metric.Int64Histogram
-	queryLatency    metric.Int64Histogram
+	// queryLatency records the total time spent handling an ABCI query request.
+	queryLatency metric.Int64Histogram
 )
 
 func init() {

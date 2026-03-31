@@ -5,6 +5,8 @@ import (
 	"os"
 )
 
+// RollbackFileToOffset truncates the file to the given offset and syncs it.
+// It opens a separate write handle because the passed-in file may be read-only or memory-mapped.
 func RollbackFileToOffset(f *os.File, offset int64) error {
 	filename := f.Name()
 	f2, err := os.OpenFile(filename, os.O_WRONLY, 0)

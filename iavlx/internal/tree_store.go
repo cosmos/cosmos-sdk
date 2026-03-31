@@ -58,6 +58,8 @@ type versionedRoot struct {
 	root    *NodePointer
 }
 
+// NewTreeStore creates a TreeStore by loading existing data from dir (if any) and
+// initializing background goroutines for checkpointing, cleanup, and cache management.
 func NewTreeStore(dir string, opts TreeOptions, logger log.Logger) (*TreeStore, error) {
 	ts := &TreeStore{
 		dir:          dir,
@@ -88,6 +90,7 @@ func NewTreeStore(dir string, opts TreeOptions, logger log.Logger) (*TreeStore, 
 	return ts, nil
 }
 
+// StagedVersion returns the next version that will be committed (current version + 1).
 func (ts *TreeStore) StagedVersion() uint32 {
 	return ts.root.Load().version + 1
 }
@@ -128,6 +131,8 @@ func (ts *TreeStore) GetRootForUpdate(ctx context.Context) (*NodePointer, error)
 	return ts.root.Load().root, nil
 }
 
+// SaveRoot atomically swaps the in-memory root to newRoot, caches the previous root,
+// and triggers checkpointing or orphan tracking as needed based on the checkpoint interval.
 func (ts *TreeStore) SaveRoot(ctx context.Context, newRoot *NodePointer, mutationCtx *MutationContext) error {
 	// sanity check
 	lastRoot := ts.root.Load()
@@ -195,6 +200,8 @@ func (ts *TreeStore) SaveRoot(ctx context.Context, newRoot *NodePointer, mutatio
 	return nil
 }
 
+// WriteWALUpdates writes the given node updates to the current WAL file for the staged version.
+// If fsync is true, the WAL is synced to disk before returning.
 func (ts *TreeStore) WriteWALUpdates(ctx context.Context, updates []NodeUpdate, fsync bool) error {
 	version := ts.StagedVersion()
 	walWriter := ts.currentWriter.WALWriter()
@@ -223,6 +230,7 @@ func (ts *TreeStore) WriteWALUpdates(ctx context.Context, updates []NodeUpdate, 
 	return nil
 }
 
+// RollbackWAL truncates the current WAL back to the last committed version.
 func (ts *TreeStore) RollbackWAL() error {
 	return ts.currentWriter.WALWriter().Rollback()
 }
@@ -387,6 +395,8 @@ func (ts *TreeStore) UnlockOrphanProc() {
 	ts.checkpointer.orphanProc.Unlock()
 }
 
+// Close shuts down the checkpointer and cleanup goroutines, seals the current changeset
+// writer, closes all changeset readers, and stops the root cache.
 func (ts *TreeStore) Close() error {
 	// TODO save a checkpoint before closing if needed
 	errs := []error{
@@ -408,44 +418,6 @@ func (ts *TreeStore) addToDisposalQueue(existing *ChangesetReaderRef) {
 
 func (ts *TreeStore) addToDeletionQueue(ch *Changeset) {
 	ts.cleanupProc.AddDeletion(ch)
-}
-
-func (ts *TreeStore) Describe() TreeDescription {
-	ts.changesetsLock.RLock()
-	defer ts.changesetsLock.RUnlock()
-
-	changesetDescs := make([]ChangesetDescription, 0, ts.changesetsByVersion.Len())
-	ts.changesetsByVersion.Ascend(0, func(version uint32, cs *Changeset) bool {
-		rdr, pin := cs.TryPinReader()
-		defer pin.Unpin()
-		if rdr != nil {
-			changesetDescs = append(changesetDescs, rdr.Describe())
-		} else {
-			changesetDescs = append(changesetDescs, ChangesetDescription{
-				StartVersion: version,
-				Incomplete:   true,
-			})
-		}
-		return true
-	})
-
-	totalBytes := 0
-	for _, cs := range changesetDescs {
-		totalBytes += cs.TotalBytes
-	}
-	version, root := ts.Latest()
-	desc := TreeDescription{
-		Version:                 version,
-		LatestCheckpointVersion: ts.lastCheckpointVersion,
-		LatestCheckpoint:        ts.lastCheckpoint.Load(),
-		LatestSavedCheckpoint:   ts.checkpointer.LatestSavedCheckpoint(),
-		TotalBytes:              totalBytes,
-		Changesets:              changesetDescs,
-	}
-	if root != nil {
-		desc.RootID = root.id
-	}
-	return desc
 }
 
 const memNodeOverhead = int64(unsafe.Sizeof(MemNode{})) + int64(unsafe.Sizeof(NodePointer{}))*2 + 32 /* hash size */

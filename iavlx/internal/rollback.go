@@ -26,7 +26,7 @@ import (
 // if needed by moving them back.
 func RollbackMultiTree(multiTreeDir string, targetVersion uint64, logger log.Logger, backupDir string) error {
 	if backupDir == "" {
-		backupDir = filepath.Join(multiTreeDir, fmt.Sprintf("bak-%s", time.Now().Format("20260102150405")))
+		backupDir = filepath.Join(multiTreeDir, fmt.Sprintf("bak-%s", time.Now().Format("20060102150405")))
 	}
 
 	logger.Info("Rolling back multi-tree", "dir", multiTreeDir, "targetVersion", targetVersion)

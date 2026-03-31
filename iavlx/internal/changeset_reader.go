@@ -409,25 +409,6 @@ func (cr *ChangesetReader) TotalBytes() int {
 		cr.walReader.Len()
 }
 
-func (cr *ChangesetReader) Describe() ChangesetDescription {
-	checkpoints := make([]CheckpointInfo, 0, cr.checkpointsInfo.Count())
-	for i := 0; i < cr.checkpointsInfo.Count(); i++ {
-		info := cr.checkpointsInfo.UnsafeItem(i)
-		checkpoints = append(checkpoints, *info) // copy
-	}
-	return ChangesetDescription{
-		StartVersion:  cr.changeset.Files().StartVersion(),
-		EndVersion:    cr.changeset.Files().EndVersion(),
-		CompactedAt:   cr.changeset.Files().CompactedAtVersion(),
-		TotalLeaves:   cr.leavesData.Count(),
-		TotalBranches: cr.branchesData.Count(),
-		TotalBytes:    cr.TotalBytes(),
-		KVLogSize:     cr.kvDataReader.Len(),
-		WALSize:       cr.walReader.Len(),
-		Checkpoints:   checkpoints,
-	}
-}
-
 func (cr *ChangesetReader) Close() error {
 	errs := []error{
 		cr.leavesData.Close(),

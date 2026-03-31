@@ -47,6 +47,8 @@ type CommitTree struct {
 	lastCommitId storetypes.CommitID
 }
 
+// NewCommitTree creates a CommitTree backed by the given directory, loading any existing
+// tree data and starting background goroutines. The directory is created if it doesn't exist.
 func NewCommitTree(dir string, opts TreeOptions, logger log.Logger) (*CommitTree, error) {
 	err := os.MkdirAll(dir, 0o700)
 	if err != nil {
@@ -531,15 +533,19 @@ func (c *commitTreeFinalizer) Finalize() (storetypes.CommitID, error) {
 	return c.lastCommitId, nil
 }
 
+// LatestVersion returns the most recently committed version of this tree.
 func (c *CommitTree) LatestVersion() uint32 {
 	return c.treeStore.LatestVersion()
 }
 
+// Latest returns a TreeReader for the most recently committed version.
 func (c *CommitTree) Latest() TreeReader {
 	version, root := c.treeStore.Latest()
 	return NewTreeReader(version, root)
 }
 
+// GetVersion returns a TreeReader for a historical version of the tree, reconstructed
+// by finding the nearest checkpoint and replaying the WAL forward.
 func (c *CommitTree) GetVersion(version uint32) (TreeReader, error) {
 	root, err := c.treeStore.RootAtVersion(version)
 	if err != nil {
@@ -548,6 +554,7 @@ func (c *CommitTree) GetVersion(version uint32) (TreeReader, error) {
 	return NewTreeReader(version, root), nil
 }
 
+// Close releases all resources held by this tree (file handles, background goroutines, caches).
 func (c *CommitTree) Close() error {
 	return c.treeStore.Close()
 }

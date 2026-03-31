@@ -141,22 +141,6 @@ func testCommitMultiTreeSims(t *rapid.T, iter int, opts Options, pruningOpts pru
 	//}()
 
 	t.Cleanup(func() {
-		// NOTE: if we need to debug test failures, we can uncomment this code to save a debug HTML file with the tree state at the end of the test for inspection:
-		//// generate debug HTML file for test inspection
-		////if t.Failed() {
-		// desc := sim.mtV2.Describe()
-		//os.MkdirAll("testdata", 0o755)
-		//f, err := os.Create(fmt.Sprintf("testdata/iavl-debug-run-%d.html", iter))
-		//if err != nil {
-		//	t.Logf("failed to create debug HTML file: %v", err)
-		//	return
-		//}
-		//defer f.Close()
-		//if err := RenderHTML(f, desc); err != nil {
-		//	t.Logf("failed to render debug HTML: %v", err)
-		//}
-		////}
-
 		require.NoError(t, sim.mtV2.Close(), "failed to close iavlx commit multi tree")
 	})
 

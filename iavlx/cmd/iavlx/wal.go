@@ -127,7 +127,7 @@ func (v *walAnalysisView) KeyMap() help.KeyMap {
 	return v.keys
 }
 
-func (v *walAnalysisView) HelpDocKey() string { return "wal-analysis.md" }
+func (v *walAnalysisView) HelpDocKey() string { return "wal.md" }
 
 // walEntriesView shows individual WAL entries for a version.
 
@@ -192,4 +192,4 @@ func (v *walEntriesView) KeyMap() help.KeyMap {
 	return emptyKeyMap{}
 }
 
-func (v *walEntriesView) HelpDocKey() string { return "wal-entries.md" }
+func (v *walEntriesView) HelpDocKey() string { return "wal.md" }

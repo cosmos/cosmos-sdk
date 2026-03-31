@@ -2,6 +2,9 @@ package internal
 
 import "iter"
 
+// Export returns an iterator that yields all nodes in the tree in post-order
+// (left subtree, right subtree, parent). This is the standard IAVL export order
+// and is compatible with the Importer's expected input for tree reconstruction.
 func (t TreeReader) Export() iter.Seq2[ExportNode, error] {
 	rootPtr := t.root
 	if rootPtr == nil {

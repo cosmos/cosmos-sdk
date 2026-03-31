@@ -30,4 +30,6 @@ var (
 	ErrInvalidAdminAddress            = errors.Register(ModuleName, 8, "invalid admin address")
 	ErrTotalPowerOverflow             = errors.Register(ModuleName, 9, "total validator power would overflow")
 	ErrInvalidPubKeyLength            = errors.Register(ModuleName, 10, "invalid pubkey length")
+	ErrInvalidAllocatedFees           = errors.Register(ModuleName, 11, "invalid allocated fees")
+	ErrInvalidValidatorPower          = errors.Register(ModuleName, 12, "invalid validator power")
 )

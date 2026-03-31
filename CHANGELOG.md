@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+* (x/consensus) [#25607](https://github.com/cosmos/cosmos-sdk/pull/25607) Add `AuthorityParams` to consensus params. When set, the consensus params authority takes precedence over per-keeper authority for all module parameter updates. Keeper constructor signatures are unchanged.
 * (x/staking) [#25724](https://github.com/cosmos/cosmos-sdk/issues/25724) Validate `BondDenom` in `MsgUpdateParams` to prevent setting non-existent or zero-supply denoms.
 * [#25778](https://github.com/cosmos/cosmos-sdk/pull/25778) Update `log` to log v2.
 * [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will no longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
@@ -54,9 +55,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#25617](https://github.com/cosmos/cosmos-sdk/pull/25617) `AfterProposalSubmission` hook now includes proposer address as a parameter.
 * (x/gov) [#25616](https://github.com/cosmos/cosmos-sdk/pull/25616) `DistrKeeper` `x/distribution` is now optional. Genesis validation ensures `distrKeeper` is set if distribution module is used as proposal cancel destination.
 * (systemtests) [#25930]https://github.com/cosmos/cosmos-sdk/pull/25930) Move `systemtests` into `testutil` and no longer under its own `go.mod`.
-* (abci) [#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) Add support for new application side mempool ABCI methods. 
-* (ABCI) [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) Add support for new ABCI methods, `InsertTx` and `ReapTxs`.
 * (baseapp) [#26060](https://github.com/cosmos/cosmos-sdk/pull/26060) Remove `BaseApp.SetStoreMetrics`. The `StoreMetrics` interface never worked, so removing dead code.
+* (store) [#26061](https://github.com/cosmos/cosmos-sdk/pull/26061) Remove store tracing API and all related plumbing:
+    * Remove `SetTracer`, `SetTracingContext`, and `TracingEnabled` from `MultiStore` interface.
+    * Remove `CacheWrapWithTrace` from `CacheWrapper` interface.
+    * Remove `BaseApp.SetCommitMultiStoreTracer` and tracing context logic from `BaseApp.cacheTxContext` and `FinalizeBlock`.
+    * Remove `io.Writer` parameter from `servertypes.AppCreator` and `traceWriter io.Writer` from `servertypes.AppExporter`.
+    * Remove `traceStore io.Writer` parameter from `simapp.NewSimApp` and all enterprise simapp constructors.
+    * Remove `traceStore io.Writer` from all `testutil/simsx` app factory signatures.
+* (store) [#26042](https://github.com/cosmos/cosmos-sdk/pull/26042) We are now importing `github.com/cosmos/cosmos-sdk/store/v2` as the store package instead of `cosmossdk.io/store` and all import paths have changed.
+* (baseapp) [#26138](https://github.com/cosmos/cosmos-sdk/pull/26138) Default block gas meter to disabled. Adds checking to ensure block gas meter is not enabled while bstm parallel execution is configured and panics in these scenarios during parameter assignment.
 
 ### Features
 
@@ -80,6 +88,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (ci) Use softprops/action-gh-release for main-nightly instead of custom gh/git to avoid repository ruleset conflicts.
 * (telemetry) [#26006](https://github.com/cosmos/cosmos-sdk/pull/26006) Export `ExtensionOptions` type for programmatic otel.yaml generation.
 * [#25955](https://github.com/cosmos/cosmos-sdk/pull/25955) Use cosmos/btree directly instead of replacing it in go.mods
 * (types) [#25342](https://github.com/cosmos/cosmos-sdk/pull/25342) Undeprecated `EmitEvent` and `EmitEvents` on the `EventManager`.  These functions will continue to be maintained.
@@ -140,6 +149,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [#24664](https://github.com/cosmos/cosmos-sdk/pull/24664) Deprecate the `Invariant` type in the Cosmos SDK.
 * [#25516](https://github.com/cosmos/cosmos-sdk/pull/25516) Deprecate all existing methods and types in the `telemetry` package, usage of `github.com/hashicorp/go-metrics` and the `telemetry` configuration section. New instrumentation should use the official [OpenTelemetry go API](https://pkg.go.dev/go.opentelemetry.io/otel) and Cosmos SDK applications can automatically expose OpenTelemetry metrics, traces and logs via [OpenTelemetry declarative configuration](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf).
 * [#25948](https://github.com/cosmos/cosmos-sdk/pull/25948) Change default `app.go` code to not use `depinject` as we are phasing it out.
+* (baseapp) [#26107](https://github.com/cosmos/cosmos-sdk/pull/26170) Deprecate baseapp test helper `app.NewUncachedContext`, consider using `app.NewNextBlockContext` or `app.NewContext` instead, see `UPGRADING.md` for more details.
 
 ## [v0.53.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-25
 

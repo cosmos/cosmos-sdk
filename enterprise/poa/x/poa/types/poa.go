@@ -38,6 +38,10 @@ func (v *Validator) ValidateBasic() error {
 		return ErrNegativeValidatorPower
 	}
 
+	if v.Metadata == nil {
+		return sdkerrors.Wrap(ErrInvalidMetadata, "metadata cannot be nil")
+	}
+
 	if err := v.Metadata.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(ErrInvalidMetadata, err.Error())
 	}
@@ -102,7 +106,7 @@ func ValidateValidatorSet(vs []Validator) error {
 // It ensures that:
 //   - OperatorAddress is not empty
 //   - Moniker is not empty and does not exceed 256 characters
-//   - Description is not empty and does not exceed 256 characters
+//   - Description does not exceed 256 characters (it may be empty)
 func (m *ValidatorMetadata) ValidateBasic() error {
 	if m.OperatorAddress == "" {
 		return ErrMissingOperatorAddress
@@ -155,20 +159,42 @@ func (m *MsgUpdateParams) Validate(ac address.Codec) error {
 }
 
 // ValidateBasic performs basic validation on MsgUpdateValidators.
-// It delegates to ValidateValidatorSet() to validate the validators list.
-// This ensures that:
-//   - All validators pass basic validation
-//   - No duplicate operator addresses exist across validators
-//
-// Returns an error with the validator index if validation fails.
+// Unlike ValidateValidatorSet (used for genesis), this does NOT require total
+// power > 0 because updates may set individual validators to 0 power (removal).
+// The keeper's AdjustTotalPower enforces that the on-chain total stays positive.
 func (m *MsgUpdateValidators) ValidateBasic() error {
-	return ValidateValidatorSet(m.Validators)
+	if len(m.Validators) == 0 {
+		return fmt.Errorf("validators list cannot be empty")
+	}
+
+	operatorAddresses := make(map[string]struct{})
+	var totalPower int64
+
+	for i, validator := range m.Validators {
+		if err := validator.ValidateBasic(); err != nil {
+			return fmt.Errorf("validator at index %d: %w", i, err)
+		}
+
+		operatorAddr := validator.Metadata.OperatorAddress
+		if _, found := operatorAddresses[operatorAddr]; found {
+			return fmt.Errorf("duplicate operator address %s found in validators", operatorAddr)
+		}
+		operatorAddresses[operatorAddr] = struct{}{}
+
+		if totalPower > math.MaxInt64-validator.Power {
+			return ErrTotalPowerOverflow
+		}
+		totalPower += validator.Power
+	}
+
+	return nil
 }
 
 // Validate performs validation on MsgCreateValidator.
 // It ensures that:
 //   - Metadata passes basic validation (operator address, moniker, and description are valid)
 //   - Operator address is a valid address format according to the address codec
+//   - Admin (signer) is a valid address format
 //   - PubKey is not nil
 //
 // The address codec is used to validate the operator address format.
@@ -185,6 +211,12 @@ func (m *MsgCreateValidator) Validate(ac address.Codec) error {
 	if _, err := ac.StringToBytes(m.OperatorAddress); err != nil {
 		return sdkerrors.Wrap(ErrInvalidMetadata, "operator address is invalid")
 	}
+	if _, err := ac.StringToBytes(m.Admin); err != nil {
+		return sdkerrors.Wrap(ErrInvalidAdminAddress, "invalid signer address: "+err.Error())
+	}
+	if m.Power <= 0 {
+		return sdkerrors.Wrap(ErrInvalidValidatorPower, "validator power must be greater than zero")
+	}
 
 	// Check that pubkey is not nil
 	if m.PubKey == nil {
@@ -198,6 +230,64 @@ func (m *MsgCreateValidator) Validate(ac address.Codec) error {
 		return sdkerrors.Wrapf(ErrInvalidPubKeyLength, "pubkey length %d exceeds maximum %d", len(m.PubKey.Value), MaxPubKeyLength)
 	}
 
+	return nil
+}
+
+// ValidateBasic performs basic validation on ValidatorFees.
+// It ensures that no fee coin has a negative amount.
+func (f *ValidatorFees) ValidateBasic() error {
+	for _, fee := range f.Fees {
+		if fee.Amount.IsNegative() {
+			return sdkerrors.Wrapf(ErrInvalidAllocatedFees, "negative fee amount for denom %s: %s", fee.Denom, fee.Amount)
+		}
+	}
+	return nil
+}
+
+// ValidateBasic performs basic validation on GenesisAllocatedFees.
+// It ensures that:
+//   - ConsensusAddress is not empty
+//   - Fees are not negative
+func (g *GenesisAllocatedFees) ValidateBasic() error {
+	if g.ConsensusAddress == "" {
+		return sdkerrors.Wrap(ErrInvalidAllocatedFees, "consensus address cannot be empty")
+	}
+	for _, fee := range g.Fees {
+		if fee.Amount.IsNegative() {
+			return sdkerrors.Wrapf(ErrInvalidAllocatedFees, "negative fee amount for denom %s: %s", fee.Denom, fee.Amount)
+		}
+	}
+	return nil
+}
+
+// Validate performs full validation on GenesisAllocatedFees.
+// In addition to basic validation, it verifies that the consensus address
+// is a valid address format according to the provided address codec.
+func (g *GenesisAllocatedFees) Validate(ac address.Codec) error {
+	if err := g.ValidateBasic(); err != nil {
+		return err
+	}
+	if _, err := ac.StringToBytes(g.ConsensusAddress); err != nil {
+		return sdkerrors.Wrapf(ErrInvalidAllocatedFees, "invalid consensus address: %s", err)
+	}
+	return nil
+}
+
+// ValidateAllocatedFees validates a slice of GenesisAllocatedFees.
+// It ensures that:
+//   - Each entry passes basic validation
+//   - No duplicate consensus addresses exist
+func ValidateAllocatedFees(fees []GenesisAllocatedFees) error {
+	seen := make(map[string]struct{})
+	for i, entry := range fees {
+		if err := entry.ValidateBasic(); err != nil {
+			return fmt.Errorf("allocated fees at index %d: %w", i, err)
+		}
+		if _, found := seen[entry.ConsensusAddress]; found {
+			return sdkerrors.Wrapf(ErrInvalidAllocatedFees, "duplicate consensus address %s at index %d", entry.ConsensusAddress, i)
+		}
+		seen[entry.ConsensusAddress] = struct{}{}
+	}
 	return nil
 }
 

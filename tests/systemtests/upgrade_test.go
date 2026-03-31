@@ -11,31 +11,32 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	systest "github.com/cosmos/cosmos-sdk/testutil/systemtests"
+	systest "github.com/cosmos/cosmos-sdk/tools/systemtests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
-func TestChainUpgrade(t *testing.T) {
-	const (
-		upgradeHeight int64 = 22
-		upgradeName         = "v053-to-v054" // must match UpgradeName in simapp/upgrades.go
-	)
+const (
+	testSeed            = "scene learn remember glide apple expand quality spawn property shoe lamp carry upset blossom draft reject aim file trash miss script joy only measure"
+	upgradeHeight int64 = 22
+	upgradeName         = "v054-to-v055" // must match UpgradeName in simapp/upgrades.go
+)
 
+func TestChainUpgrade(t *testing.T) {
 	// Scenario:
 	// start a legacy chain with some state
 	// when a chain upgrade proposal is executed
 	// then the chain upgrades successfully
-	systest.ResetSut(t)
+	systest.Sut.StopChain()
 
 	currentBranchBinary := systest.Sut.ExecBinary()
 	currentInitializer := systest.Sut.TestnetInitializer()
 
-	legacyBinary := systest.WorkDir + "/binaries/v0.53/simd"
+	legacyBinary := systest.WorkDir + "/binaries/v0.54/simd"
 	systest.Sut.SetExecBinary(legacyBinary)
 	systest.Sut.SetTestnetInitializer(systest.InitializerWithBinary(legacyBinary, systest.Sut))
 	systest.Sut.SetupChain()
-	require.False(t, gjson.Get(systest.Sut.ReadGenesisJSON(t), "app_state.mint.params.max_supply").Exists())
+	require.True(t, gjson.Get(systest.Sut.ReadGenesisJSON(t), "app_state.mint.params.max_supply").Exists())
 
 	votingPeriod := 5 * time.Second // enough time to vote
 	systest.Sut.ModifyGenesisJSON(t, systest.SetGovVotingPeriod(t, votingPeriod))

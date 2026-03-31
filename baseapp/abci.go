@@ -12,19 +12,20 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	otelattr "go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
 	coreheader "cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/store/rootmulti"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -38,16 +39,6 @@ const (
 	QueryPathStore  = "store"
 
 	QueryPathBroadcastTx = "/cosmos.tx.v1beta1.Service/BroadcastTx"
-
-	TelemetrySubsystem            = "abci"
-	MetricOETime                  = "oe_time"
-	MetricInternalFinalizeTime    = "internal_finalize_time"
-	MetricExecuteWithExecutorTime = "execute_with_executor_time"
-	MetricGetFinalizeStateTime    = "get_finalize_state_time"
-	MetricPreBlockTime            = "pre_block_time"
-	MetricBeginBlockTime          = "begin_block_time"
-	MetricEndBlockTime            = "end_block_time"
-	MetricOEAborted               = "oe_aborted"
 )
 
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
@@ -774,6 +765,9 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 // only used to handle early cancellation, for anything related to state app.stateManager.GetState(execModeFinalize).Context()
 // must be used.
 func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	start := time.Now()
+	defer measureSince(goCtx, func() metric.Int64Histogram { return inst.InternalFinalizeTime }, start)
+
 	var events []abci.Event
 
 	if err := app.checkHalt(req.Height, req.Time); err != nil {
@@ -782,12 +776,6 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 
 	if err := app.validateFinalizeBlockHeight(req); err != nil {
 		return nil, err
-	}
-
-	if app.cms.TracingEnabled() {
-		app.cms.SetTracingContext(storetypes.TraceContext(
-			map[string]any{"blockHeight": req.Height},
-		))
 	}
 
 	// NOTE: Header populated here is intentionally partial; it omits Version, LastBlockID,
@@ -806,11 +794,13 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	// finalizeBlockState should be set on InitChain or ProcessProposal. If it is
 	// nil, it means we are replaying this block and we need to set the state here
 	// given that during block replay ProcessProposal is not executed by CometBFT.
+	gfsStart := time.Now()
 	finalizeState := app.stateManager.GetState(execModeFinalize)
 	if finalizeState == nil {
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 		finalizeState = app.stateManager.GetState(execModeFinalize)
 	}
+	measureSince(goCtx, func() metric.Int64Histogram { return inst.GetFinalizeStateTime }, gfsStart)
 	ctx := finalizeState.Context().WithContext(goCtx)
 	ctx, span := ctx.StartSpan(tracer, "internalFinalizeBlock")
 	defer span.End()
@@ -846,14 +836,18 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 			WithHeaderHash(req.Hash))
 	}
 
+	pbStart := time.Now()
 	preblockEvents, err := app.preBlock(req)
+	measureSince(ctx, func() metric.Int64Histogram { return inst.PreBlockTime }, pbStart)
 	if err != nil {
 		return nil, err
 	}
 
 	events = append(events, preblockEvents...)
 
+	bbStart := time.Now()
 	beginBlock, err := app.beginBlock(req)
+	measureSince(ctx, func() metric.Int64Histogram { return inst.BeginBlockTime }, bbStart)
 	if err != nil {
 		return nil, err
 	}
@@ -881,14 +875,12 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	//
 	// NOTE: Not all raw transactions may adhere to the sdk.Tx interface, e.g.
 	// vote extensions, so skip those.
+	eweStart := time.Now()
 	txResults, err := app.executeTxsWithExecutor(ctx, finalizeState.MultiStore, req.Txs)
+	measureSince(ctx, func() metric.Int64Histogram { return inst.ExecuteWithExecutorTime }, eweStart)
 	if err != nil {
 		// usually due to canceled
 		return nil, err
-	}
-
-	if finalizeState.MultiStore.TracingEnabled() {
-		finalizeState.MultiStore = finalizeState.MultiStore.SetTracingContext(nil).(storetypes.CacheMultiStore)
 	}
 
 	var (
@@ -910,7 +902,9 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 			WithBlockGasUsed(blockGasUsed).
 			WithBlockGasWanted(blockGasWanted),
 	)
+	ebStart := time.Now()
 	endBlock, err := app.endBlock()
+	measureSince(ctx, func() metric.Int64Histogram { return inst.EndBlockTime }, ebStart)
 	if err != nil {
 		return nil, err
 	}
@@ -955,7 +949,13 @@ func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, ms storetypes.Mu
 // extensions into the proposal, which should not themselves be executed in cases
 // where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.ResponseFinalizeBlock, err error) {
+	fbStart := time.Now()
 	defer func() {
+		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.FinalizeBlockTime }, fbStart)
+	}()
+
+	defer func() {
+		slStart := time.Now()
 		if res == nil {
 			return
 		}
@@ -965,22 +965,30 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 				app.logger.Error("ListenFinalizeBlock listening hook failed", "height", req.Height, "err", err)
 			}
 		}
+		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.StreamingListenerTime }, slStart)
 	}()
 
 	if app.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
+		ainStart := time.Now()
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
+		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.OEAbortIfNeededTime }, ainStart)
 		if aborted {
-			//nolint:staticcheck // todo: refactor
-			telemetry.IncrCounter(1, TelemetrySubsystem, MetricOEAborted)
+			if inst != nil {
+				inst.OEAborted.Add(app.metricsCtx(), 1)
+			}
 		}
 		// Wait for the OE to finish, regardless of whether it was aborted or not
+		oeStart := time.Now()
 		res, err = app.optimisticExec.WaitResult()
+		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.OETime }, oeStart)
 
 		// only return if we are not aborting
 		if !aborted {
 			if res != nil {
+				whStart := time.Now()
 				res.AppHash = app.workingHash()
+				measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.WorkingHashTime }, whStart)
 			}
 
 			return res, err
@@ -992,9 +1000,13 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	}
 
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
+	nonOEStart := time.Now()
 	res, err = app.internalFinalizeBlock(context.Background(), req)
+	measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.NonOEInternalFinalize }, nonOEStart)
 	if res != nil {
+		whStart := time.Now()
 		res.AppHash = app.workingHash()
+		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.WorkingHashTime }, whStart)
 	}
 
 	return res, err
@@ -1077,7 +1089,9 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	// The SnapshotIfApplicable method will create the snapshot by starting the goroutine
 	app.snapshotManager.SnapshotIfApplicable(header.Height)
 
-	blockCounter.Add(ctx, 1)
+	if inst != nil {
+		inst.BlockCount.Add(ctx, 1)
+	}
 
 	return resp, nil
 }
@@ -1315,7 +1329,7 @@ func (bapp *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, chec
 	// use custom query multi-store if provided
 	qms := bapp.qms
 	if qms == nil {
-		qms = bapp.cms.(storetypes.MultiStore)
+		qms = bapp.cms
 	}
 
 	lastBlockHeight := qms.LatestVersion()

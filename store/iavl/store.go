@@ -3,7 +3,6 @@ package iavl
 import (
 	"errors"
 	"fmt"
-	"io"
 
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	dbm "github.com/cosmos/cosmos-db"
@@ -12,12 +11,12 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/internal/kv"
-	"cosmossdk.io/store/legacy/cachekv"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/types"
-	"cosmossdk.io/store/wrapper"
+
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/internal/kv"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/wrapper"
 )
 
 const (
@@ -179,11 +178,6 @@ func (st *Store) GetStoreType() types.StoreType {
 // CacheWrap implements Store, returns a cachewrap around the store.
 func (st *Store) CacheWrap() types.CacheWrap {
 	return cachekv.NewStore(st)
-}
-
-// CacheWrapWithTrace implements the Store interface.
-func (st *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return cachekv.NewStore(tracekv.NewStore(st, w, tc))
 }
 
 // Set implements types.KVStore, creates a new key/value pair in the underlying IAVL tree.

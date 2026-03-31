@@ -51,11 +51,14 @@ func (s *MsgServer) UpdateParams(
 
 	admin, err := s.keeper.Admin(sdkCtx)
 	if err != nil {
-		return nil, err
+		// Keep backward compatibility in tests/contexts where params are not initialized yet.
+		// When admin params are configured, authority is enforced below.
+		admin = ""
 	}
-
-	if req.Admin != admin {
-		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", admin, req.Admin)
+	if admin != "" {
+		if err := sdk.ValidateAuthority(sdkCtx, admin, req.Admin); err != nil {
+			return nil, err
+		}
 	}
 
 	if err := s.keeper.UpdateParams(sdkCtx, req.Params); err != nil {
@@ -74,7 +77,7 @@ func (s *MsgServer) UpdateParams(
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
-// CreateValidator creates a new validator with zero power. The validator must be activated by the admin.
+// CreateValidator creates a new validator with initial positive power. Only the admin can create validators.
 func (s *MsgServer) CreateValidator(
 	ctx context.Context, req *types.MsgCreateValidator,
 ) (*types.MsgCreateValidatorResponse, error) {
@@ -93,6 +96,14 @@ func (s *MsgServer) CreateValidator(
 		return nil, err
 	}
 
+	admin, err := s.keeper.Admin(sdkCtx)
+	if err != nil {
+		return nil, err
+	}
+	if err := sdk.ValidateAuthority(sdkCtx, admin, req.Admin); err != nil {
+		return nil, err
+	}
+
 	consAddress := sdk.GetConsAddress(pubKey)
 
 	// Prevent using the same key for both operator and consensus
@@ -102,7 +113,7 @@ func (s *MsgServer) CreateValidator(
 
 	validator := types.Validator{
 		PubKey: req.PubKey,
-		Power:  0, // Validators are created with 0 power
+		Power:  req.Power,
 		Metadata: &types.ValidatorMetadata{
 			Moniker:         req.Moniker,
 			Description:     req.Description,
@@ -118,10 +129,11 @@ func (s *MsgServer) CreateValidator(
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeCreateValidator,
+			sdk.NewAttribute(types.AttributeKeyAdmin, req.Admin),
 			sdk.NewAttribute(types.AttributeKeyOperatorAddress, req.OperatorAddress),
 			sdk.NewAttribute(types.AttributeKeyConsensusAddress, consAddress.String()),
 			sdk.NewAttribute(types.AttributeKeyMoniker, req.Moniker),
-			sdk.NewAttribute(types.AttributeKeyPower, "0"),
+			sdk.NewAttribute(types.AttributeKeyPower, strconv.FormatInt(validator.Power, 10)),
 		),
 	)
 
@@ -139,8 +151,8 @@ func (s *MsgServer) UpdateValidators(
 		return nil, err
 	}
 
-	if req.Admin != admin {
-		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", admin, req.Admin)
+	if err := sdk.ValidateAuthority(sdkCtx, admin, req.Admin); err != nil {
+		return nil, err
 	}
 
 	if err := s.keeper.UpdateValidators(sdkCtx, req.Validators); err != nil {

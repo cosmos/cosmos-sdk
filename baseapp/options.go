@@ -141,15 +141,13 @@ func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp
 }
 
 // SetBlockSTMTxRunner sets the block stm tx runner for the BaseApp for parallel execution.
-func (app *BaseApp) SetBlockSTMTxRunner(txRunner sdk.TxRunner) {
+// dataDir is the application's data directory (typically homePath + "/data") where the
+// BlockSTM execution debug trace will be persisted after every FinalizeBlock.
+// This trace is overwritten each block and is available for post-mortem analysis
+// when CometBFT detects an app hash mismatch.
+func (app *BaseApp) SetBlockSTMTxRunner(txRunner sdk.TxRunner, dataDir string) {
 	app.txRunner = txRunner
-}
-
-// SetBlockSTMDebugDir enables persisting BlockSTM execution traces to the given directory
-// after every FinalizeBlock. When a CometBFT app hash mismatch causes a crash, the most
-// recent execution trace will already be on disk for post-mortem analysis.
-func (app *BaseApp) SetBlockSTMDebugDir(dir string) {
-	app.blockSTMDebugDir = dir
+	app.blockSTMDebugDir = dataDir
 }
 
 // DisableBlockGasMeter disables the block gas meter.

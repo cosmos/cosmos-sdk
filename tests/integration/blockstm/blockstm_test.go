@@ -125,7 +125,7 @@ func TestBlockSTM_AccountCreationPanics(t *testing.T) {
 		false, // no pre-estimation to avoid serialization hints
 		func(_ storetypes.MultiStore) string { return sdk.DefaultBondDenom },
 	)
-	bApp.SetBlockSTMTxRunner(runner)
+	bApp.SetBlockSTMTxRunner(runner, t.TempDir())
 
 	// Generate unique destination addresses (new accounts, not in genesis)
 	recipientAddrs := make([]sdk.AccAddress, numSenders)

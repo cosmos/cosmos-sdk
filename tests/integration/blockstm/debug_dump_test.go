@@ -173,8 +173,7 @@ func TestBlockSTM_DebugDumpOnAppHashMismatch(t *testing.T) {
 		false,
 		func(_ storetypes.MultiStore) string { return sdk.DefaultBondDenom },
 	)
-	bApp.SetBlockSTMTxRunner(runner)
-	bApp.SetBlockSTMDebugDir(debugDir)
+	bApp.SetBlockSTMTxRunner(runner, debugDir)
 
 	// --- Build conflicting transactions ---
 	// All senders send to the SAME recipient. This forces concurrent writes to

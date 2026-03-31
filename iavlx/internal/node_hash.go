@@ -11,6 +11,8 @@ import (
 	"sync"
 )
 
+// ComputeHash recursively computes the SHA-256 hash for this node and caches the result.
+// The scheduler controls whether child hashes are computed synchronously or in parallel.
 func (node *MemNode) ComputeHash(scheduler HashScheduler) ([]byte, error) {
 	if node.hash != nil {
 		return node.hash, nil
@@ -104,8 +106,8 @@ func shaSum256(bz []byte) []byte {
 	return sum[:]
 }
 
-// Writes the node's hash to the given `io.Writer`. This function recursively calls
-// children to update hashes.
+// writeHashBytes writes the hash preimage for a single node to w.
+// Child hashes are passed in as parameters (not computed here).
 func writeHashBytes(node Node, leftHash, rightHash []byte, w io.Writer) error {
 	var (
 		n   int
@@ -159,8 +161,8 @@ func writeHashBytes(node Node, leftHash, rightHash []byte, w io.Writer) error {
 	return nil
 }
 
-// encodeVarintPrefixedBytes writes a varint length-prefixed byte slice to the currentWriter,
-// it's used for hash computation, must be compactible with the official IAVL implementation.
+// encodeVarintPrefixedBytes writes a varint length-prefixed byte slice to w.
+// Used for hash computation; must be compatible with the official IAVL implementation.
 func encodeVarintPrefixedBytes(w io.Writer, bz []byte) error {
 	var buf [binary.MaxVarintLen64]byte
 	n := binary.PutUvarint(buf[:], uint64(len(bz)))

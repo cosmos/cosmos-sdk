@@ -5,6 +5,8 @@ import (
 	"os"
 )
 
+// NodeLayout is implemented by types stored in a memory-mapped node file (leaves or branches)
+// that can be looked up by NodeID.
 type NodeLayout interface {
 	GetNodeID() NodeID
 }
@@ -17,6 +19,7 @@ type NodeMmap[T NodeLayout] struct {
 	*StructMmap[T]
 }
 
+// NewNodeReader creates a NodeMmap by memory-mapping the given file.
 func NewNodeReader[T NodeLayout](file *os.File) (*NodeMmap[T], error) {
 	sf, err := NewStructMmap[T](file)
 	if err != nil {

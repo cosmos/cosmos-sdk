@@ -48,6 +48,7 @@ type Options struct {
 	RootCacheExpiry int64 `json:"root_cache_expiry"`
 }
 
+// toInternalOpts converts public Options to internal options, applying defaults for zero values.
 func (opts Options) toInternalOpts() internal.Options {
 	changesetRolloverSize := opts.ChangesetRolloverSize
 	if changesetRolloverSize == 0 {

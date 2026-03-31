@@ -7,9 +7,12 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
+// MultiTree is an in-memory cached view of multiple stores for a given version.
+// It implements storetypes.CacheMultiStore with lazy initialization: individual store
+// caches are created on first access via initCacheWrapFromParent.
 type MultiTree struct {
-	// for now we use sync.Map but this is only needed by block STM for the root store layer - we should find a fix that doesn't force sync.Map on every layer
-	trees                   sync.Map // index of the trees by name
+	// trees is a sync.Map for block STM compatibility at the root store layer.
+	trees                   sync.Map
 	initCacheWrapFromParent func(storetypes.StoreKey) storetypes.CacheWrap
 	latestVersion           int64
 }

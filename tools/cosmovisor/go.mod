@@ -232,5 +232,5 @@ require (
 // it upgrades to a later version of cosmos-sdk that fixes this.
 replace (
 	cosmossdk.io/api => cosmossdk.io/api v0.9.2
-	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.38.17
+	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.38.21
 )

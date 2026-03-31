@@ -135,7 +135,8 @@ func (r *Runner) ComputeRunPlan(args []string) (cmd *exec.Cmd, haltHeight uint64
 		r.logger.Info("Setting --halt-height flag for manual upgrade", "halt_height", haltHeight)
 		cmd.Args = append(cmd.Args, fmt.Sprintf("--%s=%d", cosmovisor.FlagHaltHeight, haltHeight))
 	}
-	return
+
+	return cmd, haltHeight, nil
 }
 
 // RunProcess runs the given command until either an upgrade is detected or the process exits.

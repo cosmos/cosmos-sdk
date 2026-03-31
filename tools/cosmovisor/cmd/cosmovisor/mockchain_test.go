@@ -94,8 +94,8 @@ func (m MockChainSetup) Setup(t *testing.T) (string, string) {
 		upgradeDir := filepath.Join(cosmovisorDir, "upgrades", name, "bin")
 		require.NoError(t, os.MkdirAll(upgradeDir, 0o755))
 		require.NoError(t,
-			os.WriteFile(filepath.Join(upgradeDir, "mockd"),
-				[]byte(mockNodeWrapper(args)), 0o755), //nolint:gosec // executable wrapper
+			os.WriteFile(filepath.Join(upgradeDir, "mockd"), //nolint:gosec // executable wrapper
+				[]byte(mockNodeWrapper(args)), 0o755),
 		)
 	}
 	// create manual upgrade wrappers

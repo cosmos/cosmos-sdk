@@ -50,7 +50,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.67.5
-	github.com/rs/zerolog v1.34.0
+	github.com/rs/zerolog v1.35.0
 	github.com/shirou/gopsutil/v4 v4.26.2
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/cobra v1.10.2
@@ -332,6 +332,9 @@ require (
 	nhooyr.io/websocket v1.8.17 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )
+
+// Here are the short-lived replace from the Cosmos SDK
+// Replace here are pending PRs, or version to be tagged
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

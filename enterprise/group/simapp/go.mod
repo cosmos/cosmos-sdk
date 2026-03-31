@@ -4,7 +4,7 @@ go 1.25.8
 
 require (
 	cosmossdk.io/api v1.0.0
-	cosmossdk.io/client/v2 v2.0.0-beta.11
+	cosmossdk.io/client/v2 v2.11.0-rc.0
 	cosmossdk.io/core v1.1.0
 	cosmossdk.io/log/v2 v2.1.0-rc.0
 	cosmossdk.io/math v1.5.3
@@ -199,7 +199,7 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/rs/cors v1.11.1 // indirect
-	github.com/rs/zerolog v1.34.0 // indirect
+	github.com/rs/zerolog v1.35.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.7 // indirect
 	github.com/shirou/gopsutil/v4 v4.26.2 // indirect
@@ -287,10 +287,7 @@ require (
 replace github.com/cosmos/cosmos-sdk/enterprise/group => ..
 
 replace (
-	cosmossdk.io/client/v2 => ../../../client/v2
-	cosmossdk.io/log/v2 => ../../../log
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	github.com/cosmos/cosmos-sdk => ../../../.
-	github.com/cosmos/cosmos-sdk/store/v2 => ../../../store
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )

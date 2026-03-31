@@ -63,8 +63,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * Remove `io.Writer` parameter from `servertypes.AppCreator` and `traceWriter io.Writer` from `servertypes.AppExporter`.
     * Remove `traceStore io.Writer` parameter from `simapp.NewSimApp` and all enterprise simapp constructors.
     * Remove `traceStore io.Writer` from all `testutil/simsx` app factory signatures.
-* (baseapp) [#26056](https://github.com/cosmos/cosmos-sdk/pull/26056) Remove `BaseApp.NewUncachedContext()` and `BaseApp.SimWriteState`. It is no longer possible to write directly to the `CommitMultiStore` without using a cache layer first. Tests that used `BaseApp.NewUncachedContext(false, header)` could adapt to using a regular cache context using `BaseApp.NewNextBlockContext(header)`. Tests that used `BaseApp.NewUncachedContext(true, header)` (with `isCheckTx` true) could adapt to `BaseApp.NewContext(true)`, but mostly usage of uncached contexts for `CheckTx` in tests was wrong. In general, though, tests that were abusing the ability to write to an uncached store may need to adjust to commit/rollback isolation now present in the store layer. `BaseApp.SimWriteState` is no longer needed for tests that wrote to state outside of `FinalizeBlock` since `Commit` handles all of that, so callers can safely delete any calls to `BaseApp.SimWriteState`.
 * (store) [#26042](https://github.com/cosmos/cosmos-sdk/pull/26042) We are now importing `github.com/cosmos/cosmos-sdk/store/v2` as the store package instead of `cosmossdk.io/store` and all import paths have changed.
+* (baseapp) [#26138](https://github.com/cosmos/cosmos-sdk/pull/26138) Default block gas meter to disabled. Adds checking to ensure block gas meter is not enabled while bstm parallel execution is configured and panics in these scenarios during parameter assignment.
 
 ### Features
 
@@ -109,7 +109,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [25883](https://github.com/cosmos/cosmos-sdk/pull/25883) Re-use decoded tx object in pre-estimates.
 * (blockstm) [#25788](https://github.com/cosmos/cosmos-sdk/pull/25788) Only validate transactions that's executed at lease once.
 * (blockstm) [#25767](https://github.com/cosmos/cosmos-sdk/pull/25767) Optimize block-stm MVMemory with bitmap index.
-* (baseapp) [#26056](https://github.com/cosmos/cosmos-sdk/pull/26056) Use `CommitBranch.StartCommit` and `CommitFinalizer` for two-phase commit with rollback support, enabling optimistic execution to begin commit work early. Removes `BaseApp.workingHash()`.
 
 ### Bug Fixes
 
@@ -150,6 +149,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [#24664](https://github.com/cosmos/cosmos-sdk/pull/24664) Deprecate the `Invariant` type in the Cosmos SDK.
 * [#25516](https://github.com/cosmos/cosmos-sdk/pull/25516) Deprecate all existing methods and types in the `telemetry` package, usage of `github.com/hashicorp/go-metrics` and the `telemetry` configuration section. New instrumentation should use the official [OpenTelemetry go API](https://pkg.go.dev/go.opentelemetry.io/otel) and Cosmos SDK applications can automatically expose OpenTelemetry metrics, traces and logs via [OpenTelemetry declarative configuration](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf).
 * [#25948](https://github.com/cosmos/cosmos-sdk/pull/25948) Change default `app.go` code to not use `depinject` as we are phasing it out.
+* (baseapp) [#26107](https://github.com/cosmos/cosmos-sdk/pull/26170) Deprecate baseapp test helper `app.NewUncachedContext`, consider using `app.NewNextBlockContext` or `app.NewContext` instead, see `UPGRADING.md` for more details.
 
 ## [v0.53.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-25
 

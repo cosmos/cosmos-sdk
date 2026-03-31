@@ -3,7 +3,7 @@ module cosmossdk.io/tools/confix
 go 1.25.8
 
 require (
-	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.3
 	github.com/creachadair/atomicfile v0.4.0
 	github.com/creachadair/tomledit v0.0.29
 	github.com/pelletier/go-toml/v2 v2.2.4
@@ -275,9 +275,3 @@ require (
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
-
-replace github.com/cosmos/cosmos-sdk => ../../
-
-replace github.com/cosmos/cosmos-sdk/store/v2 => ../../store
-
-replace cosmossdk.io/log/v2 => ../../log

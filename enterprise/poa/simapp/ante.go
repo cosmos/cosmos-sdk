@@ -17,13 +17,14 @@ package simapp
 import (
 	"errors"
 
+	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
-// signer.
+// signer. Fees are sent to the POA module account instead of fee_collector.
 func NewAnteHandler(options ante.HandlerOptions) (sdk.AnteHandler, error) {
 	if options.AccountKeeper == nil {
 		return nil, errors.New("account keeper is required for ante builder")
@@ -44,7 +45,9 @@ func NewAnteHandler(options ante.HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewTxTimeoutHeightDecorator(),
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+		// NOTE: WithFeeRecipientModule is required for POA — the chain will panic at block 1 without it.
+		ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker).
+			WithFeeRecipientModule(poatypes.ModuleName),
 		ante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),

@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/iavlx
 
-go 1.26.1
+go 1.25.8
 
 require (
 	cosmossdk.io/core v1.1.0

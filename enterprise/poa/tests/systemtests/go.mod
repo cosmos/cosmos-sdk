@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/enterprise/poa/tests/systemtests
 go 1.25.8
 
 require (
-	github.com/cosmos/cosmos-sdk v0.54.0-rc.1.0.20251127205138-44ca1c39b279
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.3
 	github.com/cosmos/cosmos-sdk/tools/systemtests v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.18.0
@@ -191,7 +191,7 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/rs/cors v1.11.1 // indirect
-	github.com/rs/zerolog v1.34.0 // indirect
+	github.com/rs/zerolog v1.35.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.7 // indirect
 	github.com/shirou/gopsutil/v4 v4.26.2 // indirect
@@ -281,9 +281,7 @@ require (
 )
 
 replace (
-	cosmossdk.io/log/v2 => ../../../../log
 	github.com/cosmos/cosmos-sdk => ../../../../
 	github.com/cosmos/cosmos-sdk/enterprise/poa => ../../
-	github.com/cosmos/cosmos-sdk/store/v2 => ../../../../store
 	github.com/cosmos/cosmos-sdk/tools/systemtests => ../../../../tools/systemtests
 )

@@ -195,13 +195,6 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 	if ci != nil {
 		// should be nil on initial creation
 		version = ci.Version
-		db.commitData.Store(&commitData{
-			commitId: storetypes.CommitID{
-				Version: version,
-				Hash:    ci.Hash(),
-			},
-			commitInfo: ci,
-		})
 		db.earliestVersion.Store(earliestVersion)
 	}
 
@@ -219,6 +212,34 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 		} else {
 			db.otherStores = append(db.otherStores, si)
 		}
+	}
+
+	if ci != nil {
+		// The commit info hash footer is not fsynced, so after a crash per-store
+		// hashes may be missing. Recompute any empty ones from the loaded trees
+		// so the app hash matches what CometBFT expects.
+		for i, si := range ci.StoreInfos {
+			// If we have a valid hash, no need to recompute.
+			if len(si.CommitId.Hash) != 0 {
+				continue
+			}
+			// We don't have the store key in StoreInfos, so we need to search all iavl stores.
+			for _, sd := range db.iavlStores {
+				if sd.key.Name() == si.Name {
+					_, rootPtr := sd.store.(*CommitTree).treeStore.Latest()
+					hash, err := rootHash(context.Background(), rootPtr)
+					if err != nil {
+						return fmt.Errorf("recomputing root hash for store %s: %w", si.Name, err)
+					}
+					ci.StoreInfos[i].CommitId = storetypes.CommitID{Version: ci.Version, Hash: hash}
+					break
+				}
+			}
+		}
+		db.commitData.Store(&commitData{
+			commitId:   storetypes.CommitID{Version: version, Hash: ci.Hash()},
+			commitInfo: ci,
+		})
 	}
 
 	return nil

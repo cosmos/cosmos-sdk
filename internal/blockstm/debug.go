@@ -119,11 +119,11 @@ type snapshotTxnData struct {
 }
 
 type snapshotExecution struct {
-	Incarnation Incarnation              `json:"incarnation"`
-	Start       time.Time                `json:"start"`
-	End         time.Time                `json:"end"`
-	ReadSets    map[int][]snapshotRead   `json:"read_sets,omitempty"`
-	WriteSets   map[int][]snapshotWrite  `json:"write_sets,omitempty"`
+	Incarnation Incarnation             `json:"incarnation"`
+	Start       time.Time               `json:"start"`
+	End         time.Time               `json:"end"`
+	ReadSets    map[int][]snapshotRead  `json:"read_sets,omitempty"`
+	WriteSets   map[int][]snapshotWrite `json:"write_sets,omitempty"`
 }
 
 type snapshotRead struct {
@@ -194,20 +194,11 @@ func (d *BlockExecutionDebug) ToSnapshot() *Snapshot {
 		}
 
 		for j, val := range t.Validations {
-			st.Validations[j] = snapshotValidation{
-				Incarnation: val.Incarnation,
-				Timestamp:   val.Timestamp,
-				Valid:       val.Valid,
-				Aborted:     val.Aborted,
-			}
+			st.Validations[j] = snapshotValidation(val)
 		}
 
 		for j, sus := range t.Suspensions {
-			st.Suspensions[j] = snapshotSuspension{
-				Suspend:   sus.Suspend,
-				Resume:    sus.Resume,
-				BlockedBy: sus.BlockedBy,
-			}
+			st.Suspensions[j] = snapshotSuspension(sus)
 		}
 
 		txns[i] = st

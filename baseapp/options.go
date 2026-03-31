@@ -7,9 +7,9 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
+	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
@@ -74,37 +74,19 @@ func SetIndexEvents(ie []string) func(*BaseApp) {
 
 // SetIAVLCacheSize provides a BaseApp option function that sets the size of IAVL cache.
 func SetIAVLCacheSize(size int) func(*BaseApp) {
-	return func(bapp *BaseApp) {
-		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
-			rms.SetIAVLCacheSize(size)
-		} else {
-			bapp.logger.Warn("SetIAVLCacheSize: CommitMultiStore is not rootmulti.Store, option ignored")
-		}
-	}
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
 }
 
 // SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
 func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
-	return func(bapp *BaseApp) {
-		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
-			rms.SetIAVLDisableFastNode(disable)
-		} else {
-			bapp.logger.Warn("SetIAVLDisableFastNode: CommitMultiStore is not rootmulti.Store, option ignored")
-		}
-	}
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
 }
 
 // SetIAVLSyncPruning set sync/async pruning in the IAVL store. Developers should rarely use this.
 // This option was added to allow the `Prune` command to force synchronous pruning, which is needed to allow the
 // command to wait before returning.
 func SetIAVLSyncPruning(syncPruning bool) func(*BaseApp) {
-	return func(bapp *BaseApp) {
-		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
-			rms.SetIAVLSyncPruning(syncPruning)
-		} else {
-			bapp.logger.Warn("SetIAVLSyncPruning: CommitMultiStore is not rootmulti.Store, option ignored")
-		}
-	}
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLSyncPruning(syncPruning) }
 }
 
 // SetInterBlockCache provides a BaseApp option function that sets the
@@ -146,13 +128,17 @@ func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp
 // This trace is overwritten each block and is available for post-mortem analysis
 // when CometBFT detects an app hash mismatch.
 func (app *BaseApp) SetBlockSTMTxRunner(txRunner sdk.TxRunner, dataDir string) {
+	if _, ok := txRunner.(*txnrunner.STMRunner); ok && !app.disableBlockGasMeter {
+		// This combination results in indeterminism
+		panic("Cannot configure parallel execution while block gas meter is enabled")
+	}
 	app.txRunner = txRunner
 	app.blockSTMDebugDir = dataDir
 }
 
-// DisableBlockGasMeter disables the block gas meter.
-func DisableBlockGasMeter() func(*BaseApp) {
-	return func(app *BaseApp) { app.SetDisableBlockGasMeter(true) }
+// EnableBlockGasMeter enables the block gas meter.
+func EnableBlockGasMeter() func(*BaseApp) {
+	return func(app *BaseApp) { app.SetDisableBlockGasMeter(false) }
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -341,7 +327,7 @@ func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
 // SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
-func (app *BaseApp) SetQueryMultiStore(ms storetypes.RootMultiStore) {
+func (app *BaseApp) SetQueryMultiStore(ms storetypes.MultiStore) {
 	app.qms = ms
 }
 
@@ -402,6 +388,10 @@ func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
 
 // SetDisableBlockGasMeter sets the disableBlockGasMeter flag for the BaseApp.
 func (app *BaseApp) SetDisableBlockGasMeter(disableBlockGasMeter bool) {
+	if _, ok := app.txRunner.(*txnrunner.STMRunner); ok && !disableBlockGasMeter {
+		// This combination results in indeterminism
+		panic("Cannot enable block gas meter while parallel execution is configured")
+	}
 	app.disableBlockGasMeter = disableBlockGasMeter
 }
 

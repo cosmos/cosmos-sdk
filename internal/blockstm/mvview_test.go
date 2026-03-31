@@ -1,6 +1,7 @@
 package blockstm
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -10,32 +11,34 @@ import (
 )
 
 func TestMVMemoryViewDelete(t *testing.T) {
+	ctx := context.Background()
 	stores := map[storetypes.StoreKey]int{
 		StoreKeyAuth: 0,
 	}
 	storage := NewMultiMemDB(stores)
 	mv := NewMVMemory(16, stores, storage, nil)
 
-	mview := mv.View(0)
+	mview := mv.View(ctx, 0)
 	view := mview.GetKVStore(StoreKeyAuth)
 	view.Set(Key("a"), []byte("1"))
 	view.Set(Key("b"), []byte("1"))
 	view.Set(Key("c"), []byte("1"))
 	require.True(t, mv.Record(TxnVersion{0, 0}, mview))
 
-	mview = mv.View(1)
+	mview = mv.View(ctx, 1)
 	view = mview.GetKVStore(StoreKeyAuth)
 	view.Delete(Key("a"))
 	view.Set(Key("b"), []byte("2"))
 	require.True(t, mv.Record(TxnVersion{1, 0}, mview))
 
-	mview = mv.View(2)
+	mview = mv.View(ctx, 2)
 	view = mview.GetKVStore(StoreKeyAuth)
 	require.Nil(t, view.Get(Key("a")))
 	require.False(t, view.Has(Key("a")))
 }
 
 func TestMVMemoryViewIteration(t *testing.T) {
+	ctx := context.Background()
 	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
 	storage := NewMultiMemDB(stores)
 	mv := NewMVMemory(16, stores, storage, nil)
@@ -68,7 +71,7 @@ func TestMVMemoryViewIteration(t *testing.T) {
 	}
 
 	for i, pairs := range sets {
-		mview := mv.View(TxnIndex(i))
+		mview := mv.View(ctx, TxnIndex(i))
 		view := mview.GetKVStore(StoreKeyAuth)
 		for _, kv := range pairs {
 			view.Set(kv.Key, kv.Value)
@@ -158,7 +161,7 @@ func TestMVMemoryViewIteration(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("version-%d", tc.index), func(t *testing.T) {
-			view := mv.View(tc.index).GetKVStore(StoreKeyAuth)
+			view := mv.View(ctx, tc.index).GetKVStore(StoreKeyAuth)
 			var iter storetypes.Iterator
 			if tc.ascending {
 				iter = view.Iterator(tc.start, tc.end)

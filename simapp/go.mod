@@ -1,6 +1,6 @@
 module cosmossdk.io/simapp
 
-go 1.26.1
+go 1.25.8
 
 require (
 	cosmossdk.io/api v1.0.0
@@ -14,7 +14,7 @@ require (
 	github.com/cosmos/cosmos-db v1.1.3
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.54.0-rc.3
-	github.com/cosmos/cosmos-sdk/iavlx v0.0.0-20260325164250-bd04934099f9
+	github.com/cosmos/cosmos-sdk/iavlx v0.0.0-20260331183728-1cd0b47ac70a
 	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-rc.0
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/spf13/cast v1.10.0
@@ -250,7 +250,7 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/rs/cors v1.11.1 // indirect
-	github.com/rs/zerolog v1.34.0 // indirect
+	github.com/rs/zerolog v1.35.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.9 // indirect
 	github.com/shirou/gopsutil/v4 v4.26.2 // indirect

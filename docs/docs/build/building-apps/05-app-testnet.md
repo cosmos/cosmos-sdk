@@ -28,7 +28,7 @@ We will be breaking down the steps to create a testnet from mainnet state.
 When creating a testnet the important part is to migrate the validator set from many validators to one or a few. This allows developers to spin up the chain without needing to replace validator keys. 
 
 ```go
-	ctx := app.BaseApp.NewContext(true)
+	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
 	pubkey := &ed25519.PubKey{Key: newValPubKey.Bytes()}
 	pubkeyAny, err := types.NewAnyWithValue(pubkey)
 	if err != nil {

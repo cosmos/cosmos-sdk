@@ -14,9 +14,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	protov2 "google.golang.org/protobuf/proto"
 
@@ -60,25 +58,6 @@ const (
 )
 
 var _ servertypes.ABCI = (*BaseApp)(nil)
-
-var (
-	tracer       = otel.Tracer("cosmos-sdk/baseapp")
-	meter        = otel.Meter("cosmos-sdk/baseapp")
-	blockCounter metric.Int64Counter
-	txCounter    metric.Int64Counter
-)
-
-func init() {
-	var err error
-	blockCounter, err = meter.Int64Counter("block.count")
-	if err != nil {
-		panic(err)
-	}
-	txCounter, err = meter.Int64Counter("tx.count")
-	if err != nil {
-		panic(err)
-	}
-}
 
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
@@ -988,7 +967,9 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 
 			msCache.Write()
 
-			txCounter.Add(ctx, 1)
+			if inst != nil {
+				inst.TxCount.Add(ctx, 1)
+			}
 		}
 
 		if len(anteEvents) > 0 && (mode == execModeFinalize || mode == execModeSimulate) {

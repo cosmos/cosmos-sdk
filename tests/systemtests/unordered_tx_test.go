@@ -19,7 +19,7 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 	// when a new tx with the same unordered nonce is broadcasted,
 	// then the new tx should be rejected.
 
-	systest.ResetSut(t)
+	systest.Sut.ResetChain(t)
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// add genesis account with some tokens
 	account1Addr := cli.AddKey("account1")

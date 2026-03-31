@@ -131,3 +131,15 @@ The remaining TODOs are mostly operational support methods, specifically:
   `prepareCommit` divides leaves into equal-sized buckets across workers. This assumes uniform
   hash cost per leaf, but leaves with very large keys or values take longer to hash. A work-
   stealing approach or dynamic batch sizing could reduce tail latency when leaf sizes vary.
+
+- **Iterator zero-copy** — `Iterator.Next()` currently `SafeCopy`'s every key and value returned,
+  even when the caller doesn't mutate them. There's a TODO in `iterator.go` to keep a stack of
+  Pins and return unsafe references, only copying when the caller explicitly requests it. For
+  large range scans this could eliminate millions of allocations. Related: the iterator uses
+  `defer pin.Unpin()` inside the `for` loop, which delays all unpins until the function returns
+  instead of releasing each pin immediately — fixing this would also improve memory release
+  timing during large iterations.
+
+- **NodeUpdates slice reuse** — `prepareCommit` allocates a new `[]NodeUpdate` slice every commit
+  (TODO in `commit_tree.go`). A `sync.Pool` or reusable buffer could reduce GC pressure on
+  high-TPS chains.

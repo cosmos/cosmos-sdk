@@ -161,7 +161,7 @@ func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Conf
 
 Most `cosmossdk.io` vanity URLs for modules under `x/` have been removed. These separate Go modules caused dependency version management to be unpredictable; different modules could be pinned to different SDK versions, leading to compatibility issues. Consolidating everything under `github.com/cosmos/cosmos-sdk` gives developers a single, versioned dependency to manage.
 
-A migration tool ships alongside this release to automate updating these import paths. The following must be updated manually or via the tool:
+The following must be updated:
 
 - `cosmossdk.io/x/evidence` -> `github.com/cosmos/cosmos-sdk/x/evidence`
 - `cosmossdk.io/x/feegrant` -> `github.com/cosmos/cosmos-sdk/x/feegrant` 
@@ -175,8 +175,7 @@ The `cosmossdk.io/systemtests` go module is now named `github.com/cosmos/cosmos-
 
 ### Module Version Updates
 
-- `cosmossdk.io/client/v2` has been updated to v2.x.x ?? // TODO: Finalize this.
-- `cosmossdk.io/api` has been updated to vx.x.x // TODO: Finalize this.
+- `cosmossdk.io/client/v2` has been updated to v2.11.0
 
 ### Log v2
 
@@ -445,7 +444,7 @@ NOTE: It is important to emphasize that the following are **experimental** featu
 
 #### BlockSTM
 
-BlockSTM enables deterministic, concurrent execution of transactions, improving block execution speeds by up to X%. // TODO: REAL NUMBER
+BlockSTM enables deterministic, concurrent execution of transactions, improving block execution speeds and throughput. 
 
 Developers interested in experimenting with BlockSTM should read the [documentation](https://docs.cosmos.network/sdk/latest/experimental/blockstm).
 

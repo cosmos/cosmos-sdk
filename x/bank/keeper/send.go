@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -231,22 +232,37 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
+	// --- DEBUG: trace store ops for FinalizeBlock only ---
+	if Tracer != nil {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		if sdkCtx.ExecMode() == sdk.ExecModeFinalize {
+			trace := Tracer.NewSendTrace(sdkCtx.BlockHeight(), fromAddr, toAddr, amt)
+			tracingMS := NewTracingMultiStore(sdkCtx.MultiStore(), trace, types.StoreKey, authtypes.StoreKey)
+			ctx = ContextWithTrace(sdkCtx.WithMultiStore(tracingMS), trace)
+		}
+	}
+	// --- end trace ---
+
+	AnnotateTrace(ctx, fmt.Sprintf("send_restriction: apply restrictions for %s -> %s %s", fromAddr, toAddr, amt))
 	var err error
 	toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
 	if err != nil {
 		return err
 	}
 
+	AnnotateTrace(ctx, fmt.Sprintf("sub_unlocked_coins: deduct %s from %s", amt, fromAddr))
 	err = k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
 	}
 
+	AnnotateTrace(ctx, fmt.Sprintf("add_coins: credit %s to %s", amt, toAddr))
 	err = k.addCoins(ctx, toAddr, amt)
 	if err != nil {
 		return err
 	}
 
+	AnnotateTrace(ctx, fmt.Sprintf("ensure_account: check/create account for %s", toAddr))
 	k.ensureAccountCreated(ctx, toAddr)
 	if err := k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt); err != nil {
 		return err
@@ -302,9 +318,11 @@ func (k BaseSendKeeper) emitSendCoinsEvents(ctx context.Context, fromAddr, toAdd
 //
 // A coin_spent event is emitted after the operation.
 func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+	AnnotateTrace(ctx, fmt.Sprintf("sub_unlocked_coins: get locked coins for %s", addr))
 	lockedCoins := k.LockedCoins(ctx, addr)
 
 	for _, coin := range amt {
+		AnnotateTrace(ctx, fmt.Sprintf("sub_unlocked_coins: get balance of %s for %s", coin.Denom, addr))
 		balance := k.GetBalance(ctx, addr, coin.Denom)
 		ok, locked := lockedCoins.Find(coin.Denom)
 		if !ok {
@@ -330,6 +348,7 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 
 		newBalance := balance.Sub(coin)
 
+		AnnotateTrace(ctx, fmt.Sprintf("sub_unlocked_coins: set balance of %s for %s to %s", coin.Denom, addr, newBalance))
 		if err := k.UncheckedSetBalance(ctx, addr, newBalance); err != nil {
 			return err
 		}
@@ -350,9 +369,11 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 // It emits a coin_received event after the operation.
 func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	for _, coin := range amt {
+		AnnotateTrace(ctx, fmt.Sprintf("add_coins: get balance of %s for %s", coin.Denom, addr))
 		balance := k.GetBalance(ctx, addr, coin.Denom)
 		newBalance := balance.Add(coin)
 
+		AnnotateTrace(ctx, fmt.Sprintf("add_coins: set balance of %s for %s to %s", coin.Denom, addr, newBalance))
 		err := k.UncheckedSetBalance(ctx, addr, newBalance)
 		if err != nil {
 			return err
@@ -378,12 +399,14 @@ func (k BaseSendKeeper) UncheckedSetBalance(ctx context.Context, addr sdk.AccAdd
 
 	// x/bank invariants prohibit persistence of zero balances
 	if balance.IsZero() {
+		AnnotateTrace(ctx, fmt.Sprintf("set_balance: remove zero balance %s for %s", balance.Denom, addr))
 		err := k.Balances.Remove(ctx, collections.Join(addr, balance.Denom))
 		if err != nil {
 			return err
 		}
 		return nil
 	}
+	AnnotateTrace(ctx, fmt.Sprintf("set_balance: persist %s=%s for %s", balance.Denom, balance.Amount, addr))
 	return k.Balances.Set(ctx, collections.Join(addr, balance.Denom), balance.Amount)
 }
 

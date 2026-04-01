@@ -105,6 +105,20 @@ func (store *GStore[V]) Has(key []byte) bool {
 	return !store.isZero(value)
 }
 
+// HasCached returns true if the key exists in the in-memory cache (regardless of dirty status).
+// This does NOT read from the parent store.
+func (store *GStore[V]) HasCached(key []byte) bool {
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
+	_, ok := store.cache[conv.UnsafeBytesToStr(key)]
+	return ok
+}
+
+// Parent returns the underlying parent store. Useful for walking the store chain during tracing.
+func (store *GStore[V]) Parent() types.GKVStore[V] {
+	return store.parent
+}
+
 // Delete implements types.KVStore.
 func (store *GStore[V]) Delete(key []byte) {
 	types.AssertValidKey(key)

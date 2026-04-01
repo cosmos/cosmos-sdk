@@ -342,6 +342,8 @@ replace (
 
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.
+	// DEBUG: use local store for bank send tracing (HasCached + Inner + Parent methods)
+	github.com/cosmos/cosmos-sdk/store/v2 => ../store
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )

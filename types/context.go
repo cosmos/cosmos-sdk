@@ -454,6 +454,32 @@ var (
 	_ storetypes.Context = Context{}
 )
 
+// --- DEBUG: Trace annotation support for bank send tracing ---
+
+// SendTraceAnnotator is implemented by the bank keeper's SendTrace type.
+// It is stored in the context to allow any keeper to set annotations.
+type SendTraceAnnotator interface {
+	SetAnnotation(annotation string)
+}
+
+type sendTraceKey struct{}
+
+// ContextWithSendTrace stores a SendTraceAnnotator in the context.
+func ContextWithSendTrace(ctx context.Context, trace SendTraceAnnotator) context.Context {
+	return context.WithValue(ctx, sendTraceKey{}, trace)
+}
+
+// AnnotateTrace sets a human-readable annotation on the current send trace.
+// All subsequent store operations will carry this annotation until changed.
+// No-op if no trace is active in the context.
+func AnnotateTrace(ctx context.Context, annotation string) {
+	if trace, ok := ctx.Value(sendTraceKey{}).(SendTraceAnnotator); ok && trace != nil {
+		trace.SetAnnotation(annotation)
+	}
+}
+
+// --- end trace annotation support ---
+
 // ContextKey defines a type alias for a stdlib Context key.
 type ContextKey string
 

@@ -110,6 +110,12 @@ func NewBaseKeeper(
 	// add the module name to the logger
 	logger = logger.With(log.ModuleKey, "x/"+types.ModuleName)
 
+	// DEBUG: initialize global bank send tracer
+	if Tracer == nil {
+		Tracer = NewTraceRecorder("bank_send_trace.json")
+		logger.Info("bank send tracer initialized", "file", "bank_send_trace.json")
+	}
+
 	return BaseKeeper{
 		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeService, ak, blockedAddrs, authority, logger),
 		ak:                     ak,

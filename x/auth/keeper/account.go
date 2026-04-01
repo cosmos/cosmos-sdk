@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"cosmossdk.io/collections"
 
@@ -11,6 +12,7 @@ import (
 
 // NewAccountWithAddress implements AccountKeeperI.
 func (ak AccountKeeper) NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI {
+	sdk.AnnotateTrace(ctx, fmt.Sprintf("auth: new account with address %s", addr))
 	acc := ak.proto()
 	err := acc.SetAddress(addr)
 	if err != nil {
@@ -22,6 +24,7 @@ func (ak AccountKeeper) NewAccountWithAddress(ctx context.Context, addr sdk.AccA
 
 // NewAccount sets the next account number to a given account interface
 func (ak AccountKeeper) NewAccount(ctx context.Context, acc sdk.AccountI) sdk.AccountI {
+	sdk.AnnotateTrace(ctx, fmt.Sprintf("auth: assign account number for %s", acc.GetAddress()))
 	if err := acc.SetAccountNumber(ak.NextAccountNumber(ctx, acc)); err != nil {
 		panic(err)
 	}
@@ -31,12 +34,14 @@ func (ak AccountKeeper) NewAccount(ctx context.Context, acc sdk.AccountI) sdk.Ac
 
 // HasAccount implements AccountKeeperI.
 func (ak AccountKeeper) HasAccount(ctx context.Context, addr sdk.AccAddress) bool {
+	sdk.AnnotateTrace(ctx, fmt.Sprintf("auth: check account exists for %s", addr))
 	has, _ := ak.Accounts.Has(ctx, addr)
 	return has
 }
 
 // GetAccount implements AccountKeeperI.
 func (ak AccountKeeper) GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI {
+	sdk.AnnotateTrace(ctx, fmt.Sprintf("auth: get account %s", addr))
 	acc, err := ak.Accounts.Get(ctx, addr)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		panic(err)
@@ -56,6 +61,7 @@ func (ak AccountKeeper) GetAllAccounts(ctx context.Context) (accounts []sdk.Acco
 
 // SetAccount implements AccountKeeperI.
 func (ak AccountKeeper) SetAccount(ctx context.Context, acc sdk.AccountI) {
+	sdk.AnnotateTrace(ctx, fmt.Sprintf("auth: set account %s (num=%d)", acc.GetAddress(), acc.GetAccountNumber()))
 	err := ak.Accounts.Set(ctx, acc.GetAddress(), acc)
 	if err != nil {
 		panic(err)

@@ -53,6 +53,11 @@ func NewGStore[V any](
 	return kvs
 }
 
+// Inner returns the underlying parent store, useful for type assertions in tracing.
+func (gs *GStore[V]) Inner() types.GKVStore[V] {
+	return gs.parent
+}
+
 // GetStoreType implements Store, consuming no gas and returning the underlying
 // store's type.
 func (gs *GStore[V]) GetStoreType() types.StoreType {

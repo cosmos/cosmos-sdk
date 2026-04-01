@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/v2/gaskv"
 	iavlstore "github.com/cosmos/cosmos-sdk/store/v2/iavl"
+	"github.com/cosmos/cosmos-sdk/store/v2/listenkv"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -398,6 +399,8 @@ func (s *TracingKVStore) findIAVLStore() *iavlstore.Store {
 				return nil
 			}
 			store = parentKV
+		case *listenkv.Store:
+			store = st.Inner()
 		case *iavlstore.Store:
 			return st
 		default:

@@ -22,6 +22,11 @@ func NewStore(parent types.KVStore, parentStoreKey types.StoreKey, listener *typ
 	return &Store{parent: parent, listener: listener, parentStoreKey: parentStoreKey}
 }
 
+// Inner returns the underlying parent store, useful for type assertions in tracing.
+func (s *Store) Inner() types.KVStore {
+	return s.parent
+}
+
 // Get implements the KVStore interface. It traces a read operation and
 // delegates a Get call to the parent KVStore.
 func (s *Store) Get(key []byte) []byte {

@@ -54,7 +54,7 @@ Use this checklist first, then read the linked sections for the exact code or wi
 - [ ] Update `x/epochs.NewAppModule` if your app includes `x/epochs`. See [x/epochs](#xepochs).
 - [ ] Put `x/bank` first in `SetOrderEndBlockers`. See [x/bank](#xbank).
 - [ ] Update your node service registration if your app exposes `NodeService`. See [NodeService](#nodeservice).
-- [ ] Migrate imports for moved `x/` Go modules. See [Removed Go Modules](#removed-go-modules).
+- [ ] Migrate imports for removed `x/` Go modules. See [Removed Go Modules](#removed-go-modules).
 - [ ] Update required Cosmos SDK Go module dependencies. See [Module Version Updates](#module-version-updates).
 - [ ] Migrate to `contrib/` imports if you use `x/circuit`, `x/nft`, or `x/crisis`. See [Module Deprecations](#module-deprecations).
 - [ ] Migrate to Cosmos Enterprise if you use the `x/group` module. See [Groups Module](#groups-module).

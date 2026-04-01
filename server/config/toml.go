@@ -25,6 +25,15 @@ minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 # If this is set to zero, the query can consume an unbounded amount of gas.
 query-gas-limit = "{{ .BaseConfig.QueryGasLimit }}"
 
+# BlockExecutor sets block execution mode: "block-stm" or "sequential".
+block-executor = "{{ .BaseConfig.BlockExecutor }}"
+
+# BlockSTMWorkers sets the number of workers for block-stm execution (0 = auto).
+block-stm-workers = {{ .BaseConfig.BlockSTMWorkers }}
+
+# BlockSTMPreEstimate enables pre-estimation for block-stm execution.
+block-stm-pre-estimate = {{ .BaseConfig.BlockSTMPreEstimate }}
+
 # default: the last 362880 states are kept, pruning at 10 block intervals
 # nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
 # everything: 2 latest states will be kept; pruning at 10 block intervals.

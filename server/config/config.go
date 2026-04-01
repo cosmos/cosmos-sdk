@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"slices"
 
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -16,6 +17,16 @@ import (
 
 const (
 	defaultMinGasPrices = ""
+
+	// DefaultBlockExecutor is the default transaction executor for block execution.
+	DefaultBlockExecutor = BlockExecutorBlockSTM
+
+	// DefaultBlockSTMWorkers is the default worker count for block-stm execution.
+	// 0 means auto-detect based on CPU in the app wiring.
+	DefaultBlockSTMWorkers = 0
+
+	// DefaultBlockSTMPreEstimate controls whether block-stm pre-estimation is enabled by default.
+	DefaultBlockSTMPreEstimate = false
 
 	// DefaultAPIAddress defines the default address to bind the API server to.
 	DefaultAPIAddress = "tcp://localhost:1317"
@@ -32,6 +43,13 @@ const (
 	DefaultGRPCMaxSendMsgSize = math.MaxInt32
 )
 
+const (
+	BlockExecutorSequential = "sequential"
+	BlockExecutorBlockSTM   = "block-stm"
+)
+
+var blockExecutors = []string{BlockExecutorSequential, BlockExecutorBlockSTM}
+
 // BaseConfig defines the server's basic configuration
 type BaseConfig struct {
 	// The minimum gas prices a validator is willing to accept for processing a
@@ -42,6 +60,16 @@ type BaseConfig struct {
 	// The maximum amount of gas a grpc/Rest query may consume.
 	// If set to 0, it is unbounded.
 	QueryGasLimit uint64 `mapstructure:"query-gas-limit"`
+
+	// BlockExecutor selects the block transaction execution strategy.
+	BlockExecutor string `mapstructure:"block-executor"`
+
+	// BlockSTMWorkers is the worker count for block-stm execution.
+	// 0 means auto-detect based on CPU in app wiring.
+	BlockSTMWorkers int `mapstructure:"block-stm-workers"`
+
+	// BlockSTMPreEstimate enables pre-estimation for block-stm execution.
+	BlockSTMPreEstimate bool `mapstructure:"block-stm-pre-estimate"`
 
 	Pruning           string `mapstructure:"pruning"`
 	PruningKeepRecent string `mapstructure:"pruning-keep-recent"`
@@ -243,6 +271,9 @@ func DefaultConfig() *Config {
 		BaseConfig: BaseConfig{
 			MinGasPrices:        defaultMinGasPrices,
 			QueryGasLimit:       0,
+			BlockExecutor:       DefaultBlockExecutor,
+			BlockSTMWorkers:     DefaultBlockSTMWorkers,
+			BlockSTMPreEstimate: DefaultBlockSTMPreEstimate,
 			InterBlockCache:     true,
 			Pruning:             pruningtypes.PruningOptionDefault,
 			PruningKeepRecent:   "0",
@@ -338,6 +369,15 @@ func (c Config) ValidateBasic() error {
 	if c.MinGasPrices == "" {
 		return sdkerrors.ErrAppConfig.Wrap("set min gas price in app.toml or flag or env variable")
 	}
+
+	if !slices.Contains(blockExecutors, c.BlockExecutor) {
+		return sdkerrors.ErrAppConfig.Wrapf("invalid block executor %q, available types: %v", c.BlockExecutor, blockExecutors)
+	}
+
+	if c.BlockSTMWorkers < 0 {
+		return sdkerrors.ErrAppConfig.Wrapf("invalid block-stm-workers %d: must be >= 0", c.BlockSTMWorkers)
+	}
+
 	if c.Pruning == pruningtypes.PruningOptionEverything && c.StateSync.SnapshotInterval > 0 {
 		return sdkerrors.ErrAppConfig.Wrapf(
 			"cannot enable state sync snapshots with '%s' pruning setting", pruningtypes.PruningOptionEverything,

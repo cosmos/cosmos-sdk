@@ -10,6 +10,7 @@ import (
 	"sync"
 	"unicode/utf8"
 
+	"github.com/cosmos/cosmos-sdk/store/v2/cache"
 	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/v2/gaskv"
 	iavlstore "github.com/cosmos/cosmos-sdk/store/v2/iavl"
@@ -401,9 +402,17 @@ func (s *TracingKVStore) findIAVLStore() *iavlstore.Store {
 			store = parentKV
 		case *listenkv.Store:
 			store = st.Inner()
+		case *cache.CommitKVStoreCache:
+			// Inter-block cache wraps the IAVL store via embedded CommitKVStore
+			inner, ok := st.CommitKVStore.(storetypes.KVStore)
+			if !ok {
+				return nil
+			}
+			store = inner
 		case *iavlstore.Store:
 			return st
 		default:
+			fmt.Fprintf(os.Stderr, "bank trace: findIAVLStore: unhandled store wrapper type %T\n", st)
 			return nil
 		}
 	}

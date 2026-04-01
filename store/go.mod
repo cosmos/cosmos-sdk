@@ -2,6 +2,8 @@ module github.com/cosmos/cosmos-sdk/store/v2
 
 go 1.25.0
 
+replace github.com/cosmos/iavl => ../iavl-local // DEBUG: local iavl for GetWithSource tracing
+
 require (
 	cosmossdk.io/errors v1.1.0
 	cosmossdk.io/log/v2 v2.1.0-rc.0

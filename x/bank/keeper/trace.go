@@ -11,6 +11,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/gaskv"
+	iavlstore "github.com/cosmos/cosmos-sdk/store/v2/iavl"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -147,6 +149,7 @@ type TraceEntry struct {
 	Value      string `json:"value"`                 // printable or 0x-prefixed hex
 	CacheHit   *bool  `json:"cache_hit"`             // true=cache hit, false=read-through, nil=write op
 	CacheLayer *int   `json:"cache_layer,omitempty"` // 0=top cache, 1=parent cache, etc. nil if not a cache hit
+	IAVLSource string `json:"iavl_source,omitempty"` // which IAVL layer answered (only for read-through GETs)
 }
 
 // SendTrace records all store operations for a single SendCoins invocation.
@@ -169,7 +172,7 @@ func (t *SendTrace) SetAnnotation(annotation string) {
 	t.annotation = annotation
 }
 
-func (t *SendTrace) record(op, storeName string, key, value []byte, cacheHit *bool, cacheLayer *int) {
+func (t *SendTrace) record(op, storeName string, key, value []byte, cacheHit *bool, cacheLayer *int, iavlSource string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	t.Ops = append(t.Ops, TraceEntry{
@@ -182,6 +185,7 @@ func (t *SendTrace) record(op, storeName string, key, value []byte, cacheHit *bo
 		Value:      encodeValue(value),
 		CacheHit:   cacheHit,
 		CacheLayer: cacheLayer,
+		IAVLSource: iavlSource,
 	})
 	t.seq++
 }
@@ -298,18 +302,28 @@ type TracingKVStore struct {
 func (s *TracingKVStore) Get(key []byte) []byte {
 	// Check cache hit before the actual Get (which may populate the cache)
 	cacheHit, cacheLayer := s.checkCacheHit(key)
+
+	// If this will be a read-through to IAVL, probe which IAVL layer answers
+	var iavlSource string
+	if cacheHit != nil && !*cacheHit {
+		if iavlSt := s.findIAVLStore(); iavlSt != nil {
+			_, src := iavlSt.GetWithSource(key)
+			iavlSource = string(src)
+		}
+	}
+
 	value := s.KVStore.Get(key)
-	s.trace.record("GET", s.storeName, key, value, cacheHit, cacheLayer)
+	s.trace.record("GET", s.storeName, key, value, cacheHit, cacheLayer, iavlSource)
 	return value
 }
 
 func (s *TracingKVStore) Set(key, value []byte) {
-	s.trace.record("SET", s.storeName, key, value, nil, nil)
+	s.trace.record("SET", s.storeName, key, value, nil, nil, "")
 	s.KVStore.Set(key, value)
 }
 
 func (s *TracingKVStore) Delete(key []byte) {
-	s.trace.record("DELETE", s.storeName, key, nil, nil, nil)
+	s.trace.record("DELETE", s.storeName, key, nil, nil, nil, "")
 	s.KVStore.Delete(key)
 }
 
@@ -320,7 +334,7 @@ func (s *TracingKVStore) Has(key []byte) bool {
 	if result {
 		value = []byte{1}
 	}
-	s.trace.record("HAS", s.storeName, key, value, cacheHit, cacheLayer)
+	s.trace.record("HAS", s.storeName, key, value, cacheHit, cacheLayer, "")
 	return result
 }
 
@@ -357,6 +371,39 @@ func (s *TracingKVStore) checkCacheHit(key []byte) (*bool, *int) {
 	// Key not found in any cache layer — will read through to IAVL
 	miss := false
 	return &miss, nil
+}
+
+// findIAVLStore walks through the cache/gas wrapper chain to find the underlying IAVL store.
+func (s *TracingKVStore) findIAVLStore() *iavlstore.Store {
+	var store storetypes.KVStore = s.KVStore
+	for {
+		switch st := store.(type) {
+		case *cachekv.GStore[[]byte]:
+			parent := st.Parent()
+			if parent == nil {
+				return nil
+			}
+			parentKV, ok := parent.(storetypes.KVStore)
+			if !ok {
+				return nil
+			}
+			store = parentKV
+		case *gaskv.GStore[[]byte]:
+			parent := st.Inner()
+			if parent == nil {
+				return nil
+			}
+			parentKV, ok := parent.(storetypes.KVStore)
+			if !ok {
+				return nil
+			}
+			store = parentKV
+		case *iavlstore.Store:
+			return st
+		default:
+			return nil
+		}
+	}
 }
 
 // Delegate iterator methods without tracing (not needed for this debug)

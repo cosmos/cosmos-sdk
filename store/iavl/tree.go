@@ -20,6 +20,7 @@ type (
 	Tree interface {
 		Has(key []byte) (bool, error)
 		Get(key []byte) ([]byte, error)
+		GetWithSource(key []byte) ([]byte, iavl.IAVLGetSource, error)
 		Set(key, value []byte) (bool, error)
 		Remove(key []byte) ([]byte, bool, error)
 		SaveVersion() ([]byte, int64, error)
@@ -91,6 +92,10 @@ func (it *immutableTree) AvailableVersions() []int {
 
 func (it *immutableTree) LoadVersionForOverwriting(targetVersion int64) error {
 	panic("cannot call 'LoadVersionForOverwriting' on an immutable IAVL tree")
+}
+
+func (it *immutableTree) GetWithSource(key []byte) ([]byte, iavl.IAVLGetSource, error) {
+	return it.ImmutableTree.GetWithSource(key)
 }
 
 func (it *immutableTree) WorkingHash() []byte {

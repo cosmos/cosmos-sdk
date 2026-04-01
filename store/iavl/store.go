@@ -199,6 +199,16 @@ func (st *Store) Get(key []byte) []byte {
 	return value
 }
 
+// GetWithSource returns the value and the IAVL layer that produced it.
+// For debugging only.
+func (st *Store) GetWithSource(key []byte) ([]byte, iavl.IAVLGetSource) {
+	value, source, err := st.tree.GetWithSource(key)
+	if err != nil {
+		panic(err)
+	}
+	return value, source
+}
+
 // Has implements types.KVStore, returns true if the key exists in the underlying IAVL tree.
 func (st *Store) Has(key []byte) (exists bool) {
 	has, err := st.tree.Has(key)

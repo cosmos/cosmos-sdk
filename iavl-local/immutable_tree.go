@@ -193,7 +193,11 @@ func (t *ImmutableTree) Get(key []byte) ([]byte, error) {
 			// If the tree is of the latest version and fast node is not in the tree
 			// then the regular node is not in the tree either because fast node
 			// represents live state.
-			if t.version == t.ndb.latestVersion {
+			latestVersion, latestErr := t.ndb.getLatestVersion()
+			if latestErr != nil {
+				return nil, latestErr
+			}
+			if t.version == latestVersion {
 				return nil, nil
 			}
 
@@ -228,9 +232,14 @@ func (t *ImmutableTree) GetWithSource(key []byte) ([]byte, IAVLGetSource, error)
 		}
 
 		if fastNode == nil {
-			if t.version == t.ndb.latestVersion {
+			latestVersion, latestErr := t.ndb.getLatestVersion()
+			if latestErr != nil {
+				return nil, IAVLSourceFastNodeDB, latestErr
+			}
+			if t.version == latestVersion {
 				return nil, IAVLSourceFastNodeDB, nil
 			}
+			
 			_, result, err := t.root.get(t, key)
 			return result, IAVLSourceTreeTraversal, err
 		}

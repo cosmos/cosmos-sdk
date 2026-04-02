@@ -613,7 +613,7 @@ func (tree *MutableTree) enableFastStorageAndCommitIfNotEnabled() (bool, error) 
 	}
 
 	if err := tree.enableFastStorageAndCommit(); err != nil {
-		tree.ndb.storageVersion = defaultStorageVersionValue
+		tree.ndb.resetStorageVersion(defaultStorageVersionValue)
 		return false, err
 	}
 	return true, nil
@@ -702,8 +702,14 @@ func (tree *MutableTree) GetVersioned(key []byte, version int64) ([]byte, error)
 
 			if isFastCacheEnabled {
 				fastNode, _ := tree.ndb.GetFastNode(key)
-				if fastNode == nil && version == tree.ndb.latestVersion {
-					return nil, nil
+				if fastNode == nil {
+					latestVersion, latestErr := tree.ndb.getLatestVersion()
+					if latestErr != nil {
+						return nil, latestErr
+					}
+					if version == latestVersion {
+						return nil, nil
+					}
 				}
 
 				if fastNode != nil && fastNode.GetVersionLastUpdatedAt() <= version {

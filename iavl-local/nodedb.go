@@ -76,7 +76,7 @@ type nodeDB struct {
 	cancel context.CancelFunc
 	logger Logger
 
-	mtx                 sync.Mutex       // Read/write lock.
+	mtx                 sync.RWMutex     // Read/write lock.
 	done                chan struct{}    // Channel to signal that the pruning process is done.
 	db                  dbm.DB           // Persistent node storage.
 	batch               dbm.Batch        // Batched writing buffer.
@@ -330,8 +330,8 @@ func (ndb *nodeDB) UnsetCommitting() {
 
 // IsCommitting returns true if the nodeDB is committing, false otherwise.
 func (ndb *nodeDB) IsCommitting() bool {
-	ndb.mtx.Lock()
-	defer ndb.mtx.Unlock()
+	ndb.mtx.RLock()
+	defer ndb.mtx.RUnlock()
 	return ndb.isCommitting
 }
 
@@ -366,7 +366,15 @@ func (ndb *nodeDB) SetFastStorageVersionToBatch(latestVersion int64) error {
 }
 
 func (ndb *nodeDB) getStorageVersion() string {
+	ndb.mtx.RLock()
+	defer ndb.mtx.RUnlock()
 	return ndb.storageVersion
+}
+
+func (ndb *nodeDB) resetStorageVersion(version string) {
+	ndb.mtx.Lock()
+	defer ndb.mtx.Unlock()
+	ndb.storageVersion = version
 }
 
 // Returns true if the upgrade to latest storage version has been performed, false otherwise.
@@ -379,7 +387,7 @@ func (ndb *nodeDB) hasUpgradedToFastStorage() bool {
 // We determine this by checking the version of the live state and the version of the live state when
 // latest storage was updated on disk the last time.
 func (ndb *nodeDB) shouldForceFastStorageUpgrade() (bool, error) {
-	versions := strings.Split(ndb.storageVersion, fastStorageVersionDelimiter)
+	versions := strings.Split(ndb.getStorageVersion(), fastStorageVersionDelimiter)
 
 	if len(versions) == 2 {
 		latestVersion, err := ndb.getLatestVersion()
@@ -659,7 +667,7 @@ func (ndb *nodeDB) DeleteVersionsFrom(fromVersion int64) error {
 			return err
 		}
 		// Update the legacy latest version forcibly
-		ndb.legacyLatestVersion = 0
+		ndb.resetLegacyLatestVersion(0)
 		fromVersion = legacyLatestVersion + 1
 	}
 
@@ -815,9 +823,9 @@ func (ndb *nodeDB) legacyRootKey(version int64) []byte {
 
 // getFirstNonLegacyVersion binary searches the store for the first non-legacy version
 func (ndb *nodeDB) getFirstNonLegacyVersion() (int64, error) {
-	ndb.mtx.Lock()
+	ndb.mtx.RLock()
 	firstVersion := ndb.firstVersion
-	ndb.mtx.Unlock()
+	ndb.mtx.RUnlock()
 
 	// Find the first version
 	latestVersion, err := ndb.getLatestVersion()
@@ -843,9 +851,9 @@ func (ndb *nodeDB) getFirstNonLegacyVersion() (int64, error) {
 }
 
 func (ndb *nodeDB) getFirstVersion() (int64, error) {
-	ndb.mtx.Lock()
+	ndb.mtx.RLock()
 	firstVersion := ndb.firstVersion
-	ndb.mtx.Unlock()
+	ndb.mtx.RUnlock()
 
 	if firstVersion > 0 {
 		return firstVersion, nil
@@ -893,9 +901,9 @@ func (ndb *nodeDB) resetFirstVersion(version int64) {
 }
 
 func (ndb *nodeDB) getLegacyLatestVersion() (int64, error) {
-	ndb.mtx.Lock()
+	ndb.mtx.RLock()
 	latestVersion := ndb.legacyLatestVersion
-	ndb.mtx.Unlock()
+	ndb.mtx.RUnlock()
 
 	if latestVersion != 0 {
 		return latestVersion, nil
@@ -935,9 +943,9 @@ func (ndb *nodeDB) resetLegacyLatestVersion(version int64) {
 }
 
 func (ndb *nodeDB) getLatestVersion() (int64, error) {
-	ndb.mtx.Lock()
+	ndb.mtx.RLock()
 	latestVersion := ndb.latestVersion
-	ndb.mtx.Unlock()
+	ndb.mtx.RUnlock()
 
 	if latestVersion > 0 {
 		return latestVersion, nil

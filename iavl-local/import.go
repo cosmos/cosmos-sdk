@@ -41,8 +41,12 @@ func newImporter(tree *MutableTree, version int64) (*Importer, error) {
 	if version < 0 {
 		return nil, errors.New("imported version cannot be negative")
 	}
-	if tree.ndb.latestVersion > 0 {
-		return nil, fmt.Errorf("found database at version %d, must be 0", tree.ndb.latestVersion)
+	latestVersion, err := tree.ndb.getLatestVersion()
+	if err != nil {
+		return nil, err
+	}
+	if latestVersion > 0 {
+		return nil, fmt.Errorf("found database at version %d, must be 0", latestVersion)
 	}
 	if !tree.IsEmpty() {
 		return nil, errors.New("tree must be empty")

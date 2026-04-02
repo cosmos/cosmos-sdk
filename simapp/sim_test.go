@@ -3,12 +3,15 @@
 package simapp
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"math/rand"
+	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -237,14 +240,112 @@ func TestAppStateDeterminism(t *testing.T) {
 	sims.RunWithSeeds(t, interBlockCachingAppFactory, setupStateFactory, seeds, []byte{}, captureAndCheckHash)
 }
 
+func TestAppStateDeterminismExtended(t *testing.T) {
+	if os.Getenv("SIMAPP_EXTENDED_DETERMINISM") != "1" {
+		t.Skip("set SIMAPP_EXTENDED_DETERMINISM=1 to run the extended determinism simulation")
+	}
+	if testing.Short() {
+		t.Skip("skipping extended determinism simulation in short mode")
+	}
+
+	cfg := simcli.NewConfigFromFlags()
+	cfg.ChainID = sims.SimAppChainID
+	cfg.NumBlocks = maxInt(cfg.NumBlocks, envInt("SIMAPP_EXTENDED_NUM_BLOCKS", 2000))
+	cfg.BlockSize = maxInt(cfg.BlockSize, envInt("SIMAPP_EXTENDED_BLOCK_SIZE", 500))
+	cfg.Lean = true
+	cfg.Commit = true
+
+	runsPerSeed := envInt("SIMAPP_EXTENDED_RUNS_PER_SEED", 2)
+	progressEvery := envInt("SIMAPP_EXTENDED_PROGRESS_EVERY", 100)
+	maxSeedRetries := envInt("SIMAPP_EXTENDED_SEED_RETRIES", 50)
+
+	baseSeed := simcli.NewConfigFromFlags().Seed
+	if baseSeed == simcli.DefaultSeedValue {
+		baseSeed = rand.Int63()
+	}
+
+	t.Logf(
+		"running extended determinism simulation: base_seed=%d runs_per_seed=%d num_blocks=%d block_size=%d progress_every=%d",
+		baseSeed, runsPerSeed, cfg.NumBlocks, cfg.BlockSize, progressEvery,
+	)
+
+	var (
+		selectedSeed int64
+		traces       []*finalizeHashTrace
+		found        bool
+	)
+	for attempt := 0; attempt < maxSeedRetries; attempt++ {
+		candidateSeed := baseSeed + int64(attempt)
+		t.Logf("evaluating candidate seed, attempt=%d seed=%d", attempt+1, candidateSeed)
+
+		candidateTraces := make([]*finalizeHashTrace, 0, runsPerSeed)
+		validCandidate := true
+		var baselineHashes [][]byte
+		for run := 0; run < runsPerSeed; run++ {
+			trace := runSimulationAndCollectFinalizeHashes(
+				t,
+				cfg,
+				candidateSeed,
+				false,
+				progressEvery,
+				fmt.Sprintf("run[%d/%d] seed=%d", run+1, runsPerSeed, candidateSeed),
+				baselineHashes,
+			)
+			if len(trace.finalizeHashes) == 0 {
+				t.Logf("candidate rejected: empty validator set on run %d with seed %d", run+1, candidateSeed)
+				validCandidate = false
+				break
+			}
+
+			if run == 0 {
+				baselineHashes = trace.finalizeHashes
+			}
+			candidateTraces = append(candidateTraces, trace)
+		}
+		if !validCandidate {
+			continue
+		}
+
+		selectedSeed = candidateSeed
+		traces = candidateTraces
+		found = true
+		break
+	}
+
+	require.Truef(t, found, "unable to find non-empty validator-set simulation for base seed %d after %d attempts", baseSeed, maxSeedRetries)
+	baseline := traces[0]
+	t.Logf("selected seed=%d with %d successful runs", selectedSeed, len(traces))
+
+	matchedApps := 1 // baseline run always matches itself
+	expectedApps := len(traces)
+	for run := 1; run < len(traces); run++ {
+		trace := traces[run]
+		commitMatch := assert.Equalf(t, baseline.commitCount, trace.commitCount, "commit count mismatch for seed %d (run %d)", selectedSeed, run+1)
+		hashMatch := assert.Equalf(
+			t,
+			baseline.finalizeHashes,
+			trace.finalizeHashes,
+			"finalize-block app-hash trace mismatch for seed %d (run %d)",
+			selectedSeed,
+			run+1,
+		)
+		if commitMatch && hashMatch {
+			matchedApps++
+		}
+	}
+
+	t.Logf("extended determinism summary: matched app states %d/%d", matchedApps, expectedApps)
+	require.Equalf(t, expectedApps, matchedApps, "app-state matches %d/%d", matchedApps, expectedApps)
+}
+
 func TestAppStateDeterminismBSTMEquivalence(t *testing.T) {
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = sims.SimAppChainID
 	seed := config.Seed
 
 	t.Run(fmt.Sprintf("seed:%d", seed), func(t *testing.T) {
-		regularTrace := runSimulationAndCollectFinalizeHashes(t, config, seed, false)
-		blockSTMTrace := runSimulationAndCollectFinalizeHashes(t, config, seed, true)
+		regularTrace := runSimulationAndCollectFinalizeHashes(t, config, seed, false, 0, "determinism-baseline", nil)
+		blockSTMTrace := runSimulationAndCollectFinalizeHashes(t, config, seed, true, 0, "determinism-blockstm", regularTrace.finalizeHashes)
 
 		require.Equal(t, regularTrace.commitCount, blockSTMTrace.commitCount)
 		require.Equal(t, regularTrace.finalizeHashes, blockSTMTrace.finalizeHashes)
@@ -253,11 +354,42 @@ func TestAppStateDeterminismBSTMEquivalence(t *testing.T) {
 
 type finalizeHashTrace struct {
 	finalizeHashes [][]byte
+	expectedHashes [][]byte
 	commitCount    int
+	progressEvery  int
+	label          string
+	tb             testing.TB
 }
 
 func (t *finalizeHashTrace) ListenFinalizeBlock(_ context.Context, _ abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
-	t.finalizeHashes = append(t.finalizeHashes, append([]byte(nil), res.AppHash...))
+	appHash := append([]byte(nil), res.AppHash...)
+	t.finalizeHashes = append(t.finalizeHashes, appHash)
+	blockNum := len(t.finalizeHashes)
+
+	if len(t.expectedHashes) > 0 {
+		if blockNum > len(t.expectedHashes) {
+			return fmt.Errorf("%s produced extra finalize block: block=%d expected_total=%d", t.label, blockNum, len(t.expectedHashes))
+		}
+
+		expectedHash := t.expectedHashes[blockNum-1]
+		if !bytes.Equal(expectedHash, appHash) {
+			return fmt.Errorf(
+				"%s app-hash mismatch at finalized block=%d expected=%s got=%s",
+				t.label,
+				blockNum,
+				shortHash(expectedHash),
+				shortHash(appHash),
+			)
+		}
+	}
+
+	if t.progressEvery > 0 && len(t.finalizeHashes)%t.progressEvery == 0 && t.tb != nil {
+		if len(t.expectedHashes) > 0 {
+			t.tb.Logf("%s progress: finalized_blocks=%d app_hash=%s baseline_match=yes", t.label, len(t.finalizeHashes), shortHash(appHash))
+		} else {
+			t.tb.Logf("%s progress: finalized_blocks=%d app_hash=%s", t.label, len(t.finalizeHashes), shortHash(appHash))
+		}
+	}
 	return nil
 }
 
@@ -266,10 +398,23 @@ func (t *finalizeHashTrace) ListenCommit(_ context.Context, _ abci.ResponseCommi
 	return nil
 }
 
-func runSimulationAndCollectFinalizeHashes(tb testing.TB, cfg simtypes.Config, seed int64, enableBlockSTM bool) *finalizeHashTrace {
+func runSimulationAndCollectFinalizeHashes(
+	tb testing.TB,
+	cfg simtypes.Config,
+	seed int64,
+	enableBlockSTM bool,
+	progressEvery int,
+	label string,
+	expectedHashes [][]byte,
+) *finalizeHashTrace {
 	tb.Helper()
 
-	trace := &finalizeHashTrace{}
+	trace := &finalizeHashTrace{
+		progressEvery:  progressEvery,
+		label:          label,
+		tb:             tb,
+		expectedHashes: expectedHashes,
+	}
 	appFactory := func(
 		logger log.Logger,
 		db dbm.DB,
@@ -299,6 +444,41 @@ func runSimulationAndCollectFinalizeHashes(tb testing.TB, cfg simtypes.Config, s
 
 	sims.RunWithSeed(tb, cfg, appFactory, setupStateFactory, seed, nil)
 	return trace
+}
+
+func shortHash(hash []byte) string {
+	if len(hash) == 0 {
+		return "empty"
+	}
+
+	end := 6
+	if len(hash) < end {
+		end = len(hash)
+	}
+
+	return fmt.Sprintf("%X", hash[:end])
+}
+
+func envInt(key string, fallback int) int {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed <= 0 {
+		return fallback
+	}
+
+	return parsed
+}
+
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+
+	return b
 }
 
 type ComparableStoreApp interface {

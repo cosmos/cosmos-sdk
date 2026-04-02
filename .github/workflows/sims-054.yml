@@ -1,8 +1,6 @@
 name: Sims release/0.54.x
-# Sims workflow runs multiple types of simulations (nondeterminism, import-export, after-import, multi-seed-short)
-# Sims workflow runs multiple types of simulations (nondeterminism, import-export, after-import, multi-seed-short)
+# Sims workflow runs multiple types of simulations (nondeterminism, import-export, after-import)
 # This workflow runs on a schedule (twice daily) and on published releases.
-
 on:
   schedule:
     - cron: "0 0,12 * * *"
@@ -83,30 +81,10 @@ jobs:
         run: |
           make test-sim-after-import
 
-  test-sim-multi-seed-short:
-    runs-on: depot-ubuntu-22.04-4
-    needs: [build, install-runsim]
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: "release/v0.54.x"
-      - uses: actions/setup-go@v6
-        with:
-          go-version: "1.25.8"
-          check-latest: true
-      - uses: actions/cache@v5
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-      - name: test-sim-multi-seed-short
-        run: |
-          make test-sim-multi-seed-short
-
   sims-notify-failure:
     permissions:
       contents: none
-    needs:
-      [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
+    needs: [test-sim-after-import, test-sim-import-export]
     runs-on: depot-ubuntu-22.04-4
     if: ${{ failure() }}
     steps:

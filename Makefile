@@ -317,32 +317,13 @@ test-sim-after-import:
 	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestAppSimulationAfterImport \
 		-NumBlocks=50 -Period=5
 
-test-sim-custom-genesis-multi-seed:
-	@echo "Running multi-seed custom genesis simulation..."
-	@echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
-	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestFullAppSimulation -Genesis=${HOME}/.simapp/config/genesis.json \
-		-NumBlocks=400 -Period=5
-
-test-sim-multi-seed-long:
-	@echo "Running long multi-seed application simulation. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=1h -tags='sims' -run TestFullAppSimulation \
-		-NumBlocks=500 -Period=50
-
-test-sim-multi-seed-short:
-	@echo "Running short multi-seed application simulation. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestFullAppSimulation \
-		-NumBlocks=50 -Period=10
-
 .PHONY: \
 test-sim-nondeterminism \
 test-sim-blockstm \
 test-sim-nondeterminism-streaming \
 test-sim-custom-genesis-fast \
 test-sim-import-export \
-test-sim-after-import \
-test-sim-custom-genesis-multi-seed \
-test-sim-multi-seed-short \
-test-sim-multi-seed-long
+test-sim-after-import
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200

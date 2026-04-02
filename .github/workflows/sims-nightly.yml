@@ -1,6 +1,6 @@
-name: Sims Nightly (Long)
-# Release Sims workflow runs long-lived (multi-seed & large block size) simulations
-# This workflow only runs mightly at 8am UTC and on releases
+name: Sims Nightly (Extended Determinism)
+# Release sims workflow runs extended nondeterminism simulation
+# This workflow only runs nightly at 8am UTC and on releases
 on:
   schedule:
     - cron: "0 8 * * *"
@@ -11,11 +11,11 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}-sims-nightly-long
+  group: ci-${{ github.ref }}-sims-nightly-extended
   cancel-in-progress: true
 
 jobs:
-  test-sim-multi-seed-long:
+  test-sim-extended-nondeterminism:
     runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v6
@@ -23,31 +23,23 @@ jobs:
         with:
           go-version: "1.25.8"
           check-latest: true
-      - name: test-sim-multi-seed-long
+      - name: test-sim-extended-nondeterminism
         env:
           GOMEMLIMIT: 14GiB # reserve 2 GiB as buffer for GC to avoid OOM
+          SIMAPP_EXTENDED_DETERMINISM: "1"
+          SIMAPP_EXTENDED_NUM_BLOCKS: "2000"
+          SIMAPP_EXTENDED_BLOCK_SIZE: "500"
+          SIMAPP_EXTENDED_RUNS_PER_SEED: "3"
+          SIMAPP_EXTENDED_PROGRESS_EVERY: "500"
+          SIMAPP_EXTENDED_SEED_RETRIES: "3"
         run: |
-          make test-sim-multi-seed-long
-
-  test-sim-import-export:
-    runs-on: depot-ubuntu-22.04-4
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
-        with:
-          go-version: "1.25.8"
-          check-latest: true
-      - name: test-sim-import-export
-        env:
-          GOMEMLIMIT: 14GiB # reserve 2 GiB as buffer for GC to avoid OOM
-        run: |
-          make test-sim-import-export
+          cd simapp
+          go test -tags sims . -run TestAppStateDeterminismExtended -count=1 -timeout 0 -v
 
   sims-notify-failure:
     permissions:
       contents: none
-    needs: [test-sim-multi-seed-long]
+    needs: [test-sim-extended-nondeterminism]
     runs-on: depot-ubuntu-22.04-4
     if: ${{ failure() }}
     steps:
@@ -59,5 +51,5 @@ jobs:
           SLACK_USERNAME: Sim Tests
           SLACK_ICON_EMOJI: ":skull:"
           SLACK_COLOR: danger
-          SLACK_MESSAGE: Sims Nightly (Long) are failing
+          SLACK_MESSAGE: Sims Nightly (Extended Determinism) are failing
           SLACK_FOOTER: ""

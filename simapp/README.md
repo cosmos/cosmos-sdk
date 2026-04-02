@@ -51,3 +51,80 @@ Now you have a small testnet that you can use to try out changes to the Cosmos S
 NOTE: Sometimes creating the network through the `collect-gentxs` will fail, and validators will start
 in a funny state (and then panic). If this happens, you can try to create and start the network first
 with a single validator and then add additional validators using a `create-validator` transaction.
+
+## Determinism simulation guide
+
+The `simapp` simulator includes an extended determinism test:
+
+* `TestAppStateDeterminismExtended` in `simapp/sim_test.go`
+
+This test replays randomized simulations and compares full per-block app-hash traces.
+For replay runs (run 2..N), app hashes are checked incrementally at each finalized block
+against run 1 and fail fast on the first mismatch.
+
+Simulation tx execution now always runs through the default BaseApp lifecycle:
+
+* `CheckTx` (mempool admission)
+* `PrepareProposal`
+* `ProcessProposal`
+* finalize/deliver execution
+
+This keeps simulator execution closer to real node behavior than direct deliver-only paths.
+The simulator summary also includes tx lifecycle failure breakdowns by phase
+(`checktx`, `prepare`, `process`, `finalize`) with per-reason counts.
+It also prints:
+
+* factory pre-delivery skips total (message factory pre-delivery skips)
+* lifecycle rejects total (txs rejected in `checktx`/`prepare`/`process`/`finalize`)
+
+### Summary controls and exports
+
+* `SIMAPP_SUMMARY_TOP_N`: when set to `N > 0`, limits lifecycle and skip-reason output to top N entries per section and buckets the remainder as `other`.
+* `SIMAPP_SUMMARY_EXPORT_DIR`: when set, each run exports:
+    * `seed-<seed>.summary.json`
+    * `seed-<seed>.summary.csv`
+  containing execution counts/skip reasons and lifecycle phase breakdowns.
+
+### What does "runs per seed" mean?
+
+`SIMAPP_EXTENDED_RUNS_PER_SEED` controls how many times the simulator runs the exact same seed.
+
+Example:
+
+* `SIMAPP_EXTENDED_RUNS_PER_SEED=3`
+* `-Seed=932727706452219696`
+
+means:
+
+* one seed is selected (from `-Seed` or randomly)
+* that seed is replayed 3 times
+* traces/hashes from runs 2..N are compared against run 1 for the same seed
+
+If a seed would lead to an empty validator set, the harness retries candidate seeds automatically.
+
+### Recommended command (heavy)
+
+Run from the repository root:
+
+```bash
+cd simapp && \
+SIMAPP_EXTENDED_DETERMINISM=1 \
+SIMAPP_EXTENDED_NUM_BLOCKS=5000 \
+SIMAPP_EXTENDED_BLOCK_SIZE=1200 \
+SIMAPP_EXTENDED_RUNS_PER_SEED=5 \
+SIMAPP_EXTENDED_PROGRESS_EVERY=5 \
+SIMAPP_EXTENDED_SEED_RETRIES=5 \
+SIMAPP_SUMMARY_TOP_N=20 \
+SIMAPP_SUMMARY_EXPORT_DIR=./sim-summaries \
+go test -tags sims . -run TestAppStateDeterminismExtended -count=1 -v -timeout 0 \
+  -Seed=932727706452219696
+```
+
+### Environment variables
+
+* `SIMAPP_EXTENDED_DETERMINISM`: set to `1` to enable this test
+* `SIMAPP_EXTENDED_NUM_BLOCKS`: number of blocks per simulation
+* `SIMAPP_EXTENDED_BLOCK_SIZE`: operations per block
+* `SIMAPP_EXTENDED_RUNS_PER_SEED`: number of replays per seed
+* `SIMAPP_EXTENDED_PROGRESS_EVERY`: print progress every N finalized blocks
+* `SIMAPP_EXTENDED_SEED_RETRIES`: max candidate-seed retries to avoid empty-validator-set runs

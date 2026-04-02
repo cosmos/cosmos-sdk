@@ -1,5 +1,5 @@
 name: Sims
-# Sims workflow runs multiple types of simulations (nondeterminism, import-export, after-import, multi-seed-short)
+# Sims workflow runs multiple types of simulations (nondeterminism, import-export, after-import)
 # This workflow will run on all Pull Requests, if a .go, .mod or .sum file have been changed
 on:
   schedule:
@@ -81,16 +81,3 @@ jobs:
         run: |
           make test-sim-blockstm
 
-  test-sim-multi-seed-short:
-    runs-on: depot-ubuntu-22.04-16
-    needs: [build]
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
-        with:
-          go-version: "1.25.8"
-          check-latest: true
-      - name: test-sim-multi-seed-short
-        run: |
-          make test-sim-multi-seed-short

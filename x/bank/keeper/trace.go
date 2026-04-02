@@ -16,10 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2/gaskv"
 	iavlstore "github.com/cosmos/cosmos-sdk/store/v2/iavl"
 	"github.com/cosmos/cosmos-sdk/store/v2/listenkv"
-	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // encodeValue returns a human-readable string if the bytes are valid printable UTF-8,
@@ -213,9 +211,10 @@ type BlockTraces struct {
 
 // TraceRecorder accumulates per-block traces and flushes to a file.
 type TraceRecorder struct {
-	mu       sync.Mutex
-	current  *BlockTraces
-	filePath string
+	mu            sync.Mutex
+	current       *BlockTraces
+	filePath      string
+	bankIAVLStore *iavlstore.Store // cached reference for draining race events
 }
 
 // NewTraceRecorder creates a recorder that writes to the given file path.
@@ -431,6 +430,10 @@ func (s *TracingKVStore) findIAVLStore() *iavlstore.Store {
 			}
 			store = inner
 		case *iavlstore.Store:
+			// Cache the reference for race event draining
+			if Tracer != nil && Tracer.bankIAVLStore == nil && s.storeName == "bank" {
+				Tracer.bankIAVLStore = st
+			}
 			return st
 		default:
 			fmt.Fprintf(os.Stderr, "bank trace: findIAVLStore: unhandled store wrapper type %T\n", st)
@@ -458,31 +461,13 @@ func (s *TracingKVStore) GetStoreType() storetypes.StoreType {
 	return s.KVStore.GetStoreType()
 }
 
-// DrainBankIAVLRaceEvents walks from the SDK context's multistore to the bank IAVL store,
-// drains any fast node cache race events, and returns them in trace-serializable form.
+// DrainBankIAVLRaceEvents returns any fast node cache race events from the bank IAVL store.
+// Uses the cached reference populated by findIAVLStore during traced GETs.
 func DrainBankIAVLRaceEvents(sdkCtx sdk.Context) []TraceRaceEvent {
-	// Walk up to the rootmulti store from the context's (possibly cached) multistore
-	cms := sdkCtx.MultiStore()
-	rmStore, ok := cms.(*rootmulti.Store)
-	if !ok {
-		// The context multistore may be a CacheMultiStore; try getting the commit multistore
-		// from the base app. We can't easily do that, so try type assertion on GetKVStore result.
-		// Fall back: get the KVStore for bank and walk wrappers.
-		bankKey := storetypes.NewKVStoreKey(banktypes.StoreKey)
-		kvStore := cms.GetKVStore(bankKey)
-		return drainRaceEventsFromKVStore(kvStore)
-	}
-	bankKey := storetypes.NewKVStoreKey(banktypes.StoreKey)
-	kvStore := rmStore.GetKVStore(bankKey)
-	return drainRaceEventsFromKVStore(kvStore)
-}
-
-func drainRaceEventsFromKVStore(store storetypes.KVStore) []TraceRaceEvent {
-	iavlSt := findIAVLStoreFromKVStore(store)
-	if iavlSt == nil {
+	if Tracer == nil || Tracer.bankIAVLStore == nil {
 		return nil
 	}
-	events := iavlSt.DrainRaceEvents()
+	events := Tracer.bankIAVLStore.DrainRaceEvents()
 	if len(events) == 0 {
 		return nil
 	}
@@ -497,51 +482,4 @@ func drainRaceEventsFromKVStore(store storetypes.KVStore) []TraceRaceEvent {
 		}
 	}
 	return result
-}
-
-// findIAVLStoreFromKVStore is like TracingKVStore.findIAVLStore but takes a KVStore directly.
-func findIAVLStoreFromKVStore(store storetypes.KVStore) *iavlstore.Store {
-	for {
-		switch st := store.(type) {
-		case *cachekv.GStore[[]byte]:
-			parent := st.Parent()
-			if parent == nil {
-				return nil
-			}
-			parentKV, ok := parent.(storetypes.KVStore)
-			if !ok {
-				return nil
-			}
-			store = parentKV
-		case *gaskv.GStore[[]byte]:
-			parent := st.Inner()
-			if parent == nil {
-				return nil
-			}
-			parentKV, ok := parent.(storetypes.KVStore)
-			if !ok {
-				return nil
-			}
-			store = parentKV
-		case *listenkv.Store:
-			store = st.Inner()
-		case *cache.CommitKVStoreCache:
-			inner, ok := st.CommitKVStore.(storetypes.KVStore)
-			if !ok {
-				return nil
-			}
-			store = inner
-		case *blockstm.GMVMemoryView[[]byte]:
-			inner, ok := st.Inner().(storetypes.KVStore)
-			if !ok {
-				return nil
-			}
-			store = inner
-		case *iavlstore.Store:
-			return st
-		default:
-			fmt.Fprintf(os.Stderr, "bank trace: findIAVLStoreFromKVStore: unhandled store wrapper type %T\n", st)
-			return nil
-		}
-	}
 }

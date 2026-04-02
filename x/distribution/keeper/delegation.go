@@ -11,6 +11,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+const delegationStakeRoundingMarginMultiplier int64 = 10
+
 // initializeDelegation initializes starting info for a new delegation
 func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, del sdk.AccAddress) error {
 	// period has already been incremented - we want to store the period ended by this delegation action
@@ -148,38 +150,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 	// when multiplied by slash fractions (see above). We could only use equals if
 	// we had arbitrary-precision rationals.
 	currentStake := val.TokensFromShares(del.GetShares())
-
-	if stake.GT(currentStake) {
-		// Account for rounding inconsistencies between:
-		//
-		//     currentStake: calculated as in staking with a single computation
-		//     stake:        calculated as an accumulation of stake
-		//                   calculations across validator's distribution periods
-		//
-		// These inconsistencies are due to differing order of operations which
-		// will inevitably have different accumulated rounding and may lead to
-		// the smallest decimal place being one greater in stake than
-		// currentStake. When we calculated slashing by period, even if we
-		// round down for each slash fraction, it's possible due to how much is
-		// being rounded that we slash less when slashing by period instead of
-		// for when we slash without periods. In other words, the single slash,
-		// and the slashing by period could both be rounding down but the
-		// slashing by period is simply rounding down less, thus making stake >
-		// currentStake
-		//
-		// A small amount of this error is tolerated and corrected for,
-		// however any greater amount should be considered a breach in expected
-		// behavior.
-		marginOfErr := math.LegacySmallestDec().MulInt64(3)
-		if stake.LTE(currentStake.Add(marginOfErr)) {
-			stake = currentStake
-		} else {
-			panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake"+
-				"\n\tfinal stake:\t%s"+
-				"\n\tcurrent stake:\t%s",
-				del.GetDelegatorAddr(), stake, currentStake))
-		}
-	}
+	stake = normalizeDelegationStakeWithMargin(del.GetDelegatorAddr(), stake, currentStake)
 
 	// calculate rewards for final period
 	delRewards, err := k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake)
@@ -189,6 +160,44 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 
 	rewards = rewards.Add(delRewards...)
 	return rewards, nil
+}
+
+func normalizeDelegationStakeWithMargin(delegatorAddr string, stake, currentStake math.LegacyDec) math.LegacyDec {
+	if stake.LTE(currentStake) {
+		return stake
+	}
+
+	// Account for rounding inconsistencies between:
+	//
+	//     currentStake: calculated as in staking with a single computation
+	//     stake:        calculated as an accumulation of stake
+	//                   calculations across validator's distribution periods
+	//
+	// These inconsistencies are due to differing order of operations which
+	// will inevitably have different accumulated rounding and may lead to
+	// the smallest decimal place being one greater in stake than
+	// currentStake. When we calculated slashing by period, even if we
+	// round down for each slash fraction, it's possible due to how much is
+	// being rounded that we slash less when slashing by period instead of
+	// for when we slash without periods. In other words, the single slash,
+	// and the slashing by period could both be rounding down but the
+	// slashing by period is simply rounding down less, thus making stake >
+	// currentStake.
+	//
+	// A small amount of this error is tolerated and corrected for,
+	// however any greater amount should be considered a breach in expected
+	// behavior.
+	marginOfErr := math.LegacySmallestDec().MulInt64(delegationStakeRoundingMarginMultiplier)
+	if stake.LTE(currentStake.Add(marginOfErr)) {
+		return currentStake
+	}
+
+	panic(fmt.Sprintf("calculated final stake for delegator %s greater than current stake"+
+		"\n\tfinal stake:\t%s"+
+		"\n\tcurrent stake:\t%s"+
+		"\n\tdelta:\t%s"+
+		"\n\ttolerated delta:\t%s",
+		delegatorAddr, stake, currentStake, stake.Sub(currentStake), marginOfErr))
 }
 
 func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {

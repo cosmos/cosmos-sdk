@@ -87,22 +87,29 @@ func updateValidators(
 ) map[string]mockValidator {
 	tb.Helper()
 
+	// Apply updates on a copy so we can enforce simulator invariants
+	// on the resulting validator set.
+	next := make(map[string]mockValidator, len(current))
+	for key, val := range current {
+		next[key] = val
+	}
+
 	for _, update := range updates {
 		str := fmt.Sprintf("%X", update.PubKey.GetEd25519())
 
 		if update.Power == 0 {
-			if _, ok := current[str]; !ok {
+			if _, ok := next[str]; !ok {
 				tb.Fatalf("tried to delete a nonexistent validator: %s", str)
 			}
 
 			event("end_block", "validator_updates", "kicked")
-			delete(current, str)
-		} else if _, ok := current[str]; ok {
+			delete(next, str)
+		} else if _, ok := next[str]; ok {
 			// validator already exists
 			event("end_block", "validator_updates", "updated")
 		} else {
 			// Set this new validator
-			current[str] = mockValidator{
+			next[str] = mockValidator{
 				update,
 				GetMemberOfInitialState(r, params.InitialLivenessWeightings()),
 			}
@@ -110,7 +117,17 @@ func updateValidators(
 		}
 	}
 
-	return current
+	// Keep the simulation's state transition graph valid by ensuring we never
+	// transition into an empty validator set.
+	if len(next) == 0 && len(current) > 0 {
+		currentValidators := mockValidators(current)
+		fallback := currentValidators[currentValidators.getKeys()[0]]
+		key := fmt.Sprintf("%X", fallback.val.PubKey.GetEd25519())
+		next[key] = fallback
+		event("end_block", "validator_updates", "prevented-empty-set")
+	}
+
+	return next
 }
 
 // RandomRequestFinalizeBlock generates a list of signing validators according to

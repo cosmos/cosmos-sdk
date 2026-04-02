@@ -1,12 +1,14 @@
 package simsx
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -209,12 +211,127 @@ func RunWithSeedAndRandAcc[T SimulationApp](
 	if tCfg.Commit {
 		simtestutil.PrintStats(testInstance.DB)
 	}
+	execSummary := reporter.Summary()
+	lifecycleSnapshot := simulation.TxLifecycleFailuresSnapshot()
+	factoryPreDeliverySkips := execSummary.TotalSkipped() - lifecycleSnapshot.TotalRejected
+	if factoryPreDeliverySkips < 0 {
+		factoryPreDeliverySkips = 0
+	}
 	// not using tb.Log to always print the summary
-	fmt.Printf("+++ DONE (seed: %d): \n%s\n", seed, reporter.Summary().String())
+	fmt.Printf("+++ DONE (seed: %d): \n%s\n", seed, execSummary.String())
+	fmt.Printf("factory pre-delivery skips total: %d\n", factoryPreDeliverySkips)
+	fmt.Printf("lifecycle rejects total: %d\n", lifecycleSnapshot.TotalRejected)
+	fmt.Println(simulation.TxLifecycleFailuresSummary())
+	writeSummaryExports(seed, execSummary.Snapshot(), lifecycleSnapshot, factoryPreDeliverySkips)
 	for _, step := range postRunActions {
 		step(tb, testInstance, accs)
 	}
 	require.NoError(tb, app.Close())
+}
+
+type runSummaryExport struct {
+	Seed                    int64                                 `json:"seed"`
+	Execution               SummarySnapshot                       `json:"execution"`
+	TxLifecycle             simulation.TxLifecycleSummarySnapshot `json:"tx_lifecycle"`
+	FactoryPreDeliverySkips int                                   `json:"factory_pre_delivery_skips"`
+	LifecycleRejects        int                                   `json:"lifecycle_rejects"`
+}
+
+func writeSummaryExports(seed int64, execution SummarySnapshot, lifecycle simulation.TxLifecycleSummarySnapshot, factoryPreDeliverySkips int) {
+	exportDir := strings.TrimSpace(os.Getenv("SIMAPP_SUMMARY_EXPORT_DIR"))
+	if exportDir == "" {
+		return
+	}
+
+	if err := os.MkdirAll(exportDir, 0o750); err != nil {
+		fmt.Printf("failed to create summary export dir %q: %v\n", exportDir, err)
+		return
+	}
+
+	base := filepath.Join(exportDir, fmt.Sprintf("seed-%d", seed))
+	jsonPath := base + ".summary.json"
+	csvPath := base + ".summary.csv"
+
+	payload := runSummaryExport{
+		Seed:                    seed,
+		Execution:               execution,
+		TxLifecycle:             lifecycle,
+		FactoryPreDeliverySkips: factoryPreDeliverySkips,
+		LifecycleRejects:        lifecycle.TotalRejected,
+	}
+	bz, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		fmt.Printf("failed to marshal summary export: %v\n", err)
+		return
+	}
+	if err := os.WriteFile(jsonPath, bz, 0o600); err != nil {
+		fmt.Printf("failed to write summary json export: %v\n", err)
+		return
+	}
+
+	f, err := os.Create(csvPath)
+	if err != nil {
+		fmt.Printf("failed to create summary csv export: %v\n", err)
+		return
+	}
+	defer func() { _ = f.Close() }()
+
+	w := csv.NewWriter(f)
+	defer w.Flush()
+
+	_ = w.Write([]string{"category", "name", "count", "detail"})
+	_ = w.Write([]string{"execution", "total_skipped", fmt.Sprintf("%d", execution.TotalSkipped), ""})
+	_ = w.Write([]string{"execution", "total_completed", fmt.Sprintf("%d", execution.TotalCompleted), ""})
+	_ = w.Write([]string{"execution", "factory_pre_delivery_skips", fmt.Sprintf("%d", factoryPreDeliverySkips), ""})
+	_ = w.Write([]string{"execution", "lifecycle_rejects", fmt.Sprintf("%d", lifecycle.TotalRejected), ""})
+	countKeys := mapSortedKeys(execution.Counts)
+	for _, k := range countKeys {
+		v := execution.Counts[k]
+		_ = w.Write([]string{"execution_count", k, fmt.Sprintf("%d", v), ""})
+	}
+	msgTypes := mapSortedKeys(execution.SkipReasons)
+	for _, msgType := range msgTypes {
+		reasons := execution.SkipReasons[msgType]
+		reasonKeys := mapSortedKeys(reasons)
+		for _, reason := range reasonKeys {
+			count := reasons[reason]
+			_ = w.Write([]string{"execution_skip_reason", msgType, fmt.Sprintf("%d", count), reason})
+		}
+	}
+
+	_ = w.Write([]string{"lifecycle", "total_rejected", fmt.Sprintf("%d", lifecycle.TotalRejected), ""})
+	phaseOrder := []simulation.TxLifecyclePhase{
+		simulation.TxPhaseCheckTx,
+		simulation.TxPhasePrepare,
+		simulation.TxPhaseProcess,
+		simulation.TxPhaseFinalize,
+	}
+	for _, phase := range phaseOrder {
+		summary, ok := lifecycle.Phases[phase]
+		if !ok {
+			continue
+		}
+		_ = w.Write([]string{"lifecycle_phase_total", string(phase), fmt.Sprintf("%d", summary.Total), ""})
+		lifecycleMsgTypes := mapSortedKeys(summary.ByMsg)
+		for _, msgType := range lifecycleMsgTypes {
+			count := summary.ByMsg[msgType]
+			_ = w.Write([]string{"lifecycle_phase_msg", string(phase), fmt.Sprintf("%d", count), msgType})
+		}
+		lifecycleReasons := mapSortedKeys(summary.ByReason)
+		for _, reason := range lifecycleReasons {
+			count := summary.ByReason[reason]
+			_ = w.Write([]string{"lifecycle_phase_reason", string(phase), fmt.Sprintf("%d", count), reason})
+		}
+	}
+}
+
+func mapSortedKeys[V any](m map[string]V) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 type (

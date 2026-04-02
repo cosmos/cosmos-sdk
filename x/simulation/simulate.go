@@ -99,6 +99,7 @@ func SimulateFromSeedX(
 	startTime := time.Now()
 	logger.Info("Starting SimulateFromSeed with randomness", "time", startTime)
 	logger.Debug("Randomized simulation setup", "params", mustMarshalJSONIndent(params))
+	simTxLifecycleStats.reset()
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
 	accs = randAccFn(r, params.NumKeys())

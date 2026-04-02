@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	xsimulation "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 type (
@@ -86,6 +87,47 @@ func DeliverSimsMsg(
 		reporter.Fail(err, "encoding TX")
 		return reporter.ToLegacyOperationMsg()
 	}
+
+	// Use the shared tx lifecycle implementation when available to avoid
+	// diverging behavior between simulation frameworks.
+	if lifecycleApp, ok := any(app).(xsimulation.TxLifecycleApp); ok {
+		sdkCtx, ok := ctx.(sdk.Context)
+		if !ok {
+			reporter.Fail(errors.New("expected sdk.Context for lifecycle execution"), "executing tx lifecycle")
+			return reporter.ToLegacyOperationMsg()
+		}
+
+		outcome := xsimulation.ExecuteTxLifecycle(lifecycleApp, txGen, tx, sdkCtx)
+		if !outcome.Accepted {
+			xsimulation.RecordTxLifecycleFailureForMsg(outcome.Phase, sdk.MsgTypeURL(msg), outcome.Reason)
+			if outcome.Phase == xsimulation.TxPhaseFinalize {
+				if err2 := deliveryResultHandler(outcome.Err); err2 != nil {
+					var comment string
+					for _, msg := range tx.GetMsgs() {
+						comment += fmt.Sprintf("%#v", msg)
+					}
+					reporter.Fail(err2, fmt.Sprintf("delivering tx with msgs: %s", comment))
+					return reporter.ToLegacyOperationMsg()
+				}
+			}
+
+			reporter.Skipf("tx lifecycle %s failed: %s", outcome.Phase, outcome.Reason)
+			return reporter.ToLegacyOperationMsg()
+		}
+
+		if err2 := deliveryResultHandler(nil); err2 != nil {
+			var comment string
+			for _, msg := range tx.GetMsgs() {
+				comment += fmt.Sprintf("%#v", msg)
+			}
+			reporter.Fail(err2, fmt.Sprintf("delivering tx with msgs: %s", comment))
+			return reporter.ToLegacyOperationMsg()
+		}
+
+		reporter.Success(msg)
+		return reporter.ToLegacyOperationMsg()
+	}
+
 	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 	if err2 := deliveryResultHandler(err); err2 != nil {
 		var comment string

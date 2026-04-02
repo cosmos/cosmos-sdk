@@ -38,6 +38,7 @@ coverage.txt
 pkgs*.txt
 pkgs*.part.*
 sim_log_file
+simapp/sim-summaries/
 x/genutil/config
 x/genutil/data
 *.fail

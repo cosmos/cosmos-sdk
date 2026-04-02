@@ -80,6 +80,9 @@ type OperationInput struct {
 // GenAndDeliverTxWithRandFees generates a transaction with a random fee and delivers it.
 func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
+	if account == nil {
+		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "account not found"), nil, nil
+	}
 	spendable := txCtx.Bankkeeper.SpendableCoins(txCtx.Context, account.GetAddress())
 
 	var fees sdk.Coins
@@ -87,17 +90,28 @@ func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, [
 
 	coins, hasNeg := spendable.SafeSub(txCtx.CoinsSpentInMsg...)
 	if hasNeg {
-		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "message doesn't leave room for fees"), nil, err
+		// Prefer attempting lifecycle validation over early skip; CheckTx/Finalize
+		// will reject if fees/state are invalid.
+		return GenAndDeliverTx(txCtx, nil)
 	}
 
 	fees, err = simtypes.RandomFees(txCtx.R, txCtx.Context, coins)
 	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to generate fees"), nil, err
+		// Same rationale as above: fall back to zero fees and let lifecycle checks decide.
+		return GenAndDeliverTx(txCtx, nil)
 	}
 	return GenAndDeliverTx(txCtx, fees)
 }
 
-// GenAndDeliverTx generates a transactions and delivers it.
+// GenAndDeliverTx generates a transaction and executes it through the default
+// BaseApp lifecycle:
+//
+//   - CheckTx (mempool admission)
+//   - PrepareProposal
+//   - ProcessProposal
+//   - Finalize/Deliver
+//
+// This behavior is always on for simulation tx execution.
 func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
 	tx, err := simtestutil.GenSignedMockTx(
@@ -115,9 +129,21 @@ func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMs
 		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to generate mock tx"), nil, err
 	}
 
-	_, _, err = txCtx.App.SimDeliver(txCtx.TxGen.TxEncoder(), tx)
-	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to deliver tx"), nil, err
+	outcome := ExecuteTxLifecycle(txCtx.App, txCtx.TxGen, tx, txCtx.Context)
+	if !outcome.Accepted {
+		RecordTxLifecycleFailureForMsg(outcome.Phase, sdk.MsgTypeURL(txCtx.Msg), outcome.Reason)
+		switch outcome.Phase {
+		case TxPhaseCheckTx:
+			return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "check tx rejected"), nil, nil
+		case TxPhasePrepare:
+			return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "prepare proposal rejected"), nil, nil
+		case TxPhaseProcess:
+			return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "process proposal rejected"), nil, nil
+		case TxPhaseFinalize:
+			return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to finalize tx"), nil, nil
+		default:
+			return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "tx lifecycle failed"), nil, nil
+		}
 	}
 
 	return simtypes.NewOperationMsg(txCtx.Msg, true, ""), nil, nil

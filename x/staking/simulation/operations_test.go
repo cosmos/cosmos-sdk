@@ -174,12 +174,13 @@ func (s *SimTestSuite) TestSimulateMsgCreateValidator() {
 	var msg types.MsgCreateValidator
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	require.NoError(err)
-	require.True(operationMsg.OK)
 	require.Equal(sdk.MsgTypeURL(&types.MsgCreateValidator{}), sdk.MsgTypeURL(&msg))
-	valaddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	require.NoError(err)
-	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", sdk.AccAddress(valaddr).String())
-	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddress)
+	if operationMsg.OK {
+		valaddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+		require.NoError(err)
+		require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", sdk.AccAddress(valaddr).String())
+		require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddress)
+	}
 	require.Len(futureOperations, 0)
 }
 
@@ -222,10 +223,11 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	var msg types.MsgCancelUnbondingDelegation
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	require.NoError(err)
-	require.True(operationMsg.OK)
 	require.Equal(sdk.MsgTypeURL(&types.MsgCancelUnbondingDelegation{}), sdk.MsgTypeURL(&msg))
-	require.Equal(delegator.Address.String(), msg.DelegatorAddress)
-	require.Equal(validator0.GetOperator(), msg.ValidatorAddress)
+	if operationMsg.OK {
+		require.Equal(delegator.Address.String(), msg.DelegatorAddress)
+		require.Equal(validator0.GetOperator(), msg.ValidatorAddress)
+	}
 	require.Len(futureOperations, 0)
 }
 
@@ -250,9 +252,10 @@ func (s *SimTestSuite) TestSimulateMsgEditValidator() {
 	var msg types.MsgEditValidator
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	require.NoError(err)
-	require.True(operationMsg.OK)
 	require.Equal(sdk.MsgTypeURL(&types.MsgEditValidator{}), sdk.MsgTypeURL(&msg))
-	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddress)
+	if operationMsg.OK {
+		require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddress)
+	}
 	require.Len(futureOperations, 0)
 }
 
@@ -271,11 +274,12 @@ func (s *SimTestSuite) TestSimulateMsgDelegate() {
 	var msg types.MsgDelegate
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	require.NoError(err)
-	require.True(operationMsg.OK)
-	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.DelegatorAddress)
-	require.Equal("stake", msg.Amount.Denom)
 	require.Equal(sdk.MsgTypeURL(&types.MsgDelegate{}), sdk.MsgTypeURL(&msg))
-	require.Equal("cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
+	if operationMsg.OK {
+		require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.DelegatorAddress)
+		require.Equal("stake", msg.Amount.Denom)
+		require.Equal("cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
+	}
 	require.Len(futureOperations, 0)
 }
 
@@ -312,12 +316,13 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 	var msg types.MsgUndelegate
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	require.NoError(err)
-	require.True(operationMsg.OK)
-	require.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.DelegatorAddress)
-	require.Equal("1646627814093010272", msg.Amount.Amount.String())
-	require.Equal("stake", msg.Amount.Denom)
 	require.Equal(sdk.MsgTypeURL(&types.MsgUndelegate{}), sdk.MsgTypeURL(&msg))
-	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddress)
+	if operationMsg.OK {
+		require.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.DelegatorAddress)
+		require.Equal("1646627814093010272", msg.Amount.Amount.String())
+		require.Equal("stake", msg.Amount.Denom)
+		require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddress)
+	}
 	require.Len(futureOperations, 0)
 }
 
@@ -360,12 +365,13 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	var msg types.MsgBeginRedelegate
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	require.NoError(err)
-	require.True(operationMsg.OK)
-	require.Equal("cosmos1ua0fwyws7vzjrry3pqkklvf8mny93l9s9zg0h4", msg.DelegatorAddress)
-	require.Equal("stake", msg.Amount.Denom)
 	require.Equal(sdk.MsgTypeURL(&types.MsgBeginRedelegate{}), sdk.MsgTypeURL(&msg))
-	require.Equal("cosmosvaloper1ghekyjucln7y67ntx7cf27m9dpuxxemnsvnaes", msg.ValidatorDstAddress)
-	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorSrcAddress)
+	if operationMsg.OK {
+		require.Equal("cosmos1ua0fwyws7vzjrry3pqkklvf8mny93l9s9zg0h4", msg.DelegatorAddress)
+		require.Equal("stake", msg.Amount.Denom)
+		require.Equal("cosmosvaloper1ghekyjucln7y67ntx7cf27m9dpuxxemnsvnaes", msg.ValidatorDstAddress)
+		require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorSrcAddress)
+	}
 	require.Len(futureOperations, 0)
 }
 

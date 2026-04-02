@@ -4,7 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"os"
 	"slices"
+	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -246,6 +249,7 @@ func (s *ExecutionSummary) Add(module, url string, status ReporterStatus, commen
 func (s *ExecutionSummary) String() string {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
+	topN := summaryTopNFromEnv()
 	keys := slices.Sorted(maps.Keys(s.counts))
 	var sb strings.Builder
 	for _, key := range keys {
@@ -254,12 +258,133 @@ func (s *ExecutionSummary) String() string {
 	if len(s.skipReasons) != 0 {
 		sb.WriteString("\nSkip reasons:\n")
 	}
-	for m, c := range s.skipReasons {
+	msgTypeTotals := make(map[string]int, len(s.skipReasons))
+	for msgType, reasons := range s.skipReasons {
+		msgTypeTotals[msgType] = sum(slices.Collect(maps.Values(reasons)))
+	}
+	msgTypeEntries := toSortedEntries(msgTypeTotals)
+	if topN > 0 && len(msgTypeEntries) > topN {
+		other := 0
+		for _, e := range msgTypeEntries[topN:] {
+			other += e.Count
+		}
+		msgTypeEntries = append(msgTypeEntries[:topN], summaryEntry{Key: "other", Count: other})
+	}
+	for _, msgTypeEntry := range msgTypeEntries {
+		m := msgTypeEntry.Key
+		if m == "other" {
+			fmt.Fprintf(&sb, "%d\t%s\n", msgTypeEntry.Count, "other")
+			continue
+		}
+		c := s.skipReasons[m]
 		values := maps.Values(c)
-		keys := maps.Keys(c)
-		fmt.Fprintf(&sb, "%d\t%s: %q\n", sum(slices.Collect(values)), m, slices.Collect(keys))
+		total := sum(slices.Collect(values))
+		reasonEntries := toSortedEntries(c)
+		if topN > 0 && len(reasonEntries) > topN {
+			other := 0
+			for _, e := range reasonEntries[topN:] {
+				other += e.Count
+			}
+			reasonEntries = append(reasonEntries[:topN], summaryEntry{Key: "other", Count: other})
+		}
+		reasons := make([]string, 0, len(reasonEntries))
+		for _, e := range reasonEntries {
+			reasons = append(reasons, e.Key)
+		}
+		fmt.Fprintf(&sb, "%d\t%s: %q\n", total, m, reasons)
 	}
 	return sb.String()
+}
+
+func (s *ExecutionSummary) TotalSkipped() int {
+	s.mx.RLock()
+	defer s.mx.RUnlock()
+	total := 0
+	for key, count := range s.counts {
+		if strings.HasSuffix(key, "_skipped") {
+			total += count
+		}
+	}
+	return total
+}
+
+func (s *ExecutionSummary) TotalCompleted() int {
+	s.mx.RLock()
+	defer s.mx.RUnlock()
+	total := 0
+	for key, count := range s.counts {
+		if strings.HasSuffix(key, "_completed") {
+			total += count
+		}
+	}
+	return total
+}
+
+type SummarySnapshot struct {
+	Counts         map[string]int            `json:"counts"`
+	SkipReasons    map[string]map[string]int `json:"skip_reasons"`
+	TotalSkipped   int                       `json:"total_skipped"`
+	TotalCompleted int                       `json:"total_completed"`
+}
+
+func (s *ExecutionSummary) Snapshot() SummarySnapshot {
+	s.mx.RLock()
+	defer s.mx.RUnlock()
+
+	counts := maps.Clone(s.counts)
+	reasons := make(map[string]map[string]int, len(s.skipReasons))
+	for msgType, byReason := range s.skipReasons {
+		reasons[msgType] = maps.Clone(byReason)
+	}
+
+	skipped := 0
+	completed := 0
+	for key, count := range counts {
+		switch {
+		case strings.HasSuffix(key, "_skipped"):
+			skipped += count
+		case strings.HasSuffix(key, "_completed"):
+			completed += count
+		}
+	}
+
+	return SummarySnapshot{
+		Counts:         counts,
+		SkipReasons:    reasons,
+		TotalSkipped:   skipped,
+		TotalCompleted: completed,
+	}
+}
+
+type summaryEntry struct {
+	Key   string
+	Count int
+}
+
+func toSortedEntries(items map[string]int) []summaryEntry {
+	entries := make([]summaryEntry, 0, len(items))
+	for k, c := range items {
+		entries = append(entries, summaryEntry{Key: k, Count: c})
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		if entries[i].Count == entries[j].Count {
+			return entries[i].Key < entries[j].Key
+		}
+		return entries[i].Count > entries[j].Count
+	})
+	return entries
+}
+
+func summaryTopNFromEnv() int {
+	v := strings.TrimSpace(os.Getenv("SIMAPP_SUMMARY_TOP_N"))
+	if v == "" {
+		return 0
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil || n < 0 {
+		return 0
+	}
+	return n
 }
 
 func sum(values []int) int {

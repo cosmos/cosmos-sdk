@@ -88,10 +88,9 @@ func MsgCancelProposalFactory(k *keeper.Keeper, sharedState *SharedState) simsx.
 			return nil, nil
 		}
 
-		from := testData.GetAccount(reporter, proposal.Proposer)
-		if from.LiquidBalance().Empty() {
-			reporter.Skip("proposer is broke")
-			return nil, nil
+		from := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
+		if testData.HasAccount(proposal.Proposer) {
+			from = testData.GetAccount(reporter, proposal.Proposer)
 		}
 		msg := v1.NewMsgCancelProposal(proposalID, from.AddressBech32)
 		return []simsx.SimAccount{from}, msg
@@ -154,8 +153,8 @@ func submitProposalWithVotesScheduled(
 	deposit := minDeposit
 	// deposit := sdk.Coin{Amount: amount.Add(minAmount), Denom: minDeposit.Denom}
 
-	proposer := testData.AnyAccount(reporter, simsx.WithLiquidBalanceGTE(deposit))
-	if reporter.IsSkipped() || !proposer.LiquidBalance().BlockAmount(deposit) {
+	proposer := testData.AnyAccount(reporter, simsx.WithSpendableBalance())
+	if reporter.IsSkipped() {
 		return nil, nil
 	}
 	msg, err := v1.NewMsgSubmitProposal(

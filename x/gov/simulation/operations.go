@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -233,9 +232,9 @@ func simulateMsgSubmitProposal(
 		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, true, expedited)
 		switch {
 		case skip:
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "skip deposit"), nil, nil
+			deposit = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.OneInt())}
 		case err != nil:
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "unable to generate deposit"), nil, err
+			deposit = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.OneInt())}
 		}
 
 		msg, err := v1.NewMsgSubmitProposal(
@@ -251,28 +250,27 @@ func simulateMsgSubmitProposal(
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate a submit proposal msg"), nil, err
 		}
 
-		account := ak.GetAccount(ctx, simAccount.Address)
-		tx, err := simtestutil.GenSignedMockTx(
-			r,
-			txGen,
-			[]sdk.Msg{msg},
-			sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
-			simtestutil.DefaultGenTxGas,
-			chainID,
-			[]uint64{account.GetAccountNumber()},
-			[]uint64{account.GetSequence()},
-			simAccount.PrivKey,
-		)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           txGen,
+			Cdc:             nil,
+			Msg:             msg,
+			CoinsSpentInMsg: deposit,
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
 		}
 
-		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+		opMsg, _, err := simulation.GenAndDeliverTxWithRandFees(txCtx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
-
-		opMsg := simtypes.NewOperationMsg(msg, true, "")
+		if !opMsg.OK {
+			return opMsg, nil, nil
+		}
 
 		// get the submitted proposal ID
 		proposalID, err := k.ProposalID.Peek(ctx)
@@ -331,20 +329,20 @@ func simulateMsgDeposit(
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		proposalID, ok := randomProposalID(r, k, ctx, v1.StatusDepositPeriod, s)
 		if !ok {
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to generate proposalID"), nil, nil
+			proposalID = uint64(simtypes.RandIntBetween(r, 1, math.MaxInt32))
 		}
 
 		p, err := k.Proposals.Get(ctx, proposalID)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to get proposal"), nil, err
+			p = v1.Proposal{Expedited: false}
 		}
 
 		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, false, p.Expedited)
 		switch {
 		case skip:
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "skip deposit"), nil, nil
+			deposit = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.OneInt())}
 		case err != nil:
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to generate deposit"), nil, err
+			deposit = sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.OneInt())}
 		}
 
 		msg := v1.NewMsgDeposit(simAccount.Address, proposalID, deposit)
@@ -423,7 +421,7 @@ func operationSimulateMsgVote(
 			var ok bool
 			proposalID, ok = randomProposalID(r, k, ctx, v1.StatusVotingPeriod, s)
 			if !ok {
-				return simtypes.NoOpMsg(types.ModuleName, TypeMsgVote, "unable to generate proposalID"), nil, nil
+				proposalID = uint64(simtypes.RandIntBetween(r, 1, math.MaxInt32))
 			}
 		default:
 			proposalID = uint64(proposalIDInt)
@@ -498,7 +496,7 @@ func operationSimulateMsgVoteWeighted(
 			var ok bool
 			proposalID, ok = randomProposalID(r, k, ctx, v1.StatusVotingPeriod, s)
 			if !ok {
-				return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteWeighted, "unable to generate proposalID"), nil, nil
+				proposalID = uint64(simtypes.RandIntBetween(r, 1, math.MaxInt32))
 			}
 		default:
 			proposalID = uint64(proposalIDInt)
@@ -542,22 +540,19 @@ func SimulateMsgCancelProposal(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount := accs[0]
 		proposal := randomProposal(r, k, ctx)
-		if proposal == nil {
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgCancelProposal, "no proposals found"), nil, nil
-		}
-
-		if proposal.Proposer != simAccount.Address.String() {
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgCancelProposal, "invalid proposer"), nil, nil
-		}
-
-		if (proposal.Status != v1.StatusDepositPeriod) && (proposal.Status != v1.StatusVotingPeriod) {
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgCancelProposal, "invalid proposal status"), nil, nil
+		var proposalID uint64
+		if proposal != nil &&
+			proposal.Proposer == simAccount.Address.String() &&
+			((proposal.Status == v1.StatusDepositPeriod) || (proposal.Status == v1.StatusVotingPeriod)) {
+			proposalID = proposal.Id
+		} else {
+			proposalID = uint64(simtypes.RandIntBetween(r, 1, math.MaxInt32))
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := v1.NewMsgCancelProposal(proposal.Id, account.GetAddress().String())
+		msg := v1.NewMsgCancelProposal(proposalID, account.GetAddress().String())
 
 		txCtx := simulation.OperationInput{
 			R:               r,

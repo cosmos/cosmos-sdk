@@ -207,7 +207,7 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 	// DEBUG: flush bank send traces for this block, including any race events from IAVL
 	if keeper.Tracer != nil {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		raceEvents := keeper.DrainBankIAVLRaceEvents(sdkCtx)
+		raceEvents := keeper.GetBankIAVLRaceEvents(sdkCtx)
 		keeper.Tracer.FlushAndReset(sdkCtx.BlockHeight()+1, raceEvents)
 	}
 	return am.keeper.CreditVirtualAccounts(ctx)

@@ -235,10 +235,10 @@ func (tree *MutableTree) Import(version int64) (*Importer, error) {
 	return newImporter(tree, version)
 }
 
-// DrainRaceEvents returns and clears all fast node cache race events detected
-// by concurrent GetFastNode calls. For debugging only.
-func (tree *MutableTree) DrainRaceEvents() []RaceEvent {
-	return tree.ndb.DrainRaceEvents()
+// GetRaceEvents returns all fast node cache race events detected by concurrent
+// GetFastNode calls since node startup. Events accumulate and are never cleared.
+func (tree *MutableTree) GetRaceEvents() []RaceEvent {
+	return tree.ndb.GetRaceEvents()
 }
 
 // Iterate iterates over all keys of the tree. The keys and values must not be modified,

@@ -199,9 +199,9 @@ func (st *Store) Get(key []byte) []byte {
 	return value
 }
 
-// DrainRaceEvents returns and clears all fast node cache race events. For debugging only.
-func (st *Store) DrainRaceEvents() []iavl.RaceEvent {
-	return st.tree.DrainRaceEvents()
+// GetRaceEvents returns all fast node cache race events since node startup. For debugging only.
+func (st *Store) GetRaceEvents() []iavl.RaceEvent {
+	return st.tree.GetRaceEvents()
 }
 
 // GetWithSource returns the value and the IAVL layer that produced it.

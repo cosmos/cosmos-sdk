@@ -105,13 +105,14 @@ type nodeDB struct {
 	chCommitting               chan struct{}    // Channel to signal that the committing is done.
 }
 
-// DrainRaceEvents returns and clears all accumulated race events. Thread-safe.
-func (ndb *nodeDB) DrainRaceEvents() []RaceEvent {
+// GetRaceEvents returns a copy of all accumulated race events. Events are never cleared,
+// so every call returns the full history since node startup. Thread-safe.
+func (ndb *nodeDB) GetRaceEvents() []RaceEvent {
 	ndb.mtx.Lock()
 	defer ndb.mtx.Unlock()
-	events := ndb.raceEvents
-	ndb.raceEvents = nil
-	return events
+	result := make([]RaceEvent, len(ndb.raceEvents))
+	copy(result, ndb.raceEvents)
+	return result
 }
 
 func newNodeDB(db dbm.DB, cacheSize int, opts Options, lg Logger) *nodeDB {

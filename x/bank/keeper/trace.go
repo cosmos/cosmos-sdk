@@ -464,13 +464,14 @@ func (s *TracingKVStore) GetStoreType() storetypes.StoreType {
 	return s.KVStore.GetStoreType()
 }
 
-// DrainBankIAVLRaceEvents returns any fast node cache race events from the bank IAVL store.
-// Uses the cached reference populated by findIAVLStore during traced GETs.
-func DrainBankIAVLRaceEvents(sdkCtx sdk.Context) []TraceRaceEvent {
+// GetBankIAVLRaceEvents returns all fast node cache race events from the bank IAVL store
+// since node startup. Events accumulate and are never cleared, so every trace file
+// contains the full history. Uses the cached reference populated by findIAVLStore.
+func GetBankIAVLRaceEvents(sdkCtx sdk.Context) []TraceRaceEvent {
 	if Tracer == nil || Tracer.bankIAVLStore == nil {
 		return nil
 	}
-	events := Tracer.bankIAVLStore.DrainRaceEvents()
+	events := Tracer.bankIAVLStore.GetRaceEvents()
 	if len(events) == 0 {
 		return nil
 	}

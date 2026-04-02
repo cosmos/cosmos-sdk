@@ -241,6 +241,7 @@ func (r *TraceRecorder) NewSendTrace(height int64, from, to sdk.AccAddress, amt 
 }
 
 // FlushAndReset writes the current block's traces to the file and resets for the next block.
+// Keeps the previous block's file as <filePath>.prev for debugging.
 // raceEvents are appended from the IAVL store's DrainRaceEvents.
 func (r *TraceRecorder) FlushAndReset(newHeight int64, raceEvents []TraceRaceEvent) {
 	r.mu.Lock()
@@ -258,6 +259,8 @@ func (r *TraceRecorder) FlushAndReset(newHeight int64, raceEvents []TraceRaceEve
 		fmt.Fprintf(os.Stderr, "bank trace: marshal error: %v\n", err)
 		return
 	}
+	// Rotate: current file becomes .prev before overwriting
+	os.Rename(r.filePath, r.filePath+".prev")
 	if err := os.WriteFile(r.filePath, data, 0o644); err != nil {
 		fmt.Fprintf(os.Stderr, "bank trace: write error: %v\n", err)
 	}

@@ -76,21 +76,23 @@ type nodeDB struct {
 	cancel context.CancelFunc
 	logger Logger
 
-	mtx                 sync.Mutex       // Read/write lock.
-	done                chan struct{}    // Channel to signal that the pruning process is done.
-	db                  dbm.DB           // Persistent node storage.
-	batch               dbm.Batch        // Batched writing buffer.
-	opts                Options          // Options to customize for pruning/writing
-	versionReaders      map[int64]uint32 // Number of active version readers
-	storageVersion      string           // Storage version
-	firstVersion        int64            // First version of nodeDB.
-	latestVersion       int64            // Latest version of nodeDB.
-	pruneVersion        int64            // Version to prune up to.
-	legacyLatestVersion int64            // Latest version of nodeDB in legacy format.
-	nodeCache           cache.Cache      // Cache for nodes in the regular tree that consists of key-value pairs at any version.
-	fastNodeCache       cache.Cache      // Cache for nodes in the fast index that represents only key-value pairs at the latest version.
-	isCommitting        bool             // Flag to indicate that the nodeDB is committing.
-	chCommitting        chan struct{}    // Channel to signal that the committing is done.
+	mtx                        sync.Mutex       // Read/write lock.
+	done                       chan struct{}    // Channel to signal that the pruning process is done.
+	db                         dbm.DB           // Persistent node storage.
+	batch                      dbm.Batch        // Batched writing buffer.
+	opts                       Options          // Options to customize for pruning/writing
+	versionReaders             map[int64]uint32 // Number of active version readers
+	storageVersion             string           // Storage version
+	firstVersion               int64            // First version of nodeDB.
+	latestVersion              int64            // Latest version of nodeDB.
+	pruneVersion               int64            // Version to prune up to.
+	legacyLatestVersion        int64            // Latest version of nodeDB in legacy format.
+	nodeCache                  cache.Cache      // Cache for nodes in the regular tree that consists of key-value pairs at any version.
+	fastNodeCache              cache.Cache      // Cache for nodes in the fast index that represents only key-value pairs at the latest version.
+	pendingFastNodeDeletionSet sync.Map         // DEBUG: tracks keys with pending batch DELETE for race detection.
+	pendingFastNodeAdditionSet sync.Map         // DEBUG: tracks keys with pending batch SET for race detection.
+	isCommitting               bool             // Flag to indicate that the nodeDB is committing.
+	chCommitting               chan struct{}    // Channel to signal that the committing is done.
 }
 
 func newNodeDB(db dbm.DB, cacheSize int, opts Options, lg Logger) *nodeDB {
@@ -232,40 +234,44 @@ func (ndb *nodeDB) GetFastNode(key []byte) (*fastnode.Node, error) {
 }
 
 // GetFastNodeWithSource is like GetFastNode but also reports whether the value came
-// from the in-memory fast node cache or the underlying database. For debugging only.
-func (ndb *nodeDB) GetFastNodeWithSource(key []byte) (*fastnode.Node, bool, error) {
+// from the in-memory fast node cache or the underlying database, and whether the
+// key has a pending batch deletion or addition (race detection). For debugging only.
+func (ndb *nodeDB) GetFastNodeWithSource(key []byte) (node *fastnode.Node, fromCache bool, pendingDeletion bool, pendingAddition bool, err error) {
 	if !ndb.hasUpgradedToFastStorage() {
-		return nil, false, errors.New("storage version is not fast")
+		return nil, false, false, false, errors.New("storage version is not fast")
 	}
 
 	ndb.mtx.Lock()
 	defer ndb.mtx.Unlock()
 
 	if len(key) == 0 {
-		return nil, false, fmt.Errorf("nodeDB.GetFastNodeWithSource() requires key, len(key) equals 0")
+		return nil, false, false, false, fmt.Errorf("nodeDB.GetFastNodeWithSource() requires key, len(key) equals 0")
 	}
+
+	_, hasPendingDeletion := ndb.pendingFastNodeDeletionSet.Load(string(key))
+	_, hasPendingAddition := ndb.pendingFastNodeAdditionSet.Load(string(key))
 
 	if cachedFastNode := ndb.fastNodeCache.Get(key); cachedFastNode != nil {
 		ndb.opts.Stat.IncFastCacheHitCnt()
-		return cachedFastNode.(*fastnode.Node), true, nil // fromCache=true
+		return cachedFastNode.(*fastnode.Node), true, hasPendingDeletion, hasPendingAddition, nil
 	}
 
 	ndb.opts.Stat.IncFastCacheMissCnt()
 
 	buf, err := ndb.db.Get(ndb.fastNodeKey(key))
 	if err != nil {
-		return nil, false, fmt.Errorf("can't get FastNode %X: %w", key, err)
+		return nil, false, false, false, fmt.Errorf("can't get FastNode %X: %w", key, err)
 	}
 	if buf == nil {
-		return nil, false, nil
+		return nil, false, false, false, nil
 	}
 
 	fastNode, err := fastnode.DeserializeNode(key, buf)
 	if err != nil {
-		return nil, false, fmt.Errorf("error reading FastNode. bytes: %x, error: %w", buf, err)
+		return nil, false, false, false, fmt.Errorf("error reading FastNode. bytes: %x, error: %w", buf, err)
 	}
 	ndb.fastNodeCache.Add(fastNode)
-	return fastNode, false, nil // fromCache=false (loaded from DB)
+	return fastNode, false, hasPendingDeletion, hasPendingAddition, nil
 }
 
 // SaveNode saves a node to disk.
@@ -411,6 +417,7 @@ func (ndb *nodeDB) saveFastNodeUnlocked(node *fastnode.Node, shouldAddToCache bo
 	if err := ndb.batch.Set(ndb.fastNodeKey(node.GetKey()), buf.Bytes()); err != nil {
 		return fmt.Errorf("error while writing key/val to nodedb batch. Err: %w", err)
 	}
+	ndb.pendingFastNodeAdditionSet.Store(string(node.GetKey()), true) // DEBUG: race detection
 	if shouldAddToCache {
 		ndb.fastNodeCache.Add(node)
 	}
@@ -794,6 +801,7 @@ func (ndb *nodeDB) DeleteFastNode(key []byte) error {
 		return err
 	}
 	ndb.fastNodeCache.Remove(key)
+	ndb.pendingFastNodeDeletionSet.Store(string(key), true) // DEBUG: race detection
 	return nil
 }
 
@@ -1161,6 +1169,16 @@ func (ndb *nodeDB) Commit() error {
 	if err != nil {
 		return fmt.Errorf("failed to write batch, %w", err)
 	}
+
+	// DEBUG: clear race detection sets — batch is committed, DB and cache are consistent.
+	ndb.pendingFastNodeDeletionSet.Range(func(key, _ interface{}) bool {
+		ndb.pendingFastNodeDeletionSet.Delete(key)
+		return true
+	})
+	ndb.pendingFastNodeAdditionSet.Range(func(key, _ interface{}) bool {
+		ndb.pendingFastNodeAdditionSet.Delete(key)
+		return true
+	})
 
 	return nil
 }

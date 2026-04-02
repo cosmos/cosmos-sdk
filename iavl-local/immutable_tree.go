@@ -221,7 +221,7 @@ func (t *ImmutableTree) GetWithSource(key []byte) ([]byte, IAVLGetSource, error)
 	}
 
 	if !t.skipFastStorageUpgrade {
-		fastNode, fromCache, err := t.ndb.GetFastNodeWithSource(key)
+		fastNode, fromCache, pendingDeletion, pendingAddition, err := t.ndb.GetFastNodeWithSource(key)
 		if err != nil {
 			_, result, err := t.root.get(t, key)
 			return result, IAVLSourceTreeTraversal, err
@@ -236,6 +236,15 @@ func (t *ImmutableTree) GetWithSource(key []byte) ([]byte, IAVLGetSource, error)
 		}
 
 		if fastNode.GetVersionLastUpdatedAt() <= t.version {
+			if pendingDeletion {
+				return fastNode.GetValue(), IAVLSourceFastNodeRaceDetected, nil
+			}
+			if pendingAddition && !fromCache {
+				// Cache miss + DB read for a key with a pending batch SET.
+				// The DB returned the old pre-batch value (stale) because
+				// LRU evicted the correct entry before Commit().
+				return fastNode.GetValue(), IAVLSourceFastNodeSetRaceDetected, nil
+			}
 			if fromCache {
 				return fastNode.GetValue(), IAVLSourceFastNodeCache, nil
 			}

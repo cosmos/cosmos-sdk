@@ -192,13 +192,15 @@ func (tree *MutableTree) Get(key []byte) ([]byte, error) {
 type IAVLGetSource string
 
 const (
-	IAVLSourceUnsavedAdditions IAVLGetSource = "unsaved_fast_node_additions"
-	IAVLSourceUnsavedRemovals  IAVLGetSource = "unsaved_fast_node_removals"
-	IAVLSourceFastNodeCache    IAVLGetSource = "fast_node_cache"
-	IAVLSourceFastNodeDB       IAVLGetSource = "fast_node_db"
-	IAVLSourceFastNodeStale    IAVLGetSource = "fast_node_stale_fallback_to_tree"
-	IAVLSourceTreeTraversal    IAVLGetSource = "tree_traversal"
-	IAVLSourceNilRoot          IAVLGetSource = "nil_root"
+	IAVLSourceUnsavedAdditions        IAVLGetSource = "unsaved_fast_node_additions"
+	IAVLSourceUnsavedRemovals         IAVLGetSource = "unsaved_fast_node_removals"
+	IAVLSourceFastNodeCache           IAVLGetSource = "fast_node_cache"
+	IAVLSourceFastNodeDB              IAVLGetSource = "fast_node_db"
+	IAVLSourceFastNodeStale           IAVLGetSource = "fast_node_stale_fallback_to_tree"
+	IAVLSourceTreeTraversal           IAVLGetSource = "tree_traversal"
+	IAVLSourceNilRoot                 IAVLGetSource = "nil_root"
+	IAVLSourceFastNodeRaceDetected    IAVLGetSource = "fast_node_pending_deletion_race"
+	IAVLSourceFastNodeSetRaceDetected IAVLGetSource = "fast_node_pending_addition_race"
 )
 
 // GetWithSource returns the value for the key along with a description of which

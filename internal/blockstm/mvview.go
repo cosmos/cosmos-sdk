@@ -207,6 +207,11 @@ func (s *GMVMemoryView[V]) CacheWrap() storetypes.CacheWrap {
 	return cachekv.NewGStore(s, s.mvData.isZero, s.mvData.valueLen)
 }
 
+// Inner returns the underlying storage store, useful for tracing.
+func (s *GMVMemoryView[V]) Inner() storetypes.GKVStore[V] {
+	return s.storage
+}
+
 // GetStoreType implements types.Store.
 func (s *GMVMemoryView[V]) GetStoreType() storetypes.StoreType {
 	return s.storage.GetStoreType()

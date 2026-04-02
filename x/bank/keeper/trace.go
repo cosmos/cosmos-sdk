@@ -10,6 +10,7 @@ import (
 	"sync"
 	"unicode/utf8"
 
+	"github.com/cosmos/cosmos-sdk/internal/blockstm"
 	"github.com/cosmos/cosmos-sdk/store/v2/cache"
 	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/v2/gaskv"
@@ -405,6 +406,12 @@ func (s *TracingKVStore) findIAVLStore() *iavlstore.Store {
 		case *cache.CommitKVStoreCache:
 			// Inter-block cache wraps the IAVL store via embedded CommitKVStore
 			inner, ok := st.CommitKVStore.(storetypes.KVStore)
+			if !ok {
+				return nil
+			}
+			store = inner
+		case *blockstm.GMVMemoryView[[]byte]:
+			inner, ok := st.Inner().(storetypes.KVStore)
 			if !ok {
 				return nil
 			}

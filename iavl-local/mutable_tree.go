@@ -235,6 +235,12 @@ func (tree *MutableTree) Import(version int64) (*Importer, error) {
 	return newImporter(tree, version)
 }
 
+// DrainRaceEvents returns and clears all fast node cache race events detected
+// by concurrent GetFastNode calls. For debugging only.
+func (tree *MutableTree) DrainRaceEvents() []RaceEvent {
+	return tree.ndb.DrainRaceEvents()
+}
+
 // Iterate iterates over all keys of the tree. The keys and values must not be modified,
 // since they may point to data stored within IAVL. Returns true if stopped by callnack, false otherwise
 func (tree *MutableTree) Iterate(fn func(key []byte, value []byte) bool) (stopped bool, err error) {

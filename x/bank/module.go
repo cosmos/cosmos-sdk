@@ -204,10 +204,11 @@ func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Re
 }
 
 func (am AppModule) EndBlock(ctx context.Context) error {
-	// DEBUG: flush bank send traces for this block
+	// DEBUG: flush bank send traces for this block, including any race events from IAVL
 	if keeper.Tracer != nil {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		keeper.Tracer.FlushAndReset(sdkCtx.BlockHeight() + 1)
+		raceEvents := keeper.DrainBankIAVLRaceEvents(sdkCtx)
+		keeper.Tracer.FlushAndReset(sdkCtx.BlockHeight()+1, raceEvents)
 	}
 	return am.keeper.CreditVirtualAccounts(ctx)
 }

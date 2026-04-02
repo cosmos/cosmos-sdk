@@ -16,8 +16,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2/gaskv"
 	iavlstore "github.com/cosmos/cosmos-sdk/store/v2/iavl"
 	"github.com/cosmos/cosmos-sdk/store/v2/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // encodeValue returns a human-readable string if the bytes are valid printable UTF-8,
@@ -193,10 +195,20 @@ func (t *SendTrace) record(op, storeName string, key, value []byte, cacheHit *bo
 	t.seq++
 }
 
+// TraceRaceEvent is the JSON-serializable form of a fast node cache race event.
+type TraceRaceEvent struct {
+	Key         string `json:"key"`
+	KeyDecoded  string `json:"key_decoded,omitempty"`
+	StaleValue  string `json:"stale_value"`
+	PendingOp   string `json:"pending_op"`
+	TimestampNs int64  `json:"timestamp_ns"`
+}
+
 // BlockTraces holds all SendCoins traces for a single block.
 type BlockTraces struct {
-	Height int64        `json:"height"`
-	Traces []*SendTrace `json:"traces"`
+	Height     int64            `json:"height"`
+	Traces     []*SendTrace     `json:"traces"`
+	RaceEvents []TraceRaceEvent `json:"race_events,omitempty"`
 }
 
 // TraceRecorder accumulates per-block traces and flushes to a file.
@@ -230,13 +242,15 @@ func (r *TraceRecorder) NewSendTrace(height int64, from, to sdk.AccAddress, amt 
 }
 
 // FlushAndReset writes the current block's traces to the file and resets for the next block.
-func (r *TraceRecorder) FlushAndReset(newHeight int64) {
+// raceEvents are appended from the IAVL store's DrainRaceEvents.
+func (r *TraceRecorder) FlushAndReset(newHeight int64, raceEvents []TraceRaceEvent) {
 	r.mu.Lock()
 	toWrite := r.current
+	toWrite.RaceEvents = raceEvents
 	r.current = &BlockTraces{Height: newHeight}
 	r.mu.Unlock()
 
-	if len(toWrite.Traces) == 0 {
+	if len(toWrite.Traces) == 0 && len(toWrite.RaceEvents) == 0 {
 		return
 	}
 
@@ -442,4 +456,92 @@ func (s *TracingKVStore) CacheWrap() storetypes.CacheWrap {
 // GetStoreType delegates to the underlying store.
 func (s *TracingKVStore) GetStoreType() storetypes.StoreType {
 	return s.KVStore.GetStoreType()
+}
+
+// DrainBankIAVLRaceEvents walks from the SDK context's multistore to the bank IAVL store,
+// drains any fast node cache race events, and returns them in trace-serializable form.
+func DrainBankIAVLRaceEvents(sdkCtx sdk.Context) []TraceRaceEvent {
+	// Walk up to the rootmulti store from the context's (possibly cached) multistore
+	cms := sdkCtx.MultiStore()
+	rmStore, ok := cms.(*rootmulti.Store)
+	if !ok {
+		// The context multistore may be a CacheMultiStore; try getting the commit multistore
+		// from the base app. We can't easily do that, so try type assertion on GetKVStore result.
+		// Fall back: get the KVStore for bank and walk wrappers.
+		bankKey := storetypes.NewKVStoreKey(banktypes.StoreKey)
+		kvStore := cms.GetKVStore(bankKey)
+		return drainRaceEventsFromKVStore(kvStore)
+	}
+	bankKey := storetypes.NewKVStoreKey(banktypes.StoreKey)
+	kvStore := rmStore.GetKVStore(bankKey)
+	return drainRaceEventsFromKVStore(kvStore)
+}
+
+func drainRaceEventsFromKVStore(store storetypes.KVStore) []TraceRaceEvent {
+	iavlSt := findIAVLStoreFromKVStore(store)
+	if iavlSt == nil {
+		return nil
+	}
+	events := iavlSt.DrainRaceEvents()
+	if len(events) == 0 {
+		return nil
+	}
+	result := make([]TraceRaceEvent, len(events))
+	for i, e := range events {
+		result[i] = TraceRaceEvent{
+			Key:         hex.EncodeToString(e.Key),
+			KeyDecoded:  decodeKey("bank", e.Key),
+			StaleValue:  encodeValue(e.StaleValue),
+			PendingOp:   e.PendingOp,
+			TimestampNs: e.TimestampNs,
+		}
+	}
+	return result
+}
+
+// findIAVLStoreFromKVStore is like TracingKVStore.findIAVLStore but takes a KVStore directly.
+func findIAVLStoreFromKVStore(store storetypes.KVStore) *iavlstore.Store {
+	for {
+		switch st := store.(type) {
+		case *cachekv.GStore[[]byte]:
+			parent := st.Parent()
+			if parent == nil {
+				return nil
+			}
+			parentKV, ok := parent.(storetypes.KVStore)
+			if !ok {
+				return nil
+			}
+			store = parentKV
+		case *gaskv.GStore[[]byte]:
+			parent := st.Inner()
+			if parent == nil {
+				return nil
+			}
+			parentKV, ok := parent.(storetypes.KVStore)
+			if !ok {
+				return nil
+			}
+			store = parentKV
+		case *listenkv.Store:
+			store = st.Inner()
+		case *cache.CommitKVStoreCache:
+			inner, ok := st.CommitKVStore.(storetypes.KVStore)
+			if !ok {
+				return nil
+			}
+			store = inner
+		case *blockstm.GMVMemoryView[[]byte]:
+			inner, ok := st.Inner().(storetypes.KVStore)
+			if !ok {
+				return nil
+			}
+			store = inner
+		case *iavlstore.Store:
+			return st
+		default:
+			fmt.Fprintf(os.Stderr, "bank trace: findIAVLStoreFromKVStore: unhandled store wrapper type %T\n", st)
+			return nil
+		}
+	}
 }

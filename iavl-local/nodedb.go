@@ -71,6 +71,15 @@ var (
 
 var errInvalidFastStorageVersion = fmt.Errorf("fast storage version must be in the format <storage version>%s<latest fast cache version>", fastStorageVersionDelimiter)
 
+// RaceEvent records when a concurrent GetFastNode call repopulates the LRU cache
+// with a stale DB value for a key that has a pending batch operation.
+type RaceEvent struct {
+	Key         []byte `json:"key"`
+	StaleValue  []byte `json:"stale_value"`
+	PendingOp   string `json:"pending_op"` // "deletion" or "addition"
+	TimestampNs int64  `json:"timestamp_ns"`
+}
+
 type nodeDB struct {
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -91,8 +100,18 @@ type nodeDB struct {
 	fastNodeCache              cache.Cache      // Cache for nodes in the fast index that represents only key-value pairs at the latest version.
 	pendingFastNodeDeletionSet sync.Map         // DEBUG: tracks keys with pending batch DELETE for race detection.
 	pendingFastNodeAdditionSet sync.Map         // DEBUG: tracks keys with pending batch SET for race detection.
+	raceEvents                 []RaceEvent      // DEBUG: race events detected by concurrent GetFastNode calls.
 	isCommitting               bool             // Flag to indicate that the nodeDB is committing.
 	chCommitting               chan struct{}    // Channel to signal that the committing is done.
+}
+
+// DrainRaceEvents returns and clears all accumulated race events. Thread-safe.
+func (ndb *nodeDB) DrainRaceEvents() []RaceEvent {
+	ndb.mtx.Lock()
+	defer ndb.mtx.Unlock()
+	events := ndb.raceEvents
+	ndb.raceEvents = nil
+	return events
 }
 
 func newNodeDB(db dbm.DB, cacheSize int, opts Options, lg Logger) *nodeDB {
@@ -228,6 +247,23 @@ func (ndb *nodeDB) GetFastNode(key []byte) (*fastnode.Node, error) {
 	fastNode, err := fastnode.DeserializeNode(key, buf)
 	if err != nil {
 		return nil, fmt.Errorf("error reading FastNode. bytes: %x, error: %w", buf, err)
+	}
+	// DEBUG: detect race — loading from DB for a key with a pending batch operation
+	if _, ok := ndb.pendingFastNodeDeletionSet.Load(ibytes.UnsafeBytesToStr(key)); ok {
+		ndb.raceEvents = append(ndb.raceEvents, RaceEvent{
+			Key:         append([]byte(nil), key...),
+			StaleValue:  append([]byte(nil), fastNode.GetValue()...),
+			PendingOp:   "deletion",
+			TimestampNs: time.Now().UnixNano(),
+		})
+	}
+	if _, ok := ndb.pendingFastNodeAdditionSet.Load(ibytes.UnsafeBytesToStr(key)); ok {
+		ndb.raceEvents = append(ndb.raceEvents, RaceEvent{
+			Key:         append([]byte(nil), key...),
+			StaleValue:  append([]byte(nil), fastNode.GetValue()...),
+			PendingOp:   "addition",
+			TimestampNs: time.Now().UnixNano(),
+		})
 	}
 	ndb.fastNodeCache.Add(fastNode)
 	return fastNode, nil

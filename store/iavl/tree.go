@@ -36,6 +36,7 @@ type (
 		AvailableVersions() []int
 		LoadVersionForOverwriting(targetVersion int64) error
 		TraverseStateChanges(startVersion, endVersion int64, fn func(version int64, changeSet *iavl.ChangeSet) error) error
+		DrainRaceEvents() []iavl.RaceEvent
 	}
 
 	// immutableTree is a simple wrapper around a reference to an iavl.ImmutableTree
@@ -96,6 +97,10 @@ func (it *immutableTree) LoadVersionForOverwriting(targetVersion int64) error {
 
 func (it *immutableTree) GetWithSource(key []byte) ([]byte, iavl.IAVLGetSource, error) {
 	return it.ImmutableTree.GetWithSource(key)
+}
+
+func (it *immutableTree) DrainRaceEvents() []iavl.RaceEvent {
+	return nil // immutable trees don't track race events
 }
 
 func (it *immutableTree) WorkingHash() []byte {

@@ -2,9 +2,7 @@ package simulation
 
 import (
 	"fmt"
-	"os"
-	"sort"
-	"strconv"
+	"reflect"
 	"strings"
 	"sync"
 )
@@ -18,15 +16,6 @@ const (
 	TxPhaseFinalize TxLifecyclePhase = "finalize"
 )
 
-type txLifecyclePhase = TxLifecyclePhase
-
-const (
-	txPhaseCheckTx  = TxPhaseCheckTx
-	txPhasePrepare  = TxPhasePrepare
-	txPhaseProcess  = TxPhaseProcess
-	txPhaseFinalize = TxPhaseFinalize
-)
-
 type txLifecycleStats struct {
 	mu          sync.Mutex
 	reasons     map[TxLifecyclePhase]map[string]int
@@ -35,17 +24,17 @@ type txLifecycleStats struct {
 
 func newTxLifecycleStats() *txLifecycleStats {
 	return &txLifecycleStats{
-		reasons: map[txLifecyclePhase]map[string]int{
-			txPhaseCheckTx:  {},
-			txPhasePrepare:  {},
-			txPhaseProcess:  {},
-			txPhaseFinalize: {},
+		reasons: map[TxLifecyclePhase]map[string]int{
+			TxPhaseCheckTx:  {},
+			TxPhasePrepare:  {},
+			TxPhaseProcess:  {},
+			TxPhaseFinalize: {},
 		},
-		byMsgCounts: map[txLifecyclePhase]map[string]int{
-			txPhaseCheckTx:  {},
-			txPhasePrepare:  {},
-			txPhaseProcess:  {},
-			txPhaseFinalize: {},
+		byMsgCounts: map[TxLifecyclePhase]map[string]int{
+			TxPhaseCheckTx:  {},
+			TxPhasePrepare:  {},
+			TxPhaseProcess:  {},
+			TxPhaseFinalize: {},
 		},
 	}
 }
@@ -85,11 +74,11 @@ func (s *txLifecycleStats) recordForMsg(phase TxLifecyclePhase, msgType, reason 
 func (s *txLifecycleStats) summaryString() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	topN := summaryTopNFromEnv()
+	topN := SummaryTopNFromEnv()
 
 	var b strings.Builder
 	b.WriteString("Tx lifecycle failures:\n")
-	for _, phase := range []TxLifecyclePhase{txPhaseCheckTx, txPhasePrepare, txPhaseProcess, txPhaseFinalize} {
+	for _, phase := range []TxLifecyclePhase{TxPhaseCheckTx, TxPhasePrepare, TxPhaseProcess, TxPhaseFinalize} {
 		reasons := s.reasons[phase]
 		msgCounts := s.byMsgCounts[phase]
 
@@ -107,13 +96,13 @@ func (s *txLifecycleStats) summaryString() string {
 		_, _ = fmt.Fprintf(&b, "- %s: %d\n", phase, total)
 
 		if len(msgCounts) > 0 {
-			msgEntries := toSortedEntries(msgCounts)
+			msgEntries := ToSortedEntries(msgCounts)
 			if topN > 0 && len(msgEntries) > topN {
 				other := 0
 				for _, e := range msgEntries[topN:] {
 					other += e.Count
 				}
-				msgEntries = append(msgEntries[:topN], summaryEntry{Key: "other", Count: other})
+				msgEntries = append(msgEntries[:topN], SummaryEntry{Key: "other", Count: other})
 			}
 			for _, e := range msgEntries {
 				_, _ = fmt.Fprintf(&b, "  - %d\t%s\n", e.Count, e.Key)
@@ -133,13 +122,13 @@ func (s *txLifecycleStats) summaryString() string {
 		}
 
 		b.WriteString("    reasons:\n")
-		reasonEntries := toSortedEntries(reasons)
+		reasonEntries := ToSortedEntries(reasons)
 		if topN > 0 && len(reasonEntries) > topN {
 			other := 0
 			for _, e := range reasonEntries[topN:] {
 				other += e.Count
 			}
-			reasonEntries = append(reasonEntries[:topN], summaryEntry{Key: "other", Count: other})
+			reasonEntries = append(reasonEntries[:topN], SummaryEntry{Key: "other", Count: other})
 		}
 		for _, e := range reasonEntries {
 			_, _ = fmt.Fprintf(&b, "      - %d\t%s\n", e.Count, e.Key)
@@ -149,23 +138,80 @@ func (s *txLifecycleStats) summaryString() string {
 	return b.String()
 }
 
-var simTxLifecycleStats = newTxLifecycleStats()
+type txLifecycleStatsRegistry struct {
+	mu    sync.Mutex
+	stats map[uintptr]*txLifecycleStats
+}
+
+var simTxLifecycleStatsRegistry = txLifecycleStatsRegistry{
+	stats: map[uintptr]*txLifecycleStats{},
+}
+
+func statsKeyForApp(app any) uintptr {
+	if app == nil {
+		return 0
+	}
+
+	v := reflect.ValueOf(app)
+	if v.Kind() != reflect.Ptr || v.IsNil() {
+		return 0
+	}
+	return v.Pointer()
+}
+
+func getTxLifecycleStatsForApp(app any) *txLifecycleStats {
+	key := statsKeyForApp(app)
+
+	simTxLifecycleStatsRegistry.mu.Lock()
+	defer simTxLifecycleStatsRegistry.mu.Unlock()
+
+	stats := simTxLifecycleStatsRegistry.stats[key]
+	if stats == nil {
+		stats = newTxLifecycleStats()
+		simTxLifecycleStatsRegistry.stats[key] = stats
+	}
+
+	return stats
+}
+
+// ResetTxLifecycleFailuresForApp resets lifecycle stats for the given app.
+func ResetTxLifecycleFailuresForApp(app any) {
+	getTxLifecycleStatsForApp(app).reset()
+}
 
 // TxLifecycleFailuresSummary returns a per-phase failure summary for the
 // simulation tx lifecycle.
 func TxLifecycleFailuresSummary() string {
-	return simTxLifecycleStats.summaryString()
+	return TxLifecycleFailuresSummaryForApp(nil)
+}
+
+// TxLifecycleFailuresSummaryForApp returns a per-phase failure summary for the
+// simulation tx lifecycle scoped to a single app instance.
+func TxLifecycleFailuresSummaryForApp(app any) string {
+	return getTxLifecycleStatsForApp(app).summaryString()
 }
 
 // RecordTxLifecycleFailure records a lifecycle failure reason by phase.
 func RecordTxLifecycleFailure(phase TxLifecyclePhase, reason string) {
-	simTxLifecycleStats.record(phase, reason)
+	RecordTxLifecycleFailureForApp(nil, phase, reason)
+}
+
+// RecordTxLifecycleFailureForApp records a lifecycle failure reason by phase
+// scoped to a single app instance.
+func RecordTxLifecycleFailureForApp(app any, phase TxLifecyclePhase, reason string) {
+	getTxLifecycleStatsForApp(app).record(phase, reason)
 }
 
 // RecordTxLifecycleFailureForMsg records a lifecycle failure reason by phase
 // and message type.
 func RecordTxLifecycleFailureForMsg(phase TxLifecyclePhase, msgType, reason string) {
-	simTxLifecycleStats.recordForMsg(phase, msgType, reason)
+	RecordTxLifecycleFailureForMsgForApp(nil, phase, msgType, reason)
+}
+
+// RecordTxLifecycleFailureForMsgForApp records a lifecycle failure reason by
+// phase and message type scoped to a single app instance.
+func RecordTxLifecycleFailureForMsgForApp(app any, phase TxLifecyclePhase, msgType, reason string) {
+	getTxLifecycleStatsForApp(app).recordForMsg(phase, msgType, reason)
 }
 
 type TxLifecyclePhaseSummary struct {
@@ -180,15 +226,20 @@ type TxLifecycleSummarySnapshot struct {
 }
 
 func TxLifecycleFailuresSnapshot() TxLifecycleSummarySnapshot {
-	simTxLifecycleStats.mu.Lock()
-	defer simTxLifecycleStats.mu.Unlock()
+	return TxLifecycleFailuresSnapshotForApp(nil)
+}
+
+func TxLifecycleFailuresSnapshotForApp(app any) TxLifecycleSummarySnapshot {
+	stats := getTxLifecycleStatsForApp(app)
+	stats.mu.Lock()
+	defer stats.mu.Unlock()
 
 	phases := make(map[TxLifecyclePhase]TxLifecyclePhaseSummary, 4)
 	totalRejected := 0
 
-	for _, phase := range []TxLifecyclePhase{txPhaseCheckTx, txPhasePrepare, txPhaseProcess, txPhaseFinalize} {
-		msgCounts := mapsCloneInt(simTxLifecycleStats.byMsgCounts[phase])
-		reasons := mapsCloneInt(simTxLifecycleStats.reasons[phase])
+	for _, phase := range []TxLifecyclePhase{TxPhaseCheckTx, TxPhasePrepare, TxPhaseProcess, TxPhaseFinalize} {
+		msgCounts := mapsCloneInt(stats.byMsgCounts[phase])
+		reasons := mapsCloneInt(stats.reasons[phase])
 		total := 0
 		for _, c := range msgCounts {
 			total += c
@@ -210,37 +261,6 @@ func TxLifecycleFailuresSnapshot() TxLifecycleSummarySnapshot {
 		TotalRejected: totalRejected,
 		Phases:        phases,
 	}
-}
-
-type summaryEntry struct {
-	Key   string
-	Count int
-}
-
-func toSortedEntries(items map[string]int) []summaryEntry {
-	entries := make([]summaryEntry, 0, len(items))
-	for k, c := range items {
-		entries = append(entries, summaryEntry{Key: k, Count: c})
-	}
-	sort.Slice(entries, func(i, j int) bool {
-		if entries[i].Count == entries[j].Count {
-			return entries[i].Key < entries[j].Key
-		}
-		return entries[i].Count > entries[j].Count
-	})
-	return entries
-}
-
-func summaryTopNFromEnv() int {
-	v := strings.TrimSpace(os.Getenv("SIMAPP_SUMMARY_TOP_N"))
-	if v == "" {
-		return 0
-	}
-	n, err := strconv.Atoi(v)
-	if err != nil || n < 0 {
-		return 0
-	}
-	return n
 }
 
 func mapsCloneInt(src map[string]int) map[string]int {

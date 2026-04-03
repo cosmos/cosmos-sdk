@@ -88,6 +88,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/simulation) [#26215](https://github.com/cosmos/cosmos-sdk/pull/26215) Route simulation tx execution through `CheckTx`/`PrepareProposal`/`ProcessProposal` before delivery and add per-run lifecycle rejection summaries for debugging determinism failures.
 * (ci) Use softprops/action-gh-release for main-nightly instead of custom gh/git to avoid repository ruleset conflicts.
 * (telemetry) [#26006](https://github.com/cosmos/cosmos-sdk/pull/26006) Export `ExtensionOptions` type for programmatic otel.yaml generation.
 * [#25955](https://github.com/cosmos/cosmos-sdk/pull/25955) Use cosmos/btree directly instead of replacing it in go.mods

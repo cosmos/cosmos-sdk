@@ -212,7 +212,7 @@ func RunWithSeedAndRandAcc[T SimulationApp](
 		simtestutil.PrintStats(testInstance.DB)
 	}
 	execSummary := reporter.Summary()
-	lifecycleSnapshot := simulation.TxLifecycleFailuresSnapshot()
+	lifecycleSnapshot := simulation.TxLifecycleFailuresSnapshotForApp(app.GetBaseApp())
 	factoryPreDeliverySkips := execSummary.TotalSkipped() - lifecycleSnapshot.TotalRejected
 	if factoryPreDeliverySkips < 0 {
 		factoryPreDeliverySkips = 0
@@ -221,7 +221,7 @@ func RunWithSeedAndRandAcc[T SimulationApp](
 	fmt.Printf("+++ DONE (seed: %d): \n%s\n", seed, execSummary.String())
 	fmt.Printf("factory pre-delivery skips total: %d\n", factoryPreDeliverySkips)
 	fmt.Printf("lifecycle rejects total: %d\n", lifecycleSnapshot.TotalRejected)
-	fmt.Println(simulation.TxLifecycleFailuresSummary())
+	fmt.Println(simulation.TxLifecycleFailuresSummaryForApp(app.GetBaseApp()))
 	writeSummaryExports(seed, execSummary.Snapshot(), lifecycleSnapshot, factoryPreDeliverySkips)
 	for _, step := range postRunActions {
 		step(tb, testInstance, accs)

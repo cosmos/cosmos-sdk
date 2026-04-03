@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"bytes"
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -67,6 +68,7 @@ func ExecuteTxLifecycle(app TxLifecycleApp, txGen client.TxConfig, tx sdk.Tx, ct
 	prepareRes, err := app.PrepareProposal(&abci.RequestPrepareProposal{
 		Height:     ctx.BlockHeight(),
 		Time:       ctx.BlockTime(),
+		Txs:        [][]byte{txBytes},
 		MaxTxBytes: maxTxBytes,
 	})
 	if err != nil {
@@ -82,6 +84,22 @@ func ExecuteTxLifecycle(app TxLifecycleApp, txGen client.TxConfig, tx sdk.Tx, ct
 			Accepted: false,
 			Phase:    TxPhasePrepare,
 			Reason:   "returned no txs",
+		}
+	}
+	proposedTxFound := false
+	var proposedTxBytes []byte
+	for _, preparedTx := range prepareRes.Txs {
+		if bytes.Equal(preparedTx, txBytes) {
+			proposedTxFound = true
+			proposedTxBytes = preparedTx
+			break
+		}
+	}
+	if !proposedTxFound {
+		return TxLifecycleOutcome{
+			Accepted: false,
+			Phase:    TxPhasePrepare,
+			Reason:   "proposal omitted simulated tx",
 		}
 	}
 
@@ -106,7 +124,21 @@ func ExecuteTxLifecycle(app TxLifecycleApp, txGen client.TxConfig, tx sdk.Tx, ct
 		}
 	}
 
-	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+	txToDeliver := tx
+	if txDecoder := txGen.TxDecoder(); txDecoder != nil {
+		decodedTx, decodeErr := txDecoder(proposedTxBytes)
+		if decodeErr != nil {
+			return TxLifecycleOutcome{
+				Accepted: false,
+				Phase:    TxPhasePrepare,
+				Reason:   fmt.Sprintf("unable to decode tx chosen by proposal: %v", decodeErr),
+				Err:      decodeErr,
+			}
+		}
+		txToDeliver = decodedTx
+	}
+
+	_, _, err = app.SimDeliver(txGen.TxEncoder(), txToDeliver)
 	if err != nil {
 		return TxLifecycleOutcome{
 			Accepted: false,

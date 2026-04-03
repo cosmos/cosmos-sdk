@@ -114,6 +114,9 @@ func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, [
 // This behavior is always on for simulation tx execution.
 func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
+	if account == nil {
+		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "account not found"), nil, nil
+	}
 	tx, err := simtestutil.GenSignedMockTx(
 		txCtx.R,
 		txCtx.TxGen,
@@ -131,7 +134,7 @@ func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMs
 
 	outcome := ExecuteTxLifecycle(txCtx.App, txCtx.TxGen, tx, txCtx.Context)
 	if !outcome.Accepted {
-		RecordTxLifecycleFailureForMsg(outcome.Phase, sdk.MsgTypeURL(txCtx.Msg), outcome.Reason)
+		RecordTxLifecycleFailureForMsgForApp(txCtx.App, outcome.Phase, sdk.MsgTypeURL(txCtx.Msg), outcome.Reason)
 		switch outcome.Phase {
 		case TxPhaseCheckTx:
 			return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "check tx rejected"), nil, nil

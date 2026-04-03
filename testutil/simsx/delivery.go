@@ -99,7 +99,7 @@ func DeliverSimsMsg(
 
 		outcome := xsimulation.ExecuteTxLifecycle(lifecycleApp, txGen, tx, sdkCtx)
 		if !outcome.Accepted {
-			xsimulation.RecordTxLifecycleFailureForMsg(outcome.Phase, sdk.MsgTypeURL(msg), outcome.Reason)
+			xsimulation.RecordTxLifecycleFailureForMsgForApp(app, outcome.Phase, sdk.MsgTypeURL(msg), outcome.Reason)
 			if outcome.Phase == xsimulation.TxPhaseFinalize {
 				if err2 := deliveryResultHandler(outcome.Err); err2 != nil {
 					var comment string

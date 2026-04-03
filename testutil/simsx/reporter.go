@@ -4,16 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"maps"
-	"os"
 	"slices"
-	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // SimulationReporter is an interface for reporting the result of a simulation run.
@@ -249,7 +247,7 @@ func (s *ExecutionSummary) Add(module, url string, status ReporterStatus, commen
 func (s *ExecutionSummary) String() string {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
-	topN := summaryTopNFromEnv()
+	topN := simulation.SummaryTopNFromEnv()
 	keys := slices.Sorted(maps.Keys(s.counts))
 	var sb strings.Builder
 	for _, key := range keys {
@@ -262,13 +260,13 @@ func (s *ExecutionSummary) String() string {
 	for msgType, reasons := range s.skipReasons {
 		msgTypeTotals[msgType] = sum(slices.Collect(maps.Values(reasons)))
 	}
-	msgTypeEntries := toSortedEntries(msgTypeTotals)
+	msgTypeEntries := simulation.ToSortedEntries(msgTypeTotals)
 	if topN > 0 && len(msgTypeEntries) > topN {
 		other := 0
 		for _, e := range msgTypeEntries[topN:] {
 			other += e.Count
 		}
-		msgTypeEntries = append(msgTypeEntries[:topN], summaryEntry{Key: "other", Count: other})
+		msgTypeEntries = append(msgTypeEntries[:topN], simulation.SummaryEntry{Key: "other", Count: other})
 	}
 	for _, msgTypeEntry := range msgTypeEntries {
 		m := msgTypeEntry.Key
@@ -279,13 +277,13 @@ func (s *ExecutionSummary) String() string {
 		c := s.skipReasons[m]
 		values := maps.Values(c)
 		total := sum(slices.Collect(values))
-		reasonEntries := toSortedEntries(c)
+		reasonEntries := simulation.ToSortedEntries(c)
 		if topN > 0 && len(reasonEntries) > topN {
 			other := 0
 			for _, e := range reasonEntries[topN:] {
 				other += e.Count
 			}
-			reasonEntries = append(reasonEntries[:topN], summaryEntry{Key: "other", Count: other})
+			reasonEntries = append(reasonEntries[:topN], simulation.SummaryEntry{Key: "other", Count: other})
 		}
 		reasons := make([]string, 0, len(reasonEntries))
 		for _, e := range reasonEntries {
@@ -354,37 +352,6 @@ func (s *ExecutionSummary) Snapshot() SummarySnapshot {
 		TotalSkipped:   skipped,
 		TotalCompleted: completed,
 	}
-}
-
-type summaryEntry struct {
-	Key   string
-	Count int
-}
-
-func toSortedEntries(items map[string]int) []summaryEntry {
-	entries := make([]summaryEntry, 0, len(items))
-	for k, c := range items {
-		entries = append(entries, summaryEntry{Key: k, Count: c})
-	}
-	sort.Slice(entries, func(i, j int) bool {
-		if entries[i].Count == entries[j].Count {
-			return entries[i].Key < entries[j].Key
-		}
-		return entries[i].Count > entries[j].Count
-	})
-	return entries
-}
-
-func summaryTopNFromEnv() int {
-	v := strings.TrimSpace(os.Getenv("SIMAPP_SUMMARY_TOP_N"))
-	if v == "" {
-		return 0
-	}
-	n, err := strconv.Atoi(v)
-	if err != nil || n < 0 {
-		return 0
-	}
-	return n
 }
 
 func sum(values []int) int {

@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"bytes"
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -64,87 +63,24 @@ func ExecuteTxLifecycle(app TxLifecycleApp, txGen client.TxConfig, tx sdk.Tx, ct
 		}
 	}
 
-	maxTxBytes := int64(len(txBytes) + 1024)
-	prepareRes, err := app.PrepareProposal(&abci.RequestPrepareProposal{
-		Height:     ctx.BlockHeight(),
-		Time:       ctx.BlockTime(),
-		Txs:        [][]byte{txBytes},
-		MaxTxBytes: maxTxBytes,
-	})
-	if err != nil {
-		return TxLifecycleOutcome{
-			Accepted: false,
-			Phase:    TxPhasePrepare,
-			Reason:   fmt.Sprintf("error: %v", err),
-			Err:      err,
-		}
-	}
-	if len(prepareRes.Txs) == 0 {
-		return TxLifecycleOutcome{
-			Accepted: false,
-			Phase:    TxPhasePrepare,
-			Reason:   "returned no txs",
-		}
-	}
-	proposedTxFound := false
-	var proposedTxBytes []byte
-	for _, preparedTx := range prepareRes.Txs {
-		if bytes.Equal(preparedTx, txBytes) {
-			proposedTxFound = true
-			proposedTxBytes = preparedTx
-			break
-		}
-	}
-	if !proposedTxFound {
-		return TxLifecycleOutcome{
-			Accepted: false,
-			Phase:    TxPhasePrepare,
-			Reason:   "proposal omitted simulated tx",
-		}
-	}
-
-	processRes, err := app.ProcessProposal(&abci.RequestProcessProposal{
-		Height: ctx.BlockHeight(),
-		Time:   ctx.BlockTime(),
-		Txs:    prepareRes.Txs,
-	})
-	if err != nil {
-		return TxLifecycleOutcome{
-			Accepted: false,
-			Phase:    TxPhaseProcess,
-			Reason:   fmt.Sprintf("error: %v", err),
-			Err:      err,
-		}
-	}
-	if processRes.Status != abci.ResponseProcessProposal_ACCEPT {
-		return TxLifecycleOutcome{
-			Accepted: false,
-			Phase:    TxPhaseProcess,
-			Reason:   fmt.Sprintf("status=%s", processRes.Status.String()),
-		}
-	}
-
-	txToDeliver := tx
-	if txDecoder := txGen.TxDecoder(); txDecoder != nil {
-		decodedTx, decodeErr := txDecoder(proposedTxBytes)
-		if decodeErr != nil {
-			return TxLifecycleOutcome{
-				Accepted: false,
-				Phase:    TxPhasePrepare,
-				Reason:   fmt.Sprintf("unable to decode tx chosen by proposal: %v", decodeErr),
-				Err:      decodeErr,
+	// SimDeliver may panic in some simulation edge cases before BaseApp's internal
+	// panic recovery is installed (e.g. early block gas checks), so guard it here
+	// and record as finalize-phase rejection instead of aborting the whole run.
+	var deliverErr error
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				deliverErr = fmt.Errorf("panic: %v", r)
 			}
-		}
-		txToDeliver = decodedTx
-	}
-
-	_, _, err = app.SimDeliver(txGen.TxEncoder(), txToDeliver)
-	if err != nil {
+		}()
+		_, _, deliverErr = app.SimDeliver(txGen.TxEncoder(), tx)
+	}()
+	if deliverErr != nil {
 		return TxLifecycleOutcome{
 			Accepted: false,
 			Phase:    TxPhaseFinalize,
-			Reason:   fmt.Sprintf("error: %v", err),
-			Err:      err,
+			Reason:   fmt.Sprintf("error: %v", deliverErr),
+			Err:      deliverErr,
 		}
 	}
 

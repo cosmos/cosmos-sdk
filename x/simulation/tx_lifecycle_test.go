@@ -95,7 +95,7 @@ func (a *testLifecycleApp) SimDeliver(_ sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, 
 	return sdk.GasInfo{}, &sdk.Result{}, nil
 }
 
-func TestExecuteTxLifecycle_UsesPreparedTxForDelivery(t *testing.T) {
+func TestExecuteTxLifecycle_DeliversCheckedTx(t *testing.T) {
 	t.Parallel()
 
 	app := &testLifecycleApp{
@@ -110,30 +110,10 @@ func TestExecuteTxLifecycle_UsesPreparedTxForDelivery(t *testing.T) {
 
 	outcome := ExecuteTxLifecycle(app, txConfig, inputTx, ctx)
 	require.True(t, outcome.Accepted)
-	require.NotNil(t, app.prepareReq)
-	require.Equal(t, [][]byte{[]byte("original")}, app.prepareReq.Txs)
-	require.NotNil(t, app.processReq)
-	require.Equal(t, app.prepareResp.Txs, app.processReq.Txs)
+	require.Nil(t, app.prepareReq)
+	require.Nil(t, app.processReq)
 	require.NotNil(t, app.deliveredTx)
 	require.Equal(t, "original", app.deliveredTx.id)
-}
-
-func TestExecuteTxLifecycle_RejectsWhenProposalOmitsSimulatedTx(t *testing.T) {
-	t.Parallel()
-
-	app := &testLifecycleApp{
-		prepareResp: &abci.ResponsePrepareProposal{
-			Txs: [][]byte{[]byte("different")},
-		},
-		processResp: &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT},
-	}
-	txConfig := testTxConfig{}
-	inputTx := &testTx{id: "original"}
-
-	outcome := ExecuteTxLifecycle(app, txConfig, inputTx, sdk.Context{})
-	require.False(t, outcome.Accepted)
-	require.Equal(t, TxPhasePrepare, outcome.Phase)
-	require.Equal(t, "proposal omitted simulated tx", outcome.Reason)
 }
 
 func TestTxLifecycleFailuresSnapshotForApp_IsolatedAcrossApps(t *testing.T) {

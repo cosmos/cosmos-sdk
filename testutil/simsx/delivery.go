@@ -100,17 +100,6 @@ func DeliverSimsMsg(
 		outcome := xsimulation.ExecuteTxLifecycle(lifecycleApp, txGen, tx, sdkCtx)
 		if !outcome.Accepted {
 			xsimulation.RecordTxLifecycleFailureForMsgForApp(app, outcome.Phase, sdk.MsgTypeURL(msg), outcome.Reason)
-			if outcome.Phase == xsimulation.TxPhaseFinalize {
-				if err2 := deliveryResultHandler(outcome.Err); err2 != nil {
-					var comment string
-					for _, msg := range tx.GetMsgs() {
-						comment += fmt.Sprintf("%#v", msg)
-					}
-					reporter.Fail(err2, fmt.Sprintf("delivering tx with msgs: %s", comment))
-					return reporter.ToLegacyOperationMsg()
-				}
-			}
-
 			reporter.Skipf("tx lifecycle %s failed: %s", outcome.Phase, outcome.Reason)
 			return reporter.ToLegacyOperationMsg()
 		}

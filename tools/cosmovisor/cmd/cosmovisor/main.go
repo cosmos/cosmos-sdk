@@ -1,12 +1,11 @@
 package main
 
 import (
-	"context"
 	"os"
 )
 
 func main() {
-	if err := NewRootCmd().ExecuteContext(context.Background()); err != nil {
+	if err := NewRootCmd().Execute(); err != nil {
 		os.Exit(1)
 	}
 }

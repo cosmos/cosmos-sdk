@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/tools/cosmovisor"
+	"cosmossdk.io/tools/cosmovisor/v2"
 )
 
 func NewRootCmd() *cobra.Command {
@@ -19,7 +19,7 @@ func NewRootCmd() *cobra.Command {
 		configCmd,
 		NewVersionCmd(),
 		NewAddUpgradeCmd(),
-		NewShowUpgradeInfoCmd(),
+		NewShowManualUpgradesCmd(),
 		NewBatchAddUpgradeCmd(),
 		NewPrepareUpgradeCmd(),
 	)

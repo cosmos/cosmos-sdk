@@ -3,6 +3,8 @@ package main
 import (
 	"io"
 	"os"
+
+	"cosmossdk.io/tools/cosmovisor/v2/internal"
 )
 
 // DefaultRunConfig defines a default RunConfig that writes to os.Stdout and os.Stderr
@@ -12,12 +14,7 @@ var DefaultRunConfig = RunConfig{
 	StdErr: os.Stderr,
 }
 
-// RunConfig defines the configuration for running a command
-type RunConfig struct {
-	StdIn  io.Reader
-	StdOut io.Writer
-	StdErr io.Writer
-}
+type RunConfig = internal.RunConfig
 
 type RunOption func(*RunConfig)
 

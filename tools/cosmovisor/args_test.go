@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
+	"cosmossdk.io/x/upgrade/plan"
 )
 
 type argsTestSuite struct {
@@ -472,6 +472,7 @@ var newConfig = func(
 		UnsafeSkipBackup:         skipBackup,
 		DataBackupPath:           dataBackupPath,
 		GRPCAddress:              grpcAddress,
+		RPCAddress:               "http://localhost:26657",
 		PreUpgradeMaxRetries:     preupgradeMaxRetries,
 		DisableLogs:              disableLogs,
 		ColorLogs:                colorLogs,

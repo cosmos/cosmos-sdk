@@ -36,13 +36,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Improvements
+### Breaking Changes
 
-* [#23720](https://github.com/cosmos/cosmos-sdk/pull/23720) Get block height from db after node execution fails
-
-### Bug Fixes
-
-* [#23683](https://github.com/cosmos/cosmos-sdk/pull/23683) Replace `SigInt` with `SigTerm` to gracefully shutdown the process.
+* [#24821](https://github.com/cosmos/cosmos-sdk/pull/24821) Reimplement core Cosmovisor logic for managing and observing governance and manual upgrades.
 
 ## v1.7.1 - 2025-01-12
 

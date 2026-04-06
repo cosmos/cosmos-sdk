@@ -1,13 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/tools/cosmovisor"
+	"cosmossdk.io/tools/cosmovisor/v2"
+	"cosmossdk.io/tools/cosmovisor/v2/internal"
 )
 
 var runCmd = &cobra.Command{
@@ -18,22 +23,34 @@ Provide '--cosmovisor-config' file path in command args or set env variables to 
 `,
 	SilenceUsage:       true,
 	DisableFlagParsing: true,
-	RunE: func(_ *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		cfgPath, args, err := parseCosmovisorConfig(args)
 		if err != nil {
 			return fmt.Errorf("failed to parse cosmovisor config: %w", err)
 		}
 
-		return run(cfgPath, args)
+		return run(cmd.Context(), cfgPath, args)
 	},
 }
 
 // run runs the configured program with the given args and monitors it for upgrades.
-func run(cfgPath string, args []string, options ...RunOption) error {
+func run(ctx context.Context, cfgPath string, args []string, options ...RunOption) error {
 	cfg, err := cosmovisor.GetConfigFromFile(cfgPath)
 	if err != nil {
 		return err
 	}
+
+	ctx, _ = signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
+	shutdownChan := make(chan os.Signal, 1)
+	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
+	// ensure we shutdown if the process is killed and context cancellation doesn't cause an exit on its own
+	go func() {
+		<-shutdownChan
+		fmt.Println("Received shutdown signal, exiting gracefully...")
+		time.Sleep(cfg.ShutdownGrace)
+		fmt.Println("Forcing process shutdown")
+		os.Exit(0)
+	}()
 
 	runCfg := DefaultRunConfig
 	for _, opt := range options {
@@ -47,23 +64,8 @@ func run(cfgPath string, args []string, options ...RunOption) error {
 	}
 
 	logger := cfg.Logger(runCfg.StdOut)
-	launcher, err := cosmovisor.NewLauncher(logger, cfg)
-	if err != nil {
-		return err
-	}
-
-	doUpgrade, err := launcher.Run(args, runCfg.StdIn, runCfg.StdOut, runCfg.StdErr)
-	// if RestartAfterUpgrade is enabled, we launch after a successful upgrade (given that the launcher.Run returns nil)
-	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
-		logger.Info("upgrade detected, relaunching", "app", cfg.Name)
-		doUpgrade, err = launcher.Run(args, runCfg.StdIn, runCfg.StdOut, runCfg.StdErr)
-	}
-
-	if doUpgrade && err == nil {
-		logger.Info("upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Please verify the new upgrade and start cosmovisor again.")
-	}
-
-	return err
+	runner := internal.NewRunner(cfg, runCfg, logger)
+	return runner.Start(ctx, args)
 }
 
 func parseCosmovisorConfig(args []string) (string, []string, error) {

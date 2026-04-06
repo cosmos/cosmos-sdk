@@ -7,6 +7,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
@@ -121,7 +122,67 @@ func TestBlockSTM_DeterministicAppHash(t *testing.T) {
 	require.Equal(t, sequentialCommitID, blockSTMCommitID)
 }
 
-func newBlockSTMTestApp(t *testing.T, db dbm.DB, logger log.Logger, enableBlockSTM bool) blockSTMTestApp {
+func BenchmarkBlockSTM(b *testing.B) {
+	cases := []struct {
+		name       string
+		numSenders int
+	}{
+		{"50txs", 50},
+		{"500txs", 500},
+		{"1000txs", 1000},
+		{"2500txs", 2500},
+	}
+
+	for _, tc := range cases {
+		senderAddrs := generateAddrs(tc.numSenders)
+		recipientAddrs := generateAddrs(tc.numSenders)
+
+		b.Run(tc.name+"/BlockSTM", func(b *testing.B) {
+
+			b.ResetTimer()
+			for b.Loop() {
+				b.StopTimer()
+				blockSTMApp := newBlockSTMTestApp(b, dbm.NewMemDB(), log.NewNopLogger(), true)
+				initChainAndFundAccounts(b, blockSTMApp, senderAddrs)
+
+				txBytes := buildSendTxs(b, blockSTMApp.txConfig, senderAddrs, recipientAddrs)
+				b.StartTimer()
+
+				res := finalizeNextBlock(b, blockSTMApp.app, txBytes)
+
+				b.StopTimer()
+				for _, result := range res.TxResults {
+					assert.Equal(b, uint32(0x0), result.Code)
+				}
+				_ = commitBlock(b, blockSTMApp.app)
+				b.StartTimer()
+			}
+		})
+
+		b.Run(tc.name+"/Sequential", func(b *testing.B) {
+			b.ResetTimer()
+			for b.Loop() {
+				b.StopTimer()
+				seqApp := newBlockSTMTestApp(b, dbm.NewMemDB(), log.NewNopLogger(), false)
+				initChainAndFundAccounts(b, seqApp, senderAddrs)
+
+				txBytes := buildSendTxs(b, seqApp.txConfig, senderAddrs, recipientAddrs)
+				b.StartTimer()
+
+				res := finalizeNextBlock(b, seqApp.app, txBytes)
+
+				b.StopTimer()
+				for _, result := range res.TxResults {
+					assert.Equal(b, uint32(0x0), result.Code)
+				}
+				_ = commitBlock(b, seqApp.app)
+				b.StartTimer()
+			}
+		})
+	}
+}
+
+func newBlockSTMTestApp(t testing.TB, db dbm.DB, logger log.Logger, enableBlockSTM bool) blockSTMTestApp {
 	t.Helper()
 
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey)
@@ -179,7 +240,7 @@ func newBlockSTMTestApp(t *testing.T, db dbm.DB, logger log.Logger, enableBlockS
 	}
 }
 
-func initChainAndFundAccounts(t *testing.T, testApp blockSTMTestApp, senderAddrs []sdk.AccAddress) {
+func initChainAndFundAccounts(t testing.TB, testApp blockSTMTestApp, senderAddrs []sdk.AccAddress) {
 	t.Helper()
 
 	require.NoError(t, testApp.app.LoadLatestVersion())
@@ -197,7 +258,7 @@ func initChainAndFundAccounts(t *testing.T, testApp blockSTMTestApp, senderAddrs
 	_, _ = finalizeAndCommitNextBlock(t, testApp.app, nil)
 }
 
-func buildSendTxs(t *testing.T, txConfig client.TxConfig, senderAddrs, recipientAddrs []sdk.AccAddress) [][]byte {
+func buildSendTxs(t testing.TB, txConfig client.TxConfig, senderAddrs, recipientAddrs []sdk.AccAddress) [][]byte {
 	t.Helper()
 	require.Len(t, recipientAddrs, len(senderAddrs))
 

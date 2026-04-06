@@ -11,7 +11,7 @@ require (
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.7.2
-	github.com/cosmos/iavl v1.2.7
+	github.com/cosmos/iavl v1.2.8-0.20260406175355-45196a8322a0
 	github.com/cosmos/ics23/go v0.11.0
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-plugin v1.7.0

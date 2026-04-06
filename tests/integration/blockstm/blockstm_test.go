@@ -141,7 +141,6 @@ func BenchmarkBlockSTM(b *testing.B) {
 
 			b.ResetTimer()
 			for b.Loop() {
-				b.StopTimer()
 				blockSTMApp := newBlockSTMTestApp(b, dbm.NewMemDB(), log.NewNopLogger(), true)
 				initChainAndFundAccounts(b, blockSTMApp, senderAddrs)
 
@@ -155,14 +154,12 @@ func BenchmarkBlockSTM(b *testing.B) {
 					assert.Equal(b, uint32(0x0), result.Code)
 				}
 				_ = commitBlock(b, blockSTMApp.app)
-				b.StartTimer()
 			}
 		})
 
 		b.Run(tc.name+"/Sequential", func(b *testing.B) {
 			b.ResetTimer()
 			for b.Loop() {
-				b.StopTimer()
 				seqApp := newBlockSTMTestApp(b, dbm.NewMemDB(), log.NewNopLogger(), false)
 				initChainAndFundAccounts(b, seqApp, senderAddrs)
 
@@ -176,7 +173,6 @@ func BenchmarkBlockSTM(b *testing.B) {
 					assert.Equal(b, uint32(0x0), result.Code)
 				}
 				_ = commitBlock(b, seqApp.app)
-				b.StartTimer()
 			}
 		})
 	}

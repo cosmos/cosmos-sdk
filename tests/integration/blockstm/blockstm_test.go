@@ -138,7 +138,6 @@ func BenchmarkBlockSTM(b *testing.B) {
 		recipientAddrs := generateAddrs(tc.numSenders)
 
 		b.Run(tc.name+"/BlockSTM", func(b *testing.B) {
-
 			b.ResetTimer()
 			for b.Loop() {
 				blockSTMApp := newBlockSTMTestApp(b, dbm.NewMemDB(), log.NewNopLogger(), true)
@@ -178,8 +177,8 @@ func BenchmarkBlockSTM(b *testing.B) {
 	}
 }
 
-func newBlockSTMTestApp(t testing.TB, db dbm.DB, logger log.Logger, enableBlockSTM bool) blockSTMTestApp {
-	t.Helper()
+func newBlockSTMTestApp(tb testing.TB, db dbm.DB, logger log.Logger, enableBlockSTM bool) blockSTMTestApp {
+	tb.Helper()
 
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey)
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
@@ -236,36 +235,36 @@ func newBlockSTMTestApp(t testing.TB, db dbm.DB, logger log.Logger, enableBlockS
 	}
 }
 
-func initChainAndFundAccounts(t testing.TB, testApp blockSTMTestApp, senderAddrs []sdk.AccAddress) {
-	t.Helper()
+func initChainAndFundAccounts(tb testing.TB, testApp blockSTMTestApp, senderAddrs []sdk.AccAddress) {
+	tb.Helper()
 
-	require.NoError(t, testApp.app.LoadLatestVersion())
+	require.NoError(tb, testApp.app.LoadLatestVersion())
 
 	_, err := testApp.app.InitChain(&abci.RequestInitChain{ChainId: "blockstm-test"})
-	require.NoError(t, err)
+	require.NoError(tb, err)
 
-	_ = finalizeNextBlock(t, testApp.app, nil)
+	_ = finalizeNextBlock(tb, testApp.app, nil)
 
 	ctx := testApp.app.NewContext(false)
 	for _, addr := range senderAddrs {
-		require.NoError(t, testutil.FundAccount(ctx, testApp.bankKeeper, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 1000))))
+		require.NoError(tb, testutil.FundAccount(ctx, testApp.bankKeeper, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 1000))))
 	}
 
-	_, _ = finalizeAndCommitNextBlock(t, testApp.app, nil)
+	_, _ = finalizeAndCommitNextBlock(tb, testApp.app, nil)
 }
 
-func buildSendTxs(t testing.TB, txConfig client.TxConfig, senderAddrs, recipientAddrs []sdk.AccAddress) [][]byte {
-	t.Helper()
-	require.Len(t, recipientAddrs, len(senderAddrs))
+func buildSendTxs(tb testing.TB, txConfig client.TxConfig, senderAddrs, recipientAddrs []sdk.AccAddress) [][]byte {
+	tb.Helper()
+	require.Len(tb, recipientAddrs, len(senderAddrs))
 
 	txBytes := make([][]byte, len(senderAddrs))
 	for i := range senderAddrs {
 		msg := banktypes.NewMsgSend(senderAddrs[i], recipientAddrs[i], sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10)))
 		txBuilder := txConfig.NewTxBuilder()
-		require.NoError(t, txBuilder.SetMsgs(msg))
+		require.NoError(tb, txBuilder.SetMsgs(msg))
 
 		bz, err := txConfig.TxEncoder()(txBuilder.GetTx())
-		require.NoError(t, err)
+		require.NoError(tb, err)
 
 		txBytes[i] = bz
 	}

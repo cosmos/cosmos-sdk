@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/enterprise/poa/tests/systemtests
 go 1.25.8
 
 require (
-	github.com/cosmos/cosmos-sdk v0.54.0-rc.3
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.4
 	github.com/cosmos/cosmos-sdk/tools/systemtests v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.18.0

@@ -4,11 +4,13 @@ WAIT_TIME ?= 20s
 
 # Build the transitional POA simapp binary (post-upgrade binary with migration handler).
 build-poa:
-	cd ../../examples/migrate-from-pos && go build -o ../../tests/systemtests/binaries/simd ./simd
+	mkdir -p binaries
+	cd ../../examples/migrate-from-pos && go build -o $(CURDIR)/binaries/simd ./simd
 
 # Build the standard SDK simapp binary (pre-upgrade POS binary).
 build-pos:
-	cd ../../../../simapp && go build -o ../../../../enterprise/poa/tests/systemtests/binaries/pos/simd ./simd
+	mkdir -p binaries/pos
+	cd ../../../../simapp && go build -o $(CURDIR)/binaries/pos/simd ./simd
 
 # Build both binaries.
 build: build-poa build-pos

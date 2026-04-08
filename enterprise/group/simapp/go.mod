@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/enterprise/group/simapp
 
-go 1.25.8
+go 1.25.9
 
 require (
 	cosmossdk.io/api v1.0.0
@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/tools/confix v0.1.2
 	github.com/cometbft/cometbft v0.39.0-rc4
 	github.com/cosmos/cosmos-db v1.1.3
-	github.com/cosmos/cosmos-sdk v0.54.0-rc.3
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.4
 	github.com/cosmos/cosmos-sdk/enterprise/group v0.0.1
 	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-rc.1
 	github.com/cosmos/gogoproto v1.7.2

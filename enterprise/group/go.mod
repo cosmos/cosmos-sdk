@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/enterprise/group
 
-go 1.25.8
+go 1.25.9
 
 require (
 	cosmossdk.io/api v1.0.0
@@ -13,7 +13,7 @@ require (
 	github.com/cometbft/cometbft v0.39.0-rc4
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.54.0-rc.3
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.4
 	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-rc.1
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/golang/protobuf v1.5.4
@@ -243,7 +243,7 @@ require (
 	go.opentelemetry.io/otel/exporters/stdout/stdoutlog v0.18.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.42.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.42.0 // indirect
-	go.opentelemetry.io/otel/log v0.18.0 // indirect
+	go.opentelemetry.io/otel/log v0.19.0 // indirect
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.42.0 // indirect
 	go.opentelemetry.io/otel/sdk/log v0.18.0 // indirect

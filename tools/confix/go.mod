@@ -1,9 +1,9 @@
 module cosmossdk.io/tools/confix
 
-go 1.25.8
+go 1.25.9
 
 require (
-	github.com/cosmos/cosmos-sdk v0.54.0-rc.3
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.4
 	github.com/creachadair/atomicfile v0.4.0
 	github.com/creachadair/tomledit v0.0.29
 	github.com/pelletier/go-toml/v2 v2.2.4
@@ -238,7 +238,7 @@ require (
 	go.opentelemetry.io/otel/exporters/stdout/stdoutlog v0.18.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.42.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.42.0 // indirect
-	go.opentelemetry.io/otel/log v0.18.0 // indirect
+	go.opentelemetry.io/otel/log v0.19.0 // indirect
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.42.0 // indirect
 	go.opentelemetry.io/otel/sdk/log v0.18.0 // indirect

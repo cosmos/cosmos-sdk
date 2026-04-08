@@ -44,7 +44,6 @@ import (
 
 const StandaloneUpgradeName = "pos-to-poa"
 
-
 // NewPOSToPOAUpgradeHandler returns the POS → POA upgrade handler.
 //
 // This loads all delegations into memory. For large chains (>100K delegations),
@@ -92,7 +91,7 @@ func NewPOSToPOAUpgradeHandler(
 		}
 
 		// 7. Fail all active governance proposals and refund deposits.
-		// Empty string burns cancelled-proposal deposits. Set to an address to redirect them.
+		// Empty string burns canceled-proposal deposits. Set to an address to redirect them.
 		if err := failActiveProposals(ctx, govKeeper, ""); err != nil {
 			return nil, err
 		}

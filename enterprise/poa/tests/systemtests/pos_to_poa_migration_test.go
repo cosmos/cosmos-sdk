@@ -92,13 +92,13 @@ func TestPOStoPoaUpgrade(t *testing.T) {
 	require.NotEmpty(t, gjson.Get(rsp, "unbond.entries").Array())
 
 	// Active governance proposal (not voted on).
-	activeProposal := fmt.Sprintf(`{
+	activeProposal := `{
 		"messages": [],
 		"metadata": "ipfs://CID",
 		"deposit": "10000000stake",
 		"title": "Should be failed by upgrade",
 		"summary": "This proposal should be in voting period when the upgrade fires"
-	}`)
+	}`
 	rsp = cli.SubmitGovProposal(activeProposal, "--from=node0")
 	systemtests.RequireTxSuccess(t, rsp)
 
@@ -227,13 +227,13 @@ func TestPOStoPoaUpgrade(t *testing.T) {
 		}
 		require.NotEmpty(t, voterKeyName)
 
-		textProposal := fmt.Sprintf(`{
+		textProposal := `{
 			"messages": [],
 			"metadata": "ipfs://CID",
 			"deposit": "10000000stake",
 			"title": "Post-upgrade POA governance test",
 			"summary": "Verify governance works after POS to POA migration"
-		}`)
+		}`
 		propFile := systemtests.StoreTempFile(t, []byte(textProposal))
 		rsp = cli.Run("tx", "gov", "submit-proposal", propFile.Name(),
 			"--from="+voterKeyName, "--fees=1stake", "--gas=auto")

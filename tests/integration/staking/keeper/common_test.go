@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"math/big"
 	"testing"
+	"time"
 
 	cmtprototypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
@@ -151,7 +152,8 @@ func initFixture(tb testing.TB) *fixture {
 		types.ModuleName:     stakingModule,
 	})
 
-	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
+	initialTime := time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context()).WithBlockTime(initialTime)
 
 	// Register MsgServer and QueryServer
 	types.RegisterMsgServer(integrationApp.MsgServiceRouter(), stakingkeeper.NewMsgServerImpl(stakingKeeper))

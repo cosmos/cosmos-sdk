@@ -37,8 +37,10 @@ func TestSlashRedelegation(t *testing.T) {
 	), &stakingKeeper, &bankKeeper, &slashKeeper, &distrKeeper)
 	require.NoError(t, err)
 
+	initialTime := time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+	ctx := app.NewContext(false).WithBlockTime(initialTime)
+
 	// get sdk context, staking msg server and bond denom
-	ctx := app.NewContext(false)
 	stakingMsgServer := stakingkeeper.NewMsgServerImpl(stakingKeeper)
 	bondDenom, err := stakingKeeper.BondDenom(ctx)
 	require.NoError(t, err)

@@ -51,6 +51,10 @@ var (
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 
+	ValidatorQueuePendingSlotsKey    = []byte{0x44} // single key: pending validator queue slots
+	UBDQueuePendingSlotsKey          = []byte{0x45} // single key: pending UBD queue times
+	RedelegationQueuePendingSlotsKey = []byte{0x46} // single key: pending redelegation queue times
+
 	HistoricalInfoKey   = []byte{0x50} // prefix for the historical info
 	ValidatorUpdatesKey = []byte{0x61} // prefix for the end block validator updates key
 
@@ -61,6 +65,12 @@ var (
 	// NOTE: keys in range 0x81–0x87 were previously used in liquid staking forks of the staking module.
 	// Module developers MUST NOT use these keys and MUST consider them "reserved".
 )
+
+// TimeHeightQueueSlot is a (time, height) slot in the validator unbonding queue.
+type TimeHeightQueueSlot struct {
+	Time   time.Time
+	Height int64
+}
 
 // UnbondingType defines the type of unbonding operation
 type UnbondingType int

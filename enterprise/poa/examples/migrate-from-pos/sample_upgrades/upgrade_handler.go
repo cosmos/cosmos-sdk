@@ -107,7 +107,8 @@ func NewPOSToPOAUpgradeHandler(
 		}
 
 		// 7. Fail all active governance proposals and refund deposits.
-		if err := failActiveProposals(ctx, govKeeper); err != nil {
+		// Empty string burns cancelled-proposal deposits. Set to an address to redirect them.
+		if err := failActiveProposals(ctx, govKeeper, ""); err != nil {
 			return nil, err
 		}
 
@@ -336,8 +337,22 @@ func drainPools(
 }
 
 // failActiveProposals fails all proposals in voting/deposit period, removes them
-// from the timed queues, and refunds deposits.
-func failActiveProposals(ctx context.Context, govKeeper *govkeeper.Keeper) error {
+// from the timed queues, refunds deposits, and sets ProposalCancelDest.
+// proposalCancelDest must be set explicitly because the gov keeper's distrKeeper
+// is nil in the transitional binary — if the pre-upgrade value pointed to the
+// distribution module, CancelProposal would panic on a nil dereference.
+func failActiveProposals(ctx context.Context, govKeeper *govkeeper.Keeper, proposalCancelDest string) error {
+	params, err := govKeeper.Params.Get(ctx)
+	if err != nil {
+		return err
+	}
+	if params.ProposalCancelDest != proposalCancelDest {
+		params.ProposalCancelDest = proposalCancelDest
+		if err := govKeeper.Params.Set(ctx, params); err != nil {
+			return err
+		}
+	}
+
 	return govKeeper.Proposals.Walk(ctx, nil, func(proposalID uint64, proposal govv1.Proposal) (bool, error) {
 		switch proposal.Status {
 		case govv1.StatusVotingPeriod:

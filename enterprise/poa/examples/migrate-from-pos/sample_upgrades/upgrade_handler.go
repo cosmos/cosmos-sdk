@@ -27,7 +27,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	poakeeper "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/keeper"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -38,7 +37,6 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -46,19 +44,6 @@ import (
 
 const StandaloneUpgradeName = "pos-to-poa"
 
-// StandaloneStoreUpgrades returns store upgrades for the final clean POA binary.
-// The transitional binary must keep staking/distribution/slashing stores mounted
-// so the upgrade handler can read them; apply these deletions in a subsequent upgrade.
-func StandaloneStoreUpgrades() storetypes.StoreUpgrades {
-	return storetypes.StoreUpgrades{
-		Added: []string{poatypes.StoreKey},
-		Deleted: []string{
-			stakingtypes.StoreKey,
-			distrtypes.StoreKey,
-			slashingtypes.StoreKey,
-		},
-	}
-}
 
 // NewPOSToPOAUpgradeHandler returns the POS → POA upgrade handler.
 //
@@ -234,7 +219,7 @@ func forceUnbondAll(
 
 		val, err := stakingKeeper.GetValidator(ctx, valAddr)
 		if err != nil {
-			continue // validator may have been removed by a previous unbond
+			return fmt.Errorf("get validator %s for delegation from %s: %w", del.GetValidatorAddr(), del.GetDelegatorAddr(), err)
 		}
 
 		delBz, err := accountKeeper.AddressCodec().StringToBytes(del.GetDelegatorAddr())

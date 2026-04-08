@@ -1,6 +1,6 @@
 module cosmossdk.io/tools/cosmovisor
 
-go 1.25.8
+go 1.25.9
 
 require (
 	cosmossdk.io/log/v2 v2.1.0-rc.1

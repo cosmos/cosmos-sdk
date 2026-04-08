@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/enterprise/group
 
-go 1.25.8
+go 1.25.9
 
 require (
 	cosmossdk.io/api v1.0.0

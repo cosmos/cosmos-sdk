@@ -16,6 +16,21 @@ import (
 func TestDefaultConfig(t *testing.T) {
 	cfg := DefaultConfig()
 	require.True(t, cfg.GetMinGasPrices().IsZero())
+	require.Equal(t, DefaultBlockExecutor, cfg.BlockExecutor)
+	require.Equal(t, DefaultBlockSTMWorkers, cfg.BlockSTMWorkers)
+	require.Equal(t, DefaultBlockSTMPreEstimate, cfg.BlockSTMPreEstimate)
+}
+
+func TestValidateBasicBlockSTMConfig(t *testing.T) {
+	cfg := DefaultConfig()
+	cfg.MinGasPrices = "0stake"
+	require.NoError(t, cfg.ValidateBasic())
+
+	cfg.BlockExecutor = "bad-executor"
+	require.ErrorContains(t, cfg.ValidateBasic(), "invalid block executor")
+	cfg.BlockExecutor = DefaultBlockExecutor
+	cfg.BlockSTMWorkers = -1
+	require.ErrorContains(t, cfg.ValidateBasic(), "invalid block-stm-workers")
 }
 
 func TestGetAndSetMinimumGas(t *testing.T) {

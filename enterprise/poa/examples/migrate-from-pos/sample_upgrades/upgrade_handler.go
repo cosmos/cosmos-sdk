@@ -59,6 +59,10 @@ func StandaloneStoreUpgrades() storetypes.StoreUpgrades {
 }
 
 // NewPOSToPOAUpgradeHandler returns the POS → POA upgrade handler.
+//
+// This loads all delegations into memory. For large chains (>100K delegations),
+// swap GetAllDelegations/GetValidatorDelegations for their iterator equivalents
+// and increase CometBFT timeouts for the upgrade height.
 func NewPOSToPOAUpgradeHandler(
 	cdc codec.Codec,
 	accountKeeper authkeeper.AccountKeeper,

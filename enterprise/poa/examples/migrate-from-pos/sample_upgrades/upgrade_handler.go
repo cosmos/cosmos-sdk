@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	poakeeper "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/keeper"
@@ -333,17 +335,33 @@ func drainPools(
 	return nil
 }
 
-// failActiveProposals fails all proposals in voting/deposit period and refunds deposits.
+// failActiveProposals fails all proposals in voting/deposit period, removes them
+// from the timed queues, and refunds deposits.
 func failActiveProposals(ctx context.Context, govKeeper *govkeeper.Keeper) error {
 	return govKeeper.Proposals.Walk(ctx, nil, func(proposalID uint64, proposal govv1.Proposal) (bool, error) {
-		if proposal.Status == govv1.StatusVotingPeriod || proposal.Status == govv1.StatusDepositPeriod {
-			proposal.Status = govv1.StatusFailed
-			if err := govKeeper.Proposals.Set(ctx, proposalID, proposal); err != nil {
-				return true, err
+		switch proposal.Status {
+		case govv1.StatusVotingPeriod:
+			if proposal.VotingEndTime != nil {
+				if err := govKeeper.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposalID)); err != nil {
+					return true, err
+				}
 			}
-			if err := govKeeper.RefundAndDeleteDeposits(ctx, proposalID); err != nil {
-				return true, err
+		case govv1.StatusDepositPeriod:
+			if proposal.DepositEndTime != nil {
+				if err := govKeeper.InactiveProposalsQueue.Remove(ctx, collections.Join(*proposal.DepositEndTime, proposalID)); err != nil {
+					return true, err
+				}
 			}
+		default:
+			return false, nil
+		}
+
+		proposal.Status = govv1.StatusFailed
+		if err := govKeeper.Proposals.Set(ctx, proposalID, proposal); err != nil {
+			return true, err
+		}
+		if err := govKeeper.RefundAndDeleteDeposits(ctx, proposalID); err != nil {
+			return true, err
 		}
 		return false, nil
 	})

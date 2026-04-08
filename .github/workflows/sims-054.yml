@@ -23,7 +23,7 @@ jobs:
           ref: "release/v0.54.x"
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.8"
+          go-version: "1.25.9"
           check-latest: true
       - run: make build
 
@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.8"
+          go-version: "1.25.9"
           check-latest: true
       - name: Install runsim
         run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
@@ -54,7 +54,7 @@ jobs:
           ref: "release/v0.54.x"
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.8"
+          go-version: "1.25.9"
           check-latest: true
       - uses: actions/cache@v5
         with:
@@ -73,7 +73,7 @@ jobs:
           ref: "release/v0.54.x"
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.8"
+          go-version: "1.25.9"
           check-latest: true
       - uses: actions/cache@v5
         with:
@@ -92,7 +92,7 @@ jobs:
           ref: "release/v0.54.x"
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.8"
+          go-version: "1.25.9"
           check-latest: true
       - uses: actions/cache@v5
         with:

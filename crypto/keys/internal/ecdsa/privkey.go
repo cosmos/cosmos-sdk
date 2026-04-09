@@ -118,6 +118,6 @@ func (sk *PrivKey) Unmarshal(bz []byte, curve elliptic.Curve, expectedSize int) 
 
 	sk.Curve = curve
 	sk.D = new(big.Int).SetBytes(bz)
-	sk.X, sk.Y = curve.ScalarBaseMult(bz)
+	sk.X, sk.Y = curve.ScalarBaseMult(bz) // nolint:staticcheck // keep this as this is widely tested
 	return nil
 }

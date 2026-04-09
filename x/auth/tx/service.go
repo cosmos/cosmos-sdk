@@ -250,7 +250,7 @@ func (s txServer) TxEncodeAmino(_ context.Context, req *txtypes.TxEncodeAminoReq
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx json")
 	}
 
-	var stdTx legacytx.StdTx
+	var stdTx legacytx.StdTx // nolint:staticcheck // legacy testing
 	err := s.clientCtx.LegacyAmino.UnmarshalJSON([]byte(req.AminoJson), &stdTx)
 	if err != nil {
 		return nil, err
@@ -293,7 +293,7 @@ func (s txServer) TxDecodeAmino(_ context.Context, req *txtypes.TxDecodeAminoReq
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
 	}
 
-	var stdTx legacytx.StdTx
+	var stdTx legacytx.StdTx // nolint:staticcheck // legacy testing
 	err := s.clientCtx.LegacyAmino.Unmarshal(req.AminoBinary, &stdTx)
 	if err != nil {
 		return nil, err

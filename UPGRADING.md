@@ -6,7 +6,6 @@ However, this guide is not exhaustive for all breaking changes. For a comprehens
 
 Always read the [App Wiring Changes](#app-wiring-changes) section for more information on application wiring updates.
 
-
 ## Table of Contents
 
 - [Upgrade Checklist](#upgrade-checklist)

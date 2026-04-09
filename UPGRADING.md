@@ -1,10 +1,11 @@
 # Upgrade Reference
 
-This document provides a reference for upgrading from `v0.53.x` to `v0.54.x` of Cosmos SDK.
+This document provides a reference for upgrading from `v0.53.x` to `v0.54.x` of Cosmos SDK. This guide provides an overview of the major changes in v0.54.0. 
 
-Note, always read the [App Wiring Changes](#app-wiring-changes) section for more information on application wiring updates.
+However, this guide is not exhaustive for all breaking changes. For a comprehensive list of all breaking changes in v0.54.0, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/CHANGELOG.md).
 
-For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/CHANGELOG.md).
+Always read the [App Wiring Changes](#app-wiring-changes) section for more information on application wiring updates.
+
 
 ## Table of Contents
 
@@ -71,6 +72,8 @@ Use this checklist first, then read the linked sections for the exact code or wi
 ## Required Changes
 
 All chains upgrading to `v0.54.x` should review and apply the changes in this section.
+
+This guide provides an overview of the major changes in v0.54.0. However, this guide is not exhaustive for all breaking changes. For a comprehensive list of all breaking changes in v0.54.0, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/CHANGELOG.md).
 
 ### App Wiring Changes
 
@@ -184,6 +187,8 @@ The v2 release of log adds contextual methods to the logger interface (InfoConte
 To learn more about the new features offered in `log/v2`, as well as setting up log correlation, see the [log package documentation](https://docs.cosmos.network/sdk/latest/guides/testing/log).
 
 ### Store v2
+
+Store v2 introduces breaking changes. For a comprehensive list of all breaking changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/CHANGELOG.md).
 
 The store package has been updated to `v2`. Applications using v0.54.0+ of
 Cosmos SDK will be required to update imports to
@@ -506,4 +511,3 @@ See the [libp2p page](https://docs.cosmos.network/cometbft/latest/docs/experimen
 `AdaptiveSync` allows a node to run `blocksync` and consensus at the same time for faster recovery behavior. In the default flow, a node starts in `blocksync`, catches up, then switches to consensus. Under sustained load, a node can remain behind and struggle to catch up. With `adaptive_sync` enabled, consensus still works normally, but it can also ingest already available blocks from `blocksync`, allowing nodes to recover more quickly during traffic spikes. `AdaptiveSync` does not change consensus safety or finality rules.
 
 See the [`AdaptiveSync` documentation](https://docs.cosmos.network/cometbft/latest/docs/core/block-sync#adaptivesync) for details.
-

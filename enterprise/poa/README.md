@@ -48,6 +48,10 @@ When integrating with SDK v0.54.x+ (see upgrade guide [here](https://github.com/
 
 See the full [Cosmos SDK v0.54.x Changelog](https://github.com/cosmos/cosmos-sdk/blob/main/CHANGELOG.md) for details.
 
+## Migration from POS
+
+For chains transitioning from Proof-of-Stake to Proof-of-Authority, see the [POS-to-POA Migration Example](./examples/migrate-from-pos/). It includes a transitional simapp, sample upgrade handlers, and an end-to-end system test.
+
 ## Quick Start
 
 ### Prerequisites

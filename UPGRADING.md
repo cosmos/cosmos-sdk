@@ -1,6 +1,6 @@
 # Upgrade Reference
 
-This document provides a reference for upgrading from `v0.53.x` to `v0.54.x` of Cosmos SDK. This guide provides an overview of the major changes in v0.54.0. 
+This document provides a reference for upgrading from `v0.53.x` to `v0.54.x` of Cosmos SDK. 
 
 However, this guide is not exhaustive for all breaking changes. For a comprehensive list of all breaking changes in v0.54.0, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/CHANGELOG.md).
 

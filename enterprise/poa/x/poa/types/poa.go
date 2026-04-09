@@ -113,7 +113,7 @@ func (m *ValidatorMetadata) ValidateBasic() error {
 	}
 
 	if len(m.Moniker) > 256 {
-		return sdkerrors.Wrap(ErrInvalidMetadata, "moniker too long") // todo: err
+		return sdkerrors.Wrap(ErrInvalidMetadata, "moniker too long")
 	}
 
 	if len(m.Moniker) == 0 {
@@ -121,7 +121,7 @@ func (m *ValidatorMetadata) ValidateBasic() error {
 	}
 
 	if len(m.Description) > 256 {
-		return sdkerrors.Wrap(ErrInvalidMetadata, "description too long") // todo: err
+		return sdkerrors.Wrap(ErrInvalidMetadata, "description too long")
 	}
 
 	return nil

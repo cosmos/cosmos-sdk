@@ -52,7 +52,7 @@ func (app *SimApp) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAd
 
 	genesisValidators := make([]types.GenesisValidator, 0, len(validators))
 	for _, v := range validators {
-		if v.Power == 0 {
+		if v.Power == 0 || v.Metadata == nil {
 			continue
 		}
 		var pk cryptotypes.PubKey

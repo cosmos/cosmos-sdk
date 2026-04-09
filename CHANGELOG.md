@@ -74,17 +74,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (server) [#24720](https://github.com/cosmos/cosmos-sdk/pull/24720) add `verbose_log_level` flag for configuring the log level when switching to verbose logging mode during sensitive operations (such as chain upgrades).
 * (crypto) [#24861](https://github.com/cosmos/cosmos-sdk/pull/24861) add `PubKeyFromCometTypeAndBytes` helper function to convert from `comet/v2` PubKeys to the `cryptotypes.Pubkey` interface.
 * (abci_utils) [#25008](https://github.com/cosmos/cosmos-sdk/pull/25008) add the ability to assign a custom signer extraction adapter in `DefaultProposalHandler`.
-* (crypto/ledger) [#25435](https://github.com/cosmos/cosmos-sdk/pull/25435) Add SetDERConversion to reset skipDERConversion and App name for ledger.
-* (gRPC) [#25565](https://github.com/cosmos/cosmos-sdk/pull/25565) Support for multi gRPC query clients serve with historical binaries to serve proper historical state.
-* (blockstm) [#25600](https://github.com/cosmos/cosmos-sdk/pull/25600) Allow dynamic retrieval of the coin denomination from multi store at runtime.
 * (x/distribution) [#25650](https://github.com/cosmos/cosmos-sdk/pull/25650) Add new gRPC query endpoints and CLI commands for `DelegatorStartingInfo`, `ValidatorHistoricalRewards`, and `ValidatorCurrentRewards`.
-* [#25516](https://github.com/cosmos/cosmos-sdk/pull/25516) Support automatic configuration of OpenTelemetry via [OpenTelemetry declarative configuration](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) and add OpenTelemetry instrumentation of `BaseApp`.
 * [#25745](https://github.com/cosmos/cosmos-sdk/pull/25745) Add DiskIO telemetry via gopsutil.
 * (grpc) [#25648](https://github.com/cosmos/cosmos-sdk/pull/25648) Add `earliest_block_height` and `latest_block_height` fields to `GetSyncingResponse`.
 * (collections/codec) [#25614] (https://github.com/cosmos/cosmos-sdk/pull/25827)  Add `TimeValue` (`ValueCodec[time.Time]`) to collections/codec.
 * (enterprise/poa) [#25838](https://github.com/cosmos/cosmos-sdk/pull/25838) Add the `poa` module under the `enterprise` directory.
 * (grpc) [#25850](https://github.com/cosmos/cosmos-sdk/pull/25850) Add `GetBlockResults` and `GetLatestBlockResults` gRPC endpoints to expose CometBFT block results including `finalize_block_events`.
-* (events) [#25877](https://github.com/cosmos/cosmos-sdk/pull/25877) Add `OverrideEvents` to `EventManagerI`.
 
 ### Improvements
 
@@ -97,9 +92,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (proto) [#24161](https://github.com/cosmos/cosmos-sdk/pull/24161) Remove unnecessary annotations from `x/staking` authz proto.
 * (x/bank) [#24660](https://github.com/cosmos/cosmos-sdk/pull/24660) Improve performance of the `GetAllBalances` and `GetAccountsBalances` keeper methods.
 * (collections) [#25464](https://github.com/cosmos/cosmos-sdk/pull/25464) Add `IterateRaw` method to `Multi` index type to satisfty query `Collection` interface.
-* (x/mint) [#25562](https://github.com/cosmos/cosmos-sdk/pull/25562) Improve and test `x/mint` params validation.
 * (api) [#25613](https://github.com/cosmos/cosmos-sdk/pull/25613) Separated deprecated modules into the contrib directory, distinct from api, to enable and unblock new proto changes without affecting legacy code.
-* (server) [#25632](https://github.com/cosmos/cosmos-sdk/pull/25632) Add missing call to close the app on shutdown.
 * (server) [#25740](https://github.com/cosmos/cosmos-sdk/pull/25740) Add variadic `grpc.DialOption` parameter to `StartGrpcServer` for custom gRPC client connection options.
 * (blockstm) [#25765](https://github.com/cosmos/cosmos-sdk/pull/25765) Minor code readability improvement in block-stm.
 * (blockstm) [#25786](https://github.com/cosmos/cosmos-sdk/pull/25786) Add pre-state checking in transaction state transition.
@@ -126,13 +119,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/epochs) [#25087](https://github.com/cosmos/cosmos-sdk/pull/25087) Remove redundant error check in BeginBlocker.
 * [GHSA-p22h-3m2v-cmgh](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-p22h-3m2v-cmgh) Fix x/distribution can halt when historical rewards overflow.
 * (x/staking) [#25258](https://github.com/cosmos/cosmos-sdk/pull/25258) Add delegator address to redelegate event.
-* (cli) [#25485](https://github.com/cosmos/cosmos-sdk/pull/25485) Avoid failed to convert address field in `withdraw-validator-commission` cmd.
-* (baseapp) [#25642](https://github.com/cosmos/cosmos-sdk/pull/25642) Mark pre-block events for indexing based on local configuration.
 * (x/bank) [#25751](https://github.com/cosmos/cosmos-sdk/pull/25751) Fix recipient address in events.
 * (client) [#25811] (https://github.com/cosmos/cosmos-sdk/pull/25811) fix(client): fix file handle leaks in snapshot commands.
 * (server/config) [#25806](https://github.com/cosmos/cosmos-sdk/pull/25806) fix: add missing commas in historical gRPC config template.
 * (client) [#25804](https://github.com/cosmos/cosmos-sdk/pull/25804) Add `GetHeightFromMetadataStrict` API to `grpc` client for better error handling.
-* (x/auth) [#25828](https://github.com/cosmos/cosmos-sdk/pull/25828) Limits pagination at default for values that exceed it.
 * (x/staking) [#25829](https://github.com/cosmos/cosmos-sdk/pull/25829) Validates case-sensitivity on authz grands in x/staking.
 * (mempool) [#25869](https://github.com/cosmos/cosmos-sdk/pull/25869) fix(mempool): add thread safety to NextSenderTx.
 * (blockstm) [#25912](https://github.com/cosmos/cosmos-sdk/pull/25912) Remove `SigVerificationDecorator` signature incarnation cache causing state divergence under blockstm.
@@ -144,12 +134,46 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Deprecated
 
+* [#25948](https://github.com/cosmos/cosmos-sdk/pull/25948) Change default `app.go` code to not use `depinject` as we are phasing it out.
+* (baseapp) [#26107](https://github.com/cosmos/cosmos-sdk/pull/26170) Deprecate baseapp test helper `app.NewUncachedContext`, consider using `app.NewNextBlockContext` or `app.NewContext` instead, see `UPGRADING.md` for more details.
+
+## [v0.53.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.6) - 2026-02-10
+
+### Improvements
+
+* (deps) [#25710](https://github.com/cosmos/cosmos-sdk/pull/25710) Bump github.com/cosmos/ledger-cosmos-go from 0.16.0 to 1.0.0
+* (deps) [#25820](https://github.com/cosmos/cosmos-sdk/pull/25820) Bump github.com/cometbft/cometbft from 0.80.20 to 0.38.21
+
+### Bug Fixes
+
+* (x/auth) [#25828](https://github.com/cosmos/cosmos-sdk/pull/25828) Limits pagination at default for values that exceed it.
+* (events) [#25877](https://github.com/cosmos/cosmos-sdk/pull/25877) Add `OverrideEvents` to `EventManagerI`.
+
+## [v0.53.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.5) - 2025-12-12
+
+### Features
+
+* (crypto/ledger) [#25435](https://github.com/cosmos/cosmos-sdk/pull/25435) Add SetDERConversion to reset skipDERConversion and App name for ledger.
+* (gRPC) [#25565](https://github.com/cosmos/cosmos-sdk/pull/25565) Support for multi gRPC query clients serve with historical binaries to serve proper historical state.
+* (blockstm) [#25600](https://github.com/cosmos/cosmos-sdk/pull/25600) Allow dynamic retrieval of the coin denomination from multi store at runtime.
+* [#25516](https://github.com/cosmos/cosmos-sdk/pull/25516) Support automatic configuration of OpenTelemetry via [OpenTelemetry declarative configuration](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) and add OpenTelemetry instrumentation of `BaseApp`.
+
+### Improvements
+
+* (x/mint) [#25562](https://github.com/cosmos/cosmos-sdk/pull/25562) Improve and test `x/mint` params validation.
+* (server) [#25632](https://github.com/cosmos/cosmos-sdk/pull/25632) Add missing call to close the app on shutdown.
+
+### Bug Fixes
+
+* (cli) [#25485](https://github.com/cosmos/cosmos-sdk/pull/25485) Avoid failed to convert address field in `withdraw-validator-commission` cmd.
+* (baseapp) [#25642](https://github.com/cosmos/cosmos-sdk/pull/25642) Mark pre-block events for indexing based on local configuration.
+
+### Deprecated
+
 * (x/nft) [#24575](https://github.com/cosmos/cosmos-sdk/pull/24575) Deprecate the `x/nft` module in the Cosmos SDK repository.  This module will not be maintained to the extent that our core modules will and will be kept in a [legacy repo](https://github.com/cosmos/cosmos-legacy).
 * (x/group) [#24571](https://github.com/cosmos/cosmos-sdk/pull/24571) Deprecate the `x/group` module in the Cosmos SDK repository.  This module will not be maintained to the extent that our core modules will and will be kept in a [legacy repo](https://github.com/cosmos/cosmos-legacy).
 * (types) [#24664](https://github.com/cosmos/cosmos-sdk/pull/24664) Deprecate the `Invariant` type in the Cosmos SDK.
 * [#25516](https://github.com/cosmos/cosmos-sdk/pull/25516) Deprecate all existing methods and types in the `telemetry` package, usage of `github.com/hashicorp/go-metrics` and the `telemetry` configuration section. New instrumentation should use the official [OpenTelemetry go API](https://pkg.go.dev/go.opentelemetry.io/otel) and Cosmos SDK applications can automatically expose OpenTelemetry metrics, traces and logs via [OpenTelemetry declarative configuration](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf).
-* [#25948](https://github.com/cosmos/cosmos-sdk/pull/25948) Change default `app.go` code to not use `depinject` as we are phasing it out.
-* (baseapp) [#26107](https://github.com/cosmos/cosmos-sdk/pull/26170) Deprecate baseapp test helper `app.NewUncachedContext`, consider using `app.NewNextBlockContext` or `app.NewContext` instead, see `UPGRADING.md` for more details.
 
 ## [v0.53.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-25
 

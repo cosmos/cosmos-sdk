@@ -11,7 +11,7 @@ require (
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.7.2
-	github.com/cosmos/iavl v1.2.8
+	github.com/cosmos/iavl v1.3.6
 	github.com/cosmos/ics23/go v0.11.0
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-plugin v1.7.0
@@ -22,6 +22,8 @@ require (
 	google.golang.org/protobuf v1.36.11
 	gotest.tools/v3 v3.5.2
 )
+
+require cosmossdk.io/core v0.12.1-0.20240725072823-6a2d039e1212 // indirect
 
 require (
 	github.com/DataDog/zstd v1.5.7 // indirect

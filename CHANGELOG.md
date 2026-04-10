@@ -40,6 +40,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+### Features
+
+### Improvements
+
+### Bug Fixes
+
+### Deprecated
+
+## [v0.54.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.0) - 2026-04-10
+
+### Breaking Changes
+
 * (x/consensus) [#25607](https://github.com/cosmos/cosmos-sdk/pull/25607) Add `AuthorityParams` to consensus params. When set, the consensus params authority takes precedence over per-keeper authority for all module parameter updates. Keeper constructor signatures are unchanged.
 * (x/staking) [#25724](https://github.com/cosmos/cosmos-sdk/issues/25724) Validate `BondDenom` in `MsgUpdateParams` to prevent setting non-existent or zero-supply denoms.
 * [#25778](https://github.com/cosmos/cosmos-sdk/pull/25778) Update `log` to log v2.

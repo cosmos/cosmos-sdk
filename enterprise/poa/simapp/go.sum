@@ -4,6 +4,8 @@ cosmossdk.io/api v1.0.0 h1:qTV8OPVEwcBPwp2b9p4Qy4noZyihJ+sOMaWL/VT+RCc=
 cosmossdk.io/api v1.0.0/go.mod h1:fKRljeYk+04p4T8Shdyv+uH2fSVyzHoWrvDAs/7OxfI=
 cosmossdk.io/client/v2 v2.11.0-rc.0 h1:9mPUd87i0fJgGN4NJeMGouHx4lOk9k/pJ5JUx2SlJ/g=
 cosmossdk.io/client/v2 v2.11.0-rc.0/go.mod h1:5ffkRPaTKCLGPD/vuFaweEa/7IKSeUujkq2ZZ/nuGFk=
+cosmossdk.io/client/v2 v2.11.0 h1:k3hg9liNjrLv5P/PEle8wcihSwQ/ALCr1fja2sp5His=
+cosmossdk.io/client/v2 v2.11.0/go.mod h1:wJNFx9sSqSDE3QeXIU6DRZDagqdv98j6O7hmjnfGa2I=
 cosmossdk.io/collections v1.4.0 h1:b373bkxCxKiRbapxZ42TRmcKJEnBVBebdQVk9I5IkkE=
 cosmossdk.io/collections v1.4.0/go.mod h1:gxbieVY3tjbvWlkm3yOXf7sGyDrVi12haZH+sek6whw=
 cosmossdk.io/core v1.1.0 h1:iJ7j2DjNsFzg4/z4ImNQYzy2D4LfMCsaQ8Lrz1KCmxk=
@@ -40,6 +42,7 @@ github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 h1:TngWCqHvy9oXAN6lEV
 github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5/go.mod h1:lmUJ/7eu/Q8D7ML55dXQrVaamCz2vxCfdQBasLZfHKk=
 github.com/RoaringBitmap/roaring/v2 v2.15.0 h1:gCbixa3UiG7g6WUZNVOfEEg2HTc1vR4OVdMkX8t1ZFc=
 github.com/RoaringBitmap/roaring/v2 v2.15.0/go.mod h1:eq4wdNXxtJIS/oikeCzdX1rBzek7ANzbth041hrU8Q4=
+github.com/RoaringBitmap/roaring/v2 v2.16.0/go.mod h1:eq4wdNXxtJIS/oikeCzdX1rBzek7ANzbth041hrU8Q4=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/VividCortex/gohistogram v1.0.0 h1:6+hBz+qvs0JOrrNhhmR7lFxo5sINxBCGXrdtl/UvroE=

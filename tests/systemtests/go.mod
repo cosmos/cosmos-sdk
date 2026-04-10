@@ -9,7 +9,7 @@ replace github.com/cosmos/cosmos-sdk/tools/systemtests => ../../tools/systemtest
 
 require (
 	cosmossdk.io/math v1.5.3
-	github.com/cosmos/cosmos-sdk v0.54.0-rc.4
+	github.com/cosmos/cosmos-sdk v0.54.0
 	github.com/cosmos/cosmos-sdk/tools/systemtests v0.0.0-00010101000000-000000000000
 	github.com/creachadair/tomledit v0.0.29
 	github.com/stretchr/testify v1.11.1

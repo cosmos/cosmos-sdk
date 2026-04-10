@@ -141,8 +141,8 @@ github.com/cosmos/cosmos-db v1.1.3 h1:7QNT77+vkefostcKkhrzDK9uoIEryzFrU9eoMeaQOP
 github.com/cosmos/cosmos-db v1.1.3/go.mod h1:kN+wGsnwUJZYn8Sy5Q2O0vCYA99MJllkKASbs6Unb9U=
 github.com/cosmos/cosmos-proto v1.0.0-beta.5 h1:eNcayDLpip+zVLRLYafhzLvQlSmyab+RC5W7ZfmxJLA=
 github.com/cosmos/cosmos-proto v1.0.0-beta.5/go.mod h1:hQGLpiIUloJBMdQMMWb/4wRApmI9hjHH05nefC0Ojec=
-github.com/cosmos/cosmos-sdk v0.54.0-rc.4 h1:rcOWXm/ZgPO2bYkD558nlhwpuva9kJDiA/7qzjtFGE0=
-github.com/cosmos/cosmos-sdk v0.54.0-rc.4/go.mod h1:DnL1yHJlbBNs9uuu2ls4TrWiCj5Ej+aAKu9fRmJvr/c=
+github.com/cosmos/cosmos-sdk v0.54.0 h1:eggBnFL+QiBt3O2/oPAuZtBdxl840UcdYhow+sk5Vag=
+github.com/cosmos/cosmos-sdk v0.54.0/go.mod h1:Kx5RNGmLShyUK6aWXljCMKjwJ3YNJX2ykd9rziRoXpM=
 github.com/cosmos/cosmos-sdk/store/v2 v2.0.0 h1:5CFXBU5cHIvxMpz5QBrTwR5DL/W3uZL2BYYMoDp4siY=
 github.com/cosmos/cosmos-sdk/store/v2 v2.0.0/go.mod h1:XyRyi5fGjIcokBqS1cyA8/QVbVNy4ui8hmpk1gezuHo=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=

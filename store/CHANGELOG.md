@@ -24,10 +24,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+
+### API Breaking
+
+### Features
+
+### Improvements
+
+### Deprecated
+
+### Bug Fixes
+
+## v2.0.0 (April 10, 2026)
+
+### API Breaking
+
 * [#26037](https://github.com/cosmos/cosmos-sdk/pull/26037) Remove `GetCommitStore` and `GetCommitKVStore` from the `CommitMultiStore` interface. Remove top-level `store.CommitStore` and `store.CommitKVStore` type aliases from `store/reexport.go`.
-
-### Breaking Changes
-
 * [#26060](https://github.com/cosmos/cosmos-sdk/pull/26060) Remove non-functional `StoreMetrics`. This metric interface never worked, so this simply removes dead code.
 * [#26061](https://github.com/cosmos/cosmos-sdk/pull/26061) Remove tracing from store interfaces and implementations:
     * Remove `SetTracer`, `SetTracingContext`, and `TracingEnabled` from `MultiStore` interface.

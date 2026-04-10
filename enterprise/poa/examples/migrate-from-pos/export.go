@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -45,36 +45,44 @@ func (app *SimApp) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAd
 		return servertypes.ExportedApp{}, err
 	}
 
-	validators, err := app.POAKeeper.GetAllValidators(ctx)
+	validators, err := writeValidators(ctx, app)
 	if err != nil {
-		return servertypes.ExportedApp{}, fmt.Errorf("failed to get validators from POA module: %w", err)
-	}
-
-	genesisValidators := make([]types.GenesisValidator, 0, len(validators))
-	for _, v := range validators {
-		if v.Power == 0 || v.Metadata == nil {
-			continue
-		}
-		var pk cryptotypes.PubKey
-		if err := app.InterfaceRegistry().UnpackAny(v.PubKey, &pk); err != nil {
-			return servertypes.ExportedApp{}, fmt.Errorf("failed to unpack validator pubkey: %w", err)
-		}
-		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
-		if err != nil {
-			return servertypes.ExportedApp{}, fmt.Errorf("failed to convert validator pubkey: %w", err)
-		}
-		genesisValidators = append(genesisValidators, types.GenesisValidator{
-			Address: sdk.ConsAddress(cmtPk.Address()).Bytes(),
-			PubKey:  cmtPk,
-			Power:   v.Power,
-			Name:    v.Metadata.Moniker,
-		})
+		return servertypes.ExportedApp{}, err
 	}
 
 	return servertypes.ExportedApp{
 		AppState:        appState,
-		Validators:      genesisValidators,
+		Validators:      validators,
 		Height:          height,
 		ConsensusParams: app.GetConsensusParams(ctx),
 	}, nil
+}
+
+// writeValidators exports POA validators as CometBFT genesis validators.
+func writeValidators(ctx sdk.Context, app *SimApp) ([]cmttypes.GenesisValidator, error) {
+	poaVals, err := app.POAKeeper.GetAllValidators(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get POA validators: %w", err)
+	}
+
+	vals := make([]cmttypes.GenesisValidator, 0, len(poaVals))
+	for _, v := range poaVals {
+		var pk cryptotypes.PubKey
+		if err := app.encodingConfig.InterfaceRegistry.UnpackAny(v.PubKey, &pk); err != nil {
+			return nil, fmt.Errorf("unpack pubkey for validator %s: %w", v.Metadata.GetMoniker(), err)
+		}
+
+		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
+		if err != nil {
+			return nil, fmt.Errorf("convert pubkey for validator %s: %w", v.Metadata.GetMoniker(), err)
+		}
+
+		vals = append(vals, cmttypes.GenesisValidator{
+			Address: sdk.ConsAddress(cmtPk.Address()).Bytes(),
+			PubKey:  cmtPk,
+			Power:   v.Power,
+			Name:    v.Metadata.GetMoniker(),
+		})
+	}
+	return vals, nil
 }

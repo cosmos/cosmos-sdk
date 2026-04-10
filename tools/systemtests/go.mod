@@ -285,4 +285,5 @@ replace (
 	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/errors => ../../errors
 	cosmossdk.io/math => ../../math
+	github.com/cosmos/cosmos-sdk => ../..
 )

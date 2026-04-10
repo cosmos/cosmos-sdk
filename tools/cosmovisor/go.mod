@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/log/v2 v2.1.0
 	github.com/cometbft/cometbft v0.39.0
 	github.com/cometbft/cometbft-db v0.14.3
-	github.com/cosmos/cosmos-sdk v0.54.0-rc.4
+	github.com/cosmos/cosmos-sdk v0.54.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/otiai10/copy v1.14.1
 	github.com/pelletier/go-toml/v2 v2.3.0

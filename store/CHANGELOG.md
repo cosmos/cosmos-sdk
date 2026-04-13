@@ -59,8 +59,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * [#25470](https://github.com/cosmos/cosmos-sdk/pull/25470) Add object KV stores and refactor the base store to be generic across the value parameter:
       * Add object store types: `ObjKVStore`, `ObjBasicKVStore`, `ObjIterator`, `ObjectStoreKey`, `StoreTypeObject`.
       * Add generic store types: `GBasicKVStore[V]`, `GKVStore[V]`, `GIterator[V]`.
-      * Add `EarliestVersion() int64` to the `CommitMultiStore` interface.
-      * Add `SnapshotAnnouncer` interface and `AnnounceSnapshotHeight` on `rootmulti.Store` and the pruning manager, so pruning can defer deletion of heights that are being snapshotted.
       * Add `cachemulti.NewFromParent` constructor for lazy cache multistore construction from a parent store function.
   * [#25647](https://github.com/cosmos/cosmos-sdk/pull/25647) Add `EarliestVersion() int64` to the `CommitMultiStore` interface and `GetEarliestVersion(db)` helper.
 

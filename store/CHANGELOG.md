@@ -39,6 +39,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking
 
+  * [#25470](https://github.com/cosmos/cosmos-sdk/pull/25470) Refactor store interfaces to support generic value types (object stores):
+      * Replace `BasicKVStore`, `KVStore`, and `Iterator` interfaces/types with generic `GBasicKVStore[V]`, `GKVStore[V]`, and `GIterator[V]`. The old names are retained as type aliases (e.g. `KVStore = GKVStore[[]byte]`).
+      * Remove `Iterator` as a direct alias to `dbm.Iterator`. It is now `GIterator[[]byte]`, a distinct interface defined in the store package. Code that type-asserts to `dbm.Iterator` will break.
+      * Remove `CacheWrap()` and `CacheWrapWithTrace()` method declarations from the `CacheWrap` interface. `CacheWrap` now embeds `CacheWrapper` to obtain `CacheWrap()`.
+      * Add `GetObjKVStore(StoreKey) ObjKVStore` to the `MultiStore` interface.
+      * Add generic store variants across `cachekv`, `gaskv`, `prefix`, `transient`, and `mem` packages (`GStore[V]`, `NewGStore`, `NewObjStore`).
 * [#26037](https://github.com/cosmos/cosmos-sdk/pull/26037) Remove `GetCommitStore` and `GetCommitKVStore` from the `CommitMultiStore` interface. Remove top-level `store.CommitStore` and `store.CommitKVStore` type aliases from `store/reexport.go`.
 * [#26060](https://github.com/cosmos/cosmos-sdk/pull/26060) Remove non-functional `StoreMetrics`. This metric interface never worked, so this simply removes dead code.
 * [#26061](https://github.com/cosmos/cosmos-sdk/pull/26061) Remove tracing from store interfaces and implementations:
@@ -48,19 +54,26 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * Remove `store/tracekv` package entirely.
     * Remove `TraceContext` type `store/types`.
 
+### Features
+
+  * [#25470](https://github.com/cosmos/cosmos-sdk/pull/25470) Add object KV stores and refactor the base store to be generic across the value parameter:
+      * Add object store types: `ObjKVStore`, `ObjBasicKVStore`, `ObjIterator`, `ObjectStoreKey`, `StoreTypeObject`.
+      * Add generic store types: `GBasicKVStore[V]`, `GKVStore[V]`, `GIterator[V]`.
+      * Add `EarliestVersion() int64` to the `CommitMultiStore` interface.
+      * Add `SnapshotAnnouncer` interface and `AnnounceSnapshotHeight` on `rootmulti.Store` and the pruning manager, so pruning can defer deletion of heights that are being snapshotted.
+      * Add `cachemulti.NewFromParent` constructor for lazy cache multistore construction from a parent store function.
+  * [#25647](https://github.com/cosmos/cosmos-sdk/pull/25647) Add `EarliestVersion() int64` to the `CommitMultiStore` interface and `GetEarliestVersion(db)` helper.
+
 ### Bug Fixes
 
 * [#20425](https://github.com/cosmos/cosmos-sdk/pull/20425) Fix nil pointer panic when querying historical state where a new store does not exist.
+* [#24583](https://github.com/cosmos/cosmos-sdk/pull/24583) Fix pruning height calculation to correctly handle in-flight snapshots. Adds `SnapshotAnnouncer` interface and `AnnounceSnapshotHeight` to track snapshots in progress and prevent premature pruning of their heights.
 
 ## v1.1.2 (March 31, 2025)
 
 ### Bug Fixes
 
 * [#24090](https://github.com/cosmos/cosmos-sdk/pull/24090) Running the `prune` command now disables async pruning.
-
-### Features
-
-* [#25470](https://github.com/cosmos/cosmos-sdk/pull/25470) Adds object KV stores and refactors the base store to be generic across the value parameter.
 
 ## v1.1.1 (September 06, 2024)
 

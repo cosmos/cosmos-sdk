@@ -742,8 +742,10 @@ func (s *E2ETestSuite) TestGetBlockWithTxs_LimitCappedToBlockTxCount() {
 		Pagination: &query.PageRequest{Offset: 0, Limit: 50_000_000},
 	})
 	s.Require().NoError(err)
-	s.Require().Len(grpcRes.Txs, 1)
-	s.Require().Equal(uint64(1), grpcRes.Pagination.Total)
+	// The block has 2 txs; the limit should be capped to the block's tx count
+	// rather than query.DefaultLimit.
+	s.Require().Len(grpcRes.Txs, 2)
+	s.Require().Equal(uint64(2), grpcRes.Pagination.Total)
 }
 
 func (s *E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {

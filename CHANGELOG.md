@@ -36,6 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [v0.53.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.7) - 2026-04-14
+
+### Improvements
+
+* (x/auth) [#26297](https://github.com/cosmos/cosmos-sdk/pull/26297) Cap pagination limit at number of txs within block during `GetBlockWithTxs` instead of 100.
+
 ## [v0.53.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.6) - 2026-02-10
 
 ### Improvements

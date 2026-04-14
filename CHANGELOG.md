@@ -48,7 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Deprecated
 
-## v0.54.1 - 2026-04-14
+## [v0.54.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.1) - 2026-04-14
 
 ### Improvements
 

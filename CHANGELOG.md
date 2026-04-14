@@ -36,7 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [v0.53.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.6) - 2026-04-14
+## [v0.53.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.7) - 2026-04-14
 
 ### Improvements
 

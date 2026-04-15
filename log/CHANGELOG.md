@@ -20,11 +20,15 @@ Each entry must include the Github issue reference in the following format:
 
 # Changelog
 
-## [v2.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/log%2Fv2.0.1) - 2026-02-11
+## [v2.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v2.1.0) - 2026-04-10
+
+* [#26007](https://github.com/cosmos/cosmos-sdk/pull/26007) Implement fanout logger when OpenTelemetry is configured.
+
+## [v2.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v2.0.1) - 2026-02-11
 
 * [#25894](https://github.com/cosmos/cosmos-sdk/pull/25894) Fix `slog.Logger` wrapper so that the correct source/line information is tracked.
 
-## [v2.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log%2Fv2.0.0) - 2026-02-10
+## [v2.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v2.0.0) - 2026-02-10
 
 * [#25778](https://github.com/cosmos/cosmos-sdk/pull/25778) Introduce log v2, adding contextual methods to Logger for trace correlation. See [Upgrading](../UPGRADING.md) for more details.
 

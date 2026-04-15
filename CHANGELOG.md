@@ -50,7 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) - 2026-04-15
 
-This path release contains only minor dependency bumps.
+This patch release contains only minor dependency bumps.
 
 ## [v0.54.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.1) - 2026-04-14
 

@@ -47,6 +47,10 @@ func DiffCommand() *cobra.Command {
 				return fmt.Errorf("unknown version %q, supported versions are: %q", targetVersion, slices.Collect(maps.Keys(confix.Migrations)))
 			}
 
+			if configType == confix.ClientConfigType && targetVersion < "v0.47" {
+				return fmt.Errorf("version %q does not support client.toml, client config is available from v0.47", targetVersion)
+			}
+
 			targetVersionFile, err := confix.LoadLocalConfig(targetVersion, configType)
 			if err != nil {
 				return fmt.Errorf("failed to load internal config: %w", err)

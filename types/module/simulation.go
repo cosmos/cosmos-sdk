@@ -124,6 +124,9 @@ func (sm *SimulationManager) RegisterStoreDecoders() {
 // GenerateGenesisStates generates a randomized GenesisState for each of the
 // registered modules
 func (sm *SimulationManager) GenerateGenesisStates(simState *SimulationState) {
+	if simState == nil {
+		return
+	}
 	for _, module := range sm.Modules {
 		module.GenerateGenesisState(simState)
 	}

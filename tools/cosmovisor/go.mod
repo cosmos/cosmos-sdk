@@ -5,7 +5,7 @@ go 1.25.9
 require (
 	cosmossdk.io/log/v2 v2.1.0
 	github.com/cometbft/cometbft v0.39.0
-	github.com/cometbft/cometbft-db v0.14.3
+	github.com/cometbft/cometbft-db v1.0.4
 	github.com/cosmos/cosmos-sdk v0.54.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/otiai10/copy v1.14.1
@@ -179,7 +179,7 @@ require (
 	github.com/rs/cors v1.11.1 // indirect
 	github.com/rs/zerolog v1.35.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
-	github.com/sasha-s/go-deadlock v0.3.7 // indirect
+	github.com/sasha-s/go-deadlock v0.3.9 // indirect
 	github.com/shirou/gopsutil/v4 v4.26.2 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect

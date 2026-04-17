@@ -19,15 +19,16 @@ replacement=$2
 IFS='@' read -ra dependency_mod <<< "$dependency"
 dependency_mod=${dependency_mod[0]}
 
-for modfile in $(find . -name go.mod); do
-  if grep $dependency_mod $modfile &> /dev/null; then
+while IFS= read -r modfile; do
+  if grep -q "$dependency_mod" "$modfile"; then
     echo "Updating $modfile"
-    DIR=$(dirname $modfile)
+    DIR=$(dirname "$modfile")
     # we want to skip the go.mod of the package we're updating
-    if [[ "$dependency_mod" == *"$(basename $DIR)"  ]]; then
+    if [[ "$dependency_mod" == *"$(basename "$DIR")" ]]; then
         echo "Skipping $DIR"
         continue
     fi
-     (cd $DIR; go mod edit -replace $dependency=$replacement)
+    (cd "$DIR"; go mod edit -replace "$dependency=$replacement")
   fi
+done < <(find . -name go.mod)
 done

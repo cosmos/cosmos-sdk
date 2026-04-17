@@ -10,7 +10,6 @@ if [ $# -lt 2 ]; then
   dependency, and the go module path of the dependency that should replace it."
   exit 1
 fi
-fi
 
 dependency=$1
 replacement=$2
@@ -31,4 +30,3 @@ while IFS= read -r modfile; do
     (cd "$DIR"; go mod edit -replace "$dependency=$replacement")
   fi
 done < <(find . -name go.mod)
-done

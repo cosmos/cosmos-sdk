@@ -736,7 +736,15 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 			}
 		} else {
 			sdkCtx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
-			if module, ok := m.Modules[moduleName].(HasGenesis); ok {
+			if module, ok := m.Modules[moduleName].(appmodule.HasGenesis); ok {
+				source, err := genesis.SourceFromRawJSON(module.(HasGenesisBasics).DefaultGenesis(c.cdc))
+				if err != nil {
+					return nil, err
+				}
+				if err := module.InitGenesis(sdkCtx, source); err != nil {
+					return nil, err
+				}
+			} else if module, ok := m.Modules[moduleName].(HasGenesis); ok {
 				module.InitGenesis(sdkCtx, c.cdc, module.DefaultGenesis(c.cdc))
 			}
 			if module, ok := m.Modules[moduleName].(HasABCIGenesis); ok {

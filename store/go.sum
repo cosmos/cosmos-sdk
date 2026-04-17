@@ -39,8 +39,8 @@ github.com/cockroachdb/redact v1.1.8 h1:8eVLLj6juKxiKrAEw2b8cJvNqWq++U8WOfQFuL7K
 github.com/cockroachdb/redact v1.1.8/go.mod h1:GceHHpJ0rMDpYARL5In88Alq/xMBUtVlz7Qxix6ZVkw=
 github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb h1:3bCgBvB8PbJVMX1ouCcSIxvsqKPYM7gs72o0zC76n9g=
 github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb/go.mod h1:7nc4anLGjupUW/PeY5qiNYsdNXj7zopG+eqsS7To5IQ=
-github.com/cometbft/cometbft v0.39.0-rc1.0.20260417154241-766ab925b619 h1:4nuQWz9cwKKXa/zr748hYSSczE2CvuwXMVKke4Pf50o=
-github.com/cometbft/cometbft v0.39.0-rc1.0.20260417154241-766ab925b619/go.mod h1:+UN4jo94b9NhV7d+7ZOfkOksAZP3gfNV8j/pCt/SLfg=
+github.com/cometbft/cometbft v0.39.0-rc1.0.20260417162916-9fcf8612cc6c h1:6m6fZznl23XkcSMWElX+uwcojlfswo+KfowqEUNCcmc=
+github.com/cometbft/cometbft v0.39.0-rc1.0.20260417162916-9fcf8612cc6c/go.mod h1:+UN4jo94b9NhV7d+7ZOfkOksAZP3gfNV8j/pCt/SLfg=
 github.com/cosmos/btree v1.0.0 h1:V3OdIzTQw2yE7f6pD6FfA9j2/YLj1UpB9MdY0zU3v3k=
 github.com/cosmos/btree v1.0.0/go.mod h1:BZML+flLn4d3MOa4POmzDWf5HQ7EGh0y1OLlfhh7A0k=
 github.com/cosmos/cosmos-db v1.1.3 h1:7QNT77+vkefostcKkhrzDK9uoIEryzFrU9eoMeaQOPY=

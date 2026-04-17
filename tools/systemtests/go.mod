@@ -288,4 +288,4 @@ replace (
 	github.com/cosmos/cosmos-sdk => ../..
 )
 
-replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.39.0-rc1.0.20260417154241-766ab925b619
+replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.39.0-rc1.0.20260417162916-9fcf8612cc6c

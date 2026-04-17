@@ -2,13 +2,14 @@
 
 set -euo pipefail
 
-if [ -z ${1+x} ]; then
+if [ $# -lt 2 ]; then
   echo "USAGE:
     ./scripts/go-replace-dep-all.sh <go-mod-dependency> <go-mod-replacement>
   This command replaces a dependency in all of the go.mod files which import it.
   It should be called with two arguments which is the go module path of the
-  dependency, and the go module path of the dependcy that should replace it."
-  exit
+  dependency, and the go module path of the dependency that should replace it."
+  exit 1
+fi
 fi
 
 dependency=$1

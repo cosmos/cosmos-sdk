@@ -164,6 +164,9 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 
 	// file exist but too early in height
 	currentHeight, err := fw.checkHeight()
+	if err != nil && !errors.Is(err, errUntestAble) {
+		panic(fmt.Errorf("failed to check current block height: %w", err))
+	}
 	if (err != nil || currentHeight < info.Height) && !errors.Is(err, errUntestAble) { // ignore this check for tests
 		return false
 	}

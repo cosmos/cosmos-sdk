@@ -17,9 +17,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"cosmossdk.io/systemtests"
-
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
+	"github.com/cosmos/cosmos-sdk/tools/systemtests"
 )
 
 // TestCometBFTGetSyncingGRPC tests the GetSyncing gRPC endpoint

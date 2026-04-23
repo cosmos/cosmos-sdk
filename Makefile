@@ -23,6 +23,17 @@ HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 
+# Required for scripts (e.g. build-v54.sh)
+SH := $(shell command -v sh 2>/dev/null || true)
+ifeq ($(SH),)
+$(error sh not found. Required for build-v54 and other scripts. Install a POSIX shell.)
+endif
+# build-v54.sh uses bash-specific features (BASH_SOURCE, local)
+BASH := $(shell command -v bash 2>/dev/null || true)
+ifeq ($(BASH),)
+$(error bash not found. Required for build-v54. Install bash.)
+endif
+
 # process build tags
 build_tags = netgo
 ifeq ($(LEDGER_ENABLED),true)
@@ -50,10 +61,6 @@ endif
 
 ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
   build_tags += libsecp256k1_sdk
-endif
-
-ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += app_v1
 endif
 
 whitespace :=
@@ -122,6 +129,12 @@ build-linux-amd64:
 build-linux-arm64:
 	GOOS=linux GOARCH=arm64 LEDGER_ENABLED=false $(MAKE) build
 
+build-darwin-amd64:
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 LEDGER_ENABLED=false $(MAKE) build
+
+build-darwin-arm64:
+	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 LEDGER_ENABLED=false $(MAKE) build
+
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 	cd ${CURRENT_DIR}/simapp && go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
 
@@ -134,11 +147,11 @@ cosmovisor:
 confix:
 	$(MAKE) -C tools/confix confix
 
-.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor confix
+.PHONY: build build-linux-amd64 build-linux-arm64 build-darwin-amd64 build-darwin-arm64 cosmovisor confix
 
 #? mocks: Generate mock file
 mocks: $(MOCKS_DIR)
-	@go install go.uber.org/mock/mockgen@v0.6.0
+	@go install go.uber.org/mock/mockgen@latest
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
 
@@ -168,6 +181,11 @@ go.sum: go.mod
 	echo "Ensure dependencies have not been modified ..." >&2
 	go mod verify
 	go mod tidy
+
+tidy-all:
+	sh ./scripts/go-mod-tidy-all.sh
+
+.PHONY: tidy-all
 
 ###############################################################################
 ###                              Documentation                              ###
@@ -264,6 +282,11 @@ test-sim-nondeterminism:
 	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=30m -tags='sims' -run TestAppStateDeterminism \
 		-NumBlocks=100 -BlockSize=200 -Period=0
 
+
+test-sim-blockstm:
+	@echo "Running blockstm-determinism test..."
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=30m -tags='sims' -run TestAppStateDeterminismBSTMEquivalence \
+		-NumBlocks=100 -BlockSize=200 -Period=0
 # Requires an exported plugin. See store/streaming/README.md for documentation.
 #
 # example:
@@ -312,6 +335,7 @@ test-sim-multi-seed-short:
 
 .PHONY: \
 test-sim-nondeterminism \
+test-sim-blockstm \
 test-sim-nondeterminism-streaming \
 test-sim-custom-genesis-fast \
 test-sim-import-export \
@@ -379,7 +403,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v2.8.0
+golangci_version=v2.11.2
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
@@ -401,7 +425,7 @@ lint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.18.0
+protoVer=0.18.1
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
@@ -425,6 +449,17 @@ proto-lint:
 
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
+
+# Build and push proto-builder image for amd64 and arm64 to ghcr.io.
+# Usage: make proto-docker-build [protoVer=0.18.1]
+# Requires: docker buildx, ghcr.io login (echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin)
+proto-docker-build:
+	docker buildx build \
+		--platform linux/amd64,linux/arm64 \
+		--push \
+		-f contrib/devtools/Dockerfile \
+		-t ghcr.io/cosmos/proto-builder:$(protoVer) \
+		contrib/devtools
 
 CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.38.0/proto/tendermint
 
@@ -463,7 +498,7 @@ proto-update-deps:
 
 	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) buf mod update
 
-.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps
+.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-docker-build proto-update-deps
 
 ###############################################################################
 ###                                Localnet                                 ###
@@ -492,44 +527,41 @@ localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
 
-test-system: build-v53 build
+###############################################################################
+###                              Enterprise Modules                          ###
+###############################################################################
+#
+# Delegate to enterprise module Makefiles. Examples:
+#   make enterprise-all-lint      # Run lint in group and poa
+#   make enterprise-all-test      # Run test in group and poa
+#   make enterprise-group-build   # Run build in group only
+#   make enterprise-poa-localnet  # Run localnet in poa only
+#
+enterprise-%:
+	$(MAKE) -C enterprise $*
+
+.PHONY: enterprise-%
+
+build-system-test-current: build
 	mkdir -p ./tests/systemtests/binaries/
 	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
-	mkdir -p ./tests/systemtests/binaries/v0.53
-	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
-	$(MAKE) -C tests/systemtests test
-	$(MAKE) -C enterprise/poa/ test-system
-.PHONY: test-system
 
-# build-v53 checks out the v0.53.x branch, builds the binary, and renames it to simdv53.
-build-v53:
-	@echo "Starting v53 build process..."
-	git_status=$$(git status --porcelain) && \
-	has_changes=false && \
-	if [ -n "$$git_status" ]; then \
-		echo "Stashing uncommitted changes..." && \
-		git stash push -m "Temporary stash for v53 build" && \
-		has_changes=true; \
-	else \
-		echo "No changes to stash"; \
-	fi && \
-	echo "Saving current reference..." && \
-	CURRENT_REF=$$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse HEAD) && \
-	echo "Checking out release branch..." && \
-	git checkout release/v0.53.x && \
-	echo "Building v53 binary..." && \
-	make build && \
-	mv build/simd build/simdv53 && \
-	echo "Returning to original branch..." && \
-	if [ "$$CURRENT_REF" = "HEAD" ]; then \
-		git checkout $$(git rev-parse HEAD); \
-	else \
-		git checkout $$CURRENT_REF; \
-	fi && \
-	if [ "$$has_changes" = "true" ]; then \
-		echo "Reapplying stashed changes..." && \
-		git stash pop || echo "Warning: Could not pop stash, your changes may be in the stash list"; \
-	else \
-		echo "No changes to reapply"; \
-	fi
-.PHONY: build-v53
+# test-sdk-system runs only the core SDK system tests (tests/systemtests), not enterprise.
+# Used by CI to avoid redundant runs when test-poa-system and test-group-system exist.
+test-sdk-system: build-v54 build-system-test-current
+	mkdir -p ./tests/systemtests/binaries/v0.54 ./tests/systemtests/testnet
+	mv $(BUILDDIR)/simdv54 ./tests/systemtests/binaries/v0.54/simd
+	$(MAKE) -C tests/systemtests test
+
+test-system: test-sdk-system
+	$(MAKE) -C enterprise/poa/ test-system
+	$(MAKE) -C enterprise/group/ test-system
+
+.PHONY: test-system test-sdk-system build-system-test-current
+
+# build-v54 fetches the v0.54 simd binary for system tests from the v0.54 nightlies channel.
+# Skips if $(BUILDDIR)/simdv54 exists (e.g. local dev reuse).
+build-v54:
+	@if [ -f $(BUILDDIR)/simdv54 ]; then echo "build/simdv54 exists, skipping"; else \
+		BUILDDIR=$(BUILDDIR) bash scripts/build-v54.sh; fi
+.PHONY: build-v54

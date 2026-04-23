@@ -2,6 +2,8 @@
 
 > **Part of Cosmos SDK Enterprise Modules** | [Enterprise Modules](../README.md)
 >
+> **Full Documentation**: [docs.cosmos.network/enterprise/components/poa/overview](https://docs.cosmos.network/enterprise/components/poa/overview)
+>
 > **License Notice**: This module uses the [Source Available Evaluation License](./LICENSE), different from the core SDK's Apache-2.0 license. See the [License](#license) section for details.
 
 A Cosmos SDK module that implements a Proof of Authority (PoA) consensus mechanism, allowing a designated admin to manage a permissioned validator set and integrate with governance for validator-only participation.
@@ -45,6 +47,10 @@ When integrating with SDK v0.54.x+ (see upgrade guide [here](https://github.com/
 - **x/gov Distribution Keeper** ([#25616](https://github.com/cosmos/cosmos-sdk/pull/25616)): `DistrKeeper` is now optional, but must be non-nil if used as a cancellation fee destination.
 
 See the full [Cosmos SDK v0.54.x Changelog](https://github.com/cosmos/cosmos-sdk/blob/main/CHANGELOG.md) for details.
+
+## Migration from POS
+
+For chains transitioning from Proof-of-Stake to Proof-of-Authority, see the [POS-to-POA Migration Example](./examples/migrate-from-pos/). It includes a transitional simapp, sample upgrade handlers, and an end-to-end system test.
 
 ## Quick Start
 
@@ -146,15 +152,18 @@ export CONS_PUBKEY="$(simd comet show-validator | jq -r '.key')"
 # Option B: For testing, you can use an arbitrary ed25519 key like 13iyxnnVneLg0AxHeUD7dRAegA8W3gB1mT4p7sPGjyY=
 ```
 
-3. **Create the validator (any funded account can do this):**
+3. **Create the validator (admin-gated):**
 ```bash
-# Create validator with zero power (pending activation by admin)
+# Admin creates validator with initial positive power.
+# operator-address is the validator operator account, while --from is the admin signer.
 simd tx poa create-validator \
     "My Validator" \
     $CONS_PUBKEY \
     "ed25519" \
     --description "My validator description" \
-    --from myvalidator \
+    --operator-address $OPERATOR_ADDR \
+    --power 1 \
+    --from account \
     --keyring-backend test \
     --fees 1token
 ```

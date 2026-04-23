@@ -28,7 +28,7 @@ import (
 
 // ConsensusVersion defines the current x/auth module consensus version.
 const (
-	ConsensusVersion = 5
+	ConsensusVersion = 6
 	GovModuleName    = "gov"
 )
 
@@ -128,7 +128,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.accountKeeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.accountKeeper))
 
-	_ = keeper.NewMigrator(am.accountKeeper, cfg.QueryServer())
+	m := keeper.NewMigrator(am.accountKeeper, cfg.QueryServer())
+	if err := cfg.RegisterMigration(types.ModuleName, 5, m.Migrate5to6); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 5 to 6: %v", types.ModuleName, err))
+	}
 }
 
 // InitGenesis performs genesis initialization for the auth module. It returns

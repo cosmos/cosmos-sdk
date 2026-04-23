@@ -135,7 +135,7 @@ To do so, use the `app.RegisterModules` method to register the modules on your a
 
 ```go
 // ....
-app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
+app.App = appBuilder.Build(db, baseAppOptions...)
 
 // register module manually
 app.RegisterStores(storetypes.NewKVStoreKey(example.ModuleName))

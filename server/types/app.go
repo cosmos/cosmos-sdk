@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"io"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -11,12 +10,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/snapshots"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 type (
@@ -66,7 +65,7 @@ type (
 
 	// AppCreator is a function that allows us to lazily initialize an
 	// application using various configurations.
-	AppCreator func(log.Logger, dbm.DB, io.Writer, AppOptions) Application
+	AppCreator func(log.Logger, dbm.DB, AppOptions) Application
 
 	// ModuleInitFlags takes a start command and adds modules specific init flags.
 	ModuleInitFlags func(startCmd *cobra.Command)
@@ -89,7 +88,6 @@ type (
 	AppExporter func(
 		logger log.Logger,
 		db dbm.DB,
-		traceWriter io.Writer,
 		height int64,
 		forZeroHeight bool,
 		jailAllowedAddrs []string,

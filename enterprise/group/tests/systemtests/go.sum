@@ -497,8 +497,8 @@ github.com/lightstep/lightstep-tracer-common/golang/gogo v0.0.0-20190605223551-b
 github.com/lightstep/lightstep-tracer-go v0.18.1/go.mod h1:jlF1pusYV4pidLvZ+XD0UBX0ZE6WURAspgAczcDHrL4=
 github.com/linxGnu/grocksdb v1.10.7 h1:fCi4qvZWo04VgFwGWmO8HQJgUVounJBy+C2TMVPU/ho=
 github.com/linxGnu/grocksdb v1.10.7/go.mod h1:OLQKZwiKwaJiAVCsOzWKvwiLwfZ5Vz8Md5TYR7t7pM8=
-github.com/lufia/plan9stats v0.0.0-20260216142805-b3301c5f2a88 h1:PTw+yKnXcOFCR6+8hHTyWBeQ/P4Nb7dd4/0ohEcWQuM=
-github.com/lufia/plan9stats v0.0.0-20260216142805-b3301c5f2a88/go.mod h1:autxFIvghDt3jPTLoqZ9OZ7s9qTGNAWmYCjVFWPX/zg=
+github.com/lufia/plan9stats v0.0.0-20260330125221-c963978e514e h1:Q6MvJtQK/iRcRtzAscm/zF23XxJlbECiGPyRicsX+Ak=
+github.com/lufia/plan9stats v0.0.0-20260330125221-c963978e514e/go.mod h1:autxFIvghDt3jPTLoqZ9OZ7s9qTGNAWmYCjVFWPX/zg=
 github.com/lyft/protoc-gen-validate v0.0.13/go.mod h1:XbGvPuh87YZc5TdIa2/I4pLk0QoUACkjt2znoq26NVQ=
 github.com/magiconair/properties v1.8.10 h1:s31yESBquKXCV9a/ScB3ESkOjUYYv+X0rg8SYxI99mE=
 github.com/magiconair/properties v1.8.10/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
@@ -889,8 +889,8 @@ go.opentelemetry.io/contrib/bridges/otelslog v0.18.0 h1:hhPGP3zvvy1xWT9RTy970wln
 go.opentelemetry.io/contrib/bridges/otelslog v0.18.0/go.mod h1:twJF7inoMza6kxMcF8JOdL3mPmtOZu7GEr34CUNE6Dg=
 go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.68.0 h1:0Qx7VGBacMm9ZENQ7TnNObTYI4ShC+lHI16seduaxZo=
 go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.68.0/go.mod h1:Sje3i3MjSPKTSPvVWCaL8ugBzJwik3u4smCjUeuupqg=
-go.opentelemetry.io/contrib/instrumentation/host v0.67.0 h1:TBZlpWERGQYejjjxOCaul34rx1gM8Dc3erQH3DDe1ng=
-go.opentelemetry.io/contrib/instrumentation/host v0.67.0/go.mod h1:gY4HjuF4CJmklxYjdJNH3wxBlAehJfX/g/vQo+kL0TU=
+go.opentelemetry.io/contrib/instrumentation/host v0.68.0 h1:0BfTRAHtFpIlIY7cw1qg9nODUwblutIqx7Cn6NPD+2s=
+go.opentelemetry.io/contrib/instrumentation/host v0.68.0/go.mod h1:SmgEeGNt1+gp8bmzB5LLyUlCObWcWrRbYMIiDii3NH8=
 go.opentelemetry.io/contrib/instrumentation/runtime v0.67.0 h1:fM78cKITJ2r08cl+nw5i+hI9zWAu3iak8o1Os/ca2Ck=
 go.opentelemetry.io/contrib/instrumentation/runtime v0.67.0/go.mod h1:ybmlzIqGcQzwt5lAfi8TpSnHo/CI3yv1Czodmm+OJa8=
 go.opentelemetry.io/contrib/otelconf v0.22.0 h1:+kpcfczGOFM85zDZyqQCzWefhovegfn24D0WwmQz0n4=

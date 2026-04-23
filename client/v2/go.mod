@@ -132,7 +132,7 @@ require (
 	github.com/libp2p/go-reuseport v0.4.0 // indirect
 	github.com/libp2p/go-yamux/v5 v5.0.1 // indirect
 	github.com/linxGnu/grocksdb v1.10.7 // indirect
-	github.com/lufia/plan9stats v0.0.0-20260216142805-b3301c5f2a88 // indirect
+	github.com/lufia/plan9stats v0.0.0-20260330125221-c963978e514e // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/marten-seemann/tcp v0.0.0-20210406111302-dfbc87cc63fd // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
@@ -198,7 +198,7 @@ require (
 	github.com/rs/zerolog v1.35.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.7 // indirect
-	github.com/shirou/gopsutil/v4 v4.26.2 // indirect
+	github.com/shirou/gopsutil/v4 v4.26.3 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
@@ -221,7 +221,7 @@ require (
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/bridges/otelslog v0.18.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.66.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/host v0.67.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/host v0.68.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.67.0 // indirect
 	go.opentelemetry.io/contrib/otelconf v0.22.0 // indirect
 	go.opentelemetry.io/contrib/propagators/autoprop v0.67.0 // indirect
@@ -243,9 +243,9 @@ require (
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.42.0 // indirect
 	go.opentelemetry.io/otel/log v0.19.0 // indirect
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.42.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.43.0 // indirect
 	go.opentelemetry.io/otel/sdk/log v0.18.0 // indirect
-	go.opentelemetry.io/otel/sdk/metric v1.42.0 // indirect
+	go.opentelemetry.io/otel/sdk/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.9.0 // indirect
 	go.uber.org/dig v1.19.0 // indirect

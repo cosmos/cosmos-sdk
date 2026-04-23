@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/bytedance/sonic v1.15.0
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.35.0
+	github.com/rs/zerolog v1.35.1
 	go.opentelemetry.io/otel/trace v1.41.0
 )
 

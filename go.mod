@@ -65,7 +65,7 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.67.0
 	go.opentelemetry.io/contrib/otelconf v0.22.0
 	go.opentelemetry.io/contrib/propagators/b3 v1.42.0
-	go.opentelemetry.io/contrib/propagators/jaeger v1.42.0
+	go.opentelemetry.io/contrib/propagators/jaeger v1.43.0
 	go.opentelemetry.io/otel v1.43.0
 	go.opentelemetry.io/otel/log v0.19.0
 	go.opentelemetry.io/otel/metric v1.43.0

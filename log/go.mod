@@ -5,13 +5,8 @@ go 1.24.0
 require (
 	github.com/bytedance/sonic v1.15.0
 	github.com/pkg/errors v0.9.1
-<<<<<<< HEAD
-	github.com/rs/zerolog v1.35.0
-	go.opentelemetry.io/otel/trace v1.41.0
-=======
 	github.com/rs/zerolog v1.35.1
-	go.opentelemetry.io/otel/trace v1.43.0
->>>>>>> 29f52048a (build(deps): Bump github.com/rs/zerolog from 1.35.0 to 1.35.1 in /log (#26323))
+	go.opentelemetry.io/otel/trace v1.41.0
 )
 
 require (

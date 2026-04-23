@@ -17,6 +17,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -69,8 +70,8 @@ func TestMultiSendNewAccountsGetUniqueIDs(t *testing.T) {
 	)
 
 	// Initialize module genesis (creates module accounts like mint).
-	authModule := auth.NewAppModule(cdc, accountKeeper, nil, nil)
-	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
+	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	authModule.InitGenesis(ctx, cdc, authModule.DefaultGenesis(cdc))
 	bankModule.InitGenesis(ctx, cdc, bankModule.DefaultGenesis(cdc))
 

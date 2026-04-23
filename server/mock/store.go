@@ -1,15 +1,12 @@
 package mock
 
 import (
-	"io"
-
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 
-	"cosmossdk.io/store/metrics"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 var _ storetypes.MultiStore = multiStore{}
@@ -30,31 +27,11 @@ func (ms multiStore) CacheWrap() storetypes.CacheWrap {
 	panic("not implemented")
 }
 
-func (ms multiStore) CacheWrapWithTrace(_ io.Writer, _ storetypes.TraceContext) storetypes.CacheWrap {
-	panic("not implemented")
-}
-
 func (ms multiStore) CacheWrapWithListeners(_ storetypes.StoreKey, _ []storetypes.MemoryListener) storetypes.CacheWrap {
 	panic("not implemented")
 }
 
-func (ms multiStore) TracingEnabled() bool {
-	panic("not implemented")
-}
-
-func (ms multiStore) SetTracingContext(tc storetypes.TraceContext) storetypes.MultiStore {
-	panic("not implemented")
-}
-
-func (ms multiStore) SetTracer(w io.Writer) storetypes.MultiStore {
-	panic("not implemented")
-}
-
 func (ms multiStore) AddListeners(keys []storetypes.StoreKey) {
-	panic("not implemented")
-}
-
-func (ms multiStore) SetMetrics(metrics.StoreMetrics) {
 	panic("not implemented")
 }
 
@@ -79,14 +56,6 @@ func (ms multiStore) SetPruning(opts pruningtypes.PruningOptions) {
 }
 
 func (ms multiStore) GetPruning() pruningtypes.PruningOptions {
-	panic("not implemented")
-}
-
-func (ms multiStore) GetCommitKVStore(key storetypes.StoreKey) storetypes.CommitKVStore {
-	panic("not implemented")
-}
-
-func (ms multiStore) GetCommitStore(key storetypes.StoreKey) storetypes.CommitStore {
 	panic("not implemented")
 }
 
@@ -187,10 +156,6 @@ type kvStore struct {
 }
 
 func (kv kvStore) CacheWrap() storetypes.CacheWrap {
-	panic("not implemented")
-}
-
-func (kv kvStore) CacheWrapWithTrace(_ io.Writer, _ storetypes.TraceContext) storetypes.CacheWrap {
 	panic("not implemented")
 }
 

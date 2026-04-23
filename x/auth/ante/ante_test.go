@@ -13,12 +13,12 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -189,12 +189,17 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 		{
 			"save all the accounts, should pass",
 			func(suite *AnteTestSuite) TestCaseArgs {
-				suite.accountKeeper.SetAccount(suite.ctx, suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr0))
-				suite.accountKeeper.SetAccount(suite.ctx, suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr1))
-				suite.accountKeeper.SetAccount(suite.ctx, suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr2))
+				acc0 := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr0)
+				suite.accountKeeper.SetAccount(suite.ctx, acc0)
+				acc1 := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+				suite.accountKeeper.SetAccount(suite.ctx, acc1)
+				acc2 := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr2)
+				suite.accountKeeper.SetAccount(suite.ctx, acc2)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
-				privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0, priv1, priv2}, []uint64{1, 2, 3}, []uint64{0, 0, 0}
+				privs := []cryptotypes.PrivKey{priv0, priv1, priv2}
+				accNums := []uint64{acc0.GetAccountNumber(), acc1.GetAccountNumber(), acc2.GetAccountNumber()}
+				accSeqs := []uint64{0, 0, 0}
 
 				return TestCaseArgs{
 					accNums: accNums,

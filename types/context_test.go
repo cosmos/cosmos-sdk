@@ -13,11 +13,10 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/metrics"
-	"cosmossdk.io/store/rootmulti"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -248,7 +247,7 @@ func (s *contextTestSuite) TestUnwrapSDKContext() {
 
 func (s *contextTestSuite) TestMultiStore() {
 	db := dbm.NewMemDB()
-	rms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	rms := rootmulti.NewStore(db, log.NewNopLogger())
 	ctx := types.NewContext(rms, cmtproto.Header{}, false, nil)
 
 	objKey := storetypes.NewObjectStoreKey("obj")

@@ -37,9 +37,25 @@ func (k *Keeper) ExportGenesis(ctx sdk.Context) (*types.GenesisState, error) {
 		return nil, err
 	}
 
+	// Export per-validator allocated fees
+	var allocatedFees []types.GenesisAllocatedFees
+	err = k.validatorAllocatedFees.Walk(ctx, nil, func(consAddr string, fees types.ValidatorFees) (bool, error) {
+		if !fees.Fees.IsZero() {
+			allocatedFees = append(allocatedFees, types.GenesisAllocatedFees{
+				ConsensusAddress: consAddr,
+				Fees:             fees.Fees,
+			})
+		}
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.GenesisState{
-		Params:     params,
-		Validators: validators,
+		Params:        params,
+		Validators:    validators,
+		AllocatedFees: allocatedFees,
 	}, nil
 }
 
@@ -61,6 +77,20 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, cdc codec.BinaryCodec, genesis *ty
 
 		consAddress := sdk.GetConsAddress(pubKey)
 		if err := k.CreateValidator(ctx, consAddress, validator, false); err != nil {
+			return nil, err
+		}
+	}
+
+	// Restore per-validator allocated fees and recompute totalAllocatedFees
+	var totalAllocated sdk.DecCoins
+	for _, entry := range genesis.AllocatedFees {
+		if err := k.validatorAllocatedFees.Set(ctx, entry.ConsensusAddress, types.ValidatorFees{Fees: entry.Fees}); err != nil {
+			return nil, err
+		}
+		totalAllocated = totalAllocated.Add(entry.Fees...)
+	}
+	if !totalAllocated.IsZero() {
+		if err := k.totalAllocatedFees.Set(ctx, types.ValidatorFees{Fees: totalAllocated}); err != nil {
 			return nil, err
 		}
 	}

@@ -37,6 +37,7 @@ ignore:
   - "**/*.pb.go"             # Protobuf generated files
   - "**/*.pb.gw.go"          # Protobuf gateway files
   - "**/*.pulsar.go"         # Pulsar generated files
+  - "**/*clone*.go"          # Gogoproto generated Clone files
   - "test_helpers.go"        # Test helper files
   - "docs/**"                # Documentation
   - "**/*.java"              # Java files

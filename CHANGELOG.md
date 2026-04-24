@@ -42,11 +42,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (abci) [#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) Add support for new application side mempool ABCI methods. 
+* (abci) [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) Add support for new ABCI methods, `InsertTx` and `ReapTxs`.
+
 ### Improvements
 
 ### Bug Fixes
 
 ### Deprecated
+
+## [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) - 2026-04-15
+
+This patch release contains only minor dependency bumps.
 
 ## [v0.54.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.1) - 2026-04-14
 

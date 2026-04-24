@@ -51,8 +51,11 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 	return gasInfo, result, err
 }
 
-// SimWriteState is an entrypoint for simulations only. They are not executed during the normal ABCI finalize
-// block step but later. Therefore, an extra call to the root multi-store (app.cms) is required to write the changes.
+// SimWriteState manually flushes the finalizeBlock state to the root
+// CommitMultiStore. It is intended for simulation paths that bypass the
+// standard FinalizeBlock→Commit flow (e.g. SimTxFinalizeBlock). When
+// called after a normal FinalizeBlock, it is a no-op because workingHash()
+// has already written the cache.
 func (app *BaseApp) SimWriteState() {
 	app.stateManager.GetState(execModeFinalize).MultiStore.Write()
 }
@@ -72,6 +75,21 @@ func (app *BaseApp) NewContext(isCheckTx bool) sdk.Context {
 	return app.NewContextLegacy(isCheckTx, cmtproto.Header{})
 }
 
+// NewNextBlockContext sets up the finalize state for the next block and
+// returns a context that writes to it. This should be used in tests that need
+// to perform state mutations between Commit and the next FinalizeBlock.
+//
+// IMPORTANT: This method will reset the finalizeBlock state. Writing to this
+// context, then resetting it with another call To this method will discard all
+// changes. It is important to perform all writes against this context, then
+// commit.
+func (app *BaseApp) NewNextBlockContext(header cmtproto.Header) sdk.Context {
+	app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
+	return app.stateManager.GetState(execModeFinalize).Context()
+}
+
+// Deprecated: Consider using app.NewNextBlockContext(header) or app.NewContext
+// instead. This function will be removed in a future release.
 func (app *BaseApp) NewUncachedContext(isCheckTx bool, header cmtproto.Header) sdk.Context {
 	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
 }

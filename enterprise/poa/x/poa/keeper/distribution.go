@@ -15,6 +15,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -22,13 +23,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// CheckpointAllValidators allocates pending fees to all validators.
+// checkpointAllValidators allocates pending fees to all validators.
 // This must be called every time validator power changes or a validator
 // withdraws its fees.
-func (k *Keeper) CheckpointAllValidators(ctx sdk.Context) error {
+func (k *Keeper) checkpointAllValidators(ctx sdk.Context) error {
 	// Get unallocated fees
 	unallocated, err := k.getUnallocatedFees(ctx)
 	if err != nil {
@@ -47,27 +47,29 @@ func (k *Keeper) CheckpointAllValidators(ctx sdk.Context) error {
 	}
 
 	// Iterate validators in descending power order
-	ranger := new(collections.Range[collections.Pair[int64, string]]).Descending()
-	err = k.validators.Walk(ctx, ranger, func(key collections.Pair[int64, string], validator types.Validator) (bool, error) {
-		power := key.K1()
-
-		// Stop iteration when we reach validators with power 0
-		if power == 0 {
-			return true, nil
-		}
-
+	err = k.IterateActiveValidators(ctx, func(consAddr sdk.ConsAddress, power int64, validator types.Validator) (bool, error) {
 		// Calculate this validator's share using the shared helper
 		validatorPendingFees := calculateValidatorPendingFees(power, totalPower, unallocated)
 
-		// Update validator accumulated fees
-		validator.AllocatedFees = validator.AllocatedFees.Add(validatorPendingFees...)
+		// Update per-validator allocated fees
+		current, err := k.validatorAllocatedFees.Get(ctx, consAddr.String())
+		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				current = types.ValidatorFees{Fees: sdk.DecCoins{}}
+			} else {
+				return true, err
+			}
+		}
+		if err := k.validatorAllocatedFees.Set(ctx, consAddr.String(), types.ValidatorFees{Fees: current.Fees.Add(validatorPendingFees...)}); err != nil {
+			return true, err
+		}
 
 		// Update total allocated
 		if err := k.adjustTotalAllocated(ctx, validatorPendingFees); err != nil {
 			return true, err
 		}
 
-		return false, k.validators.Set(ctx, key, validator)
+		return false, nil
 	})
 	if err != nil {
 		ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName)).Debug("error checkpointing all validator fees", "error", err)
@@ -82,7 +84,7 @@ func (k *Keeper) CheckpointAllValidators(ctx sdk.Context) error {
 // Returns zero values if there are no unallocated fees or no validators.
 func (k *Keeper) getUnallocatedFees(ctx sdk.Context) (unallocated sdk.DecCoins, err error) {
 	// Get fee collector balance
-	feeCollector := k.authKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
+	feeCollector := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 	feeCollectorBalance := k.bankKeeper.GetAllBalances(ctx, feeCollector.GetAddress())
 
 	// If no fees in collector, return zero
@@ -111,7 +113,7 @@ func (k *Keeper) getUnallocatedFees(ctx sdk.Context) (unallocated sdk.DecCoins, 
 
 // calculateValidatorPendingFees calculates a validator's share of unallocated fees.
 // Formula: unallocated * validator_power / total_power.
-// This is a helper function used by both CheckpointAllValidators and WithdrawableFees query.
+// This is a helper function used by both checkpointAllValidators and WithdrawableFees query.
 // Panics if totalPower == 0, as this indicates an invalid state.
 func calculateValidatorPendingFees(validatorPower, totalPower int64, unallocated sdk.DecCoins) sdk.DecCoins {
 	if totalPower == 0 {
@@ -130,23 +132,28 @@ func calculateValidatorPendingFees(validatorPower, totalPower int64, unallocated
 // WithdrawValidatorFees withdraws accumulated fees for a validator
 // Returns the amount withdrawn as coins.
 func (k *Keeper) WithdrawValidatorFees(ctx sdk.Context, validatorAddr sdk.AccAddress) (sdk.Coins, error) {
-	compositeKey, err := k.validators.Indexes.OperatorAddress.MatchExact(ctx, validatorAddr.String())
+	consAddr, err := k.validators.Indexes.OperatorAddress.MatchExact(ctx, validatorAddr.String())
 	if err != nil {
 		return nil, err
 	}
 
 	// Checkpoint all validators to allocate pending fees before withdrawal
-	if err := k.CheckpointAllValidators(ctx); err != nil {
+	if err := k.checkpointAllValidators(ctx); err != nil {
 		return nil, err
 	}
 
-	validator, err := k.validators.Get(ctx, compositeKey)
+	// Get allocated fees for this validator (not found = zero value)
+	allocated, err := k.validatorAllocatedFees.Get(ctx, consAddr.String())
 	if err != nil {
-		return nil, err
+		if errors.Is(err, collections.ErrNotFound) {
+			allocated = types.ValidatorFees{Fees: sdk.DecCoins{}}
+		} else {
+			return nil, err
+		}
 	}
 
 	// Truncate DecCoins to Coins, preserving the decimal remainder
-	coins, remainder := validator.AllocatedFees.TruncateDecimal()
+	coins, remainder := allocated.Fees.TruncateDecimal()
 
 	// If no fees to withdraw, return early
 	if coins.IsZero() {
@@ -154,7 +161,7 @@ func (k *Keeper) WithdrawValidatorFees(ctx sdk.Context, validatorAddr sdk.AccAdd
 	}
 
 	// Transfer fees from fee collector to validator address
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, authtypes.FeeCollectorName, validatorAddr, coins)
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, validatorAddr, coins)
 	if err != nil {
 		return nil, err
 	}
@@ -165,23 +172,12 @@ func (k *Keeper) WithdrawValidatorFees(ctx sdk.Context, validatorAddr sdk.AccAdd
 		return nil, err
 	}
 
-	// Update validator with the decimal remainder (prevents dust accumulation)
-	validator.AllocatedFees = remainder
-	err = k.validators.Set(ctx, compositeKey, validator)
-	if err != nil {
+	// Update with the decimal remainder (prevents dust accumulation)
+	if err := k.validatorAllocatedFees.Set(ctx, consAddr.String(), types.ValidatorFees{Fees: remainder}); err != nil {
 		return nil, err
 	}
 
 	return coins, nil
-}
-
-// getValidatorAllocatedFees returns the accumulated fees for a validator
-func (k *Keeper) getValidatorAllocatedFees(ctx sdk.Context, consAddr sdk.ConsAddress) (sdk.DecCoins, error) {
-	validator, err := k.GetValidator(ctx, consAddr)
-	if err != nil {
-		return nil, err
-	}
-	return validator.AllocatedFees, nil
 }
 
 // getTotalAllocated returns the total allocated fees across all validators

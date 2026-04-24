@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
@@ -64,11 +63,12 @@ func TestRedelegationEqual(t *testing.T) {
 	r2 := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
 		time.Unix(0, 0), math.NewInt(0),
 		math.LegacyNewDec(0), 1, addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
-	require.True(t, proto.Equal(&r1, &r2))
+
+	require.Equal(t, r1.String(), r2.String())
 
 	r2.Entries[0].SharesDst = math.LegacyNewDec(10)
 	r2.Entries[0].CompletionTime = time.Unix(20*20*2, 0)
-	require.False(t, proto.Equal(&r1, &r2))
+	require.NotEqual(t, r1.String(), r2.String())
 }
 
 func TestRedelegationString(t *testing.T) {

@@ -45,7 +45,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	appOptions := viper.New()
 	appOptions.SetDefault(flags.FlagHome, DefaultNodeHome)
 
-	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(simsx.SimAppChainID))
+	app := NewSimApp(logger, db, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(simsx.SimAppChainID))
 
 	// run randomized simulation
 	simParams, _, simErr := simulation.SimulateFromSeedX(

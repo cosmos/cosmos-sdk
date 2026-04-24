@@ -1,16 +1,15 @@
 package blockstm
 
 import (
-	"github.com/tidwall/btree"
-
-	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/btree"
 
 	tree2 "github.com/cosmos/cosmos-sdk/internal/blockstm/tree"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 // MVIterator is an iterator for a multi-versioned store.
 type MVIterator[V any] struct {
-	tree2.BTreeIteratorG[dataItem[V]]
+	tree2.BTreeIteratorG[indexEntry]
 	txn TxnIndex
 
 	// cache current found value and version
@@ -23,23 +22,27 @@ type MVIterator[V any] struct {
 	waitFn func(TxnIndex)
 	// signal the validation to fail
 	readEstimateValue bool
+
+	resolveInnerValue func(Key, TxnIndex, *BitmapIndex) (V, TxnVersion, bool)
 }
 
 var _ storetypes.Iterator = (*MVIterator[[]byte])(nil)
 
 func NewMVIterator[V any](
-	opts IteratorOptions, txn TxnIndex, iter btree.IterG[dataItem[V]],
+	opts IteratorOptions, txn TxnIndex, iter btree.IterG[indexEntry],
 	waitFn func(TxnIndex),
+	resolveInnerValue func(Key, TxnIndex, *BitmapIndex) (V, TxnVersion, bool),
 ) *MVIterator[V] {
 	it := &MVIterator[V]{
 		BTreeIteratorG: *tree2.NewBTreeIteratorG(
-			dataItem[V]{Key: opts.Start},
-			dataItem[V]{Key: opts.End},
+			indexEntry{Key: opts.Start},
+			indexEntry{Key: opts.End},
 			iter,
 			opts.Ascending,
 		),
-		txn:    txn,
-		waitFn: waitFn,
+		txn:               txn,
+		waitFn:            waitFn,
+		resolveInnerValue: resolveInnerValue,
 	}
 	it.resolveValue()
 	return it
@@ -75,7 +78,7 @@ func (it *MVIterator[V]) ReadEstimateValue() bool {
 func (it *MVIterator[V]) resolveValue() {
 	inner := &it.BTreeIteratorG
 	for ; inner.Valid(); inner.Next() {
-		v, ok := it.resolveValueInner(inner.Item().Tree)
+		v, ver, ok := it.resolveValueInner(inner.Item())
 		if !ok {
 			// abort the iterator
 			it.Invalidate()
@@ -83,12 +86,14 @@ func (it *MVIterator[V]) resolveValue() {
 			it.readEstimateValue = true
 			return
 		}
-		if v == nil {
+
+		if !ver.Valid() {
+			// not found, skip
 			continue
 		}
 
-		it.value = v.Value
-		it.version = v.Version()
+		it.value = v
+		it.version = ver
 		if it.Executing() {
 			it.reads = append(it.reads, ReadDescriptor{
 				Key:     inner.Item().Key,
@@ -102,25 +107,21 @@ func (it *MVIterator[V]) resolveValue() {
 // resolveValueInner loop until we find a value that is not an estimate,
 // wait for dependency if gets an ESTIMATE.
 // returns:
-// - (nil, true) if the value is not found
-// - (nil, false) if the value is an estimate and we should fail the validation
-// - (v, true) if the value is found
-func (it *MVIterator[V]) resolveValueInner(tree *tree2.BTree[secondaryDataItem[V]]) (*secondaryDataItem[V], bool) {
+// - (nil, Invalid, true) if the value is not found
+// - (nil, Invalid, false) if the value is an estimate and we should fail the validation
+// - (v, ver, true) if the value is found at idx
+func (it *MVIterator[V]) resolveValueInner(item indexEntry) (V, TxnVersion, bool) {
 	for {
-		v, ok := seekClosestTxn(tree, it.txn)
-		if !ok {
-			return nil, true
-		}
-
-		if v.Estimate {
+		v, ver, estimate := it.resolveInnerValue(item.Key, it.txn, item.Index)
+		if estimate {
 			if it.Executing() {
-				it.waitFn(v.Index)
+				it.waitFn(ver.Index)
 				continue
 			}
 			// in validation mode, it should fail validation immediately
-			return nil, false
+			return v, ver, false
 		}
 
-		return &v, true
+		return v, ver, true
 	}
 }

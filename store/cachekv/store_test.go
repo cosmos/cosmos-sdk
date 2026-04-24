@@ -8,9 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math/unsafe"
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func newCacheKVStore() types.CacheKVStore {
@@ -475,18 +476,18 @@ func doOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, op int, args ...int
 		require.NoError(t, err)
 	case opSetRange:
 		require.True(t, len(args) > 1)
-		start := args[0] //nolint:gosec // this is not out of range
-		end := args[1]   //nolint:gosec // this is not out of range
+		start := args[0]
+		end := args[1]
 		setRange(t, st, truth, start, end)
 	case opDel:
-		k := args[0] //nolint:gosec // this is not out of range
+		k := args[0]
 		st.Delete(keyFmt(k))
 		err := truth.Delete(keyFmt(k))
 		require.NoError(t, err)
 	case opDelRange:
 		require.True(t, len(args) > 1)
-		start := args[0] //nolint:gosec // this is not out of range
-		end := args[1]   //nolint:gosec // this is not out of range
+		start := args[0]
+		end := args[1]
 		deleteRange(t, st, truth, start, end)
 	case opWrite:
 		st.Write()

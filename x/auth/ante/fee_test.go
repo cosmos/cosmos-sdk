@@ -143,3 +143,56 @@ func TestDeductFees(t *testing.T) {
 
 	require.Nil(t, err, "Tx errored after account has been set with sufficient funds")
 }
+
+func TestDeductFees_WithFeeRecipientModule(t *testing.T) {
+	tests := []struct {
+		name            string
+		recipientModule string
+		expRecipient    string
+	}{
+		{
+			name:            "default sends to fee_collector",
+			recipientModule: "",
+			expRecipient:    authtypes.FeeCollectorName,
+		},
+		{
+			name:            "overridden module receives fees",
+			recipientModule: "mint",
+			expRecipient:    "mint",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := SetupTestSuite(t, false)
+			s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
+
+			accs := s.CreateTestAccounts(1)
+
+			msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
+			feeAmount := testdata.NewTestFeeAmount()
+			gasLimit := testdata.NewTestGasLimit()
+			require.NoError(t, s.txBuilder.SetMsgs(msg))
+			s.txBuilder.SetFeeAmount(feeAmount)
+			s.txBuilder.SetGasLimit(gasLimit)
+
+			privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
+			tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+			require.NoError(t, err)
+
+			dfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil)
+			if tc.recipientModule != "" {
+				dfd = dfd.WithFeeRecipientModule(tc.recipientModule)
+			}
+			antehandler := sdk.ChainAnteDecorators(dfd)
+
+			// Expect SendCoinsFromAccountToModule to be called with the correct recipient
+			s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(
+				gomock.Any(), accs[0].acc.GetAddress(), tc.expRecipient, feeAmount,
+			).Return(nil)
+
+			_, err = antehandler(s.ctx, tx, false)
+			require.NoError(t, err)
+		})
+	}
+}

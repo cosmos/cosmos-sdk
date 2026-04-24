@@ -11,6 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+// FeeRecipientModule holds the module name that receives deducted tx fees.
+// It is set by NewDeductFeeDecorator (default: fee_collector) and updated by
+// WithFeeRecipientModule. Other modules can read this to verify that fees are
+// being routed to the expected destination.
+var FeeRecipientModule string
+
 // TxFeeChecker check if the provided fee is enough and returns the effective fee and tx priority,
 // the effective fee should be deducted later, and the priority should be returned in abci response.
 type TxFeeChecker func(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error)
@@ -20,10 +26,11 @@ type TxFeeChecker func(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error)
 // Call next AnteHandler if fees successfully deducted.
 // CONTRACT: Tx must implement FeeTx interface to use DeductFeeDecorator
 type DeductFeeDecorator struct {
-	accountKeeper  AccountKeeper
-	bankKeeper     types.BankKeeper
-	feegrantKeeper FeegrantKeeper
-	txFeeChecker   TxFeeChecker
+	accountKeeper      AccountKeeper
+	bankKeeper         types.BankKeeper
+	feegrantKeeper     FeegrantKeeper
+	txFeeChecker       TxFeeChecker
+	feeRecipientModule string
 }
 
 func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper, tfc TxFeeChecker) DeductFeeDecorator {
@@ -31,12 +38,27 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 		tfc = checkTxFeeWithValidatorMinGasPrices
 	}
 
+	FeeRecipientModule = types.FeeCollectorName
+
 	return DeductFeeDecorator{
-		accountKeeper:  ak,
-		bankKeeper:     bk,
-		feegrantKeeper: fk,
-		txFeeChecker:   tfc,
+		accountKeeper:      ak,
+		bankKeeper:         bk,
+		feegrantKeeper:     fk,
+		txFeeChecker:       tfc,
+		feeRecipientModule: types.FeeCollectorName,
 	}
+}
+
+// WithFeeRecipientModule sets the module account that receives deducted fees.
+// By default this is the fee_collector. Use this to redirect fees to a
+// different module (e.g. a distribution module that manages its own balance).
+func (dfd DeductFeeDecorator) WithFeeRecipientModule(moduleName string) DeductFeeDecorator {
+	if moduleName == "" {
+		panic("fee recipient module name cannot be empty")
+	}
+	dfd.feeRecipientModule = moduleName
+	FeeRecipientModule = moduleName
+	return dfd
 }
 
 func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
@@ -76,8 +98,8 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	if addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
+	if addr := dfd.accountKeeper.GetModuleAddress(dfd.feeRecipientModule); addr == nil {
+		return fmt.Errorf("fee recipient module account (%s) has not been set", dfd.feeRecipientModule)
 	}
 
 	feePayer := feeTx.FeePayer()
@@ -126,13 +148,14 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 	return nil
 }
 
-// DeductFees deducts fees from the given account.
+// DeductFees deducts fees from the given account and sends them to the
+// module configured via FeeRecipientModule.
 func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc sdk.AccountI, fees sdk.Coins) error {
 	if !fees.IsValid() {
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), FeeRecipientModule, fees)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, "%s", err.Error())
 	}

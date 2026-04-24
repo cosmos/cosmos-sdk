@@ -391,7 +391,7 @@ The starting height of the delegation is set to the current validator period, an
 The amount withdrawn is deducted from the `ValidatorOutstandingRewards` variable for the validator.
 
 In the F1 distribution, the total rewards are calculated per validator period, and a delegator receives a piece of those rewards in proportion to their stake in the validator.
-In basic F1, the total rewards that all the delegators are entitled to between to periods is calculated the following way.
+In basic F1, the total rewards that all the delegators are entitled to between two periods is calculated the following way.
 Let `R(X)` be the total accumulated rewards up to period `X` divided by the tokens staked at that time. The delegator allocation is `R(X) * delegator_stake`.
 Then the rewards for all the delegators for staking between periods `A` and `B` are `(R(B) - R(A)) * total stake`.
 However, these calculated rewards don't account for slashing.

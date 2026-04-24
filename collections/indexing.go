@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/cosmos/btree"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/tidwall/btree"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/collections/codec"

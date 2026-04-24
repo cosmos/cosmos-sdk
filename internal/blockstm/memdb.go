@@ -1,15 +1,11 @@
 package blockstm
 
 import (
-	"io"
-
-	"github.com/tidwall/btree"
-
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/tracekv"
-	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/btree"
 
 	tree2 "github.com/cosmos/cosmos-sdk/internal/blockstm/tree"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 type (
@@ -32,7 +28,7 @@ func NewObjMemDB() *ObjMemDB {
 	return NewGMemDB(storetypes.AnyIsZero, storetypes.AnyValueLen)
 }
 
-// GMemDB is a generic implementation of an in memory Store backed by tidwall/btree.
+// GMemDB is a generic implementation of an in memory Store backed by cosmos/btree.
 type GMemDB[V any] struct {
 	btree.BTreeG[memdbItem[V]]
 	isZero   func(V) bool
@@ -51,8 +47,9 @@ func NewGMemDB[V any](
 	}
 }
 
-// NewGMemDBNonConcurrent returns a new BTree which is not concurrency safe.
-func NewGMemDBNonConcurrent[V any](
+// NewWriteSet is built in views, and stored in the MVData as a whole, and not modified thereafter,
+// no need for locks.
+func NewWriteSet[V any](
 	isZero func(V) bool,
 	valueLen func(V) int,
 ) *GMemDB[V] {
@@ -132,14 +129,6 @@ func (db *GMemDB[V]) GetStoreType() storetypes.StoreType {
 // CacheWrap implements types.KVStore.
 func (db *GMemDB[V]) CacheWrap() storetypes.CacheWrap {
 	return cachekv.NewGStore(db, db.isZero, db.valueLen)
-}
-
-// CacheWrapWithTrace implements types.KVStore.
-func (db *GMemDB[V]) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	if store, ok := any(db).(*GMemDB[[]byte]); ok {
-		return cachekv.NewGStore(tracekv.NewStore(store, w, tc), store.isZero, store.valueLen)
-	}
-	return db.CacheWrap()
 }
 
 // MemDBIterator wraps a generic BTreeIteratorG over a memdbItem.

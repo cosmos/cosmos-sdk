@@ -3,11 +3,9 @@ package prefix
 import (
 	"bytes"
 	"errors"
-	"io"
 
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 type (
@@ -83,15 +81,6 @@ func (s GStore[V]) GetStoreType() types.StoreType {
 // CacheWrap implements CacheWrap, returning a new CacheWrap with the parent store as the underlying store
 func (s GStore[V]) CacheWrap() types.CacheWrap {
 	return cachekv.NewGStore(s, s.isZero, s.valueLen)
-}
-
-// CacheWrapWithTrace implements the KVStore interface.
-func (s GStore[V]) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	// We need to make a type assertion here as the tracekv store requires bytes value types for serialization.
-	if store, ok := any(s).(*GStore[[]byte]); ok {
-		return cachekv.NewGStore(tracekv.NewStore(store, w, tc), store.isZero, store.valueLen)
-	}
-	return s.CacheWrap()
 }
 
 // Get implements KVStore, calls Get on the parent store with the key prefixed with the prefix

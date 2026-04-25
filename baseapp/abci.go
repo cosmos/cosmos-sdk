@@ -475,12 +475,12 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 		WithBlockGasMeter(app.getBlockGasMeter(prepareProposalState.Context())))
 
 	defer func() {
-		if err := recover(); err != nil {
+		if r := recover(); r != nil {
 			app.logger.Error(
 				"panic recovered in PrepareProposal",
 				"height", req.Height,
 				"time", req.Time,
-				"panic", err,
+				"panic", r,
 			)
 
 			resp = &abci.ResponsePrepareProposal{Txs: req.Txs}
@@ -590,13 +590,13 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		WithBlockGasMeter(app.getBlockGasMeter(processProposalState.Context())))
 
 	defer func() {
-		if err := recover(); err != nil {
+		if r := recover(); r != nil {
 			app.logger.Error(
 				"panic recovered in ProcessProposal",
 				"height", req.Height,
 				"time", req.Time,
 				"hash", fmt.Sprintf("%X", req.Hash),
-				"panic", err,
+				"panic", r,
 			)
 			resp = &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 		}

@@ -16,6 +16,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -49,7 +50,7 @@ func (k *Keeper) Validator(
 	consAddress, consErr := sdk.ConsAddressFromBech32(req.Address)
 	if consErr == nil {
 		// Successfully parsed as consensus address
-		validator, err := k.GetValidator(sdkCtx, consAddress)
+		validator, err := k.validators.Get(sdkCtx, consAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -78,25 +79,24 @@ func (k *Keeper) Validator(
 	)
 }
 
-// Validators queries all validators with pagination
-// Behavior is to return validators in descending order by power. The pagination reverse field is ignored.
+// Validators queries all validators with pagination in descending power order.
 func (k *Keeper) Validators(
 	ctx context.Context, req *types.QueryValidatorsRequest,
 ) (*types.QueryValidatorsResponse, error) {
-	pageReq := req.Pagination
-	if pageReq == nil {
-		pageReq = &query.PageRequest{}
+	pageReq := &query.PageRequest{Reverse: true}
+	if req.Pagination != nil {
+		pageReq.Limit = req.Pagination.Limit
+		pageReq.Offset = req.Pagination.Offset
+		pageReq.Key = req.Pagination.Key
+		pageReq.CountTotal = req.Pagination.CountTotal
 	}
 
-	// fix reverse to true so we always return in descending order
-	pageReq.Reverse = true
-
-	validators, pageRes, err := query.CollectionPaginate(
+	validators, pageRes, err := query.CollectionPaginate[collections.Pair[int64, sdk.ConsAddress], collections.NoValue](
 		ctx,
-		k.validators,
+		k.validators.Indexes.Power,
 		pageReq,
-		func(key collections.Pair[int64, string], value types.Validator) (types.Validator, error) {
-			return value, nil
+		func(key collections.Pair[int64, sdk.ConsAddress], _ collections.NoValue) (types.Validator, error) {
+			return k.validators.Get(ctx, key.K2())
 		},
 	)
 	if err != nil {
@@ -120,21 +120,28 @@ func (k *Keeper) WithdrawableFees(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	// Use the secondary index to find the composite key
-	compositeKey, err := k.validators.Indexes.OperatorAddress.MatchExact(sdkCtx, operatorAddress.String())
+	// Use the secondary index to find the consensus address
+	consAddr, err := k.validators.Indexes.OperatorAddress.MatchExact(sdkCtx, operatorAddress.String())
 	if err != nil {
 		return nil, err
 	}
 
-	// Get the validator
-	validator, err := k.validators.Get(sdkCtx, compositeKey)
+	validator, err := k.validators.Get(sdkCtx, consAddr)
 	if err != nil {
 		return nil, err
 	}
+	power := validator.Power
 
-	// Calculate pending fees using lazy distribution formula:
-	// allocated + validator_power * (fee_collector - total_allocated) / total_power
-	totalFees := validator.AllocatedFees
+	// Get allocated fees from the separate collection (not found = zero value)
+	allocated, err := k.validatorAllocatedFees.Get(sdkCtx, consAddr.String())
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			allocated = types.ValidatorFees{Fees: sdk.DecCoins{}}
+		} else {
+			return nil, err
+		}
+	}
+	totalFees := allocated.Fees
 
 	// Get total power
 	totalPower, err := k.GetTotalPower(sdkCtx)
@@ -150,8 +157,7 @@ func (k *Keeper) WithdrawableFees(
 
 	// If there are unallocated fees, calculate this validator's pending share
 	if !unallocated.IsZero() {
-		// Calculate pending fees using the shared helper
-		pendingFees := calculateValidatorPendingFees(validator.Power, totalPower, unallocated)
+		pendingFees := calculateValidatorPendingFees(power, totalPower, unallocated)
 		totalFees = totalFees.Add(pendingFees...)
 	}
 

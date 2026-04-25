@@ -1,13 +1,9 @@
 package blockstm
 
 import (
-	storetypes "cosmossdk.io/store/types"
-)
+	"context"
 
-const (
-	TelemetrySubsystem = "blockstm"
-	KeyExecutedTxs     = "executed_txs"
-	KeyValidatedTxs    = "validated_txs"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 type (
@@ -69,16 +65,20 @@ type MultiStore interface {
 
 // MVStore is a value type agnostic interface for `MVData`, to keep `MVMemory` value type agnostic.
 type MVStore interface {
-	Delete(Key, TxnIndex)
-	WriteEstimate(Key, TxnIndex)
-	ValidateReadSet(TxnIndex, *ReadSet) bool
-	SnapshotToStore(storetypes.Store)
+	InitWithEstimates(context.Context, TxnIndex, Locations)
+	ConvertWritesToEstimates(txn TxnIndex)
+	ClearEstimates(txn TxnIndex)
+	ConsolidateEmpty(context.Context, TxnIndex)
+
+	ValidateReadSet(context.Context, TxnIndex, *ReadSet) bool
+	SnapshotToStore(context.Context, storetypes.Store)
 }
 
 // MVView is a value type agnostic interface for `MVMemoryView`, to keep `MultiMVMemoryView` value type agnostic.
 type MVView interface {
 	storetypes.Store
 
-	ApplyWriteSet(TxnVersion) Locations
+	ApplyWriteSet(TxnVersion) bool
 	ReadSet() *ReadSet
+	WriteCount() int
 }

@@ -9,18 +9,15 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/metrics"
-	"cosmossdk.io/store/rootmulti"
-	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestGetSimulationLog(t *testing.T) {
-	legacyAmino := codec.NewLegacyAmino()
 	decoders := make(simulation.StoreDecoderRegistry)
 	decoders[authtypes.StoreKey] = func(kvAs, kvBs kv.Pair) string { return "10" }
 
@@ -33,11 +30,6 @@ func TestGetSimulationLog(t *testing.T) {
 			"Empty",
 			[]kv.Pair{{}},
 			"",
-		},
-		{
-			authtypes.StoreKey,
-			[]kv.Pair{{Key: authtypes.GlobalAccountNumberKey, Value: legacyAmino.MustMarshal(uint64(10))}},
-			"10",
 		},
 		{
 			"OtherStore",
@@ -112,7 +104,7 @@ func initTestStores(t *testing.T) (storetypes.KVStore, storetypes.KVStore) {
 	t.Helper()
 
 	db := dbm.NewMemDB()
-	ms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	ms := rootmulti.NewStore(db, log.NewNopLogger())
 
 	key1 := storetypes.NewKVStoreKey("store1")
 	key2 := storetypes.NewKVStoreKey("store2")

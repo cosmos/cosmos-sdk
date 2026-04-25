@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"runtime"
 
 	"golang.org/x/sync/errgroup"
 
-	storetypes "cosmossdk.io/store/types"
-
-	"github.com/cosmos/cosmos-sdk/telemetry"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func ExecuteBlock(
@@ -36,6 +35,10 @@ func ExecuteBlockWithEstimates(
 	estimates []MultiLocations, // txn -> multi-locations
 	txExecutor TxExecutor,
 ) error {
+	if blockSize > math.MaxUint32 {
+		return fmt.Errorf("block size overflows uint32: %d", blockSize)
+	}
+
 	if executors < 0 {
 		return fmt.Errorf("invalid number of executors: %d", executors)
 	}
@@ -81,11 +84,17 @@ func ExecuteBlockWithEstimates(
 		return errors.New("scheduler did not complete")
 	}
 
-	telemetry.SetGauge(float32(scheduler.executedTxns.Load()), TelemetrySubsystem, KeyExecutedTxs)   //nolint:staticcheck // TODO: switch to OpenTelemetry
-	telemetry.SetGauge(float32(scheduler.validatedTxns.Load()), TelemetrySubsystem, KeyValidatedTxs) //nolint:staticcheck // TODO: switch to OpenTelemetry
+	if inst != nil {
+		inst.ExecutedTxs.Add(ctx, scheduler.executedTxns.Load())
+		inst.ValidatedTxs.Add(ctx, scheduler.validatedTxns.Load())
+		inst.DecreaseCount.Add(ctx, int64(scheduler.decreaseCnt.Load()))
+		if blockSize > 0 {
+			inst.ExecutionRatio.Add(ctx, float64(scheduler.executedTxns.Load())/float64(blockSize))
+		}
+	}
 
 	// Write the snapshot into the storage
-	mvMemory.WriteSnapshot(storage)
+	mvMemory.WriteSnapshot(ctx, storage)
 	return nil
 }
 

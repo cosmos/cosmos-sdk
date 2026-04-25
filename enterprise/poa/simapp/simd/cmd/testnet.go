@@ -377,7 +377,6 @@ func initTestnetFiles(
 				Moniker:         nodeDirName,
 				OperatorAddress: addr.String(),
 			},
-			AllocatedFees: nil,
 		}
 		validators = append(validators, validator)
 

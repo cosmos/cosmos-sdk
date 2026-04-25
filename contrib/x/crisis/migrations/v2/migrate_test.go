@@ -3,14 +3,13 @@ package v2_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/contrib/x/crisis"
-	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/migrations/v2"
-	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	"github.com/stretchr/testify/require"
 
-	storetypes "cosmossdk.io/store/types"
-
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis"
+	v2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/migrations/v2"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"

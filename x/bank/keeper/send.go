@@ -194,7 +194,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 
 		// Create account if recipient does not exist.
 		//
-		// NOTE: This should ultimately be removed in favor a more flexible approach
+		// NOTE: This should ultimately be removed in favor of a more flexible approach
 		// such as delegated fee messages.
 		accExists := k.ak.HasAccount(ctx, updatedAddressBz)
 		if !accExists {
@@ -257,7 +257,7 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 func (k BaseSendKeeper) ensureAccountCreated(ctx context.Context, toAddr sdk.AccAddress) {
 	// Create account if recipient does not exist.
 	//
-	// NOTE: This should ultimately be removed in favor a more flexible approach
+	// NOTE: This should ultimately be removed in favor of a more flexible approach
 	// such as delegated fee messages.
 	accExists := k.ak.HasAccount(ctx, toAddr)
 	if !accExists {

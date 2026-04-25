@@ -69,13 +69,17 @@ func (suite *AddressSuite) TestComposed() {
 	assert.True(lessBytes(la, lb), "lessBytes(a,b) must be true when a < b")
 	assert.False(lessBytes(lb, la), "lessBytes must be asymmetric")
 
-	// Compose must be deterministic with duplicate sub-addresses
-	dup := addrMock{[]byte{1, 2, 3}}
-	addr1, err := Compose("test", []Addressable{dup, dup, dup})
+	// Compose must be order-independent even when sub-addresses include duplicates
+	da := addrMock{[]byte{1, 2, 3}}
+	db := addrMock{[]byte{4, 5, 6}}
+	aab, err := Compose("test", []Addressable{da, da, db})
 	assert.NoError(err)
-	addr2, err := Compose("test", []Addressable{dup, dup, dup})
+	aba, err := Compose("test", []Addressable{da, db, da})
 	assert.NoError(err)
-	assert.Equal(addr1, addr2, "Compose with duplicates must be deterministic")
+	baa, err := Compose("test", []Addressable{db, da, da})
+	assert.NoError(err)
+	assert.Equal(aab, aba, "Compose must be order-independent with duplicates")
+	assert.Equal(aab, baa, "Compose must be order-independent with duplicates")
 }
 
 func (suite *AddressSuite) TestModule() {

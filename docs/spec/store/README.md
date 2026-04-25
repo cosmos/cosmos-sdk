@@ -203,7 +203,6 @@ func NewApp(...) Application {
   // ...
   
   bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
-  bApp.SetCommitMultiStoreTracer(traceStore)
   bApp.SetVersion(version.Version)
   bApp.SetInterfaceRegistry(interfaceRegistry)
 

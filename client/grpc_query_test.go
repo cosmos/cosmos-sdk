@@ -65,7 +65,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		&interfaceRegistry, &bankKeeper, &appBuilder, &cdc)
 	s.NoError(err)
 
-	app := appBuilder.Build(dbm.NewMemDB(), nil)
+	app := appBuilder.Build(dbm.NewMemDB())
 	err = app.Load(true)
 	s.NoError(err)
 

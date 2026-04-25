@@ -29,7 +29,7 @@ func TestSignatureVerificationAndRejectUpperS(t *testing.T) {
 
 		// malleate:
 		var S256 secp256k1.ModNScalar
-		S256.SetByteSlice(secp256k1.S256().N.Bytes())
+		S256.SetByteSlice(secp256k1.S256().N.Bytes()) //nolint:staticcheck // TODO: migrate off deprecated elliptic.Curve (SA1019)
 		s.Negate().Add(&S256)
 		require.True(t, s.IsOverHalfOrder())
 

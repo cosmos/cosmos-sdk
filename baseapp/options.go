@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
@@ -75,37 +74,19 @@ func SetIndexEvents(ie []string) func(*BaseApp) {
 
 // SetIAVLCacheSize provides a BaseApp option function that sets the size of IAVL cache.
 func SetIAVLCacheSize(size int) func(*BaseApp) {
-	return func(bapp *BaseApp) {
-		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
-			rms.SetIAVLCacheSize(size)
-		} else {
-			bapp.logger.Warn("SetIAVLCacheSize: CommitMultiStore is not rootmulti.Store, option ignored")
-		}
-	}
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
 }
 
 // SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
 func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
-	return func(bapp *BaseApp) {
-		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
-			rms.SetIAVLDisableFastNode(disable)
-		} else {
-			bapp.logger.Warn("SetIAVLDisableFastNode: CommitMultiStore is not rootmulti.Store, option ignored")
-		}
-	}
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
 }
 
 // SetIAVLSyncPruning set sync/async pruning in the IAVL store. Developers should rarely use this.
 // This option was added to allow the `Prune` command to force synchronous pruning, which is needed to allow the
 // command to wait before returning.
 func SetIAVLSyncPruning(syncPruning bool) func(*BaseApp) {
-	return func(bapp *BaseApp) {
-		if rms, ok := bapp.cms.(*rootmulti.Store); ok {
-			rms.SetIAVLSyncPruning(syncPruning)
-		} else {
-			bapp.logger.Warn("SetIAVLSyncPruning: CommitMultiStore is not rootmulti.Store, option ignored")
-		}
-	}
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLSyncPruning(syncPruning) }
 }
 
 // SetInterBlockCache provides a BaseApp option function that sets the
@@ -341,7 +322,7 @@ func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
 // SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
-func (app *BaseApp) SetQueryMultiStore(ms storetypes.RootMultiStore) {
+func (app *BaseApp) SetQueryMultiStore(ms storetypes.MultiStore) {
 	app.qms = ms
 }
 
@@ -377,6 +358,24 @@ func (app *BaseApp) SetCheckTxHandler(handler sdk.CheckTxHandler) {
 	}
 
 	app.abciHandlers.CheckTxHandler = handler
+}
+
+// SetInsertTxHandler sets the InsertTx function for the BaseApp.
+func (app *BaseApp) SetInsertTxHandler(handler sdk.InsertTxHandler) {
+	if app.sealed {
+		panic("SetInsertTxHandler() on sealed BaseApp")
+	}
+
+	app.abciHandlers.InsertTxHandler = handler
+}
+
+// SetReapTxsHandler sets the ReapTxs function for the BaseApp.
+func (app *BaseApp) SetReapTxsHandler(handler sdk.ReapTxsHandler) {
+	if app.sealed {
+		panic("SetReapTxsHandler() on sealed BaseApp")
+	}
+
+	app.abciHandlers.ReapTxsHandler = handler
 }
 
 func (app *BaseApp) SetExtendVoteHandler(handler sdk.ExtendVoteHandler) {

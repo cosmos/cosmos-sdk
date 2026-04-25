@@ -12,6 +12,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	otelattr "go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
@@ -22,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -37,16 +39,6 @@ const (
 	QueryPathStore  = "store"
 
 	QueryPathBroadcastTx = "/cosmos.tx.v1beta1.Service/BroadcastTx"
-
-	TelemetrySubsystem            = "abci"
-	MetricOETime                  = "oe_time"
-	MetricInternalFinalizeTime    = "internal_finalize_time"
-	MetricExecuteWithExecutorTime = "execute_with_executor_time"
-	MetricGetFinalizeStateTime    = "get_finalize_state_time"
-	MetricPreBlockTime            = "pre_block_time"
-	MetricBeginBlockTime          = "begin_block_time"
-	MetricEndBlockTime            = "end_block_time"
-	MetricOEAborted               = "oe_aborted"
 )
 
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
@@ -403,6 +395,22 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 	return app.abciHandlers.CheckTxHandler(runTx, req)
 }
 
+// InsertTx inserts a tx into the applications mempool.
+func (app *BaseApp) InsertTx(req *abci.RequestInsertTx) (*abci.ResponseInsertTx, error) {
+	if app.abciHandlers.InsertTxHandler == nil {
+		return nil, errors.New("InsertTx handler not set")
+	}
+	return app.abciHandlers.InsertTxHandler(req)
+}
+
+// ReapTxs returns new valid txs from the applications mempool.
+func (app *BaseApp) ReapTxs(req *abci.RequestReapTxs) (*abci.ResponseReapTxs, error) {
+	if app.abciHandlers.ReapTxsHandler == nil {
+		return nil, errors.New("ReapTxs handler not set")
+	}
+	return app.abciHandlers.ReapTxsHandler(req)
+}
+
 // PrepareProposal implements the PrepareProposal ABCI method and returns a
 // ResponsePrepareProposal object to the client. The PrepareProposal method is
 // responsible for allowing the block proposer to perform application-dependent
@@ -428,10 +436,6 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 	// No-op if OE is not enabled.
 	// Similar call to Abort() is done in `ProcessProposal`.
 	app.optimisticExec.Abort()
-	// If OE had already reached StartCommit, rollback to discard uncommitted state.
-	if err := app.rollbackCommitter(); err != nil {
-		return nil, fmt.Errorf("failed to rollback committer in PrepareProposal: %w", err)
-	}
 
 	// Always reset state given that PrepareProposal can timeout and be called
 	// again in a subsequent round.
@@ -550,10 +554,6 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	if req.Height > app.initialHeight {
 		// abort any running OE
 		app.optimisticExec.Abort()
-		// If OE had already reached StartCommit, rollback to discard uncommitted state.
-		if err := app.rollbackCommitter(); err != nil {
-			return nil, fmt.Errorf("failed to rollback committer in ProcessProposal: %w", err)
-		}
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 	}
 
@@ -645,7 +645,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		ctx, _ = app.stateManager.GetState(execModeFinalize).Context().CacheContext()
 	} else {
 		emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
-		ms := app.cms.CommitBranch()
+		ms := app.cms.CacheMultiStore()
 		ctx = sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 	}
 
@@ -723,7 +723,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		ctx, _ = app.stateManager.GetState(execModeFinalize).Context().CacheContext()
 	} else {
 		emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
-		ms := app.cms.CommitBranch()
+		ms := app.cms.CacheMultiStore()
 		ctx = sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 	}
 
@@ -781,6 +781,9 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 // only used to handle early cancellation, for anything related to state app.stateManager.GetState(execModeFinalize).Context()
 // must be used.
 func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	start := time.Now()
+	defer measureSince(goCtx, func() metric.Int64Histogram { return inst.InternalFinalizeTime }, start)
+
 	var events []abci.Event
 
 	if err := app.checkHalt(req.Height, req.Time); err != nil {
@@ -807,11 +810,13 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	// finalizeBlockState should be set on InitChain or ProcessProposal. If it is
 	// nil, it means we are replaying this block and we need to set the state here
 	// given that during block replay ProcessProposal is not executed by CometBFT.
+	gfsStart := time.Now()
 	finalizeState := app.stateManager.GetState(execModeFinalize)
 	if finalizeState == nil {
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 		finalizeState = app.stateManager.GetState(execModeFinalize)
 	}
+	measureSince(goCtx, func() metric.Int64Histogram { return inst.GetFinalizeStateTime }, gfsStart)
 	ctx := finalizeState.Context().WithContext(goCtx)
 	ctx, span := ctx.StartSpan(tracer, "internalFinalizeBlock")
 	defer span.End()
@@ -847,14 +852,18 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 			WithHeaderHash(req.Hash))
 	}
 
+	pbStart := time.Now()
 	preblockEvents, err := app.preBlock(req)
+	measureSince(ctx, func() metric.Int64Histogram { return inst.PreBlockTime }, pbStart)
 	if err != nil {
 		return nil, err
 	}
 
 	events = append(events, preblockEvents...)
 
+	bbStart := time.Now()
 	beginBlock, err := app.beginBlock(req)
+	measureSince(ctx, func() metric.Int64Histogram { return inst.BeginBlockTime }, bbStart)
 	if err != nil {
 		return nil, err
 	}
@@ -882,7 +891,9 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	//
 	// NOTE: Not all raw transactions may adhere to the sdk.Tx interface, e.g.
 	// vote extensions, so skip those.
+	eweStart := time.Now()
 	txResults, err := app.executeTxsWithExecutor(ctx, finalizeState.MultiStore, req.Txs)
+	measureSince(ctx, func() metric.Int64Histogram { return inst.ExecuteWithExecutorTime }, eweStart)
 	if err != nil {
 		// usually due to canceled
 		return nil, err
@@ -907,7 +918,9 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 			WithBlockGasUsed(blockGasUsed).
 			WithBlockGasWanted(blockGasWanted),
 	)
+	ebStart := time.Now()
 	endBlock, err := app.endBlock()
+	measureSince(ctx, func() metric.Int64Histogram { return inst.EndBlockTime }, ebStart)
 	if err != nil {
 		return nil, err
 	}
@@ -922,13 +935,6 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 
 	events = append(events, endBlock.Events...)
 	cp := app.GetConsensusParams(finalizeState.Context())
-
-	// if we haven't aborted thus far, start committing the state, we can always rollback later
-	committer, err := finalizeState.MultiStore.StartCommit(goCtx, header)
-	if err != nil {
-		return nil, fmt.Errorf("failed to start commit: %w", err)
-	}
-	app.committer = committer
 
 	return &abci.ResponseFinalizeBlock{
 		Events:                events,
@@ -959,7 +965,13 @@ func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, ms storetypes.Mu
 // extensions into the proposal, which should not themselves be executed in cases
 // where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.ResponseFinalizeBlock, err error) {
+	fbStart := time.Now()
 	defer func() {
+		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.FinalizeBlockTime }, fbStart)
+	}()
+
+	defer func() {
+		slStart := time.Now()
 		if res == nil {
 			return
 		}
@@ -969,45 +981,51 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 				app.logger.Error("ListenFinalizeBlock listening hook failed", "height", req.Height, "err", err)
 			}
 		}
+		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.StreamingListenerTime }, slStart)
 	}()
 
 	if app.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
+		ainStart := time.Now()
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
+		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.OEAbortIfNeededTime }, ainStart)
+		if aborted {
+			if inst != nil {
+				inst.OEAborted.Add(app.metricsCtx(), 1)
+			}
+		}
 		// Wait for the OE to finish, regardless of whether it was aborted or not
+		oeStart := time.Now()
 		res, err = app.optimisticExec.WaitResult()
+		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.OETime }, oeStart)
 
 		// only return if we are not aborting
 		if !aborted {
-			// only check errors here because if we abort we don't care about the error
-			if err != nil {
-				return nil, err
+			if res != nil {
+				whStart := time.Now()
+				res.AppHash = app.workingHash()
+				measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.WorkingHashTime }, whStart)
 			}
-			if app.committer == nil {
-				return nil, fmt.Errorf("unexpected nil committer after successful optimistic execution")
-			}
-			return app.finishFinalizeBlock(res)
-		} else {
-			//nolint:staticcheck // todo: refactor
-			telemetry.IncrCounter(1, TelemetrySubsystem, MetricOEAborted)
 
-			// if it was aborted, we need to reset the state
-			app.stateManager.ClearState(execModeFinalize)
-			app.optimisticExec.Reset()
-			// rollback the committer if it was started
-			if err := app.rollbackCommitter(); err != nil {
-				return nil, fmt.Errorf("failed to rollback optimistic execution commit: %w", err)
-			}
+			return res, err
 		}
+
+		// if it was aborted, we need to reset the state
+		app.stateManager.ClearState(execModeFinalize)
+		app.optimisticExec.Reset()
 	}
 
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
+	nonOEStart := time.Now()
 	res, err = app.internalFinalizeBlock(context.Background(), req)
-	if err != nil {
-		return nil, err
+	measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.NonOEInternalFinalize }, nonOEStart)
+	if res != nil {
+		whStart := time.Now()
+		res.AppHash = app.workingHash()
+		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.WorkingHashTime }, whStart)
 	}
 
-	return app.finishFinalizeBlock(res)
+	return res, err
 }
 
 // checkHalt checks if height or time exceeds halt-height or halt-time respectively.
@@ -1048,22 +1066,12 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 		app.abciHandlers.Precommiter(finalizeState.Context())
 	}
 
-	committer := app.committer
-	app.committer = nil
-
-	if committer == nil {
-		// during InitChain or simulations we must initialize the committer here
-		var err error
-		committer, err = finalizeState.MultiStore.StartCommit(context.Background(), header)
-		if err != nil {
-			return nil, fmt.Errorf("failed to start commit: %w", err)
-		}
+	rms, ok := app.cms.(*rootmulti.Store)
+	if ok {
+		rms.SetCommitHeader(header)
 	}
 
-	_, err := committer.Finalize()
-	if err != nil {
-		return nil, fmt.Errorf("failed to finalize commit: %w", err)
-	}
+	app.cms.Commit()
 
 	resp := &abci.ResponseCommit{
 		RetainHeight: retainHeight,
@@ -1097,28 +1105,29 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	// The SnapshotIfApplicable method will create the snapshot by starting the goroutine
 	app.snapshotManager.SnapshotIfApplicable(header.Height)
 
-	blockCounter.Add(ctx, 1)
+	if inst != nil {
+		inst.BlockCount.Add(ctx, 1)
+	}
 
 	return resp, nil
 }
 
-// rollbackCommitter rolls back and nils the in-progress committer, if any.
-func (app *BaseApp) rollbackCommitter() error {
-	if app.committer == nil {
-		return nil
-	}
-	err := app.committer.Rollback()
-	app.committer = nil
-	return err
-}
+// workingHash gets the apphash that will be finalized in commit.
+// These writes will be persisted to the root multi-store (app.cms) and flushed to
+// disk in the Commit phase. This means when the ABCI client requests Commit(), the application
+// state transitions will be flushed to disk and as a result, but we already have
+// an application Merkle root.
+func (app *BaseApp) workingHash() []byte {
+	// Write the FinalizeBlock state into branched storage and commit the MultiStore.
+	// The write to the FinalizeBlock state writes all state transitions to the root
+	// MultiStore (app.cms) so when Commit() is called it persists those values.
+	app.stateManager.GetState(execModeFinalize).MultiStore.Write()
 
-func (app *BaseApp) finishFinalizeBlock(res *abci.ResponseFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
-	hash, err := app.committer.StartFinalize()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get working hash: %w", err)
-	}
-	res.AppHash = hash.Hash
-	return res, nil
+	// Get the hash of all writes in order to return the apphash to the comet in finalizeBlock.
+	commitHash := app.cms.WorkingHash()
+	app.logger.Debug("hash of all writes", "workingHash", fmt.Sprintf("%X", commitHash))
+
+	return commitHash
 }
 
 func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.ResponseQuery {
@@ -1409,9 +1418,12 @@ func (bapp *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, chec
 		WithBlockHeight(height)
 
 	if !isLatest {
-		cInfo, err := bapp.cms.GetCommitInfo(height)
-		if cInfo != nil && err == nil {
-			ctx = ctx.WithBlockHeight(height).WithBlockTime(cInfo.Timestamp)
+		rms, ok := bapp.cms.(*rootmulti.Store)
+		if ok {
+			cInfo, err := rms.GetCommitInfo(height)
+			if cInfo != nil && err == nil {
+				ctx = ctx.WithBlockHeight(height).WithBlockTime(cInfo.Timestamp)
+			}
 		}
 	}
 	return ctx, nil

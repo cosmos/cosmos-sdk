@@ -36,7 +36,7 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.8"
+          go-version: "1.25.9"
           cache: true
 
       - name: Install aarch64 cross-compiler
@@ -139,11 +139,11 @@ jobs:
             "${{ steps.channel.outputs.channel }}" \
             "${{ steps.channel.outputs.is_main }}"
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
           retention-days: 90
 
-      - uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@v5

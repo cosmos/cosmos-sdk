@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestExportGenesis(t *testing.T) {
@@ -457,7 +456,7 @@ func TestInitGenesis(t *testing.T) {
 		require.Equal(t, expectedTotalPower, totalPower)
 	})
 
-	t.Run("export and import preserves fee collector balances and allocated fees", func(t *testing.T) {
+	t.Run("export and import preserves poa module balances and allocated fees", func(t *testing.T) {
 		// Create a fresh fixture for export
 		f := setupTest(t)
 
@@ -511,12 +510,12 @@ func TestInitGenesis(t *testing.T) {
 		// Create a new keeper instance (simulating a new chain state)
 		f = setupTest(t)
 
-		// Set up fee collector with balances (simulating bank module state restoration)
-		feeCollectorFees := sdk.NewCoins(
+		// Set up poa module with balances (simulating bank module state restoration)
+		poaModuleFees := sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 1000),
 			sdk.NewInt64Coin("atom", 500),
 		)
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, feeCollectorFees)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, poaModuleFees)
 		require.NoError(t, err)
 
 		// Import the exported genesis
@@ -524,10 +523,10 @@ func TestInitGenesis(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, updates, numValidators)
 
-		// Verify fee collector has the balances
-		feeCollectorImport := f.authKeeper.GetModuleAccount(f.ctx, authtypes.FeeCollectorName)
-		feeCollectorBalanceImport := f.bankKeeper.GetAllBalances(f.ctx, feeCollectorImport.GetAddress())
-		require.Equal(t, feeCollectorFees, feeCollectorBalanceImport, "fee collector balances should be set")
+		// Verify poa module has the balances
+		poaModuleImport := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
+		poaModuleBalanceImport := f.bankKeeper.GetAllBalances(f.ctx, poaModuleImport.GetAddress())
+		require.Equal(t, poaModuleFees, poaModuleBalanceImport, "poa module balances should be set")
 
 		// Verify allocated fees are preserved in the collection after import
 		for _, entry := range exportedGenesis.AllocatedFees {
@@ -537,10 +536,10 @@ func TestInitGenesis(t *testing.T) {
 				"allocated fees should be preserved during export/import for %s", entry.ConsensusAddress)
 		}
 
-		// Verify fee collector balance remains unchanged (genesis doesn't distribute fees)
-		feeCollectorAfterImport := f.authKeeper.GetModuleAccount(f.ctx, authtypes.FeeCollectorName)
-		feeCollectorBalanceAfterImport := f.bankKeeper.GetAllBalances(f.ctx, feeCollectorAfterImport.GetAddress())
-		require.Equal(t, feeCollectorFees, feeCollectorBalanceAfterImport,
-			"fee collector balance should remain unchanged during genesis import")
+		// Verify poa module balance remains unchanged (genesis doesn't distribute fees)
+		poaModuleAfterImport := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
+		poaModuleBalanceAfterImport := f.bankKeeper.GetAllBalances(f.ctx, poaModuleAfterImport.GetAddress())
+		require.Equal(t, poaModuleFees, poaModuleBalanceAfterImport,
+			"poa module balance should remain unchanged during genesis import")
 	})
 }

@@ -301,12 +301,12 @@ func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types
 	if err != nil {
 		return errors.Wrapf(err, "failed to create snapshot chunk file %q", path)
 	}
+	fileClosed := false
 	defer func() {
-		if chunkFile == nil {
-			return
-		}
-		if cerr := chunkFile.Close(); cerr != nil && err == nil {
-			err = errors.Wrapf(cerr, "failed to close snapshot chunk file %d", index)
+		if !fileClosed {
+			if cerr := chunkFile.Close(); cerr != nil && err == nil {
+				err = errors.Wrapf(cerr, "failed to close snapshot chunk file %d", index)
+			}
 		}
 	}()
 
@@ -319,10 +319,8 @@ func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types
 		return errors.Wrapf(err, "failed to sync snapshot chunk file %d", index)
 	}
 
-	cerr := chunkFile.Close()
-	// mark as already closed so deferred handler does not run again, even on error
-	chunkFile = nil
-	if cerr != nil {
+	fileClosed = true
+	if cerr := chunkFile.Close(); cerr != nil {
 		return errors.Wrapf(cerr, "failed to close snapshot chunk file %d", index)
 	}
 
@@ -330,10 +328,23 @@ func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types
 	return nil
 }
 
-// saveChunkContent save the chunk to disk
+// saveChunkContent saves the chunk to disk and syncs before returning so the
+// data is durable even if the process crashes immediately after.
 func (s *Store) saveChunkContent(chunk []byte, index uint32, snapshot *types.Snapshot) error {
 	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
-	return os.WriteFile(path, chunk, 0o600)
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create snapshot chunk file %q", path)
+	}
+	if _, err := f.Write(chunk); err != nil {
+		f.Close()
+		return errors.Wrapf(err, "failed to write snapshot chunk %d", index)
+	}
+	if err := f.Sync(); err != nil {
+		f.Close()
+		return errors.Wrapf(err, "failed to sync snapshot chunk file %d", index)
+	}
+	return errors.Wrapf(f.Close(), "failed to close snapshot chunk file %d", index)
 }
 
 // saveSnapshot saves snapshot metadata to the database.

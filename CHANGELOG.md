@@ -49,6 +49,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (x/gov) [#26353](https://github.com/cosmos/cosmos-sdk/pull/26353) Fix leading comma in `proposal_messages` event attribute emitted by `SubmitProposal`.
+
 ### Deprecated
 
 ## [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) - 2026-04-15

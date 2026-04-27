@@ -14,7 +14,7 @@ import (
 )
 
 func TestVoteRemovalAfterTally(t *testing.T) {
-	govKeeper, authKeeper, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
+	govKeeper, authKeeper, bankKeeper, stakingKeeper, _, _, _, ctx := setupGovKeeper(t)
 	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
@@ -59,7 +59,7 @@ func TestVoteRemovalAfterTally(t *testing.T) {
 // TestMultipleProposalsVoteRemoval verifies that votes for one proposal are removed
 // while votes for another proposal are preserved during tallying
 func TestMultipleProposalsVoteRemoval(t *testing.T) {
-	govKeeper, authKeeper, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
+	govKeeper, authKeeper, bankKeeper, stakingKeeper, _, _, _, ctx := setupGovKeeper(t)
 	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 

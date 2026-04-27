@@ -67,7 +67,6 @@ import (
 	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -95,7 +94,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
 		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
 		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
-		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{}, params.AppModuleBasic{},
+		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{},
 		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})

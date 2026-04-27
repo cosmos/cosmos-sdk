@@ -68,6 +68,8 @@ This patch release contains only minor dependency bumps.
 * (x/consensus) [#25607](https://github.com/cosmos/cosmos-sdk/pull/25607) Add `AuthorityParams` to consensus params. When set, the consensus params authority takes precedence over per-keeper authority for all module parameter updates. Keeper constructor signatures are unchanged.
 * (x/staking) [#25724](https://github.com/cosmos/cosmos-sdk/issues/25724) Validate `BondDenom` in `MsgUpdateParams` to prevent setting non-existent or zero-supply denoms.
 * [#25778](https://github.com/cosmos/cosmos-sdk/pull/25778) Update `log` to log v2.
+* [#25546](https://github.com/cosmos/cosmos-sdk/pull/25546) Removed `x/params`:
+    * Removes all `legacySubspace` arguments from Keeper and Module instantiation
 * [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will no longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
     * `x/group`
     * `x/nft`

@@ -21,7 +21,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/mint/exported"
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -89,9 +88,6 @@ type AppModule struct {
 
 	keeper     keeper.Keeper
 	authKeeper types.AccountKeeper
-
-	// legacySubspace is used solely for migration of x/params managed parameters
-	legacySubspace exported.Subspace
 }
 
 // NewAppModule creates a new AppModule object. If the InflationCalculationFn
@@ -102,7 +98,6 @@ func NewAppModule(
 	ak types.AccountKeeper,
 	// This input is unused as of Cosmos SDK v0.53 and will be removed in a future release of the Cosmos SDK.
 	ic types.InflationCalculationFn,
-	ss exported.Subspace,
 ) AppModule {
 	if ic != nil {
 		panic("inflation calculation function argument must be nil as it is no longer used.  This argument will be removed in a future release of the Cosmos SDK.  To set a custom inflation calculation function, use the WithMintFn option when constructing the x/mint keeper as follows: mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn))")
@@ -112,7 +107,6 @@ func NewAppModule(
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		authKeeper:     ak,
-		legacySubspace: ss,
 	}
 }
 
@@ -128,7 +122,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(am.keeper))
 
-	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
+	m := keeper.NewMigrator(am.keeper)
 	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
 	}
@@ -207,9 +201,6 @@ type ModuleInputs struct {
 	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
 	MintFn                 keeper.MintFn                `optional:"true"`
 
-	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace `optional:"true"`
-
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
 	StakingKeeper types.StakingKeeper
@@ -255,7 +246,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	)
 
 	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, nil, in.LegacySubspace)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, nil)
 
 	return ModuleOutputs{MintKeeper: k, Module: m}
 }

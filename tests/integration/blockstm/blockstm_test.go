@@ -153,8 +153,8 @@ func newBlockSTMTestApp(t *testing.T, db dbm.DB, logger log.Logger, enableBlockS
 		log.NewNopLogger(),
 	)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
+	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 
 	bApp.SetInitChainer(func(ctx sdk.Context, _ *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 		authModule.InitGenesis(ctx, cdc, authModule.DefaultGenesis(cdc))

@@ -4,20 +4,18 @@ import (
 	"github.com/cosmos/gogoproto/grpc"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	v6 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v6"
 )
 
 // Migrator is a struct for handling in-place store migrations.
 type Migrator struct {
-	keeper         AccountKeeper
-	queryServer    grpc.Server
-	legacySubspace exported.Subspace
+	keeper      AccountKeeper
+	queryServer grpc.Server
 }
 
 // NewMigrator returns a new Migrator.
-func NewMigrator(keeper AccountKeeper, queryServer grpc.Server, ss exported.Subspace) Migrator {
-	return Migrator{keeper: keeper, queryServer: queryServer, legacySubspace: ss}
+func NewMigrator(keeper AccountKeeper, queryServer grpc.Server) Migrator {
+	return Migrator{keeper: keeper, queryServer: queryServer}
 }
 
 // Migrate5to6 migrates the x/auth module state from the consensus version 5 to

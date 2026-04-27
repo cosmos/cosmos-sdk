@@ -120,7 +120,6 @@ linters:
       - crypto/keys/secp256k1/internal/*
       - types/coin_regex.go
       - testutil/testdata
-      - x/params
       - contrib
       - third_party$
       - builtin$
@@ -153,7 +152,6 @@ formatters:
       - crypto/keys/secp256k1/internal/*
       - types/coin_regex.go
       - testutil/testdata
-      - x/params
       - contrib
       - third_party$
       - builtin$

@@ -356,18 +356,12 @@ func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err e
 			break
 		}
 
-		var targetStore types.KVStore
-		if res.Height == tree.Version() {
-			targetStore = st
-		} else {
-			immutableStore, err := st.GetImmutable(res.Height)
-			if err != nil {
-				panic(fmt.Sprintf("version exists in store but could not retrieve corresponding versioned tree in store, %s", err.Error()))
-			}
-			targetStore = immutableStore
+		immutableStore, err := st.GetImmutable(res.Height)
+		if err != nil {
+			panic(fmt.Sprintf("version exists in store but could not retrieve corresponding versioned tree in /subspace path, %s", err.Error()))
 		}
 
-		iterator := types.KVStorePrefixIterator(targetStore, subspace)
+		iterator := types.KVStorePrefixIterator(immutableStore, subspace)
 		for ; iterator.Valid(); iterator.Next() {
 			pairs.Pairs = append(pairs.Pairs, kv.Pair{Key: iterator.Key(), Value: iterator.Value()})
 		}

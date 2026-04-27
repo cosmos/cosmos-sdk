@@ -145,6 +145,9 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 }
 
 func (app *BaseApp) Info(_ *abci.RequestInfo) (*abci.ResponseInfo, error) {
+	app.mu.Lock()
+	defer app.mu.Unlock()
+
 	lastCommitID := app.cms.LastCommitID()
 
 	return &abci.ResponseInfo{

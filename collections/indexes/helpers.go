@@ -48,15 +48,19 @@ func ScanKeyValues[K, V any, I iterator[K], Idx collections.Indexes[K, V]](
 		}
 	}()
 
+	var (
+		pk    K
+		value V
+	)
 	for ; iter.Valid(); iter.Next() {
-		pk, err := iter.PrimaryKey()
+		pk, err = iter.PrimaryKey()
 		if err != nil {
-			return err
+			return
 		}
 
-		value, err := indexedMap.Get(ctx, pk)
+		value, err = indexedMap.Get(ctx, pk)
 		if err != nil {
-			return err
+			return
 		}
 
 		kv := collections.KeyValue[K, V]{
@@ -100,20 +104,23 @@ func ScanValues[K, V any, I iterator[K], Idx collections.Indexes[K, V]](
 		}
 	}()
 
+	var (
+		key   K
+		value V
+	)
 	for ; iter.Valid(); iter.Next() {
-		key, err := iter.PrimaryKey()
+		key, err = iter.PrimaryKey()
 		if err != nil {
-			return err
+			return
 		}
 
-		value, err := indexedMap.Get(ctx, key)
+		value, err = indexedMap.Get(ctx, key)
 		if err != nil {
-			return err
+			return
 		}
 
-		stop := f(value)
-		if stop {
-			return nil
+		if f(value) {
+			return
 		}
 	}
 

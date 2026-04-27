@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/log/v2 v2.1.0
 	cosmossdk.io/math v1.5.3
 	github.com/99designs/keyring v1.2.1
-	github.com/RoaringBitmap/roaring/v2 v2.16.0
+	github.com/RoaringBitmap/roaring/v2 v2.18.0
 	github.com/bgentry/speakeasy v0.2.0
 	github.com/bits-and-blooms/bitset v1.24.4
 	github.com/chzyer/readline v1.5.1
@@ -60,9 +60,9 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	github.com/test-go/testify v1.1.4
 	go.opentelemetry.io/contrib/bridges/otelslog v0.18.0
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.66.0
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.68.0
 	go.opentelemetry.io/contrib/instrumentation/host v0.68.0
-	go.opentelemetry.io/contrib/instrumentation/runtime v0.67.0
+	go.opentelemetry.io/contrib/instrumentation/runtime v0.68.0
 	go.opentelemetry.io/contrib/otelconf v0.23.0
 	go.opentelemetry.io/contrib/propagators/b3 v1.43.0
 	go.opentelemetry.io/contrib/propagators/jaeger v1.43.0

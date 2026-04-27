@@ -103,18 +103,6 @@ func (s *StatusEntry) Resume() {
 		return
 	}
 
-	// status must be SUSPENDED and cond != nil
-	if s.status != StatusSuspended || s.cond == nil {
-		s.Unlock()
-		panic(fmt.Sprintf("invalid resume: status=%v", s.status))
-	}
-
-	// status must be SUSPENDED and cond != nil
-	if s.status != StatusSuspended || s.cond == nil {
-		s.Unlock()
-		panic(fmt.Sprintf("invalid resume: status=%v", s.status))
-	}
-
 	s.status = StatusExecuting
 	s.cond.Notify()
 	s.cond = nil

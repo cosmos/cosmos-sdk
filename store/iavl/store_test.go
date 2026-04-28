@@ -531,6 +531,7 @@ func TestIAVLStoreQuery(t *testing.T) {
 
 	// but yes on the new version
 	query.Height = cid.Version
+	querySub.Height = cid.Version
 	qres, err = iavlStore.Query(&query)
 	require.NoError(t, err)
 	require.Equal(t, uint32(0), qres.Code)
@@ -564,8 +565,15 @@ func TestIAVLStoreQuery(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v2, qres.Value)
-	// and for the subspace
+	// subspace queries at the pinned height remain on the old version
 	qres, err = iavlStore.Query(&querySub)
+	require.NoError(t, err)
+	require.Equal(t, uint32(0), qres.Code)
+	require.Equal(t, valExpSub1, qres.Value)
+
+	// updating the height returns the latest values
+	querySubLatest := types.RequestQuery{Path: "/subspace", Data: ksub, Height: cid.Version}
+	qres, err = iavlStore.Query(&querySubLatest)
 	require.NoError(t, err)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, valExpSub2, qres.Value)
@@ -576,6 +584,14 @@ func TestIAVLStoreQuery(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v1, qres.Value)
+
+	// /subspace with a non-existent version returns ErrVersionDoesNotExist
+	querySubBad := types.RequestQuery{Path: "/subspace", Data: ksub, Height: 9999}
+	qres, err = iavlStore.Query(&querySubBad)
+	require.NoError(t, err)
+	require.Equal(t, uint32(0), qres.Code)
+	require.Equal(t, iavl.ErrVersionDoesNotExist.Error(), qres.Log)
+	require.Nil(t, qres.Value)
 }
 
 func BenchmarkIAVLIteratorNext(b *testing.B) {

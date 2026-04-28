@@ -49,6 +49,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (blockstm) [#26355](https://github.com/cosmos/cosmos-sdk/pull/26355) fix(blockstm): remove double-unlock on panic path in `Resume()`.
+
 ### Deprecated
 
 ## [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) - 2026-04-15

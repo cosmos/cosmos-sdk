@@ -199,3 +199,37 @@ func TestWalk(t *testing.T) {
 	})
 	require.ErrorIs(t, err, sentinelErr) // asserts correct error propagation
 }
+
+func TestIteratorCloseError(t *testing.T) {
+	closeErr := errors.New("close error")
+
+	newIter := func() Iterator[string, uint64] {
+		return Iterator[string, uint64]{
+			kc:   StringKey,
+			vc:   Uint64Value,
+			iter: &mockCloseErrIter{closeErr: closeErr},
+		}
+	}
+
+	_, err := newIter().Keys()
+	require.ErrorIs(t, err, closeErr)
+
+	_, err = newIter().Values()
+	require.ErrorIs(t, err, closeErr)
+
+	_, err = newIter().KeyValues()
+	require.ErrorIs(t, err, closeErr)
+}
+
+// mockCloseErrIter is an empty store iterator whose Close returns an error.
+type mockCloseErrIter struct {
+	closeErr error
+}
+
+func (m *mockCloseErrIter) Domain() ([]byte, []byte) { return nil, nil }
+func (m *mockCloseErrIter) Valid() bool               { return false }
+func (m *mockCloseErrIter) Next()                     {}
+func (m *mockCloseErrIter) Key() []byte               { return nil }
+func (m *mockCloseErrIter) Value() []byte              { return nil }
+func (m *mockCloseErrIter) Error() error               { return nil }
+func (m *mockCloseErrIter) Close() error               { return m.closeErr }

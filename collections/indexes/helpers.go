@@ -42,17 +42,25 @@ func ScanKeyValues[K, V any, I iterator[K], Idx collections.Indexes[K, V]](
 	iter I,
 	do func(kv collections.KeyValue[K, V]) (stop bool),
 ) (err error) {
-	defer iter.Close()
+	defer func() {
+		if cerr := iter.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
+	var (
+		pk    K
+		value V
+	)
 	for ; iter.Valid(); iter.Next() {
-		pk, err := iter.PrimaryKey()
+		pk, err = iter.PrimaryKey()
 		if err != nil {
-			return err
+			return
 		}
 
-		value, err := indexedMap.Get(ctx, pk)
+		value, err = indexedMap.Get(ctx, pk)
 		if err != nil {
-			return err
+			return
 		}
 
 		kv := collections.KeyValue[K, V]{
@@ -89,23 +97,30 @@ func ScanValues[K, V any, I iterator[K], Idx collections.Indexes[K, V]](
 	indexedMap *collections.IndexedMap[K, V, Idx],
 	iter I,
 	f func(value V) (stop bool),
-) error {
-	defer iter.Close()
+) (err error) {
+	defer func() {
+		if cerr := iter.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
+	var (
+		key   K
+		value V
+	)
 	for ; iter.Valid(); iter.Next() {
-		key, err := iter.PrimaryKey()
+		key, err = iter.PrimaryKey()
 		if err != nil {
-			return err
+			return
 		}
 
-		value, err := indexedMap.Get(ctx, key)
+		value, err = indexedMap.Get(ctx, key)
 		if err != nil {
-			return err
+			return
 		}
 
-		stop := f(value)
-		if stop {
-			return nil
+		if f(value) {
+			return
 		}
 	}
 

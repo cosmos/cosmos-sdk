@@ -239,33 +239,41 @@ func (i Iterator[K, V]) Key() (K, error) {
 }
 
 // Values fully consumes the iterator and returns all the decoded values contained within the range.
-func (i Iterator[K, V]) Values() ([]V, error) {
-	defer i.Close()
+func (i Iterator[K, V]) Values() (values []V, err error) {
+	defer func() {
+		if cerr := i.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
-	var values []V
+	var value V
 	for ; i.iter.Valid(); i.iter.Next() {
-		value, err := i.Value()
+		value, err = i.Value()
 		if err != nil {
-			return nil, err
+			return
 		}
 		values = append(values, value)
 	}
-	return values, nil
+	return
 }
 
 // Keys fully consumes the iterator and returns all the decoded keys contained within the range.
-func (i Iterator[K, V]) Keys() ([]K, error) {
-	defer i.Close()
+func (i Iterator[K, V]) Keys() (keys []K, err error) {
+	defer func() {
+		if cerr := i.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
-	var keys []K
+	var key K
 	for ; i.iter.Valid(); i.iter.Next() {
-		key, err := i.Key()
+		key, err = i.Key()
 		if err != nil {
-			return nil, err
+			return
 		}
 		keys = append(keys, key)
 	}
-	return keys, nil
+	return
 }
 
 // KeyValue returns the current key and value decoded.
@@ -284,19 +292,22 @@ func (i Iterator[K, V]) KeyValue() (kv KeyValue[K, V], err error) {
 }
 
 // KeyValues fully consumes the iterator and returns the list of key and values within the iterator range.
-func (i Iterator[K, V]) KeyValues() ([]KeyValue[K, V], error) {
-	defer i.Close()
+func (i Iterator[K, V]) KeyValues() (kvs []KeyValue[K, V], err error) {
+	defer func() {
+		if cerr := i.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
-	var kvs []KeyValue[K, V]
+	var kv KeyValue[K, V]
 	for ; i.iter.Valid(); i.iter.Next() {
-		kv, err := i.KeyValue()
+		kv, err = i.KeyValue()
 		if err != nil {
-			return nil, err
+			return
 		}
 		kvs = append(kvs, kv)
 	}
-
-	return kvs, nil
+	return
 }
 
 func (i Iterator[K, V]) Close() error { return i.iter.Close() }

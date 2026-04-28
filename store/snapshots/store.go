@@ -289,37 +289,84 @@ func (s *Store) Save(
 // saveChunk saves the given chunkBody with the given index to its appropriate path on disk.
 // The hash of the chunk is appended to the snapshot's metadata,
 // and the overall snapshot hash is updated with the chunk content too.
-func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types.Snapshot, chunkHasher, snapshotHasher hash.Hash) error {
-	defer chunkBody.Close()
+func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types.Snapshot, chunkHasher, snapshotHasher hash.Hash) (err error) {
+	defer func() {
+		if cerr := chunkBody.Close(); cerr != nil && err == nil {
+			err = errors.Wrapf(cerr, "failed to close snapshot chunk body %d", index)
+		}
+	}()
 
 	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
 	chunkFile, err := os.Create(path)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create snapshot chunk file %q", path)
 	}
-	defer chunkFile.Close()
+	fileClosed := false
+	defer func() {
+		if !fileClosed {
+			if cerr := chunkFile.Close(); cerr != nil && err == nil {
+				err = errors.Wrapf(cerr, "failed to close snapshot chunk file %d", index)
+			}
+		}
+	}()
 
 	chunkHasher.Reset()
 	if _, err := io.Copy(io.MultiWriter(chunkFile, chunkHasher, snapshotHasher), chunkBody); err != nil {
 		return errors.Wrapf(err, "failed to generate snapshot chunk %d", index)
 	}
 
-	if err := chunkFile.Close(); err != nil {
-		return errors.Wrapf(err, "failed to close snapshot chunk file %d", index)
+	if err := chunkFile.Sync(); err != nil {
+		return errors.Wrapf(err, "failed to sync snapshot chunk file %d", index)
 	}
 
-	if err := chunkBody.Close(); err != nil {
-		return errors.Wrapf(err, "failed to close snapshot chunk body %d", index)
+	fileClosed = true
+	if cerr := chunkFile.Close(); cerr != nil {
+		return errors.Wrapf(cerr, "failed to close snapshot chunk file %d", index)
+	}
+
+	if err := syncDir(filepath.Dir(path)); err != nil {
+		return err
 	}
 
 	snapshot.Metadata.ChunkHashes = append(snapshot.Metadata.ChunkHashes, chunkHasher.Sum(nil))
 	return nil
 }
 
-// saveChunkContent save the chunk to disk
+// saveChunkContent saves the chunk to disk and syncs before returning so the
+// data is durable even if the process crashes immediately after.
 func (s *Store) saveChunkContent(chunk []byte, index uint32, snapshot *types.Snapshot) error {
 	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
-	return os.WriteFile(path, chunk, 0o600)
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create snapshot chunk file %q", path)
+	}
+	if _, err := f.Write(chunk); err != nil {
+		f.Close()
+		return errors.Wrapf(err, "failed to write snapshot chunk %d", index)
+	}
+	// After Sync returns, the chunk data is durable. A subsequent Close failure
+	// does not affect durability but is still reported so callers can detect it.
+	if err := f.Sync(); err != nil {
+		f.Close()
+		return errors.Wrapf(err, "failed to sync snapshot chunk file %d", index)
+	}
+	if err := f.Close(); err != nil {
+		return errors.Wrapf(err, "failed to close snapshot chunk file %d", index)
+	}
+	return syncDir(filepath.Dir(path))
+}
+
+// syncDir fsyncs dirPath so the directory entry for a newly created file is durable.
+func syncDir(dirPath string) error {
+	dir, err := os.Open(dirPath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to open directory %q for sync", dirPath)
+	}
+	if err := dir.Sync(); err != nil {
+		dir.Close()
+		return errors.Wrapf(err, "failed to sync directory %q", dirPath)
+	}
+	return errors.Wrapf(dir.Close(), "failed to close directory %q after sync", dirPath)
 }
 
 // saveSnapshot saves snapshot metadata to the database.

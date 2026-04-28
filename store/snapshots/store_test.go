@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"os"
 	"testing"
 	"time"
 
@@ -330,4 +331,23 @@ func TestStore_Save(t *testing.T) {
 	_, err = store.Save(8, 1, makeChunks(nil))
 	require.NoError(t, err)
 	close(ch)
+}
+
+// TestStore_Save_ChunksWrittenToDisk verifies that chunk files exist on disk with correct
+// contents after Save returns.
+func TestStore_Save_ChunksWrittenToDisk(t *testing.T) {
+	tempdir := GetTempDir(t)
+	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
+	require.NoError(t, err)
+
+	chunkData := [][]byte{{0xde, 0xad}, {0xbe, 0xef}}
+	snapshot, err := store.Save(1, 1, makeChunks(chunkData))
+	require.NoError(t, err)
+
+	for i, want := range chunkData {
+		path := store.PathChunk(snapshot.Height, snapshot.Format, uint32(i))
+		got, err := os.ReadFile(path)
+		require.NoErrorf(t, err, "chunk %d file should exist on disk", i)
+		assert.Equalf(t, want, got, "chunk %d file content should match", i)
+	}
 }

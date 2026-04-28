@@ -694,6 +694,70 @@ func (suite *KeeperTestSuite) TestSendCoinsVirtual() {
 	require.Equal(math.NewInt(25), keeper.GetBalance(suite.ctx, burnerAcc.GetAddress(), feeDenom2).Amount)
 }
 
+func (suite *KeeperTestSuite) TestMintBurnCoinsVirtual() {
+	ctx := suite.ctx
+	require := suite.Require()
+	keeper := suite.bankKeeper
+
+	testCases := []struct {
+		name         string
+		mintAmounts  sdk.Coins
+		burnAmounts  sdk.Coins
+		expectSupply sdk.Coins
+	}{
+		{
+			name:         "mint only",
+			mintAmounts:  sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 100)),
+			burnAmounts:  sdk.Coins{},
+			expectSupply: sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 100)),
+		},
+		{
+			name:         "mint and partial burn",
+			mintAmounts:  sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 100)),
+			burnAmounts:  sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 30)),
+			expectSupply: sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 70)),
+		},
+		{
+			name:         "multiple denoms",
+			mintAmounts:  sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 100), sdk.NewInt64Coin(barDenom, 200)),
+			burnAmounts:  sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50)),
+			expectSupply: sdk.NewCoins(sdk.NewInt64Coin(barDenom, 200), sdk.NewInt64Coin(fooDenom, 50)),
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			ctx = suite.ctx
+			keeper = suite.bankKeeper
+
+			suite.authKeeper.EXPECT().GetModuleAccount(ctx, multiPermAcc.Name).Return(multiPermAcc).AnyTimes()
+			suite.authKeeper.EXPECT().GetAccount(ctx, multiPermAcc.GetAddress()).Return(multiPermAcc).AnyTimes()
+			suite.authKeeper.EXPECT().HasAccount(ctx, multiPermAcc.GetAddress()).Return(true).AnyTimes()
+
+			require.NoError(keeper.MintCoinsVirtual(ctx, multiPerm, tc.mintAmounts))
+
+			if !tc.burnAmounts.IsZero() {
+				require.NoError(keeper.BurnCoinsVirtual(ctx, multiPerm, tc.burnAmounts))
+			}
+
+			require.NoError(keeper.CreditVirtualAccounts(ctx))
+			require.NoError(keeper.SettleVirtualSupply(ctx))
+
+			for _, expected := range tc.expectSupply {
+				actual := keeper.GetSupply(ctx, expected.Denom)
+				require.Equal(expected.Amount, actual.Amount, "supply mismatch for denom %s", expected.Denom)
+			}
+
+			expectedBalance := tc.mintAmounts.Sub(tc.burnAmounts...)
+			for _, expected := range expectedBalance {
+				actual := keeper.GetBalance(ctx, multiPermAcc.GetAddress(), expected.Denom)
+				require.Equal(expected.Amount, actual.Amount, "balance mismatch for denom %s", expected.Denom)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestInputOutputNewAccount() {
 	ctx := suite.ctx
 	require := suite.Require()

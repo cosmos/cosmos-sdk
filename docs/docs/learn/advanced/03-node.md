@@ -32,7 +32,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/types/config.go#L14-L29
 * Prepare and execute the `executor`.
   
 ```go reference
-https://github.com/cometbft/cometbft/blob/v0.37.0/libs/cli/setup.go#L74-L78
+https://github.com/cometbft/cometbft/blob/v1.x/libs/cli/setup.go#L74-L78
 ```
 
 See an example of `main` function from the `simapp` application, the Cosmos SDK's application for demo purposes:
@@ -81,7 +81,7 @@ Then, the instance of `app` is used to instantiate a new CometBFT node:
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/server/start.go#L361-L400
 ```
 
-The CometBFT node can be created with `app` because the latter satisfies the [`abci.Application` interface](https://github.com/cometbft/cometbft/blob/v0.37.0/abci/types/application.go#L9-L35) (given that `app` extends [`baseapp`](./00-baseapp.md)). As part of the `node.New` method, CometBFT makes sure that the height of the application (i.e. number of blocks since genesis) is equal to the height of the CometBFT node. The difference between these two heights should always be negative or null. If it is strictly negative, `node.New` will replay blocks until the height of the application reaches the height of the CometBFT node. Finally, if the height of the application is `0`, the CometBFT node will call [`InitChain`](./00-baseapp.md#initchain) on the application to initialize the state from the genesis file.
+The CometBFT node can be created with `app` because the latter satisfies the [`abci.Application` interface](https://github.com/cometbft/cometbft/blob/v1.x/abci/types/application.go#L9-L35) (given that `app` extends [`baseapp`](./00-baseapp.md)). As part of the `node.New` method, CometBFT makes sure that the height of the application (i.e. number of blocks since genesis) is equal to the height of the CometBFT node. The difference between these two heights should always be negative or null. If it is strictly negative, `node.New` will replay blocks until the height of the application reaches the height of the CometBFT node. Finally, if the height of the application is `0`, the CometBFT node will call [`InitChain`](./00-baseapp.md#initchain) on the application to initialize the state from the genesis file.
 
 Once the CometBFT node is instantiated and in sync with the application, the node can be started:
 

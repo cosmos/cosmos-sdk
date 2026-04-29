@@ -23,14 +23,14 @@ An application can set this handler in `app.go` via the `baseapp.SetExtendVoteHa
 `BaseApp` option function. The `sdk.ExtendVoteHandler`, if defined, is called during
 the `ExtendVote` ABCI method. Note, if an application decides to implement
 `baseapp.ExtendVoteHandler`, it MUST return a non-nil `VoteExtension`. However, the vote
-extension can be empty. See [here](https://github.com/cometbft/cometbft/blob/v0.38.0-rc1/spec/abci/abci++_methods.md#extendvote)
+extension can be empty. See [here](https://github.com/cometbft/cometbft/blob/v1.x/spec/abci/abci++_methods.md#extendvote)
 for more details.
 
 There are many decentralized censorship-resistant use cases for vote extensions.
 For example, a validator may want to submit prices for a price oracle or encryption
 shares for an encrypted transaction mempool. Note, an application should be careful
 to consider the size of the vote extensions as they could increase latency in block
-production. See [here](https://github.com/cometbft/cometbft/blob/v0.38.0-rc1/docs/qa/CometBFT-QA-38.md#vote-extensions-testbed)
+production. See [here](https://github.com/cometbft/cometbft/blob/v1.x/docs/references/qa/CometBFT-QA-38.md#vote-extensions-testbed)
 for more details.
 
 ## Verify Vote Extension
@@ -48,7 +48,7 @@ An application can set this handler in `app.go` via the `baseapp.SetVerifyVoteEx
 during the `VerifyVoteExtension` ABCI method. If an application defines a vote
 extension handler, it should also define a verification handler. Note, not all
 validators will share the same view of what vote extensions they verify depending
-on how votes are propagated. See [here](https://github.com/cometbft/cometbft/blob/v0.38.0-rc1/spec/abci/abci++_methods.md#verifyvoteextension)
+on how votes are propagated. See [here](https://github.com/cometbft/cometbft/blob/v1.x/spec/abci/abci++_methods.md#verifyvoteextension)
 for more details.
 
 ## Vote Extension Propagation

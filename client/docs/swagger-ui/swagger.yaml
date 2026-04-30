@@ -6747,6 +6747,11 @@ paths:
                     description: >-
                       ABCIParams configure functionality specific to the
                       Application Blockchain Interface.
+                  authority:
+                    type: object
+                    properties:
+                      authority:
+                        type: string
               appHash:
                 type: string
                 format: byte
@@ -7197,6 +7202,11 @@ paths:
                     description: >-
                       ABCIParams configure functionality specific to the
                       Application Blockchain Interface.
+                  authority:
+                    type: object
+                    properties:
+                      authority:
+                        type: string
               appHash:
                 type: string
                 format: byte
@@ -11950,6 +11960,11 @@ paths:
                     description: >-
                       ABCIParams configure functionality specific to the
                       Application Blockchain Interface.
+                  authority:
+                    type: object
+                    properties:
+                      authority:
+                        type: string
             description: >-
               QueryParamsResponse defines the response type for querying
               x/consensus parameters.
@@ -30352,485 +30367,6 @@ paths:
       tags:
         - Query
 definitions:
-  cosmos.app.v1alpha1.Config:
-    type: object
-    properties:
-      modules:
-        type: array
-        items:
-          type: object
-          properties:
-            name:
-              type: string
-              description: >-
-                name is the unique name of the module within the app. It should
-                be a name
-
-                that persists between different versions of a module so that
-                modules
-
-                can be smoothly upgraded to new versions.
-
-
-                For example, for the module cosmos.bank.module.v1.Module, we may
-                chose
-
-                to simply name the module "bank" in the app. When we upgrade to
-
-                cosmos.bank.module.v2.Module, the app-specific name "bank" stays
-                the same
-
-                and the framework knows that the v2 module should receive all
-                the same state
-
-                that the v1 module had. Note: modules should provide info on
-                which versions
-
-                they can migrate from in the ModuleDescriptor.can_migrate_from
-                field.
-            config:
-              description: >-
-                config is the config object for the module. Module config
-                messages should
-
-                define a ModuleDescriptor using the
-                cosmos.app.v1alpha1.is_module extension.
-              type: object
-              properties:
-                '@type':
-                  type: string
-                  description: >-
-                    A URL/resource name that uniquely identifies the type of the
-                    serialized
-
-                    protocol buffer message. This string must contain at least
-
-                    one "/" character. The last segment of the URL's path must
-                    represent
-
-                    the fully qualified name of the type (as in
-
-                    `path/google.protobuf.Duration`). The name should be in a
-                    canonical form
-
-                    (e.g., leading "." is not accepted).
-
-
-                    In practice, teams usually precompile into the binary all
-                    types that they
-
-                    expect it to use in the context of Any. However, for URLs
-                    which use the
-
-                    scheme `http`, `https`, or no scheme, one can optionally set
-                    up a type
-
-                    server that maps type URLs to message definitions as
-                    follows:
-
-
-                    * If no scheme is provided, `https` is assumed.
-
-                    * An HTTP GET on the URL must yield a
-                    [google.protobuf.Type][]
-                      value in binary format, or produce an error.
-                    * Applications are allowed to cache lookup results based on
-                    the
-                      URL, or have them precompiled into a binary to avoid any
-                      lookup. Therefore, binary compatibility needs to be preserved
-                      on changes to types. (Use versioned type names to manage
-                      breaking changes.)
-
-                    Note: this functionality is not currently available in the
-                    official
-
-                    protobuf release, and it is not used for type URLs beginning
-                    with
-
-                    type.googleapis.com. As of May 2023, there are no widely
-                    used type server
-
-                    implementations and no plans to implement one.
-
-
-                    Schemes other than `http`, `https` (or the empty scheme)
-                    might be
-
-                    used with implementation specific semantics.
-              additionalProperties: {}
-            golangBindings:
-              type: array
-              items:
-                type: object
-                properties:
-                  interfaceType:
-                    type: string
-                    title: >-
-                      interface_type is the interface type which will be bound
-                      to a specific implementation type
-                  implementation:
-                    type: string
-                    title: >-
-                      implementation is the implementing type which will be
-                      supplied when an input of type interface is requested
-                description: >-
-                  GolangBinding is an explicit interface type to implementing
-                  type binding for dependency injection.
-              description: >-
-                golang_bindings specifies explicit interface to implementation
-                type bindings which
-
-                depinject uses to resolve interface inputs to provider
-                functions.  The scope of this
-
-                field's configuration is module specific.
-          description: ModuleConfig is a module configuration for an app.
-        description: modules are the module configurations for the app.
-      golangBindings:
-        type: array
-        items:
-          type: object
-          properties:
-            interfaceType:
-              type: string
-              title: >-
-                interface_type is the interface type which will be bound to a
-                specific implementation type
-            implementation:
-              type: string
-              title: >-
-                implementation is the implementing type which will be supplied
-                when an input of type interface is requested
-          description: >-
-            GolangBinding is an explicit interface type to implementing type
-            binding for dependency injection.
-        description: >-
-          golang_bindings specifies explicit interface to implementation type
-          bindings which
-
-          depinject uses to resolve interface inputs to provider functions.  The
-          scope of this
-
-          field's configuration is global (not module specific).
-    description: >-
-      Config represents the configuration for a Cosmos SDK ABCI app.
-
-      It is intended that all state machine logic including the version of
-
-      baseapp and tx handlers (and possibly even Tendermint) that an app needs
-
-      can be described in a config object. For compatibility, the framework
-      should
-
-      allow a mixture of declarative and imperative app wiring, however, apps
-
-      that strive for the maximum ease of maintainability should be able to
-      describe
-
-      their state machine with a config object alone.
-  cosmos.app.v1alpha1.GolangBinding:
-    type: object
-    properties:
-      interfaceType:
-        type: string
-        title: >-
-          interface_type is the interface type which will be bound to a specific
-          implementation type
-      implementation:
-        type: string
-        title: >-
-          implementation is the implementing type which will be supplied when an
-          input of type interface is requested
-    description: >-
-      GolangBinding is an explicit interface type to implementing type binding
-      for dependency injection.
-  cosmos.app.v1alpha1.ModuleConfig:
-    type: object
-    properties:
-      name:
-        type: string
-        description: >-
-          name is the unique name of the module within the app. It should be a
-          name
-
-          that persists between different versions of a module so that modules
-
-          can be smoothly upgraded to new versions.
-
-
-          For example, for the module cosmos.bank.module.v1.Module, we may chose
-
-          to simply name the module "bank" in the app. When we upgrade to
-
-          cosmos.bank.module.v2.Module, the app-specific name "bank" stays the
-          same
-
-          and the framework knows that the v2 module should receive all the same
-          state
-
-          that the v1 module had. Note: modules should provide info on which
-          versions
-
-          they can migrate from in the ModuleDescriptor.can_migrate_from field.
-      config:
-        description: >-
-          config is the config object for the module. Module config messages
-          should
-
-          define a ModuleDescriptor using the cosmos.app.v1alpha1.is_module
-          extension.
-        type: object
-        properties:
-          '@type':
-            type: string
-            description: >-
-              A URL/resource name that uniquely identifies the type of the
-              serialized
-
-              protocol buffer message. This string must contain at least
-
-              one "/" character. The last segment of the URL's path must
-              represent
-
-              the fully qualified name of the type (as in
-
-              `path/google.protobuf.Duration`). The name should be in a
-              canonical form
-
-              (e.g., leading "." is not accepted).
-
-
-              In practice, teams usually precompile into the binary all types
-              that they
-
-              expect it to use in the context of Any. However, for URLs which
-              use the
-
-              scheme `http`, `https`, or no scheme, one can optionally set up a
-              type
-
-              server that maps type URLs to message definitions as follows:
-
-
-              * If no scheme is provided, `https` is assumed.
-
-              * An HTTP GET on the URL must yield a [google.protobuf.Type][]
-                value in binary format, or produce an error.
-              * Applications are allowed to cache lookup results based on the
-                URL, or have them precompiled into a binary to avoid any
-                lookup. Therefore, binary compatibility needs to be preserved
-                on changes to types. (Use versioned type names to manage
-                breaking changes.)
-
-              Note: this functionality is not currently available in the
-              official
-
-              protobuf release, and it is not used for type URLs beginning with
-
-              type.googleapis.com. As of May 2023, there are no widely used type
-              server
-
-              implementations and no plans to implement one.
-
-
-              Schemes other than `http`, `https` (or the empty scheme) might be
-
-              used with implementation specific semantics.
-        additionalProperties: {}
-      golangBindings:
-        type: array
-        items:
-          type: object
-          properties:
-            interfaceType:
-              type: string
-              title: >-
-                interface_type is the interface type which will be bound to a
-                specific implementation type
-            implementation:
-              type: string
-              title: >-
-                implementation is the implementing type which will be supplied
-                when an input of type interface is requested
-          description: >-
-            GolangBinding is an explicit interface type to implementing type
-            binding for dependency injection.
-        description: >-
-          golang_bindings specifies explicit interface to implementation type
-          bindings which
-
-          depinject uses to resolve interface inputs to provider functions.  The
-          scope of this
-
-          field's configuration is module specific.
-    description: ModuleConfig is a module configuration for an app.
-  cosmos.app.v1alpha1.QueryConfigResponse:
-    type: object
-    properties:
-      config:
-        description: config is the current app config.
-        type: object
-        properties:
-          modules:
-            type: array
-            items:
-              type: object
-              properties:
-                name:
-                  type: string
-                  description: >-
-                    name is the unique name of the module within the app. It
-                    should be a name
-
-                    that persists between different versions of a module so that
-                    modules
-
-                    can be smoothly upgraded to new versions.
-
-
-                    For example, for the module cosmos.bank.module.v1.Module, we
-                    may chose
-
-                    to simply name the module "bank" in the app. When we upgrade
-                    to
-
-                    cosmos.bank.module.v2.Module, the app-specific name "bank"
-                    stays the same
-
-                    and the framework knows that the v2 module should receive
-                    all the same state
-
-                    that the v1 module had. Note: modules should provide info on
-                    which versions
-
-                    they can migrate from in the
-                    ModuleDescriptor.can_migrate_from field.
-                config:
-                  description: >-
-                    config is the config object for the module. Module config
-                    messages should
-
-                    define a ModuleDescriptor using the
-                    cosmos.app.v1alpha1.is_module extension.
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com. As of May 2023, there are no widely
-                        used type server
-
-                        implementations and no plans to implement one.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
-                  additionalProperties: {}
-                golangBindings:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      interfaceType:
-                        type: string
-                        title: >-
-                          interface_type is the interface type which will be
-                          bound to a specific implementation type
-                      implementation:
-                        type: string
-                        title: >-
-                          implementation is the implementing type which will be
-                          supplied when an input of type interface is requested
-                    description: >-
-                      GolangBinding is an explicit interface type to
-                      implementing type binding for dependency injection.
-                  description: >-
-                    golang_bindings specifies explicit interface to
-                    implementation type bindings which
-
-                    depinject uses to resolve interface inputs to provider
-                    functions.  The scope of this
-
-                    field's configuration is module specific.
-              description: ModuleConfig is a module configuration for an app.
-            description: modules are the module configurations for the app.
-          golangBindings:
-            type: array
-            items:
-              type: object
-              properties:
-                interfaceType:
-                  type: string
-                  title: >-
-                    interface_type is the interface type which will be bound to
-                    a specific implementation type
-                implementation:
-                  type: string
-                  title: >-
-                    implementation is the implementing type which will be
-                    supplied when an input of type interface is requested
-              description: >-
-                GolangBinding is an explicit interface type to implementing type
-                binding for dependency injection.
-            description: >-
-              golang_bindings specifies explicit interface to implementation
-              type bindings which
-
-              depinject uses to resolve interface inputs to provider functions. 
-              The scope of this
-
-              field's configuration is global (not module specific).
-    description: QueryConfigResponse is the Query/Config response type.
   google.protobuf.Any:
     type: object
     properties:
@@ -36390,6 +35926,11 @@ definitions:
             description: >-
               ABCIParams configure functionality specific to the Application
               Blockchain Interface.
+          authority:
+            type: object
+            properties:
+              authority:
+                type: string
       appHash:
         type: string
         format: byte
@@ -37883,6 +37424,11 @@ definitions:
             description: >-
               ABCIParams configure functionality specific to the Application
               Blockchain Interface.
+          authority:
+            type: object
+            properties:
+              authority:
+                type: string
       appHash:
         type: string
         format: byte
@@ -38989,6 +38535,11 @@ definitions:
     description: >-
       ABCIParams configure functionality specific to the Application Blockchain
       Interface.
+  tendermint.types.AuthorityParams:
+    type: object
+    properties:
+      authority:
+        type: string
   tendermint.types.Block:
     type: object
     properties:
@@ -39831,6 +39382,11 @@ definitions:
         description: >-
           ABCIParams configure functionality specific to the Application
           Blockchain Interface.
+      authority:
+        type: object
+        properties:
+          authority:
+            type: string
     description: |-
       ConsensusParams contains consensus critical parameters that determine the
       validity of blocks.
@@ -41922,6 +41478,11 @@ definitions:
             description: >-
               ABCIParams configure functionality specific to the Application
               Blockchain Interface.
+          authority:
+            type: object
+            properties:
+              authority:
+                type: string
     description: >-
       QueryParamsResponse defines the response type for querying x/consensus
       parameters.

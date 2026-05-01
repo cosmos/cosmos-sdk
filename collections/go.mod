@@ -10,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/protobuf v1.36.11
-	pgregory.net/rapid v1.2.0
+	pgregory.net/rapid v1.3.0
 )
 
 require (

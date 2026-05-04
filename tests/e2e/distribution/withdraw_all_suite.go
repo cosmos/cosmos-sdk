@@ -77,6 +77,8 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	)
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())
+	// Ensure the funded account is committed before delegate uses it (CI timing).
+	require.NoError(s.network.WaitForNextBlock())
 
 	// delegate 500 tokens to validator1
 	args := []string{

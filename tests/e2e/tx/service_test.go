@@ -139,12 +139,23 @@ func (s *E2ETestSuite) TestQueryBySig() {
 	// encode, format, query
 	b64Sig := base64.StdEncoding.EncodeToString(sig.Signature)
 	sigFormatted := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, b64Sig)
-	res, err := s.queryClient.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{
-		Query:   sigFormatted,
-		OrderBy: 0,
-		Page:    0,
-		Limit:   10,
-	})
+	var res *tx.GetTxsEventResponse
+	err = s.network.RetryForBlocks(func() error {
+		var inner error
+		res, inner = s.queryClient.GetTxsEvent(context.Background(), &tx.GetTxsEventRequest{
+			Query:   sigFormatted,
+			OrderBy: 0,
+			Page:    0,
+			Limit:   10,
+		})
+		if inner != nil {
+			return inner
+		}
+		if len(res.Txs) == 0 {
+			return fmt.Errorf("tx not indexed yet for signature query")
+		}
+		return nil
+	}, 10)
 	s.Require().NoError(err)
 	s.Require().Len(res.Txs, 1)
 	s.Require().Len(res.Txs[0].Signatures, 1)

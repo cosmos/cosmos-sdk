@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/log/v2 v2.1.0
 	cosmossdk.io/math v1.5.3
 	github.com/99designs/keyring v1.2.1
-	github.com/RoaringBitmap/roaring/v2 v2.16.0
+	github.com/RoaringBitmap/roaring/v2 v2.18.0
 	github.com/bgentry/speakeasy v0.2.0
 	github.com/bits-and-blooms/bitset v1.24.4
 	github.com/chzyer/readline v1.5.1
@@ -60,9 +60,9 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	github.com/test-go/testify v1.1.4
 	go.opentelemetry.io/contrib/bridges/otelslog v0.18.0
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.66.0
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.68.0
 	go.opentelemetry.io/contrib/instrumentation/host v0.68.0
-	go.opentelemetry.io/contrib/instrumentation/runtime v0.67.0
+	go.opentelemetry.io/contrib/instrumentation/runtime v0.68.0
 	go.opentelemetry.io/contrib/otelconf v0.23.0
 	go.opentelemetry.io/contrib/propagators/b3 v1.43.0
 	go.opentelemetry.io/contrib/propagators/jaeger v1.43.0
@@ -72,7 +72,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.43.0
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v3 v3.0.4
-	golang.org/x/crypto v0.49.0
+	golang.org/x/crypto v0.50.0
 	golang.org/x/sync v0.20.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20260406210006-6f92a3bedf2d
 	google.golang.org/grpc v1.80.0
@@ -318,8 +318,8 @@ require (
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sys v0.43.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260311193753-579e4da9a98c // indirect
-	golang.org/x/term v0.41.0 // indirect
-	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/term v0.42.0 // indirect
+	golang.org/x/text v0.36.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.43.0 // indirect
 	google.golang.org/api v0.271.0 // indirect

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"maps"
 	goruntime "runtime"
+	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -261,10 +262,13 @@ func NewSimApp(
 		workers = min(goruntime.GOMAXPROCS(0), goruntime.NumCPU())
 	}
 
-	nonTransientKeys := make([]storetypes.StoreKey, 0, len(keys))
+	kvStoreKeys := make([]storetypes.StoreKey, 0, len(keys))
 	for _, k := range keys {
-		nonTransientKeys = append(nonTransientKeys, k)
+		kvStoreKeys = append(kvStoreKeys, k)
 	}
+	sort.Slice(kvStoreKeys, func(i, j int) bool {
+		return kvStoreKeys[i].Name() < kvStoreKeys[j].Name()
+	})
 
 	preEstimate := cast.ToBool(appOpts.Get(server.FlagBlockSTMPreEstimate))
 	executor := cast.ToString(appOpts.Get(server.FlagBlockExecutor))
@@ -276,7 +280,7 @@ func NewSimApp(
 	case config.BlockExecutorBlockSTM:
 		bApp.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(
 			txConfig.TxDecoder(),
-			nonTransientKeys,
+			kvStoreKeys,
 			workers,
 			preEstimate,
 			func(storetypes.MultiStore) string { return sdk.DefaultBondDenom },

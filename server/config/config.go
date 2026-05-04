@@ -19,7 +19,7 @@ const (
 	defaultMinGasPrices = ""
 
 	// DefaultBlockExecutor is the default transaction executor for block execution.
-	DefaultBlockExecutor = BlockExecutorBlockSTM
+	DefaultBlockExecutor = BlockExecutorSequential
 
 	// DefaultBlockSTMWorkers is the default worker count for block-stm execution.
 	// 0 means auto-detect based on CPU in the app wiring.

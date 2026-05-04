@@ -47,7 +47,11 @@ remove_license_headers() {
 
     # Remove all lines from any occurrence of "IMPORTANT LICENSE NOTICE"
     # through "Copyright (c) 2026 Cosmos Labs US Inc."
-    sed '/\/\/ IMPORTANT LICENSE NOTICE/,/\/\/ Copyright (c) 2026 Cosmos Labs US Inc\./d' "$file" > "$tmpfile"
+    if grep -qF "// Copyright (c) 2026 Cosmos Labs US Inc." "$file"; then
+        sed '/\/\/ IMPORTANT LICENSE NOTICE/,/\/\/ Copyright (c) 2026 Cosmos Labs US Inc\./d' "$file" > "$tmpfile"
+    else
+        cp "$file" "$tmpfile"
+    fi
 
     # Remove any blank lines at the start of file
     sed -i.bak '1{/^$/d;}' "$tmpfile"

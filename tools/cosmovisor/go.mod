@@ -4,17 +4,10 @@ go 1.25.9
 
 require (
 	cosmossdk.io/log/v2 v2.1.0
-<<<<<<< HEAD
-	github.com/cometbft/cometbft v0.39.0
-	github.com/cometbft/cometbft-db v0.14.3
-	github.com/cosmos/cosmos-sdk v0.54.0
-	github.com/fsnotify/fsnotify v1.9.0
-=======
 	github.com/cometbft/cometbft v0.39.1
 	github.com/cometbft/cometbft-db v1.0.4
 	github.com/cosmos/cosmos-sdk v0.54.2
 	github.com/fsnotify/fsnotify v1.10.0
->>>>>>> b2fd3fd10 (build(deps): Bump github.com/fsnotify/fsnotify from 1.9.0 to 1.10.0 in /tools/cosmovisor (#26365))
 	github.com/otiai10/copy v1.14.1
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/spf13/cobra v1.10.2
@@ -187,7 +180,7 @@ require (
 	github.com/rs/zerolog v1.35.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.7 // indirect
-	github.com/shirou/gopsutil/v4 v4.26.2 // indirect
+	github.com/shirou/gopsutil/v4 v4.26.3 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect

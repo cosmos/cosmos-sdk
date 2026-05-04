@@ -44,27 +44,48 @@ func TestExecuteBlock_CancelWakesSuspendedExecutors(t *testing.T) {
 	require.True(t, errors.Is(err, context.Canceled))
 }
 
-func TestSchedulerCancelAllCallsPreCancelForAllTxns(t *testing.T) {
-	total := 3
-	s := NewScheduler(total)
-	cond := NewCondvar()
-	_, ok := s.txnStatus[1].TrySetExecuting()
+// CancelAll must clear an Executing blocker's ESTIMATE, not just the
+// Suspended waiter's — otherwise the woken waiter re-suspends on the same mark.
+func TestCancelAllClearsBlockerEstimate(t *testing.T) {
+	ctx := context.Background()
+	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
+	storage := NewMultiMemDB(stores)
+
+	// Pre-estimate: tx1 has key "k" marked as ESTIMATE — it is the blocker.
+	estimates := make([]MultiLocations, 3)
+	estimates[1] = MultiLocations{0: Locations{Key([]byte("k"))}}
+
+	scheduler := NewScheduler(3)
+	mv := NewMVMemoryWithEstimates(3, stores, storage, scheduler, estimates)
+
+	// tx1 is Executing (the blocker, NOT suspended).
+	_, ok := scheduler.txnStatus[1].TrySetExecuting()
 	require.True(t, ok)
-	s.txnStatus[1].Suspend(cond)
 
-	called := 0
-	s.CancelAll(func(i TxnIndex) {
-		called++
+	// tx2 is Suspended on tx1's ESTIMATE.
+	_, ok = scheduler.txnStatus[2].TrySetExecuting()
+	require.True(t, ok)
+	cond := NewCondvar()
+	scheduler.txnStatus[2].Suspend(cond)
+
+	// Sanity: from tx2's perspective, key "k" currently reads as ESTIMATE.
+	mvData := mv.data[0].(*MVData)
+	_, _, isEstimate := mvData.Read(ctx, Key([]byte("k")), 2)
+	require.True(t, isEstimate, "precondition: tx1's estimate should be visible to tx2")
+
+	// Run the same callback the production code uses on ctx cancellation.
+	scheduler.CancelAll(func(i TxnIndex) {
+		mv.ClearEstimates(i)
 	})
-	require.Equal(t, total, called)
 
-	// suspended txn should be woken
+	// tx2 must be woken.
+	cond.Lock()
 	require.True(t, cond.notified)
+	cond.Unlock()
 
-	s.txnStatus[1].Lock()
-	defer s.txnStatus[1].Unlock()
-	require.Equal(t, StatusExecuting, s.txnStatus[1].status)
-	require.Nil(t, s.txnStatus[1].cond)
+	// Regression guard: blocker's ESTIMATE must be cleared too.
+	_, _, isEstimate = mvData.Read(ctx, Key([]byte("k")), 2)
+	require.False(t, isEstimate, "tx1's ESTIMATE must be cleared so tx2 doesn't re-suspend on resume")
 }
 
 func accountName(i int64) string {

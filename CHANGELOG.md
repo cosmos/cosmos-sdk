@@ -49,6 +49,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (blockstm) [#25893](https://github.com/cosmos/cosmos-sdk/pull/25893) Fix CancelAll cancellation by clearing blocker ESTIMATE marks before waking suspended executors.
+
 ### Deprecated
 
 ## [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) - 2026-04-15
@@ -150,7 +152,6 @@ This patch release contains only minor dependency bumps.
 * (client) [#25804](https://github.com/cosmos/cosmos-sdk/pull/25804) Add `GetHeightFromMetadataStrict` API to `grpc` client for better error handling.
 * (x/staking) [#25829](https://github.com/cosmos/cosmos-sdk/pull/25829) Validates case-sensitivity on authz grands in x/staking.
 * (mempool) [#25869](https://github.com/cosmos/cosmos-sdk/pull/25869) fix(mempool): add thread safety to NextSenderTx.
-* (blockstm) [#25893](https://github.com/cosmos/cosmos-sdk/pull/25893) Fix CancelAll cancellation by clearing blocker ESTIMATE marks before waking suspended executors.
 * (blockstm) [#25912](https://github.com/cosmos/cosmos-sdk/pull/25912) Remove `SigVerificationDecorator` signature incarnation cache causing state divergence under blockstm.
 * (x/group) [#25922](https://github.com/cosmos/cosmos-sdk/pull/25922) Add zero-total-weight check for ThresholdDecisionPolicy
 * (x/group) [#25917](https://github.com/cosmos/cosmos-sdk/pull/25917) Prevent creation of zero-weight groups.

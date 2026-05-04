@@ -72,7 +72,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	logger := log.NewTestLogger(t)
 	cms := integration.CreateMultiStore(keys, logger)
 
-	newCtx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 

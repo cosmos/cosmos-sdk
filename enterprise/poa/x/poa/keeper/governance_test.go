@@ -308,7 +308,7 @@ func TestPOADepoweredValidatorVoteRemoval(t *testing.T) {
 	submitVoteDirectly(t, f, proposalID, addr2, govv1.WeightedVoteOptions{{Option: govv1.OptionNo, Weight: "1.0"}})
 
 	// De-power validator1 before tally
-	err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr1, 0)
+	err = f.poaKeeper.UpdateValidator(f.ctx, consAddr1, types.Validator{Power: 0})
 	require.NoError(t, err)
 
 	proposal, err := f.govKeeper.Proposals.Get(f.ctx, proposalID)
@@ -349,14 +349,14 @@ func TestPOACalculateVoteResultsAndVotingPower_EdgeCases(t *testing.T) {
 
 		// Try to remove the last validator by setting power to 0 - should fail
 		consAddr := sdk.ConsAddress("cons1")
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr, 0)
+		err = f.poaKeeper.UpdateValidator(f.ctx, consAddr, types.Validator{Power: 0})
 		require.Error(t, err)
 		require.ErrorIs(t, err, types.ErrInvalidTotalPower)
 
 		// Verify validator power was NOT changed (validation failed before changes)
-		power, err := f.poaKeeper.GetValidatorPower(f.ctx, consAddr)
+		v, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
 		require.NoError(t, err)
-		require.Equal(t, int64(100), power)
+		require.Equal(t, int64(100), v.Power)
 
 		// Tally should work normally with validator still having power
 		tallyFn := NewPOACalculateVoteResultsAndVotingPowerFn(*f.poaKeeper)

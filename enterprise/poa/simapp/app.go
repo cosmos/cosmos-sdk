@@ -188,6 +188,7 @@ func NewSimApp(
 		map[string][]string{
 			authtypes.FeeCollectorName: nil,
 			govtypes.ModuleName:        {authtypes.Burner, authtypes.Staking},
+			poatypes.ModuleName:        nil,
 		},
 		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,

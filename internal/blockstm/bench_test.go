@@ -65,9 +65,8 @@ func BenchmarkBlockSTM(b *testing.B) {
 				}
 
 				b.ResetTimer()
-				var executedTotal, validatedTotal uint64
 				for i := 0; i < b.N; i++ {
-					executed, validated, _, err := executeBlockWithEstimatesImpl(
+					err := ExecuteBlockWithEstimates(
 						context.Background(),
 						tc.block.Size(),
 						stores,
@@ -81,12 +80,7 @@ func BenchmarkBlockSTM(b *testing.B) {
 						},
 					)
 					require.NoError(b, err)
-					executedTotal += executed
-					validatedTotal += validated
 				}
-				denom := float64(b.N * tc.block.Size())
-				b.ReportMetric(float64(executedTotal)/denom, "exec/txn")
-				b.ReportMetric(float64(validatedTotal)/denom, "val/txn")
 			})
 		}
 	}

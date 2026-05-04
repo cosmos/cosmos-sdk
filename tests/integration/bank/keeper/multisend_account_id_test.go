@@ -36,7 +36,7 @@ func TestMultiSendNewAccountsGetUniqueIDs(t *testing.T) {
 	logger := log.NewTestLogger(t)
 
 	cms := integration.CreateMultiStore(keys, logger)
-	ctx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{
+	ctx := sdk.NewContext(cms, cmtproto.Header{
 		Height:  1,
 		AppHash: []byte("test-app-hash"),
 	}, false, logger).

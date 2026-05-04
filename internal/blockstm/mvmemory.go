@@ -1,6 +1,7 @@
 package blockstm
 
 import (
+	"context"
 	"sync/atomic"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
@@ -51,9 +52,10 @@ func NewMVMemoryWithEstimates(
 	}
 
 	// init with pre-estimates
+	ctx := context.Background()
 	for txn, est := range estimates {
 		for store, locs := range est {
-			mv.data[store].InitWithEstimates(TxnIndex(txn), locs)
+			mv.data[store].InitWithEstimates(ctx, TxnIndex(txn), locs)
 		}
 	}
 
@@ -79,31 +81,31 @@ func (mv *MVMemory) ClearEstimates(txn TxnIndex) {
 	}
 }
 
-func (mv *MVMemory) ValidateReadSet(txn TxnIndex) bool {
+func (mv *MVMemory) ValidateReadSet(ctx context.Context, txn TxnIndex) bool {
 	// Invariant: at least one `Record` call has been made for `txn`
 	rs := *mv.lastReadSet[txn].Load()
 	for store, readSet := range rs {
-		if !mv.data[store].ValidateReadSet(txn, readSet) {
+		if !mv.data[store].ValidateReadSet(ctx, txn, readSet) {
 			return false
 		}
 	}
 	return true
 }
 
-func (mv *MVMemory) WriteSnapshot(parent MultiStore) {
+func (mv *MVMemory) WriteSnapshot(ctx context.Context, parent MultiStore) {
 	for name, i := range mv.stores {
-		mv.data[i].SnapshotToStore(parent.GetStore(name))
+		mv.data[i].SnapshotToStore(ctx, parent.GetStore(name))
 	}
 }
 
 // View creates a view for a particular transaction.
-func (mv *MVMemory) View(txn TxnIndex) *MultiMVMemoryView {
-	return NewMultiMVMemoryView(mv, txn)
+func (mv *MVMemory) View(ctx context.Context, txn TxnIndex) *MultiMVMemoryView {
+	return NewMultiMVMemoryView(ctx, mv, txn)
 }
 
-func (mv *MVMemory) newMVView(name storetypes.StoreKey, txn TxnIndex) MVView {
+func (mv *MVMemory) newMVView(ctx context.Context, name storetypes.StoreKey, txn TxnIndex) MVView {
 	i := mv.stores[name]
-	return NewMVView(mv.storage[i], mv.GetMVStore(i), mv.scheduler, txn)
+	return NewMVView(ctx, i, mv.storage[i], mv.GetMVStore(i), mv.scheduler, txn)
 }
 
 func (mv *MVMemory) GetMVStore(i int) MVStore {

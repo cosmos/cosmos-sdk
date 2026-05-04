@@ -1,11 +1,16 @@
 package blockstm
 
-import storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+import (
+	"context"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+)
 
 const ViewsPreAllocate = 4
 
 // MultiMVMemoryView don't need to be thread-safe, there's a dedicated instance for each tx execution.
 type MultiMVMemoryView struct {
+	ctx    context.Context
 	mv     *MVMemory
 	stores map[storetypes.StoreKey]int
 	views  map[storetypes.StoreKey]MVView
@@ -15,10 +20,12 @@ type MultiMVMemoryView struct {
 var _ MultiStore = (*MultiMVMemoryView)(nil)
 
 func NewMultiMVMemoryView(
+	ctx context.Context,
 	mv *MVMemory,
 	txn TxnIndex,
 ) *MultiMVMemoryView {
 	return &MultiMVMemoryView{
+		ctx:    ctx,
 		stores: mv.stores,
 		views:  make(map[storetypes.StoreKey]MVView, ViewsPreAllocate),
 		txn:    txn,
@@ -29,7 +36,7 @@ func NewMultiMVMemoryView(
 func (mv *MultiMVMemoryView) getViewOrInit(name storetypes.StoreKey) MVView {
 	view, ok := mv.views[name]
 	if !ok {
-		view = mv.mv.newMVView(name, mv.txn)
+		view = mv.mv.newMVView(mv.ctx, name, mv.txn)
 		mv.views[name] = view
 	}
 	return view
@@ -66,7 +73,7 @@ func (mv *MultiMVMemoryView) ApplyWriteSet(version TxnVersion) bool {
 	// handle un-touched stores
 	for name, i := range mv.stores {
 		if _, ok := mv.views[name]; !ok {
-			mv.mv.GetMVStore(i).ConsolidateEmpty(version.Index)
+			mv.mv.GetMVStore(i).ConsolidateEmpty(mv.ctx, version.Index)
 		}
 	}
 	return wroteNewLocation

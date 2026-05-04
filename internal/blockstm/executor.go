@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
+	"go.opentelemetry.io/otel/metric"
 )
 
 // Executor fields are not mutated during execution.
@@ -78,21 +78,25 @@ func (e *Executor) TryExecute(version TxnVersion) (TxnVersion, TaskKind) {
 	// Track read and write counts
 	readCount := view.CountReads()
 	writeCount := view.CountWrites()
-	telemetry.IncrCounter(float32(readCount), TelemetrySubsystem, KeyTxReadCount)   //nolint:staticcheck // TODO: switch to OpenTelemetry
-	telemetry.IncrCounter(float32(writeCount), TelemetrySubsystem, KeyTxWriteCount) //nolint:staticcheck // TODO: switch to OpenTelemetry
+	if inst != nil {
+		inst.TxReadCount.Add(e.ctx, int64(readCount))
+		inst.TxWriteCount.Add(e.ctx, int64(writeCount))
+	}
 
 	wroteNewLocation := e.mvMemory.Record(version, view)
 	if wroteNewLocation {
-		telemetry.IncrCounter(1, TelemetrySubsystem, KeyTxNewLocationWrite) //nolint:staticcheck // TODO: switch to OpenTelemetry
+		if inst != nil {
+			inst.TxNewLocationWrite.Add(e.ctx, 1)
+		}
 	}
 
-	telemetry.MeasureSince(start, TelemetrySubsystem, KeyTryExecuteTime) //nolint:staticcheck // TODO: switch to OpenTelemetry
+	measureSince(e.ctx, func() metric.Int64Histogram { return inst.TryExecuteTime }, start)
 	return e.scheduler.FinishExecution(version, wroteNewLocation)
 }
 
 func (e *Executor) NeedsReexecution(version TxnVersion) (TxnVersion, TaskKind) {
 	e.scheduler.validatedTxns.Add(1)
-	valid := e.mvMemory.ValidateReadSet(version.Index)
+	valid := e.mvMemory.ValidateReadSet(e.ctx, version.Index)
 
 	var aborted bool
 	if !valid {
@@ -108,7 +112,7 @@ func (e *Executor) NeedsReexecution(version TxnVersion) (TxnVersion, TaskKind) {
 }
 
 func (e *Executor) execute(txn TxnIndex) *MultiMVMemoryView {
-	view := e.mvMemory.View(txn)
+	view := e.mvMemory.View(e.ctx, txn)
 	e.txExecutor(txn, view)
 	return view
 }

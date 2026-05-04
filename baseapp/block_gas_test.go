@@ -100,6 +100,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		require.NoError(t, err)
 
 		bapp := appBuilder.Build(dbm.NewMemDB())
+		bapp.SetDisableBlockGasMeter(false)
 		err = bapp.Load(true)
 		require.NoError(t, err)
 

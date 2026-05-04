@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log/v2"
-	"github.com/cosmos/cosmos-sdk/store/v2"
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/v2"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	paramsmodule "github.com/cosmos/cosmos-sdk/x/params"
@@ -43,7 +43,7 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	suite.amino = encodingConfig.Amino
 
 	ss := types.NewSubspace(suite.cdc, suite.amino, key, tkey, "testsubspace")
-	suite.ctx = sdk.NewContext(ms.RootCacheMultiStore(), cmtproto.Header{}, false, log.NewNopLogger())
+	suite.ctx = sdk.NewContext(ms, cmtproto.Header{}, false, log.NewNopLogger())
 	suite.ss = ss.WithKeyTable(paramKeyTable())
 }
 

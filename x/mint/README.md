@@ -102,7 +102,6 @@ Then, pass the function defined above into the `depinject.Supply` function with 
 func NewSimApp(
     logger log.Logger,
     db dbm.DB,
-    traceStore io.Writer,
     loadLatest bool,
     appOpts servertypes.AppOptions,
     baseAppOptions ...func(*baseapp.BaseApp),

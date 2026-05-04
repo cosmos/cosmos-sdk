@@ -7,45 +7,41 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
-func TestCosmosExtraUnmarshal(t *testing.T) {
+func TestExtensionOptionsUnmarshal(t *testing.T) {
 	tests := []struct {
 		name     string
 		yaml     string
-		expected extraConfig
+		expected *ExtensionOptions
 	}{
 		{
 			name: "instruments with empty config",
 			yaml: `
-cosmos_extra:
+extensions:
   instruments:
     host: {}
     runtime: {}
 `,
-			expected: extraConfig{
-				CosmosExtra: &cosmosExtra{
-					Instruments: map[string]map[string]any{
-						"host":    {},
-						"runtime": {},
-					},
+			expected: &ExtensionOptions{
+				Instruments: map[string]map[string]any{
+					"host":    {},
+					"runtime": {},
 				},
 			},
 		},
 		{
 			name: "instruments with options",
 			yaml: `
-cosmos_extra:
+extensions:
   instruments:
     host: {}
     diskio:
       disable_virtual_device_filter: true
 `,
-			expected: extraConfig{
-				CosmosExtra: &cosmosExtra{
-					Instruments: map[string]map[string]any{
-						"host": {},
-						"diskio": {
-							"disable_virtual_device_filter": true,
-						},
+			expected: &ExtensionOptions{
+				Instruments: map[string]map[string]any{
+					"host": {},
+					"diskio": {
+						"disable_virtual_device_filter": true,
 					},
 				},
 			},
@@ -53,26 +49,24 @@ cosmos_extra:
 		{
 			name: "instruments with propagators",
 			yaml: `
-cosmos_extra:
+extensions:
   instruments:
     host: {}
   propagators:
     - tracecontext
     - baggage
 `,
-			expected: extraConfig{
-				CosmosExtra: &cosmosExtra{
-					Instruments: map[string]map[string]any{
-						"host": {},
-					},
-					Propagators: []string{"tracecontext", "baggage"},
+			expected: &ExtensionOptions{
+				Instruments: map[string]map[string]any{
+					"host": {},
 				},
+				Propagators: []string{"tracecontext", "baggage"},
 			},
 		},
 		{
 			name: "full config",
 			yaml: `
-cosmos_extra:
+extensions:
   trace_file: /tmp/traces.json
   metrics_file: /tmp/metrics.json
   instruments:
@@ -83,50 +77,42 @@ cosmos_extra:
   propagators:
     - tracecontext
 `,
-			expected: extraConfig{
-				CosmosExtra: &cosmosExtra{
-					TraceFile:   "/tmp/traces.json",
-					MetricsFile: "/tmp/metrics.json",
-					Instruments: map[string]map[string]any{
-						"host":    {},
-						"runtime": {},
-						"diskio": {
-							"disable_virtual_device_filter": true,
-						},
+			expected: &ExtensionOptions{
+				TraceFile:   "/tmp/traces.json",
+				MetricsFile: "/tmp/metrics.json",
+				Instruments: map[string]map[string]any{
+					"host":    {},
+					"runtime": {},
+					"diskio": {
+						"disable_virtual_device_filter": true,
 					},
-					Propagators: []string{"tracecontext"},
 				},
+				Propagators: []string{"tracecontext"},
 			},
 		},
 		{
-			name: "empty cosmos_extra (null)",
+			name: "empty extensions (null)",
 			yaml: `
-cosmos_extra:
+extensions:
 `,
-			expected: extraConfig{
-				CosmosExtra: nil, // YAML with just "cosmos_extra:" and no value results in nil
-			},
+			expected: nil,
 		},
 		{
-			name: "empty cosmos_extra (empty object)",
+			name: "empty extensions (empty object)",
 			yaml: `
-cosmos_extra: {}
+extensions: {}
 `,
-			expected: extraConfig{
-				CosmosExtra: &cosmosExtra{},
-			},
+			expected: &ExtensionOptions{},
 		},
 		{
-			name: "no cosmos_extra",
+			name: "no extensions",
 			yaml: `
 some_other_key: value
 `,
-			expected: extraConfig{
-				CosmosExtra: nil,
-			},
+			expected: nil,
 		},
 		{
-			name: "realistic otel.yaml with cosmos_extra",
+			name: "realistic otel.yaml with extensions",
 			yaml: `
 file_format: "1.0-rc.3"
 resource:
@@ -149,7 +135,7 @@ meter_provider:
             host: 0.0.0.0
             port: 9464
 
-cosmos_extra:
+extensions:
   instruments:
     host: {}
     runtime: {}
@@ -158,42 +144,42 @@ cosmos_extra:
   propagators:
     - tracecontext
 `,
-			expected: extraConfig{
-				CosmosExtra: &cosmosExtra{
-					Instruments: map[string]map[string]any{
-						"host":    {},
-						"runtime": {},
-						"diskio": {
-							"disable_virtual_device_filter": true,
-						},
+			expected: &ExtensionOptions{
+				Instruments: map[string]map[string]any{
+					"host":    {},
+					"runtime": {},
+					"diskio": {
+						"disable_virtual_device_filter": true,
 					},
-					Propagators: []string{"tracecontext"},
 				},
+				Propagators: []string{"tracecontext"},
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var cfg extraConfig
+			var cfg struct {
+				Extensions *ExtensionOptions `yaml:"extensions"`
+			}
 			err := yaml.Unmarshal([]byte(tc.yaml), &cfg)
 			require.NoError(t, err)
 
-			if tc.expected.CosmosExtra == nil {
-				require.Nil(t, cfg.CosmosExtra)
+			if tc.expected == nil {
+				require.Nil(t, cfg.Extensions)
 				return
 			}
 
-			require.NotNil(t, cfg.CosmosExtra)
-			require.Equal(t, tc.expected.CosmosExtra.TraceFile, cfg.CosmosExtra.TraceFile)
-			require.Equal(t, tc.expected.CosmosExtra.MetricsFile, cfg.CosmosExtra.MetricsFile)
-			require.Equal(t, tc.expected.CosmosExtra.Propagators, cfg.CosmosExtra.Propagators)
+			require.NotNil(t, cfg.Extensions)
+			require.Equal(t, tc.expected.TraceFile, cfg.Extensions.TraceFile)
+			require.Equal(t, tc.expected.MetricsFile, cfg.Extensions.MetricsFile)
+			require.Equal(t, tc.expected.Propagators, cfg.Extensions.Propagators)
 
-			require.Equal(t, len(tc.expected.CosmosExtra.Instruments), len(cfg.CosmosExtra.Instruments),
+			require.Equal(t, len(tc.expected.Instruments), len(cfg.Extensions.Instruments),
 				"instruments count mismatch")
 
-			for name, expectedOpts := range tc.expected.CosmosExtra.Instruments {
-				actualOpts, ok := cfg.CosmosExtra.Instruments[name]
+			for name, expectedOpts := range tc.expected.Instruments {
+				actualOpts, ok := cfg.Extensions.Instruments[name]
 				require.True(t, ok, "missing instrument: %s", name)
 				require.Equal(t, len(expectedOpts), len(actualOpts),
 					"options count mismatch for instrument %s", name)

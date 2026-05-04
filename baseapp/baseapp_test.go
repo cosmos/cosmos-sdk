@@ -19,19 +19,19 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/metrics"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/rootmulti"
-	"cosmossdk.io/store/snapshots"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
+	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
+	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -301,7 +301,7 @@ func TestSetLoader(t *testing.T) {
 	initStore := func(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 		t.Helper()
 
-		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+		rs := rootmulti.NewStore(db, log.NewNopLogger())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
 		key := storetypes.NewKVStoreKey(storeKey)
@@ -323,7 +323,7 @@ func TestSetLoader(t *testing.T) {
 	checkStore := func(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
 		t.Helper()
 
-		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+		rs := rootmulti.NewStore(db, log.NewNopLogger())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 
 		key := storetypes.NewKVStoreKey(storeKey)
@@ -453,6 +453,47 @@ func TestOptionFunction(t *testing.T) {
 	db := dbm.NewMemDB()
 	bap := baseapp.NewBaseApp("starting name", log.NewTestLogger(t), db, nil, testChangeNameHelper("new name"))
 	require.Equal(t, bap.Name(), "new name", "BaseApp should have had name changed via option function")
+}
+
+func TestBlockGasMeterParallelRunnerPanic(t *testing.T) {
+	db := dbm.NewMemDB()
+
+	testCases := []struct {
+		name     string
+		testFunc func(*testing.T, *baseapp.BaseApp)
+	}{
+		{
+			"panic on bstm + gas meter",
+			func(t *testing.T, bap *baseapp.BaseApp) {
+				t.Helper()
+				bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil))
+				require.Panics(t, func() { bap.SetDisableBlockGasMeter(false) })
+				require.Panics(t, func() { baseapp.EnableBlockGasMeter()(bap) })
+			},
+		},
+		{
+			"panic on gas meter + bstm",
+			func(t *testing.T, bap *baseapp.BaseApp) {
+				t.Helper()
+				bap.SetDisableBlockGasMeter(false)
+				require.Panics(t, func() { bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil)) })
+			},
+		},
+		{
+			"successful bstm parallelism",
+			func(t *testing.T, bap *baseapp.BaseApp) {
+				t.Helper()
+				require.NotPanics(t, func() { bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil)) })
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			bap := baseapp.NewBaseApp("foo", log.NewTestLogger(t), db, nil)
+			tc.testFunc(t, bap)
+		})
+	}
 }
 
 func TestBaseAppOptionSeal(t *testing.T) {

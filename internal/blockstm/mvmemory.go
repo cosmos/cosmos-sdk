@@ -1,9 +1,10 @@
 package blockstm
 
 import (
+	"context"
 	"sync/atomic"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 type (
@@ -13,12 +14,11 @@ type (
 
 // MVMemory implements `Algorithm 2 The MVMemory module`
 type MVMemory struct {
-	storage              MultiStore
-	scheduler            *Scheduler
-	stores               map[storetypes.StoreKey]int
-	data                 []MVStore
-	lastWrittenLocations []atomic.Pointer[MultiLocations]
-	lastReadSet          []atomic.Pointer[MultiReadSet]
+	storage     MultiStore
+	scheduler   *Scheduler
+	stores      map[storetypes.StoreKey]int
+	data        []MVStore
+	lastReadSet []atomic.Pointer[MultiReadSet]
 }
 
 func NewMVMemory(
@@ -34,123 +34,72 @@ func NewMVMemoryWithEstimates(
 ) *MVMemory {
 	data := make([]MVStore, len(stores))
 	for key, i := range stores {
-		data[i] = NewMVStore(key)
+		data[i] = NewMVStore(key, block_size)
 	}
 
 	mv := &MVMemory{
-		storage:              storage,
-		scheduler:            scheduler,
-		stores:               stores,
-		data:                 data,
-		lastWrittenLocations: make([]atomic.Pointer[MultiLocations], block_size),
-		lastReadSet:          make([]atomic.Pointer[MultiReadSet], block_size),
+		storage:     storage,
+		scheduler:   scheduler,
+		stores:      stores,
+		data:        data,
+		lastReadSet: make([]atomic.Pointer[MultiReadSet], block_size),
 	}
 
 	// init with pre-estimates
+	ctx := context.Background()
 	for txn, est := range estimates {
-		mv.rcuUpdateWrittenLocations(TxnIndex(txn), est)
-		mv.ConvertWritesToEstimates(TxnIndex(txn))
+		for store, locs := range est {
+			mv.data[store].InitWithEstimates(ctx, TxnIndex(txn), locs)
+		}
 	}
 
 	return mv
 }
 
 func (mv *MVMemory) Record(version TxnVersion, view *MultiMVMemoryView) bool {
-	newLocations := view.ApplyWriteSet(version)
-	wroteNewLocation := mv.rcuUpdateWrittenLocations(version.Index, newLocations)
+	wroteNewLocation := view.ApplyWriteSet(version)
 	mv.lastReadSet[version.Index].Store(view.ReadSet())
 	return wroteNewLocation
 }
 
-// newLocations are sorted
-func (mv *MVMemory) rcuUpdateWrittenLocations(txn TxnIndex, newLocations MultiLocations) bool {
-	var wroteNewLocation bool
-
-	prevLocations := mv.readLastWrittenLocations(txn)
-	for i, newLoc := range newLocations {
-		prevLoc, ok := prevLocations[i]
-		if !ok {
-			if len(newLocations[i]) > 0 {
-				wroteNewLocation = true
-			}
-			continue
-		}
-
-		DiffOrderedList(prevLoc, newLoc, func(key Key, is_new bool) bool {
-			if is_new {
-				wroteNewLocation = true
-			} else {
-				mv.data[i].Delete(key, txn)
-			}
-			return true
-		})
-	}
-
-	// delete all the keys in un-touched stores
-	for i, prevLoc := range prevLocations {
-		if _, ok := newLocations[i]; ok {
-			continue
-		}
-
-		for _, key := range prevLoc {
-			mv.data[i].Delete(key, txn)
-		}
-	}
-
-	mv.lastWrittenLocations[txn].Store(&newLocations)
-	return wroteNewLocation
-}
-
 func (mv *MVMemory) ConvertWritesToEstimates(txn TxnIndex) {
-	for i, locations := range mv.readLastWrittenLocations(txn) {
-		for _, key := range locations {
-			mv.data[i].WriteEstimate(key, txn)
-		}
+	for _, data := range mv.data {
+		data.ConvertWritesToEstimates(txn)
 	}
 }
 
 // ClearEstimates removes estimate marks for canceled transactions.
 func (mv *MVMemory) ClearEstimates(txn TxnIndex) {
-	for i, locations := range mv.readLastWrittenLocations(txn) {
-		for _, key := range locations {
-			mv.data[i].Delete(key, txn)
-		}
+	for _, data := range mv.data {
+		data.ClearEstimates(txn)
 	}
 }
 
-func (mv *MVMemory) ValidateReadSet(txn TxnIndex) bool {
+func (mv *MVMemory) ValidateReadSet(ctx context.Context, txn TxnIndex) bool {
 	// Invariant: at least one `Record` call has been made for `txn`
 	rs := *mv.lastReadSet[txn].Load()
 	for store, readSet := range rs {
-		if !mv.data[store].ValidateReadSet(txn, readSet) {
+		if !mv.data[store].ValidateReadSet(ctx, txn, readSet) {
 			return false
 		}
 	}
 	return true
 }
 
-func (mv *MVMemory) readLastWrittenLocations(txn TxnIndex) MultiLocations {
-	p := mv.lastWrittenLocations[txn].Load()
-	if p != nil {
-		return *p
-	}
-	return nil
-}
-
-func (mv *MVMemory) WriteSnapshot(storage MultiStore) {
+func (mv *MVMemory) WriteSnapshot(ctx context.Context, storage MultiStore) {
 	for name, i := range mv.stores {
-		mv.data[i].SnapshotToStore(storage.GetStore(name))
+		mv.data[i].SnapshotToStore(ctx, storage.GetStore(name))
 	}
 }
 
 // View creates a view for a particular transaction.
-func (mv *MVMemory) View(txn TxnIndex) *MultiMVMemoryView {
-	return NewMultiMVMemoryView(mv.stores, mv.newMVView, txn)
+func (mv *MVMemory) View(ctx context.Context, txn TxnIndex) *MultiMVMemoryView {
+	return NewMultiMVMemoryView(ctx, mv, txn)
 }
 
-func (mv *MVMemory) newMVView(name storetypes.StoreKey, txn TxnIndex) MVView {
+func (mv *MVMemory) newMVView(ctx context.Context, name storetypes.StoreKey, txn TxnIndex) MVView {
 	i := mv.stores[name]
-	return NewMVView(i, mv.storage.GetStore(name), mv.GetMVStore(i), mv.scheduler, txn)
+	return NewMVView(ctx, i, mv.storage.GetStore(name), mv.GetMVStore(i), mv.scheduler, txn)
 }
 
 func (mv *MVMemory) GetMVStore(i int) MVStore {

@@ -5,9 +5,8 @@ import (
 
 	proto "github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 // FilteredPaginate does pagination of all the results in the PrefixStore based on the

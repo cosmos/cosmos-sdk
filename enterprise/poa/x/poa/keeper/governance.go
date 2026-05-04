@@ -58,33 +58,26 @@ func NewPOACalculateVoteResultsAndVotingPowerFn(keeper Keeper) govkeeper.Calcula
 		// Collect all validators and their voting power
 		validators := make(map[string]int64) // operator address -> power
 
-		// Iterate through POA validators in descending power order (highest power first)
-		// Stop when we reach power = 0
-		ranger := new(collections.Range[collections.Pair[int64, string]]).Descending()
-		err = keeper.validators.Walk(sdkCtx, ranger, func(key collections.Pair[int64, string], validator types.Validator) (stop bool, err error) {
-			power := key.K1()
-
-			// Stop iteration when we reach validators with power 0
-			if power == 0 {
-				return true, nil
-			}
-
+		// Iterate through active POA validators (IterateActiveValidators skips power=0)
+		err = keeper.IterateActiveValidators(sdkCtx, func(consAddr sdk.ConsAddress, power int64, validator types.Validator) (stop bool, err error) {
 			validators[validator.Metadata.OperatorAddress] = power
-
 			return false, nil
 		})
 		if err != nil {
 			return math.LegacyZeroDec(), math.ZeroInt(), nil, err
 		}
 
+		votesToRemove := []collections.Pair[uint64, sdk.AccAddress]{}
+
 		// Iterate through all votes for this proposal
 		rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposal.Id)
 		err = k.Votes.Walk(sdkCtx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote govv1.Vote) (bool, error) {
-			// Check if the voter is a POA validator
-			power, isValidator := validators[vote.Voter]
-			if !isValidator {
-				// Skip non-validator votes in POA
-				// Note that this should never happen if POA governance is set up properly
+			votesToRemove = append(votesToRemove, key)
+
+			// Check if the voter is an active POA validator
+			power, isActive := validators[vote.Voter]
+			if !isActive {
+				// Skip votes from de-powered or non-validator addresses
 				return false, nil
 			}
 
@@ -105,6 +98,12 @@ func NewPOACalculateVoteResultsAndVotingPowerFn(keeper Keeper) govkeeper.Calcula
 		})
 		if err != nil {
 			return math.LegacyZeroDec(), math.ZeroInt(), nil, err
+		}
+
+		for _, key := range votesToRemove {
+			if err := k.Votes.Remove(sdkCtx, key); err != nil {
+				return math.LegacyZeroDec(), math.ZeroInt(), nil, fmt.Errorf("error while removing vote (%d/%s): %w", key.K1(), key.K2(), err)
+			}
 		}
 
 		return totalVoterPower, totalValPower, results, nil

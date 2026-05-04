@@ -36,7 +36,8 @@ message MsgUpdateParams {
   tendermint.types.EvidenceParams  evidence  = 3;
   tendermint.types.ValidatorParams validator = 4;
 
-  tendermint.types.ABCIParams abci = 5 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.50"];
+  tendermint.types.ABCIParams      abci = 5 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.50"];
+  tendermint.types.AuthorityParams auth = 6 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.54"];
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a

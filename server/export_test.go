@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -156,7 +155,6 @@ func (e *mockExporter) SetDefaultExportApp() {
 func (e *mockExporter) Export(
 	logger log.Logger,
 	db dbm.DB,
-	traceWriter io.Writer,
 	height int64,
 	forZeroHeight bool,
 	jailAllowedAddrs []string,

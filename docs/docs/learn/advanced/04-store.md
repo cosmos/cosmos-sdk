@@ -90,7 +90,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/store/types/store.go#L22-L32
 
 The `CommitID` is a deterministic commit of the state tree. Its hash is returned to the underlying consensus engine and stored in the block header. Note that commit store interfaces exist for various purposes, one of which is to make sure not every object can commit the store. As part of the [object-capabilities model](./10-ocap.md) of the Cosmos SDK, only `baseapp` should have the ability to commit stores. For example, this is the reason why the `ctx.KVStore()` method by which modules typically access stores returns a `KVStore` and not a `CommitKVStore`.
 
-The Cosmos SDK comes with many types of stores, the most used being [`CommitMultiStore`](#multistore), [`KVStore`](#kvstore) and [`GasKv` store](#gaskv-store). [Other types of stores](#other-stores) include `Transient` and `TraceKV` stores.
+The Cosmos SDK comes with many types of stores, the most used being [`CommitMultiStore`](#multistore), [`KVStore`](#kvstore) and [`GasKv` store](#gaskv-store). [Other types of stores](#other-stores) include `Transient` stores.
 
 ## Multistore
 
@@ -101,8 +101,6 @@ Each Cosmos SDK application holds a multistore at its root to persist its state.
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/store/types/store.go#L115-L147
 ```
-
-If tracing is enabled, then branching the multistore will firstly wrap all the underlying `KVStore` in [`TraceKv.Store`](#tracekv-store).
 
 ### CommitMultiStore
 
@@ -248,16 +246,6 @@ Otherwise it uses the following default:
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/store/types/gas.go#L230-L241
 ```
-
-### `TraceKv` Store
-
-`tracekv.Store` is a wrapper `KVStore` which provides operation tracing functionalities over the underlying `KVStore`. It is applied automatically by the Cosmos SDK on all `KVStore` if tracing is enabled on the parent `MultiStore`.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/store/tracekv/store.go#L20-L43
-```
-
-When each `KVStore` methods are called, `tracekv.Store` automatically logs `traceOperation` to the `Store.writer`. `traceOperation.Metadata` is filled with `Store.context` when it is not nil. `TraceContext` is a `map[string]interface{}`.
 
 ### `Prefix` Store
 

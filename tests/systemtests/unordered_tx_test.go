@@ -10,7 +10,7 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
-	systest "github.com/cosmos/cosmos-sdk/testutil/systemtests"
+	systest "github.com/cosmos/cosmos-sdk/tools/systemtests"
 )
 
 func TestUnorderedTXDuplicate(t *testing.T) {

@@ -38,7 +38,7 @@ func RestoreSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
 				return err
 			}
 			logger := log.NewLogger(cmd.OutOrStdout())
-			app := appCreator(logger, db, nil, ctx.Viper)
+			app := appCreator(logger, db, ctx.Viper)
 
 			sm := app.SnapshotManager()
 			return sm.RestoreLocalSnapshot(height, uint32(format))

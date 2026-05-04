@@ -36,12 +36,14 @@ import (
 // Keeper maintains the POA module state and provides methods for validator management and fee distribution.
 type Keeper struct {
 	params collections.Item[types.Params]
-	// Validators indexed by (power, consensus_address) for sorted iteration
-	validators *collections.IndexedMap[collections.Pair[int64, string], types.Validator, ValidatorIndexes]
+	// Validators keyed by consensus address
+	validators *collections.IndexedMap[sdk.ConsAddress, types.Validator, ValidatorIndexes]
 	// totalPower of all validators
 	totalPower collections.Item[int64]
 	// totalAllocatedFees tracks the sum of all allocated fees across validators
 	totalAllocatedFees collections.Item[types.ValidatorFees]
+	// validatorAllocatedFees tracks per-validator allocated fees, keyed by consensus address
+	validatorAllocatedFees collections.Map[string, types.ValidatorFees]
 	// queuedUpdates stores pending validator updates for the block in transient store.
 	// The store gets wiped every block, so this is only used for same-block updates.
 	queuedUpdates collections.Vec[abci.ValidatorUpdate]
@@ -55,17 +57,17 @@ type Keeper struct {
 
 // ValidatorIndexes defines secondary indexes for validators to enable efficient lookups by different keys.
 type ValidatorIndexes struct {
-	// ConsensusAddress maps consensus address -> (power, consensus_address)
-	ConsensusAddress *indexes.Unique[string, collections.Pair[int64, string], types.Validator]
-	// OperatorAddress maps operator address -> (power, consensus_address)
-	OperatorAddress *indexes.Unique[string, collections.Pair[int64, string], types.Validator]
+	// OperatorAddress maps operator address -> consensus address
+	OperatorAddress *indexes.Unique[string, sdk.ConsAddress, types.Validator]
+	// Power maps (power, consensus_address) for sorted iteration by power
+	Power *indexes.Multi[int64, sdk.ConsAddress, types.Validator]
 }
 
 // IndexesList returns the list of indexes for the validators collection.
-func (a ValidatorIndexes) IndexesList() []collections.Index[collections.Pair[int64, string], types.Validator] {
-	return []collections.Index[collections.Pair[int64, string], types.Validator]{
-		a.ConsensusAddress,
+func (a ValidatorIndexes) IndexesList() []collections.Index[sdk.ConsAddress, types.Validator] {
+	return []collections.Index[sdk.ConsAddress, types.Validator]{
 		a.OperatorAddress,
+		a.Power,
 	}
 }
 
@@ -81,33 +83,32 @@ func NewKeeper(cdc codec.Codec, storeService store.KVStoreService, transientStor
 			"params",
 			codec.CollValue[types.Params](cdc),
 		),
-		// Validators indexed by (power, consensus_address) for sorted iteration
+		// Validators keyed by consensus address
 		validators: collections.NewIndexedMap(
 			sb,
 			types.ValidatorsKey,
 			"validators",
-			collections.PairKeyCodec(collections.Int64Key, collections.StringKey),
+			sdk.ConsAddressKey,
 			codec.CollValue[types.Validator](cdc),
 			ValidatorIndexes{
-				ConsensusAddress: indexes.NewUnique(
-					sb,
-					types.ValidatorConsensusAddressIndex,
-					"validator_by_consensus",
-					collections.StringKey,
-					collections.PairKeyCodec(collections.Int64Key, collections.StringKey),
-					func(key collections.Pair[int64, string], v types.Validator) (string, error) {
-						// Extract consensus address from composite key
-						return key.K2(), nil
-					},
-				),
 				OperatorAddress: indexes.NewUnique(
 					sb,
 					types.ValidatorOperatorAddressIndex,
 					"validator_by_operator",
 					collections.StringKey,
-					collections.PairKeyCodec(collections.Int64Key, collections.StringKey),
-					func(_ collections.Pair[int64, string], v types.Validator) (string, error) {
+					sdk.ConsAddressKey,
+					func(_ sdk.ConsAddress, v types.Validator) (string, error) {
 						return v.Metadata.OperatorAddress, nil
+					},
+				),
+				Power: indexes.NewMulti(
+					sb,
+					types.ValidatorPowerIndex,
+					"validator_by_power",
+					collections.Int64Key,
+					sdk.ConsAddressKey,
+					func(_ sdk.ConsAddress, v types.Validator) (int64, error) {
+						return v.Power, nil
 					},
 				),
 			},
@@ -122,6 +123,13 @@ func NewKeeper(cdc codec.Codec, storeService store.KVStoreService, transientStor
 			sb,
 			types.TotalAllocatedKey,
 			"total_allocated",
+			codec.CollValue[types.ValidatorFees](cdc),
+		),
+		validatorAllocatedFees: collections.NewMap(
+			sb,
+			types.ValidatorAllocatedFeesKey,
+			"validator_allocated_fees",
+			collections.StringKey,
 			codec.CollValue[types.ValidatorFees](cdc),
 		),
 		queuedUpdates: collections.NewVec(

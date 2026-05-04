@@ -24,7 +24,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log/v2"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -35,6 +34,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/keeper"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -86,6 +86,7 @@ func initFixture(tb testing.TB) *fixture {
 
 	maccPerms := map[string][]string{
 		authtypes.FeeCollectorName: nil,
+		poatypes.ModuleName:        nil,
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -98,9 +99,9 @@ func initFixture(tb testing.TB) *fixture {
 		authority.String(),
 	)
 
-	// Create fee collector module account
-	feeCollectorAcc := authtypes.NewEmptyModuleAccount(authtypes.FeeCollectorName)
-	accountKeeper.SetModuleAccount(newCtx, feeCollectorAcc)
+	// Create module accounts (GetModuleAccount auto-creates with proper account numbering)
+	accountKeeper.GetModuleAccount(newCtx, authtypes.FeeCollectorName)
+	accountKeeper.GetModuleAccount(newCtx, poatypes.ModuleName)
 
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,

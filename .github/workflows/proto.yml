@@ -1,17 +1,44 @@
 name: Protobuf
 # Protobuf runs buf (https://buf.build/) lint and check-breakage
-# This workflow is only run when a .proto file has been changed
+# This workflow always runs for PRs and merge groups; jobs only execute when relevant proto files changed.
 on:
   pull_request:
-    paths:
-      - "proto/**"
-      - "enterprise/poa/proto/**"
+  merge_group:
 
 permissions:
   contents: read
 
 jobs:
+  detect-proto-changes:
+    runs-on: depot-ubuntu-22.04-4
+    outputs:
+      sdk_proto_diff: ${{ steps.sdk_proto_diff.outputs.diff }}
+      poa_proto_diff: ${{ steps.poa_proto_diff.outputs.diff }}
+      base_branch: ${{ steps.base_branch.outputs.branch }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: sdk_proto_diff
+        with:
+          PATTERNS: |
+            proto/**
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: poa_proto_diff
+        with:
+          PATTERNS: |
+            enterprise/poa/proto/**
+      - id: base_branch
+        run: |
+          if [ "${{ github.event_name }}" = "merge_group" ]; then
+            branch="${{ github.event.merge_group.base_ref }}"
+            echo "branch=${branch#refs/heads/}" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch=${{ github.event.pull_request.base.ref }}" >> "$GITHUB_OUTPUT"
+          fi
+
   lint:
+    needs: detect-proto-changes
+    if: needs.detect-proto-changes.outputs.sdk_proto_diff == 'true'
     runs-on: depot-ubuntu-22.04-4
     timeout-minutes: 5
     steps:
@@ -22,6 +49,8 @@ jobs:
           input: "proto"
 
   break-check:
+    needs: detect-proto-changes
+    if: needs.detect-proto-changes.outputs.sdk_proto_diff == 'true'
     runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v6
@@ -29,9 +58,11 @@ jobs:
       - uses: bufbuild/buf-breaking-action@v1
         with:
           input: "proto"
-          against: "https://github.com/${{ github.repository }}.git#branch=${{ github.event.pull_request.base.ref }},ref=HEAD~1,subdir=proto"
+          against: "https://github.com/${{ github.repository }}.git#branch=${{ needs.detect-proto-changes.outputs.base_branch }},ref=HEAD~1,subdir=proto"
 
   lint-poa:
+    needs: detect-proto-changes
+    if: needs.detect-proto-changes.outputs.poa_proto_diff == 'true'
     runs-on: depot-ubuntu-22.04-4
     timeout-minutes: 5
     steps:
@@ -42,6 +73,8 @@ jobs:
           input: "enterprise/poa/proto"
 
   break-check-poa:
+    needs: detect-proto-changes
+    if: needs.detect-proto-changes.outputs.poa_proto_diff == 'true'
     runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v6
@@ -49,4 +82,4 @@ jobs:
       - uses: bufbuild/buf-breaking-action@v1
         with:
           input: "enterprise/poa/proto"
-          against: "https://github.com/${{ github.repository }}.git#branch=${{ github.event.pull_request.base.ref }},ref=HEAD~1,subdir=enterprise/poa/proto"
+          against: "https://github.com/${{ github.repository }}.git#branch=${{ needs.detect-proto-changes.outputs.base_branch }},ref=HEAD~1,subdir=enterprise/poa/proto"

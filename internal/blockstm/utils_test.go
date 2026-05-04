@@ -11,7 +11,15 @@ type DiffEntry struct {
 	IsNew bool
 }
 
-func TestDiffOrderedList(t *testing.T) {
+func bytesIsZero(b []byte) bool {
+	return len(b) == 0
+}
+
+func bytesValueLen(b []byte) int {
+	return len(b)
+}
+
+func TestDiffMemDB(t *testing.T) {
 	testCases := []struct {
 		name     string
 		old      []Key
@@ -71,7 +79,15 @@ func TestDiffOrderedList(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := []DiffEntry{}
-			DiffOrderedList(tc.old, tc.new, func(key Key, leftOrRight bool) bool {
+			old := NewWriteSet(bytesIsZero, bytesValueLen)
+			for _, key := range tc.old {
+				old.Set(key, []byte{1})
+			}
+			new := NewWriteSet(bytesIsZero, bytesValueLen)
+			for _, key := range tc.new {
+				new.Set(key, []byte{1})
+			}
+			DiffMemDB(old, new, func(key Key, leftOrRight bool) bool {
 				result = append(result, DiffEntry{key, leftOrRight})
 				return true
 			})

@@ -41,7 +41,8 @@ func TestDefaultGenesis(t *testing.T) {
 		genesis := DefaultGenesis()
 		err := genesis.ValidateBasic()
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "at least one validator with non-zero power")
+		require.ErrorIs(t, err, ErrInvalidTotalPower)
+		require.Contains(t, err.Error(), "total power must be greater than zero")
 	})
 }
 
@@ -55,7 +56,8 @@ func TestGenesisStateValidateBasicEnhanced(t *testing.T) {
 		}
 		err := genesis.ValidateBasic()
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "at least one validator with non-zero power")
+		require.ErrorIs(t, err, ErrInvalidTotalPower)
+		require.Contains(t, err.Error(), "total power must be greater than zero")
 	})
 
 	t.Run("valid genesis state with validators", func(t *testing.T) {
@@ -313,7 +315,8 @@ func TestGenesisStateValidateBasicEnhanced(t *testing.T) {
 		}
 		err = genesis.ValidateBasic()
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "at least one validator with non-zero power")
+		require.ErrorIs(t, err, ErrInvalidTotalPower)
+		require.Contains(t, err.Error(), "total power must be greater than zero")
 	})
 
 	t.Run("validators with zero power and non-zero power", func(t *testing.T) {
@@ -472,7 +475,8 @@ func TestGenesisStateValidate(t *testing.T) {
 		}
 		err := genesis.Validate(ac)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "at least one validator with non-zero power")
+		require.ErrorIs(t, err, ErrInvalidTotalPower)
+		require.Contains(t, err.Error(), "total power must be greater than zero")
 	})
 
 	t.Run("fails basic validation - negative power", func(t *testing.T) {

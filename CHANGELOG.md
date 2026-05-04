@@ -54,7 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (docs) [#26362](https://github.com/cosmos/cosmos-sdk/pull/26362) Regenerate Swagger API spec to reflect current proto state, including `authority` on consensus params and removal of stale module-config definitions.
 * (tests/e2e) [#26374](https://github.com/cosmos/cosmos-sdk/pull/26374) Reduce flakiness in distribution withdraw-all and tx signature event queries.
-* (mempool) [#26014](https://github.com/cosmos/cosmos-sdk/pull/26014) Backport Krakatoa application-side mempool integration: extend `types/mempool` (`ExtMempool`, `RemoveWithReason`, `SelectBy`, removal reasons/callers), wire `BaseApp` and ABCI utilities for mempool-driven `PrepareProposal` / proposal handling, and align CometBFT server ABCI plumbing.
+* (mempool) [#26014](https://github.com/cosmos/cosmos-sdk/pull/26014) Application-side mempool integration: extend `types/mempool` (`ExtMempool`, `RemoveWithReason`, `SelectBy`, removal reasons/callers), wire `BaseApp` and ABCI utilities for mempool-driven `PrepareProposal` / proposal handling, and align CometBFT server ABCI plumbing.
 * (deps) [#26014](https://github.com/cosmos/cosmos-sdk/pull/26014) Bump `github.com/cometbft/cometbft` to [v0.39.2](https://github.com/cometbft/cometbft/releases/tag/v0.39.2) across workspace modules (Krakatoa release line).
 * (deps) Routine dependency updates across workspace modules (e.g. `github.com/cockroachdb/errors`, `pgregory.net/rapid`, `github.com/fsnotify/fsnotify`, OpenTelemetry contrib, `golang.org/x/crypto`, `github.com/hashicorp/go-plugin`, and related bumps). See merged backport PRs since [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) for the full set.
 

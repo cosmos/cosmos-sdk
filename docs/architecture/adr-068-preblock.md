@@ -10,12 +10,12 @@ DRAFT
 
 ## Abstract
 
-Introduce `PreBlock`, which runs before begin blocker other modules, and allows to modify consensus parameters, and the changes are visible to the following state machine logics.
+Introduce `PreBlock`, which runs before the begin blocker of other modules, and allows modifying consensus parameters, and the changes are visible to the following state machine logics.
 
 ## Context
 
 When upgrading to sdk 0.47, the storage format for consensus parameters changed, but in the migration block, `ctx.ConsensusParams()` is always `nil`, because it fails to load the old format using new code, it's supposed to be migrated by the `x/upgrade` module first, but unfortunately, the migration happens in `BeginBlocker` handler, which runs after the `ctx` is initialized.
-When we try to solve this, we find the `x/upgrade` module can't modify the context to make the consensus parameters visible for the other modules, the context is passed by value, and sdk team want to keep it that way, that's good for isolations between modules.
+When we try to solve this, we find the `x/upgrade` module can't modify the context to make the consensus parameters visible for the other modules, the context is passed by value, and sdk team want to keep it that way, that's good for isolation between modules.
 
 ## Alternatives
 
@@ -32,7 +32,7 @@ There are two semantics around the new lifecycle method:
 * It runs before the `BeginBlocker` of all modules
 * It can modify consensus parameters in storage, and signal the caller through the return value.
 
-When it returns `ConsensusParamsChanged=true`, the caller must refresh the consensus parameter in the finalize context:
+When it returns `ConsensusParamsChanged=true`, the caller must refresh the consensus parameters in the finalize context:
 
 ```
 app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithConsensusParams(app.GetConsensusParams())

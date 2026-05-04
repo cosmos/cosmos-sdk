@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-// DefaultRunConfig defintes a default RunConfig that writes to os.Stdout and os.Stderr
+// DefaultRunConfig defines a default RunConfig that writes to os.Stdout and os.Stderr
 var DefaultRunConfig = RunConfig{
 	StdIn:  os.Stdin,
 	StdOut: os.Stdout,

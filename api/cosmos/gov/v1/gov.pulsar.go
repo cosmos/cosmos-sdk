@@ -7253,7 +7253,7 @@ type Proposal struct {
 	Title string `protobuf:"bytes,11,opt,name=title,proto3" json:"title,omitempty"`
 	// summary is a short summary of the proposal
 	Summary string `protobuf:"bytes,12,opt,name=summary,proto3" json:"summary,omitempty"`
-	// proposer is the address of the proposal sumbitter
+	// proposer is the address of the proposal submitter
 	Proposer string `protobuf:"bytes,13,opt,name=proposer,proto3" json:"proposer,omitempty"`
 	// expedited defines if the proposal is expedited
 	Expedited bool `protobuf:"varint,14,opt,name=expedited,proto3" json:"expedited,omitempty"`

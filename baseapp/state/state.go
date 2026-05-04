@@ -3,8 +3,9 @@ package state
 import (
 	"sync"
 
-	storetypes "cosmossdk.io/store/types"
+	"go.opentelemetry.io/otel/trace"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,6 +14,8 @@ type State struct {
 
 	mtx sync.RWMutex
 	ctx sdk.Context
+
+	span trace.Span
 }
 
 func NewState(ctx sdk.Context, ms storetypes.CacheMultiStore) *State {
@@ -22,7 +25,7 @@ func NewState(ctx sdk.Context, ms storetypes.CacheMultiStore) *State {
 	}
 }
 
-// CacheMultiStore calls and returns a CacheMultiStore on the state's underling
+// CacheMultiStore calls and returns a CacheMultiStore on the state's underlying
 // CacheMultiStore.
 func (st *State) CacheMultiStore() storetypes.CacheMultiStore {
 	return st.MultiStore.CacheMultiStore()

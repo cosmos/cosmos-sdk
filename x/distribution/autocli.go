@@ -85,6 +85,35 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:     "Query the amount of coins in the community pool",
 					Example:   fmt.Sprintf(`$ %s query distribution community-pool`, version.AppName),
 				},
+				{
+					RpcMethod: "ValidatorHistoricalRewards",
+					Use:       "validator-historical-rewards [validator] [period]",
+					Short:     "Query validator historical rewards for a specific period",
+					Example:   fmt.Sprintf(`$ %s query distribution validator-historical-rewards [validator-address] 5`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "validator_address"},
+						{ProtoField: "period"},
+					},
+				},
+				{
+					RpcMethod: "ValidatorCurrentRewards",
+					Use:       "validator-current-rewards [validator]",
+					Short:     "Query validator current rewards",
+					Example:   fmt.Sprintf(`$ %s query distribution validator-current-rewards [validator-address]`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "validator_address"},
+					},
+				},
+				{
+					RpcMethod: "DelegatorStartingInfo",
+					Use:       "delegator-starting-info [delegator-address] [validator-address]",
+					Short:     "Query delegator starting info for a delegation",
+					Example:   fmt.Sprintf(`$ %s query distribution delegator-starting-info [delegator-address] [validator-address]`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "delegator_address"},
+						{ProtoField: "validator_address"},
+					},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{

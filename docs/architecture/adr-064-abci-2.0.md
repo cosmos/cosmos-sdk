@@ -25,7 +25,7 @@ includes `ExtendVote`, `VerifyVoteExtension` and `FinalizeBlock`.
 ABCI 2.0 continues the promised updates from ABCI++, specifically three additional
 ABCI methods that the application can implement in order to gain further control,
 insight and customization of the consensus process, unlocking many novel use-cases
-that previously not possible. We describe these three new methods below:
+that were previously not possible. We describe these three new methods below:
 
 ### `ExtendVote`
 
@@ -103,8 +103,8 @@ vote extensions.
 We propose the following new handlers for applications to implement:
 
 ```go
-type ExtendVoteHandler func(sdk.Context, abci.ExtendVoteRequest) abci.ExtendVoteResponse
-type VerifyVoteExtensionHandler func(sdk.Context, abci.VerifyVoteExtensionRequest) abci.VerifyVoteExtensionResponse
+type ExtendVoteHandler func(sdk.Context, abci.RequestExtendVote) abci.ResponseExtendVote
+type VerifyVoteExtensionHandler func(sdk.Context, abci.RequestVerifyVoteExtension) abci.ResponseVerifyVoteExtension
 ```
 
 An ephemeral context and state will be supplied to both handlers. The
@@ -120,7 +120,7 @@ Recall, an implementation of `ExtendVoteHandler` does NOT need to be determinist
 however, given a set of vote extensions, `VerifyVoteExtensionHandler` must be
 deterministic, otherwise the chain may suffer from liveness faults. In addition,
 recall CometBFT proceeds in rounds for each height, so if a decision cannot be
-made about about a block proposal at a given height, CometBFT will proceed to the
+made about a block proposal at a given height, CometBFT will proceed to the
 next round and thus will execute `ExtendVote` and `VerifyVoteExtension` again for
 the new round for each validator until 2/3 valid pre-commits can be obtained.
 
@@ -144,7 +144,7 @@ type VoteExtensionHandler struct {
 
 // ExtendVoteHandler can do something with h.mk and possibly h.state to create
 // a vote extension, such as fetching a series of prices for supported assets.
-func (h VoteExtensionHandler) ExtendVoteHandler(ctx sdk.Context, req abci.ExtendVoteRequest) abci.ExtendVoteResponse {
+func (h VoteExtensionHandler) ExtendVoteHandler(ctx sdk.Context, req abci.RequestExtendVote) abci.ResponseExtendVote {
 	prices := GetPrices(ctx, h.mk.Assets())
 	bz, err := EncodePrices(h.cdc, prices)
 	if err != nil {
@@ -156,22 +156,22 @@ func (h VoteExtensionHandler) ExtendVoteHandler(ctx sdk.Context, req abci.Extend
 	// NOTE: Vote extensions can be overridden since we can timeout in a round.
 	SetPrices(h.state, req, bz)
 
-	return abci.ExtendVoteResponse{VoteExtension: bz}
+	return abci.ResponseExtendVote{VoteExtension: bz}
 }
 
 // VerifyVoteExtensionHandler can do something with h.state and req to verify
 // the req.VoteExtension field, such as ensuring the provided oracle prices are
 // within some valid range of our prices.
-func (h VoteExtensionHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req abci.VerifyVoteExtensionRequest) abci.VerifyVoteExtensionResponse {
+func (h VoteExtensionHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req abci.RequestVerifyVoteExtension) abci.ResponseVerifyVoteExtension {
 	prices, err := DecodePrices(h.cdc, req.VoteExtension)
 	if err != nil {
 		log("failed to decode vote extension", "err", err)
-		return abci.VerifyVoteExtensionResponse{Status: REJECT}
+		return abci.ResponseVerifyVoteExtension{Status: REJECT}
 	}
 
 	if err := ValidatePrices(h.state, req, prices); err != nil {
 		log("failed to validate vote extension", "prices", prices, "err", err)
-		return abci.VerifyVoteExtensionResponse{Status: REJECT}
+		return abci.ResponseVerifyVoteExtension{Status: REJECT}
 	}
 
 	// store updated vote extensions at the given height
@@ -179,7 +179,7 @@ func (h VoteExtensionHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req ab
 	// NOTE: Vote extensions can be overridden since we can timeout in a round.
 	SetPrices(h.state, req, req.VoteExtension)
 
-	return abci.VerifyVoteExtensionResponse{Status: ACCEPT}
+	return abci.ResponseVerifyVoteExtension{Status: ACCEPT}
 }
 ```
 
@@ -286,7 +286,7 @@ decision based on the vote extensions.
 > nor the vote extension verification mechanism described above is required for
 > applications to implement. In other words, a proposer is not required to verify
 > and propagate vote extensions along with their signatures nor are proposers
-> required to verify those signatures. An application can implement it's own
+> required to verify those signatures. An application can implement its own
 > PKI mechanism and use that to sign and verify vote extensions.
 
 #### Vote Extension Persistence
@@ -301,7 +301,7 @@ during `ProcessProposal` because during replay, CometBFT will NOT call `ProcessP
 which would result in an incomplete state view.
 
 ```go
-func (a MyApp) PreBlocker(ctx sdk.Context, req *abci.FinalizeBlockRequest) error {
+func (a MyApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
 	voteExts := GetVoteExtensions(ctx, req.Txs)
 	
 	// Process and perform some compute on vote extensions, storing any resulting
@@ -350,7 +350,7 @@ legacy ABCI types, e.g. `LegacyBeginBlockRequest` and `LegacyEndBlockRequest`. O
 we can come up with new types and names altogether.
 
 ```go
-func (app *BaseApp) FinalizeBlock(req abci.FinalizeBlockRequest) (*abci.FinalizeBlockResponse, error) {
+func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	ctx := ...
 
 	if app.preBlocker != nil {
@@ -375,7 +375,7 @@ func (app *BaseApp) FinalizeBlock(req abci.FinalizeBlockRequest) (*abci.Finalize
 	endBlockResp, err := app.endBlock(app.finalizeBlockState.ctx)
 	appendBlockEventAttr(beginBlockResp.Events, "end_block")
 
-	return abci.FinalizeBlockResponse{
+	return abci.ResponseFinalizeBlock{
 		TxResults:             txExecResults,
 		Events:                joinEvents(beginBlockResp.Events, endBlockResp.Events),
 		ValidatorUpdates:      endBlockResp.ValidatorUpdates,
@@ -396,7 +396,7 @@ and rely on existing events, especially since applications will still define
 In order to facilitate existing event functionality, we propose that all `BeginBlock`
 and `EndBlock` events have a dedicated `EventAttribute` with `key=block` and
 `value=begin_block|end_block`. The `EventAttribute` will be appended to each event
-in both `BeginBlock` and `EndBlock` events`. 
+in both `BeginBlock` and `EndBlock` events. 
 
 
 ### Upgrading

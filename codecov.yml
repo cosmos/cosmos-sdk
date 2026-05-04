@@ -1,0 +1,54 @@
+# Codecov configuration for cosmos-sdk
+# This replaces the previous SonarCloud configuration
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 0.5%
+        informational: false
+        if_ci_failed: error
+
+    patch:
+      default:
+        target: auto
+        threshold: 0.5%
+        informational: false
+        if_ci_failed: error
+
+# Comments on pull requests
+comment:
+  layout: "reach,diff,flags,tree,reach"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+# Ignore paths - equivalent to old sonar exclusions
+ignore:
+  - "**/*_test.go"           # Test files
+  - "tests/**"               # Test directories
+  - "**/testutil/**"         # Test utilities
+  - "**/*.pb.go"             # Protobuf generated files
+  - "**/*.pb.gw.go"          # Protobuf gateway files
+  - "**/*.pulsar.go"         # Pulsar generated files
+  - "test_helpers.go"        # Test helper files
+  - "docs/**"                # Documentation
+  - "**/*.java"              # Java files
+  - "client/docs/**"         # Client documentation
+  - "**/*.md"                # Markdown files
+  - "**/mock*.go"            # Mock files
+  - "**/mock/**"             # Mock directories
+  - "**/*.pb.gateway.go"     # Gateway files
+
+# How to handle multiple coverage reports
+# The workflow uploads: 00profile.out, 01profile.out, 02profile.out, 03profile.out,
+# integration-profile.out, e2e-profile.out
+parsers:
+  go:
+    partials_as_hits: true

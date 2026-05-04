@@ -48,7 +48,7 @@ type (
 		GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	}
 
-	Cometinfo interface {
+	CometInfo interface {
 		comet.BlockInfoService
 	}
 )

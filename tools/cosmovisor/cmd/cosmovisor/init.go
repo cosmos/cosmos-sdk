@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/tools/cosmovisor"
 
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
@@ -52,7 +52,7 @@ func InitializeCosmovisor(logger log.Logger, args []string) error {
 		return err
 	}
 
-	// process to minimal validation
+	// proceed to minimal validation
 	if err := minConfigValidate(cfg); err != nil {
 		return err
 	}

@@ -12,7 +12,7 @@ import (
 )
 
 func marshalAny(enc *Encoder, message protoreflect.Message, writer io.Writer) error {
-	// when a message contains a nested any field, and the top-level message has been unmarshalled into a dyanmicpb,
+	// when a message contains a nested any field, and the top-level message has been unmarshalled into a dynamicpb,
 	// the nested any field will also be a dynamicpb. In this case, we must use the dynamicpb API.
 	_, ok := message.Interface().(*dynamicpb.Message)
 	if ok {

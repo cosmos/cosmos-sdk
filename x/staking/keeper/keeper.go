@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	addresscodec "cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -80,7 +80,7 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// Hooks gets the hooks for staking *Keeper {
+// Hooks gets the hooks for staking.
 func (k *Keeper) Hooks() types.StakingHooks {
 	if k.hooks == nil {
 		// return a no-op implementation if no hooks are set

@@ -2,21 +2,20 @@ package types
 
 import (
 	"encoding/json"
-	"io"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	cmttypes "github.com/cometbft/cometbft/v2/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/store/snapshots"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 type (
@@ -40,7 +39,7 @@ type (
 		RegisterAPIRoutes(*api.Server, config.APIConfig)
 
 		// RegisterGRPCServerWithSkipCheckHeader registers gRPC services directly with the gRPC
-		// server and bypass check header flag.
+		// server and bypasses check header flag.
 		RegisterGRPCServerWithSkipCheckHeader(grpc.Server, bool)
 
 		// RegisterTxService registers the gRPC Query service for tx (such as tx
@@ -53,10 +52,10 @@ type (
 		// RegisterNodeService registers the node gRPC Query service.
 		RegisterNodeService(client.Context, config.Config)
 
-		// CommitMultiStore return the multistore instance
+		// CommitMultiStore returns the multistore instance
 		CommitMultiStore() storetypes.CommitMultiStore
 
-		// Return the snapshot manager
+		// SnapshotManager returns the snapshot manager
 		SnapshotManager() *snapshots.Manager
 
 		// Close is called in start cmd to gracefully cleanup resources.
@@ -66,7 +65,7 @@ type (
 
 	// AppCreator is a function that allows us to lazily initialize an
 	// application using various configurations.
-	AppCreator func(log.Logger, dbm.DB, io.Writer, AppOptions) Application
+	AppCreator func(log.Logger, dbm.DB, AppOptions) Application
 
 	// ModuleInitFlags takes a start command and adds modules specific init flags.
 	ModuleInitFlags func(startCmd *cobra.Command)
@@ -89,7 +88,6 @@ type (
 	AppExporter func(
 		logger log.Logger,
 		db dbm.DB,
-		traceWriter io.Writer,
 		height int64,
 		forZeroHeight bool,
 		jailAllowedAddrs []string,

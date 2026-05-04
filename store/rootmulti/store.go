@@ -5,38 +5,36 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"maps"
 	"math"
 	"sort"
 	"strings"
-	"sync"
 	"sync/atomic"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	iavltree "github.com/cosmos/iavl"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
-	"cosmossdk.io/store/cachemulti"
-	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/iavl"
-	"cosmossdk.io/store/listenkv"
-	"cosmossdk.io/store/mem"
-	"cosmossdk.io/store/metrics"
-	"cosmossdk.io/store/pruning"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/transient"
-	"cosmossdk.io/store/types"
+	"cosmossdk.io/log/v2"
+
+	"github.com/cosmos/cosmos-sdk/store/v2/cachemulti"
+	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
+	"github.com/cosmos/cosmos-sdk/store/v2/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/v2/mem"
+	"github.com/cosmos/cosmos-sdk/store/v2/pruning"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/transient"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 const (
-	latestVersionKey = "s/latest"
-	commitInfoKeyFmt = "s/%d" // s/<version>
+	latestVersionKey   = "s/latest"
+	earliestVersionKey = "s/earliest"
+	commitInfoKeyFmt   = "s/%d" // s/<version>
 )
 
 const iavlDisablefastNodeDefault = false
@@ -67,19 +65,17 @@ type Store struct {
 	// iavlSyncPruning should rarely be set to true.
 	// The Prune command will automatically set this to true.
 	// This allows the prune command to wait for the pruning to finish before returning.
-	iavlSyncPruning   bool
-	storesParams      map[types.StoreKey]storeParams
-	stores            map[types.StoreKey]types.CommitKVStore
-	keysByName        map[string]types.StoreKey
-	initialVersion    int64
-	removalMap        map[types.StoreKey]bool
-	traceWriter       io.Writer
-	traceContext      types.TraceContext
-	traceContextMutex sync.Mutex
-	interBlockCache   types.MultiStorePersistentCache
-	listeners         map[types.StoreKey]*types.MemoryListener
-	metrics           metrics.StoreMetrics
-	commitHeader      cmtproto.Header
+	iavlSyncPruning bool
+	storesParams    map[types.StoreKey]storeParams
+	// CommitStore is a common interface to unify generic CommitKVStore of different value types
+	stores          map[types.StoreKey]types.CommitStore
+	keysByName      map[string]types.StoreKey
+	initialVersion  int64
+	removalMap      map[types.StoreKey]bool
+	interBlockCache types.MultiStorePersistentCache
+	listeners       map[types.StoreKey]*types.MemoryListener
+
+	commitHeader cmtproto.Header
 }
 
 var (
@@ -92,19 +88,18 @@ var (
 // store will be created with a PruneNothing pruning strategy by default. After
 // a store is created, KVStores must be mounted and finally LoadLatestVersion or
 // LoadVersion must be called.
-func NewStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics) *Store {
+func NewStore(db dbm.DB, logger log.Logger) *Store {
 	return &Store{
 		db:                  db,
 		logger:              logger,
 		iavlCacheSize:       iavl.DefaultIAVLCacheSize,
 		iavlDisableFastNode: iavlDisablefastNodeDefault,
 		storesParams:        make(map[types.StoreKey]storeParams),
-		stores:              make(map[types.StoreKey]types.CommitKVStore),
+		stores:              make(map[types.StoreKey]types.CommitStore),
 		keysByName:          make(map[string]types.StoreKey),
 		listeners:           make(map[types.StoreKey]*types.MemoryListener),
 		removalMap:          make(map[types.StoreKey]bool),
 		pruningManager:      pruning.NewManager(db, logger),
-		metrics:             metricGatherer,
 	}
 }
 
@@ -120,25 +115,27 @@ func (rs *Store) SetPruning(pruningOpts pruningtypes.PruningOptions) {
 	rs.pruningManager.SetOptions(pruningOpts)
 }
 
-// SetMetrics sets the metrics gatherer for the store package
-func (rs *Store) SetMetrics(metrics metrics.StoreMetrics) {
-	rs.metrics = metrics
-}
-
 // SetSnapshotInterval sets the interval at which the snapshots are taken.
 // It is used by the store to determine which heights to retain until after the snapshot is complete.
 func (rs *Store) SetSnapshotInterval(snapshotInterval uint64) {
 	rs.pruningManager.SetSnapshotInterval(snapshotInterval)
 }
 
+// SetIAVLCacheSize sets the cache size of the IAVL tree.
 func (rs *Store) SetIAVLCacheSize(cacheSize int) {
 	rs.iavlCacheSize = cacheSize
 }
 
+// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
 func (rs *Store) SetIAVLDisableFastNode(disableFastNode bool) {
 	rs.iavlDisableFastNode = disableFastNode
 }
 
+// SetIAVLSyncPruning set sync/async pruning on iavl.
+//
+// It is not recommended to use this option. It is here to enable the prune
+// command to force this to true, allowing the command to wait for the pruning
+// to finish before returning.
 func (rs *Store) SetIAVLSyncPruning(syncPruning bool) {
 	rs.iavlSyncPruning = syncPruning
 }
@@ -163,15 +160,9 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db db
 	rs.keysByName[key.Name()] = key
 }
 
-// GetCommitStore returns a mounted CommitStore for a given StoreKey. If the
+// getCommitStore returns a mounted CommitStore for a given StoreKey. If the
 // store is wrapped in an inter-block cache, it will be unwrapped before returning.
-func (rs *Store) GetCommitStore(key types.StoreKey) types.CommitStore {
-	return rs.GetCommitKVStore(key)
-}
-
-// GetCommitKVStore returns a mounted CommitKVStore for a given StoreKey. If the
-// store is wrapped in an inter-block cache, it will be unwrapped before returning.
-func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
+func (rs *Store) getCommitStore(key types.StoreKey) types.CommitStore {
 	// If the Store has an inter-block cache, first attempt to lookup and unwrap
 	// the underlying CommitKVStore by StoreKey. If it does not exist, fallback to
 	// the main mapping of CommitKVStores.
@@ -182,6 +173,17 @@ func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
 	}
 
 	return rs.stores[key]
+}
+
+// getCommitKVStore returns a mounted CommitKVStore for a given StoreKey. If the
+// store is wrapped in an inter-block cache, it will be unwrapped before returning.
+func (rs *Store) getCommitKVStore(key types.StoreKey) types.CommitKVStore {
+	store, ok := rs.getCommitStore(key).(types.CommitKVStore)
+	if !ok {
+		panic(fmt.Sprintf("store with key %v is not CommitKVStore", key))
+	}
+
+	return store
 }
 
 // StoreKeysByName returns mapping storeNames -> StoreKeys
@@ -232,7 +234,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	}
 
 	// load each Store (note this doesn't panic on unmounted keys now)
-	newStores := make(map[types.StoreKey]types.CommitKVStore)
+	newStores := make(map[types.StoreKey]types.CommitStore)
 
 	storesKeys := make([]types.StoreKey, 0, len(rs.storesParams))
 
@@ -354,7 +356,7 @@ func moveKVStoreData(oldDB, newDB types.KVStore) error {
 
 // PruneSnapshotHeight prunes the given height according to the prune strategy.
 // If the strategy is PruneNothing, this is a no-op.
-// For other strategies, this height is persisted until the snapshot is operated.
+// For other strategies, this height is persisted until the snapshot is completed.
 func (rs *Store) PruneSnapshotHeight(height int64) {
 	rs.pruningManager.HandleSnapshotHeight(height)
 }
@@ -368,44 +370,6 @@ func (rs *Store) AnnounceSnapshotHeight(height int64) {
 // inter-block cache.
 func (rs *Store) SetInterBlockCache(c types.MultiStorePersistentCache) {
 	rs.interBlockCache = c
-}
-
-// SetTracer sets the tracer for the MultiStore that the underlying
-// stores will utilize to trace operations. A MultiStore is returned.
-func (rs *Store) SetTracer(w io.Writer) types.MultiStore {
-	rs.traceWriter = w
-	return rs
-}
-
-// SetTracingContext updates the tracing context for the MultiStore by merging
-// the given context with the existing context by key. Any existing keys will
-// be overwritten. It is implied that the caller should update the context when
-// necessary between tracing operations. It returns a modified MultiStore.
-func (rs *Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
-	rs.traceContextMutex.Lock()
-	defer rs.traceContextMutex.Unlock()
-	rs.traceContext = rs.traceContext.Merge(tc)
-
-	return rs
-}
-
-func (rs *Store) getTracingContext() types.TraceContext {
-	rs.traceContextMutex.Lock()
-	defer rs.traceContextMutex.Unlock()
-
-	if rs.traceContext == nil {
-		return nil
-	}
-
-	ctx := types.TraceContext{}
-	maps.Copy(ctx, rs.traceContext)
-
-	return ctx
-}
-
-// TracingEnabled returns if tracing is enabled for the MultiStore.
-func (rs *Store) TracingEnabled() bool {
-	return rs.traceWriter != nil
 }
 
 // AddListeners adds a listener for the KVStore belonging to the provided StoreKey
@@ -447,6 +411,11 @@ func (rs *Store) PopStateCache() []*types.StoreKVPair {
 // LatestVersion returns the latest version in the store
 func (rs *Store) LatestVersion() int64 {
 	return rs.LastCommitID().Version
+}
+
+// EarliestVersion returns the earliest version in the store
+func (rs *Store) EarliestVersion() int64 {
+	return GetEarliestVersion(rs.db)
 }
 
 // LastCommitID implements Committer/CommitStore.
@@ -564,25 +533,22 @@ func (rs *Store) CacheWrap() types.CacheWrap {
 	return rs.CacheMultiStore().(types.CacheWrap)
 }
 
-// CacheWrapWithTrace implements the CacheWrapper interface.
-func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
-	return rs.CacheWrap()
-}
-
 // CacheMultiStore creates ephemeral branch of the multi-store and returns a CacheMultiStore.
 // It implements the MultiStore interface.
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for k, v := range rs.stores {
-		store := types.KVStore(v)
-		// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
-		// set same listeners on cache store will observe duplicated writes.
-		if rs.ListeningEnabled(k) {
-			store = listenkv.NewStore(store, k, rs.listeners[k])
+		store := types.CacheWrapper(v)
+		if kv, ok := store.(types.KVStore); ok {
+			// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
+			// set same listeners on cache store will observe duplicated writes.
+			if rs.ListeningEnabled(k) {
+				store = listenkv.NewStore(kv, k, rs.listeners[k])
+			}
 		}
 		stores[k] = store
 	}
-	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.getTracingContext())
+	return cachemulti.NewStore(stores)
 }
 
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
@@ -594,12 +560,12 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 	var commitInfo *types.CommitInfo
 	storeInfos := map[string]bool{}
 	for key, store := range rs.stores {
-		var cacheStore types.KVStore
+		var cacheStore types.CacheWrapper
 		switch store.GetStoreType() {
 		case types.StoreTypeIAVL:
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
-			store = rs.GetCommitKVStore(key)
+			store = rs.getCommitKVStore(key)
 
 			// Attempt to lazy-load an already saved IAVL store version. If the
 			// version does not exist or is pruned, an error should be returned.
@@ -628,7 +594,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 					return nil, err
 				}
 
-				// If the store donesn't exist at this version, create a dummy one to prevent
+				// If the store doesn't exist at this version, create a dummy one to prevent
 				// nil pointer panic in newer query APIs.
 				cacheStore = dbadapter.Store{DB: dbm.NewMemDB()}
 			}
@@ -637,16 +603,18 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 			cacheStore = store
 		}
 
-		// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
-		// set same listeners on cache store will observe duplicated writes.
-		if rs.ListeningEnabled(key) {
-			cacheStore = listenkv.NewStore(cacheStore, key, rs.listeners[key])
+		if kv, ok := cacheStore.(types.KVStore); ok {
+			// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
+			// set same listeners on cache store will observe duplicated writes.
+			if rs.ListeningEnabled(key) {
+				cacheStore = listenkv.NewStore(kv, key, rs.listeners[key])
+			}
 		}
 
 		cachedStores[key] = cacheStore
 	}
 
-	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.getTracingContext()), nil
+	return cachemulti.NewStore(cachedStores), nil
 }
 
 // GetStore returns a mounted Store for a given StoreKey. If the StoreKey does
@@ -656,7 +624,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 // TODO: This isn't used directly upstream. Consider returning the Store as-is
 // instead of unwrapping.
 func (rs *Store) GetStore(key types.StoreKey) types.Store {
-	store := rs.GetCommitKVStore(key)
+	store := rs.getCommitStore(key)
 	if store == nil {
 		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
 	}
@@ -664,9 +632,7 @@ func (rs *Store) GetStore(key types.StoreKey) types.Store {
 	return store
 }
 
-// GetKVStore returns a mounted KVStore for a given StoreKey. If tracing is
-// enabled on the KVStore, a wrapped TraceKVStore will be returned with the root
-// store's tracer, otherwise, the original KVStore will be returned.
+// GetKVStore returns a mounted KVStore for a given StoreKey.
 //
 // NOTE: The returned KVStore may be wrapped in an inter-block cache if it is
 // set on the root store.
@@ -675,13 +641,27 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	if s == nil {
 		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
 	}
-	store := types.KVStore(s)
-
-	if rs.TracingEnabled() {
-		store = tracekv.NewStore(store, rs.traceWriter, rs.getTracingContext())
+	store, ok := s.(types.KVStore)
+	if !ok {
+		panic(fmt.Sprintf("store with key %v is not KVStore", key))
 	}
+
 	if rs.ListeningEnabled(key) {
 		store = listenkv.NewStore(store, key, rs.listeners[key])
+	}
+
+	return store
+}
+
+// GetObjKVStore returns a mounted ObjKVStore for a given StoreKey.
+func (rs *Store) GetObjKVStore(key types.StoreKey) types.ObjKVStore {
+	s := rs.stores[key]
+	if s == nil {
+		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
+	}
+	store, ok := s.(types.ObjKVStore)
+	if !ok {
+		panic(fmt.Sprintf("store with key %v is not ObjKVStore", key))
 	}
 
 	return store
@@ -694,7 +674,7 @@ func (rs *Store) handlePruning(version int64) error {
 	return rs.PruneStores(pruneHeight)
 }
 
-// PruneStores prunes all history upto the specific height of the multi store.
+// PruneStores prunes all history up to the specific height of the multi store.
 func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 	if pruningHeight <= 0 {
 		rs.logger.Debug("pruning skipped, height is less than or equal to 0")
@@ -712,7 +692,7 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 			continue
 		}
 
-		store = rs.GetCommitKVStore(key)
+		store = rs.getCommitKVStore(key)
 
 		err := store.(*iavl.Store).DeleteVersionsTo(pruningHeight)
 		if err == nil {
@@ -725,6 +705,23 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 
 		rs.logger.Error("failed to prune store", "key", key, "err", err)
 	}
+
+	// Update earliest version after successful pruning.
+	// The new earliest available version is pruningHeight + 1.
+	// Only persist if newer than current earliest - this handles state sync
+	// scenarios and avoids issues if pruning config changes result in a
+	// lower pruning height than previously persisted.
+	newEarliest := pruningHeight + 1
+	currentEarliest := GetEarliestVersion(rs.db)
+	if newEarliest > currentEarliest {
+		batch := rs.db.NewBatch()
+		defer batch.Close()
+		flushEarliestVersion(batch, newEarliest)
+		if err := batch.WriteSync(); err != nil {
+			rs.logger.Error("failed to persist earliest version", "err", err)
+		}
+	}
+
 	return nil
 }
 
@@ -738,7 +735,7 @@ func (rs *Store) GetStoreByName(name string) types.Store {
 		return nil
 	}
 
-	return rs.GetCommitKVStore(key)
+	return rs.getCommitStore(key)
 }
 
 // Query calls substore.Query with the same `req` where `req.Path` is
@@ -806,7 +803,7 @@ func (rs *Store) SetInitialVersion(version int64) error {
 		if store.GetStoreType() == types.StoreTypeIAVL {
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
-			store = rs.GetCommitKVStore(key)
+			store = rs.getCommitKVStore(key)
 			store.(types.StoreWithInitialVersion).SetInitialVersion(version)
 		}
 	}
@@ -852,10 +849,10 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	stores := []namedStore{}
 	keys := keysFromStoreKeyMap(rs.stores)
 	for _, key := range keys {
-		switch store := rs.GetCommitKVStore(key).(type) {
+		switch store := rs.getCommitStore(key).(type) {
 		case *iavl.Store:
 			stores = append(stores, namedStore{name: key.Name(), Store: store})
-		case *transient.Store, *mem.Store:
+		case *transient.Store, *mem.Store, *transient.ObjStore:
 			// Non-persisted stores shouldn't be snapshotted
 			continue
 		default:
@@ -1015,7 +1012,7 @@ loop:
 	return snapshotItem, rs.LoadLatestVersion()
 }
 
-func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (types.CommitKVStore, error) {
+func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (types.CommitStore, error) {
 	var db dbm.DB
 
 	if params.db != nil {
@@ -1030,7 +1027,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		panic("recursive MultiStores not yet supported")
 
 	case types.StoreTypeIAVL:
-		store, err := iavl.LoadStoreWithOpts(db, rs.logger, key, id, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.metrics, iavltree.AsyncPruningOption(!rs.iavlSyncPruning))
+		store, err := iavl.LoadStoreWithOpts(db, rs.logger, key, id, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode, iavltree.AsyncPruningOption(!rs.iavlSyncPruning))
 		if err != nil {
 			return nil, err
 		}
@@ -1047,19 +1044,25 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		return commitDBStoreAdapter{Store: dbadapter.Store{DB: db}}, nil
 
 	case types.StoreTypeTransient:
-		_, ok := key.(*types.TransientStoreKey)
-		if !ok {
-			return nil, fmt.Errorf("invalid StoreKey for StoreTypeTransient: %s", key.String())
+		if _, ok := key.(*types.TransientStoreKey); !ok {
+			return nil, fmt.Errorf("unexpected key type for a TransientStoreKey; got: %s, %T", key.String(), key)
 		}
 
 		return transient.NewStore(), nil
 
 	case types.StoreTypeMemory:
 		if _, ok := key.(*types.MemoryStoreKey); !ok {
-			return nil, fmt.Errorf("unexpected key type for a MemoryStoreKey; got: %s", key.String())
+			return nil, fmt.Errorf("unexpected key type for a MemoryStoreKey; got: %s, %T", key.String(), key)
 		}
 
 		return mem.NewStore(), nil
+
+	case types.StoreTypeObject:
+		if _, ok := key.(*types.ObjectStoreKey); !ok {
+			return nil, fmt.Errorf("unexpected key type for a ObjectStoreKey; got: %s, %T", key.String(), key)
+		}
+
+		return transient.NewObjStore(), nil
 
 	default:
 		panic(fmt.Sprintf("unrecognized store type %v", params.typ))
@@ -1072,7 +1075,7 @@ func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
 	for _, key := range keys {
 		store := rs.stores[key]
 		storeType := store.GetStoreType()
-		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory {
+		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory || storeType == types.StoreTypeObject {
 			continue
 		}
 		storeInfos = append(storeInfos, types.StoreInfo{
@@ -1096,7 +1099,7 @@ func (rs *Store) RollbackToVersion(target int64) error {
 		if store.GetStoreType() == types.StoreTypeIAVL {
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
-			store = rs.GetCommitKVStore(key)
+			store = rs.getCommitKVStore(key)
 			err := store.(*iavl.Store).LoadVersionForOverwriting(target)
 			if err != nil {
 				return err
@@ -1189,8 +1192,38 @@ func GetLatestVersion(db dbm.DB) int64 {
 	return latestVersion
 }
 
+// GetEarliestVersion returns the earliest version stored in the database.
+// Returns 1 if no earliest version has been explicitly set (unpruned chain).
+func GetEarliestVersion(db dbm.DB) int64 {
+	bz, err := db.Get([]byte(earliestVersionKey))
+	if err != nil {
+		panic(err)
+	} else if bz == nil {
+		return 1 // default to 1 for unpruned chains
+	}
+
+	var earliestVersion int64
+
+	if err := gogotypes.StdInt64Unmarshal(&earliestVersion, bz); err != nil {
+		panic(err)
+	}
+
+	return earliestVersion
+}
+
+func flushEarliestVersion(batch dbm.Batch, version int64) {
+	bz, err := gogotypes.StdInt64Marshal(version)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := batch.Set([]byte(earliestVersionKey), bz); err != nil {
+		panic(err)
+	}
+}
+
 // commitStores commits each store and returns a new commitInfo.
-func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
+func commitStores(version int64, storeMap map[types.StoreKey]types.CommitStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
 	storeKeys := keysFromStoreKeyMap(storeMap)
 
@@ -1210,7 +1243,7 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 		}
 
 		storeType := store.GetStoreType()
-		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory {
+		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory || storeType == types.StoreTypeObject {
 			continue
 		}
 

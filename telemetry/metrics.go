@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,18 +14,19 @@ import (
 	metricsprom "github.com/hashicorp/go-metrics/prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
+	"go.opentelemetry.io/otel"
 )
 
 // globalTelemetryEnabled is a private variable that stores the telemetry enabled state.
 // It is set on initialization and does not change for the lifetime of the program.
 var globalTelemetryEnabled bool
 
-// IsTelemetryEnabled provides controlled access to check if telemetry is enabled.
+// Deprecated: IsTelemetryEnabled provides controlled access to check if telemetry is enabled.
 func IsTelemetryEnabled() bool {
 	return globalTelemetryEnabled
 }
 
-// EnableTelemetry allows for the global telemetry enabled state to be set.
+// Deprecated: EnableTelemetry allows for the global telemetry enabled state to be set.
 func EnableTelemetry() {
 	globalTelemetryEnabled = true
 }
@@ -35,28 +37,41 @@ var globalLabels = []metrics.Label{}
 
 // Metrics supported format types.
 const (
-	FormatDefault    = ""
+	// Deprecated: FormatDefault is the default format for metrics gathering.
+	FormatDefault = ""
+	// Deprecated: FormatPrometheus indicates Prometheus format for metrics gathering.
 	FormatPrometheus = "prometheus"
-	FormatText       = "text"
-	ContentTypeText  = `text/plain; version=` + expfmt.TextVersion + `; charset=utf-8`
+	// Deprecated: FormatText indicates text format for metrics gathering.
+	FormatText = "text"
+	// Deprecated: ContentTypeText is the content type for text formatted metrics.
+	ContentTypeText = `text/plain; version=` + expfmt.TextVersion + `; charset=utf-8`
 
-	MetricSinkInMem      = "mem"
-	MetricSinkStatsd     = "statsd"
+	// Deprecated: MetricSinkInMem indicates in-memory metrics sink.
+	MetricSinkInMem = "mem"
+	// Deprecated: MetricSinkPrometheus indicates Prometheus metrics sink.
+	MetricSinkStatsd = "statsd"
+	// Deprecated: MetricSinkDogsStatsd indicates DogStatsD metrics sink.
 	MetricSinkDogsStatsd = "dogstatsd"
+	// Deprecated: MetricSinkOtel indicates OpenTelemetry metrics sink.
+	MetricSinkOtel = "otel"
 )
 
-// DisplayableSink is an interface that defines a method for displaying metrics.
+// DisplayableSink defines an interface for a sink to provide human-readable metrics.
+//
+// Deprecated: DisplayableSink is an interface that defines a method for displaying metrics.
 type DisplayableSink interface {
 	DisplayMetrics(resp http.ResponseWriter, req *http.Request) (any, error)
 }
 
-// Config defines the configuration options for application telemetry.
+// Config is the telemetry configuration.
+//
+// Deprecated: Use OpenTelemetry instead.
 type Config struct {
 	// Prefixed with keys to separate services
 	ServiceName string `mapstructure:"service-name"`
 
 	// Enabled enables the application telemetry functionality. When enabled,
-	// an in-memory sink is also enabled by default. Operators may also enabled
+	// an in-memory sink is also enabled by default. Operators may also enable
 	// other sinks such as Prometheus.
 	Enabled bool `mapstructure:"enabled"`
 
@@ -81,6 +96,7 @@ type Config struct {
 	GlobalLabels [][]string `mapstructure:"global-labels"`
 
 	// MetricsSink defines the type of metrics backend to use.
+	// Can be one of "mem", "statsd", "dogstatsd", or "otel".
 	MetricsSink string `mapstructure:"metrics-sink" default:"mem"`
 
 	// StatsdAddr defines the address of a statsd server to send metrics to.
@@ -97,18 +113,24 @@ type Config struct {
 // internally, a global metrics is registered with a set of sinks as configured
 // by the operator. In addition to the sinks, when a process gets a SIGUSR1, a
 // dump of formatted recent metrics will be sent to STDERR.
+//
+// Deprecated: users should switch to OpenTelemetry.
 type Metrics struct {
 	sink              metrics.MetricSink
 	prometheusEnabled bool
 }
 
 // GatherResponse is the response type of registered metrics
+//
+// Depreacated: users should switch to OpenTelemetry.
 type GatherResponse struct {
 	Metrics     []byte
 	ContentType string
 }
 
 // New creates a new instance of Metrics
+//
+// Deprecated: users should switch to OpenTelemetry.
 func New(cfg Config) (_ *Metrics, rerr error) {
 	globalTelemetryEnabled = cfg.Enabled
 	if !cfg.Enabled {
@@ -136,6 +158,8 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		sink, err = metrics.NewStatsdSink(cfg.StatsdAddr)
 	case MetricSinkDogsStatsd:
 		sink, err = datadog.NewDogStatsdSink(cfg.StatsdAddr, cfg.DatadogHostname)
+	case MetricSinkOtel:
+		sink = newOtelGoMetricsSink(context.Background(), otel.Meter("gometrics"))
 	default:
 		memSink := metrics.NewInmemSink(10*time.Second, time.Minute)
 		sink = memSink

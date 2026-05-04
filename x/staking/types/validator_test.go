@@ -5,7 +5,7 @@ import (
 	"sort"
 	"testing"
 
-	cmttypes "github.com/cometbft/cometbft/v2/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -59,6 +59,24 @@ func TestUpdateDescription(t *testing.T) {
 	require.Equal(t, d, d3)
 }
 
+func TestABCIValidatorUpdate(t *testing.T) {
+	validator := newValidator(t, valAddr1, pk1)
+	abciVal := validator.ABCIValidatorUpdate(sdk.DefaultPowerReduction)
+	pk, err := validator.TmConsPublicKey()
+	require.NoError(t, err)
+	require.Equal(t, pk, abciVal.PubKey)
+	require.Equal(t, validator.BondedTokens().Int64(), abciVal.Power)
+}
+
+func TestABCIValidatorUpdateZero(t *testing.T) {
+	validator := newValidator(t, valAddr1, pk1)
+	abciVal := validator.ABCIValidatorUpdateZero()
+	pk, err := validator.TmConsPublicKey()
+	require.NoError(t, err)
+	require.Equal(t, pk, abciVal.PubKey)
+	require.Equal(t, int64(0), abciVal.Power)
+}
+
 func TestShareTokens(t *testing.T) {
 	validator := mkValidator(100, math.LegacyNewDec(100))
 	assert.True(math.LegacyDecEq(t, math.LegacyNewDec(50), validator.TokensFromShares(math.LegacyNewDec(50))))
@@ -75,7 +93,7 @@ func TestRemoveTokens(t *testing.T) {
 	validator = validator.RemoveTokens(math.NewInt(10))
 	require.Equal(t, int64(90), validator.Tokens.Int64())
 
-	// update validator to from bonded -> unbonded
+	// update validator from bonded -> unbonded
 	validator = validator.UpdateStatus(types.Unbonded)
 	require.Equal(t, types.Unbonded, validator.Status)
 

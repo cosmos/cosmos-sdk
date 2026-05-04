@@ -155,12 +155,12 @@ func (p BIP44Params) String() string {
 		p.AddressIndex)
 }
 
-// ComputeMastersFromSeed returns the master secret key's, and chain code.
+// ComputeMastersFromSeed returns the master secret key, and chain code.
 func ComputeMastersFromSeed(seed []byte) (secret, chainCode [32]byte) {
 	curveIdentifier := []byte("Bitcoin seed")
 	secret, chainCode = i64(curveIdentifier, seed)
 
-	return
+	return secret, chainCode
 }
 
 // DerivePrivateKeyForPath derives the private key by following the BIP 32/44 path from privKeyBytes,
@@ -248,7 +248,8 @@ func addScalars(a, b []byte) [32]byte {
 	aInt := new(big.Int).SetBytes(a)
 	bInt := new(big.Int).SetBytes(b)
 	sInt := new(big.Int).Add(aInt, bInt)
-	x := sInt.Mod(sInt, secp.S256().N).Bytes()
+	// TODO: replace secp.S256().N with secp256k1 package's new API - elliptic.Curve is deprecated (SA1019)
+	x := sInt.Mod(sInt, secp.S256().N).Bytes() //nolint:staticcheck // TODO: migrate off deprecated elliptic.Curve
 	x2 := [32]byte{}
 	copy(x2[32-len(x):], x)
 
@@ -272,7 +273,7 @@ func i64(key, data []byte) (il, ir [32]byte) {
 	copy(il[:], I[:32])
 	copy(ir[:], I[32:])
 
-	return
+	return il, ir
 }
 
 // CreateHDPath returns BIP 44 object from account and index parameters.

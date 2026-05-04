@@ -69,5 +69,5 @@ func Test_validateParams(t *testing.T) {
 	assert.NoError(t, DefaultParams().Validate(), "default")
 	assert.NoError(t, NewParams(true).Validate(), "true")
 	assert.NoError(t, NewParams(false).Validate(), "false")
-	assert.Error(t, Params{[]*SendEnabled{{"foocoing", false}}, true}.Validate(), "with SendEnabled entry")
+	assert.Error(t, Params{[]*SendEnabled{{"foocoin", false}}, true}.Validate(), "with SendEnabled entry")
 }

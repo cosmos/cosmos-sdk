@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/x/tx/internal/testpb"
-	"cosmossdk.io/x/tx/signing/textual"
+	"github.com/cosmos/cosmos-sdk/x/tx/internal/testpb"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual"
 )
 
 var intValues = []protoreflect.Value{
@@ -29,10 +29,9 @@ var intValues = []protoreflect.Value{
 func BenchmarkIntValueRendererFormat(b *testing.B) {
 	ctx := context.Background()
 	ivr := textual.NewIntValueRenderer(fieldDescriptorFromName("UINT64"))
-	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, value := range intValues {
 			if _, err := ivr.Format(ctx, value); err != nil {
 				b.Fatal(err)
@@ -56,10 +55,9 @@ var decimalValues = []protoreflect.Value{
 func BenchmarkDecimalValueRendererFormat(b *testing.B) {
 	ctx := context.Background()
 	dvr := textual.NewDecValueRenderer()
-	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, value := range decimalValues {
 			if _, err := dvr.Format(ctx, value); err != nil {
 				b.Fatal(err)
@@ -83,10 +81,9 @@ var byteValues = []protoreflect.Value{
 func BenchmarkBytesValueRendererFormat(b *testing.B) {
 	ctx := context.Background()
 	bvr := textual.NewBytesValueRenderer()
-	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, value := range byteValues {
 			if _, err := bvr.Format(ctx, value); err != nil {
 				b.Fatal(err)
@@ -129,9 +126,8 @@ func BenchmarkMessageValueRenderer_parseRepeated(b *testing.B) {
 	}
 
 	b.ReportAllocs()
-	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, rs := range rsL {
 			sink, _ = rs.rend.Parse(ctx, rs.screens)
 		}

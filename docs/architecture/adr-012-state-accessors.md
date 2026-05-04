@@ -92,7 +92,7 @@ func (Mapping) Set(ctx Context, key []byte, o interface{}) {}
 // Check if a raw value exists
 func (Mapping) Has(ctx Context, key []byte) bool {}
 
-// Delete a raw value value
+// Delete a raw value
 func (Mapping) Delete(ctx Context, key []byte) {}
 ```
 

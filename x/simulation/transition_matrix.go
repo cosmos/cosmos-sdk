@@ -20,7 +20,25 @@ type TransitionMatrix struct {
 }
 
 // CreateTransitionMatrix creates a transition matrix from the provided weights.
-// TODO: Provide example usage
+//
+// Example:
+//
+//	weights := [][]int{
+//	  // From state 0 to states 0,1,2
+//	  {90, 10, 0},
+//	  // From state 1 to states 0,1,2
+//	  {20, 70, 10},
+//	  // From state 2 to states 0,1,2
+//	  {5,  15, 80},
+//	}
+//	tm, err := CreateTransitionMatrix(weights)
+//	if err != nil {
+//	  // handle error
+//	}
+//
+//	// NextState picks the next state from current state i.
+//	// r should be a deterministic *rand.Rand when used in simulations.
+//	// next := tm.NextState(r, i)
 func CreateTransitionMatrix(weights [][]int) (simulation.TransitionMatrix, error) {
 	n := len(weights)
 	for i := range n {

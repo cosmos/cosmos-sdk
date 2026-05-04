@@ -48,7 +48,7 @@ which is FIFO-ordered by default.
 
 ### Sender Nonce Mempool
 
-The nonce mempool is a mempool that keeps transactions from an sorted by nonce in order to avoid the issues with nonces. 
+The nonce mempool is a mempool that keeps transactions from a sender sorted by nonce in order to avoid the issues with nonces. 
 It works by storing the transaction in a list sorted by the transaction nonce. When the proposer asks for transactions to be included in a block it randomly selects a sender and gets the first transaction in the list. It repeats this until the mempool is empty or the block is full. 
 
 It is configurable with the following parameters:
@@ -59,7 +59,7 @@ It is an integer value that sets the mempool in one of three modes, *bounded*, *
 
 * **negative**: Disabled, mempool does not insert new transaction and return early.
 * **zero**: Unbounded mempool has no transaction limit and will never fail with `ErrMempoolTxMaxCapacity`.
-* **positive**: Bounded, it fails with `ErrMempoolTxMaxCapacity` when `maxTx` value is the same as `CountTx()`
+* **positive**: Bounded, it fails with `ErrMempoolTxMaxCapacity` when the `maxTx` value is the same as `CountTx()`
 
 #### Seed
 
@@ -82,13 +82,13 @@ It is an integer value that sets the mempool in one of three modes, *bounded*, *
 
 * **negative**: Disabled, mempool does not insert new transaction and return early.
 * **zero**: Unbounded mempool has no transaction limit and will never fail with `ErrMempoolTxMaxCapacity`.
-* **positive**: Bounded, it fails with `ErrMempoolTxMaxCapacity` when `maxTx` value is the same as `CountTx()`
+* **positive**: Bounded, it fails with `ErrMempoolTxMaxCapacity` when the `maxTx` value is the same as `CountTx()`
 
 #### Callback
 
-The priority nonce mempool provides mempool options allowing the application sets callback(s).
+The priority nonce mempool provides mempool options allowing the application to set callback(s).
 
 * **OnRead**: Set a callback to be called when a transaction is read from the mempool.
-* **TxReplacement**: Sets a callback to be called when duplicated transaction nonce detected during mempool insert. Application can define a transaction replacement rule based on tx priority or certain transaction fields.
+* **TxReplacement**: Sets a callback to be called when duplicate transaction nonce detected during mempool insert. Application can define a transaction replacement rule based on tx priority or certain transaction fields.
 
 More information on the SDK mempool implementation can be found in the [godocs](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/types/mempool).

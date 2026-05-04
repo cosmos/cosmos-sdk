@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -72,7 +72,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false)
 
-	_, err := baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
+	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(b, err)
 
 	require.NoError(b, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
@@ -86,13 +86,12 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	// pre-compute all txs
 	txs, err := genSequenceOfTxs(txGen, []sdk.Msg{sendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
 	require.NoError(b, err)
-	b.ResetTimer()
 
 	height := int64(2)
 
 	// Run this with a profiler, so its easy to distinguish what time comes from
 	// Committing, and what time comes from Check/Deliver Tx.
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		_, _, err := baseApp.SimCheck(txEncoder, txs[i])
 		if err != nil {
 			panic(fmt.Errorf("failed to simulate tx: %w", err))
@@ -102,7 +101,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 		require.NoError(b, err)
 
 		_, err = baseApp.FinalizeBlock(
-			&abci.FinalizeBlockRequest{
+			&abci.RequestFinalizeBlock{
 				Height: height,
 				Txs:    [][]byte{bz},
 			},
@@ -130,7 +129,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false)
 
-	_, err := baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
+	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
 	require.NoError(b, err)
 
 	require.NoError(b, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
@@ -144,13 +143,12 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	// pre-compute all txs
 	txs, err := genSequenceOfTxs(txGen, []sdk.Msg{multiSendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
 	require.NoError(b, err)
-	b.ResetTimer()
 
 	height := int64(2)
 
 	// Run this with a profiler, so its easy to distinguish what time comes from
 	// Committing, and what time comes from Check/Deliver Tx.
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		_, _, err := baseApp.SimCheck(txEncoder, txs[i])
 		if err != nil {
 			panic(fmt.Errorf("failed to simulate tx: %w", err))
@@ -160,7 +158,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 		require.NoError(b, err)
 
 		_, err = baseApp.FinalizeBlock(
-			&abci.FinalizeBlockRequest{
+			&abci.RequestFinalizeBlock{
 				Height: height,
 				Txs:    [][]byte{bz},
 			},

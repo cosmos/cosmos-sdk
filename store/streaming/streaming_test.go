@@ -8,15 +8,16 @@ import (
 	"testing"
 	"time"
 
-	tmproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/log/v2"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 type PluginTestSuite struct {
@@ -26,9 +27,9 @@ type PluginTestSuite struct {
 
 	workDir string
 
-	finalizeBlockReq abci.FinalizeBlockRequest
-	finalizeBlockRes abci.FinalizeBlockResponse
-	commitRes        abci.CommitResponse
+	finalizeBlockReq abci.RequestFinalizeBlock
+	finalizeBlockRes abci.ResponseFinalizeBlock
+	commitRes        abci.ResponseCommit
 
 	changeSet []*storetypes.StoreKVPair
 }
@@ -66,14 +67,14 @@ func (s *PluginTestSuite) SetupTest() {
 
 	// test abci message types
 
-	s.finalizeBlockReq = abci.FinalizeBlockRequest{
+	s.finalizeBlockReq = abci.RequestFinalizeBlock{
 		Height:            s.loggerCtx.BlockHeight(),
 		Txs:               [][]byte{{1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}},
 		Misbehavior:       []abci.Misbehavior{},
 		Hash:              []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
 		DecidedLastCommit: abci.CommitInfo{},
 	}
-	s.finalizeBlockRes = abci.FinalizeBlockResponse{
+	s.finalizeBlockRes = abci.ResponseFinalizeBlock{
 		Events:                []abci.Event{},
 		ConsensusParamUpdates: &tmproto.ConsensusParams{},
 		ValidatorUpdates:      []abci.ValidatorUpdate{},
@@ -88,7 +89,7 @@ func (s *PluginTestSuite) SetupTest() {
 			Log:       "mockLog",
 		}},
 	}
-	s.commitRes = abci.CommitResponse{}
+	s.commitRes = abci.ResponseCommit{}
 
 	// test store kv pair types
 	for range [2000]int{} {

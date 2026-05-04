@@ -187,7 +187,7 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 	}
 
 	if screens[0].Content != mr.header() {
-		return nilValue, fmt.Errorf(`bad header: want "%s", got "%s"`, mr.header(), screens[0].Title)
+		return nilValue, fmt.Errorf(`bad header: want "%s", got "%s"`, mr.header(), screens[0].Content)
 	}
 	if screens[0].Indent != 0 {
 		return nilValue, fmt.Errorf("bad message indentation: want 0, got %d", screens[0].Indent)

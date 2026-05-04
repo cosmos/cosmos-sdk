@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cometbft/cometbft/v2/mempool"
-	cmttypes "github.com/cometbft/cometbft/v2/types"
+	"github.com/cometbft/cometbft/mempool"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 

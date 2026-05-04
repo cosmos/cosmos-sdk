@@ -6,9 +6,8 @@ import (
 
 	gogotypes "github.com/cosmos/gogoproto/types"
 
-	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -83,7 +82,7 @@ func (k Keeper) GetDelegatorStartingInfo(ctx context.Context, val sdk.ValAddress
 	store := k.storeService.OpenKVStore(ctx)
 	b, err := store.Get(types.GetDelegatorStartingInfoKey(val, del))
 	if err != nil {
-		return
+		return period, err
 	}
 
 	err = k.cdc.Unmarshal(b, &period)
@@ -133,11 +132,11 @@ func (k Keeper) GetValidatorHistoricalRewards(ctx context.Context, val sdk.ValAd
 	store := k.storeService.OpenKVStore(ctx)
 	b, err := store.Get(types.GetValidatorHistoricalRewardsKey(val, period))
 	if err != nil {
-		return
+		return rewards, err
 	}
 
 	err = k.cdc.Unmarshal(b, &rewards)
-	return
+	return rewards, err
 }
 
 // SetValidatorHistoricalRewards sets historical rewards for a particular period
@@ -202,7 +201,7 @@ func (k Keeper) GetValidatorHistoricalReferenceCount(ctx context.Context) (count
 		k.cdc.MustUnmarshal(iter.Value(), &rewards)
 		count += uint64(rewards.ReferenceCount)
 	}
-	return
+	return count
 }
 
 // GetValidatorCurrentRewards gets current rewards for a validator
@@ -210,11 +209,11 @@ func (k Keeper) GetValidatorCurrentRewards(ctx context.Context, val sdk.ValAddre
 	store := k.storeService.OpenKVStore(ctx)
 	b, err := store.Get(types.GetValidatorCurrentRewardsKey(val))
 	if err != nil {
-		return
+		return rewards, err
 	}
 
 	err = k.cdc.Unmarshal(b, &rewards)
-	return
+	return rewards, err
 }
 
 // SetValidatorCurrentRewards sets current rewards for a validator
@@ -265,7 +264,7 @@ func (k Keeper) GetValidatorAccumulatedCommission(ctx context.Context, val sdk.V
 	if err != nil {
 		return types.ValidatorAccumulatedCommission{}, err
 	}
-	return
+	return commission, err
 }
 
 // SetValidatorAccumulatedCommission sets accumulated commission for a validator
@@ -315,10 +314,10 @@ func (k Keeper) GetValidatorOutstandingRewards(ctx context.Context, val sdk.ValA
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.GetValidatorOutstandingRewardsKey(val))
 	if err != nil {
-		return
+		return rewards, err
 	}
 	err = k.cdc.Unmarshal(bz, &rewards)
-	return
+	return rewards, err
 }
 
 // SetValidatorOutstandingRewards sets validator outstanding rewards

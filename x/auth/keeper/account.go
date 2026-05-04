@@ -22,7 +22,7 @@ func (ak AccountKeeper) NewAccountWithAddress(ctx context.Context, addr sdk.AccA
 
 // NewAccount sets the next account number to a given account interface
 func (ak AccountKeeper) NewAccount(ctx context.Context, acc sdk.AccountI) sdk.AccountI {
-	if err := acc.SetAccountNumber(ak.NextAccountNumber(ctx)); err != nil {
+	if err := acc.SetAccountNumber(ak.NextAccountNumber(ctx, acc)); err != nil {
 		panic(err)
 	}
 
@@ -62,7 +62,7 @@ func (ak AccountKeeper) SetAccount(ctx context.Context, acc sdk.AccountI) {
 	}
 }
 
-// RemoveAccount removes an account for the account mapper store.
+// RemoveAccount removes an account from the account mapper store.
 // NOTE: this will cause supply invariant violation if called
 func (ak AccountKeeper) RemoveAccount(ctx context.Context, acc sdk.AccountI) {
 	err := ak.Accounts.Remove(ctx, acc.GetAddress())

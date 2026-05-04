@@ -1,12 +1,11 @@
 //go:build !libsecp256k1_sdk
-// +build !libsecp256k1_sdk
 
 package secp256k1
 
 import (
 	"errors"
 
-	"github.com/cometbft/cometbft/v2/crypto"
+	"github.com/cometbft/cometbft/crypto"
 	secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 )

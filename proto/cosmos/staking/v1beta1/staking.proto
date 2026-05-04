@@ -9,8 +9,8 @@ import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "amino/amino.proto";
-import "cometbft/types/v2/types.proto";
-import "cometbft/abci/v2/types.proto";
+import "tendermint/types/types.proto";
+import "tendermint/abci/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
@@ -19,8 +19,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 // recent HistoricalInfo
 // (`n` is set by the staking module's `historical_entries` parameter).
 message HistoricalInfo {
-  cometbft.types.v2.Header header = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  repeated Validator       valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  tendermint.types.Header header = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated Validator      valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // CommissionRates defines the initial commission rates to be used for creating
@@ -131,7 +131,7 @@ message Validator {
   // strictly positive if this validator's unbonding has been stopped by external modules
   int64 unbonding_on_hold_ref_count = 12;
 
-  // list of unbonding ids, each uniquely identifing an unbonding of this validator
+  // list of unbonding ids, each uniquely identifying an unbonding of this validator
   repeated uint64 unbonding_ids = 13;
 }
 
@@ -376,7 +376,7 @@ message Pool {
   ];
 }
 
-// Infraction indicates the infraction a validator commited.
+// Infraction indicates the infraction a validator committed.
 enum Infraction {
   // UNSPECIFIED defines an empty infraction.
   INFRACTION_UNSPECIFIED = 0;
@@ -389,5 +389,5 @@ enum Infraction {
 // ValidatorUpdates defines an array of abci.ValidatorUpdate objects.
 // TODO: explore moving this to proto/cosmos/base to separate modules from tendermint dependence
 message ValidatorUpdates {
-  repeated cometbft.abci.v2.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

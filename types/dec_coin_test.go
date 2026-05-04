@@ -268,7 +268,7 @@ func (s *decCoinTestSuite) TestSubDecCoins() {
 		{
 			sdk.DecCoins{sdk.NewDecCoin("mytoken", math.NewInt(10)), sdk.NewDecCoin("btc", math.NewInt(20)), sdk.NewDecCoin("eth", math.NewInt(30))},
 			false,
-			"unorted coins should panic",
+			"unsorted coins should panic",
 		},
 		{
 			sdk.DecCoins{sdk.DecCoin{Denom: "BTC", Amount: math.LegacyNewDec(10)}, sdk.NewDecCoin("eth", math.NewInt(15)), sdk.NewDecCoin("mytoken", math.NewInt(5))},

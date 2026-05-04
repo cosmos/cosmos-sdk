@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Main Components of the Cosmos SDK
 
-The Cosmos SDK is a framework that facilitates the development of secure state-machines on top of CometBFT. At its core, the Cosmos SDK is a boilerplate implementation of the [ABCI](./02-sdk-app-architecture.md#abci) in Golang. It comes with a [`multistore`](../advanced/04-store.md#multistore) to persist data and a [`router`](../advanced/00-baseapp.md#routing) to handle transactions.
+The Cosmos SDK is a framework that facilitates the development of secure state-machines on top of CometBFT. At its core, the Cosmos SDK is a boilerplate implementation of the [ABCI](./02-sdk-app-architecture.md#abci) in Golang. It comes with a [`multistore`](../advanced/04-store.md#multistore) to persist data and a [`router`](../advanced/00-baseapp.md#service-routers) to handle transactions.
 
 Here is a simplified view of how transactions are handled by an application built on top of the Cosmos SDK when transferred from CometBFT via `DeliverTx`:
 

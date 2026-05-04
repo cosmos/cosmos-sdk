@@ -157,8 +157,8 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 	return nil
 }
 
-// Select returns an iterator ordering transactions the mempool with the lowest
-// nonce of a random selected sender first.
+// Select returns an iterator ordering transactions in the mempool with the lowest
+// nonce of a randomly selected sender first.
 //
 // NOTE: It is not safe to use this iterator while removing transactions from
 // the underlying mempool.
@@ -252,6 +252,11 @@ func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
 	delete(snm.existingTx, key)
 
 	return nil
+}
+
+// RemoveWithReason is a proxy to Remove for this mempool.
+func (snm *SenderNonceMempool) RemoveWithReason(_ context.Context, tx sdk.Tx, _ RemoveReason) error {
+	return snm.Remove(tx)
 }
 
 type senderNonceMempoolIterator struct {

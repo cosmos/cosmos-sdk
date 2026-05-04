@@ -69,7 +69,7 @@ static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx
             for (i = 0; i < 4; i++) {
                 secp256k1_gej_double_var(&gbase, &gbase, NULL);
             }
-            /* Multiply numbase by 2. */
+            /* Multiply numsbase by 2. */
             secp256k1_gej_double_var(&numsbase, &numsbase, NULL);
             if (j == 62) {
                 /* In the last iteration, numsbase is (1 - 2^j) * nums instead. */

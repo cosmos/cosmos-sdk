@@ -7,8 +7,8 @@ import (
 	fuzz "github.com/google/gofuzz"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/store/prefix"
 
+	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"

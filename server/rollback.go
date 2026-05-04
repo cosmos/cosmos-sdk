@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 
-	cmtcmd "github.com/cometbft/cometbft/v2/cmd/cometbft/commands"
+	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -33,7 +33,7 @@ application.
 			if err != nil {
 				return err
 			}
-			app := appCreator(ctx.Logger, db, nil, ctx.Viper)
+			app := appCreator(ctx.Logger, db, ctx.Viper)
 			// rollback CometBFT state
 			height, hash, err := cmtcmd.RollbackState(ctx.Config, removeBlock)
 			if err != nil {

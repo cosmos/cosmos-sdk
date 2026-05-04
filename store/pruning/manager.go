@@ -9,8 +9,9 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/log/v2"
+
+	"github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 )
 
 // Manager is an abstraction to handle the logic needed for
@@ -134,7 +135,7 @@ func (m *Manager) SetSnapshotInterval(snapshotInterval uint64) {
 	m.snapshotInterval = snapshotInterval
 }
 
-// GetPruningHeight returns the height which can prune upto if it is able to prune at the given height.
+// GetPruningHeight returns the height which can prune up to if it is able to prune at the given height.
 func (m *Manager) GetPruningHeight(height int64) int64 {
 	if m.opts.GetPruningStrategy() == types.PruningNothing ||
 		m.opts.Interval <= 0 ||
@@ -224,11 +225,9 @@ func loadPruningSnapshotHeights(db dbm.DB) ([]int64, error) {
 }
 
 func int64SliceToBytes(slice ...int64) []byte {
-	bz := make([]byte, 0, len(slice)*8)
-	for _, ph := range slice {
-		buf := make([]byte, 8)
-		binary.BigEndian.PutUint64(buf, uint64(ph))
-		bz = append(bz, buf...)
+	bz := make([]byte, len(slice)*8)
+	for i, ph := range slice {
+		binary.BigEndian.PutUint64(bz[i<<3:], uint64(ph))
 	}
 	return bz
 }

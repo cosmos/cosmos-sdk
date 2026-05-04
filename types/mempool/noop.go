@@ -11,13 +11,14 @@ var _ ExtMempool = (*NoOpMempool)(nil)
 // NoOpMempool defines a no-op mempool. Transactions are completely discarded and
 // ignored when BaseApp interacts with the mempool.
 //
-// Note: When this mempool is used, it assumed that an application will rely
+// Note: When this mempool is used, it is assumed that an application will rely
 // on CometBFT's transaction ordering defined in `RequestPrepareProposal`, which
 // is FIFO-ordered by default.
 type NoOpMempool struct{}
 
-func (NoOpMempool) Insert(context.Context, sdk.Tx) error                  { return nil }
-func (NoOpMempool) Select(context.Context, [][]byte) Iterator             { return nil }
-func (NoOpMempool) SelectBy(context.Context, [][]byte, func(sdk.Tx) bool) {}
-func (NoOpMempool) CountTx() int                                          { return 0 }
-func (NoOpMempool) Remove(sdk.Tx) error                                   { return nil }
+func (NoOpMempool) Insert(context.Context, sdk.Tx) error                         { return nil }
+func (NoOpMempool) Select(context.Context, [][]byte) Iterator                    { return nil }
+func (NoOpMempool) SelectBy(context.Context, [][]byte, func(sdk.Tx) bool)        {}
+func (NoOpMempool) CountTx() int                                                 { return 0 }
+func (NoOpMempool) Remove(sdk.Tx) error                                          { return nil }
+func (NoOpMempool) RemoveWithReason(context.Context, sdk.Tx, RemoveReason) error { return nil }

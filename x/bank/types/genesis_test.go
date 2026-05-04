@@ -174,7 +174,7 @@ func TestMigrateSendEnabled(t *testing.T) {
 				}},
 				Supply: sdk.Coins{sdk.NewCoin("supplycoin", math.NewInt(800))},
 				DenomMetadata: []Metadata{{
-					Description: "metadesk",
+					Description: "metadesc",
 					DenomUnits:  nil,
 					Base:        "meta",
 					Display:     "meta",
@@ -192,7 +192,7 @@ func TestMigrateSendEnabled(t *testing.T) {
 				}},
 				Supply: sdk.Coins{sdk.NewCoin("supplycoin", math.NewInt(800))},
 				DenomMetadata: []Metadata{{
-					Description: "metadesk",
+					Description: "metadesc",
 					DenomUnits:  nil,
 					Base:        "meta",
 					Display:     "meta",

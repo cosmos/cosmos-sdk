@@ -1,4 +1,4 @@
-# ADR ADR-061: Liquid Staking
+# ADR-061: Liquid Staking
 
 ## Changelog
 

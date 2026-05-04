@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -108,7 +108,7 @@ func TestRegisterQueryServiceTwice(t *testing.T) {
 		&appBuilder)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	app := appBuilder.Build(db, nil)
+	app := appBuilder.Build(db)
 
 	// First time registering service shouldn't panic.
 	require.NotPanics(t, func() {

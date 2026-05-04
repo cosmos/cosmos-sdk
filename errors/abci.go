@@ -6,24 +6,24 @@ import (
 )
 
 const (
-	// SuccessABCICode declares an ABCI response use 0 to signal that the
+	// SuccessABCICode declares an ABCI response uses 0 to signal that the
 	// processing was successful and no error is returned.
 	SuccessABCICode uint32 = 0
 
 	// All unclassified errors that do not provide an ABCI code are clubbed
 	// under an internal error code and a generic message instead of
-	// detailed error string.
+	// a detailed error string.
 	internalABCICodespace        = UndefinedCodespace
 	internalABCICode      uint32 = 1
 )
 
 // ABCIInfo returns the ABCI error information as consumed by the tendermint
-// client. Returned codespace, code, and log message should be used as a ABCI response.
+// client. Returned codespace, code, and log message should be used as an ABCI response.
 // Any error that does not provide ABCICode information is categorized as error
 // with code 1, codespace UndefinedCodespace
 // When not running in a debug mode all messages of errors that do not provide
 // ABCICode information are replaced with generic "internal error". Errors
-// without an ABCICode information as considered internal.
+// without an ABCICode information are considered internal.
 func ABCIInfo(err error, debug bool) (codespace string, code uint32, log string) {
 	if errIsNil(err) {
 		return "", SuccessABCICode, ""

@@ -81,7 +81,7 @@ We would like to be able to customize:
 * which fields are positional parameters rather than flags
 
 It is an [open discussion](https://github.com/cosmos/cosmos-sdk/pull/11725#issuecomment-1108676129)
-as to whether these customizations options should line in:
+as to whether these customizations options should lie in:
 
 * the .proto files themselves,
 * separate config files (ex. YAML), or

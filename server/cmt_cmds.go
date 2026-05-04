@@ -7,16 +7,16 @@ import (
 	"strconv"
 	"strings"
 
-	cmtcfg "github.com/cometbft/cometbft/v2/config"
-	cmtjson "github.com/cometbft/cometbft/v2/libs/json"
-	"github.com/cometbft/cometbft/v2/node"
-	"github.com/cometbft/cometbft/v2/p2p"
-	pvm "github.com/cometbft/cometbft/v2/privval"
-	cmtversion "github.com/cometbft/cometbft/v2/version"
+	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	"github.com/cometbft/cometbft/node"
+	"github.com/cometbft/cometbft/p2p"
+	pvm "github.com/cometbft/cometbft/privval"
+	cmtversion "github.com/cometbft/cometbft/version"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -51,7 +51,7 @@ func StatusCommand() *cobra.Command {
 				return err
 			}
 
-			// In order to maintain backwards compatibility, the default json format output
+			// In order to maintain backwards compatibility, the default json format output is used
 			outputFormat, _ := cmd.Flags().GetString(flags.FlagOutput)
 			if outputFormat == flags.OutputFormatJSON {
 				clientCtx = clientCtx.WithOutputFormat(flags.OutputFormatJSON)
@@ -155,7 +155,7 @@ func VersionCmd() *cobra.Command {
 				BlockProtocol uint64
 				P2PProtocol   uint64
 			}{
-				CometBFT:      cmtversion.CMTSemVer,
+				CometBFT:      cmtversion.TMCoreSemVer,
 				ABCI:          cmtversion.ABCIVersion,
 				BlockProtocol: cmtversion.BlockProtocol,
 				P2PProtocol:   cmtversion.P2PProtocol,
@@ -381,13 +381,11 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 					return err
 				}
 
-				app := appCreator(logger, db, nil, serverCtx.Viper)
+				app := appCreator(logger, db, serverCtx.Viper)
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
-			if height < 0 {
-				return fmt.Errorf("height must be non-negative, got %d", height)
-			}
-			return node.BootstrapState(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg), uint64(height), nil)
+
+			return node.BootstrapStateWithGenProvider(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg), uint64(height), nil)
 		},
 	}
 

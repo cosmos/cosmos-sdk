@@ -6,11 +6,11 @@ sidebar_position: 1
 
 :::note Pre-requisite Readings
 
-* [Depinject Documentation](../packages/01-depinject.md)
+* [Depinject Documentation](../building-apps/01-app-go-di.md)
 
 :::
 
-[`depinject`](../packages/01-depinject.md) is used to wire any module in `app.go`.
+[`depinject`](../building-apps/01-app-go-di.md) is used to wire any module in `app.go`.
 All core modules are already configured to support dependency injection.
 
 To work with `depinject` a module must define its configuration and requirements so that `depinject` can provide the right dependencies.
@@ -36,7 +36,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/group/mod
 * `go_import` must point to the Go package of the custom module.
 * Message fields define the module configuration.
   That configuration can be set in the `app_config.go` / `app.yaml` file for a chain developer to configure the module.  
-  Taking `group` as example, a chain developer is able to decide, thanks to `uint64 max_metadata_len`, what the maximum metadata length allowed for a group proposal is.
+  Taking `group` as an example, a chain developer is able to decide, thanks to `uint64 max_metadata_len`, what the maximum metadata length allowed for a group proposal is.
 
   ```go reference
   https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_config.go#L228-L234

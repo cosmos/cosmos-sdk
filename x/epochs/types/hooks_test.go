@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/epochs/types"
@@ -30,7 +30,7 @@ func (s *KeeperTestSuite) SetupTest() {
 var dummyErr = errors.New("9", 9, "dummyError")
 
 // dummyEpochHook is a struct satisfying the epoch hook interface,
-// that maintains a counter for how many times its been successfully called,
+// that maintains a counter for how many times it's been successfully called,
 // and a boolean for whether it should panic during its execution.
 type dummyEpochHook struct {
 	successCounter int

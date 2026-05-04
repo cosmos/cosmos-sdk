@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cometbft/cometbft/v2/crypto"
+	"github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"
 
@@ -51,11 +51,20 @@ func TestFundraiserCompatibility(t *testing.T) {
 	hdToAddrTable := initFundraiserTestVectors(t)
 
 	for i, d := range hdToAddrTable {
-		privB, _ := hex.DecodeString(d.Priv)
-		pubB, _ := hex.DecodeString(d.Pub)
-		addrB, _ := hex.DecodeString(d.Addr)
-		seedB, _ := hex.DecodeString(d.Seed)
-		masterB, _ := hex.DecodeString(d.Master)
+		privB, err := hex.DecodeString(d.Priv)
+		require.NoError(t, err)
+
+		pubB, err := hex.DecodeString(d.Pub)
+		require.NoError(t, err)
+
+		addrB, err := hex.DecodeString(d.Addr)
+		require.NoError(t, err)
+
+		seedB, err := hex.DecodeString(d.Seed)
+		require.NoError(t, err)
+
+		masterB, err := hex.DecodeString(d.Master)
+		require.NoError(t, err)
 
 		seed := bip39.NewSeed(d.Mnemonic, "")
 

@@ -70,7 +70,7 @@ func OutputJSONOption() Option {
 	}
 }
 
-// ColorOption add option to enable/disable coloring
+// ColorOption adds an option to enable/disable coloring
 // of the logs when console writer is in use
 func ColorOption(val bool) Option {
 	return func(cfg *Config) {
@@ -79,8 +79,8 @@ func ColorOption(val bool) Option {
 }
 
 // TimeFormatOption configures timestamp format of the logger
-// timestamps disabled if empty.
-// it is responsibility of the caller to provider correct values
+// Timestamps are disabled if empty.
+// It is the responsibility of the caller to provide correct values
 // Supported formats:
 //   - time.Layout
 //   - time.ANSIC
@@ -100,14 +100,14 @@ func TimeFormatOption(format string) Option {
 	}
 }
 
-// TraceOption add option to enable/disable print of stacktrace on error log
+// TraceOption adds an option to enable/disable print of stacktrace on error log
 func TraceOption(val bool) Option {
 	return func(cfg *Config) {
 		cfg.StackTrace = val
 	}
 }
 
-// HooksOption append hooks to the Logger hooks
+// HooksOption appends hooks to the Logger hooks
 func HooksOption(hooks ...zerolog.Hook) Option {
 	return func(cfg *Config) {
 		cfg.Hooks = append(cfg.Hooks, hooks...)

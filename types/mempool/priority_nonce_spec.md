@@ -75,7 +75,7 @@ graph LR
 
 Mempool order: [6, 5, 8, 3, 5, 9]
 
-Although tx(priority=9) has the highest global priority it is selected last.  This is due tx(priority=3) 
+Although tx(priority=9) has the highest global priority it is selected last.  This is due to tx(priority=3) 
 gating 9's selection by rule 1.
 
 ### Case 3 - Priority ties
@@ -116,7 +116,7 @@ because of the transactions following them, tx(priority=99) must be selected bef
 | B      | 1     | 20       |
 | B      | 3     | 4        |
 | C      | 0     | 2        |
-| C      | 3     | 7        |
+| C      | 3     | 90        |
 
 ```mermaid
 graph TD
@@ -143,4 +143,4 @@ graph TD
 
 Mempool order: [10, 15, 30, 8, 20, 6, 4, 2, 90]
 
-This case shows how the mempool handles a more complex graph with more priority edges between senders.  Again we also demonstrate an idiosyncrasy of this nonce/priroity ordering scheme, tx(priority=90) is selected last because it is gated behind tx(priority=2) by nonce ordering. 
+This case shows how the mempool handles a more complex graph with more priority edges between senders.  Again we also demonstrate an idiosyncrasy of this nonce/priority ordering scheme, tx(priority=90) is selected last because it is gated behind tx(priority=2) by nonce ordering. 

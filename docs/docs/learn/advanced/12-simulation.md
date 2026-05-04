@@ -48,7 +48,7 @@ In addition to the various inputs and commands, the simulator runs in three mode
 1. Completely random where the initial state, module parameters and simulation
    parameters are **pseudo-randomly generated**.
 2. From a `genesis.json` file where the initial state and the module parameters are defined.
-   This mode is helpful for running simulations on a known state such as a live network export where a new (mostly likely breaking) version of the application needs to be tested.
+   This mode is helpful for running simulations on a known state such as a live network export where a new (most likely breaking) version of the application needs to be tested.
 3. From a `params.json` file where the initial state is pseudo-randomly generated but the module and simulation parameters can be provided manually.
    This allows for a more controlled and deterministic simulation setup while allowing the state space to still be pseudo-randomly simulated.
    The list of available parameters are listed [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/x/simulation/client/cli/flags.go#L72-L90).

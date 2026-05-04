@@ -8,9 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/store/snapshots"
-	"cosmossdk.io/store/snapshots/types"
+	"cosmossdk.io/log/v2"
+
+	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
+	"github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
 )
 
 var opts = types.NewSnapshotOptions(1500, 2)
@@ -170,7 +171,7 @@ func TestManager_Restore(t *testing.T) {
 	err = manager.Restore(types.Snapshot{Height: 3, Format: types.CurrentFormat, Hash: []byte{1, 2, 3}})
 	require.Error(t, err)
 
-	// Restore errors on chunk and chunkhashes mismatch
+	// Restore errors on chunk and chunk hashes mismatch
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
 		Format:   types.CurrentFormat,

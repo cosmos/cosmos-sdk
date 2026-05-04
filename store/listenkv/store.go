@@ -1,9 +1,8 @@
 package listenkv
 
 import (
-	"io"
-
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 var _ types.KVStore = &Store{}
@@ -17,8 +16,8 @@ type Store struct {
 	parentStoreKey types.StoreKey
 }
 
-// NewStore returns a reference to a new traceKVStore given a parent
-// KVStore implementation and a buffered writer.
+// NewStore returns a reference to a new listenKVStore given a parent
+// KVStore implementation and a memory listener.
 func NewStore(parent types.KVStore, parentStoreKey types.StoreKey, listener *types.MemoryListener) *Store {
 	return &Store{parent: parent, listener: listener, parentStoreKey: parentStoreKey}
 }
@@ -52,19 +51,19 @@ func (s *Store) Has(key []byte) bool {
 }
 
 // Iterator implements the KVStore interface. It delegates the Iterator call
-// the to the parent KVStore.
+// to the parent KVStore.
 func (s *Store) Iterator(start, end []byte) types.Iterator {
 	return s.iterator(start, end, true)
 }
 
 // ReverseIterator implements the KVStore interface. It delegates the
-// ReverseIterator call the to the parent KVStore.
+// ReverseIterator call to the parent KVStore.
 func (s *Store) ReverseIterator(start, end []byte) types.Iterator {
 	return s.iterator(start, end, false)
 }
 
 // iterator facilitates iteration over a KVStore. It delegates the necessary
-// calls to it's parent KVStore.
+// calls to its parent KVStore.
 func (s *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	var parent types.Iterator
 
@@ -129,14 +128,7 @@ func (s *Store) GetStoreType() types.StoreType {
 	return s.parent.GetStoreType()
 }
 
-// CacheWrap implements the KVStore interface. It panics as a Store
-// cannot be cache wrapped.
+// CacheWrap implements the KVStore interface. It branches the kv store via creating a new cachekv around s.
 func (s *Store) CacheWrap() types.CacheWrap {
-	panic("cannot CacheWrap a ListenKVStore")
-}
-
-// CacheWrapWithTrace implements the KVStore interface. It panics as a
-// Store cannot be cache wrapped.
-func (s *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
-	panic("cannot CacheWrapWithTrace a ListenKVStore")
+	return cachekv.NewStore(s)
 }

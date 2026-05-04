@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"strings"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	abci "github.com/cometbft/cometbft/v2/abci/types"
-	coretypes "github.com/cometbft/cometbft/v2/rpc/core/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -82,7 +82,7 @@ func NewResponseResultTx(res *coretypes.ResultTx, anyTx *codectypes.Any, timesta
 	}
 }
 
-// NewResponseResultBlock returns a BlockResponse given a ResultBlock from CometBFT
+// NewResponseResultBlock returns a cmtproto.Block given a ResultBlock from CometBFT
 func NewResponseResultBlock(res *coretypes.ResultBlock, timestamp string) *cmtproto.Block {
 	if res == nil {
 		return nil

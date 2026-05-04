@@ -87,7 +87,7 @@ func TestMultipleProposalsVoteRemoval(t *testing.T) {
 	require.NoError(t, govKeeper.AddVote(ctx, proposal2ID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionNo), ""))
 	require.NoError(t, govKeeper.AddVote(ctx, proposal2ID, addrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 
-	// votes should eixst
+	// votes should exist
 	vote1Addr0, err := govKeeper.Votes.Get(ctx, collections.Join(proposal1ID, addrs[0]))
 	require.NoError(t, err)
 	require.Equal(t, v1.OptionYes, vote1Addr0.Options[0].Option)

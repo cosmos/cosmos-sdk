@@ -98,10 +98,10 @@ func findGrant(
 	})
 	if innerErr != nil {
 		reporter.Skip(innerErr.Error())
-		return
+		return granterAddr, granteeAddr, auth
 	}
 	if auth == nil {
 		reporter.Skip("no grant found")
 	}
-	return
+	return granterAddr, granteeAddr, auth
 }

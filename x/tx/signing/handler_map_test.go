@@ -7,7 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	"cosmossdk.io/x/tx/signing"
+
+	"github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 var (

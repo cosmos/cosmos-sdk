@@ -50,7 +50,7 @@ provide query methods that expose these interfaces via `google.protobuf.Any`.
 There is a concern on the transaction level that the overhead of `Any` is too
 high to justify its usage. However for queries this is not a concern, and
 providing generic module-level queries that use `Any` does not preclude apps
-from also providing app-level queries that return use the app-level `oneof`s.
+from also providing app-level queries that return using the app-level `oneof`s.
 
 A hypothetical example for the `gov` module would look something like:
 
@@ -205,7 +205,7 @@ type QueryClient interface {
 ```
 
 Via a small patch to gogo protobuf ([gogo/protobuf#675](https://github.com/gogo/protobuf/pull/675))
-we have tweaked the grpc codegen to use an interface rather than concrete type
+we have tweaked the grpc codegen to use an interface rather than a concrete type
 for the generated client struct. This allows us to also reuse the GRPC infrastructure
 for ABCI client queries.
 

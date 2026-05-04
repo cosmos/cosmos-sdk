@@ -4,7 +4,9 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/gogoproto/proto"
+	anypb "github.com/cosmos/gogoproto/types/any"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
@@ -47,7 +49,7 @@ func TestUnregisteredProposal_InactiveProposalFails(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = suite.GovKeeper.Proposals.Get(ctx, proposal.Id)
-	require.Error(t, err, collections.ErrNotFound)
+	require.ErrorIs(t, err, collections.ErrNotFound)
 }
 
 func TestUnregisteredProposal_ActiveProposalFails(t *testing.T) {
@@ -81,13 +83,82 @@ func TestUnregisteredProposal_ActiveProposalFails(t *testing.T) {
 	require.Equal(t, v1.StatusFailed, p.Status)
 }
 
+func TestUndecodableProposal_ActiveProposalFails(t *testing.T) {
+	s := createTestSuite(t)
+	ctx := s.App.NewContext(false)
+
+	const proposalID uint64 = 9901
+	endTime := ctx.BlockTime()
+
+	// Write a proposal with an unregistered Any type URL directly into the KV
+	// store, simulating a proposal that was valid under a previous binary but
+	// becomes undecodable after a binary upgrade removes the message type.
+	storeKey := s.App.UnsafeFindStoreKey(types.StoreKey)
+	require.NotNil(t, storeKey)
+	bz, err := proto.Marshal(&v1.Proposal{
+		Id:       proposalID,
+		Messages: []*anypb.Any{{TypeUrl: "/cosmos.removed.v1.MsgRemoved", Value: []byte{0x08, 0x01}}},
+	})
+	require.NoError(t, err)
+	key, err := collections.EncodeKeyWithPrefix(s.GovKeeper.Proposals.GetPrefix(), collections.Uint64Key, proposalID)
+	require.NoError(t, err)
+	ctx.KVStore(storeKey).Set(key, bz)
+
+	_, err = s.GovKeeper.Proposals.Get(ctx, proposalID)
+	require.ErrorIs(t, err, collections.ErrEncoding)
+
+	require.NoError(t, s.GovKeeper.ActiveProposalsQueue.Set(ctx, collections.Join(endTime, proposalID), proposalID))
+
+	require.NotPanics(t, func() {
+		err := gov.EndBlocker(ctx, s.GovKeeper)
+		require.NoError(t, err)
+	})
+
+	has, err := s.GovKeeper.ActiveProposalsQueue.Has(ctx, collections.Join(endTime, proposalID))
+	require.NoError(t, err)
+	require.False(t, has, "active queue entry should be removed")
+}
+
+func TestUndecodableProposal_InactiveProposalFails(t *testing.T) {
+	s := createTestSuite(t)
+	ctx := s.App.NewContext(false)
+
+	const proposalID uint64 = 9902
+	endTime := ctx.BlockTime()
+
+	storeKey := s.App.UnsafeFindStoreKey(types.StoreKey)
+	require.NotNil(t, storeKey)
+	bz, err := proto.Marshal(&v1.Proposal{
+		Id:       proposalID,
+		Messages: []*anypb.Any{{TypeUrl: "/cosmos.removed.v1.MsgRemoved", Value: []byte{0x08, 0x01}}},
+	})
+	require.NoError(t, err)
+	key, err := collections.EncodeKeyWithPrefix(s.GovKeeper.Proposals.GetPrefix(), collections.Uint64Key, proposalID)
+	require.NoError(t, err)
+	ctx.KVStore(storeKey).Set(key, bz)
+
+	_, err = s.GovKeeper.Proposals.Get(ctx, proposalID)
+	require.ErrorIs(t, err, collections.ErrEncoding)
+
+	require.NoError(t, s.GovKeeper.InactiveProposalsQueue.Set(ctx, collections.Join(endTime, proposalID), proposalID))
+
+	require.NoError(t, gov.EndBlocker(ctx, s.GovKeeper))
+
+	has, err := s.GovKeeper.InactiveProposalsQueue.Has(ctx, collections.Join(endTime, proposalID))
+	require.NoError(t, err)
+	require.False(t, has, "inactive queue entry should be removed")
+
+	// Second pass: nothing left to process.
+	require.NoError(t, gov.EndBlocker(ctx, s.GovKeeper))
+}
+
 func TestTickExpiredDepositPeriod(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.App
 	ctx := app.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -139,7 +210,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	ctx := app.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -211,7 +282,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	ctx := app.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
 
-	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -277,7 +348,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 			SortAddresses(addrs)
 
-			_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
+			_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 				Height: app.LastBlockHeight() + 1,
 				Hash:   app.LastCommitID().Hash,
 			})
@@ -372,7 +443,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 
-			_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
+			_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 				Height: app.LastBlockHeight() + 1,
 				Hash:   app.LastCommitID().Hash,
 			})
@@ -433,7 +504,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 
 	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 
-	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
 	})
@@ -519,7 +590,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
 
-			_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{
+			_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 				Height: app.LastBlockHeight() + 1,
 				Hash:   app.LastCommitID().Hash,
 			})
@@ -619,8 +690,8 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			require.NotEqual(t, initialModuleAccCoins, intermediateModuleAccCoins)
 
 			// Submit proposal deposit + 1 extra top up deposit
-			expectedIntermediateMofuleAccCoings := initialModuleAccCoins.Add(proposalCoins...).Add(proposalCoins...)
-			require.Equal(t, expectedIntermediateMofuleAccCoings, intermediateModuleAccCoins)
+			expectedIntermediateModuleAccCoins := initialModuleAccCoins.Add(proposalCoins...).Add(proposalCoins...)
+			require.Equal(t, expectedIntermediateModuleAccCoins, intermediateModuleAccCoins)
 
 			// block header time at the voting period
 			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)

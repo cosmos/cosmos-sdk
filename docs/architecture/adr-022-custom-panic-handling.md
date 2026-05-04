@@ -26,8 +26,8 @@ It will also make `OutOfGas` case and `default` case one of the middlewares.
 `Default` case wraps recovery object to an error and logs it ([example middleware implementation](#recovery-middleware)).
 
 Our project has a sidecar service running alongside the blockchain node (smart contracts virtual machine). It is
-essential that node <-> sidecar connectivity stays stable for TXs processing. So when the communication breaks we need
-to crash the node and reboot it once the problem is solved. That behaviour makes node's state machine execution
+essential that node <-> sidecar connectivity stays stable for TXs processing. So when the communication breaks, we need
+to crash the node and reboot it once the problem is solved. That behavior makes the node's state machine execution
 deterministic. As all keeper panics are caught by runTx's `defer()` handler, we have to adjust the BaseApp code
 in order to customize it.
 
@@ -37,8 +37,8 @@ in order to customize it.
 
 #### Overview
 
-Instead of hardcoding custom error handling into BaseApp we suggest using set of middlewares which can be customized
-externally and will allow developers use as many custom error handlers as they want. Implementation with tests
+Instead of hardcoding custom error handling into BaseApp we suggest using a set of middlewares which can be customized
+externally and will allow developers to use as many custom error handlers as they want. Implementation with tests
 can be found [here](https://github.com/cosmos/cosmos-sdk/pull/6053).
 
 #### Implementation details
@@ -52,9 +52,9 @@ New `RecoveryHandler` type added. `recoveryObj` input argument is an object retu
 type RecoveryHandler func(recoveryObj interface{}) error
 ```
 
-Handler should type assert (or other methods) an object to define if object should be handled.
-`nil` should be returned if input object can't be handled by that `RecoveryHandler` (not a handler's target type).
-Not `nil` error should be returned if input object was handled and middleware chain execution should be stopped.
+Handler should type assert (or other methods) an object to define if the object should be handled.
+`nil` should be returned if the input object can't be handled by that `RecoveryHandler` (not a handler's target type).
+Not `nil` error should be returned if the input object was handled and the middleware chain execution should be stopped.
 
 An example:
 
@@ -97,7 +97,7 @@ Function receives a `recoveryObj` object and returns:
 * (next `recoveryMiddleware`, `nil`) if object wasn't handled (not a target type) by `RecoveryHandler`;
 * (`nil`, not nil `error`) if input object was handled and other middlewares in the chain should not be executed;
 * (`nil`, `nil`) in case of invalid behavior. Panic recovery might not have been properly handled;
-this can be avoided by always using a `default` as a rightmost middleware in the chain (always returns an `error`');
+this can be avoided by always using a `default` as a rightmost middleware in the chain (always returns an `error`);
 
 `OutOfGas` middleware example:
 
@@ -153,7 +153,7 @@ That way we can create a middleware chain which is executed from left to right, 
 
 ##### BaseApp changes
 
-The `default` middleware chain must exist in a `BaseApp` object. `Baseapp` modifications:
+The `default` middleware chain must exist in a `BaseApp` object. `BaseApp` modifications:
 
 ```go
 type BaseApp struct {
@@ -196,11 +196,11 @@ This method would prepend handlers to an existing chain.
 
 ### Positive
 
-* Developers of Cosmos SDK based projects can add custom panic handlers to:
+* Developers of Cosmos SDK-based projects can add custom panic handlers to:
     * add error context for custom panic sources (panic inside of custom keepers);
     * emit `panic()`: passthrough recovery object to the Tendermint core;
     * other necessary handling;
-* Developers can use standard Cosmos SDK `BaseApp` implementation, rather that rewriting it in their projects;
+* Developers can use standard Cosmos SDK `BaseApp` implementation, rather than rewriting it in their projects;
 * Proposed solution doesn't break the current "standard" `runTx()` flow;
 
 ### Negative

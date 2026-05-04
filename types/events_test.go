@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
@@ -86,6 +86,20 @@ func (s *eventsTestSuite) TestEventManager() {
 
 	s.Require().Len(em.Events(), 2)
 	s.Require().Equal(em.Events(), events.AppendEvent(event))
+}
+
+func (s *eventsTestSuite) TestOverrideEvents() {
+	em := sdk.NewEventManager()
+	event := sdk.NewEvent("reward", sdk.NewAttribute("x", "y"))
+	events := sdk.Events{sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))}
+
+	em.EmitEvents(events)
+	em.EmitEvent(event)
+
+	s.Require().Len(em.Events(), 2)
+
+	em.OverrideEvents(events)
+	s.Require().Len(em.Events(), 1)
 }
 
 func (s *eventsTestSuite) TestEmitTypedEvent() {

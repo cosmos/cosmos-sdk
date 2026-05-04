@@ -1,7 +1,7 @@
 package types
 
 import (
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"cosmossdk.io/math"
 
@@ -28,7 +28,7 @@ type ValidatorI interface {
 	TmConsPublicKey() (cmtprotocrypto.PublicKey, error)             // validation consensus pubkey (CometBFT)
 	GetConsAddr() ([]byte, error)                                   // validation consensus address
 	GetTokens() math.Int                                            // validation tokens
-	GetBondedTokens() math.Int                                      // validator bonded tokens
+	GetValidatorPower() math.Int                                    // validator bonded tokens
 	GetConsensusPower(math.Int) int64                               // validation power in CometBFT
 	GetCommission() math.LegacyDec                                  // validator commission rate
 	GetMinSelfDelegation() math.Int                                 // validator minimum self delegation

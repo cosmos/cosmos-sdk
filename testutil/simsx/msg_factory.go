@@ -69,7 +69,7 @@ func NewSimMsgFactoryWithDeliveryResultHandler[T sdk.Msg](f FactoryMethodWithDel
 		if r.resultHandler == nil {
 			r.resultHandler = expectNoError
 		}
-		return
+		return signer, msg
 	}
 	return r
 }
@@ -95,7 +95,7 @@ func NewSimMsgFactoryWithFutureOps[T sdk.Msg](f FactoryMethodWithFutureOps[T]) *
 	r := &LazyStateSimMsgFactory[T]{}
 	r.SimMsgFactoryFn = func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg T) {
 		signer, msg = f(ctx, testData, reporter, r.fsOpsReg)
-		return
+		return signer, msg
 	}
 	return r
 }

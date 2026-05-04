@@ -1,9 +1,9 @@
 package codec
 
 import (
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-	cmtcrypto "github.com/cometbft/cometbft/v2/crypto"
-	"github.com/cometbft/cometbft/v2/crypto/encoding"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/encoding"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"cosmossdk.io/errors"
 
@@ -25,6 +25,7 @@ func FromCmtProtoPublicKey(protoPk cmtprotocrypto.PublicKey) (cryptotypes.PubKey
 		return &secp256k1.PubKey{
 			Key: protoPk.Secp256K1,
 		}, nil
+		// TODO: readd once comet has this
 	case *cmtprotocrypto.PublicKey_Bls12381:
 		return &bls12_381.PubKey{
 			Key: protoPk.Bls12381,
@@ -49,6 +50,7 @@ func ToCmtProtoPublicKey(pk cryptotypes.PubKey) (cmtprotocrypto.PublicKey, error
 				Secp256K1: pk.Key,
 			},
 		}, nil
+		// TODO: readd once comet has this
 	case *bls12_381.PubKey:
 		return cmtprotocrypto.PublicKey{
 			Sum: &cmtprotocrypto.PublicKey_Bls12381{

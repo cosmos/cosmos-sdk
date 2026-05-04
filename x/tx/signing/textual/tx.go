@@ -16,7 +16,8 @@ import (
 	msg "cosmossdk.io/api/cosmos/msg/v1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/x/tx/signing/textual/internal/textualpb"
+
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual/internal/textualpb"
 )
 
 var (
@@ -204,7 +205,7 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 	for i := range screens {
 		parsable[i+1].Indent = screens[i].Indent + 1
 
-		// Take same text, except that we weplace:
+		// Take same text, except that we replace:
 		// "This transaction has <N> Message"
 		// with:
 		// "Message: <N> Any"

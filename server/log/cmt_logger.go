@@ -1,9 +1,9 @@
 package server
 
 import (
-	cmtlog "github.com/cometbft/cometbft/v2/libs/log"
+	cmtlog "github.com/cometbft/cometbft/libs/log"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 )
 
 var _ cmtlog.Logger = (*CometLoggerWrapper)(nil)

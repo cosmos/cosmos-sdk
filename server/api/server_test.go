@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/protobuf/proto" //nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // needed for testing
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
@@ -252,7 +252,7 @@ func readTrailersFromBytes(t *testing.T, dataBytes []byte) Trailer {
 
 	// First, read bytes as MIME headers.
 	// However, it normalizes header names by textproto.CanonicalMIMEHeaderKey.
-	// In the next step, replace header names by raw one.
+	// In the next step, replace header names by raw ones.
 	mimeHeader, err := tp.ReadMIMEHeader()
 	if err == nil {
 		return Trailer{}
@@ -298,7 +298,7 @@ func HTTPTrailerToGrpcWebTrailer(httpTrailer http.Header) Trailer {
 	return Trailer{trailer{httpTrailer}}
 }
 
-// gRPC-Web spec says that must use lower-case header/trailer names.
+// gRPC-Web spec says that we must use lower-case header/trailer names.
 // See "HTTP wire protocols" section in
 // https://github.com/grpc/grpc/blob/master/doc/PROTOCOL-WEB.md#protocol-differences-vs-grpc-over-http2
 type trailer struct {

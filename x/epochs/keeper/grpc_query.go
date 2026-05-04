@@ -45,7 +45,7 @@ func (q Querier) CurrentEpoch(ctx context.Context, req *types.QueryCurrentEpochR
 
 	info, err := q.EpochInfo.Get(ctx, req.Identifier)
 	if err != nil {
-		return nil, errors.New("not available identifier")
+		return nil, errors.New("identifier not available")
 	}
 
 	return &types.QueryCurrentEpochResponse{

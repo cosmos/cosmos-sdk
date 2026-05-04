@@ -119,7 +119,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 			name:      "invalid delegator address",
 			exceptErr: true,
 			req: types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: "invalid_delegator_addrtess",
+				DelegatorAddress: "invalid_delegator_address",
 				ValidatorAddress: resUnbond.ValidatorAddress,
 				Amount:           unbondingAmount,
 				CreationHeight:   0,

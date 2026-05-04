@@ -5,11 +5,10 @@ import (
 	"sort"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
-	gogotypes "github.com/cosmos/gogoproto/types"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/comet"
@@ -36,7 +35,7 @@ func TestValidateVoteExtensions(t *testing.T) {
 
 	// enable vote extensions
 	cp := simtestutil.DefaultConsensusParams
-	cp.Feature = &cmtproto.FeatureParams{VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 1}}
+	cp.Abci = &cmtproto.ABCIParams{VoteExtensionsEnableHeight: 1}
 	f.sdkCtx = f.sdkCtx.WithConsensusParams(*cp).WithHeaderInfo(header.Info{Height: 2, ChainID: chainID})
 
 	// setup the validators
@@ -73,7 +72,7 @@ func TestValidateVoteExtensions(t *testing.T) {
 			ChainId:   chainID,
 		}
 
-		extSignBytes, err := mashalVoteExt(&cve)
+		extSignBytes, err := marshalVoteExt(&cve)
 		assert.NilError(t, err)
 
 		sig, err := privKeys[i].Sign(extSignBytes)
@@ -100,7 +99,7 @@ func TestValidateVoteExtensions(t *testing.T) {
 	assert.NilError(t, err)
 }
 
-func mashalVoteExt(msg proto.Message) ([]byte, error) {
+func marshalVoteExt(msg proto.Message) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {
 		return nil, err

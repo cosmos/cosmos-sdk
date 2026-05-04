@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 
-	storetypes "cosmossdk.io/store/types"
-
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -82,7 +81,10 @@ func (k Keeper) GetAllHistoricalInfo(ctx context.Context) ([]types.HistoricalInf
 }
 
 // TrackHistoricalInfo saves the latest historical-info and deletes the oldest
-// heights that are below pruning height
+// heights that are below pruning height.
+// NOTE: HistoricalInfo headers are partial and omit fields such as: Version, LastBlockID,
+// LastCommitHash, DataHash, ValidatorsHash, ConsensusHash, LastResultsHash, and EvidenceHash.
+// As a result hashing the Header will not produce the correct result.
 func (k Keeper) TrackHistoricalInfo(ctx context.Context) error {
 	entryNum, err := k.HistoricalEntries(ctx)
 	if err != nil {

@@ -4,10 +4,11 @@ import (
 	"maps"
 	"slices"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"cosmossdk.io/math/unsafe"
-	sdkmaps "cosmossdk.io/store/internal/maps"
+
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/v2/internal/maps"
 )
 
 // SimpleResult contains a merkle.SimpleProof along with all data needed to build the confio/proof
@@ -55,7 +56,7 @@ func CalcRoot(data map[string][]byte) []byte {
 	return root
 }
 
-// GetKey this returns a key, on Left/Right/Middle
+// GetKey returns a key, on Left/Right/Middle
 func GetKey(allkeys []string, loc Where) string {
 	if loc == Left {
 		return allkeys[0]

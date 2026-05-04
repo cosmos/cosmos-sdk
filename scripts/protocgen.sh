@@ -26,22 +26,22 @@ done
 cd ..
 
 # generate tests proto code
-echo "Generating tests proto code"
 (cd testutil/testdata; buf generate)
 (cd baseapp/testutil; buf generate)
 (cd tests/integration/tx/internal; make codegen)
 
 # move proto files to the right places
-echo "Moving proto files"
 cp -r github.com/cosmos/cosmos-sdk/* ./
 cp -r cosmossdk.io/** ./
 rm -rf github.com cosmossdk.io
 
-echo "Generating pulsar proto code"
-./scripts/protocgen-pulsar.sh
+# store module path is store/v2 but files live in store/ on disk
+# move generated store/v2/* into store/ to match the repo layout
+if [ -d store/v2 ]; then
+  cp -r store/v2/* store/
+  rm -rf store/v2
+fi
 
-echo
-echo "All Protobuf code generation steps completed"
-echo "Last step: running go mod tidy"
-echo
 go mod tidy
+
+./scripts/protocgen-pulsar.sh

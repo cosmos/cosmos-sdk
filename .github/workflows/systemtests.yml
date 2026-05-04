@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - main
-      - release/v0.53.x
 
 permissions:
   contents: read
@@ -21,13 +20,13 @@ jobs:
     outputs:
       git_diff: ${{ steps.git_diff.outputs.diff }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-tags: true
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
-          go-version: "1.24"
+          go-version: "1.25.9"
           check-latest: true
           cache: true
           cache-dependency-path: |
@@ -40,6 +39,7 @@ jobs:
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
+          # Core Go code, go.mod, Makefile; exclude non-core (workflow passes when skipped)
           PATTERNS: |
             **/*.go
             go.mod
@@ -49,40 +49,76 @@ jobs:
             **/Makefile
             Makefile
 
-  test-system:
+  test-sdk-system:
     needs: setup
     if: needs.setup.outputs.git_diff
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
-      - name: Run system tests
-        run: |
-          mkdir -p ./tests/systemtests/testnet
-          make test-system
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.9"
+          check-latest: true
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Run SDK system tests
+        run: make test-sdk-system
 
       - name: Upload system test logs if failed
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: system-test-logs
           path: ./tests/systemtests/testnet/*.out
+          if-no-files-found: ignore
 
-  test-system-legacy:
-    needs: setup
-    if: needs.setup.outputs.git_diff
+  test-poa-system:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Run legacy system tests
-        run: |
-          mkdir -p ./tests/systemtests/testnet
-          COSMOS_BUILD_OPTIONS=legacy make test-system
-
-      - name: Upload legacy system test logs if failed
-        if: failure()
-        uses: actions/upload-artifact@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
         with:
-          name: legacy-system-test-logs
-          path: ./tests/systemtests/testnet/*.out
+          go-version: "1.25.9"
+          check-latest: true
+          cache: true
+          cache-dependency-path: enterprise/poa/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            enterprise/poa/**/*.go
+            enterprise/poa/go.mod
+            enterprise/poa/go.sum
+      - name: system tests
+        if: env.GIT_DIFF
+        run: |
+          cd enterprise/poa
+          make test-system
+
+  test-group-system:
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.9"
+          check-latest: true
+          cache: true
+          cache-dependency-path: enterprise/group/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            enterprise/group/**/*.go
+            enterprise/group/go.mod
+            enterprise/group/go.sum
+      - name: system tests
+        if: env.GIT_DIFF
+        run: |
+          cd enterprise/group
+          make test-system
+

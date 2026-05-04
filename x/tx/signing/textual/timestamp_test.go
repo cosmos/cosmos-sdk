@@ -13,7 +13,7 @@ import (
 	dur "google.golang.org/protobuf/types/known/durationpb"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
 
-	"cosmossdk.io/x/tx/signing/textual"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual"
 )
 
 // timestampJSONTest is the type of test cases in the testdata file.
@@ -39,7 +39,7 @@ func TestTimestampJSONTestcasesTestData(t *testing.T) {
 // Tests to ensure that we compare standardized forms of the final timestamppb.Timestamp.
 // Please see issue https://github.com/cosmos/cosmos-sdk/issues/15761
 func TestTimestampJsonTestcasesExtraneousNanos(t *testing.T) {
-	testTimestampJSONTestcases(t, []byte(`[{"proto":{"nAnos":1000000000},"text":"1970-01-01T00:00:01Z"}]`))
+	testTimestampJSONTestcases(t, []byte(`[{"proto":{"nanos":1000000000},"text":"1970-01-01T00:00:01Z"}]`))
 }
 
 func testTimestampJSONTestcases(t *testing.T, raw []byte) {

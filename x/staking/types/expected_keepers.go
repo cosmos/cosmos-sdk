@@ -3,7 +3,7 @@ package types
 import (
 	context "context"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
@@ -57,7 +57,7 @@ type ValidatorSet interface {
 
 	Validator(context.Context, sdk.ValAddress) (ValidatorI, error)            // get a particular validator by operator address
 	ValidatorByConsAddr(context.Context, sdk.ConsAddress) (ValidatorI, error) // get a particular validator by consensus address
-	TotalBondedTokens(context.Context) (math.Int, error)                      // total bonded tokens within the validator set
+	TotalValidatorPower(context.Context) (math.Int, error)                    // total validator power within the validator set
 	StakingTokenSupply(context.Context) (math.Int, error)                     // total staking token supply
 
 	// slash the validator and delegators of the validator, specifying offense height, offense power, and slash fraction

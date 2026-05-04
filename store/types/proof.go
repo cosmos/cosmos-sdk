@@ -3,13 +3,14 @@ package types
 import (
 	"fmt"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-	"github.com/cometbft/cometbft/v2/crypto/merkle"
+	"github.com/cometbft/cometbft/crypto/merkle"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/cosmos/ics23/go"
 
 	errorsmod "cosmossdk.io/errors"
-	sdkmaps "cosmossdk.io/store/internal/maps"
-	sdkproofs "cosmossdk.io/store/internal/proofs"
+
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/v2/internal/maps"
+	sdkproofs "github.com/cosmos/cosmos-sdk/store/v2/internal/proofs"
 )
 
 const (
@@ -153,14 +154,14 @@ func ProofOpFromMap(cmap map[string][]byte, storeName string) (ret cmtprotocrypt
 	proof := proofs[storeName]
 	if proof == nil {
 		err = fmt.Errorf("ProofOp for %s but not registered store name", storeName)
-		return
+		return ret, err
 	}
 
 	// convert merkle.SimpleProof to CommitmentProof
 	existProof, err := sdkproofs.ConvertExistenceProof(proof, []byte(storeName), cmap[storeName])
 	if err != nil {
 		err = fmt.Errorf("could not convert simple proof to existence proof: %w", err)
-		return
+		return ret, err
 	}
 
 	commitmentProof := &ics23.CommitmentProof{
@@ -170,5 +171,5 @@ func ProofOpFromMap(cmap map[string][]byte, storeName string) (ret cmtprotocrypt
 	}
 
 	ret = NewSimpleMerkleCommitmentOp([]byte(storeName), commitmentProof).ProofOp()
-	return
+	return ret, err
 }

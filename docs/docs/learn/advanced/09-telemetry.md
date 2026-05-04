@@ -9,11 +9,11 @@ Gather relevant insights about your application and modules with custom metrics 
 :::
 
 The Cosmos SDK enables operators and developers to gain insight into the performance and behavior of
-their application through the use of the `telemetry` package. To enable telemetrics, set `telemetry.enabled = true` in the app.toml config file.
+their application through the use of the `telemetry` package. To enable telemetry, set `telemetry.enabled = true` in the app.toml config file.
 
 The Cosmos SDK currently supports enabling in-memory and prometheus as telemetry sinks. In-memory sink is always attached (when the telemetry is enabled) with 10 second interval and 1 minute retention. This means that metrics will be aggregated over 10 seconds, and metrics will be kept alive for 1 minute.
 
-To query active metrics (see retention note above) you have to enable API server (`api.enabled = true` in the app.toml). Single API endpoint is exposed: `http://localhost:1317/metrics?format={text|prometheus}`, the default being `text`.
+To query active metrics (see retention note above) you have to enable API server (`api.enabled = true` in the app.toml). A single API endpoint is exposed: `http://localhost:1317/metrics?format={text|prometheus}`, the default being `text`.
 
 ## Emitting metrics
 
@@ -91,7 +91,7 @@ The following examples expose too much cardinality and may not even prove to be 
 | `tx_msg_withdraw_commission`    | The total amount of tokens withdrawn in a `MsgWithdrawValidatorCommission` (per denom)    | token           | gauge   |
 | `tx_msg_delegate`               | The total amount of tokens delegated in a `MsgDelegate`                                   | token           | gauge   |
 | `tx_msg_begin_unbonding`        | The total amount of tokens undelegated in a `MsgUndelegate`                               | token           | gauge   |
-| `tx_msg_begin_begin_redelegate` | The total amount of tokens redelegated in a `MsgBeginRedelegate`                          | token           | gauge   |
+| `tx_msg_begin_redelegate`       | The total amount of tokens redelegated in a `MsgBeginRedelegate`                          | token           | gauge   |
 | `tx_msg_ibc_transfer`           | The total amount of tokens transferred via IBC in a `MsgTransfer` (source or sink chain)  | token           | gauge   |
 | `ibc_transfer_packet_receive`   | The total amount of tokens received in a `FungibleTokenPacketData` (source or sink chain) | token           | gauge   |
 | `new_account`                   | Total number of new accounts created                                                      | account         | counter |

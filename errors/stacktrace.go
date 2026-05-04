@@ -51,7 +51,7 @@ func trimInternal(st errors.StackTrace) errors.StackTrace {
 		"cosmossdk.io/errors.Wrap",
 		"cosmossdk.io/errors.Wrapf",
 		"cosmossdk.io/errors.WithType",
-		// runtime are added on panics
+		// runtime is added on panics
 		"runtime.",
 		// _test is defined in coverage tests, causing failure
 		// "/_test/"

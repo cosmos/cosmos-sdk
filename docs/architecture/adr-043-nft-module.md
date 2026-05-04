@@ -48,7 +48,7 @@ We create a `x/nft` module, which contains the following functionality:
 * Expose external `Message` interface for users to transfer ownership of their NFTs.
 * Query NFTs and their supply information.
 
-The proposed module is a base module for NFT app logic. It's goal it to provide a common layer for storage, basic transfer functionality and IBC. The module should not be used as a standalone.
+The proposed module is a base module for NFT app logic. Its goal is to provide a common layer for storage, basic transfer functionality and IBC. The module should not be used as a standalone.
 Instead an app should create a specialized module to handle app specific logic (eg: NFT ID construction, royalty), user level minting and burning. Moreover an app specialized module should handle auxiliary data to support the app logic (eg indexes, ORM, business data).
 
 All data carried over IBC must be part of the `NFT` or `Class` type described below. The app specific NFT data should be encoded in `NFT.data` for cross-chain integrity. Other objects related to NFT, which are not important for integrity can be part of the app specific module.
@@ -253,7 +253,7 @@ message QuerySupplyResponse {
   uint64 amount = 1;
 }
 
-// QueryNFTstRequest is the request type for the Query/NFTs RPC method
+// QueryNFTsRequest is the request type for the Query/NFTs RPC method
 message QueryNFTsRequest {
   string                                class_id   = 1;
   string                                owner      = 2;
@@ -315,7 +315,7 @@ No backward incompatibilities.
 
 ### Forward Compatibility
 
-This specification conforms to the ERC-721 smart contract specification for NFT identifiers. Note that ERC-721 defines uniqueness based on (contract address, uint256 tokenId), and we conform to this implicitly because a single module is currently aimed to track NFT identifiers. Note: use of the (mutable) data field to determine uniqueness is not safe.s
+This specification conforms to the ERC-721 smart contract specification for NFT identifiers. Note that ERC-721 defines uniqueness based on (contract address, uint256 tokenId), and we conform to this implicitly because a single module is currently aimed to track NFT identifiers. Note: use of the (mutable) data field to determine uniqueness is not safe.
 
 ### Positive
 

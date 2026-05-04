@@ -15,7 +15,7 @@ func GenDuration(r *rand.Rand) time.Duration {
 }
 
 func RandomizedEpochs(r *rand.Rand) []types.EpochInfo {
-	// Gen max 10 epoch
+	// Gen max 10 epochs
 	n := r.Intn(11)
 	var epochs []types.EpochInfo
 	for i := range n {

@@ -38,7 +38,7 @@ In order to improve the current situation, a new "app wiring" paradigm has been 
 involves:
 
 * declaration configuration of the modules in an app which can be serialized to JSON or YAML
-* a dependency-injection (DI) framework for instantiating apps from the that configuration
+* a dependency-injection (DI) framework for instantiating apps from the configuration
 
 ### Dependency Injection
 
@@ -247,8 +247,6 @@ func main() {
 So far we have described a system which is largely agnostic to the specifics of the SDK such as store keys, `AppModule`,
 `BaseApp`, etc. Improvements to these parts of the framework that integrate with the general app wiring framework
 defined here are described in [ADR 063: Core Module API](./adr-063-core-module-api.md).
-
-### Registration of Inter-Module Hooks
 
 ### Registration of Inter-Module Hooks
 

@@ -54,7 +54,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 	}
 }
 
-// RegisterInterfaces registers interfaces and implementations of the bank module.
+// RegisterInterfaces registers interfaces and implementations of the consensus module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }

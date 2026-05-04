@@ -45,7 +45,7 @@ const sidebars = {
         {
           type: "link",
           label: "Support",
-          href: "https://github.com/orgs/cosmos/discussions",
+          href: "https://github.com/cosmos/cosmos-sdk/discussions",
         },
       ],
     },

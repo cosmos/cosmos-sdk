@@ -90,7 +90,7 @@ func ValidWeightedVoteOption(option WeightedVoteOption) bool {
 	return ValidVoteOption(option.Option)
 }
 
-// WeightedVoteOptions describes array of WeightedVoteOptions
+// WeightedVoteOptions describes an array of WeightedVoteOptions
 type WeightedVoteOptions []*WeightedVoteOption
 
 func (v WeightedVoteOptions) String() string {
@@ -108,7 +108,7 @@ func VoteOptionFromString(str string) (VoteOption, error) {
 	return VoteOption(option), nil
 }
 
-// WeightedVoteOptionsFromString returns weighted vote options from string. It returns an error
+// WeightedVoteOptionsFromString returns weighted vote options from a string. It returns an error
 // if the string is invalid.
 func WeightedVoteOptionsFromString(str string) (WeightedVoteOptions, error) {
 	options := WeightedVoteOptions{}

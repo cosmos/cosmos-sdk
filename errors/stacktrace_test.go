@@ -20,7 +20,7 @@ func (s *errorsTestSuite) TestStackTrace() {
 			err:       Wrap(fmt.Errorf("foo"), "standard"),
 			wantError: "standard: foo",
 		},
-		"Wrapping pkg/errors gives us clean stacktrace": {
+		"Wrapping pkg/errors gives us a clean stacktrace": {
 			err:       Wrap(errors.New("bar"), "pkg"),
 			wantError: "pkg: bar",
 		},

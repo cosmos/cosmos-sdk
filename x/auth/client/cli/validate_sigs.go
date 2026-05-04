@@ -7,8 +7,6 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	txsigning "cosmossdk.io/x/tx/signing"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -16,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 func GetValidateSignaturesCommand() *cobra.Command {
@@ -28,7 +27,7 @@ signed it, and make sure that signatures are in the correct order.
 The command would check whether all required signers have signed the transactions, whether
 the signatures were collected in the right order, and if the signature is valid over the
 given transaction. If the --offline flag is also set, signature validation over the
-transaction will be not be performed as that will require RPC communication with a full node.
+transaction will not be performed as that will require RPC communication with a full node.
 `,
 		PreRun: preSignCmd,
 		RunE:   makeValidateSignaturesCmd(),

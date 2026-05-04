@@ -319,7 +319,7 @@ func (c ChainDataSource) HasAccount(addr string) bool {
 	return ok
 }
 
-// GetAccount return SimAccount with given bench32 address. Reporter skip flag is set when not found.
+// GetAccount return SimAccount with given bech32 address. Reporter skip flag is set when not found.
 func (c ChainDataSource) GetAccount(reporter SimulationReporter, addr string) SimAccount {
 	pos, ok := c.addressToAccountsPosIndex[addr]
 	if !ok {

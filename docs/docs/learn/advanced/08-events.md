@@ -4,7 +4,7 @@ sidebar_position: 1
 # Events
 
 :::note Synopsis
-`Event`s are objects that contain information about the execution of the application. They are mainly used by service providers like block explorers and wallet to track the execution of various messages and index transactions.
+`Event`s are objects that contain information about the execution of the application. They are mainly used by service providers like block explorers and wallets to track the execution of various messages and index transactions.
 :::
 
 :::note Pre-requisite Readings
@@ -26,20 +26,20 @@ https://github.com/cometbft/cometbft/blob/v0.37.0/proto/tendermint/abci/types.pr
 An Event contains:
 
 * A `type` to categorize the Event at a high-level; for example, the Cosmos SDK uses the `"message"` type to filter Events by `Msg`s.
-* A list of `attributes` are key-value pairs that give more information about the categorized Event. For example, for the `"message"` type, we can filter Events by key-value pairs using `message.action={some_action}`, `message.module={some_module}` or `message.sender={some_sender}`.
+* A list of `attributes` that are key-value pairs that give more information about the categorized Event. For example, for the `"message"` type, we can filter Events by key-value pairs using `message.action={some_action}`, `message.module={some_module}` or `message.sender={some_sender}`.
 * A `msg_index` to identify which messages relate to the same transaction
 
 :::tip
 To parse the attribute values as strings, make sure to add `'` (single quotes) around each attribute value.
 :::
 
-_Typed Events_ are Protobuf-defined [messages](../../build/architecture/adr-032-typed-events.md) used by the Cosmos SDK
+_Typed Events_ are Protobuf-defined [messages](../../../architecture/adr-032-typed-events.md) used by the Cosmos SDK
 for emitting and querying Events. They are defined in a `event.proto` file, on a **per-module basis** and are read as `proto.Message`.
 _Legacy Events_ are defined on a **per-module basis** in the module's `/types/events.go` file.
 They are triggered from the module's Protobuf [`Msg` service](../../build/building-modules/03-msg-services.md)
 by using the [`EventManager`](#eventmanager).
 
-In addition, each module documents its events under in the `Events` sections of its specs (x/{moduleName}/`README.md`).
+In addition, each module documents its events in the `Events` sections of its specs (x/{moduleName}/`README.md`).
 
 Lastly, Events are returned to the underlying consensus engine in the response of the following ABCI messages:
 
@@ -57,7 +57,7 @@ The following examples show how to query Events using the Cosmos SDK.
 | `tx.height=23`                                   | Query all transactions at height 23                                                                                                                      |
 | `message.action='/cosmos.bank.v1beta1.Msg/Send'` | Query all transactions containing a x/bank `Send` [Service `Msg`](../../build/building-modules/03-msg-services.md). Note the `'`s around the value.                  |
 | `message.module='bank'`                          | Query all transactions containing messages from the x/bank module. Note the `'`s around the value.                                                       |
-| `create_validator.validator='cosmosval1...'`     | x/staking-specific Event, see [x/staking SPEC](../../build/modules/staking/README.md).                                                         |
+| `create_validator.validator='cosmosval1...'`     | x/staking-specific Event, see [x/staking SPEC](../../../../x/staking/README.md).                                                         |
 
 ## EventManager
 
@@ -155,5 +155,5 @@ There are a few events that are automatically emitted for all messages, directly
 :::tip
 The module name is assumed by `baseapp` to be the second element of the message route: `"cosmos.bank.v1beta1.MsgSend" -> "bank"`.
 In case a module does not follow the standard message path, (e.g. IBC), it is advised to keep emitting the module name event.
-`Baseapp` only emits that event if the module have not already done so.
+`Baseapp` only emits that event if the module has not already done so.
 :::

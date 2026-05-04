@@ -34,7 +34,7 @@ message QueryGrantsRequest {
   string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // Optional, msg_type_url, when set, will query only grants matching given msg type.
   string msg_type_url = 3;
-  // pagination defines an pagination for the request.
+  // pagination defines a pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 4;
 }
 
@@ -42,7 +42,7 @@ message QueryGrantsRequest {
 message QueryGrantsResponse {
   // authorizations is a list of grants granted for grantee by granter.
   repeated Grant grants = 1;
-  // pagination defines an pagination for the response.
+  // pagination defines a pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -50,7 +50,7 @@ message QueryGrantsResponse {
 message QueryGranterGrantsRequest {
   string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // pagination defines an pagination for the request.
+  // pagination defines a pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
@@ -58,7 +58,7 @@ message QueryGranterGrantsRequest {
 message QueryGranterGrantsResponse {
   // grants is a list of grants granted by the granter.
   repeated GrantAuthorization grants = 1;
-  // pagination defines an pagination for the response.
+  // pagination defines a pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -66,7 +66,7 @@ message QueryGranterGrantsResponse {
 message QueryGranteeGrantsRequest {
   string grantee = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // pagination defines an pagination for the request.
+  // pagination defines a pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
@@ -74,6 +74,6 @@ message QueryGranteeGrantsRequest {
 message QueryGranteeGrantsResponse {
   // grants is a list of grants granted to the grantee.
   repeated GrantAuthorization grants = 1;
-  // pagination defines an pagination for the response.
+  // pagination defines a pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

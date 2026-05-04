@@ -28,7 +28,7 @@ func TestMigrateGenState(t *testing.T) {
 				}},
 				Supply: sdk.Coins{sdk.NewCoin("supplycoin", sdkmath.NewInt(800))},
 				DenomMetadata: []types.Metadata{{
-					Description: "metadesk",
+					Description: "metadesc",
 					DenomUnits:  nil,
 					Base:        "meta",
 					Display:     "meta",
@@ -47,7 +47,7 @@ func TestMigrateGenState(t *testing.T) {
 				}},
 				Supply: sdk.Coins{sdk.NewCoin("supplycoin", sdkmath.NewInt(800))},
 				DenomMetadata: []types.Metadata{{
-					Description: "metadesk",
+					Description: "metadesc",
 					DenomUnits:  nil,
 					Base:        "meta",
 					Display:     "meta",

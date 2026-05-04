@@ -32,7 +32,7 @@ const (
 const (
 	// PruningDefault defines a pruning strategy where the last 362880 heights are
 	// kept where to-be pruned heights are pruned at every 10th height.
-	// The last 362880 heights are kept(approximately 3.5 weeks worth of state) assuming the typical
+	// The last 362880 heights are kept (approximately 3.5 weeks worth of state) assuming the typical
 	// block time is 6s. If these values do not match the applications' requirements, use the "custom" option.
 	PruningDefault PruningStrategy = iota
 	// PruningEverything defines a pruning strategy where all committed heights are
@@ -40,7 +40,7 @@ const (
 	// pruned at every 10th height.
 	PruningEverything
 	// PruningNothing defines a pruning strategy where all heights are kept on disk.
-	// This is the only stretegy where KeepEvery=1 is allowed with state-sync snapshots disabled.
+	// This is the only strategy where KeepEvery=1 is allowed with state-sync snapshots disabled.
 	PruningNothing
 	// PruningCustom defines a pruning strategy where the user specifies the pruning.
 	PruningCustom

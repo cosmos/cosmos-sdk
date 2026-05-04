@@ -153,7 +153,7 @@ Users will be able to subscribe using `client.Context.Client.Subscribe` and cons
 
 Akash Network has built a simple [`pubsub`](https://github.com/ovrclk/akash/blob/90d258caeb933b611d575355b8df281208a214f8/pubsub/bus.go#L20). This can be used to subscribe to `abci.Events` and [publish](https://github.com/ovrclk/akash/blob/90d258caeb933b611d575355b8df281208a214f8/events/publish.go#L21) them as typed events.
 
-Please see the below code sample for more detail on this flow looks for clients.
+Please see the below code sample for more detail on how this flow looks for clients.
 
 ## Consequences
 
@@ -294,7 +294,7 @@ func PublishChainTxEvents(ctx context.Context, client cmtclient.EventsClient, bu
                     for _, abciEv := range events {
                         typedEvent, err := sdk.ParseTypedEvent(abciEv)
                         if err != nil {
-                            return er
+                            return err
                         }
                         if err := bus.Publish(typedEvent); err != nil {
                             bus.Close()

@@ -159,7 +159,7 @@ func (c *Context) Validate() error {
 				md := sd.Methods().Get(j).Input()
 				_, hasCustomSigner := c.customGetSignerFuncs[md.FullName()]
 				if _, err := getSignersFieldNames(md); err == nil && hasCustomSigner {
-					errs = append(errs, fmt.Errorf("a custom signer function as been defined for message %s which already has a signer field defined with (cosmos.msg.v1.signer)", md.FullName()))
+					errs = append(errs, fmt.Errorf("a custom signer function has been defined for message %s which already has a signer field defined with (cosmos.msg.v1.signer)", md.FullName()))
 					continue
 				}
 				_, err := c.getGetSignersFn(md)

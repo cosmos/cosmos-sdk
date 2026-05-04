@@ -3,8 +3,7 @@ package keeper
 import (
 	"context"
 
-	storetypes "cosmossdk.io/store/types"
-
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -169,5 +168,5 @@ func (k Keeper) GetAllSDKDelegations(ctx context.Context) (delegations []types.D
 		delegations = append(delegations, delegation)
 	}
 
-	return
+	return delegations, err
 }

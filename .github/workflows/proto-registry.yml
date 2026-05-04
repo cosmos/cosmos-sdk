@@ -16,7 +16,7 @@
 #     runs-on: depot-ubuntu-22.04-4
 #     name: "Push to buf.build/cosmos/cosmos-sdk"
 #     steps:
-#       - uses: actions/checkout@v4
+#       - uses: actions/checkout@v5
 #       - uses: bufbuild/buf-setup-action@v1.50.0
 #       - run: buf push proto --tag ${{ github.ref_type == 'tag' && github.ref_name || github.sha }} # https://github.com/bufbuild/buf-push-action/issues/20
 

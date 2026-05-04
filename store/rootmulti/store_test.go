@@ -1,7 +1,6 @@
 package rootmulti
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"fmt"
 	"math/rand"
@@ -14,19 +13,37 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/errors"
-	"cosmossdk.io/log"
-	"cosmossdk.io/store/cachemulti"
-	"cosmossdk.io/store/iavl"
-	sdkmaps "cosmossdk.io/store/internal/maps"
-	"cosmossdk.io/store/metrics"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/types"
+	"cosmossdk.io/log/v2"
+
+	"github.com/cosmos/cosmos-sdk/store/v2/cachemulti"
+	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/v2/internal/maps"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/transient"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func TestStoreType(t *testing.T) {
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, db)
+}
+
+func TestGetObjKVStore(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
+	err := ms.LoadLatestVersion()
+	require.Nil(t, err)
+
+	key := ms.keysByName["store6"]
+
+	store1 := ms.GetObjKVStore(key)
+	require.NotNil(t, store1)
+	require.IsType(t, &transient.ObjStore{}, store1)
+
+	store2 := ms.getCommitStore(key)
+	require.NotNil(t, store2)
+	require.IsType(t, &transient.ObjStore{}, store2)
 }
 
 func TestGetCommitKVStore(t *testing.T) {
@@ -37,18 +54,18 @@ func TestGetCommitKVStore(t *testing.T) {
 
 	key := ms.keysByName["store1"]
 
-	store1 := ms.GetCommitKVStore(key)
+	store1 := ms.getCommitKVStore(key)
 	require.NotNil(t, store1)
 	require.IsType(t, &iavl.Store{}, store1)
 
-	store2 := ms.GetCommitStore(key)
+	store2 := ms.getCommitStore(key)
 	require.NotNil(t, store2)
 	require.IsType(t, &iavl.Store{}, store2)
 }
 
 func TestStoreMount(t *testing.T) {
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 
 	key1 := types.NewKVStoreKey("store1")
 	key2 := types.NewKVStoreKey("store2")
@@ -436,7 +453,7 @@ func TestMultiStoreRestart(t *testing.T) {
 	reloadedCid := multi.LastCommitID()
 	require.Equal(t, int64(4), reloadedCid.Version, "Reloaded CID is not the same as last flushed CID")
 
-	// Check that store1 and store2 retained date from 3rd commit
+	// Check that store1 and store2 retained data from 3rd commit
 	store1 = multi.GetStoreByName("store1").(types.KVStore)
 	val := store1.Get([]byte(k))
 	require.Equal(t, []byte(fmt.Sprintf("%s:%d", v, 3)), val, "Reloaded value not the same as last flushed value")
@@ -812,7 +829,7 @@ func TestSetInitialVersion(t *testing.T) {
 	multi.Commit()
 	require.Equal(t, int64(5), multi.LastCommitID().Version)
 
-	ckvs := multi.GetCommitKVStore(multi.keysByName["store1"])
+	ckvs := multi.getCommitKVStore(multi.keysByName["store1"])
 	iavlStore, ok := ckvs.(*iavl.Store)
 	require.True(t, ok)
 	require.True(t, iavlStore.VersionExists(5))
@@ -840,59 +857,6 @@ func TestCacheWraps(t *testing.T) {
 
 	cacheWrapper := multi.CacheWrap()
 	require.IsType(t, cachemulti.Store{}, cacheWrapper)
-
-	cacheWrappedWithTrace := multi.CacheWrapWithTrace(nil, nil)
-	require.IsType(t, cachemulti.Store{}, cacheWrappedWithTrace)
-}
-
-func TestTraceConcurrency(t *testing.T) {
-	db := dbm.NewMemDB()
-	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
-	err := multi.LoadLatestVersion()
-	require.NoError(t, err)
-
-	b := &bytes.Buffer{}
-	key := multi.keysByName["store1"]
-	tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
-
-	multi.SetTracer(b)
-	multi.SetTracingContext(tc)
-
-	cms := multi.CacheMultiStore()
-	store1 := cms.GetKVStore(key)
-	cw := store1.CacheWrapWithTrace(b, tc)
-	_ = cw
-	require.NotNil(t, store1)
-
-	stop := make(chan struct{})
-	stopW := make(chan struct{})
-
-	go func(stop chan struct{}) {
-		for {
-			select {
-			case <-stop:
-				return
-			default:
-				store1.Set([]byte{1}, []byte{1})
-				cms.Write()
-			}
-		}
-	}(stop)
-
-	go func(stop chan struct{}) {
-		for {
-			select {
-			case <-stop:
-				return
-			default:
-				multi.SetTracingContext(tc)
-			}
-		}
-	}(stopW)
-
-	time.Sleep(3 * time.Second)
-	stop <- struct{}{}
-	stopW <- struct{}{}
 }
 
 func TestCommitOrdered(t *testing.T) {
@@ -938,21 +902,24 @@ var (
 	testStoreKey1 = types.NewKVStoreKey("store1")
 	testStoreKey2 = types.NewKVStoreKey("store2")
 	testStoreKey3 = types.NewKVStoreKey("store3")
+	testStoreKey4 = types.NewKVStoreKey("store4")
+	testStoreKey6 = types.NewObjectStoreKey("store6")
 )
 
 func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) *Store {
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 	store.SetPruning(pruningOpts)
 
 	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(testStoreKey2, types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(testStoreKey3, types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(testStoreKey6, types.StoreTypeObject, nil)
 
 	return store
 }
 
 func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) (*Store, *types.StoreUpgrades) {
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 	store.SetPruning(pruningOpts)
 
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
@@ -1010,9 +977,12 @@ func getExpectedCommitID(store *Store, ver int64) types.CommitID {
 	}
 }
 
-func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
+func hashStores(stores map[types.StoreKey]types.CommitStore) []byte {
 	m := make(map[string][]byte, len(stores))
 	for key, store := range stores {
+		if store.GetStoreType() != types.StoreTypeIAVL {
+			continue
+		}
 		name := key.Name()
 		m[name] = types.StoreInfo{
 			Name:     name,
@@ -1065,35 +1035,40 @@ func TestStateListeners(t *testing.T) {
 	require.Empty(t, ms.PopStateCache())
 }
 
-type commitKVStoreStub struct {
-	types.CommitKVStore
+type commitStoreStub struct {
+	types.CommitStore
 	Committed int
 }
 
-func (stub *commitKVStoreStub) Commit() types.CommitID {
-	commitID := stub.CommitKVStore.Commit()
+func (stub *commitStoreStub) Commit() types.CommitID {
+	commitID := stub.CommitStore.Commit()
 	stub.Committed++
 	return commitID
 }
 
-func prepareStoreMap() (map[types.StoreKey]types.CommitKVStore, error) {
+func prepareStoreMap() (map[types.StoreKey]types.CommitStore, error) {
 	var db dbm.DB = dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
+	store.MountStoreWithDB(types.NewMemoryStoreKey("mem1"), types.StoreTypeMemory, nil)
+	store.MountStoreWithDB(types.NewObjectStoreKey("obj1"), types.StoreTypeObject, nil)
 	if err := store.LoadLatestVersion(); err != nil {
 		return nil, err
 	}
-	return map[types.StoreKey]types.CommitKVStore{
-		testStoreKey1: &commitKVStoreStub{
-			CommitKVStore: store.GetStoreByName("iavl1").(types.CommitKVStore),
+	return map[types.StoreKey]types.CommitStore{
+		testStoreKey1: &commitStoreStub{
+			CommitStore: store.GetStoreByName("iavl1").(types.CommitStore),
 		},
-		testStoreKey2: &commitKVStoreStub{
-			CommitKVStore: store.GetStoreByName("iavl2").(types.CommitKVStore),
+		testStoreKey2: &commitStoreStub{
+			CommitStore: store.GetStoreByName("iavl2").(types.CommitStore),
 		},
-		testStoreKey3: &commitKVStoreStub{
-			CommitKVStore: store.GetStoreByName("trans1").(types.CommitKVStore),
+		testStoreKey3: &commitStoreStub{
+			CommitStore: store.GetStoreByName("trans1").(types.CommitStore),
+		},
+		testStoreKey4: &commitStoreStub{
+			CommitStore: store.GetStoreByName("obj1").(types.CommitStore),
 		},
 	}, nil
 }
@@ -1124,7 +1099,7 @@ func TestCommitStores(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			storeMap, err := prepareStoreMap()
 			require.NoError(t, err)
-			store := storeMap[testStoreKey1].(*commitKVStoreStub)
+			store := storeMap[testStoreKey1].(*commitStoreStub)
 			for i := tc.committed; i > 0; i-- {
 				store.Commit()
 			}
@@ -1139,4 +1114,78 @@ func TestCommitStores(t *testing.T) {
 			require.Equal(t, tc.exptectCommit, store.Committed)
 		})
 	}
+}
+
+func TestEarliestVersion(t *testing.T) {
+	db := dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	require.NoError(t, ms.LoadLatestVersion())
+
+	// Initially, earliest version should be 1 (default for unpruned chains)
+	require.Equal(t, int64(1), ms.EarliestVersion())
+
+	// Commit some versions
+	for i := 0; i < 5; i++ {
+		ms.Commit()
+	}
+
+	// Earliest version should still be 1
+	require.Equal(t, int64(1), ms.EarliestVersion())
+	require.Equal(t, int64(5), ms.LatestVersion())
+}
+
+func TestEarliestVersionWithPruning(t *testing.T) {
+	db := dbm.NewMemDB()
+	// keepRecent=2, interval=1 means prune aggressively
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 1))
+	require.NoError(t, ms.LoadLatestVersion())
+
+	// Initially, earliest version should be 1
+	require.Equal(t, int64(1), ms.EarliestVersion())
+
+	// Commit enough versions to trigger pruning
+	for i := 0; i < 10; i++ {
+		ms.Commit()
+	}
+
+	// Wait for async pruning to complete and check earliest version is updated
+	checkEarliest := func() bool {
+		return ms.EarliestVersion() > 1
+	}
+	require.Eventually(t, checkEarliest, 1*time.Second, 10*time.Millisecond,
+		"expected earliest version to be updated after pruning")
+
+	// Earliest version should now be greater than 1 (pruned heights + 1)
+	earliest := ms.EarliestVersion()
+	require.Greater(t, earliest, int64(1), "earliest version should be updated after pruning")
+
+	// Latest should still be 10
+	require.Equal(t, int64(10), ms.LatestVersion())
+}
+
+func TestEarliestVersionPersistence(t *testing.T) {
+	db := dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 1))
+	require.NoError(t, ms.LoadLatestVersion())
+
+	// Commit and prune
+	for i := 0; i < 10; i++ {
+		ms.Commit()
+	}
+
+	// Wait for pruning
+	checkEarliest := func() bool {
+		return ms.EarliestVersion() > 1
+	}
+	require.Eventually(t, checkEarliest, 1*time.Second, 10*time.Millisecond)
+
+	earliestBeforeRestart := ms.EarliestVersion()
+
+	// "Restart" by creating new store with same db
+	ms2 := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 1))
+	require.NoError(t, ms2.LoadLatestVersion())
+
+	// Earliest version should be persisted and restored
+	require.Equal(t, earliestBeforeRestart, ms2.EarliestVersion(),
+		"earliest version should persist across restarts")
 }

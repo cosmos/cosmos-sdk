@@ -89,7 +89,7 @@ message Proposal {
   // summary is a short summary of the proposal
   string summary = 12 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
 
-  // proposer is the address of the proposal sumbitter
+  // proposer is the address of the proposal submitter
   string proposer = 13
       [(cosmos_proto.scalar) = "cosmos.AddressString", (cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
 

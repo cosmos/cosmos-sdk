@@ -2,41 +2,24 @@ package baseapp
 
 import (
 	"fmt"
-	"io"
 	"math"
-	"time"
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/store/metrics"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/snapshots"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
+	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 // File for storing in-package BaseApp optional functions,
 // for options that need access to non-exported fields of the BaseApp
-
-// SetNextBlockDelay sets the next block delay for the baseapp.
-//
-// The application is initialized with a default value of 0.
-//
-// More information on this value and how it affects CometBFT can be found here:
-// https://github.com/cometbft/cometbft/blob/88ef3d267de491db98a654be0af6d791e8724ed0/spec/abci/abci%2B%2B_methods.md?plain=1#L689
-func (app *BaseApp) SetNextBlockDelay(delay time.Duration) {
-	if app.sealed {
-		panic("SetNextBlockDelay() on sealed BaseApp")
-	}
-
-	app.nextBlockDelay = delay
-}
 
 // SetPruning sets a pruning option on the multistore associated with the app
 func SetPruning(opts pruningtypes.PruningOptions) func(*BaseApp) {
@@ -139,9 +122,18 @@ func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp
 	}
 }
 
-// DisableBlockGasMeter disables the block gas meter.
-func DisableBlockGasMeter() func(*BaseApp) {
-	return func(app *BaseApp) { app.SetDisableBlockGasMeter(true) }
+// SetBlockSTMTxRunner sets the block stm tx runner for the BaseApp for parallel execution.
+func (app *BaseApp) SetBlockSTMTxRunner(txRunner sdk.TxRunner) {
+	if _, ok := txRunner.(*txnrunner.STMRunner); ok && !app.disableBlockGasMeter {
+		// This combination results in indeterminism
+		panic("Cannot configure parallel execution while block gas meter is enabled")
+	}
+	app.txRunner = txRunner
+}
+
+// EnableBlockGasMeter enables the block gas meter.
+func EnableBlockGasMeter() func(*BaseApp) {
+	return func(app *BaseApp) { app.SetDisableBlockGasMeter(false) }
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -287,12 +279,6 @@ func (app *BaseApp) SetNotSigverifyTx() {
 	app.sigverifyTx = false
 }
 
-// SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
-// CommitMultiStore.
-func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
-	app.cms.SetTracer(w)
-}
-
 // SetStoreLoader allows us to customize the rootMultiStore initialization.
 func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
 	if app.sealed {
@@ -374,6 +360,24 @@ func (app *BaseApp) SetCheckTxHandler(handler sdk.CheckTxHandler) {
 	app.abciHandlers.CheckTxHandler = handler
 }
 
+// SetInsertTxHandler sets the InsertTx function for the BaseApp.
+func (app *BaseApp) SetInsertTxHandler(handler sdk.InsertTxHandler) {
+	if app.sealed {
+		panic("SetInsertTxHandler() on sealed BaseApp")
+	}
+
+	app.abciHandlers.InsertTxHandler = handler
+}
+
+// SetReapTxsHandler sets the ReapTxs function for the BaseApp.
+func (app *BaseApp) SetReapTxsHandler(handler sdk.ReapTxsHandler) {
+	if app.sealed {
+		panic("SetReapTxsHandler() on sealed BaseApp")
+	}
+
+	app.abciHandlers.ReapTxsHandler = handler
+}
+
 func (app *BaseApp) SetExtendVoteHandler(handler sdk.ExtendVoteHandler) {
 	if app.sealed {
 		panic("SetExtendVoteHandler() on sealed BaseApp")
@@ -390,15 +394,6 @@ func (app *BaseApp) SetVerifyVoteExtensionHandler(handler sdk.VerifyVoteExtensio
 	app.abciHandlers.VerifyVoteExtensionHandler = handler
 }
 
-// SetStoreMetrics sets the prepare proposal function for the BaseApp.
-func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
-	if app.sealed {
-		panic("SetStoreMetrics() on sealed BaseApp")
-	}
-
-	app.cms.SetMetrics(gatherer)
-}
-
 // SetStreamingManager sets the streaming manager for the BaseApp.
 func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
 	app.streamingManager = manager
@@ -406,6 +401,10 @@ func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
 
 // SetDisableBlockGasMeter sets the disableBlockGasMeter flag for the BaseApp.
 func (app *BaseApp) SetDisableBlockGasMeter(disableBlockGasMeter bool) {
+	if _, ok := app.txRunner.(*txnrunner.STMRunner); ok && !disableBlockGasMeter {
+		// This combination results in indeterminism
+		panic("Cannot enable block gas meter while parallel execution is configured")
+	}
 	app.disableBlockGasMeter = disableBlockGasMeter
 }
 

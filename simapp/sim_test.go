@@ -3,27 +3,30 @@
 package simapp
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
-	"io"
+	"fmt"
 	"math/rand"
 	"strings"
 	"sync"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/store"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/store/v2"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sims "github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,6 +37,7 @@ import (
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 var FlagEnableStreamingValue bool
@@ -42,6 +46,10 @@ var FlagEnableStreamingValue bool
 func init() {
 	simcli.GetSimulatorFlags()
 	flag.BoolVar(&FlagEnableStreamingValue, "EnableStreaming", false, "Enable streaming service")
+}
+
+func TestMain(m *testing.M) {
+	telemetry.TestingMain(m, nil)
 }
 
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent
@@ -93,6 +101,11 @@ func TestAppImportExport(t *testing.T) {
 		require.NoError(tb, err)
 
 		tb.Log("comparing stores...")
+		// x/upgrade intentionally does not export upgrade state in genesis; see:
+		// https://github.com/cosmos/cosmos-sdk/blob/19f58baf64317a985552dec73fea92a54033e8ed/x/upgrade/module.go#L151-L154
+		skipStores := map[string]struct{}{
+			upgradetypes.StoreKey: {},
+		}
 		// skip certain prefixes
 		skipPrefixes := map[string][][]byte{
 			stakingtypes.StoreKey: {
@@ -105,7 +118,7 @@ func TestAppImportExport(t *testing.T) {
 			feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
 			slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
 		}
-		AssertEqualStores(tb, app, newApp, app.SimulationManager().StoreDecoders, skipPrefixes)
+		AssertEqualStores(tb, app, newApp, app.SimulationManager().StoreDecoders, skipPrefixes, skipStores)
 	})
 }
 
@@ -125,7 +138,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		tb.Log("importing genesis...\n")
 		newTestInstance := sims.NewSimulationAppInstance(tb, ti.Cfg, NewSimApp)
 		newApp := newTestInstance.App
-		_, err = newApp.InitChain(&abci.InitChainRequest{
+		_, err = newApp.InitChain(&abci.RequestInitChain{
 			AppStateBytes: exported.AppState,
 			ChainId:       sims.SimAppChainID,
 		})
@@ -174,7 +187,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		}
 	}
 	// overwrite default app config
-	interBlockCachingAppFactory := func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) *SimApp {
+	interBlockCachingAppFactory := func(logger log.Logger, db dbm.DB, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) *SimApp {
 		if FlagEnableStreamingValue {
 			m := map[string]any{
 				"streaming.abci.keys":             []string{"*"},
@@ -189,7 +202,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				return others.Get(k)
 			})
 		}
-		return NewSimApp(logger, db, nil, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
+		return NewSimApp(logger, db, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
 	}
 	var mx sync.Mutex
 	appHashResults := make(map[int64][][]byte)
@@ -224,6 +237,70 @@ func TestAppStateDeterminism(t *testing.T) {
 	sims.RunWithSeeds(t, interBlockCachingAppFactory, setupStateFactory, seeds, []byte{}, captureAndCheckHash)
 }
 
+func TestAppStateDeterminismBSTMEquivalence(t *testing.T) {
+	config := simcli.NewConfigFromFlags()
+	config.ChainID = sims.SimAppChainID
+	seed := config.Seed
+
+	t.Run(fmt.Sprintf("seed:%d", seed), func(t *testing.T) {
+		regularTrace := runSimulationAndCollectFinalizeHashes(t, config, seed, false)
+		blockSTMTrace := runSimulationAndCollectFinalizeHashes(t, config, seed, true)
+
+		require.Equal(t, regularTrace.commitCount, blockSTMTrace.commitCount)
+		require.Equal(t, regularTrace.finalizeHashes, blockSTMTrace.finalizeHashes)
+	})
+}
+
+type finalizeHashTrace struct {
+	finalizeHashes [][]byte
+	commitCount    int
+}
+
+func (t *finalizeHashTrace) ListenFinalizeBlock(_ context.Context, _ abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
+	t.finalizeHashes = append(t.finalizeHashes, append([]byte(nil), res.AppHash...))
+	return nil
+}
+
+func (t *finalizeHashTrace) ListenCommit(_ context.Context, _ abci.ResponseCommit, _ []*storetypes.StoreKVPair) error {
+	t.commitCount++
+	return nil
+}
+
+func runSimulationAndCollectFinalizeHashes(tb testing.TB, cfg simtypes.Config, seed int64, enableBlockSTM bool) *finalizeHashTrace {
+	tb.Helper()
+
+	trace := &finalizeHashTrace{}
+	appFactory := func(
+		logger log.Logger,
+		db dbm.DB,
+		loadLatest bool,
+		appOpts servertypes.AppOptions,
+		baseAppOptions ...func(*baseapp.BaseApp),
+	) *SimApp {
+		streamingOpt := func(bapp *baseapp.BaseApp) {
+			bapp.SetStreamingManager(storetypes.StreamingManager{
+				ABCIListeners: []storetypes.ABCIListener{trace},
+			})
+		}
+
+		app := NewSimApp(logger, db, loadLatest, appOpts, append(baseAppOptions, interBlockCacheOpt(), streamingOpt)...)
+		if enableBlockSTM {
+			app.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(
+				app.TxConfig().TxDecoder(),
+				app.GetStoreKeys(),
+				8,
+				false,
+				func(storetypes.MultiStore) string { return sdk.DefaultBondDenom },
+			))
+		}
+
+		return app
+	}
+
+	sims.RunWithSeed(tb, cfg, appFactory, setupStateFactory, seed, nil)
+	return trace
+}
+
 type ComparableStoreApp interface {
 	LastBlockHeight() int64
 	NewContextLegacy(isCheckTx bool, header cmtproto.Header) sdk.Context
@@ -236,6 +313,7 @@ func AssertEqualStores(
 	app, newApp ComparableStoreApp,
 	storeDecoders simtypes.StoreDecoderRegistry,
 	skipPrefixes map[string][][]byte,
+	skipStores map[string]struct{},
 ) {
 	tb.Helper()
 	ctxA := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
@@ -251,6 +329,9 @@ func AssertEqualStores(
 		}
 
 		keyName := appKeyA.Name()
+		if _, skip := skipStores[keyName]; skip {
+			continue
+		}
 		appKeyB := newApp.GetKey(keyName)
 
 		storeA := ctxA.KVStore(appKeyA)

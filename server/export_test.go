@@ -4,21 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	cmtcfg "github.com/cometbft/cometbft/v2/config"
-	cmttypes "github.com/cometbft/cometbft/v2/types"
+	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -156,7 +155,6 @@ func (e *mockExporter) SetDefaultExportApp() {
 func (e *mockExporter) Export(
 	logger log.Logger,
 	db dbm.DB,
-	traceWriter io.Writer,
 	height int64,
 	forZeroHeight bool,
 	jailAllowedAddrs []string,

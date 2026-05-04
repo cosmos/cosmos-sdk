@@ -7,10 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	storetypes "cosmossdk.io/store/types"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -48,7 +47,7 @@ func TestValidateBasic(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = antehandler(suite.ctx, validTx, false)
-	require.Nil(t, err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
+	require.NoError(t, err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
 
 	// test decorator skips on recheck
 	suite.ctx = suite.ctx.WithIsReCheckTx(true)
@@ -56,7 +55,7 @@ func TestValidateBasic(t *testing.T) {
 	// decorator should skip processing invalidTx on recheck and thus return nil-error
 	_, err = antehandler(suite.ctx, invalidTx, false)
 
-	require.Nil(t, err, "ValidateBasicDecorator ran on ReCheck")
+	require.NoError(t, err, "ValidateBasicDecorator ran on ReCheck")
 }
 
 func TestValidateMemo(t *testing.T) {
@@ -92,7 +91,7 @@ func TestValidateMemo(t *testing.T) {
 
 	// require small memos pass ValidateMemo Decorator
 	_, err = antehandler(suite.ctx, validTx, false)
-	require.Nil(t, err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
+	require.NoError(t, err, "ValidateMemoDecorator returned error on valid tx. err: %v", err)
 }
 
 func TestConsumeGasForTxSize(t *testing.T) {
@@ -130,7 +129,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 			require.NoError(t, err)
 
 			txBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
-			require.Nil(t, err, "Cannot marshal tx: %v", err)
+			require.NoError(t, err, "Cannot marshal tx: %v", err)
 
 			params := suite.accountKeeper.GetParams(suite.ctx)
 			expectedGas := storetypes.Gas(len(txBytes)) * params.TxSizeCostPerByte
@@ -146,7 +145,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 
 			beforeGas = suite.ctx.GasMeter().GasConsumed()
 			suite.ctx, err = antehandler(suite.ctx, tx, false)
-			require.Nil(t, err, "ConsumeTxSizeGasDecorator returned error: %v", err)
+			require.NoError(t, err, "ConsumeTxSizeGasDecorator returned error: %v", err)
 
 			// require that decorator consumes expected amount of gas
 			consumedGas := suite.ctx.GasMeter().GasConsumed() - beforeGas
@@ -159,7 +158,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 			tx = txBuilder.GetTx()
 
 			simTxBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
-			require.Nil(t, err, "Cannot marshal tx: %v", err)
+			require.NoError(t, err, "Cannot marshal tx: %v", err)
 			// require that simulated tx is smaller than tx with signatures
 			require.True(t, len(simTxBytes) < len(txBytes), "simulated tx still has signatures")
 
@@ -173,13 +172,13 @@ func TestConsumeGasForTxSize(t *testing.T) {
 			consumedSimGas := suite.ctx.GasMeter().GasConsumed() - beforeSimGas
 
 			// require that antehandler passes and does not underestimate decorator cost
-			require.Nil(t, err, "ConsumeTxSizeGasDecorator returned error: %v", err)
+			require.NoError(t, err, "ConsumeTxSizeGasDecorator returned error: %v", err)
 			require.True(t, consumedSimGas >= expectedGas, "Simulate mode underestimates gas on AnteDecorator. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
 		})
 	}
 }
 
-func TestTxHeightTimeoutDecorator(t *testing.T) {
+func TestTxTimeoutHeightDecorator(t *testing.T) {
 	suite := SetupTestSuite(t, true)
 
 	antehandler := sdk.ChainAnteDecorators(ante.NewTxTimeoutHeightDecorator())

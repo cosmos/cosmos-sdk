@@ -378,6 +378,7 @@ func simulateMsgDeposit(
 }
 
 // SimulateMsgVote generates a MsgVote with random values.
+//
 // Deprecated: this is an internal method and will be removed
 func SimulateMsgVote(
 	txGen client.TxConfig,

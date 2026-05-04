@@ -15,7 +15,7 @@ import (
 
 	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
-	v1 "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	crypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	types "github.com/cosmos/cosmos-sdk/types"
 	types0 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gomock "go.uber.org/mock/gomock"
@@ -315,10 +315,10 @@ func (mr *MockValidatorSetMockRecorder) Delegation(arg0, arg1, arg2 any) *gomock
 }
 
 // GetPubKeyByConsAddr mocks base method.
-func (m *MockValidatorSet) GetPubKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (v1.PublicKey, error) {
+func (m *MockValidatorSet) GetPubKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (crypto.PublicKey, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPubKeyByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(v1.PublicKey)
+	ret0, _ := ret[0].(crypto.PublicKey)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -445,19 +445,19 @@ func (mr *MockValidatorSetMockRecorder) StakingTokenSupply(arg0 any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StakingTokenSupply", reflect.TypeOf((*MockValidatorSet)(nil).StakingTokenSupply), arg0)
 }
 
-// TotalBondedTokens mocks base method.
-func (m *MockValidatorSet) TotalBondedTokens(arg0 context.Context) (math.Int, error) {
+// TotalValidatorPower mocks base method.
+func (m *MockValidatorSet) TotalValidatorPower(arg0 context.Context) (math.Int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TotalBondedTokens", arg0)
+	ret := m.ctrl.Call(m, "TotalValidatorPower", arg0)
 	ret0, _ := ret[0].(math.Int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// TotalBondedTokens indicates an expected call of TotalBondedTokens.
-func (mr *MockValidatorSetMockRecorder) TotalBondedTokens(arg0 any) *gomock.Call {
+// TotalValidatorPower indicates an expected call of TotalValidatorPower.
+func (mr *MockValidatorSetMockRecorder) TotalValidatorPower(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalBondedTokens", reflect.TypeOf((*MockValidatorSet)(nil).TotalBondedTokens), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalValidatorPower", reflect.TypeOf((*MockValidatorSet)(nil).TotalValidatorPower), arg0)
 }
 
 // Unjail mocks base method.

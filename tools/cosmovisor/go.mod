@@ -256,6 +256,3 @@ require (
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
-
-// Pin Krakatoa CometBFT pre-release while depending on tagged cosmos-sdk (see v0.54.x-krakatoa).
-replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.39.1-0.20260410173500-f4a9ba93609e

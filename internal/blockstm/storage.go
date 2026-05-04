@@ -45,17 +45,20 @@ type GCachedStorage[V any] struct {
 	cache sync.Map
 }
 
+// cacheEntry boxes V so a cached zero-value any never reaches sync.Map as a nil interface.
+type cacheEntry[V any] struct{ v V }
+
 func NewGCachedStorage[V any](storage GStorage[V]) *GCachedStorage[V] {
 	return &GCachedStorage[V]{GStorage: storage}
 }
 
 func (s *GCachedStorage[V]) Get(key []byte) V {
-	if v, ok := s.cache.Load(string(key)); ok {
-		return v.(V)
+	if e, ok := s.cache.Load(string(key)); ok {
+		return e.(cacheEntry[V]).v
 	}
 
 	v := s.GStorage.Get(key)
-	s.cache.Store(string(key), v)
+	s.cache.Store(string(key), cacheEntry[V]{v: v})
 	return v
 }
 

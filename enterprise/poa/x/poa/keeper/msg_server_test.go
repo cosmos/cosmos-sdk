@@ -140,6 +140,21 @@ func TestMsgServerUpdateParams(t *testing.T) {
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "invalid authority")
 	})
+
+	t.Run("fails when params are uninitialized", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		// Do NOT initialize params — admin is unknown
+		msg := &poatypes.MsgUpdateParams{
+			Admin:  sdk.AccAddress("attacker").String(),
+			Params: poatypes.Params{Admin: sdk.AccAddress("attacker").String()},
+		}
+
+		_, err := msgServer.UpdateParams(f.ctx, msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to get admin params")
+	})
 }
 
 func TestMsgServerCreateValidator(t *testing.T) {
@@ -675,6 +690,27 @@ func TestMsgServerCreateValidator(t *testing.T) {
 		_, err := msgServer.CreateValidator(f.ctx, msg)
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "public key type secp256k1 is not in the consensus parameters")
+	})
+
+	t.Run("fails when params are uninitialized", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		pubKey := ed25519.GenPrivKey().PubKey()
+		pubKeyAny := types.UnsafePackAny(pubKey)
+		operatorAddr := sdk.AccAddress("operator1")
+
+		msg := &poatypes.MsgCreateValidator{
+			PubKey:          pubKeyAny,
+			Moniker:         "test-validator",
+			Description:     "test",
+			OperatorAddress: operatorAddr.String(),
+			Power:           1,
+			Admin:           sdk.AccAddress("attacker").String(),
+		}
+
+		_, err := msgServer.CreateValidator(f.ctx, msg)
+		require.Error(t, err)
 	})
 }
 
@@ -1603,6 +1639,31 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 		v, err := f.poaKeeper.validators.Get(f.ctx, consAddr)
 		require.NoError(t, err)
 		require.Equal(t, int64(300), v.Power)
+	})
+
+	t.Run("fails when params are uninitialized", func(t *testing.T) {
+		f := setupTest(t)
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		pubKey := ed25519.GenPrivKey().PubKey()
+		pubKeyAny := types.UnsafePackAny(pubKey)
+
+		msg := &poatypes.MsgUpdateValidators{
+			Admin: sdk.AccAddress("attacker").String(),
+			Validators: []poatypes.Validator{
+				{
+					PubKey: pubKeyAny,
+					Power:  100,
+					Metadata: &poatypes.ValidatorMetadata{
+						Moniker:         "rogue",
+						OperatorAddress: sdk.AccAddress("operator1").String(),
+					},
+				},
+			},
+		}
+
+		_, err := msgServer.UpdateValidators(f.ctx, msg)
+		require.Error(t, err)
 	})
 }
 

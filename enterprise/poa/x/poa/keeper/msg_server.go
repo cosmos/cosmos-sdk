@@ -51,14 +51,10 @@ func (s *MsgServer) UpdateParams(
 
 	admin, err := s.keeper.Admin(sdkCtx)
 	if err != nil {
-		// Keep backward compatibility in tests/contexts where params are not initialized yet.
-		// When admin params are configured, authority is enforced below.
-		admin = ""
+		return nil, errorsmod.Wrap(err, "failed to get admin params")
 	}
-	if admin != "" {
-		if err := sdk.ValidateAuthority(sdkCtx, admin, req.Admin); err != nil {
-			return nil, err
-		}
+	if err := sdk.ValidateAuthority(sdkCtx, admin, req.Admin); err != nil {
+		return nil, err
 	}
 
 	if err := s.keeper.UpdateParams(sdkCtx, req.Params); err != nil {

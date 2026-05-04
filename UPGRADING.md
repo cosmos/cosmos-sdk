@@ -36,9 +36,14 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
     - [Centralized Authority via Consensus Params](#centralized-authority-via-consensus-params)
         - [How AuthorityParams Works](#how-authorityparams-works)
 - [Upgrade Handler](#upgrade-handler)
-- [Experimental Features](#experimental-features)
-    - [libp2p](#libp2p)
-    - [BlockSTM](#blockstm)
+- [IBC v11 Updates](#ibc-v11-updates)
+- [Cosmos Performance Upgrades (Experimental)](#cosmos-performance-upgrades-experimental)
+    - [Cosmos SDK](#cosmos-sdk)
+        - [BlockSTM](#blockstm)
+    - [CometBFT v0.39 Updates](#cometbft-v039-updates)
+        - [LibP2P](#libp2p)
+        - [`AdaptiveSync`](#adaptivesync)
+
 
 ## Upgrade Checklist
 
@@ -49,18 +54,19 @@ Use this checklist first, then read the linked sections for the exact code or wi
 - [ ] Update `x/epochs.NewAppModule` if your app includes `x/epochs`. See [x/epochs](#xepochs).
 - [ ] Put `x/bank` first in `SetOrderEndBlockers`. See [x/bank](#xbank).
 - [ ] Update your node service registration if your app exposes `NodeService`. See [NodeService](#nodeservice).
-- [ ] Migrate imports for moved `x/` Go modules. See [Moved Go Modules](#moved-go-modules).
+- [ ] Migrate imports for removed `x/` Go modules. See [Removed Go Modules](#removed-go-modules).
 - [ ] Update required Cosmos SDK Go module dependencies. See [Module Version Updates](#module-version-updates).
 - [ ] Migrate to `contrib/` imports if you use `x/circuit`, `x/nft`, or `x/crisis`. See [Module Deprecations](#module-deprecations).
 - [ ] Migrate to Cosmos Enterprise if you use the `x/group` module. See [Groups Module](#groups-module).
 - [ ] Update imports to `cosmossdk.io/log/v2` if your app imports the log package directly. See [Log v2](#log-v2).
 - [ ] Migrate imports to `github.com/cosmos/cosmos-sdk/store/v2`. See [Store v2](#store-v2).
 - [ ] Migrate any remaining `BaseApp.NewUncachedContext()` usage. See [Store v2](#store-v2).
-- [ ] If using `systemtests` update import to `github.com/cosmos/cosmos-sdk/tools/systemtests`.
+- [ ] If using `systemtests` update import to `github.com/cosmos/cosmos-sdk/tools/systemtests`. See [Renamed Go Modules](#renamed-go-modules).
+- [ ] Review [IBC v11 Updates](#ibc-v11-updates) if your chain uses IBC. Several APIs have been removed.
 - [ ] Review [Centralized Authority via Consensus Params](#centralized-authority-via-consensus-params). No upgrade action is required to keep using per-keeper authorities.
 - [ ] Review [Telemetry](#telemetry). No upgrade action is required to keep existing telemetry wiring, but upgrading to OpenTelemetry is strongly encouraged.
 - [ ] Review [PoA Module](#poa-module) if you are interested in adopting the new Cosmos Enterprise Proof of Authority module.
-- [ ] Review [Experimental Features](#experimental-features) if you are interested in enabling `libp2p` or `BlockSTM`.
+- [ ] Review [Cosmos Performance Upgrades (Experimental)](#cosmos-performance-upgrades-experimental) if you are interested in experimenting with BlockSTM, LibP2P, or AdaptiveSync.
 
 ## Required Changes
 
@@ -155,7 +161,7 @@ func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Conf
 
 Most `cosmossdk.io` vanity URLs for modules under `x/` have been removed. These separate Go modules caused dependency version management to be unpredictable; different modules could be pinned to different SDK versions, leading to compatibility issues. Consolidating everything under `github.com/cosmos/cosmos-sdk` gives developers a single, versioned dependency to manage.
 
-A migration tool ships alongside this release to automate updating these import paths. The following must be updated manually or via the tool:
+The following must be updated:
 
 - `cosmossdk.io/x/evidence` -> `github.com/cosmos/cosmos-sdk/x/evidence`
 - `cosmossdk.io/x/feegrant` -> `github.com/cosmos/cosmos-sdk/x/feegrant` 
@@ -169,14 +175,13 @@ The `cosmossdk.io/systemtests` go module is now named `github.com/cosmos/cosmos-
 
 ### Module Version Updates
 
-- `cosmossdk.io/client/v2` has been updated to v2.x.x ?? // TODO: Finalize this.
-- `cosmossdk.io/api` has been updated to vx.x.x // TODO: Finalize this.
+- `cosmossdk.io/client/v2` has been updated to v2.11.0
 
 ### Log v2
 
 The log package has been updated to `v2`. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/log/v2`. Usage of the logger itself does not need to be updated.
 The v2 release of log adds contextual methods to the logger interface (InfoContext, DebugContext, etc.), allowing logs to be correlated with OpenTelemetry traces.
-To learn more about the new features offered in `log/v2`, as well as setting up log correlation, see the [log package documentation](https://docs.cosmos.network/sdk/next/learn/advanced/log).
+To learn more about the new features offered in `log/v2`, as well as setting up log correlation, see the [log package documentation](https://docs.cosmos.network/sdk/latest/guides/testing/log).
 
 ### Store v2
 
@@ -281,8 +286,7 @@ OpenTelemetry provides an integrated solution for metrics, traces, and logging w
 
 The existing wrapper functions in the `telemetry` package required acquiring mutex locks and map lookups for every metric operation which is suboptimal. OpenTelemetry's API uses atomic concurrency wherever possible and should introduce less performance overhead during metric collection.
 
-See the [telemetry documentation](https://docs.cosmos.network/sdk/next/learn/advanced/telemetry) to learn how to set up OpenTelemetry with Cosmos SDK v0.54.0+. 
-<!-- todo: update link with correct docs version tag -->
+See the [telemetry documentation](https://docs.cosmos.network/sdk/latest/guides/testing/telemetry) to learn how to set up OpenTelemetry with Cosmos SDK v0.54.0+. 
 
 
 Below is a quick reference on setting up and using meters and traces with OpenTelemetry:
@@ -424,24 +428,25 @@ func (app SimApp) RegisterUpgradeHandlers() {
 }
 ```
 
-## Experimental Features
+## IBC v11 Updates
 
-For Q1 of 2026, Cosmos Labs has been focusing on greatly improving performance of Cosmos SDK applications. v0.54 of Cosmos SDK introduces support for several performance-related features across the stack, including BlockSTM in the SDK and Libp2p support for CometBFT. 
+IBC v11 introduces several improvements, removes long-deprecated APIs (`ParamSubspace` from all Keeper constructors, `MsgSubmitMisbehaviour`, and `ibcwasmtypes.Checksums`), and adds custom address codec support in the transfer module to enable Cosmos EVM compatibility with IBC transfers.
 
-NOTE: It is important to emphasize that the following are **experimental** features. We DO NOT recommend running chains with these features enabled in production. The inclusion in this release is for experimentation purposes only.
+Read the [Changelog](https://github.com/cosmos/ibc-go/blob/main/CHANGELOG.md) and [v11 Migration Guide](https://docs.cosmos.network/ibc/latest/migrations/v10-to-v11) for more information.
 
-### libp2p
+## Cosmos Performance Upgrades (Experimental)
 
-libp2p replaces CometBFT's legacy `comet-p2p` transport layer with [go-libp2p](https://libp2p.io/). Unlike other opt-in features, **to opt-in to libp2p, every validator in the network must upgrade together**. CometBFT p2p and libp2p are fundamentally incompatible and cannot interoperate. Because of this, a coordinated network-wide migration at a specific upgrade height is required. Mixed deployments are not supported.
+For Q1 of 2026, Cosmos Labs has been focusing on greatly improving performance of Cosmos SDK applications. v0.54 of Cosmos SDK introduces support for several performance-related features across the stack. The SDK introduces [BlockSTM](#blockstm) for concurrent transactions, and CometBFT introduces [LibP2P](#libp2p) and [`AdaptiveSync`](#adaptivesync).
 
-See the [libp2p documentation](https://docs.cosmos.network/cometbft/next/docs/experimental/lib-p2p) for details.
-<!-- todo: update link with correct docs version tag -->
+NOTE: It is important to emphasize that the following are **experimental** features. We DO NOT recommend running chains with these features enabled in production without extensive testing. 
 
-### BlockSTM
+### Cosmos SDK
 
-BlockSTM enables deterministic, concurrent execution of transactions, improving block execution speeds by up to X%. // TODO: REAL NUMBER
-Developers interested in experimenting with BlockSTM should read the [documentation](https://docs.cosmos.network/sdk/next/experimental/blockstm). 
-<!-- todo: update link with correct docs version tag -->
+#### BlockSTM
+
+BlockSTM enables deterministic, concurrent execution of transactions, improving block execution speeds and throughput. 
+
+Developers interested in experimenting with BlockSTM should read the [documentation](https://docs.cosmos.network/sdk/latest/experimental/blockstm).
 
 Below is an example of setting up BlockSTM:
 
@@ -450,7 +455,7 @@ Below is an example of setting up BlockSTM:
 ```go
 import (
     "runtime"
-	
+
     "github.com/cosmos/cosmos-sdk/baseapp/blockstm"
 )
 
@@ -485,3 +490,20 @@ bApp.SetDisableBlockGasMeter(true)
 // Set ObjectStoreKey on bank module
 app.BankKeeper = app.BankKeeper.WithObjStoreKey(oKeys[banktypes.ObjectStoreKey])
 ```
+
+### CometBFT v0.39 Updates
+
+#### LibP2P
+
+libp2p replaces CometBFT's legacy `comet-p2p` transport layer with [go-libp2p](https://libp2p.io/). It adds native stream-oriented transport, concurrent receive pipelines, and autoscaled worker pools per reactor, reducing queue pressure and improving message flow under load. In benchmarks, libp2p has been a key contributor to reaching over 2000 TPS. Beyond raw throughput, it improves network liveness by making peer communication and block propagation more resilient under sustained congestion and sudden load spikes.
+
+Unlike other opt-in features, **to opt-in to libp2p, every validator in the network must upgrade together**. CometBFT p2p and libp2p are fundamentally incompatible and cannot interoperate. Because of this, a coordinated network-wide migration at a specific upgrade height is required. 
+
+See the [libp2p page](https://docs.cosmos.network/cometbft/latest/docs/experimental/lib-p2p) in the CometBFT documentation for details.
+
+#### `AdaptiveSync`
+
+`AdaptiveSync` allows a node to run `blocksync` and consensus at the same time for faster recovery behavior. In the default flow, a node starts in `blocksync`, catches up, then switches to consensus. Under sustained load, a node can remain behind and struggle to catch up. With `adaptive_sync` enabled, consensus still works normally, but it can also ingest already available blocks from `blocksync`, allowing nodes to recover more quickly during traffic spikes. `AdaptiveSync` does not change consensus safety or finality rules.
+
+See the [`AdaptiveSync` documentation](https://docs.cosmos.network/cometbft/latest/docs/core/block-sync#adaptivesync) for details.
+

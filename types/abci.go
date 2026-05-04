@@ -12,6 +12,8 @@ import (
 type ABCIHandlers struct {
 	InitChainer
 	CheckTxHandler
+	InsertTxHandler
+	ReapTxsHandler
 	PreBlocker
 	BeginBlocker
 	EndBlocker
@@ -43,6 +45,14 @@ type PrepareProposalHandler func(Context, *abci.RequestPrepareProposal) (*abci.R
 // `RunTx` is a function type alias for executing logic before transactions are executed.
 // The passed in runtx does not override antehandlers, the execution mode is not passed into runtx to avoid overriding the execution mode.
 type CheckTxHandler func(RunTx, *abci.RequestCheckTx) (*abci.ResponseCheckTx, error)
+
+// InsertTxHandler defines a function type alias for a request to insert a
+// transaction into an applications mempool.
+type InsertTxHandler func(*abci.RequestInsertTx) (*abci.ResponseInsertTx, error)
+
+// ReapTxsHandler defines a function type alias for a request to get new,
+// validated transactions from an applications mempool.
+type ReapTxsHandler func(*abci.RequestReapTxs) (*abci.ResponseReapTxs, error)
 
 // ExtendVoteHandler defines a function type alias for extending a pre-commit vote.
 type ExtendVoteHandler func(Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)

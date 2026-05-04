@@ -45,7 +45,7 @@ require (
 	github.com/jhump/protoreflect v1.18.0
 	github.com/magiconair/properties v1.8.10
 	github.com/manifoldco/promptui v0.9.0
-	github.com/mattn/go-isatty v0.0.21
+	github.com/mattn/go-isatty v0.0.22
 	github.com/mdp/qrterminal/v3 v3.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.23.2

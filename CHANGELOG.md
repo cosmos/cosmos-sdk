@@ -44,13 +44,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* (docs) [#25918](https://github.com/cosmos/cosmos-sdk/issues/25918) Regenerate Swagger API spec to reflect current proto state, including `authority` field on consensus params and removal of stale module-config definitions.
+### Bug Fixes
+
+### Deprecated
+
+## [v0.54.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.3) - 2026-05-04
+
+### Improvements
+
+* (docs) [#26362](https://github.com/cosmos/cosmos-sdk/pull/26362) Regenerate Swagger API spec to reflect current proto state, including `authority` on consensus params and removal of stale module-config definitions.
+* (tests/e2e) [#26374](https://github.com/cosmos/cosmos-sdk/pull/26374) Reduce flakiness in distribution withdraw-all and tx signature event queries.
+* (deps) Routine dependency updates across workspace modules (e.g. `github.com/cockroachdb/errors`, `pgregory.net/rapid`, `github.com/fsnotify/fsnotify`, OpenTelemetry contrib, `golang.org/x/crypto`, `github.com/hashicorp/go-plugin`, and related bumps). See merged backport PRs since [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) for the full set.
 
 ### Bug Fixes
 
 * (x/gov) [#26353](https://github.com/cosmos/cosmos-sdk/pull/26353) Fix leading comma in `proposal_messages` event attribute emitted by `SubmitProposal`.
-
-### Deprecated
 
 ## [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) - 2026-04-15
 

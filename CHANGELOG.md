@@ -55,6 +55,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (docs) [#26362](https://github.com/cosmos/cosmos-sdk/pull/26362) Regenerate Swagger API spec to reflect current proto state, including `authority` on consensus params and removal of stale module-config definitions.
 * (tests/e2e) [#26374](https://github.com/cosmos/cosmos-sdk/pull/26374) Reduce flakiness in distribution withdraw-all and tx signature event queries.
 * (mempool) [#26014](https://github.com/cosmos/cosmos-sdk/pull/26014) Application-side mempool integration: extend `types/mempool` (`ExtMempool`, `RemoveWithReason`, `SelectBy`, removal reasons/callers), wire `BaseApp` and ABCI utilities for mempool-driven `PrepareProposal` / proposal handling, and align CometBFT server ABCI plumbing.
+* (abci) [#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) Add support for new application side mempool ABCI methods.
+* (abci) [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) Add support for new ABCI methods, `InsertTx` and `ReapTxs`.
 * (deps) [#26014](https://github.com/cosmos/cosmos-sdk/pull/26014) Bump `github.com/cometbft/cometbft` to [v0.39.2](https://github.com/cometbft/cometbft/releases/tag/v0.39.2) across workspace modules (Krakatoa release line).
 * (deps) Routine dependency updates across workspace modules (e.g. `github.com/cockroachdb/errors`, `pgregory.net/rapid`, `github.com/fsnotify/fsnotify`, OpenTelemetry contrib, `golang.org/x/crypto`, `github.com/hashicorp/go-plugin`, and related bumps). See merged backport PRs since [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) for the full set.
 
@@ -91,8 +93,6 @@ This patch release contains only minor dependency bumps.
 * (x/gov) [#25617](https://github.com/cosmos/cosmos-sdk/pull/25617) `AfterProposalSubmission` hook now includes proposer address as a parameter.
 * (x/gov) [#25616](https://github.com/cosmos/cosmos-sdk/pull/25616) `DistrKeeper` `x/distribution` is now optional. Genesis validation ensures `distrKeeper` is set if distribution module is used as proposal cancel destination.
 * (systemtests) [#25930](https://github.com/cosmos/cosmos-sdk/pull/25930) Move `systemtests` into `testutil` and no longer under its own `go.mod`.
-* (abci) [#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) Add support for new application side mempool ABCI methods. 
-* (ABCI) [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) Add support for new ABCI methods, `InsertTx` and `ReapTxs`.
 * (baseapp) [#26060](https://github.com/cosmos/cosmos-sdk/pull/26060) Remove `BaseApp.SetStoreMetrics`. The `StoreMetrics` interface never worked, so removing dead code.
 * (store) [#26061](https://github.com/cosmos/cosmos-sdk/pull/26061) Remove store tracing API and all related plumbing:
     * Remove `SetTracer`, `SetTracingContext`, and `TracingEnabled` from `MultiStore` interface.

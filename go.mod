@@ -360,5 +360,3 @@ retract (
 	// do not use
 	v0.43.0
 )
-
-replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.39.0-rc1.0.20260417162916-9fcf8612cc6c

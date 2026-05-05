@@ -283,5 +283,3 @@ replace (
 	github.com/cosmos/cosmos-sdk/enterprise/poa => ../../
 	github.com/cosmos/cosmos-sdk/tools/systemtests => ../../../../tools/systemtests
 )
-
-replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.39.0-rc1.0.20260417162916-9fcf8612cc6c

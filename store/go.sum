@@ -39,8 +39,6 @@ github.com/cockroachdb/redact v1.1.8 h1:8eVLLj6juKxiKrAEw2b8cJvNqWq++U8WOfQFuL7K
 github.com/cockroachdb/redact v1.1.8/go.mod h1:GceHHpJ0rMDpYARL5In88Alq/xMBUtVlz7Qxix6ZVkw=
 github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb h1:3bCgBvB8PbJVMX1ouCcSIxvsqKPYM7gs72o0zC76n9g=
 github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb/go.mod h1:7nc4anLGjupUW/PeY5qiNYsdNXj7zopG+eqsS7To5IQ=
-github.com/cometbft/cometbft v0.39.2 h1:1+yj1GbhOrx2ZyrntQsDpc+SBr9AhUtmcVqfdSkGWc4=
-github.com/cometbft/cometbft v0.39.2/go.mod h1:YS9B9ChNNlGHAtciy7fNC4kwblPnIx3zO52J8IbdzvU=
 github.com/cometbft/cometbft v0.39.3 h1:UegHXskZNomsijmm29nL5NkeXtnzkme6fg+q1hPQnEI=
 github.com/cometbft/cometbft v0.39.3/go.mod h1:PmNfvtw256BC41ad0FABts236CSZnvZ0kjPOciBwTdM=
 github.com/cosmos/btree v1.0.0 h1:V3OdIzTQw2yE7f6pD6FfA9j2/YLj1UpB9MdY0zU3v3k=

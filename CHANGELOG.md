@@ -47,7 +47,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (docs) [#25918](https://github.com/cosmos/cosmos-sdk/issues/25918) Regenerate Swagger API spec to reflect current proto state, including `authority` field on consensus params and removal of stale module-config definitions.
+
 ### Bug Fixes
+
+* (x/gov) [#26353](https://github.com/cosmos/cosmos-sdk/pull/26353) Fix leading comma in `proposal_messages` event attribute emitted by `SubmitProposal`.
 
 ### Deprecated
 

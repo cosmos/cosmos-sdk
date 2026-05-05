@@ -48,7 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Deprecated
 
-## [v0.54.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.3) - 2026-05-04
+## [v0.54.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.3) - 2026-05-05
 
 ### Improvements
 
@@ -56,8 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (tests/e2e) [#26374](https://github.com/cosmos/cosmos-sdk/pull/26374) Reduce flakiness in distribution withdraw-all and tx signature event queries.
 * (mempool) [#26014](https://github.com/cosmos/cosmos-sdk/pull/26014) Application-side mempool integration: extend `types/mempool` (`ExtMempool`, `RemoveWithReason`, `SelectBy`, removal reasons/callers), wire `BaseApp` and ABCI utilities for mempool-driven `PrepareProposal` / proposal handling, and align CometBFT server ABCI plumbing.
 * (abci) [#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) Add support for new application side mempool ABCI methods.
-* (abci) [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) Add support for new ABCI methods, `InsertTx` and `ReapTxs`.
-* (deps) [#26014](https://github.com/cosmos/cosmos-sdk/pull/26014) Bump `github.com/cometbft/cometbft` to [v0.39.2](https://github.com/cometbft/cometbft/releases/tag/v0.39.2) across workspace modules (Krakatoa release line).
+* (deps) [#26383](https://github.com/cosmos/cosmos-sdk/pull/26383) Bump CometBFT version to v0.39.3
 * (deps) Routine dependency updates across workspace modules (e.g. `github.com/cockroachdb/errors`, `pgregory.net/rapid`, `github.com/fsnotify/fsnotify`, OpenTelemetry contrib, `golang.org/x/crypto`, `github.com/hashicorp/go-plugin`, and related bumps). See merged backport PRs since [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) for the full set.
 
 ### Bug Fixes

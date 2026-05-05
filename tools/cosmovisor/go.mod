@@ -4,7 +4,7 @@ go 1.25.9
 
 require (
 	cosmossdk.io/log/v2 v2.1.0
-	github.com/cometbft/cometbft v0.39.2
+	github.com/cometbft/cometbft v0.39.3
 	github.com/cometbft/cometbft-db v1.0.4
 	github.com/cosmos/cosmos-sdk v0.54.2
 	github.com/fsnotify/fsnotify v1.10.0

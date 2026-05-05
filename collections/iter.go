@@ -250,11 +250,11 @@ func (i Iterator[K, V]) Values() (values []V, err error) {
 	for ; i.iter.Valid(); i.iter.Next() {
 		value, err = i.Value()
 		if err != nil {
-			return
+			return values, err
 		}
 		values = append(values, value)
 	}
-	return
+	return values, err
 }
 
 // Keys fully consumes the iterator and returns all the decoded keys contained within the range.
@@ -269,11 +269,11 @@ func (i Iterator[K, V]) Keys() (keys []K, err error) {
 	for ; i.iter.Valid(); i.iter.Next() {
 		key, err = i.Key()
 		if err != nil {
-			return
+			return keys, err
 		}
 		keys = append(keys, key)
 	}
-	return
+	return keys, err
 }
 
 // KeyValue returns the current key and value decoded.
@@ -303,11 +303,11 @@ func (i Iterator[K, V]) KeyValues() (kvs []KeyValue[K, V], err error) {
 	for ; i.iter.Valid(); i.iter.Next() {
 		kv, err = i.KeyValue()
 		if err != nil {
-			return
+			return kvs, err
 		}
 		kvs = append(kvs, kv)
 	}
-	return
+	return kvs, err
 }
 
 func (i Iterator[K, V]) Close() error { return i.iter.Close() }

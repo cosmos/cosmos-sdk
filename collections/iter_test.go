@@ -227,9 +227,9 @@ type mockCloseErrIter struct {
 }
 
 func (m *mockCloseErrIter) Domain() ([]byte, []byte) { return nil, nil }
-func (m *mockCloseErrIter) Valid() bool               { return false }
-func (m *mockCloseErrIter) Next()                     {}
-func (m *mockCloseErrIter) Key() []byte               { return nil }
-func (m *mockCloseErrIter) Value() []byte              { return nil }
-func (m *mockCloseErrIter) Error() error               { return nil }
-func (m *mockCloseErrIter) Close() error               { return m.closeErr }
+func (m *mockCloseErrIter) Valid() bool              { return false }
+func (m *mockCloseErrIter) Next()                    {}
+func (m *mockCloseErrIter) Key() []byte              { return nil }
+func (m *mockCloseErrIter) Value() []byte            { return nil }
+func (m *mockCloseErrIter) Error() error             { return nil }
+func (m *mockCloseErrIter) Close() error             { return m.closeErr }

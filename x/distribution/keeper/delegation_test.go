@@ -38,6 +38,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -123,6 +124,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -226,6 +228,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -350,6 +353,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -447,6 +451,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -522,6 +527,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -638,6 +644,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -775,6 +782,7 @@ func TestCalculateRewardsMultiDelegatorMultiWithdraw(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -974,6 +982,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -1048,4 +1057,332 @@ func Test100PercentCommissionReward(t *testing.T) {
 		}
 	}
 	require.True(t, hasValue)
+}
+
+func TestWithdrawDelegationRewards_BlockedWithdrawAddress(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		storeService,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
+	)
+
+	require.NoError(t, distrKeeper.FeePool.Set(ctx, disttypes.InitialFeePool()))
+	require.NoError(t, distrKeeper.Params.Set(ctx, disttypes.DefaultParams()))
+
+	valAddr := sdk.ValAddress(valConsAddr0)
+	addr := sdk.AccAddress(valAddr)
+	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
+	require.NoError(t, err)
+	val.Commission = stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+
+	del := stakingtypes.NewDelegation(addr.String(), valAddr.String(), val.DelegatorShares)
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).AnyTimes()
+	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del, nil).AnyTimes()
+
+	require.NoError(t, distrtestutil.CallCreateValidatorHooks(ctx, distrKeeper, addr, valAddr))
+
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// set withdraw address to address that we will block
+	blockedAddr := sdk.AccAddress(valConsAddr1)
+	require.NoError(t, distrKeeper.SetDelegatorWithdrawAddr(ctx, addr, blockedAddr))
+
+	// allocate rewards so there's something to withdraw
+	initial := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
+	tokens := sdk.DecCoins{sdk.NewDecCoin(sdk.DefaultBondDenom, initial)}
+	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
+
+	// snapshot accounting state we expect to remain untouched on the user path
+	outstandingBefore, err := distrKeeper.GetValidatorOutstandingRewardsCoins(ctx, valAddr)
+	require.NoError(t, err)
+	startingInfoBefore, err := distrKeeper.GetDelegatorStartingInfo(ctx, valAddr, addr)
+	require.NoError(t, err)
+	histRefBefore := distrKeeper.GetValidatorHistoricalReferenceCount(ctx)
+
+	// blocked addr is now blocked in the bank keeper
+	bankKeeper.EXPECT().BlockedAddr(blockedAddr).Return(true).Times(1)
+
+	// reset events so we can assert just the ones from this call
+	sdkCtx := ctx.WithEventManager(sdk.NewEventManager())
+
+	// try and withdraw rewards
+	_, err = distrKeeper.WithdrawDelegationRewards(sdkCtx, addr, valAddr)
+	require.ErrorIs(t, err, disttypes.ErrWithdrawAddrBlocked)
+
+	// accounting state must be unchanged
+	outstandingAfter, err := distrKeeper.GetValidatorOutstandingRewardsCoins(ctx, valAddr)
+	require.NoError(t, err)
+	require.Equal(t, outstandingBefore, outstandingAfter)
+	startingInfoAfter, err := distrKeeper.GetDelegatorStartingInfo(ctx, valAddr, addr)
+	require.NoError(t, err)
+	require.Equal(t, startingInfoBefore, startingInfoAfter)
+	require.Equal(t, histRefBefore, distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+
+	// ensure the blocked address event was emitted
+	var sawBlockedEvent bool
+	for _, ev := range sdkCtx.EventManager().Events() {
+		if ev.Type == disttypes.EventTypeWithdrawAddrBlocked {
+			sawBlockedEvent = true
+			break
+		}
+	}
+	require.True(t, sawBlockedEvent, "expected withdraw_addr_blocked event")
+}
+
+func TestBeforeDelegationSharesModified_FallbackDelegator(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		storeService,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
+	)
+
+	require.NoError(t, distrKeeper.FeePool.Set(ctx, disttypes.InitialFeePool()))
+	require.NoError(t, distrKeeper.Params.Set(ctx, disttypes.DefaultParams()))
+
+	valAddr := sdk.ValAddress(valConsAddr0)
+	addr := sdk.AccAddress(valAddr)
+	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
+	require.NoError(t, err)
+	val.Commission = stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+
+	del := stakingtypes.NewDelegation(addr.String(), valAddr.String(), val.DelegatorShares)
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).AnyTimes()
+	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del, nil).AnyTimes()
+
+	require.NoError(t, distrtestutil.CallCreateValidatorHooks(ctx, distrKeeper, addr, valAddr))
+
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// set withdraw address to address that will become blocked
+	blockedAddr := sdk.AccAddress(valConsAddr1)
+	require.NoError(t, distrKeeper.SetDelegatorWithdrawAddr(ctx, addr, blockedAddr))
+
+	initial := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
+	tokens := sdk.DecCoins{sdk.NewDecCoin(sdk.DefaultBondDenom, initial)}
+	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
+
+	expRewards := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, initial)}
+
+	// block withdraw address but NOT  delegator address
+	bankKeeper.EXPECT().BlockedAddr(blockedAddr).Return(true).Times(1)
+	bankKeeper.EXPECT().BlockedAddr(addr).Return(false).Times(1)
+	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), disttypes.ModuleName, addr, expRewards).Return(nil).Times(1)
+
+	sdkCtx := ctx.WithEventManager(sdk.NewEventManager())
+
+	// hook entry point uses the fallback resolver by default
+	require.NoError(t, distrKeeper.Hooks().BeforeDelegationSharesModified(sdkCtx, addr, valAddr))
+
+	// ensure the redirect event was emitted with both original + final
+	// addresses
+	var sawRedirectEvent bool
+	for _, ev := range sdkCtx.EventManager().Events() {
+		if ev.Type != disttypes.EventTypeWithdrawAddrRedirected {
+			continue
+		}
+		sawRedirectEvent = true
+		var foundOriginal, foundFinal bool
+		for _, attr := range ev.Attributes {
+			if attr.Key == disttypes.AttributeKeyOriginalWithdrawAddress && attr.Value == blockedAddr.String() {
+				foundOriginal = true
+			}
+			if attr.Key == disttypes.AttributeKeyWithdrawAddress && attr.Value == addr.String() {
+				foundFinal = true
+			}
+		}
+		require.True(t, foundOriginal && foundFinal, "redirect event missing expected address attributes")
+	}
+	require.True(t, sawRedirectEvent, "expected withdraw_addr_redirected event")
+}
+
+func TestBeforeDelegationSharesModified_FallbackPool(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		storeService,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
+	)
+
+	require.NoError(t, distrKeeper.FeePool.Set(ctx, disttypes.InitialFeePool()))
+	require.NoError(t, distrKeeper.Params.Set(ctx, disttypes.DefaultParams()))
+
+	valAddr := sdk.ValAddress(valConsAddr0)
+	addr := sdk.AccAddress(valAddr) // delegator address — will also be blocked
+	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
+	require.NoError(t, err)
+	val.Commission = stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+
+	del := stakingtypes.NewDelegation(addr.String(), valAddr.String(), val.DelegatorShares)
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).AnyTimes()
+	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del, nil).AnyTimes()
+
+	require.NoError(t, distrtestutil.CallCreateValidatorHooks(ctx, distrKeeper, addr, valAddr))
+
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	blockedAddr := sdk.AccAddress(valConsAddr1)
+	require.NoError(t, distrKeeper.SetDelegatorWithdrawAddr(ctx, addr, blockedAddr))
+
+	initial := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
+	tokens := sdk.DecCoins{sdk.NewDecCoin(sdk.DefaultBondDenom, initial)}
+	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
+
+	expRewards := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, initial)}
+
+	// both addresses blocked — no Send call should happen.
+	bankKeeper.EXPECT().BlockedAddr(blockedAddr).Return(true).Times(1)
+	bankKeeper.EXPECT().BlockedAddr(addr).Return(true).Times(1)
+
+	cpBefore, err := distrKeeper.FeePool.Get(ctx)
+	require.NoError(t, err)
+
+	sdkCtx := ctx.WithEventManager(sdk.NewEventManager())
+
+	// hook entry point uses the fallback resolver by default
+	require.NoError(t, distrKeeper.Hooks().BeforeDelegationSharesModified(sdkCtx, addr, valAddr))
+
+	// community-pool fallback: redirect event was emitted with the
+	// "community_pool" destination value.
+	var sawCPEvent bool
+	for _, ev := range sdkCtx.EventManager().Events() {
+		if ev.Type != disttypes.EventTypeWithdrawAddrRedirected {
+			continue
+		}
+		for _, attr := range ev.Attributes {
+			if attr.Key == disttypes.AttributeKeyWithdrawAddress && attr.Value == disttypes.AttributeValueCommunityPool {
+				sawCPEvent = true
+				break
+			}
+		}
+	}
+	require.True(t, sawCPEvent, "expected redirect-to-community-pool event")
+
+	// rewards were credited to the community pool. The truncated finalRewards
+	// plus the (here zero) decimal remainder must all land in the pool.
+	cpAfter, err := distrKeeper.FeePool.Get(ctx)
+	require.NoError(t, err)
+	diff := cpAfter.CommunityPool.Sub(cpBefore.CommunityPool)
+	require.True(t,
+		diff.AmountOf(sdk.DefaultBondDenom).Equal(math.LegacyNewDecFromInt(expRewards[0].Amount)),
+		"community pool delta should equal the truncated reward amount; got %s want %s",
+		diff, expRewards[0].Amount,
+	)
+
+	// outstanding rewards were decremented
+	outstanding, err := distrKeeper.GetValidatorOutstandingRewardsCoins(ctx, valAddr)
+	require.NoError(t, err)
+	require.True(t, outstanding.IsZero(), "expected outstanding rewards to be fully drained, got %s", outstanding)
+}
+
+func TestBeforeDelegationSharesModified_Strict(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		storeService,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
+	)
+
+	require.NoError(t, distrKeeper.FeePool.Set(ctx, disttypes.InitialFeePool()))
+	require.NoError(t, distrKeeper.Params.Set(ctx, disttypes.DefaultParams()))
+
+	valAddr := sdk.ValAddress(valConsAddr0)
+	addr := sdk.AccAddress(valAddr)
+	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
+	require.NoError(t, err)
+	val.Commission = stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+
+	del := stakingtypes.NewDelegation(addr.String(), valAddr.String(), val.DelegatorShares)
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).AnyTimes()
+	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del, nil).AnyTimes()
+
+	require.NoError(t, distrtestutil.CallCreateValidatorHooks(ctx, distrKeeper, addr, valAddr))
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	blockedAddr := sdk.AccAddress(valConsAddr1)
+	require.NoError(t, distrKeeper.SetDelegatorWithdrawAddr(ctx, addr, blockedAddr))
+
+	initial := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
+	tokens := sdk.DecCoins{sdk.NewDecCoin(sdk.DefaultBondDenom, initial)}
+	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
+
+	// strict should error on the original withdraw address being blocked
+	bankKeeper.EXPECT().BlockedAddr(blockedAddr).Return(true).Times(1)
+
+	strictCtx := stakingtypes.WithStrictWithdraw(ctx.WithEventManager(sdk.NewEventManager()))
+	err = distrKeeper.Hooks().BeforeDelegationSharesModified(strictCtx, addr, valAddr)
+	require.ErrorIs(t, err, disttypes.ErrWithdrawAddrBlocked)
 }

@@ -191,7 +191,96 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 	return rewards, nil
 }
 
-func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {
+// withdrawDestination is the resolved target for a reward withdrawal.
+// String yields the value used for the withdraw_address event attribute.
+type withdrawDestination interface {
+	fmt.Stringer
+}
+
+// withdrawToAddr routes rewards to a specific account via the bank module.
+type withdrawToAddr struct {
+	Addr sdk.AccAddress
+}
+
+func (d withdrawToAddr) String() string {
+	return d.Addr.String()
+}
+
+// withdrawToCommunityPool credits rewards to the community pool.
+type withdrawToCommunityPool struct{}
+
+func (withdrawToCommunityPool) String() string {
+	return types.AttributeValueCommunityPool
+}
+
+// resolveWithdrawDestinationStrict returns the stored withdraw address, or
+// ErrWithdrawAddrBlocked (and a WithdrawAddrBlocked event) if it is blocked.
+func (k Keeper) resolveWithdrawDestinationStrict(
+	ctx context.Context,
+	delAddr sdk.AccAddress,
+	val stakingtypes.ValidatorI,
+	del stakingtypes.DelegationI,
+) (withdrawDestination, error) {
+	withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, delAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if k.bankKeeper.BlockedAddr(withdrawAddr) {
+		sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeWithdrawAddrBlocked,
+				sdk.NewAttribute(types.AttributeKeyWithdrawAddress, withdrawAddr.String()),
+				sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
+				sdk.NewAttribute(types.AttributeKeyDelegator, del.GetDelegatorAddr()),
+			),
+		)
+		return nil, types.ErrWithdrawAddrBlocked
+	}
+
+	return withdrawToAddr{Addr: withdrawAddr}, nil
+}
+
+// resolveWithdrawDestinationWithFallback returns the stored withdraw address,
+// else the delegator's address, else the community pool — emitting
+// WithdrawAddrRedirected if a fallback is used.
+func (k Keeper) resolveWithdrawDestinationWithFallback(
+	ctx context.Context,
+	delAddr sdk.AccAddress,
+	val stakingtypes.ValidatorI,
+	del stakingtypes.DelegationI,
+) (dest withdrawDestination, err error) {
+	withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, delAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if !k.bankKeeper.BlockedAddr(withdrawAddr) {
+		return withdrawToAddr{Addr: withdrawAddr}, nil
+	}
+
+	// Closure form so dest is read at exit, not at defer registration.
+	defer func() {
+		sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeWithdrawAddrRedirected,
+				sdk.NewAttribute(types.AttributeKeyOriginalWithdrawAddress, withdrawAddr.String()),
+				sdk.NewAttribute(types.AttributeKeyWithdrawAddress, dest.String()),
+				sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
+				sdk.NewAttribute(types.AttributeKeyDelegator, del.GetDelegatorAddr()),
+			),
+		)
+	}()
+
+	if !k.bankKeeper.BlockedAddr(delAddr) {
+		return withdrawToAddr{Addr: delAddr}, nil
+	}
+	return withdrawToCommunityPool{}, nil
+}
+
+// withdrawDelegationRewards withdrawals rewards to a given withdraw
+// destination.
+func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, dest withdrawDestination) (sdk.Coins, error) {
 	addrCodec := k.authKeeper.AddressCodec()
 	delAddr, err := addrCodec.StringToBytes(del.GetDelegatorAddr())
 	if err != nil {
@@ -243,36 +332,12 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 		)
 	}
 
-	// truncate reward dec coins, return remainder to community pool
-	finalRewards, remainder := rewards.TruncateDecimal()
-
-	// add coins to user account
-	if !finalRewards.IsZero() {
-		withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, delAddr)
-		if err != nil {
-			return nil, err
-		}
-
-		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, finalRewards)
-		if err != nil {
-			return nil, err
-		}
+	finalRewards, err := k.sendCoinsToDestination(ctx, rewards, dest)
+	if err != nil {
+		return nil, err
 	}
 
-	// update the outstanding rewards and the community pool only if the
-	// transaction was successful
 	err = k.SetValidatorOutstandingRewards(ctx, sdk.ValAddress(valAddr), types.ValidatorOutstandingRewards{Rewards: outstanding.Sub(rewards)})
-	if err != nil {
-		return nil, err
-	}
-
-	feePool, err := k.FeePool.Get(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	feePool.CommunityPool = feePool.CommunityPool.Add(remainder...)
-	err = k.FeePool.Set(ctx, feePool)
 	if err != nil {
 		return nil, err
 	}
@@ -306,8 +371,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 		finalRewards = sdk.Coins{sdk.NewCoin(baseDenom, math.ZeroInt())}
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvent(
+	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeWithdrawRewards,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, finalRewards.String()),
@@ -317,4 +381,36 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val stakingtypes.
 	)
 
 	return finalRewards, nil
+}
+
+// sendCoinsToDestination sends the truncated coins to dest and routes the
+// decimal remainder (and the truncated coins themselves, for the community-pool
+// destination) into FeePool.CommunityPool.
+func (k Keeper) sendCoinsToDestination(ctx context.Context, coins sdk.DecCoins, dest withdrawDestination) (sdk.Coins, error) {
+	toSend, remainder := coins.TruncateDecimal()
+
+	communityPoolFunds := remainder
+	switch d := dest.(type) {
+	case withdrawToAddr:
+		if !toSend.IsZero() {
+			if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, d.Addr, toSend); err != nil {
+				return nil, err
+			}
+		}
+	case withdrawToCommunityPool:
+		communityPoolFunds = communityPoolFunds.Add(sdk.NewDecCoinsFromCoins(toSend...)...)
+	default:
+		return nil, fmt.Errorf("unknown withdraw destination type %T", dest)
+	}
+
+	feePool, err := k.FeePool.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	feePool.CommunityPool = feePool.CommunityPool.Add(communityPoolFunds...)
+	if err := k.FeePool.Set(ctx, feePool); err != nil {
+		return nil, err
+	}
+
+	return toSend, nil
 }

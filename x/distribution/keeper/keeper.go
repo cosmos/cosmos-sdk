@@ -163,8 +163,12 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 		return nil, types.ErrEmptyDelegationDistInfo
 	}
 
-	// withdraw rewards
-	rewards, err := k.withdrawDelegationRewards(ctx, val, del)
+	dest, err := k.resolveWithdrawDestinationStrict(ctx, delAddr, val, del)
+	if err != nil {
+		return nil, err
+	}
+
+	rewards, err := k.withdrawDelegationRewards(ctx, val, del, dest)
 	if err != nil {
 		return nil, err
 	}

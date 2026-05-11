@@ -143,7 +143,15 @@ func (h Hooks) BeforeDelegationSharesModified(ctx context.Context, delAddr sdk.A
 		return err
 	}
 
-	if _, err := h.k.withdrawDelegationRewards(ctx, val, del); err != nil {
+	resolve := h.k.resolveWithdrawDestinationWithFallback
+	if stakingtypes.IsStrictWithdraw(ctx) {
+		resolve = h.k.resolveWithdrawDestinationStrict
+	}
+	dest, err := resolve(ctx, delAddr, val, del)
+	if err != nil {
+		return err
+	}
+	if _, err := h.k.withdrawDelegationRewards(ctx, val, del, dest); err != nil {
 		return err
 	}
 

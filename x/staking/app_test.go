@@ -136,7 +136,7 @@ func TestStakingMsgs(t *testing.T) {
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr2)))
 }
 
-func TestBeginRedelegateAllSharesFromUnbondedSourceNoMocks(t *testing.T) {
+func TestBeginRedelegateAllSharesFromUnbondedSource(t *testing.T) {
 	genTokens := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
 	valTokens := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
 	bobTokens := sdk.TokensFromConsensusPower(5, sdk.DefaultPowerReduction)

@@ -78,7 +78,7 @@ func TestBeforeDelegationSharesModified(t *testing.T) {
 		},
 		{
 			name:                    "strict path, withdraw addr not blocked",
-			strict:                  false,
+			strict:                  true,
 			withdrawAddrBlocked:     false,
 			ownerBlocked:            false,
 			expectedError:           nil,
@@ -228,7 +228,7 @@ func TestAfterValidatorRemoved(t *testing.T) {
 		},
 		{
 			name:                    "strict path, withdraw addr not blocked",
-			strict:                  false,
+			strict:                  true,
 			withdrawAddrBlocked:     false,
 			ownerBlocked:            false,
 			expectedError:           nil,

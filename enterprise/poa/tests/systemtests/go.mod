@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/enterprise/poa/tests/systemtests
 
-go 1.25.9
+go 1.26.3
 
 require (
 	github.com/cosmos/cosmos-sdk v0.54.0

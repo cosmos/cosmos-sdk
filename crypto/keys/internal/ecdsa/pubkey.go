@@ -99,11 +99,11 @@ func (pk *PubKey) Unmarshal(bz []byte, curve elliptic.Curve, expectedSize int) e
 	if len(bz) != expectedSize {
 		return errorsmod.Wrapf(errors.ErrInvalidPubKey, "wrong ECDSA PK bytes, expecting %d bytes, got %d", expectedSize, len(bz))
 	}
-	cpk := ecdsa.PublicKey{Curve: curve}
-	cpk.X, cpk.Y = elliptic.UnmarshalCompressed(curve, bz)
-	if cpk.X == nil || cpk.Y == nil {
+	x, y := elliptic.UnmarshalCompressed(curve, bz)
+	if x == nil || y == nil {
 		return errorsmod.Wrapf(errors.ErrInvalidPubKey, "wrong ECDSA PK bytes, unknown curve type: %d", bz[0])
 	}
-	pk.PublicKey = cpk
+	//lint:ignore SA1019 ECDSA key decoding still requires setting coordinates from compressed form.
+	pk.PublicKey = ecdsa.PublicKey{Curve: curve, X: x, Y: y}
 	return nil
 }

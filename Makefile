@@ -17,7 +17,6 @@ export COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
-VULNCHECK_TOOLCHAIN ?= go1.26.3
 SIMAPP = ./simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
@@ -159,7 +158,7 @@ mocks: $(MOCKS_DIR)
 
 vulncheck: $(BUILDDIR)/
 	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
-	GOTOOLCHAIN=$(VULNCHECK_TOOLCHAIN) $(BUILDDIR)/govulncheck ./...
+	GOBIN=$(BUILDDIR) govulncheck ./...
 
 $(MOCKS_DIR):
 	mkdir -p $(MOCKS_DIR)
@@ -404,7 +403,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v2.11.2
+golangci_version=v2.12.2
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"

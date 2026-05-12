@@ -5,9 +5,11 @@ import (
 	"context"
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -207,7 +209,7 @@ type withdrawToAddr struct {
 }
 
 func (d withdrawToAddr) IsRedirected() bool {
-	return bytes.Equal(d.ResolvedWithdrawAddr, d.SpecifiedWithdrawAddr)
+	return !bytes.Equal(d.ResolvedWithdrawAddr, d.SpecifiedWithdrawAddr)
 }
 func (d withdrawToAddr) SpecifiedWithdrawAddress() string {
 	return d.SpecifiedWithdrawAddr.String()
@@ -262,7 +264,9 @@ func (k Keeper) resolveWithdrawDestinationStrict(
 		return withdrawToAddr{}, err
 	}
 	if k.bankKeeper.BlockedAddr(withdrawAddr) {
-		return withdrawToAddr{}, types.ErrWithdrawAddrBlocked
+		// copying error return that the bank module uses when it tries to send
+		// to a blocked address
+		return withdrawToAddr{}, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", withdrawAddr)
 	}
 	return withdrawToAddr{ResolvedWithdrawAddr: withdrawAddr, SpecifiedWithdrawAddr: withdrawAddr}, nil
 }

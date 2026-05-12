@@ -16,5 +16,4 @@ var (
 	ErrEmptyProposalRecipient  = errors.Register(ModuleName, 11, "invalid community pool spend proposal recipient")
 	ErrNoValidatorExists       = errors.Register(ModuleName, 12, "validator does not exist")
 	ErrNoDelegationExists      = errors.Register(ModuleName, 13, "delegation does not exist")
-	ErrWithdrawAddrBlocked     = errors.Register(ModuleName, 14, "withdraw address is blocked from receiving funds")
 )

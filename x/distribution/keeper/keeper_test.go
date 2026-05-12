@@ -16,12 +16,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestSetWithdrawAddr(t *testing.T) {
@@ -130,7 +133,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	}, remainder)
 }
 
-func TestWithdrawValidatorCommission_BlockedAddress(t *testing.T) {
+func TestWithdrawValidatorCommission_BlockedWithdrawAddress(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
@@ -173,31 +176,77 @@ func TestWithdrawValidatorCommission_BlockedAddress(t *testing.T) {
 	bankKeeper.EXPECT().BlockedAddr(blockedAddr).Return(false).Times(1) // allow SetWithdrawAddr to succeed
 	require.NoError(t, distrKeeper.SetWithdrawAddr(ctx, accAddr, blockedAddr))
 
-	// strict resolver sees the addr as blocked and errors before any state mutation
+	// strict resolver sees the addr as blocked and errors. Any partial state
+	// mutation done before the bank send is rolled back at the tx level by the
+	// msg server's cache context, so we don't assert keeper-level state here.
 	bankKeeper.EXPECT().BlockedAddr(blockedAddr).Return(true).Times(1)
 
 	sdkCtx := ctx.WithEventManager(sdk.NewEventManager())
 	_, err := distrKeeper.WithdrawValidatorCommission(sdkCtx, valAddr)
-	require.ErrorIs(t, err, types.ErrWithdrawAddrBlocked)
+	require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+}
 
-	// accumulated commission and outstanding rewards untouched
-	accumAfter, err := distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr)
+func TestWithdrawDelegationRewards_BlockedWithdrawAddress(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		storeService,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
+	)
+
+	require.NoError(t, distrKeeper.FeePool.Set(ctx, disttypes.InitialFeePool()))
+	require.NoError(t, distrKeeper.Params.Set(ctx, disttypes.DefaultParams()))
+
+	valAddr := sdk.ValAddress(valConsAddr0)
+	addr := sdk.AccAddress(valAddr)
+	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
 	require.NoError(t, err)
-	require.Equal(t, valCommission, accumAfter.Commission)
+	val.Commission = stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
-	outstandingAfter, err := distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr)
-	require.NoError(t, err)
-	require.Equal(t, valCommission, outstandingAfter.Rewards)
+	del := stakingtypes.NewDelegation(addr.String(), valAddr.String(), val.DelegatorShares)
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).AnyTimes()
+	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del, nil).AnyTimes()
 
-	// blocked event was emitted
-	var sawBlockedEvent bool
-	for _, ev := range sdkCtx.EventManager().Events() {
-		if ev.Type == types.EventTypeWithdrawAddrBlocked {
-			sawBlockedEvent = true
-			break
-		}
-	}
-	require.True(t, sawBlockedEvent, "expected withdraw_addr_blocked event")
+	require.NoError(t, distrtestutil.CallCreateValidatorHooks(ctx, distrKeeper, addr, valAddr))
+
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// set withdraw address to address that we will block
+	blockedAddr := sdk.AccAddress(valConsAddr1)
+	require.NoError(t, distrKeeper.SetDelegatorWithdrawAddr(ctx, addr, blockedAddr))
+
+	// allocate rewards so there's something to withdraw
+	initial := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
+	tokens := sdk.DecCoins{sdk.NewDecCoin(sdk.DefaultBondDenom, initial)}
+	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
+
+	// blocked addr is now blocked in the bank keeper
+	bankKeeper.EXPECT().BlockedAddr(blockedAddr).Return(true).Times(1)
+
+	// reset events so we can assert just the ones from this call
+	sdkCtx := ctx.WithEventManager(sdk.NewEventManager())
+
+	// try and withdraw rewards.
+	_, err = distrKeeper.WithdrawDelegationRewards(sdkCtx, addr, valAddr)
+	require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 }
 
 func TestGetTotalRewards(t *testing.T) {

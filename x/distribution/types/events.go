@@ -8,7 +8,6 @@ const (
 	EventTypeWithdrawRewards        = "withdraw_rewards"
 	EventTypeWithdrawCommission     = "withdraw_commission"
 	EventTypeProposerReward         = "proposer_reward"
-	EventTypeWithdrawAddrBlocked    = "withdraw_addr_blocked"
 	EventTypeWithdrawAddrRedirected = "withdraw_addr_redirected"
 
 	AttributeKeyWithdrawAddress         = "withdraw_address"

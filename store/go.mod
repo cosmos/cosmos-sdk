@@ -68,13 +68,8 @@ require (
 	github.com/prometheus/common v0.67.5 // indirect
 	github.com/prometheus/procfs v0.20.1 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
-<<<<<<< HEAD
-	github.com/rs/zerolog v1.35.0 // indirect
-	github.com/sasha-s/go-deadlock v0.3.7 // indirect
-=======
 	github.com/rs/zerolog v1.35.1 // indirect
 	github.com/sasha-s/go-deadlock v0.3.9 // indirect
->>>>>>> c2739356e (chore: bump Go baseline to 1.26.3 and relax goconst linting (#26407))
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/supranational/blst v0.3.16 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect

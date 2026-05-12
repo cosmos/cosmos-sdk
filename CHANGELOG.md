@@ -44,10 +44,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (abci) [#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) Add support for new application side mempool ABCI methods. 
 * (abci) [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) Add support for new ABCI methods, `InsertTx` and `ReapTxs`.
+* (deps) [#26388](https://github.com/cosmos/cosmos-sdk/pull/26388) Bump CometBFT version to v0.39.3.
 
 ### Improvements
 
+* (docs) [#25918](https://github.com/cosmos/cosmos-sdk/issues/25918) Regenerate Swagger API spec to reflect current proto state, including `authority` field on consensus params and removal of stale module-config definitions.
+
 ### Bug Fixes
+
+* (x/gov) [#26353](https://github.com/cosmos/cosmos-sdk/pull/26353) Fix leading comma in `proposal_messages` event attribute emitted by `SubmitProposal`.
+* (telemetry) [#26390](https://github.com/cosmos/cosmos-sdk/pull/26390) Fix env var for otel telemetry initialization.
 
 ### Deprecated
 
@@ -157,6 +163,7 @@ This patch release contains only minor dependency bumps.
 * (x/group) [#25917](https://github.com/cosmos/cosmos-sdk/pull/25917) Prevent creation of zero-weight groups.
 * (x/group) [#25919](https://github.com/cosmos/cosmos-sdk/pull/25919) add safer type assertions to group `DecisionPolicy` getter calls.
 * (x/group) [#25920](https://github.com/cosmos/cosmos-sdk/pull/25920) Expand voting period check to verify period is positive instead of nonzero.
+* (types/address) [#25944] (https://github.com/cosmos/cosmos-sdk/pull/25944) correct sort comparator in Compose to satisfy strict weak ordering.
 * (baseapp) [#26063](https://github.com/cosmos/cosmos-sdk/pull/26063) Fixes an issue where values embedded in context during ante handling were wiped after the handlers returned.
 
 ### Deprecated

@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/log/v2 v2.1.0
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/tools/confix v0.1.2
-	github.com/cometbft/cometbft v0.39.0
+	github.com/cometbft/cometbft v0.39.3
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-sdk v0.54.0
 	github.com/cosmos/cosmos-sdk/enterprise/poa v0.0.1
@@ -31,7 +31,7 @@ require (
 	github.com/99designs/keyring v1.2.2 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.5.7 // indirect
-	github.com/RoaringBitmap/roaring/v2 v2.16.0 // indirect
+	github.com/RoaringBitmap/roaring/v2 v2.18.0 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.2.0 // indirect
@@ -44,7 +44,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cloudwego/base64x v0.1.6 // indirect
-	github.com/cockroachdb/errors v1.12.0 // indirect
+	github.com/cockroachdb/errors v1.13.0 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
 	github.com/cockroachdb/pebble v1.1.5 // indirect
@@ -77,7 +77,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/flynn/noise v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/getsentry/sentry-go v0.44.1 // indirect
+	github.com/getsentry/sentry-go v0.46.0 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.1 // indirect
@@ -138,7 +138,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/marten-seemann/tcp v0.0.0-20210406111302-dfbc87cc63fd // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
-	github.com/mattn/go-isatty v0.0.21 // indirect
+	github.com/mattn/go-isatty v0.0.22 // indirect
 	github.com/mdp/qrterminal/v3 v3.2.1 // indirect
 	github.com/miekg/dns v1.1.66 // indirect
 	github.com/mikioh/tcpinfo v0.0.0-20190314235526-30a79bb1804b // indirect
@@ -200,7 +200,7 @@ require (
 	github.com/rs/zerolog v1.35.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.9 // indirect
-	github.com/shirou/gopsutil/v4 v4.26.3 // indirect
+	github.com/shirou/gopsutil/v4 v4.26.4 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
@@ -221,9 +221,9 @@ require (
 	go.etcd.io/bbolt v1.4.3 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/bridges/otelslog v0.18.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.66.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.68.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/host v0.68.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/runtime v0.67.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/runtime v0.68.0 // indirect
 	go.opentelemetry.io/contrib/otelconf v0.23.0 // indirect
 	go.opentelemetry.io/contrib/propagators/autoprop v0.68.0 // indirect
 	go.opentelemetry.io/contrib/propagators/aws v1.43.0 // indirect
@@ -256,15 +256,15 @@ require (
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/arch v0.26.0 // indirect
-	golang.org/x/crypto v0.49.0 // indirect
+	golang.org/x/crypto v0.50.0 // indirect
 	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90 // indirect
 	golang.org/x/mod v0.34.0 // indirect
 	golang.org/x/net v0.52.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.43.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260311193753-579e4da9a98c // indirect
-	golang.org/x/term v0.41.0 // indirect
-	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/term v0.42.0 // indirect
+	golang.org/x/text v0.36.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.43.0 // indirect
 	google.golang.org/genproto v0.0.0-20260128011058-8636f8732409 // indirect
@@ -276,7 +276,7 @@ require (
 	gotest.tools/v3 v3.5.2 // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
 	nhooyr.io/websocket v1.8.17 // indirect
-	pgregory.net/rapid v1.2.0 // indirect
+	pgregory.net/rapid v1.3.0 // indirect
 	rsc.io/qr v0.2.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
@@ -295,5 +295,3 @@ replace (
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
-
-replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.39.0-rc1.0.20260417162916-9fcf8612cc6c

@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/errors v1.1.0
 	cosmossdk.io/log/v2 v2.1.0
 	cosmossdk.io/math v1.5.3
-	github.com/cometbft/cometbft v0.39.0-rc1.0.20260417154241-766ab925b619
+	github.com/cometbft/cometbft v0.39.3
 	github.com/cosmos/btree v1.0.0
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -14,7 +14,7 @@ require (
 	github.com/cosmos/iavl v1.2.8
 	github.com/cosmos/ics23/go v0.11.0
 	github.com/hashicorp/go-hclog v1.6.3
-	github.com/hashicorp/go-plugin v1.7.0
+	github.com/hashicorp/go-plugin v1.8.0
 	github.com/hashicorp/golang-lru v1.0.2
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/mock v0.6.0
@@ -84,5 +84,3 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260120221211-b8f7ae30c516 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.39.0-rc1.0.20260417162916-9fcf8612cc6c

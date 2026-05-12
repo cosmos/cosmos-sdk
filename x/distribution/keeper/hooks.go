@@ -6,7 +6,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -50,33 +49,21 @@ func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, val
 		// subtract from outstanding
 		outstanding = outstanding.Sub(commission)
 
-		// split into integral & remainder
-		coins, remainder := commission.TruncateDecimal()
-
-		// remainder to community pool
-		feePool, err := h.k.FeePool.Get(ctx)
+		// Use the fallback resolver: this hook fires from staking's EndBlocker
+		// during validator removal, so a blocked commission withdraw address
+		// must not halt block production.
+		valOperator, err := h.k.stakingKeeper.ValidatorAddressCodec().BytesToString(valAddr)
 		if err != nil {
 			return err
 		}
-
-		feePool.CommunityPool = feePool.CommunityPool.Add(remainder...)
-		err = h.k.FeePool.Set(ctx, feePool)
+		dest, err := h.k.resolveWithdrawDestinationFromContext(ctx, sdk.AccAddress(valAddr))
 		if err != nil {
 			return err
 		}
-
-		// add to validator account
-		if !coins.IsZero() {
-			accAddr := sdk.AccAddress(valAddr)
-			withdrawAddr, err := h.k.GetDelegatorWithdrawAddr(ctx, accAddr)
-			if err != nil {
-				return err
-			}
-
-			if err := h.k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, coins); err != nil {
-				return err
-			}
+		if _, err := h.k.sendCoinsToDestination(ctx, commission, dest); err != nil {
+			return err
 		}
+		emitWithdrawDestinationEvent(ctx, dest, valOperator, "")
 	}
 
 	// Add outstanding to community pool
@@ -143,17 +130,16 @@ func (h Hooks) BeforeDelegationSharesModified(ctx context.Context, delAddr sdk.A
 		return err
 	}
 
-	resolve := h.k.resolveWithdrawDestinationWithFallback
-	if stakingtypes.IsStrictWithdraw(ctx) {
-		resolve = h.k.resolveWithdrawDestinationStrict
-	}
-	dest, err := resolve(ctx, delAddr, val, del)
+	dest, err := h.k.resolveWithdrawDestinationFromContext(ctx, delAddr)
 	if err != nil {
 		return err
 	}
+
 	if _, err := h.k.withdrawDelegationRewards(ctx, val, del, dest); err != nil {
 		return err
 	}
+
+	emitWithdrawDestinationEvent(ctx, dest, val.GetOperator(), del.GetDelegatorAddr())
 
 	return nil
 }

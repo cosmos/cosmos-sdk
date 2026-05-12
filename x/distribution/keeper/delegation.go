@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -194,88 +195,100 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 // withdrawDestination is the resolved target for a reward withdrawal.
 // String yields the value used for the withdraw_address event attribute.
 type withdrawDestination interface {
-	fmt.Stringer
+	IsRedirected() bool
+	SpecifiedWithdrawAddress() string
+	ResolvedWithdrawAddress() string
 }
 
 // withdrawToAddr routes rewards to a specific account via the bank module.
 type withdrawToAddr struct {
-	Addr sdk.AccAddress
+	ResolvedWithdrawAddr  sdk.AccAddress
+	SpecifiedWithdrawAddr sdk.AccAddress
 }
 
-func (d withdrawToAddr) String() string {
-	return d.Addr.String()
+func (d withdrawToAddr) IsRedirected() bool {
+	return bytes.Equal(d.ResolvedWithdrawAddr, d.SpecifiedWithdrawAddr)
+}
+func (d withdrawToAddr) SpecifiedWithdrawAddress() string {
+	return d.SpecifiedWithdrawAddr.String()
+}
+func (d withdrawToAddr) ResolvedWithdrawAddress() string {
+	return d.ResolvedWithdrawAddr.String()
 }
 
 // withdrawToCommunityPool credits rewards to the community pool.
-type withdrawToCommunityPool struct{}
+type withdrawToCommunityPool struct {
+	SpecifiedWithdrawAddr sdk.AccAddress
+}
 
-func (withdrawToCommunityPool) String() string {
+func (_ withdrawToCommunityPool) IsRedirected() bool {
+	return true
+}
+func (d withdrawToCommunityPool) SpecifiedWithdrawAddress() string {
+	return d.SpecifiedWithdrawAddr.String()
+}
+func (_ withdrawToCommunityPool) ResolvedWithdrawAddress() string {
 	return types.AttributeValueCommunityPool
 }
 
-// resolveWithdrawDestinationStrict returns the stored withdraw address, or
-// ErrWithdrawAddrBlocked (and a WithdrawAddrBlocked event) if it is blocked.
+// resolveWithdrawDestinationStrict returns the destination for owner's stored
+// withdraw address. If that address is in the bank module's blocked set, it
+// returns (nil, blockedAddr, ErrWithdrawAddrBlocked) so the caller can emit
+// a WithdrawAddrBlocked event with caller-specific attributes.
 func (k Keeper) resolveWithdrawDestinationStrict(
 	ctx context.Context,
-	delAddr sdk.AccAddress,
-	val stakingtypes.ValidatorI,
-	del stakingtypes.DelegationI,
-) (withdrawDestination, error) {
-	withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, delAddr)
+	owner sdk.AccAddress,
+) (withdrawToAddr, error) {
+	withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, owner)
 	if err != nil {
-		return nil, err
+		return withdrawToAddr{}, err
 	}
-
 	if k.bankKeeper.BlockedAddr(withdrawAddr) {
-		sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeWithdrawAddrBlocked,
-				sdk.NewAttribute(types.AttributeKeyWithdrawAddress, withdrawAddr.String()),
-				sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
-				sdk.NewAttribute(types.AttributeKeyDelegator, del.GetDelegatorAddr()),
-			),
-		)
-		return nil, types.ErrWithdrawAddrBlocked
+		return withdrawToAddr{}, types.ErrWithdrawAddrBlocked
 	}
-
-	return withdrawToAddr{Addr: withdrawAddr}, nil
+	return withdrawToAddr{ResolvedWithdrawAddr: withdrawAddr, SpecifiedWithdrawAddr: withdrawAddr}, nil
 }
 
-// resolveWithdrawDestinationWithFallback returns the stored withdraw address,
-// else the delegator's address, else the community pool — emitting
-// WithdrawAddrRedirected if a fallback is used.
-func (k Keeper) resolveWithdrawDestinationWithFallback(
+// resolveWithdrawDestinationFromContext returns owner's stored withdraw address,
+// else owner itself, else the community pool. The second return is the
+// original (blocked) withdraw address when a fallback occurred, so the caller
+// can emit a WithdrawAddrRedirected event; nil when no fallback was needed.
+func (k Keeper) resolveWithdrawDestinationFromContext(
 	ctx context.Context,
-	delAddr sdk.AccAddress,
-	val stakingtypes.ValidatorI,
-	del stakingtypes.DelegationI,
-) (dest withdrawDestination, err error) {
-	withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, delAddr)
+	owner sdk.AccAddress,
+) (withdrawDestination, error) {
+	if stakingtypes.IsStrictWithdraw(ctx) {
+		return k.resolveWithdrawDestinationStrict(ctx, owner)
+	}
+
+	withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, owner)
 	if err != nil {
 		return nil, err
 	}
 
 	if !k.bankKeeper.BlockedAddr(withdrawAddr) {
-		return withdrawToAddr{Addr: withdrawAddr}, nil
+		return withdrawToAddr{ResolvedWithdrawAddr: withdrawAddr}, nil
+	}
+	if !k.bankKeeper.BlockedAddr(owner) {
+		return withdrawToAddr{ResolvedWithdrawAddr: owner, SpecifiedWithdrawAddr: withdrawAddr}, nil
+	}
+	return withdrawToCommunityPool{SpecifiedWithdrawAddr: withdrawAddr}, nil
+}
+
+func emitWithdrawDestinationEvent(ctx context.Context, dest withdrawDestination, validatorOp, delegatorAddr string) {
+	if !dest.IsRedirected() {
+		return
 	}
 
-	// Closure form so dest is read at exit, not at defer registration.
-	defer func() {
-		sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeWithdrawAddrRedirected,
-				sdk.NewAttribute(types.AttributeKeyOriginalWithdrawAddress, withdrawAddr.String()),
-				sdk.NewAttribute(types.AttributeKeyWithdrawAddress, dest.String()),
-				sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),
-				sdk.NewAttribute(types.AttributeKeyDelegator, del.GetDelegatorAddr()),
-			),
-		)
-	}()
-
-	if !k.bankKeeper.BlockedAddr(delAddr) {
-		return withdrawToAddr{Addr: delAddr}, nil
+	attrs := []sdk.Attribute{
+		sdk.NewAttribute(types.AttributeKeyOriginalWithdrawAddress, dest.SpecifiedWithdrawAddress()),
+		sdk.NewAttribute(types.AttributeKeyWithdrawAddress, dest.ResolvedWithdrawAddress()),
+		sdk.NewAttribute(types.AttributeKeyValidator, validatorOp),
 	}
-	return withdrawToCommunityPool{}, nil
+	if delegatorAddr != "" {
+		attrs = append(attrs, sdk.NewAttribute(types.AttributeKeyDelegator, delegatorAddr))
+	}
+	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(sdk.NewEvent(types.EventTypeWithdrawAddrRedirected, attrs...))
 }
 
 // withdrawDelegationRewards withdrawals rewards to a given withdraw
@@ -393,7 +406,7 @@ func (k Keeper) sendCoinsToDestination(ctx context.Context, coins sdk.DecCoins, 
 	switch d := dest.(type) {
 	case withdrawToAddr:
 		if !toSend.IsZero() {
-			if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, d.Addr, toSend); err != nil {
+			if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, d.ResolvedWithdrawAddr, toSend); err != nil {
 				return nil, err
 			}
 		}
@@ -403,13 +416,15 @@ func (k Keeper) sendCoinsToDestination(ctx context.Context, coins sdk.DecCoins, 
 		return nil, fmt.Errorf("unknown withdraw destination type %T", dest)
 	}
 
-	feePool, err := k.FeePool.Get(ctx)
-	if err != nil {
-		return nil, err
-	}
-	feePool.CommunityPool = feePool.CommunityPool.Add(communityPoolFunds...)
-	if err := k.FeePool.Set(ctx, feePool); err != nil {
-		return nil, err
+	if !communityPoolFunds.IsZero() {
+		feePool, err := k.FeePool.Get(ctx)
+		if err != nil {
+			return nil, err
+		}
+		feePool.CommunityPool = feePool.CommunityPool.Add(communityPoolFunds...)
+		if err := k.FeePool.Set(ctx, feePool); err != nil {
+			return nil, err
+		}
 	}
 
 	return toSend, nil

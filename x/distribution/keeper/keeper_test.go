@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -86,6 +87,9 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", math.LegacyNewDec(5).Quo(math.LegacyNewDec(4))),
@@ -124,6 +128,76 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 		sdk.NewDecCoinFromDec("mytoken", math.LegacyNewDec(1).Quo(math.LegacyNewDec(4))),
 		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(1).Quo(math.LegacyNewDec(2))),
 	}, remainder)
+}
+
+func TestWithdrawValidatorCommission_BlockedAddress(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
+	addrs := simtestutil.CreateIncrementalAccounts(2)
+
+	valAddr := sdk.ValAddress(addrs[0])
+	accAddr := sdk.AccAddress(valAddr)
+	blockedAddr := addrs[1]
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+
+	valCommission := sdk.DecCoins{
+		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(3).Quo(math.LegacyNewDec(2))),
+	}
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		storeService,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
+	)
+
+	require.NoError(t, distrKeeper.SetValidatorOutstandingRewards(ctx, valAddr, types.ValidatorOutstandingRewards{Rewards: valCommission}))
+	require.NoError(t, distrKeeper.SetValidatorAccumulatedCommission(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: valCommission}))
+
+	// point validator's withdraw address at a blocked address
+	require.NoError(t, distrKeeper.Params.Set(ctx, types.DefaultParams()))
+	bankKeeper.EXPECT().BlockedAddr(blockedAddr).Return(false).Times(1) // allow SetWithdrawAddr to succeed
+	require.NoError(t, distrKeeper.SetWithdrawAddr(ctx, accAddr, blockedAddr))
+
+	// strict resolver sees the addr as blocked and errors before any state mutation
+	bankKeeper.EXPECT().BlockedAddr(blockedAddr).Return(true).Times(1)
+
+	sdkCtx := ctx.WithEventManager(sdk.NewEventManager())
+	_, err := distrKeeper.WithdrawValidatorCommission(sdkCtx, valAddr)
+	require.ErrorIs(t, err, types.ErrWithdrawAddrBlocked)
+
+	// accumulated commission and outstanding rewards untouched
+	accumAfter, err := distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr)
+	require.NoError(t, err)
+	require.Equal(t, valCommission, accumAfter.Commission)
+
+	outstandingAfter, err := distrKeeper.GetValidatorOutstandingRewards(ctx, valAddr)
+	require.NoError(t, err)
+	require.Equal(t, valCommission, outstandingAfter.Rewards)
+
+	// blocked event was emitted
+	var sawBlockedEvent bool
+	for _, ev := range sdkCtx.EventManager().Events() {
+		if ev.Type == types.EventTypeWithdrawAddrBlocked {
+			sawBlockedEvent = true
+			break
+		}
+	}
+	require.True(t, sawBlockedEvent, "expected withdraw_addr_blocked event")
 }
 
 func TestGetTotalRewards(t *testing.T) {

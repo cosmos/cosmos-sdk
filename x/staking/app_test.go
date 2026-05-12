@@ -2,6 +2,7 @@ package staking_test
 
 import (
 	"testing"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -218,11 +219,16 @@ func TestBeginRedelegateAllSharesFromUnbondedSource(t *testing.T) {
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: nextHeight()})
 	require.NoError(t, err)
 
-	// Force transition source validator from unbonding to unbonded.
-	ctx := app.NewContext(false)
-	srcVal, err := stakingKeeper.GetValidator(ctx, sdk.ValAddress(addr2))
+	// Advance block time past unbonding period to trigger unbonding->unbonded via normal block flow.
+	ctx := app.NewContext(true)
+	unbondingTime, err := stakingKeeper.UnbondingTime(ctx)
 	require.NoError(t, err)
-	_, err = stakingKeeper.UnbondingToUnbonded(ctx, srcVal)
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: nextHeight(),
+		Time:   ctx.BlockTime().Add(unbondingTime).Add(time.Second),
+	})
+	require.NoError(t, err)
+	_, err = app.Commit()
 	require.NoError(t, err)
 
 	// Bob redelegates 100% of remaining shares from source to destination.
@@ -243,7 +249,7 @@ func TestBeginRedelegateAllSharesFromUnbondedSource(t *testing.T) {
 	require.ErrorIs(t, err, types.ErrNoDelegation)
 	dstDel, err := stakingKeeper.GetDelegation(ctx, addr3, sdk.ValAddress(addr1))
 	require.NoError(t, err)
-	require.Equal(t, bobTokens.String(), dstDel.Shares.RoundInt().String())
+	require.Equal(t, bobTokens, dstDel.Shares.RoundInt())
 	_, err = stakingKeeper.GetRedelegation(ctx, addr3, sdk.ValAddress(addr2), sdk.ValAddress(addr1))
 	require.ErrorIs(t, err, types.ErrNoRedelegation)
 }

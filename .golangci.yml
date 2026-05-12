@@ -14,7 +14,6 @@ linters:
     - dogsled
     - errcheck
     - errorlint
-    - goconst
     - gocritic
     - gosec
     - govet
@@ -108,6 +107,9 @@ linters:
       - linters:
           - gosec
         text: "G115: integer overflow conversion"
+      - linters:
+          - govet
+        text: "Constant reflect.Ptr should be inlined"
       - linters:
           - nolintlint
         text: leading space

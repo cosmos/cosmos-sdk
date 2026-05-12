@@ -211,9 +211,11 @@ type withdrawToAddr struct {
 func (d withdrawToAddr) IsRedirected() bool {
 	return !bytes.Equal(d.ResolvedWithdrawAddr, d.SpecifiedWithdrawAddr)
 }
+
 func (d withdrawToAddr) SpecifiedWithdrawAddress() string {
 	return d.SpecifiedWithdrawAddr.String()
 }
+
 func (d withdrawToAddr) ResolvedWithdrawAddress() string {
 	return d.ResolvedWithdrawAddr.String()
 }
@@ -226,9 +228,11 @@ type withdrawToCommunityPool struct {
 func (withdrawToCommunityPool) IsRedirected() bool {
 	return true
 }
+
 func (d withdrawToCommunityPool) SpecifiedWithdrawAddress() string {
 	return d.SpecifiedWithdrawAddr.String()
 }
+
 func (withdrawToCommunityPool) ResolvedWithdrawAddress() string {
 	return types.AttributeValueCommunityPool
 }

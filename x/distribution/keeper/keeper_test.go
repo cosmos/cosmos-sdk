@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -188,7 +187,7 @@ func TestWithdrawValidatorCommission_BlockedWithdrawAddress(t *testing.T) {
 
 func TestWithdrawDelegationRewards_BlockedWithdrawAddress(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
@@ -212,8 +211,8 @@ func TestWithdrawDelegationRewards_BlockedWithdrawAddress(t *testing.T) {
 		authtypes.NewModuleAddress("gov").String(),
 	)
 
-	require.NoError(t, distrKeeper.FeePool.Set(ctx, disttypes.InitialFeePool()))
-	require.NoError(t, distrKeeper.Params.Set(ctx, disttypes.DefaultParams()))
+	require.NoError(t, distrKeeper.FeePool.Set(ctx, types.InitialFeePool()))
+	require.NoError(t, distrKeeper.Params.Set(ctx, types.DefaultParams()))
 
 	valAddr := sdk.ValAddress(valConsAddr0)
 	addr := sdk.AccAddress(valAddr)

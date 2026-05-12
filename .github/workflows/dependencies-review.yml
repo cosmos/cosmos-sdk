@@ -15,7 +15,11 @@ jobs:
       - name: "Setup Go"
         uses: actions/setup-go@v6
         with:
+<<<<<<< HEAD
           go-version: "1.24"
+=======
+          go-version: "1.26.3"
+>>>>>>> c2739356e (chore: bump Go baseline to 1.26.3 and relax goconst linting (#26407))
           check-latest: true
       - name: "Dependency Review"
         uses: actions/dependency-review-action@v4

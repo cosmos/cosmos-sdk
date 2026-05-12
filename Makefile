@@ -156,7 +156,7 @@ mocks: $(MOCKS_DIR)
 vulncheck: $(BUILDDIR)/
 	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
 	$(BUILDDIR)/govulncheck ./...
-
+	
 $(MOCKS_DIR):
 	mkdir -p $(MOCKS_DIR)
 
@@ -389,7 +389,11 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
+<<<<<<< HEAD
 golangci_version=v2.6.1
+=======
+golangci_version=v2.12.2
+>>>>>>> c2739356e (chore: bump Go baseline to 1.26.3 and relax goconst linting (#26407))
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"

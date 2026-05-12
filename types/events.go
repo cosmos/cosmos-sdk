@@ -135,7 +135,7 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 	}
 
 	var value reflect.Value
-	if concreteGoType.Kind() == reflect.Ptr {
+	if concreteGoType.Kind() == reflect.Pointer {
 		value = reflect.New(concreteGoType.Elem())
 	} else {
 		value = reflect.Zero(concreteGoType)

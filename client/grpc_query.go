@@ -102,7 +102,15 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply a
 	// 2-2. or we are querying for state, in which case we call ABCI's Query if grpc client not set.
 
 	// In both cases, we don't allow empty request args (it will panic unexpectedly).
+<<<<<<< HEAD
 	if reflect.ValueOf(req).IsNil() {
+=======
+	if req == nil {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "request cannot be nil")
+	}
+	reqVal := reflect.ValueOf(req)
+	if reqVal.Kind() == reflect.Pointer && reqVal.IsNil() {
+>>>>>>> c2739356e (chore: bump Go baseline to 1.26.3 and relax goconst linting (#26407))
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "request cannot be nil")
 	}
 

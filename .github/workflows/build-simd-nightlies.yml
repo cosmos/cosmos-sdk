@@ -36,7 +36,11 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
+<<<<<<< HEAD
           go-version: "1.25.8"
+=======
+          go-version: "1.26.3"
+>>>>>>> c2739356e (chore: bump Go baseline to 1.26.3 and relax goconst linting (#26407))
           cache: true
 
       - name: Install aarch64 cross-compiler

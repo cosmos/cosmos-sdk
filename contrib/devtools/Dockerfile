@@ -2,8 +2,13 @@
 # docker build --pull --rm -f "contrib/devtools/Dockerfile" -t cosmossdk-proto:latest "contrib/devtools"
 # docker run --rm -v $(pwd):/workspace --workdir /workspace cosmossdk-proto sh ./scripts/protocgen.sh
 
+<<<<<<< HEAD
 FROM bufbuild/buf:1.50.0 AS builder
 FROM golang:1.23-alpine
+=======
+FROM bufbuild/buf:1.64 AS builder
+FROM golang:1.26.3-alpine
+>>>>>>> c2739356e (chore: bump Go baseline to 1.26.3 and relax goconst linting (#26407))
 
 RUN apk add --no-cache \
   nodejs \

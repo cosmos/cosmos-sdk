@@ -59,7 +59,7 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 	v := reflect.ValueOf(&data).Elem()
 	if v.Kind() == reflect.Interface {
 		v = reflect.ValueOf(data)
-		if v.Kind() == reflect.Ptr {
+		if v.Kind() == reflect.Pointer {
 			v = v.Elem()
 		}
 	}

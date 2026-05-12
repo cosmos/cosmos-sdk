@@ -1,6 +1,6 @@
 module cosmossdk.io/math
 
-go 1.23.0
+go 1.26.3
 
 require (
 	github.com/stretchr/testify v1.10.0
@@ -13,7 +13,12 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
+<<<<<<< HEAD
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
+=======
+	go.yaml.in/yaml/v2 v2.4.4 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
+>>>>>>> c2739356e (chore: bump Go baseline to 1.26.3 and relax goconst linting (#26407))
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

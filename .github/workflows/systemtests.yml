@@ -25,7 +25,11 @@ jobs:
           fetch-tags: true
       - uses: actions/setup-go@v6
         with:
+<<<<<<< HEAD
           go-version: "1.23"
+=======
+          go-version: "1.26.3"
+>>>>>>> c2739356e (chore: bump Go baseline to 1.26.3 and relax goconst linting (#26407))
           check-latest: true
           cache: true
           cache-dependency-path: |
@@ -52,6 +56,7 @@ jobs:
         run: |
           make test-system
 
+<<<<<<< HEAD
   test-system-legacy:
     needs: setup
     if: needs.setup.outputs.git_diff
@@ -61,3 +66,69 @@ jobs:
       - name: Run legacy system tests
         run: |
           COSMOS_BUILD_OPTIONS=legacy make test-system
+=======
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.3"
+          check-latest: true
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Run SDK system tests
+        run: make test-sdk-system
+
+      - name: Upload system test logs if failed
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: system-test-logs
+          path: ./tests/systemtests/testnet/*.out
+          if-no-files-found: ignore
+
+  test-poa-system:
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.3"
+          check-latest: true
+          cache: true
+          cache-dependency-path: enterprise/poa/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            enterprise/poa/**/*.go
+            enterprise/poa/go.mod
+            enterprise/poa/go.sum
+      - name: system tests
+        if: env.GIT_DIFF
+        run: |
+          cd enterprise/poa
+          make test-system
+
+  test-group-system:
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.3"
+          check-latest: true
+          cache: true
+          cache-dependency-path: enterprise/group/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            enterprise/group/**/*.go
+            enterprise/group/go.mod
+            enterprise/group/go.sum
+      - name: system tests
+        if: env.GIT_DIFF
+        run: |
+          cd enterprise/group
+          make test-system
+
+>>>>>>> c2739356e (chore: bump Go baseline to 1.26.3 and relax goconst linting (#26407))

@@ -124,6 +124,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 		accs := suite.createAndSetAccounts(t, 1)
 		req := &types.QueryAccountRequest{Address: accs[0].GetAddress().String()}
 		testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.Account, 0, true)
+
+		for _, acc := range accs {
+			suite.accountKeeper.RemoveAccount(suite.ctx, acc)
+		}
 	})
 
 	// Regression tests
@@ -185,6 +189,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 		accs := suite.createAndSetAccounts(t, 1)
 		req := &types.QueryAccountAddressByIDRequest{AccountId: accs[0].GetAccountNumber()}
 		testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.AccountAddressByID, 0, true)
+
+		for _, acc := range accs {
+			suite.accountKeeper.RemoveAccount(suite.ctx, acc)
+		}
 	})
 
 	// Regression test
@@ -231,6 +239,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
 
 		req := &types.QueryAccountInfoRequest{Address: accs[0].GetAddress().String()}
 		testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.AccountInfo, 0, true)
+
+		for _, acc := range accs {
+			suite.accountKeeper.RemoveAccount(suite.ctx, acc)
+		}
 	})
 
 	// Regression test

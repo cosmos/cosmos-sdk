@@ -61,6 +61,21 @@ you are incentivized to not withdraw until after this event, increasing the
 worth of your existing _accum_. See [#2764](https://github.com/cosmos/cosmos-sdk/issues/2764)
 for further details.
 
+### Bank send restrictions and when called from Begin/EndBlocker hooks
+
+x/distribution sends rewards and commission via
+`bankKeeper.SendCoinsFromModuleToAccount`, which runs any registered
+`SendRestrictionFunc`. The resolver added in
+[#26406](https://github.com/cosmos/cosmos-sdk/pull/26406) handles addresses in
+the bank module's blocked set by falling back (delegator → community pool for
+rewards, validator owner → community pool for commission), but it cannot
+intercept custom `SendRestrictionFunc` rejections. If a chain registers a
+restriction that can error on transfers from the distribution module account to
+a delegator or validator, that error will surface during the reward-withdrawal
+hooks fired from BeginBlocker / EndBlocker / validator-removal paths and cause
+large problems. Restrictions wired onto these flows must be unconditionally
+non-failing for the distribution module's outflows.
+
 ## Effect on Staking
 
 Charging commission on Atom provisions while also allowing for Atom-provisions

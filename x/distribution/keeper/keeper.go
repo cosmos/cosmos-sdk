@@ -163,6 +163,7 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 		return nil, types.ErrEmptyDelegationDistInfo
 	}
 
+	// determine where rewards for this delegator should go
 	dest, err := k.resolveWithdrawDestinationStrict(ctx, delAddr)
 	if err != nil {
 		return nil, err
@@ -211,6 +212,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 	}
 
 	if !commission.IsZero() {
+		// determine where commission for this validator should go
 		dest, err := k.resolveWithdrawDestinationStrict(ctx, sdk.AccAddress(valAddr))
 		if err != nil {
 			return nil, err

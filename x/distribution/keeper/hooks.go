@@ -49,21 +49,30 @@ func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, val
 		// subtract from outstanding
 		outstanding = outstanding.Sub(commission)
 
-		// Use the fallback resolver: this hook fires from staking's EndBlocker
-		// during validator removal, so a blocked commission withdraw address
-		// must not halt block production.
+		// cant lookup validator from state since it has been removed
 		valOperator, err := h.k.stakingKeeper.ValidatorAddressCodec().BytesToString(valAddr)
 		if err != nil {
 			return err
 		}
-		dest, err := h.k.resolveWithdrawDestinationFromContext(ctx, sdk.AccAddress(valAddr))
+
+		// check if staking module is telling us we should use a strict
+		// withdraw or not
+		strict := stakingtypes.IsStrictWithdraw(ctx)
+
+		// determine where commission for this validator should go based on
+		// strict flag
+		dest, err := h.k.resolveWithdrawDestination(ctx, sdk.AccAddress(valAddr), strict)
 		if err != nil {
 			return err
 		}
 		if _, err := h.k.sendCoinsToDestination(ctx, commission, dest); err != nil {
 			return err
 		}
-		emitWithdrawDestinationEvent(ctx, dest, valOperator, "")
+
+		// if we have modified the withdraw destination, emit an event saying so
+		if dest.IsRedirected() {
+			emitWithdrawDestinationRedirectedEvent(ctx, dest, valOperator, "")
+		}
 	}
 
 	// Add outstanding to community pool
@@ -130,7 +139,13 @@ func (h Hooks) BeforeDelegationSharesModified(ctx context.Context, delAddr sdk.A
 		return err
 	}
 
-	dest, err := h.k.resolveWithdrawDestinationFromContext(ctx, delAddr)
+	// check if staking module is telling us we should use a strict
+	// withdraw or not
+	strict := stakingtypes.IsStrictWithdraw(ctx)
+
+	// determine where rewards for this delegator should go based on
+	// strict flag
+	dest, err := h.k.resolveWithdrawDestination(ctx, delAddr, strict)
 	if err != nil {
 		return err
 	}
@@ -139,7 +154,10 @@ func (h Hooks) BeforeDelegationSharesModified(ctx context.Context, delAddr sdk.A
 		return err
 	}
 
-	emitWithdrawDestinationEvent(ctx, dest, val.GetOperator(), del.GetDelegatorAddr())
+	// if we have modified the withdraw destination, emit an event saying so
+	if dest.IsRedirected() {
+		emitWithdrawDestinationRedirectedEvent(ctx, dest, val.GetOperator(), del.GetDelegatorAddr())
+	}
 
 	return nil
 }

@@ -231,10 +231,28 @@ func (_ withdrawToCommunityPool) ResolvedWithdrawAddress() string {
 	return types.AttributeValueCommunityPool
 }
 
+// resolveWithdrawDestination resolves a withdraw destination based on if the
+// withdraw is 'strict' or not. a withdraw being strict or not determines if
+// fallback addresses should be used or not. if a withdraw is strict, the
+// withdraw must go to the owners specified withdraw address, and if it cannot
+// for some reason, an error is returned. if a withdraw is not strict and it
+// cannot go to the owner's specified withdraw address, it will fallback to the
+// owner's address itself. if the owner's address cannot be used, it will
+// fallback to the community pool.
+func (k Keeper) resolveWithdrawDestination(
+	ctx context.Context,
+	owner sdk.AccAddress,
+	strict bool,
+) (withdrawDestination, error) {
+	if strict {
+		return k.resolveWithdrawDestinationStrict(ctx, owner)
+	}
+	return k.resolveWithdrawDestinationFallback(ctx, owner)
+}
+
 // resolveWithdrawDestinationStrict returns the destination for owner's stored
 // withdraw address. If that address is in the bank module's blocked set, it
-// returns (nil, blockedAddr, ErrWithdrawAddrBlocked) so the caller can emit
-// a WithdrawAddrBlocked event with caller-specific attributes.
+// returns ErrWithdrawAddrBlocked.
 func (k Keeper) resolveWithdrawDestinationStrict(
 	ctx context.Context,
 	owner sdk.AccAddress,
@@ -249,18 +267,14 @@ func (k Keeper) resolveWithdrawDestinationStrict(
 	return withdrawToAddr{ResolvedWithdrawAddr: withdrawAddr, SpecifiedWithdrawAddr: withdrawAddr}, nil
 }
 
-// resolveWithdrawDestinationFromContext returns owner's stored withdraw address,
-// else owner itself, else the community pool. The second return is the
-// original (blocked) withdraw address when a fallback occurred, so the caller
-// can emit a WithdrawAddrRedirected event; nil when no fallback was needed.
-func (k Keeper) resolveWithdrawDestinationFromContext(
+// resolveWithdrawDestinationFallback returns the destination for owner's
+// stored withdraw address. If that address is in the bank module's blocked
+// set, it falls back to the owner's address itself. If the owner's address is
+// in the bank module's blocked set, it falls back to the community pool.
+func (k Keeper) resolveWithdrawDestinationFallback(
 	ctx context.Context,
 	owner sdk.AccAddress,
 ) (withdrawDestination, error) {
-	if stakingtypes.IsStrictWithdraw(ctx) {
-		return k.resolveWithdrawDestinationStrict(ctx, owner)
-	}
-
 	withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, owner)
 	if err != nil {
 		return nil, err
@@ -275,11 +289,7 @@ func (k Keeper) resolveWithdrawDestinationFromContext(
 	return withdrawToCommunityPool{SpecifiedWithdrawAddr: withdrawAddr}, nil
 }
 
-func emitWithdrawDestinationEvent(ctx context.Context, dest withdrawDestination, validatorOp, delegatorAddr string) {
-	if !dest.IsRedirected() {
-		return
-	}
-
+func emitWithdrawDestinationRedirectedEvent(ctx context.Context, dest withdrawDestination, validatorOp, delegatorAddr string) {
 	attrs := []sdk.Attribute{
 		sdk.NewAttribute(types.AttributeKeyOriginalWithdrawAddress, dest.SpecifiedWithdrawAddress()),
 		sdk.NewAttribute(types.AttributeKeyWithdrawAddress, dest.ResolvedWithdrawAddress()),

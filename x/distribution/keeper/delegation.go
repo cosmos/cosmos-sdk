@@ -223,13 +223,13 @@ type withdrawToCommunityPool struct {
 	SpecifiedWithdrawAddr sdk.AccAddress
 }
 
-func (_ withdrawToCommunityPool) IsRedirected() bool {
+func (withdrawToCommunityPool) IsRedirected() bool {
 	return true
 }
 func (d withdrawToCommunityPool) SpecifiedWithdrawAddress() string {
 	return d.SpecifiedWithdrawAddr.String()
 }
-func (_ withdrawToCommunityPool) ResolvedWithdrawAddress() string {
+func (withdrawToCommunityPool) ResolvedWithdrawAddress() string {
 	return types.AttributeValueCommunityPool
 }
 

@@ -158,8 +158,8 @@ mocks: $(MOCKS_DIR)
 
 vulncheck: $(BUILDDIR)/
 	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
-	GOBIN=$(BUILDDIR) govulncheck ./...
-
+	$(BUILDDIR)/govulncheck ./...
+	
 $(MOCKS_DIR):
 	mkdir -p $(MOCKS_DIR)
 

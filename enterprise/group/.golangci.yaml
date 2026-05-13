@@ -14,7 +14,6 @@ linters:
     - dogsled
     - errcheck
     - errorlint
-    - goconst
     - gocritic
     - gosec
     - govet

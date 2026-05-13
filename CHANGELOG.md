@@ -52,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (x/distribution) [#26406](https://github.com/cosmos/cosmos-sdk/pull/26406) Add fallback paths (delegator/validator owner, then community pool) when withdrawing delegator rewards or validator commission to a blocked address during `Begin/EndBlockers`. user msg initiated paths still return `ErrUnauthorized` when withdrawing to blocked addresses.
 * (x/gov) [#26353](https://github.com/cosmos/cosmos-sdk/pull/26353) Fix leading comma in `proposal_messages` event attribute emitted by `SubmitProposal`.
 * (telemetry) [#26390](https://github.com/cosmos/cosmos-sdk/pull/26390) Fix env var for otel telemetry initialization.
 
@@ -74,6 +75,8 @@ This patch release contains only minor dependency bumps.
 * (x/consensus) [#25607](https://github.com/cosmos/cosmos-sdk/pull/25607) Add `AuthorityParams` to consensus params. When set, the consensus params authority takes precedence over per-keeper authority for all module parameter updates. Keeper constructor signatures are unchanged.
 * (x/staking) [#25724](https://github.com/cosmos/cosmos-sdk/issues/25724) Validate `BondDenom` in `MsgUpdateParams` to prevent setting non-existent or zero-supply denoms.
 * [#25778](https://github.com/cosmos/cosmos-sdk/pull/25778) Update `log` to log v2.
+* [#25546](https://github.com/cosmos/cosmos-sdk/pull/25546) Removed `x/params`:
+    * Removes all `legacySubspace` arguments from Keeper and Module instantiation
 * [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will no longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
     * `x/group`
     * `x/nft`

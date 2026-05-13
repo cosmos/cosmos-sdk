@@ -182,10 +182,68 @@ pollLoop:
 	}
 }
 
+// CheckPendingUpgrade inspects the live `data/upgrade-info.json` written by
+// `x/upgrade` and, if it points at a different upgrade than the one currently
+// linked under `current/`, switches the symlink to the staged binary before
+// the daemon is launched.
+//
+// This is the recovery path for the case where a node restarts after an
+// upgrade height has been reached but before cosmovisor's running-process
+// watcher had a chance to swap the binary (e.g. a crash, an OOM kill, or a
+// manual restart during the upgrade window). Without this pre-startup check,
+// cosmovisor would re-launch the pre-upgrade binary, which then panics again
+// the moment it reaches the upgrade height.
+//
+// If the upgrade binary is not staged, the call is a no-op and the existing
+// file-watcher / auto-download path remains responsible for resolving the
+// upgrade once the daemon is running.
+func (l Launcher) CheckPendingUpgrade() error {
+	bz, err := os.ReadFile(l.cfg.UpgradeInfoFilePath())
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return fmt.Errorf("reading %s: %w", l.cfg.UpgradeInfoFilePath(), err)
+	}
+
+	var pending upgradetypes.Plan
+	if err := json.Unmarshal(bz, &pending); err != nil {
+		return fmt.Errorf("parsing %s: %w", l.cfg.UpgradeInfoFilePath(), err)
+	}
+	if pending.Name == "" {
+		return nil
+	}
+
+	if current, err := l.cfg.UpgradeInfo(); err == nil && current.Name == pending.Name {
+		return nil
+	}
+
+	if err := plan.EnsureBinary(l.cfg.UpgradeBin(pending.Name)); err != nil {
+		l.logger.Info(
+			"pending upgrade detected on startup but upgrade binary is not staged; deferring to file watcher",
+			"upgrade", pending.Name,
+			"height", pending.Height,
+			"error", err,
+		)
+		return nil
+	}
+
+	l.logger.Info(
+		"pending upgrade detected on startup, switching to upgrade binary",
+		"upgrade", pending.Name,
+		"height", pending.Height,
+	)
+	return l.cfg.SetCurrentUpgrade(pending)
+}
+
 // Run launches the app in a subprocess and returns when the subprocess (app)
 // exits (either when it dies, or *after* a successful upgrade.) and the upgrade is finished.
 // Returns true if the upgrade request was detected and the upgrade process started.
 func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) (bool, error) {
+	if err := l.CheckPendingUpgrade(); err != nil {
+		return false, fmt.Errorf("pre-startup upgrade check failed: %w", err)
+	}
+
 	bin, err := l.cfg.CurrentBin()
 	if err != nil {
 		return false, fmt.Errorf("error creating symlink to genesis: %w", err)

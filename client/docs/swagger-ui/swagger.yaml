@@ -11991,7 +11991,6 @@ paths:
   /cosmos/distribution/v1beta1/community_pool:
     get:
       summary: CommunityPool queries the community pool coins.
-      description: 'WARNING: This query will fail if an external community pool is used.'
       operationId: CommunityPool
       responses:
         '200':
@@ -20678,115 +20677,6 @@ paths:
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      tags:
-        - Query
-  /cosmos/params/v1beta1/params:
-    get:
-      summary: |-
-        Params queries a specific parameter of a module, given its subspace and
-        key.
-      operationId: Params
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              param:
-                description: param defines the queried parameter.
-                type: object
-                properties:
-                  subspace:
-                    type: string
-                  key:
-                    type: string
-                  value:
-                    type: string
-            description: >-
-              QueryParamsResponse is response type for the Query/Params RPC
-              method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: subspace
-          description: subspace defines the module to query the parameter for.
-          in: query
-          required: false
-          type: string
-        - name: key
-          description: key defines the key of the parameter in the subspace.
-          in: query
-          required: false
-          type: string
-      tags:
-        - Query
-  /cosmos/params/v1beta1/subspaces:
-    get:
-      summary: >-
-        Subspaces queries for all registered subspaces and all keys for a
-        subspace.
-      operationId: Subspaces
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              subspaces:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    subspace:
-                      type: string
-                    keys:
-                      type: array
-                      items:
-                        type: string
-                  description: >-
-                    Subspace defines a parameter subspace name and all the keys
-                    that exist for
-
-                    the subspace.
-            description: >-
-              QuerySubspacesResponse defines the response types for querying for
-              all
-
-              registered subspaces and all keys for a subspace.
         default:
           description: An unexpected error response.
           schema:
@@ -45294,66 +45184,6 @@ definitions:
 
               A value of "0" indicates an unlimited (infinite) maximum supply.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
-  cosmos.params.v1beta1.ParamChange:
-    type: object
-    properties:
-      subspace:
-        type: string
-      key:
-        type: string
-      value:
-        type: string
-    description: |-
-      ParamChange defines an individual parameter change, for use in
-      ParameterChangeProposal.
-  cosmos.params.v1beta1.QueryParamsResponse:
-    type: object
-    properties:
-      param:
-        description: param defines the queried parameter.
-        type: object
-        properties:
-          subspace:
-            type: string
-          key:
-            type: string
-          value:
-            type: string
-    description: QueryParamsResponse is response type for the Query/Params RPC method.
-  cosmos.params.v1beta1.QuerySubspacesResponse:
-    type: object
-    properties:
-      subspaces:
-        type: array
-        items:
-          type: object
-          properties:
-            subspace:
-              type: string
-            keys:
-              type: array
-              items:
-                type: string
-          description: >-
-            Subspace defines a parameter subspace name and all the keys that
-            exist for
-
-            the subspace.
-    description: |-
-      QuerySubspacesResponse defines the response types for querying for all
-      registered subspaces and all keys for a subspace.
-  cosmos.params.v1beta1.Subspace:
-    type: object
-    properties:
-      subspace:
-        type: string
-      keys:
-        type: array
-        items:
-          type: string
-    description: |-
-      Subspace defines a parameter subspace name and all the keys that exist for
-      the subspace.
   cosmos.slashing.v1beta1.Params:
     type: object
     properties:

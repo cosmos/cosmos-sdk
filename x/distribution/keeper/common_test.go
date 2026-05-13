@@ -19,6 +19,5 @@ var (
 	valConsAddr2 = sdk.ConsAddress(valConsPk2.Address())
 
 	distrAcc        = authtypes.NewEmptyModuleAccount(types.ModuleName)
-	externalPoolAcc = authtypes.NewEmptyModuleAccount("external_pool_escrow")
 	feeCollectorAcc = authtypes.NewEmptyModuleAccount("fee_collector")
 )

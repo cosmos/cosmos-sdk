@@ -76,12 +76,14 @@ func (k BaseSendKeeper) SendCoinsFromVirtual(ctx context.Context, fromAddr, toAd
 		return err
 	}
 
-	err = k.addCoins(ctx, toAddr, amt)
+	hadPriorBalance, err := k.addCoins(ctx, toAddr, amt)
 	if err != nil {
 		return err
 	}
 
-	k.ensureAccountCreated(ctx, toAddr)
+	if !hadPriorBalance {
+		k.ensureAccountCreated(ctx, toAddr)
+	}
 	if err := k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt); err != nil {
 		return err
 	}
@@ -157,12 +159,15 @@ func (k BaseSendKeeper) CreditVirtualAccounts(ctx context.Context) error {
 			return nil
 		}
 
-		if err := k.addCoins(ctx, toAddr, sum.ToCoins()); err != nil {
+		hadPriorBalance, err := k.addCoins(ctx, toAddr, sum.ToCoins())
+		if err != nil {
 			return err
 		}
 		clear(sum)
 
-		k.ensureAccountCreated(ctx, toAddr)
+		if !hadPriorBalance {
+			k.ensureAccountCreated(ctx, toAddr)
+		}
 		return nil
 	}
 

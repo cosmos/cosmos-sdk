@@ -191,16 +191,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			AddressStr: updatedAddressStr,
 			Coins:      out.Coins,
 		})
-
-		// Create account if recipient does not exist.
-		//
-		// NOTE: This should ultimately be removed in favor a more flexible approach
-		// such as delegated fee messages.
-		accExists := k.ak.HasAccount(ctx, updatedAddressBz)
-		if !accExists {
-			defer telemetry.IncrCounter(1, "new", "account") //nolint:staticcheck // TODO: switch to OpenTelemetry
-			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, updatedAddressBz))
-		}
 	}
 
 	if err := k.subUnlockedCoins(ctx, inAddress, input.Coins); err != nil {
@@ -208,8 +198,20 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 	}
 
 	for _, out := range sending {
-		if err := k.addCoins(ctx, out.AddressBz, out.Coins); err != nil {
+		// addCoins reports whether the recipient already held a non-zero balance
+		// in any of the input denoms. If so, an `auth` account record exists by
+		// construction and the HasAccount/SetAccount probe can be skipped.
+		//
+		// NOTE: The account creation behavior itself should ultimately be
+		// removed in favor of a more flexible approach such as delegated fee
+		// messages.
+		hadPriorBalance, err := k.addCoins(ctx, out.AddressBz, out.Coins)
+		if err != nil {
 			return err
+		}
+		if !hadPriorBalance && !k.ak.HasAccount(ctx, out.AddressBz) {
+			defer telemetry.IncrCounter(1, "new", "account") //nolint:staticcheck // TODO: switch to OpenTelemetry
+			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, out.AddressBz))
 		}
 		sdkCtx.EventManager().EmitEvent(
 			sdk.NewEvent(
@@ -242,12 +244,14 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		return err
 	}
 
-	err = k.addCoins(ctx, toAddr, amt)
+	hadPriorBalance, err := k.addCoins(ctx, toAddr, amt)
 	if err != nil {
 		return err
 	}
 
-	k.ensureAccountCreated(ctx, toAddr)
+	if !hadPriorBalance {
+		k.ensureAccountCreated(ctx, toAddr)
+	}
 	if err := k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt); err != nil {
 		return err
 	}
@@ -347,15 +351,20 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 //
 // CONTRACT: The provided amount (amt) must be valid, non-negative coins.
 //
-// It emits a coin_received event after the operation.
-func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+// It emits a coin_received event after the operation. It additionally reports
+// whether the recipient already held a non-zero balance in any of the input
+// denoms; callers can use this to skip the `auth` HasAccount lookup, since a
+// non-zero balance implies an associated account already exists.
+func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) (hadPriorBalance bool, err error) {
 	for _, coin := range amt {
 		balance := k.GetBalance(ctx, addr, coin.Denom)
+		if !balance.IsZero() {
+			hadPriorBalance = true
+		}
 		newBalance := balance.Add(coin)
 
-		err := k.UncheckedSetBalance(ctx, addr, newBalance)
-		if err != nil {
-			return err
+		if err := k.UncheckedSetBalance(ctx, addr, newBalance); err != nil {
+			return hadPriorBalance, err
 		}
 	}
 
@@ -365,7 +374,7 @@ func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt s
 		types.NewCoinReceivedEvent(addr, amt),
 	)
 
-	return nil
+	return hadPriorBalance, nil
 }
 
 // UncheckedSetBalance sets the coin balance for an account by address.

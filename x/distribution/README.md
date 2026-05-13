@@ -159,9 +159,8 @@ type ExternalCommunityPoolKeeper interface {
 }
 ```
 
-By default, the distribution module will use a community pool implementation that is internal.  An external community pool 
-can be provided to the module which will have funds be diverted to it instead of the internal implementation.  The reference
-external community pool maintained by the Cosmos SDK is [`x/protocolpool`](../protocolpool/README.md).
+By default, the distribution module will use a community pool implementation that is internal. An external community pool
+can be provided to the module so funds are diverted to it instead of the internal implementation.
 
 ## State
 
@@ -277,7 +276,7 @@ integer value.
 
 #### Using an External Community Pool
 
-Starting with Cosmos SDK v0.53.0, an external community pool, such as `x/protocolpool`, can be used in place of the `x/distribution` managed community pool.
+Starting with Cosmos SDK v0.53.0, an external community pool can be used in place of the `x/distribution` managed community pool.
 
 
 Please view the warning in the next section before deciding to use an external community pool.
@@ -306,7 +305,7 @@ app.DistrKeeper = distrkeeper.NewKeeper(
     app.StakingKeeper,
     authtypes.FeeCollectorName,
     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-    distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper), // New option.
+    distrkeeper.WithExternalCommunityPool(app.ExternalPoolKeeper), // New option.
 )
 ```
 
@@ -323,7 +322,7 @@ When using an external community pool with `x/distribution`, the following handl
 * `CommunityPoolSpend`
 * `FundCommunityPool`
 
-If you have services that rely on this functionality from `x/distribution`, please update them to use the `x/protocolpool` equivalents.
+If you have services that rely on this functionality from `x/distribution`, please update them to use equivalent handlers exposed by your external pool module.
 
 #### Reward To the Validators
 

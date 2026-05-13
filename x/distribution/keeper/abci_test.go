@@ -23,25 +23,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var testProposerAddress = sdk.ConsAddress("test")
 
-var _ disttypes.ExternalCommunityPoolKeeper = &mockProtocolPoolKeeper{}
+var _ disttypes.ExternalCommunityPoolKeeper = &mockExternalPoolKeeper{}
 
-type mockProtocolPoolKeeper struct{}
+type mockExternalPoolKeeper struct{}
 
-func (m mockProtocolPoolKeeper) GetCommunityPoolModule() string {
-	return protocolpooltypes.ProtocolPoolEscrowAccount
+func (m mockExternalPoolKeeper) GetCommunityPoolModule() string {
+	return "external_pool_escrow"
 }
 
-func (m mockProtocolPoolKeeper) FundCommunityPool(_ sdk.Context, _ sdk.Coins, _ sdk.AccAddress) error {
+func (m mockExternalPoolKeeper) FundCommunityPool(_ sdk.Context, _ sdk.Coins, _ sdk.AccAddress) error {
 	panic("do not use me")
 }
 
-func (m mockProtocolPoolKeeper) DistributeFromCommunityPool(_ sdk.Context, _ sdk.Coins, _ sdk.AccAddress) error {
+func (m mockExternalPoolKeeper) DistributeFromCommunityPool(_ sdk.Context, _ sdk.Coins, _ sdk.AccAddress) error {
 	panic("do not use me")
 }
 
@@ -53,7 +52,7 @@ type testSetup struct {
 	distrKeeper   keeper.Keeper
 }
 
-func setupTest(t *testing.T, protocolPoolEnabled bool) testSetup {
+func setupTest(t *testing.T, externalPoolEnabled bool) testSetup {
 	t.Helper()
 
 	ctrl := gomock.NewController(t)
@@ -71,10 +70,10 @@ func setupTest(t *testing.T, protocolPoolEnabled bool) testSetup {
 	accountKeeper.EXPECT().GetModuleAddress(disttypes.ModuleName).Return(distrAcc.GetAddress()).AnyTimes()
 
 	var opts []keeper.InitOption
-	if protocolPoolEnabled {
-		opts = append(opts, keeper.WithExternalCommunityPool(mockProtocolPoolKeeper{}))
+	if externalPoolEnabled {
+		opts = append(opts, keeper.WithExternalCommunityPool(mockExternalPoolKeeper{}))
 		// expect that we will verify that this module account is set
-		accountKeeper.EXPECT().GetModuleAddress(protocolpooltypes.ProtocolPoolEscrowAccount).Return(protocolPoolAcc.GetAddress()).AnyTimes()
+		accountKeeper.EXPECT().GetModuleAddress("external_pool_escrow").Return(externalPoolAcc.GetAddress()).AnyTimes()
 	}
 
 	distrKeeper := keeper.NewKeeper(
@@ -397,8 +396,8 @@ func TestBeginBlockCommunityPoolCollectsDust(t *testing.T) {
 
 // Scenario:
 // check no distribution occurs after begin block with no extra validator state
-// - protocol pool module is enabled
-func TestBeginBlockNoOpProtocolPool(t *testing.T) {
+// - external pool module is enabled
+func TestBeginBlockNoOpExternalPool(t *testing.T) {
 	ts := setupTest(t, true)
 	ctx := ts.testCtx.Ctx.
 		WithBlockHeader(cmtproto.Header{
@@ -427,8 +426,8 @@ func TestBeginBlockNoOpProtocolPool(t *testing.T) {
 // after the begin blocker, rewards should be distributed evenly based on their stake weight
 // commission should differ based on their differing commission rates
 // community pool should have portion of rewards distributed
-// protocol pool is enabled so funds should leave the module
-func TestBeginBlockToMultipleValidatorsProtocolPool(t *testing.T) {
+// external pool is enabled so funds should leave the module
+func TestBeginBlockToMultipleValidatorsExternalPool(t *testing.T) {
 	ts := setupTest(t, true)
 
 	ctx := ts.testCtx.Ctx.
@@ -509,7 +508,7 @@ func TestBeginBlockToMultipleValidatorsProtocolPool(t *testing.T) {
 	ctx = ctx.WithVoteInfos(votes).WithBlockHeight(1000)
 
 	// we should fully remove everything that was in the community pool (2stake)
-	ts.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, protocolpooltypes.ProtocolPoolEscrowAccount, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2))).Return(nil).Times(1)
+	ts.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, "external_pool_escrow", sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2))).Return(nil).Times(1)
 
 	feePoolBefore, err := ts.distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
@@ -518,7 +517,7 @@ func TestBeginBlockToMultipleValidatorsProtocolPool(t *testing.T) {
 	feePoolAfter, err := ts.distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
 
-	// here we are checking if the balance is back to what it was originally (0) because we have distributed the funds to protocolpool
+	// here we are checking if the balance is back to what it was originally (0) because we have distributed the funds to the external pool
 	require.True(t, feePoolBefore.CommunityPool.Equal(feePoolAfter.CommunityPool), fmt.Sprintf("before: %s, after: %s", feePoolBefore.CommunityPool.String(), feePoolAfter.CommunityPool.String()))
 
 	t.Run("assert rewards and commission distributed", func(t *testing.T) {
@@ -562,9 +561,9 @@ func TestBeginBlockToMultipleValidatorsProtocolPool(t *testing.T) {
 // multiple validators with same commission and the same stake
 // after the begin blocker, rewards should be distributed evenly based on their stake weight
 // community pool should have portion of rewards distributed - should collect dust as decimal values
-// - the non-decimal portion of the funds should be distributed as sdk.Coins to the protocol pool module
+// - the non-decimal portion of the funds should be distributed as sdk.Coins to the external pool module
 // - the remaining dust should be in the distribution community pool
-func TestBeginBlockCommunityPoolCollectsDustProtocolPool(t *testing.T) {
+func TestBeginBlockCommunityPoolCollectsDustExternalPool(t *testing.T) {
 	ts := setupTest(t, true)
 	ctx := ts.testCtx.Ctx.
 		WithBlockHeader(cmtproto.Header{
@@ -657,10 +656,10 @@ func TestBeginBlockCommunityPoolCollectsDustProtocolPool(t *testing.T) {
 
 	// expect us to send the truncated amount
 	// total amount in pool should be 12683916.800000001243023848 before the
-	// integer portion will be sent to the protocol pool as sdk.Coins
+	// integer portion will be sent to the external pool as sdk.Coins
 	// decimal version will remain as "dust"
 	expectedCommunityPool := sdk.NewDecCoins(sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyMustNewDecFromStr("0.800000001243023848")))
-	ts.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, protocolpooltypes.ProtocolPoolEscrowAccount, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 12683916))).Return(nil).Times(1)
+	ts.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, "external_pool_escrow", sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 12683916))).Return(nil).Times(1)
 
 	feePoolBefore, err := ts.distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)

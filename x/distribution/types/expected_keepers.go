@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/core/address"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -62,4 +61,8 @@ type StakingHooks interface {
 	AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error
 }
 
-type ExternalCommunityPoolKeeper protocolpooltypes.ExternalCommunityPoolKeeper
+type ExternalCommunityPoolKeeper interface {
+	GetCommunityPoolModule() string
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+	DistributeFromCommunityPool(ctx sdk.Context, amount sdk.Coins, receiver sdk.AccAddress) error
+}

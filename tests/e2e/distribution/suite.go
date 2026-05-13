@@ -32,7 +32,6 @@ import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 type E2ETestSuite struct {
@@ -47,26 +46,10 @@ func NewE2ETestSuite(externalPoolEnabled bool) *E2ETestSuite {
 	return &E2ETestSuite{externalPoolEnabled: externalPoolEnabled}
 }
 
-func removeModuleConfig(moduleConfig []*appv1alpha1.ModuleConfig, target string) []*appv1alpha1.ModuleConfig {
-	newConfig := make([]*appv1alpha1.ModuleConfig, 0, len(moduleConfig))
-	for _, mod := range moduleConfig {
-		if mod.Name != target {
-			newConfig = append(newConfig, mod)
-		}
-	}
-
-	return newConfig
-}
-
 func initNetworkConfig(t *testing.T, externalPoolEnabled bool) network.Config {
 	t.Helper()
 
 	moduleConfig := moduleConfig
-
-	// overwrite the module config so that protocolpool is removed "disabling" it
-	if !externalPoolEnabled {
-		moduleConfig = removeModuleConfig(moduleConfig, protocolpooltypes.ModuleName)
-	}
 
 	t.Log("setting up the e2e test suite", "externalPoolEnabled", externalPoolEnabled)
 
@@ -419,16 +402,9 @@ func (s *E2ETestSuite) TestNewFundCommunityPoolCmd() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			switch {
-			case tc.expectErr:
+			if tc.expectErr {
 				s.Require().Error(err)
-			case s.externalPoolEnabled:
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType))
-				txResp := tc.respType.(*sdk.TxResponse)
-				// expect 18 because we cannot submit to distribution
-				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, 18))
-			default:
+			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 

@@ -26,7 +26,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) error {
 			return err
 		}
 
-		// send whole coins from community pool to x/protocolpool if enabled
+		// send whole coins from community pool to an external pool if enabled
 		if k.HasExternalCommunityPool() {
 			if err := k.sendCommunityPoolToExternalPool(ctx); err != nil {
 				return err

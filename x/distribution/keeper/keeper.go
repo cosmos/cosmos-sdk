@@ -163,8 +163,13 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 		return nil, types.ErrEmptyDelegationDistInfo
 	}
 
-	// withdraw rewards
-	rewards, err := k.withdrawDelegationRewards(ctx, val, del)
+	// determine where rewards for this delegator should go
+	dest, err := k.resolveWithdrawDestinationStrict(ctx, delAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	rewards, err := k.withdrawDelegationRewards(ctx, val, del, dest)
 	if err != nil {
 		return nil, err
 	}
@@ -207,13 +212,13 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 	}
 
 	if !commission.IsZero() {
-		accAddr := sdk.AccAddress(valAddr)
-		withdrawAddr, err := k.GetDelegatorWithdrawAddr(ctx, accAddr)
+		// determine where commission for this validator should go
+		dest, err := k.resolveWithdrawDestinationStrict(ctx, sdk.AccAddress(valAddr))
 		if err != nil {
 			return nil, err
 		}
 
-		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, commission)
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, dest.ResolvedWithdrawAddr, commission)
 		if err != nil {
 			return nil, err
 		}

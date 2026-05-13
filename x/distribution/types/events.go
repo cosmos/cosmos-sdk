@@ -2,14 +2,18 @@ package types
 
 // distribution module event types
 const (
-	EventTypeSetWithdrawAddress = "set_withdraw_address"
-	EventTypeRewards            = "rewards"
-	EventTypeCommission         = "commission"
-	EventTypeWithdrawRewards    = "withdraw_rewards"
-	EventTypeWithdrawCommission = "withdraw_commission"
-	EventTypeProposerReward     = "proposer_reward"
+	EventTypeSetWithdrawAddress     = "set_withdraw_address"
+	EventTypeRewards                = "rewards"
+	EventTypeCommission             = "commission"
+	EventTypeWithdrawRewards        = "withdraw_rewards"
+	EventTypeWithdrawCommission     = "withdraw_commission"
+	EventTypeProposerReward         = "proposer_reward"
+	EventTypeWithdrawAddrRedirected = "withdraw_addr_redirected"
 
-	AttributeKeyWithdrawAddress = "withdraw_address"
-	AttributeKeyValidator       = "validator"
-	AttributeKeyDelegator       = "delegator"
+	AttributeKeyWithdrawAddress         = "withdraw_address"
+	AttributeKeyValidator               = "validator"
+	AttributeKeyDelegator               = "delegator"
+	AttributeKeyOriginalWithdrawAddress = "original_withdraw_address"
+
+	AttributeValueCommunityPool = "community_pool"
 )

@@ -40,6 +40,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+* (modules) [#26421](https://github.com/cosmos/cosmos-sdk/pull/26421) Remove the `x/protocolpool` module and its API/proto surface from the SDK. Applications upgrading from v0.54 should include `protocolpool` in deleted store upgrades.
+
 ### Features
 
 * (abci) [#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) Add support for new application side mempool ABCI methods. 

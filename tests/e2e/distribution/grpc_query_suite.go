@@ -20,19 +20,18 @@ import (
 type GRPCQueryTestSuite struct {
 	suite.Suite
 
-	externalPoolEnabled bool
-	cfg                 network.Config
-	network             *network.Network
+	cfg     network.Config
+	network *network.Network
 }
 
-func NewGRPCQueryTestSuite(externalPoolEnabled bool) *GRPCQueryTestSuite {
-	return &GRPCQueryTestSuite{externalPoolEnabled: externalPoolEnabled}
+func NewGRPCQueryTestSuite() *GRPCQueryTestSuite {
+	return &GRPCQueryTestSuite{}
 }
 
 func (s *GRPCQueryTestSuite) SetupSuite() {
 	s.T().Log("setting up grpc e2e test suite")
 
-	cfg := initNetworkConfig(s.T(), s.externalPoolEnabled)
+	cfg := initNetworkConfig(s.T())
 
 	cfg.NumValidators = 1
 	s.cfg = cfg

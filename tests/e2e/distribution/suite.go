@@ -37,21 +37,20 @@ import (
 type E2ETestSuite struct {
 	suite.Suite
 
-	externalPoolEnabled bool
-	cfg                 network.Config
-	network             *network.Network
+	cfg     network.Config
+	network *network.Network
 }
 
-func NewE2ETestSuite(externalPoolEnabled bool) *E2ETestSuite {
-	return &E2ETestSuite{externalPoolEnabled: externalPoolEnabled}
+func NewE2ETestSuite() *E2ETestSuite {
+	return &E2ETestSuite{}
 }
 
-func initNetworkConfig(t *testing.T, externalPoolEnabled bool) network.Config {
+func initNetworkConfig(t *testing.T) network.Config {
 	t.Helper()
 
 	moduleConfig := moduleConfig
 
-	t.Log("setting up the e2e test suite", "externalPoolEnabled", externalPoolEnabled)
+	t.Log("setting up the e2e test suite")
 
 	// application configuration (used by depinject)
 	AppConfig := depinject.Configs(appconfig.Compose(&appv1alpha1.Config{
@@ -80,7 +79,7 @@ func initNetworkConfig(t *testing.T, externalPoolEnabled bool) network.Config {
 func (s *E2ETestSuite) SetupSuite() {
 	s.T().Log("setting up e2e test suite")
 
-	cfg := initNetworkConfig(s.T(), s.externalPoolEnabled)
+	cfg := initNetworkConfig(s.T())
 
 	cfg.NumValidators = 1
 	s.cfg = cfg

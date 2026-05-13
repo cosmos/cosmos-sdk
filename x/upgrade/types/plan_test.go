@@ -145,3 +145,29 @@ func TestShouldExecute(t *testing.T) {
 		})
 	}
 }
+
+func TestDueAt(t *testing.T) {
+	cases := map[string]struct {
+		p        types.Plan
+		expected string
+	}{
+		"positive height": {
+			p:        types.Plan{Name: "do-good", Height: 1234},
+			expected: "height: 1234",
+		},
+		"zero height": {
+			p:        types.Plan{Name: "do-good", Height: 0},
+			expected: "height: 0",
+		},
+		"large height": {
+			p:        types.Plan{Name: "do-good", Height: 9223372036854775807},
+			expected: "height: 9223372036854775807",
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.p.DueAt())
+		})
+	}
+}

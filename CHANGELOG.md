@@ -66,6 +66,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (baseapp) [#22368](https://github.com/cosmos/cosmos-sdk/issues/22368) Add `-race`-mode regression test (`TestABCI_Race_GRPC_Query_During_Commit`) covering concurrent `BaseApp.Query` and `FinalizeBlock`/`Commit`. Pins down the state-management mutex work added in #24655 and follow-ups so the data race reported against v0.50.x cannot regress silently.
 * (x/staking, x/slashing) [#26481](https://github.com/cosmos/cosmos-sdk/pull/26481) Resolve evidence against recently rotated consensus keys and migrate slashing signing state to the active consensus key.
 * (x/auth/tx) [#25221](https://github.com/cosmos/cosmos-sdk/issues/25221) Add `ConfigOptions.AminoJSONEncoder` so applications can configure a custom `aminojson.Encoder` (e.g. custom field encodings) for the `SIGN_MODE_LEGACY_AMINO_JSON` handler without replicating the SDK's `HandlerMap` construction.
+* (x/bank) [#24228](https://github.com/cosmos/cosmos-sdk/issues/24228) Skip the `auth` HasAccount lookup on the receive path when the recipient already holds a non-zero balance, removing one I/O read per recipient on the `SendCoins`, `SendCoinsFromVirtual`, `CreditVirtualAccounts`, and `InputOutputCoins` paths. Lowers gas usage on transfers to existing accounts.
 
 ### Bug Fixes
 

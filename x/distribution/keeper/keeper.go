@@ -31,23 +31,6 @@ type Keeper struct {
 	FeePool collections.Item[types.FeePool]
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
-
-	externalCommunityPool types.ExternalCommunityPoolKeeper
-}
-
-type InitOption func(*Keeper)
-
-// WithExternalCommunityPool will enable the external pool functionality in x/distribution, directing
-// community pool funds to the provided keeper.
-//
-// WARNING: using an external community pool will cause the following handlers to error when called:
-// - FundCommunityPool tx
-// - CommunityPoolSpend tx
-// - CommunityPool query
-func WithExternalCommunityPool(poolKeeper types.ExternalCommunityPoolKeeper) InitOption {
-	return func(k *Keeper) {
-		k.externalCommunityPool = poolKeeper
-	}
 }
 
 // NewKeeper creates a new distribution Keeper instance
@@ -58,7 +41,6 @@ func NewKeeper(
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
 	feeCollectorName, authority string,
-	opts ...InitOption,
 ) Keeper {
 	// ensure distribution module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -67,16 +49,15 @@ func NewKeeper(
 
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		storeService:          storeService,
-		cdc:                   cdc,
-		authKeeper:            ak,
-		bankKeeper:            bk,
-		stakingKeeper:         sk,
-		feeCollectorName:      feeCollectorName,
-		authority:             authority,
-		Params:                collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		FeePool:               collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
-		externalCommunityPool: nil,
+		storeService:     storeService,
+		cdc:              cdc,
+		authKeeper:       ak,
+		bankKeeper:       bk,
+		stakingKeeper:    sk,
+		feeCollectorName: feeCollectorName,
+		authority:        authority,
+		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		FeePool:          collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
 	}
 
 	schema, err := sb.Build()
@@ -85,30 +66,12 @@ func NewKeeper(
 	}
 	k.Schema = schema
 
-	for _, opt := range opts {
-		opt(&k)
-	}
-
-	if k.HasExternalCommunityPool() {
-		// ensure external module account is set if we are enabling it
-		// this will ensure that funds can be transferred to it.
-		if addr := ak.GetModuleAddress(k.externalCommunityPool.GetCommunityPoolModule()); addr == nil {
-			panic(fmt.Sprintf("%s module account has not been set", k.externalCommunityPool.GetCommunityPoolModule()))
-		}
-	}
-
 	return k
 }
 
 // GetAuthority returns the x/distribution module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
-}
-
-// HasExternalCommunityPool is a helper function to denote whether the x/distribution module
-// is using its native community pool, or using an external pool.
-func (k Keeper) HasExternalCommunityPool() bool {
-	return k.externalCommunityPool != nil
 }
 
 // Logger returns a module-specific logger.

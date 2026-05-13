@@ -8,7 +8,6 @@ replace github.com/cosmos/cosmos-sdk => ../..
 replace github.com/cosmos/cosmos-sdk/tools/systemtests => ../../tools/systemtests
 
 require (
-	cosmossdk.io/math v1.5.3
 	github.com/cosmos/cosmos-sdk v0.54.0
 	github.com/cosmos/cosmos-sdk/tools/systemtests v0.0.0-00010101000000-000000000000
 	github.com/creachadair/tomledit v0.0.29
@@ -25,6 +24,7 @@ require (
 	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.1.0 // indirect
 	cosmossdk.io/log/v2 v2.1.0 // indirect
+	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	filippo.io/bigmod v0.1.1-0.20260103110540-f8a47775ebe5 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect

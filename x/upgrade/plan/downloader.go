@@ -47,26 +47,36 @@ func DownloadUpgrade(dstRoot, url, daemonName string) error {
 // The archive is unpacked and saved in dstDir.
 // If the archive contains /{daemonName} and not /bin/{daemonName}, then /{daemonName} will be moved to /bin/{daemonName}.
 // If this returns nil, the download was successful, and {dstDir}/bin/{daemonName} is a regular executable file.
+//
+// Windows-archive layouts that ship the daemon as {daemonName}.exe are also
+// accepted: the .exe variant is moved/renamed to /bin/{daemonName} so the
+// rest of the upgrade pipeline can treat it identically.
 func downloadUpgradeAsArchive(dstDir, url, daemonName string) error {
 	err := getter.Get(dstDir, url)
 	if err != nil {
 		return err
 	}
 
-	// If bin/{daemonName} exists, we're done.
 	dstDirBinFile := filepath.Join(dstDir, "bin", daemonName)
-	err = EnsureBinary(dstDirBinFile)
-	if err == nil {
-		return nil
+	// Probe the four locations a daemon binary can land in after unpacking:
+	// {bin/,/}{daemonName,daemonName.exe}. The .exe variants exist because
+	// Windows releases (e.g. windows/amd64) cannot drop the extension, and
+	// ValidateFull downloads every arch listed in the upgrade plan.
+	candidates := []string{
+		dstDirBinFile,
+		filepath.Join(dstDir, daemonName),
+		dstDirBinFile + ".exe",
+		filepath.Join(dstDir, daemonName+".exe"),
 	}
-
-	// Otherwise, check for a root {daemonName} file and move it to the bin/ directory if found.
-	dstDirFile := filepath.Join(dstDir, daemonName)
-	err = EnsureBinary(dstDirFile)
-	if err == nil {
-		err = os.Rename(dstDirFile, dstDirBinFile)
-		if err != nil {
-			return fmt.Errorf("could not move %s to the bin directory: %w", daemonName, err)
+	for _, src := range candidates {
+		if err = EnsureBinary(src); err != nil {
+			continue
+		}
+		if src == dstDirBinFile {
+			return nil
+		}
+		if err = os.Rename(src, dstDirBinFile); err != nil {
+			return fmt.Errorf("could not move %s to the bin directory: %w", filepath.Base(src), err)
 		}
 		return nil
 	}

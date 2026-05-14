@@ -208,6 +208,36 @@ func (s *DownloaderTestSuite) TestDownloadUpgrade() {
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "result does not contain a bin/not-expected or not-expected file")
 	})
+
+	// Windows release archives ship the daemon as {name}.exe. Without
+	// canonicalizing the extension, ValidateFull rejects every windows/*
+	// binary listed in an upgrade plan even though it's a valid release.
+	// Regression coverage for https://github.com/cosmos/cosmos-sdk/issues/19871.
+	winName := "win-daemon"
+	winExeAtRoot := NewTestFile(winName+".exe", "#!/usr/bin\necho 'I am a windows daemon'\n")
+	winExeInBin := NewTestFile("bin"+winName+".exe", "#!/usr/bin\necho 'I am a windows daemon in bin'\n")
+	winExeAtRootZip := s.saveSrcTestZip(winName+"-root.zip", NewTestZip(winExeAtRoot))
+	winExeInBinZip := s.saveSrcTestZip(winName+"-bin.zip", NewTestZip(winExeInBin))
+
+	s.T().Run("url returns archive with windows .exe at root", func(t *testing.T) {
+		dstRoot := getDstDir(t.Name())
+		url := makeFileURL(t, winExeAtRootZip)
+		err := DownloadUpgrade(dstRoot, url, winName)
+		require.NoError(t, err)
+		expectedFile := filepath.Join(dstRoot, "bin", winName)
+		requireFileExistsAndIsExecutable(t, expectedFile)
+		requireFileEquals(t, expectedFile, winExeAtRoot)
+	})
+
+	s.T().Run("url returns archive with windows .exe in bin", func(t *testing.T) {
+		dstRoot := getDstDir(t.Name())
+		url := makeFileURL(t, winExeInBinZip)
+		err := DownloadUpgrade(dstRoot, url, winName)
+		require.NoError(t, err)
+		expectedFile := filepath.Join(dstRoot, "bin", winName)
+		requireFileExistsAndIsExecutable(t, expectedFile)
+		requireFileEquals(t, expectedFile, winExeInBin)
+	})
 }
 
 func (s *DownloaderTestSuite) TestEnsureBinary() {

@@ -1258,7 +1258,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/auth/v1beta1/address_by_id/{id}:
+  /cosmos/auth/v1beta1/address_by_id/{accountId}:
     get:
       summary: AccountAddressByID returns account address based on account number.
       operationId: AccountAddressByID
@@ -1465,6 +1465,12 @@ paths:
                           "value": "1.212s"
                         }
       parameters:
+        - name: accountId
+          description: account_id is the account number of the address to be queried.
+          in: path
+          required: true
+          type: string
+          format: uint64
         - name: id
           description: |-
             Deprecated, use account_id instead
@@ -1472,16 +1478,10 @@ paths:
             id is the account number of the address to be queried. This field
             should have been an uint64 (like all account numbers), and will be
             updated to uint64 in a future version of the auth query.
-          in: path
-          required: true
-          type: string
-          format: int64
-        - name: accountId
-          description: account_id is the account number of the address to be queried.
           in: query
           required: false
           type: string
-          format: uint64
+          format: int64
       tags:
         - Query
   /cosmos/auth/v1beta1/bech32:

@@ -399,9 +399,9 @@ func readSignaturesFromFile(ctx client.Context, filename string) (sigs []signing
 	}
 
 	newString := strings.TrimSuffix(string(bz), "\n")
-	lines := strings.Split(newString, "\n")
+	lines := strings.SplitSeq(newString, "\n")
 
-	for _, bz := range lines {
+	for bz := range lines {
 		sig, err := ctx.TxConfig.UnmarshalSignatureJSON([]byte(bz))
 		if err != nil {
 			return nil, err

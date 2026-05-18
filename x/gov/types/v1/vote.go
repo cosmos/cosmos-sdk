@@ -112,7 +112,7 @@ func VoteOptionFromString(str string) (VoteOption, error) {
 // if the string is invalid.
 func WeightedVoteOptionsFromString(str string) (WeightedVoteOptions, error) {
 	options := WeightedVoteOptions{}
-	for _, option := range strings.Split(str, ",") {
+	for option := range strings.SplitSeq(str, ",") {
 		fields := strings.Split(option, "=")
 		option, err := VoteOptionFromString(fields[0])
 		if err != nil {

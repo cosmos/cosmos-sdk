@@ -6,12 +6,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestAccountRetriever(t *testing.T) {
-	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
+	cfg, err := network.DefaultConfigWithLegacyRootModules()
 	require.NoError(t, err)
 	cfg.NumValidators = 1
 

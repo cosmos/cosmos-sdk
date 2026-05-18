@@ -5,13 +5,20 @@ import (
 	"fmt"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	"cosmossdk.io/simapp"
+
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -30,15 +37,21 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 	var err error
 	s.T().Log("setting up integration test suite")
 
-	s.cfg, err = network.DefaultConfigWithAppConfigWithQueryGasLimit(configurator.NewAppConfig(
-		configurator.AuthModule(),
-		configurator.BankModule(),
-		configurator.GenutilModule(),
-		configurator.StakingModule(),
-		configurator.ConsensusModule(),
-		configurator.TxModule(),
-	), 10)
-	s.NoError(err)
+	const queryGasLimit uint64 = 10
+	fixture := simapp.NewTestNetworkFixture()
+	fixture.AppConstructor = func(val network.ValidatorI) servertypes.Application {
+		return simapp.NewSimApp(
+			val.GetCtx().Logger,
+			dbm.NewMemDB(),
+			true,
+			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),
+			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
+			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
+			bam.SetChainID(val.GetCtx().Viper.GetString(flags.FlagChainID)),
+			bam.SetQueryGasLimit(queryGasLimit),
+		)
+	}
+	s.cfg = network.DefaultConfig(func() network.TestFixture { return fixture })
 	s.cfg.NumValidators = 1
 
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)

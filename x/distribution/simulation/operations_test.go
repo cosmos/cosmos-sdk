@@ -8,8 +8,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -261,10 +259,7 @@ func (suite *SimTestSuite) SetupTest() {
 		err        error
 	)
 	suite.app, err = simtestutil.Setup(
-		depinject.Configs(
-			distrtestutil.AppConfig,
-			depinject.Supply(log.NewNopLogger()),
-		),
+		simtestutil.AppConfigWithNopLogger(distrtestutil.AppConfig),
 		&suite.accountKeeper,
 		&suite.bankKeeper,
 		&suite.cdc,

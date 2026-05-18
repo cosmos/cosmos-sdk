@@ -6,26 +6,17 @@ import (
 	"fmt"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	modulev1 "github.com/cosmos/cosmos-sdk/contrib/api/cosmos/crisis/module/v1"
-	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/keeper"
-	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
-	"github.com/cosmos/cosmos-sdk/server"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	keeper2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/keeper"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // ConsensusVersion defines the current x/crisis module consensus version.
@@ -52,28 +43,28 @@ type AppModuleBasic struct{}
 
 // Name returns the crisis module's name.
 func (AppModuleBasic) Name() string {
-	return types.ModuleName
+	return types2.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the crisis module's types on the given LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
+	types2.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the crisis
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+	return cdc.MustMarshalJSON(types2.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the crisis module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	var data types.GenesisState
+	var data types2.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types2.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(&data)
+	return types2.ValidateGenesis(&data)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the crisis module.
@@ -82,7 +73,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.S
 // RegisterInterfaces registers interfaces and implementations of the crisis
 // module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	types.RegisterInterfaces(registry)
+	types2.RegisterInterfaces(registry)
 }
 
 // AppModule implements an application module for the crisis module.
@@ -94,7 +85,7 @@ type AppModule struct {
 	// NOTE: We store a reference to the keeper here so that after a module
 	// manager is created, the invariants can be properly registered and
 	// executed.
-	keeper *keeper.Keeper
+	keeper *keeper2.Keeper
 
 	skipGenesisInvariants bool
 }
@@ -105,7 +96,7 @@ type AppModule struct {
 // modified genesis file.
 //
 // Deprecated: the crisis module is deprecated and will be removed in the next Cosmos SDK major release.
-func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool) AppModule {
+func NewAppModule(keeper *keeper2.Keeper, skipGenesisInvariants bool) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
@@ -129,15 +120,15 @@ func AddModuleInitFlags(startCmd *cobra.Command) {
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+	types2.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 
-	_ = keeper.NewMigrator(am.keeper)
+	_ = keeper2.NewMigrator(am.keeper)
 }
 
 // InitGenesis performs genesis initialization for the crisis module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
-	var genesisState types.GenesisState
+	var genesisState types2.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
 	am.keeper.InitGenesis(ctx, &genesisState)
@@ -163,67 +154,3 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 	return nil
 }
 
-// App Wiring Setup
-
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	Config       *modulev1.Module
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
-	AppOpts      servertypes.AppOptions `optional:"true"`
-
-	BankKeeper   types.SupplyKeeper
-	AddressCodec address.Codec
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	Module       appmodule.AppModule
-	CrisisKeeper *keeper.Keeper
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	var invalidCheckPeriod uint
-	if in.AppOpts != nil {
-		invalidCheckPeriod = cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
-	}
-
-	feeCollectorName := in.Config.FeeCollectorName
-	if feeCollectorName == "" {
-		feeCollectorName = authtypes.FeeCollectorName
-	}
-
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	k := keeper.NewKeeper(
-		in.Cdc,
-		in.StoreService,
-		invalidCheckPeriod,
-		in.BankKeeper,
-		feeCollectorName,
-		authority.String(),
-		in.AddressCodec,
-	)
-
-	var skipGenesisInvariants bool
-	if in.AppOpts != nil {
-		skipGenesisInvariants = cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
-	}
-
-	m := NewAppModule(k, skipGenesisInvariants)
-
-	return ModuleOutputs{CrisisKeeper: k, Module: m}
-}

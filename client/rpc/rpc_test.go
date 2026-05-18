@@ -28,8 +28,7 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg, err := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
-
+	cfg, err := network.DefaultConfigWithLegacyRootModules()
 	s.NoError(err)
 
 	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)

@@ -8,8 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -115,7 +113,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 	startupCfg.GenesisAccounts = genAccounts
 
 	app, err := simtestutil.SetupWithConfiguration(
-		depinject.Configs(
+		simtestutil.AppConfigWithNopLogger(
 			configurator.NewAppConfig(
 				configurator.AuthModule(),
 				configurator.StakingModule(),
@@ -125,7 +123,6 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 				configurator.GovModule(),
 				configurator.DistributionModule(),
 			),
-			depinject.Supply(log.NewNopLogger()),
 		),
 		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper)
 

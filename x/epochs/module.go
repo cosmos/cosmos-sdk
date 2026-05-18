@@ -4,11 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
+	"slices"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
+	modulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -31,6 +36,37 @@ var (
 
 const ConsensusVersion = 1
 
+func init() {
+	appmodule.Register(
+		&modulev1.Module{},
+		appmodule.Provide(ProvideModule),
+		appmodule.Invoke(InvokeSetHooks),
+	)
+}
+
+type ModuleInputs struct {
+	depinject.In
+
+	Cdc          codec.Codec
+	StoreService store.KVStoreService
+}
+
+type ModuleOutputs struct {
+	depinject.Out
+
+	Keeper *keeper.Keeper
+	Module appmodule.AppModule
+}
+
+func ProvideModule(in ModuleInputs) ModuleOutputs {
+	k := keeper.NewKeeper(in.StoreService, in.Cdc)
+	m := NewAppModule(&k)
+	return ModuleOutputs{
+		Keeper: &k,
+		Module: m,
+	}
+}
+
 // AppModule implements the AppModule interface for the epochs module.
 type AppModule struct {
 	keeper *keeper.Keeper
@@ -42,6 +78,9 @@ func NewAppModule(keeper *keeper.Keeper) AppModule {
 		keeper: keeper,
 	}
 }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
@@ -142,6 +181,27 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // RegisterStoreDecoder registers a decoder for epochs module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
+}
+
+func InvokeSetHooks(keeper *keeper.Keeper, hooks map[string]types.EpochHooksWrapper) error {
+	if keeper == nil || hooks == nil {
+		return nil
+	}
+
+	// Default ordering is lexical by module name.
+	// Explicit ordering can be added to the module config if required.
+	modNames := slices.Sorted(maps.Keys(hooks))
+	var multiHooks types.MultiEpochHooks
+	for _, modName := range modNames {
+		hook, ok := hooks[modName]
+		if !ok {
+			return fmt.Errorf("can't find epoch hooks for module %s", modName)
+		}
+		multiHooks = append(multiHooks, hook)
+	}
+
+	keeper.SetHooks(multiHooks)
+	return nil
 }
 
 // TODO add when we have collections full support with schema

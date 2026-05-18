@@ -53,11 +53,16 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import auth as a blank
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import auth tx config as a blank
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	_ "github.com/cosmos/cosmos-sdk/x/bank" // import bank as a blank
+	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import auth vesting as a blank
+	_ "github.com/cosmos/cosmos-sdk/x/bank"         // import bank as a blank
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import consensus as a blank
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"    // import consensus as a blank
+	_ "github.com/cosmos/cosmos-sdk/x/distribution" // import distribution as a blank
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/staking" // import staking as a blank
+	_ "github.com/cosmos/cosmos-sdk/x/gov"      // import gov as a blank
+	_ "github.com/cosmos/cosmos-sdk/x/mint"     // import mint as a blank
+	_ "github.com/cosmos/cosmos-sdk/x/slashing" // import slashing as a blank
+	_ "github.com/cosmos/cosmos-sdk/x/staking"  // import staking as a blank
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -160,9 +165,10 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 	}
 }
 
-// MinimumAppConfig defines the minimum of modules required for a call to New to succeed
-func MinimumAppConfig() depinject.Config {
-	return configurator.NewAppConfig(
+// DefaultConfigWithLegacyRootModules returns the depinject-based network config
+// used by root-module integration tests.
+func DefaultConfigWithLegacyRootModules() (Config, error) {
+	appConfig := configurator.NewAppConfig(
 		configurator.AuthModule(),
 		configurator.BankModule(),
 		configurator.GenutilModule(),
@@ -170,21 +176,7 @@ func MinimumAppConfig() depinject.Config {
 		configurator.ConsensusModule(),
 		configurator.TxModule(),
 	)
-}
 
-// DefaultConfigWithAppConfig returns a network configuration constructed using
-// the provided app config. It sets an infinite gas limit on queries by passing zero
-// as the query gas limit (i.e. disabling gas metering for queries). This config is
-// suitable for testing scenarios where queries are allowed to consume unbounded gas.
-//
-// It is equivalent to calling DefaultConfigWithAppConfigWithQueryGasLimit(appConfig, 0).
-func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
-	return DefaultConfigWithAppConfigWithQueryGasLimit(appConfig, 0)
-}
-
-// DefaultConfigWithAppConfigWithQueryGasLimit returns a network configuration constructed
-// using the provided app config and the specified query gas limit.
-func DefaultConfigWithAppConfigWithQueryGasLimit(appConfig depinject.Config, queryGasLimit uint64) (Config, error) {
 	var (
 		appBuilder        *runtime.AppBuilder
 		txConfig          client.TxConfig
@@ -231,7 +223,7 @@ func DefaultConfigWithAppConfigWithQueryGasLimit(appConfig depinject.Config, que
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
 			baseapp.SetChainID(cfg.ChainID),
-			baseapp.SetQueryGasLimit(queryGasLimit),
+			baseapp.SetQueryGasLimit(0),
 		)
 
 		testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})

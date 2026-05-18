@@ -14,7 +14,7 @@ import (
 func TestStatusCommand(t *testing.T) {
 	t.Skip() // flaky test
 
-	cfg, err := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
+	cfg, err := network.DefaultConfigWithLegacyRootModules()
 	require.NoError(t, err)
 
 	network, err := network.New(t, t.TempDir(), cfg)

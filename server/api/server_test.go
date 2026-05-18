@@ -47,8 +47,7 @@ type GRPCWebTestSuite struct {
 func (s *GRPCWebTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg, err := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
-
+	cfg, err := network.DefaultConfigWithLegacyRootModules()
 	s.NoError(err)
 	cfg.NumValidators = 1
 	s.cfg = cfg

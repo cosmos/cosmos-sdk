@@ -5,9 +5,6 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
-
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -19,17 +16,14 @@ import (
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	var accountKeeper authkeeper.AccountKeeper
-	app, err := simtestutil.SetupAtGenesis(
-		depinject.Configs(
-			configurator.NewAppConfig(
-				configurator.AuthModule(),
-				configurator.StakingModule(),
-				configurator.BankModule(),
-				configurator.GovModule(),
-				configurator.DistributionModule(),
-				configurator.ConsensusModule(),
-			),
-			depinject.Supply(log.NewNopLogger()),
+	app, err := simtestutil.SetupAtGenesisWithNopLogger(
+		configurator.NewAppConfig(
+			configurator.AuthModule(),
+			configurator.StakingModule(),
+			configurator.BankModule(),
+			configurator.GovModule(),
+			configurator.DistributionModule(),
+			configurator.ConsensusModule(),
 		),
 		&accountKeeper,
 	)

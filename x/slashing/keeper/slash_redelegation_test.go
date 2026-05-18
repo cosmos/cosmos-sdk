@@ -8,8 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -31,10 +29,7 @@ func TestSlashRedelegation(t *testing.T) {
 	var slashKeeper slashingkeeper.Keeper
 	var distrKeeper distributionkeeper.Keeper
 
-	app, err := simtestutil.Setup(depinject.Configs(
-		depinject.Supply(log.NewNopLogger()),
-		testutil.AppConfig,
-	), &stakingKeeper, &bankKeeper, &slashKeeper, &distrKeeper)
+	app, err := simtestutil.SetupWithNopLogger(testutil.AppConfig, &stakingKeeper, &bankKeeper, &slashKeeper, &distrKeeper)
 	require.NoError(t, err)
 
 	// get sdk context, staking msg server and bond denom

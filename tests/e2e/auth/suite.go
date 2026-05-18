@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
+	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -30,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authclitestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
-	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -1227,9 +1226,7 @@ func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
 }
 
 func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
-	var txCfg client.TxConfig
-	err := depinject.Inject(authtestutil.AppConfig, &txCfg)
-	require.NoError(t, err)
+	txCfg := network.DefaultConfig(simapp.NewTestNetworkFixture).TxConfig
 	clientCtx := client.Context{}
 	clientCtx = clientCtx.WithTxConfig(txCfg)
 

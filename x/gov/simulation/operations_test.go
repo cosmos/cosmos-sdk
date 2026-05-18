@@ -10,9 +10,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -417,7 +414,7 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 	res := suite{}
 
 	app, err := simtestutil.Setup(
-		depinject.Configs(
+		simtestutil.AppConfigWithNopLogger(
 			configurator.NewAppConfig(
 				configurator.AuthModule(),
 				configurator.TxModule(),
@@ -427,7 +424,6 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 				configurator.DistributionModule(),
 				configurator.GovModule(),
 			),
-			depinject.Supply(log.NewNopLogger()),
 		),
 		&res.TxConfig, &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper, &res.DistributionKeeper)
 	require.NoError(t, err)

@@ -11,15 +11,15 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
+	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -322,17 +322,10 @@ func (c customAddressCodec) BytesToString(bz []byte) (string, error) {
 }
 
 func TestAddressCodecFactory(t *testing.T) {
-	var addrCodec address.Codec
-	var valAddressCodec runtime.ValidatorAddressCodec
-	var consAddressCodec runtime.ConsensusAddressCodec
-
-	err := depinject.Inject(
-		depinject.Configs(
-			network.MinimumAppConfig(),
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&addrCodec, &valAddressCodec, &consAddressCodec)
-	require.NoError(t, err)
+	addrCodec, valAddressCodec, consAddressCodec := runtime.ProvideAddressCodec(runtime.AddressCodecInputs{
+		AuthConfig:    &authmodulev1.Module{Bech32Prefix: "cosmos"},
+		StakingConfig: &stakingmodulev1.Module{},
+	})
 	require.NotNil(t, addrCodec)
 	_, ok := addrCodec.(customAddressCodec)
 	require.False(t, ok)
@@ -344,18 +337,11 @@ func TestAddressCodecFactory(t *testing.T) {
 	require.False(t, ok)
 
 	// Set the address codec to the custom one
-	err = depinject.Inject(
-		depinject.Configs(
-			network.MinimumAppConfig(),
-			depinject.Supply(
-				log.NewNopLogger(),
-				func() address.Codec { return customAddressCodec{} },
-				func() runtime.ValidatorAddressCodec { return customAddressCodec{} },
-				func() runtime.ConsensusAddressCodec { return customAddressCodec{} },
-			),
-		),
-		&addrCodec, &valAddressCodec, &consAddressCodec)
-	require.NoError(t, err)
+	addrCodec, valAddressCodec, consAddressCodec = runtime.ProvideAddressCodec(runtime.AddressCodecInputs{
+		AddressCodecFactory:          func() address.Codec { return customAddressCodec{} },
+		ValidatorAddressCodecFactory: func() runtime.ValidatorAddressCodec { return customAddressCodec{} },
+		ConsensusAddressCodecFactory: func() runtime.ConsensusAddressCodec { return customAddressCodec{} },
+	})
 	require.NotNil(t, addrCodec)
 	_, ok = addrCodec.(customAddressCodec)
 	require.True(t, ok)

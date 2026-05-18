@@ -8,8 +8,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -59,10 +57,7 @@ func TestStakingMsgs(t *testing.T) {
 	startupCfg.GenesisAccounts = accs
 
 	app, err := simtestutil.SetupWithConfiguration(
-		depinject.Configs(
-			testutil.AppConfig,
-			depinject.Supply(log.NewNopLogger()),
-		),
+		simtestutil.AppConfigWithNopLogger(testutil.AppConfig),
 		startupCfg, &bankKeeper, &stakingKeeper)
 	require.NoError(t, err)
 	ctxCheck := app.NewContext(true)
@@ -161,10 +156,7 @@ func TestBeginRedelegateAllSharesFromUnbondedSource(t *testing.T) {
 	startupCfg.GenesisAccounts = accs
 
 	app, err := simtestutil.SetupWithConfiguration(
-		depinject.Configs(
-			testutil.AppConfig,
-			depinject.Supply(log.NewNopLogger()),
-		),
+		simtestutil.AppConfigWithNopLogger(testutil.AppConfig),
 		startupCfg, &bankKeeper, &stakingKeeper)
 	require.NoError(t, err)
 

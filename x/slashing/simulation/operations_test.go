@@ -11,8 +11,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -80,10 +78,7 @@ func (suite *SimTestSuite) SetupTest() {
 	startupCfg.ValidatorSet = createValidator
 
 	app, err := simtestutil.SetupWithConfiguration(
-		depinject.Configs(
-			testutil.AppConfig,
-			depinject.Supply(log.NewNopLogger()),
-		),
+		simtestutil.AppConfigWithNopLogger(testutil.AppConfig),
 		startupCfg,
 		&suite.legacyAmino,
 		&suite.codec,

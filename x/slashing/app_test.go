@@ -8,8 +8,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -55,7 +53,7 @@ func TestSlashingMsgs(t *testing.T) {
 	)
 
 	app, err := sims.SetupWithConfiguration(
-		depinject.Configs(
+		sims.AppConfigWithNopLogger(
 			configurator.NewAppConfig(
 				configurator.AuthModule(),
 				configurator.StakingModule(),
@@ -64,7 +62,6 @@ func TestSlashingMsgs(t *testing.T) {
 				configurator.ConsensusModule(),
 				configurator.BankModule(),
 			),
-			depinject.Supply(log.NewNopLogger()),
 		),
 		startupCfg, &stakingKeeper, &bankKeeper, &slashingKeeper)
 	require.NoError(t, err)

@@ -10,8 +10,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 	sdkmath "cosmossdk.io/math"
 
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -80,23 +78,21 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			err               error
 		)
 
-		err = depinject.Inject(
-			depinject.Configs(
-				configurator.NewAppConfig(
-					configurator.AuthModule(),
-					configurator.TxModule(),
-					configurator.ConsensusModule(),
-					configurator.BankModule(),
-					configurator.StakingModule(),
-				),
-				depinject.Supply(log.NewNopLogger()),
+		err = simtestutil.InjectWithNopLogger(
+			configurator.NewAppConfig(
+				configurator.AuthModule(),
+				configurator.TxModule(),
+				configurator.ConsensusModule(),
+				configurator.BankModule(),
+				configurator.StakingModule(),
 			),
 			&bankKeeper,
 			&accountKeeper,
 			&interfaceRegistry,
 			&txConfig,
 			&cdc,
-			&appBuilder)
+			&appBuilder,
+		)
 		require.NoError(t, err)
 
 		bapp := appBuilder.Build(dbm.NewMemDB())

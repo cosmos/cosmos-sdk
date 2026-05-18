@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -129,11 +130,7 @@ func TestMsgService(t *testing.T) {
 		cdc               codec.Codec
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
-	err := depinject.Inject(
-		depinject.Configs(
-			makeMinimalConfig(),
-			depinject.Supply(log.NewNopLogger()),
-		), &appBuilder, &cdc, &interfaceRegistry)
+	err := simtestutil.InjectWithNopLogger(makeMinimalConfig(), &appBuilder, &cdc, &interfaceRegistry)
 	require.NoError(t, err)
 	app := appBuilder.Build(dbm.NewMemDB())
 

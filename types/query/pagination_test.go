@@ -8,8 +8,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -66,14 +64,13 @@ func (s *paginationTestSuite) SetupTest() {
 	)
 
 	app, err := testutilsims.Setup(
-		depinject.Configs(
+		testutilsims.AppConfigWithNopLogger(
 			configurator.NewAppConfig(
 				configurator.AuthModule(),
 				configurator.BankModule(),
 				configurator.ConsensusModule(),
 				configurator.OmitInitGenesis(),
 			),
-			depinject.Supply(log.NewNopLogger()),
 		),
 		&bankKeeper, &accountKeeper, &reg, &cdc)
 

@@ -13,6 +13,7 @@ import (
 
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log/v2"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -113,6 +114,32 @@ func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...any) (*runtime.A
 	cfg := DefaultStartUpConfig()
 	cfg.AtGenesis = true
 	return SetupWithConfiguration(appConfig, cfg, extraOutputs...)
+}
+
+// SetupWithNopLogger initializes a new runtime.App using appConfig with a nop logger supplied.
+func SetupWithNopLogger(appConfig depinject.Config, extraOutputs ...any) (*runtime.App, error) {
+	return Setup(AppConfigWithNopLogger(appConfig), extraOutputs...)
+}
+
+// SetupAtGenesisWithNopLogger initializes a new runtime.App at genesis using appConfig with a nop logger supplied.
+func SetupAtGenesisWithNopLogger(appConfig depinject.Config, extraOutputs ...any) (*runtime.App, error) {
+	return SetupAtGenesis(
+		AppConfigWithNopLogger(appConfig),
+		extraOutputs...,
+	)
+}
+
+// AppConfigWithNopLogger wraps appConfig with a supplied nop logger.
+func AppConfigWithNopLogger(appConfig depinject.Config) depinject.Config {
+	return depinject.Configs(
+		appConfig,
+		depinject.Supply(log.NewNopLogger()),
+	)
+}
+
+// InjectWithNopLogger injects outputs using appConfig with a supplied nop logger.
+func InjectWithNopLogger(appConfig depinject.Config, outputs ...any) error {
+	return depinject.Inject(AppConfigWithNopLogger(appConfig), outputs...)
 }
 
 // NextBlock starts a new block.

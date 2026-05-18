@@ -40,7 +40,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var err error
 	s.T().Log("setting up integration test suite")
 
-	s.cfg, err = network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
+	s.cfg, err = network.DefaultConfigWithLegacyRootModules()
 	s.NoError(err)
 	s.cfg.NumValidators = 1
 

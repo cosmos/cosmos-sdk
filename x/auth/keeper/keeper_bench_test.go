@@ -5,9 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
-
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -17,13 +14,7 @@ import (
 func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 	b.ReportAllocs()
 	var accountKeeper keeper.AccountKeeper
-	app, err := simtestutil.Setup(
-		depinject.Configs(
-			depinject.Supply(log.NewNopLogger()),
-			testutil.AppConfig,
-		),
-		&accountKeeper,
-	)
+	app, err := simtestutil.SetupWithNopLogger(testutil.AppConfig, &accountKeeper)
 	require.NoError(b, err)
 
 	ctx := app.NewContext(false)
@@ -46,11 +37,7 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 func BenchmarkAccountMapperSetAccount(b *testing.B) {
 	b.ReportAllocs()
 	var accountKeeper keeper.AccountKeeper
-	app, err := simtestutil.Setup(
-		depinject.Configs(
-			depinject.Supply(log.NewNopLogger()),
-			testutil.AppConfig,
-		), &accountKeeper)
+	app, err := simtestutil.SetupWithNopLogger(testutil.AppConfig, &accountKeeper)
 	require.NoError(b, err)
 
 	ctx := app.NewContext(false)

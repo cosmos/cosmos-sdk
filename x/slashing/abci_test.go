@@ -8,9 +8,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,11 +28,8 @@ func TestBeginBlocker(t *testing.T) {
 		slashingKeeper    slashingkeeper.Keeper
 	)
 
-	app, err := simtestutil.Setup(
-		depinject.Configs(
-			testutil.AppConfig,
-			depinject.Supply(log.NewNopLogger()),
-		),
+	app, err := simtestutil.SetupWithNopLogger(
+		testutil.AppConfig,
 		&interfaceRegistry,
 		&bankKeeper,
 		&stakingKeeper,

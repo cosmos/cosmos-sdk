@@ -7,7 +7,6 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/pulsar/testpb"
@@ -31,15 +30,16 @@ func ProvideCustomGetSigners() signing.CustomGetSigner {
 func TestDefineCustomGetSigners(t *testing.T) {
 	var interfaceRegistry codectypes.InterfaceRegistry
 	_, err := simtestutil.SetupAtGenesis(
-		depinject.Configs(
-			configurator.NewAppConfig(
-				configurator.AuthModule(),
-				configurator.StakingModule(),
-				configurator.BankModule(),
-				configurator.ConsensusModule(),
+		simtestutil.AppConfigWithNopLogger(
+			depinject.Configs(
+				configurator.NewAppConfig(
+					configurator.AuthModule(),
+					configurator.StakingModule(),
+					configurator.BankModule(),
+					configurator.ConsensusModule(),
+				),
+				depinject.Provide(ProvideCustomGetSigners),
 			),
-			depinject.Supply(log.NewNopLogger()),
-			depinject.Provide(ProvideCustomGetSigners),
 		),
 		&interfaceRegistry,
 	)
@@ -58,14 +58,13 @@ func TestDefineCustomGetSigners(t *testing.T) {
 
 	// Reset and provider no CustomGetSigners. Consequently, validation will fail and depinject will return an error
 	_, err = simtestutil.SetupAtGenesis(
-		depinject.Configs(
+		simtestutil.AppConfigWithNopLogger(
 			configurator.NewAppConfig(
 				configurator.AuthModule(),
 				configurator.StakingModule(),
 				configurator.BankModule(),
 				configurator.ConsensusModule(),
 			),
-			depinject.Supply(log.NewNopLogger()),
 		),
 		&interfaceRegistry,
 	)

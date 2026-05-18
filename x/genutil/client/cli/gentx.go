@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	address "cosmossdk.io/core/address"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	sdknet "github.com/cosmos/cosmos-sdk/types/net"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -29,8 +30,8 @@ import (
 )
 
 // GenTxCmd builds the application's gentx command.
-func GenTxCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, defaultNodeHome string, valAddressCodec address.Codec) *cobra.Command {
-	ipDefault, _ := server.ExternalIP()
+func GenTxCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, defaultNodeHome string, valAdddressCodec address.Codec) *cobra.Command {
+	ipDefault, _ := sdknet.ExternalIP()
 	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
 
 	cmd := &cobra.Command{
@@ -154,7 +155,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			createValCfg.Amount = amount
 
 			// create a 'create-validator' message
-			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txFactory, true, valAddressCodec)
+			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txFactory, true, valAdddressCodec)
 			if err != nil {
 				return errors.Wrap(err, "failed to build create-validator message")
 			}

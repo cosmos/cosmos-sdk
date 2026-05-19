@@ -114,6 +114,19 @@ func TestSDKAppConfigValidateBlockSTMWorkers(t *testing.T) {
 	}
 }
 
+func TestSDKAppConfigValidateOptimisticExecutionAndBlockSTMConflict(t *testing.T) {
+	cfg := DefaultSDKAppConfig("app", testAppOptions(t))
+	cfg.OptimisticExecutionEnabled = true
+	cfg.BlockSTM = &BlockSTMConfig{
+		Workers:  1,
+		Estimate: false,
+	}
+
+	if err := cfg.Validate(); err == nil {
+		t.Fatal("expected validation error when both optimistic execution and blockstm are enabled")
+	}
+}
+
 func testAppOptions(t *testing.T) appOptionsMap {
 	t.Helper()
 	return appOptionsMap{

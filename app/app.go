@@ -231,6 +231,10 @@ func NewSDKApp(
 }
 
 func (app *SDKApp) configureExecutionMode() {
+	if app.cfg.OptimisticExecutionEnabled {
+		baseapp.SetOptimisticExecution()(app.BaseApp)
+	}
+
 	if app.cfg.BlockSTM == nil {
 		return
 	}

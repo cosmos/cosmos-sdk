@@ -131,10 +131,18 @@ type Config struct {
 	PrintMnemonic    bool                       // print the mnemonic of first validator as log output for testing
 
 	// ValidatorConsensusKeyType selects the consensus (priv_validator_key.json)
-	// signature scheme. Empty string preserves the historical behavior
-	// (ed25519). Other recognized values are "secp256k1", "bls12_381", and
-	// "ml_dsa_65". This is an opt-in field; existing tests that don't set it
-	// continue to call genutil.InitializeNodeValidatorFiles unchanged.
+	// signature scheme used by EVERY validator in the spun-up network, and is
+	// the single pubkey type written into the genesis
+	// ConsensusParams.Validator.PubKeyTypes list. Empty string preserves the
+	// historical behavior (ed25519). Other recognized values are "secp256k1",
+	// "bls12_381", and "ml_dsa_65".
+	//
+	// Semantics are exclusive replacement, not additive: setting this to
+	// "ml_dsa_65" produces a network that accepts ML-DSA-65 validator keys
+	// only and will reject an ed25519 validator at MsgCreateValidator time.
+	// There is intentionally no way to bring up a heterogeneous validator
+	// set via this field; tests that need a mix of key types must build the
+	// AppGenesis ConsensusParams themselves.
 	ValidatorConsensusKeyType string
 }
 

@@ -3,7 +3,6 @@ package simapp_test
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -87,10 +86,13 @@ func (s *MLDsa65NetworkTestSuite) TestValidator_PubKeyType() {
 // were checked.
 func (s *MLDsa65NetworkTestSuite) TestValidator_PrivvalKeyFile() {
 	for _, v := range s.network.Validators {
-		// network.New roots each validator's home at <Dir>/simd, so the
-		// priv-validator files live there, not directly under v.Dir.
-		keyFile := filepath.Join(v.Dir, "simd", "config", "priv_validator_key.json")
-		stateFile := filepath.Join(v.Dir, "simd", "data", "priv_validator_state.json")
+		// Ask the validator's own CometBFT config for the priv-validator
+		// paths rather than re-constructing them. v.Dir is just the parent
+		// directory; the actual home root (currently "<Dir>/simd") is set by
+		// the harness and we shouldn't bake the simapp binary name into the
+		// test.
+		keyFile := v.Ctx.Config.PrivValidatorKeyFile()
+		stateFile := v.Ctx.Config.PrivValidatorStateFile()
 
 		_, err := os.Stat(keyFile)
 		s.Require().NoError(err, "priv_validator_key.json missing for %s", v.Moniker)

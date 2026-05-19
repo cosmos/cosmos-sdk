@@ -154,42 +154,56 @@ func InitializeNodeValidatorFilesFromMnemonicWithKeyType(
 }
 
 // generateValidatorPrivKey produces a consensus private key of the requested
-// type. When mnemonic is empty the key is sampled from OS randomness;
-// otherwise it is derived deterministically from the mnemonic (SHA-256 of the
-// mnemonic for schemes that take a fixed-size seed).
+// type.
+//
+// Input contract:
+//   - mnemonic == "": the key is sampled from OS randomness.
+//   - mnemonic != "": SHA-256(mnemonic) is used as the 32-byte seed for every
+//     supported scheme, so two calls with the same (keyType, mnemonic) always
+//     produce the same key, and two calls with the same mnemonic but
+//     different keyType derive from the same underlying seed bytes.
+//
+// Note: BLS12-381's underlying GenPrivKeyFromSecret hashes its input
+// internally when the input is not exactly 32 bytes; we pass the 32-byte
+// SHA-256 digest directly so it's used as-is. This keeps the
+// mnemonic -> seed mapping uniform across schemes.
 func generateValidatorPrivKey(keyType, mnemonic string) (cmtcrypto.PrivKey, error) {
+	var seed []byte
+	if mnemonic != "" {
+		h := sha256.Sum256([]byte(mnemonic))
+		seed = h[:]
+	}
+
 	switch keyType {
 	case secp256k1.KeyType:
-		if mnemonic == "" {
+		if seed == nil {
 			return secp256k1.GenPrivKey(), nil
 		}
-		seed := sha256.Sum256([]byte(mnemonic))
-		return secp256k1.GenPrivKeySecp256k1(seed[:]), nil
+		return secp256k1.GenPrivKeySecp256k1(seed), nil
 
 	case bls12381.KeyType:
-		if mnemonic == "" {
+		if seed == nil {
 			pk, err := bls12381.GenPrivKey()
 			if err != nil {
 				return nil, fmt.Errorf("bls12_381 GenPrivKey: %w", err)
 			}
 			return pk, nil
 		}
-		pk, err := bls12381.GenPrivKeyFromSecret([]byte(mnemonic))
+		pk, err := bls12381.GenPrivKeyFromSecret(seed)
 		if err != nil {
 			return nil, fmt.Errorf("bls12_381 GenPrivKeyFromSecret: %w", err)
 		}
 		return pk, nil
 
 	case mldsa65.KeyType:
-		if mnemonic == "" {
+		if seed == nil {
 			pk, err := mldsa65.GenPrivKey()
 			if err != nil {
 				return nil, fmt.Errorf("ml_dsa_65 GenPrivKey: %w", err)
 			}
 			return pk, nil
 		}
-		seed := sha256.Sum256([]byte(mnemonic))
-		pk, err := mldsa65.GenPrivKeyFromSeed(seed[:])
+		pk, err := mldsa65.GenPrivKeyFromSeed(seed)
 		if err != nil {
 			return nil, fmt.Errorf("ml_dsa_65 GenPrivKeyFromSeed: %w", err)
 		}

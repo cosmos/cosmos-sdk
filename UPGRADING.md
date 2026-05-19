@@ -274,6 +274,16 @@ Cosmos SDK v0.54 includes a Proof of Authority (POA) module under the Cosmos Ent
 
 These changes are informational and optional to adopt during the upgrade; they are not required for a successful migration.
 
+### ML-DSA-65 Validator Consensus Keys
+
+Cosmos SDK v0.54 registers the NIST ML-DSA-65 (FIPS 204) post-quantum signature scheme as a supported validator consensus key type. The new `cosmos.crypto.mldsa65.PubKey` / `PrivKey` proto messages, Amino routes (`cometbft/PubKeyMlDsa65`, `cometbft/PrivKeyMlDsa65`), interface-registry registration, multisig amino route, and `hd.MlDsa65Type` constant are all enabled by default.
+
+**Action required:** none. Existing chains continue to accept only the consensus key types listed in `genesis.consensus_params.validator.pub_key_types` (still `["ed25519"]` by default). No state-machine-relevant behavior changes for chains that do not opt in.
+
+**To opt in (new chains):** set `genesis.consensus_params.validator.pub_key_types` to `["ml_dsa_65"]` (or a list including it). Validators must then submit `MsgCreateValidator` with a `mldsa65.PubKey`. Test harnesses can use the new `testutil/network.Config.ValidatorConsensusKeyType` field together with `genutil.InitializeNodeValidatorFilesFromMnemonicWithKeyType` to spin up an in-process testnet pinned to ML-DSA-65.
+
+**Operational considerations:** ML-DSA-65 keys and signatures are substantially larger than ed25519 (pubkey 1952 bytes vs 32, signature 3309 bytes vs 64). Chains enabling this key type should review `consensus_params.block.max_bytes` and gossip framing limits accordingly. The cometbft commit lift in this release expanded `MaxSignatureSize` and the per-validator `MaxCommitSigBytes` to accommodate the larger signatures; downstream applications relying on the previous fixed values may need to be re-examined.
+
 ### Telemetry
 
 The telemetry package has been deprecated and users are encouraged to switch to OpenTelemetry.

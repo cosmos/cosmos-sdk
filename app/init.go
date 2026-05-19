@@ -383,6 +383,13 @@ func (app *SDKApp) initGovModule(cfg SDKAppConfig) {
 	govRouter := govv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler)
 	govConfig := govtypes.DefaultConfig()
+	if cfg.GovConfig != nil {
+		govConfig = *cfg.GovConfig
+	}
+	calculateVoteResultsFn := cfg.GovVoteCalcFn
+	if calculateVoteResultsFn == nil {
+		calculateVoteResultsFn = govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(app.StakingKeeper)
+	}
 	/*
 		Example of setting gov params:
 		govConfig.MaxMetadataLen = 10000
@@ -396,13 +403,13 @@ func (app *SDKApp) initGovModule(cfg SDKAppConfig) {
 		app.MsgServiceRouter(),
 		govConfig,
 		cfg.ModuleAuthority,
-		govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(app.StakingKeeper),
+		calculateVoteResultsFn,
 	)
 
 	// Set legacy router for backwards compatibility with gov v1beta1
 	govKeeper.SetLegacyRouter(govRouter)
 
-	app.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks())
+	app.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks(cfg.GovHooks...))
 
 	module := gov.NewAppModule(
 		app.encodingConfig.Codec,

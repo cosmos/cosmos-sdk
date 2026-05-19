@@ -20,6 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -73,6 +75,7 @@ type SDKAppConfig struct {
 	WithUnorderedTx bool
 
 	Keys               []string
+	TransientStoreKeys []string
 	OrderPreBlockers   []string
 	OrderBeginBlockers []string
 	OrderEndBlockers   []string
@@ -87,6 +90,8 @@ type SDKAppConfig struct {
 	PrepareProposalHandler     sdk.PrepareProposalHandler
 	ProcessProposalHandler     sdk.ProcessProposalHandler
 	ExtendVoteHandler          sdk.ExtendVoteHandler
+	AnteHandlerProvider        func(app *SDKApp, txConfig client.TxConfig) (sdk.AnteHandler, error)
+	PostHandlerProvider        func(app *SDKApp) (sdk.PostHandler, error)
 
 	OptimisticExecutionEnabled bool
 
@@ -96,6 +101,9 @@ type SDKAppConfig struct {
 	Upgrades []Upgrade[AppI]
 
 	ModuleAuthority string
+	GovConfig       *govtypes.Config
+	GovHooks        []govtypes.GovHooks
+	GovVoteCalcFn   govkeeper.CalculateVoteResultsAndVotingPowerFn
 }
 
 type BlockSTMConfig struct {
@@ -155,12 +163,20 @@ func DefaultSDKAppConfig(
 		// leave these as nil for construction later in baseapp by default
 		PrepareProposalHandler: nil,
 		ProcessProposalHandler: nil,
+		AnteHandlerProvider:    nil,
+		PostHandlerProvider:    nil,
 
 		BlockSTM: nil,
 
 		Upgrades: nil,
 
 		ModuleAuthority: defaultModuleAuthority,
+		GovConfig: func() *govtypes.Config {
+			cfg := govtypes.DefaultConfig()
+			return &cfg
+		}(),
+		GovHooks:      nil,
+		GovVoteCalcFn: nil,
 	}
 }
 

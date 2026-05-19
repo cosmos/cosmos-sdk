@@ -89,6 +89,8 @@ type SDKApp struct {
 
 	// storeKeys to access the substores
 	storeKeys map[string]*storetypes.KVStoreKey
+	// transientStoreKeys to access transient substores
+	transientStoreKeys map[string]*storetypes.TransientStoreKey
 
 	// the module manager
 	moduleManager      *module.Manager
@@ -193,6 +195,7 @@ func NewSDKApp(
 	storeKeys := storetypes.NewKVStoreKeys(
 		append(defaultKeys, appConfig.Keys...)...,
 	)
+	transientStoreKeys := storetypes.NewTransientStoreKeys(appConfig.TransientStoreKeys...)
 	if err := bApp.RegisterStreamingServices(appConfig.AppOpts, storeKeys); err != nil {
 		panic(err)
 	}
@@ -202,6 +205,7 @@ func NewSDKApp(
 		BaseApp:            bApp,
 		encodingConfig:     encodingConfig,
 		storeKeys:          storeKeys,
+		transientStoreKeys: transientStoreKeys,
 		orderPreBlockers:   appConfig.OrderPreBlockers,
 		orderBeginBlockers: appConfig.OrderBeginBlockers,
 		orderEndBlockers:   appConfig.OrderEndBlockers,
@@ -300,6 +304,14 @@ func (app *SDKApp) addModule(mod Module) error {
 		}
 		app.storeKeys[name] = storeKey
 	}
+	if transientStoreKeyProvider, ok := mod.(TransientStoreKeysProvider); ok {
+		for name, storeKey := range transientStoreKeyProvider.TransientStoreKeys() {
+			if _, found := app.transientStoreKeys[name]; found {
+				return fmt.Errorf("module transient store key %s already exists in app: %v", mod.Name(), app.transientStoreKeys)
+			}
+			app.transientStoreKeys[name] = storeKey
+		}
+	}
 
 	// append actual module to the custom module list
 	app.customModules = append(app.customModules, mod)
@@ -396,6 +408,7 @@ func (app *SDKApp) loadModules() {
 
 	// initialize stores
 	app.MountKVStores(app.storeKeys)
+	app.MountTransientStores(app.transientStoreKeys)
 }
 
 // Name returns the Name of the App
@@ -483,6 +496,17 @@ func (app *SDKApp) GetStoreKeys() []storetypes.StoreKey {
 	return keys
 }
 
+// GetTransientStoreKey returns the TransientStoreKey for the provided store key.
+//
+// NOTE: This is solely to be used for testing purposes.
+func (app *SDKApp) GetTransientStoreKey(storeKey string) *storetypes.TransientStoreKey {
+	transientStoreKey, found := app.transientStoreKeys[storeKey]
+	if !found {
+		return nil
+	}
+	return transientStoreKey
+}
+
 // SimulationManager implements the SimulationApp interface
 func (app *SDKApp) SimulationManager() *module.SimulationManager {
 	return app.simulationManager
@@ -547,6 +571,9 @@ func (app *SDKApp) setAnteHandler(txConfig client.TxConfig) {
 			},
 		},
 	)
+	if app.cfg.AnteHandlerProvider != nil {
+		anteHandler, err = app.cfg.AnteHandlerProvider(app, txConfig)
+	}
 	if err != nil {
 		panic(err)
 	}
@@ -559,6 +586,9 @@ func (app *SDKApp) setPostHandler() {
 	postHandler, err := posthandler.NewPostHandler(
 		posthandler.HandlerOptions{},
 	)
+	if app.cfg.PostHandlerProvider != nil {
+		postHandler, err = app.cfg.PostHandlerProvider(app)
+	}
 	if err != nil {
 		panic(err)
 	}

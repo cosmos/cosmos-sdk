@@ -22,6 +22,10 @@ type StoreKeysProvider interface {
 	StoreKeys() map[string]*storetypes.KVStoreKey
 }
 
+type TransientStoreKeysProvider interface {
+	TransientStoreKeys() map[string]*storetypes.TransientStoreKey
+}
+
 type NameProvider interface {
 	Name() string
 }

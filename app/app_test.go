@@ -7,6 +7,8 @@ import (
 
 	"cosmossdk.io/log/v2"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -82,5 +84,43 @@ func TestNewSDKAppRegistersConfigStoreKeys(t *testing.T) {
 	app := NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
 	if app.GetKey("custom_test_key") == nil {
 		t.Fatal("expected custom key from SDKAppConfig.Keys to be registered")
+	}
+}
+
+func TestNewSDKAppRegistersTransientStoreKeys(t *testing.T) {
+	cfg := DefaultSDKAppConfig("app", testAppOptions(t))
+	cfg.TransientStoreKeys = []string{"custom_transient_key"}
+
+	app := NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
+	if app.GetTransientStoreKey("custom_transient_key") == nil {
+		t.Fatal("expected custom transient key from SDKAppConfig.TransientStoreKeys to be registered")
+	}
+}
+
+func TestNewSDKAppUsesCustomAnteAndPostHandlerProviders(t *testing.T) {
+	cfg := DefaultSDKAppConfig("app", testAppOptions(t))
+	anteCalled := false
+	postCalled := false
+	cfg.AnteHandlerProvider = func(_ *SDKApp, _ client.TxConfig) (sdk.AnteHandler, error) {
+		anteCalled = true
+		return func(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) {
+			return ctx, nil
+		}, nil
+	}
+	cfg.PostHandlerProvider = func(_ *SDKApp) (sdk.PostHandler, error) {
+		postCalled = true
+		return func(ctx sdk.Context, _ sdk.Tx, _, _ bool) (sdk.Context, error) {
+			return ctx, nil
+		}, nil
+	}
+
+	app := NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
+	app.LoadModules()
+
+	if !anteCalled {
+		t.Fatal("expected custom ante handler provider to be called")
+	}
+	if !postCalled {
+		t.Fatal("expected custom post handler provider to be called")
 	}
 }

@@ -17,6 +17,7 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -49,7 +50,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	sigtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -118,6 +118,8 @@ func NewSimApp(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
+	poaConfig := DefaultPoAConfig()
+
 	interfaceRegistry, _ := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
 		ProtoFiles: proto.HybridResolver,
 		SigningOptions: signing.Options{
@@ -140,9 +142,11 @@ func NewSimApp(
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	std.RegisterInterfaces(interfaceRegistry)
 
-	baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
+	if poaConfig.EnableOptimisticExecution {
+		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
+	}
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
+	bApp := baseapp.NewBaseApp(poaConfig.AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetTxEncoder(txConfig.TxEncoder())
@@ -185,11 +189,7 @@ func NewSimApp(
 		appCodec,
 		runtime.NewKVStoreService(storeKeys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
-		map[string][]string{
-			authtypes.FeeCollectorName: nil,
-			govtypes.ModuleName:        {authtypes.Burner, authtypes.Staking},
-			poatypes.ModuleName:        nil,
-		},
+		poaConfig.ModuleAccountPermissions,
 		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -231,7 +231,7 @@ func NewSimApp(
 		),
 	)
 
-	enabledSignModes := append(authtx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
+	enabledSignModes := slices.Clone(poaConfig.EnabledSignModes)
 	txConfigOpts := authtx.ConfigOptions{
 		EnabledSignModes:           enabledSignModes,
 		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
@@ -245,6 +245,11 @@ func NewSimApp(
 	}
 	app.encodingConfig.TxConfig = txConfig
 
+	poaAppModule := poa.NewAppModule(appCodec, app.POAKeeper)
+	if poaConfig.EnableSecp256k1Support {
+		poaAppModule = poa.NewAppModule(appCodec, app.POAKeeper, poa.WithSecp256k1Support())
+	}
+
 	app.ModuleManager = module.NewManager(
 		genutil.NewAppModule(
 			app.AccountKeeper, nil, app,
@@ -254,7 +259,7 @@ func NewSimApp(
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		poa.NewAppModule(appCodec, app.POAKeeper, poa.WithSecp256k1Support()), // poa.WithSecp256k1Support() is an optional parameter to allow Secp256k1 keys as validators
+		poaAppModule,
 	)
 
 	app.BasicModuleManager = module.NewBasicManagerFromManager(

@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	"maps"
 	"slices"
 
 	"github.com/spf13/cast"
@@ -157,8 +156,7 @@ func DefaultSDKAppConfig(
 		PrepareProposalHandler: nil,
 		ProcessProposalHandler: nil,
 
-		OptimisticExecutionEnabled: false,
-		BlockSTM:                   nil,
+		BlockSTM: nil,
 
 		Upgrades: nil,
 
@@ -188,71 +186,26 @@ func (appConfig SDKAppConfig) Validate() error {
 }
 
 func (appConfig *SDKAppConfig) processOptionalModules() {
-	checkForModuleInclusion := func(moduleName string) func(string) bool {
-		return func(s string) bool {
-			return moduleName == s
-		}
-	}
-
 	deleteModuleFromOrdering := func(moduleName string) {
-		appConfig.OrderPreBlockers = slices.DeleteFunc(appConfig.OrderPreBlockers, checkForModuleInclusion(moduleName))
-		appConfig.OrderBeginBlockers = slices.DeleteFunc(appConfig.OrderBeginBlockers, checkForModuleInclusion(moduleName))
-		appConfig.OrderEndBlockers = slices.DeleteFunc(appConfig.OrderEndBlockers, checkForModuleInclusion(moduleName))
-		appConfig.OrderInitGenesis = slices.DeleteFunc(appConfig.OrderInitGenesis, checkForModuleInclusion(moduleName))
-		appConfig.OrderExportGenesis = slices.DeleteFunc(appConfig.OrderExportGenesis, checkForModuleInclusion(moduleName))
+		appConfig.OrderPreBlockers = slices.DeleteFunc(appConfig.OrderPreBlockers, func(s string) bool { return s == moduleName })
+		appConfig.OrderBeginBlockers = slices.DeleteFunc(appConfig.OrderBeginBlockers, func(s string) bool { return s == moduleName })
+		appConfig.OrderEndBlockers = slices.DeleteFunc(appConfig.OrderEndBlockers, func(s string) bool { return s == moduleName })
+		appConfig.OrderInitGenesis = slices.DeleteFunc(appConfig.OrderInitGenesis, func(s string) bool { return s == moduleName })
+		appConfig.OrderExportGenesis = slices.DeleteFunc(appConfig.OrderExportGenesis, func(s string) bool { return s == moduleName })
 	}
 
-	if !appConfig.WithAuthz {
-		maps.DeleteFunc(appConfig.ModuleAccountPerms, func(s string, _ []string) bool {
-			switch s {
-			case authz.ModuleName:
-				return true
-			default:
-				return false
-			}
-		})
-
-		deleteModuleFromOrdering(authz.ModuleName)
+	removeOptionalModule := func(enabled bool, moduleName string) {
+		if enabled {
+			return
+		}
+		delete(appConfig.ModuleAccountPerms, moduleName)
+		deleteModuleFromOrdering(moduleName)
 	}
 
-	if !appConfig.WithFeeGrant {
-		maps.DeleteFunc(appConfig.ModuleAccountPerms, func(s string, _ []string) bool {
-			switch s {
-			case feegrant.ModuleName:
-				return true
-			default:
-				return false
-			}
-		})
-
-		deleteModuleFromOrdering(feegrant.ModuleName)
-	}
-
-	if !appConfig.WithMint {
-		maps.DeleteFunc(appConfig.ModuleAccountPerms, func(s string, _ []string) bool {
-			switch s {
-			case minttypes.ModuleName:
-				return true
-			default:
-				return false
-			}
-		})
-
-		deleteModuleFromOrdering(minttypes.ModuleName)
-	}
-
-	if !appConfig.WithEpochs {
-		maps.DeleteFunc(appConfig.ModuleAccountPerms, func(s string, _ []string) bool {
-			switch s {
-			case epochstypes.ModuleName:
-				return true
-			default:
-				return false
-			}
-		})
-
-		deleteModuleFromOrdering(epochstypes.ModuleName)
-	}
+	removeOptionalModule(appConfig.WithAuthz, authz.ModuleName)
+	removeOptionalModule(appConfig.WithFeeGrant, feegrant.ModuleName)
+	removeOptionalModule(appConfig.WithMint, minttypes.ModuleName)
+	removeOptionalModule(appConfig.WithEpochs, epochstypes.ModuleName)
 }
 
 func cloneModuleAccountPerms(src map[string][]string) map[string][]string {

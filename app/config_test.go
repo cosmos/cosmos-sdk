@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func TestDefaultSDKAppConfigReturnsIndependentSlices(t *testing.T) {
@@ -52,15 +53,15 @@ func TestProcessOptionalModulesDoesNotMutateOtherConfigs(t *testing.T) {
 	cfgA.WithMint = false
 	cfgA.processOptionalModules()
 
-	if _, ok := cfgA.ModuleAccountPerms["mint"]; ok {
+	if _, ok := cfgA.ModuleAccountPerms[minttypes.ModuleName]; ok {
 		t.Fatal("expected mint permissions to be removed from cfgA")
 	}
 
-	if _, ok := cfgB.ModuleAccountPerms["mint"]; !ok {
+	if _, ok := cfgB.ModuleAccountPerms[minttypes.ModuleName]; !ok {
 		t.Fatal("expected cfgB mint permissions to remain unchanged")
 	}
 
-	if !slices.Contains(cfgB.OrderBeginBlockers, "mint") {
+	if !slices.Contains(cfgB.OrderBeginBlockers, minttypes.ModuleName) {
 		t.Fatal("expected cfgB order begin blockers to remain unchanged")
 	}
 }
@@ -71,13 +72,13 @@ func TestProcessOptionalModulesRemovesMintFromOrdering(t *testing.T) {
 	cfg.WithMint = false
 	cfg.processOptionalModules()
 
-	if slices.Contains(cfg.OrderBeginBlockers, "mint") {
+	if slices.Contains(cfg.OrderBeginBlockers, minttypes.ModuleName) {
 		t.Fatal("expected mint to be removed from begin blocker ordering when disabled")
 	}
-	if slices.Contains(cfg.OrderInitGenesis, "mint") {
+	if slices.Contains(cfg.OrderInitGenesis, minttypes.ModuleName) {
 		t.Fatal("expected mint to be removed from init genesis ordering when disabled")
 	}
-	if slices.Contains(cfg.OrderExportGenesis, "mint") {
+	if slices.Contains(cfg.OrderExportGenesis, minttypes.ModuleName) {
 		t.Fatal("expected mint to be removed from export genesis ordering when disabled")
 	}
 }

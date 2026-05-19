@@ -45,18 +45,10 @@ func TestBlockedAddressesExcludesGovModuleAddress(t *testing.T) {
 	}
 }
 
-func TestConfigureExecutionModePanicsOnUnsupportedMode(t *testing.T) {
+func TestConfigureExecutionModeUsesSerialWhenBlockSTMIsNil(t *testing.T) {
 	app := &SDKApp{
-		cfg: SDKAppConfig{
-			ExecutionMode: "invalid-mode",
-		},
+		cfg: SDKAppConfig{},
 	}
-
-	defer func() {
-		if recover() == nil {
-			t.Fatal("expected panic for unsupported execution mode")
-		}
-	}()
 
 	app.configureExecutionMode()
 }

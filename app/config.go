@@ -3,7 +3,6 @@ package app
 import (
 	"fmt"
 	"maps"
-	"runtime"
 	"slices"
 
 	"github.com/spf13/cast"
@@ -90,21 +89,13 @@ type SDKAppConfig struct {
 	ProcessProposalHandler     sdk.ProcessProposalHandler
 	ExtendVoteHandler          sdk.ExtendVoteHandler
 
-	ExecutionMode ExecutionMode
-	BlockSTM      BlockSTMConfig
+	// BlockSTM enables parallel execution when configured; nil means serial execution.
+	BlockSTM *BlockSTMConfig
 
 	Upgrades []Upgrade[AppI]
 
 	ModuleAuthority string
 }
-
-type ExecutionMode string
-
-const (
-	ExecutionModeSerial     ExecutionMode = "serial"
-	ExecutionModeOptimistic ExecutionMode = "optimistic"
-	ExecutionModeBlockSTM   ExecutionMode = "blockstm"
-)
 
 type BlockSTMConfig struct {
 	Workers  int
@@ -164,11 +155,7 @@ func DefaultSDKAppConfig(
 		PrepareProposalHandler: nil,
 		ProcessProposalHandler: nil,
 
-		ExecutionMode: ExecutionModeSerial,
-		BlockSTM: BlockSTMConfig{
-			Workers:  runtime.GOMAXPROCS(0),
-			Estimate: false,
-		},
+		BlockSTM: nil,
 
 		Upgrades: nil,
 
@@ -187,13 +174,7 @@ func (appConfig SDKAppConfig) Validate() error {
 		return fmt.Errorf("app opts must include --home")
 	}
 
-	switch appConfig.ExecutionMode {
-	case ExecutionModeSerial, ExecutionModeOptimistic, ExecutionModeBlockSTM:
-	default:
-		return fmt.Errorf("invalid execution mode: %q", appConfig.ExecutionMode)
-	}
-
-	if appConfig.ExecutionMode == ExecutionModeBlockSTM && appConfig.BlockSTM.Workers < 1 {
+	if appConfig.BlockSTM != nil && appConfig.BlockSTM.Workers < 1 {
 		return fmt.Errorf("blockstm workers must be >= 1")
 	}
 

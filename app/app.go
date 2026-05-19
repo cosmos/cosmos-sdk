@@ -231,41 +231,34 @@ func NewSDKApp(
 }
 
 func (app *SDKApp) configureExecutionMode() {
-	switch app.cfg.ExecutionMode {
-	case ExecutionModeSerial:
+	if app.cfg.BlockSTM == nil {
 		return
-	case ExecutionModeOptimistic:
-		baseapp.SetOptimisticExecution()(app.BaseApp)
-		return
-	case ExecutionModeBlockSTM:
-		stores := make([]storetypes.StoreKey, 0, len(app.storeKeys))
-		for _, key := range app.storeKeys {
-			stores = append(stores, key)
-		}
-
-		workers := app.cfg.BlockSTM.Workers
-		if workers < 1 {
-			workers = runtime.GOMAXPROCS(0)
-		}
-
-		var coinDenom func(storetypes.MultiStore) string
-		if app.cfg.BlockSTM.Estimate {
-			coinDenom = func(storetypes.MultiStore) string { return sdk.DefaultBondDenom }
-		}
-
-		app.SetBlockSTMTxRunner(
-			txnrunner.NewSTMRunner(
-				app.encodingConfig.TxConfig.TxDecoder(),
-				stores,
-				workers,
-				app.cfg.BlockSTM.Estimate,
-				coinDenom,
-			),
-		)
-		return
-	default:
-		panic(fmt.Sprintf("unsupported execution mode: %q", app.cfg.ExecutionMode))
 	}
+
+	stores := make([]storetypes.StoreKey, 0, len(app.storeKeys))
+	for _, key := range app.storeKeys {
+		stores = append(stores, key)
+	}
+
+	workers := app.cfg.BlockSTM.Workers
+	if workers < 1 {
+		workers = runtime.GOMAXPROCS(0)
+	}
+
+	var coinDenom func(storetypes.MultiStore) string
+	if app.cfg.BlockSTM.Estimate {
+		coinDenom = func(storetypes.MultiStore) string { return sdk.DefaultBondDenom }
+	}
+
+	app.SetBlockSTMTxRunner(
+		txnrunner.NewSTMRunner(
+			app.encodingConfig.TxConfig.TxDecoder(),
+			stores,
+			workers,
+			app.cfg.BlockSTM.Estimate,
+			coinDenom,
+		),
+	)
 }
 
 func (app *SDKApp) AddModules(modules ...Module) error {

@@ -129,6 +129,13 @@ type Config struct {
 	APIAddress       string                     // REST API listen address (including port)
 	GRPCAddress      string                     // GRPC server listen address (including port)
 	PrintMnemonic    bool                       // print the mnemonic of first validator as log output for testing
+
+	// ValidatorConsensusKeyType selects the consensus (priv_validator_key.json)
+	// signature scheme. Empty string preserves the historical behavior
+	// (ed25519). Other recognized values are "secp256k1", "bls12_381", and
+	// "ml_dsa_65". This is an opt-in field; existing tests that don't set it
+	// continue to call genutil.InitializeNodeValidatorFiles unchanged.
+	ValidatorConsensusKeyType string
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -471,7 +478,17 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		cmtCfg.P2P.AddrBookStrict = false
 		cmtCfg.P2P.AllowDuplicateIP = true
 
-		nodeID, pubKey, err := genutil.InitializeNodeValidatorFiles(cmtCfg)
+		var (
+			nodeID string
+			pubKey cryptotypes.PubKey
+		)
+		if cfg.ValidatorConsensusKeyType == "" {
+			nodeID, pubKey, err = genutil.InitializeNodeValidatorFiles(cmtCfg)
+		} else {
+			nodeID, pubKey, err = genutil.InitializeNodeValidatorFilesFromMnemonicWithKeyType(
+				cmtCfg, "", cfg.ValidatorConsensusKeyType,
+			)
+		}
 		if err != nil {
 			return nil, err
 		}

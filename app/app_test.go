@@ -3,6 +3,10 @@ package app
 import (
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
+
+	"cosmossdk.io/log/v2"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -51,4 +55,22 @@ func TestConfigureExecutionModeUsesSerialWhenBlockSTMIsNil(t *testing.T) {
 	}
 
 	app.configureExecutionMode()
+}
+
+func TestNewSDKAppWithOptimisticExecutionEnabledLoadsModules(t *testing.T) {
+	cfg := DefaultSDKAppConfig("app", testAppOptions(t))
+	cfg.OptimisticExecutionEnabled = true
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("expected startup with optimistic execution enabled to succeed, got panic: %v", r)
+		}
+	}()
+
+	app := NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
+	if app == nil {
+		t.Fatal("expected NewSDKApp to return a non-nil app")
+	}
+
+	app.LoadModules()
 }

@@ -7,6 +7,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/distribution/v1beta1/distribution.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/query/v1/query.proto";
 import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/distribution/types";
@@ -16,12 +17,14 @@ service Query {
   // Params queries params of the distribution module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/params";
+    option (cosmos.query.v1.module_query_safe) = true;
   }
 
   // ValidatorDistributionInfo queries validator commission and self-delegation rewards for validator
   rpc ValidatorDistributionInfo(QueryValidatorDistributionInfoRequest)
       returns (QueryValidatorDistributionInfoResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/{validator_address}";
+    option (cosmos.query.v1.module_query_safe) = true;
   }
 
   // ValidatorOutstandingRewards queries rewards of a validator address.
@@ -29,47 +32,55 @@ service Query {
       returns (QueryValidatorOutstandingRewardsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/"
                                    "{validator_address}/outstanding_rewards";
+    option (cosmos.query.v1.module_query_safe) = true;
   }
 
   // ValidatorCommission queries accumulated commission for a validator.
   rpc ValidatorCommission(QueryValidatorCommissionRequest) returns (QueryValidatorCommissionResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/"
                                    "{validator_address}/commission";
+    option (cosmos.query.v1.module_query_safe) = true;
   }
 
   // ValidatorSlashes queries slash events of a validator.
   rpc ValidatorSlashes(QueryValidatorSlashesRequest) returns (QueryValidatorSlashesResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/{validator_address}/slashes";
+    option (cosmos.query.v1.module_query_safe) = true;
   }
 
   // DelegationRewards queries the total rewards accrued by a delegation.
   rpc DelegationRewards(QueryDelegationRewardsRequest) returns (QueryDelegationRewardsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/"
                                    "{validator_address}";
+    option (cosmos.query.v1.module_query_safe) = true;
   }
 
   // DelegationTotalRewards queries the total rewards accrued by each
   // validator.
   rpc DelegationTotalRewards(QueryDelegationTotalRewardsRequest) returns (QueryDelegationTotalRewardsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards";
+    option (cosmos.query.v1.module_query_safe) = true;
   }
 
   // DelegatorValidators queries the validators of a delegator.
   rpc DelegatorValidators(QueryDelegatorValidatorsRequest) returns (QueryDelegatorValidatorsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/"
                                    "{delegator_address}/validators";
+    option (cosmos.query.v1.module_query_safe) = true;
   }
 
   // DelegatorWithdrawAddress queries withdraw address of a delegator.
   rpc DelegatorWithdrawAddress(QueryDelegatorWithdrawAddressRequest) returns (QueryDelegatorWithdrawAddressResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/"
                                    "{delegator_address}/withdraw_address";
+    option (cosmos.query.v1.module_query_safe) = true;
   }
 
   // CommunityPool queries the community pool coins.
   //
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/community_pool";
+    option (cosmos.query.v1.module_query_safe) = true;
   }
 
   // ValidatorHistoricalRewards queries historical rewards for a validator at a specific period.
@@ -77,18 +88,21 @@ service Query {
       returns (QueryValidatorHistoricalRewardsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/"
                                    "{validator_address}/historical_rewards/{period}";
+    option (cosmos.query.v1.module_query_safe) = true;
   }
 
   // ValidatorCurrentRewards queries current rewards for a validator.
   rpc ValidatorCurrentRewards(QueryValidatorCurrentRewardsRequest) returns (QueryValidatorCurrentRewardsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/"
                                    "{validator_address}/current_rewards";
+    option (cosmos.query.v1.module_query_safe) = true;
   }
 
   // DelegatorStartingInfo queries the starting info for a delegator.
   rpc DelegatorStartingInfo(QueryDelegatorStartingInfoRequest) returns (QueryDelegatorStartingInfoResponse) {
     option (google.api.http).get =
         "/cosmos/distribution/v1beta1/delegators/{delegator_address}/starting_info/{validator_address}";
+    option (cosmos.query.v1.module_query_safe) = true;
   }
 }
 

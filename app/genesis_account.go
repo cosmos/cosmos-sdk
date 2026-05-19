@@ -30,7 +30,7 @@ type SimGenesisAccount struct {
 func (sga SimGenesisAccount) Validate() error {
 	if !sga.OriginalVesting.IsZero() {
 		if sga.StartTime >= sga.EndTime {
-			return errors.New("vesting start-time cannot be before end-time")
+			return errors.New("vesting start-time must be before end-time")
 		}
 	}
 

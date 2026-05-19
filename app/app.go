@@ -190,7 +190,7 @@ func NewSDKApp(
 	bApp := initBaseApp(logger, db, traceStore, encodingConfig, appConfig)
 
 	storeKeys := storetypes.NewKVStoreKeys(
-		defaultKeys...,
+		append(defaultKeys, appConfig.Keys...)...,
 	)
 
 	sdkApp := &SDKApp{
@@ -206,7 +206,6 @@ func NewSDKApp(
 		moduleAccountPerms: appConfig.ModuleAccountPerms,
 		moduleLoader:       newModuleLoader(),
 	}
-	sdkApp.configureExecutionMode()
 
 	// add keepers
 	sdkApp.initConsensusModule(appConfig)
@@ -246,10 +245,7 @@ func (app *SDKApp) configureBlockSTM() {
 		return
 	}
 
-	stores := make([]storetypes.StoreKey, 0, len(app.storeKeys))
-	for _, key := range app.storeKeys {
-		stores = append(stores, key)
-	}
+	stores := app.GetStoreKeys()
 
 	workers := app.cfg.BlockSTM.Workers
 	if workers < 1 {
@@ -374,6 +370,10 @@ func (app *SDKApp) loadModules() {
 	app.simulationManager = module.NewSimulationManagerFromAppModules(app.moduleManager.Modules, overrideModules)
 
 	app.simulationManager.RegisterStoreDecoders()
+
+	// Configure execution mode after all modules are loaded so custom module store keys
+	// are included in the BlockSTM conflict-detection store set.
+	app.configureExecutionMode()
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)

@@ -74,3 +74,13 @@ func TestNewSDKAppWithOptimisticExecutionEnabledLoadsModules(t *testing.T) {
 
 	app.LoadModules()
 }
+
+func TestNewSDKAppRegistersConfigStoreKeys(t *testing.T) {
+	cfg := DefaultSDKAppConfig("app", testAppOptions(t))
+	cfg.Keys = []string{"custom_test_key"}
+
+	app := NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
+	if app.GetKey("custom_test_key") == nil {
+		t.Fatal("expected custom key from SDKAppConfig.Keys to be registered")
+	}
+}

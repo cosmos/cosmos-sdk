@@ -300,14 +300,24 @@ func (app *SDKApp) addModule(mod Module) error {
 	// append actual module to the custom module list
 	app.customModules = append(app.customModules, mod)
 
-	// append to order of genesis etc
-	app.orderPreBlockers = append(app.orderPreBlockers, mod.Name())
-	app.orderBeginBlockers = append(app.orderBeginBlockers, mod.Name())
-	app.orderEndBlockers = append(app.orderEndBlockers, mod.Name())
-	app.orderInitGenesis = append(app.orderInitGenesis, mod.Name())
-	app.orderExportGenesis = append(app.orderExportGenesis, mod.Name())
+	// append to order slices if the module is not already configured.
+	app.orderPreBlockers = appendIfMissing(app.orderPreBlockers, mod.Name())
+	app.orderBeginBlockers = appendIfMissing(app.orderBeginBlockers, mod.Name())
+	app.orderEndBlockers = appendIfMissing(app.orderEndBlockers, mod.Name())
+	app.orderInitGenesis = appendIfMissing(app.orderInitGenesis, mod.Name())
+	app.orderExportGenesis = appendIfMissing(app.orderExportGenesis, mod.Name())
 
 	return nil
+}
+
+func appendIfMissing(order []string, moduleName string) []string {
+	for _, name := range order {
+		if name == moduleName {
+			return order
+		}
+	}
+
+	return append(order, moduleName)
 }
 
 func (app *SDKApp) LoadModules() {

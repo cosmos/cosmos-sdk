@@ -569,8 +569,7 @@ func (app *SDKApp) AutoCliOpts() autocli.AppOptions {
 	}
 
 	return autocli.AppOptions{
-		Modules: modules,
-		// TODO options?????
+		Modules:               modules,
 		ModuleOptions:         services.ExtractAutoCLIOptions(app.moduleManager.Modules),
 		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),

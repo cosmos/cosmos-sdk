@@ -20,8 +20,7 @@ func (m autoCLIModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return m.opts
 }
 
-type moduleWithServices struct {
-}
+type moduleWithServices struct{}
 
 func (moduleWithServices) RegisterServices(cfg module.Configurator) {
 	cfg.RegisterService(&grpc.ServiceDesc{ServiceName: "cosmos.bank.v1beta1.Msg"}, nil)

@@ -51,6 +51,13 @@ func TestCalculateIPRejectsNonIPv4(t *testing.T) {
 	}
 }
 
+func TestCalculateIPRejectsOverflow(t *testing.T) {
+	_, err := CalculateIP("10.0.0.255", 1)
+	if err == nil {
+		t.Fatal("expected overflow error when incrementing past 255")
+	}
+}
+
 func TestGetIPUsesProvidedStartingAddress(t *testing.T) {
 	got, err := GetIP(2, "10.0.0.5")
 	if err != nil {

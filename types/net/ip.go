@@ -82,6 +82,9 @@ func CalculateIP(ip string, i int) (string, error) {
 	}
 
 	for j := 0; j < i; j++ {
+		if ipv4[3] == 255 {
+			return "", fmt.Errorf("IP address overflow: incrementing %v by %d exceeds the IPv4 last-octet range", ip, i)
+		}
 		ipv4[3]++
 	}
 

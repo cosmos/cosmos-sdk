@@ -250,6 +250,8 @@ func (appConfig *SDKAppConfig) processOptionalModules() {
 				return false
 			}
 		})
+
+		deleteModuleFromOrdering(minttypes.ModuleName)
 	}
 
 	if !appConfig.WithEpochs {

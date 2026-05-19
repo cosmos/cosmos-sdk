@@ -65,6 +65,23 @@ func TestProcessOptionalModulesDoesNotMutateOtherConfigs(t *testing.T) {
 	}
 }
 
+func TestProcessOptionalModulesRemovesMintFromOrdering(t *testing.T) {
+	cfg := DefaultSDKAppConfig("a", testAppOptions(t))
+
+	cfg.WithMint = false
+	cfg.processOptionalModules()
+
+	if slices.Contains(cfg.OrderBeginBlockers, "mint") {
+		t.Fatal("expected mint to be removed from begin blocker ordering when disabled")
+	}
+	if slices.Contains(cfg.OrderInitGenesis, "mint") {
+		t.Fatal("expected mint to be removed from init genesis ordering when disabled")
+	}
+	if slices.Contains(cfg.OrderExportGenesis, "mint") {
+		t.Fatal("expected mint to be removed from export genesis ordering when disabled")
+	}
+}
+
 func TestDefaultSDKAppConfigRequiresAppOptions(t *testing.T) {
 	defer func() {
 		if recover() == nil {

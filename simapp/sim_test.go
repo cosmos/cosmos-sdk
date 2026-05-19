@@ -34,6 +34,7 @@ import (
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 var FlagEnableStreamingValue bool
@@ -181,7 +182,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	interBlockCachingAppFactory := func(logger log.Logger, db dbm.DB, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) *SimApp {
 		if FlagEnableStreamingValue {
 			m := map[string]any{
-				"streaming.abci.Keys":             []string{"*"},
+				"streaming.abci.keys":             []string{"*"},
 				"streaming.abci.plugin":           "abci_v1",
 				"streaming.abci.stop-node-on-err": true,
 			}
@@ -255,6 +256,10 @@ func AssertEqualStores(
 		}
 
 		keyName := appKeyA.Name()
+		// x/upgrade stores done-height metadata that is not represented in genesis export.
+		if keyName == upgradetypes.StoreKey {
+			continue
+		}
 		appKeyB := newApp.GetKey(keyName)
 
 		storeA := ctxA.KVStore(appKeyA)

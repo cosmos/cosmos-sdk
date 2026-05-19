@@ -29,9 +29,11 @@ func RegisterUpgradeHandlers[T AppI](app T, upgrades ...Upgrade[T]) {
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				sdkCtx.Logger().Debug("running upgrade handler", zap.String("upgrade_name", upgrade.Name))
 
-				err := upgrade.UpgradeCallBack(sdkCtx, plan, app)
-				if err != nil {
-					return nil, err
+				if upgrade.UpgradeCallBack != nil {
+					err := upgrade.UpgradeCallBack(sdkCtx, plan, app)
+					if err != nil {
+						return nil, err
+					}
 				}
 
 				return app.ModuleManager().RunMigrations(ctx, app.Configurator(), fromVM)

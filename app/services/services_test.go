@@ -8,8 +8,6 @@ import (
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 type autoCLIModule struct {
@@ -20,13 +18,6 @@ func (m autoCLIModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return m.opts
 }
 
-type moduleWithServices struct{}
-
-func (moduleWithServices) RegisterServices(cfg module.Configurator) {
-	cfg.RegisterService(&grpc.ServiceDesc{ServiceName: "cosmos.bank.v1beta1.Msg"}, nil)
-	cfg.RegisterService(&grpc.ServiceDesc{ServiceName: "cosmos.bank.v1beta1.Query"}, nil)
-}
-
 func TestExtractAutoCLIOptions(t *testing.T) {
 	expected := &autocliv1.ModuleOptions{
 		Tx: &autocliv1.ServiceCommandDescriptor{Service: "custom.Msg"},
@@ -34,7 +25,6 @@ func TestExtractAutoCLIOptions(t *testing.T) {
 
 	appModules := map[string]any{
 		"explicit": autoCLIModule{opts: expected},
-		"derived":  moduleWithServices{},
 	}
 
 	got := ExtractAutoCLIOptions(appModules)

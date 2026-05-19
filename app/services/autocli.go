@@ -130,7 +130,7 @@ func (a *autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss any) {
 		a.queryServer.RegisterService(sd, ss)
 	}
 }
-func (a *autocliConfigurator) Error() error { return nil }
+func (a *autocliConfigurator) Error() error { return a.err }
 
 // autocliServiceRegistrar is used to capture the service name for registered services
 type autocliServiceRegistrar struct {

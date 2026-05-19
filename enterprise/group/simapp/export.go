@@ -31,7 +31,7 @@ func (app *SimApp) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAd
 		height = 0
 	}
 
-	genState, err := app.ModuleManager.ExportGenesisForModules(ctx, app.encodingConfig.Codec, modulesToExport)
+	genState, err := app.ModuleManager().ExportGenesisForModules(ctx, app.EncodingConfig().Codec, modulesToExport)
 	if err != nil {
 		return servertypes.ExportedApp{}, err
 	}

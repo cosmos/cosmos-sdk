@@ -11,6 +11,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log/v2"
@@ -192,6 +193,9 @@ func NewSDKApp(
 	storeKeys := storetypes.NewKVStoreKeys(
 		append(defaultKeys, appConfig.Keys...)...,
 	)
+	if err := bApp.RegisterStreamingServices(appConfig.AppOpts, storeKeys); err != nil {
+		panic(err)
+	}
 
 	sdkApp := &SDKApp{
 		cfg:                appConfig,
@@ -359,6 +363,11 @@ func (app *SDKApp) loadModules() {
 	}
 
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), services.NewAutoCLIQueryService(app.moduleManager.Modules))
+	reflectionSvc, err := services.NewReflectionService()
+	if err != nil {
+		panic(err)
+	}
+	reflectionv1.RegisterReflectionServiceServer(app.GRPCQueryRouter(), reflectionSvc)
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//

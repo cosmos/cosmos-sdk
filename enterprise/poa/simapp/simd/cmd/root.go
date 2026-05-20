@@ -45,7 +45,7 @@ func NewRootCmd() *cobra.Command {
 	defer os.RemoveAll(tempHome)
 
 	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
-	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), true, simtestutil.AppOptionsMap{
+	tempApp := simapp.NewPoAApp(log.NewNopLogger(), dbm.NewMemDB(), true, simtestutil.AppOptionsMap{
 		flags.FlagHome:    tempHome,
 		flags.FlagChainID: "poa-simapp-rootcmd",
 	})

@@ -409,7 +409,11 @@ func (app *SDKApp) initGovModule(cfg SDKAppConfig) {
 	// Set legacy router for backwards compatibility with gov v1beta1
 	govKeeper.SetLegacyRouter(govRouter)
 
-	app.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks(cfg.GovHooks...))
+	if len(cfg.GovHooks) > 0 {
+		app.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks(cfg.GovHooks...))
+	} else {
+		app.GovKeeper = *govKeeper
+	}
 
 	module := gov.NewAppModule(
 		app.encodingConfig.Codec,

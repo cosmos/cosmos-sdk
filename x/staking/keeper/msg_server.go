@@ -613,3 +613,67 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }
+
+func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateConsPubKey) (*types.MsgRotateConsPubKeyResponse, error) {
+	newPk, ok := msg.NewPubkey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", msg.NewPubkey.GetCachedValue())
+	}
+	newConsAddr := sdk.ConsAddress(newPk.Address())
+
+	// reject reuse of a key that some validator rotated away from inside the
+	// unbonding window
+	rotated, err := k.HasRotatedConsAddr(ctx, newConsAddr)
+	if err != nil {
+		return nil, err
+	}
+	if rotated {
+		return nil, types.ErrConsensusPubKeyInRotationHistory
+	}
+
+	// reject a key currently in use by some validator
+	if existing, err := k.GetValidatorByConsAddr(ctx, newConsAddr); err == nil && existing.OperatorAddress != "" {
+		return nil, types.ErrConsensusPubKeyAlreadyUsedForValidator
+	}
+
+	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+	validator, err := k.GetValidator(ctx, valAddr)
+	if err != nil {
+		return nil, types.ErrNoValidatorFound
+	}
+	if status := validator.GetStatus(); status != types.Bonded {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "validator status is not bonded, got %s", status)
+	}
+
+	// shouldnt ever happen
+	oldPk, ok := validator.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey for validator's current key, got %T", validator.ConsensusPubkey.GetCachedValue())
+	}
+
+	// enforce the per validator rotation limit inside the unbonding window
+	pending, err := k.HasPendingConsKeyRotation(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+	if pending {
+		return nil, types.ErrExceedingMaxConsPubKeyRotations
+	}
+
+	// transfer the rotation fee from the validators account to the
+	// distribution module, which forwards it to the community pool
+	fee := types.DefaultKeyRotationFee
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), types.DistributionModuleName, sdk.NewCoins(fee)); err != nil {
+		return nil, err
+	}
+
+	// record the key rotation in the store
+	if err := k.SetConsKeyRotation(ctx, valAddr, oldPk, fee); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgRotateConsPubKeyResponse{}, nil
+}

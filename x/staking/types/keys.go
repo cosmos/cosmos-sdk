@@ -23,6 +23,10 @@ const (
 
 	// RouterKey is the msg router key for the staking module
 	RouterKey = ModuleName
+
+	// DistributionModuleName is the name of the distribution module account, which
+	// receives the consensus key rotation fee.
+	DistributionModuleName = "distribution"
 )
 
 // Keys for store prefixes
@@ -60,6 +64,10 @@ var (
 
 	// NOTE: keys in range 0x81–0x87 were previously used in liquid staking forks of the staking module.
 	// Module developers MUST NOT use these keys and MUST consider them "reserved".
+
+	ConsKeyRotationQueueKey     = []byte{0x91} // prefix for the consensus key rotation maturity queue, keyed by (time, valAddr)
+	ValidatorConsKeyRotationKey = []byte{0x92} // prefix for a validator's pending consensus key rotation, keyed by valAddr
+	RotatedConsAddrIndexKey     = []byte{0x93} // prefix for the previously rotated consensus address lookup
 )
 
 // UnbondingType defines the type of unbonding operation
@@ -425,4 +433,55 @@ func GetHistoricalInfoKey(height int64) []byte {
 	heightBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(heightBytes, uint64(height))
 	return append(HistoricalInfoKey, heightBytes...)
+}
+
+// GetConsKeyRotationQueueKey returns the queue key for a pending rotation
+// maturing at the given time.
+func GetConsKeyRotationQueueKey(maturity time.Time, valAddr sdk.ValAddress) []byte {
+	timeBz := sdk.FormatTimeBytes(maturity)
+	valBz := address.MustLengthPrefix(valAddr)
+
+	key := make([]byte, len(ConsKeyRotationQueueKey)+len(timeBz)+len(valBz))
+	copy(key, ConsKeyRotationQueueKey)
+	copy(key[len(ConsKeyRotationQueueKey):], timeBz)
+	copy(key[len(ConsKeyRotationQueueKey)+len(timeBz):], valBz)
+	return key
+}
+
+// GetConsKeyRotationQueueTimePrefix returns the queue iteration prefix up to
+// the given time.
+func GetConsKeyRotationQueueTimePrefix(maturity time.Time) []byte {
+	return append(ConsKeyRotationQueueKey, sdk.FormatTimeBytes(maturity)...)
+}
+
+// ParseConsKeyRotationQueueKey extracts the maturity time and validator
+// address from a queue key.
+func ParseConsKeyRotationQueueKey(bz []byte) (time.Time, sdk.ValAddress, error) {
+	prefixLen := len(ConsKeyRotationQueueKey)
+	if prefix := bz[:prefixLen]; !bytes.Equal(prefix, ConsKeyRotationQueueKey) {
+		return time.Time{}, nil, fmt.Errorf("invalid prefix; expected: %X, got: %X", ConsKeyRotationQueueKey, prefix)
+	}
+
+	timeLen := len(sdk.SortableTimeFormat)
+	kv.AssertKeyAtLeastLength(bz, prefixLen+timeLen+1)
+
+	ts, err := sdk.ParseTimeBytes(bz[prefixLen : prefixLen+timeLen])
+	if err != nil {
+		return time.Time{}, nil, err
+	}
+
+	valAddrLen := int(bz[prefixLen+timeLen])
+	kv.AssertKeyAtLeastLength(bz, prefixLen+timeLen+1+valAddrLen)
+
+	return ts, sdk.ValAddress(bz[prefixLen+timeLen+1 : prefixLen+timeLen+1+valAddrLen]), nil
+}
+
+// GetValidatorConsKeyRotationKey returns the key for a validator's pending rotation record.
+func GetValidatorConsKeyRotationKey(valAddr sdk.ValAddress) []byte {
+	return append(ValidatorConsKeyRotationKey, address.MustLengthPrefix(valAddr)...)
+}
+
+// GetRotatedConsAddrIndexKey returns the lookup key for a previously rotated consensus address.
+func GetRotatedConsAddrIndexKey(oldConsAddr sdk.ConsAddress) []byte {
+	return append(RotatedConsAddrIndexKey, address.MustLengthPrefix(oldConsAddr)...)
 }

@@ -56,7 +56,7 @@ For chains transitioning from Proof-of-Stake to Proof-of-Authority, see the [POS
 
 ### Prerequisites
 
-- Go 1.25+
+- Go 1.26+
 - Docker (for localnet)
 
 ### Local Development Network

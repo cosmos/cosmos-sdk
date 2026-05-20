@@ -288,13 +288,15 @@ func (app *SDKApp) AddModules(modules ...Module) error {
 }
 
 func (app *SDKApp) addModule(mod Module) error {
-	// update MaccPerms
-	for moduleAcc, perms := range mod.ModuleAccountPermissions() {
-		if _, found := app.moduleAccountPerms[moduleAcc]; found {
-			return fmt.Errorf("module account %s already exists in app: %v", moduleAcc, app.moduleAccountPerms)
-		}
+	if app.moduleManager != nil {
+		return fmt.Errorf("cannot add modules after LoadModules has been called")
+	}
 
-		app.moduleAccountPerms[moduleAcc] = perms
+	if len(mod.ModuleAccountPermissions()) > 0 {
+		return fmt.Errorf(
+			"module %s defines module account permissions via AddModules; configure these in SDKAppConfig.ModuleAccountPerms before NewSDKApp",
+			mod.Name(),
+		)
 	}
 
 	// add to store key list
@@ -557,19 +559,10 @@ func (app *SDKApp) RegisterNodeService(clientCtx client.Context, cfg config.Conf
 }
 
 func (app *SDKApp) setAnteHandler(txConfig client.TxConfig) {
+	handlerOpts := app.buildAnteHandlerOptions(txConfig)
+
 	anteHandler, err := ante.NewAnteHandler(
-		ante.HandlerOptions{
-			AccountKeeper:   app.AccountKeeper,
-			BankKeeper:      app.BankKeeper,
-			SignModeHandler: txConfig.SignModeHandler(),
-			FeegrantKeeper:  app.FeeGrantKeeper,
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			SigVerifyOptions: []ante.SigVerificationDecoratorOption{
-				// change below as needed.
-				ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
-				ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
-			},
-		},
+		handlerOpts,
 	)
 	if err != nil {
 		panic(err)
@@ -577,6 +570,27 @@ func (app *SDKApp) setAnteHandler(txConfig client.TxConfig) {
 
 	// Set the AnteHandler for the app
 	app.SetAnteHandler(anteHandler)
+}
+
+func (app *SDKApp) buildAnteHandlerOptions(txConfig client.TxConfig) ante.HandlerOptions {
+	handlerOpts := ante.HandlerOptions{
+		AccountKeeper:   app.AccountKeeper,
+		BankKeeper:      app.BankKeeper,
+		SignModeHandler: txConfig.SignModeHandler(),
+		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+		SigVerifyOptions: []ante.SigVerificationDecoratorOption{
+			// change below as needed.
+			ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
+			ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
+		},
+	}
+	// Keep FeegrantKeeper nil when feegrant is disabled; assigning a typed-nil
+	// *feegrantkeeper.Keeper to the interface would bypass downstream nil checks.
+	if app.FeeGrantKeeper != nil {
+		handlerOpts.FeegrantKeeper = app.FeeGrantKeeper
+	}
+
+	return handlerOpts
 }
 
 func (app *SDKApp) setPostHandler() {

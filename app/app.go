@@ -571,9 +571,6 @@ func (app *SDKApp) setAnteHandler(txConfig client.TxConfig) {
 			},
 		},
 	)
-	if app.cfg.AnteHandlerProvider != nil {
-		anteHandler, err = app.cfg.AnteHandlerProvider(app, txConfig)
-	}
 	if err != nil {
 		panic(err)
 	}
@@ -586,9 +583,6 @@ func (app *SDKApp) setPostHandler() {
 	postHandler, err := posthandler.NewPostHandler(
 		posthandler.HandlerOptions{},
 	)
-	if app.cfg.PostHandlerProvider != nil {
-		postHandler, err = app.cfg.PostHandlerProvider(app)
-	}
 	if err != nil {
 		panic(err)
 	}

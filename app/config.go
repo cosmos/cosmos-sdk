@@ -90,8 +90,6 @@ type SDKAppConfig struct {
 	PrepareProposalHandler     sdk.PrepareProposalHandler
 	ProcessProposalHandler     sdk.ProcessProposalHandler
 	ExtendVoteHandler          sdk.ExtendVoteHandler
-	AnteHandlerProvider        func(app *SDKApp, txConfig client.TxConfig) (sdk.AnteHandler, error)
-	PostHandlerProvider        func(app *SDKApp) (sdk.PostHandler, error)
 
 	OptimisticExecutionEnabled bool
 
@@ -163,8 +161,6 @@ func DefaultSDKAppConfig(
 		// leave these as nil for construction later in baseapp by default
 		PrepareProposalHandler: nil,
 		ProcessProposalHandler: nil,
-		AnteHandlerProvider:    nil,
-		PostHandlerProvider:    nil,
 
 		BlockSTM: nil,
 

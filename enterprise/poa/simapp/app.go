@@ -27,7 +27,6 @@ import (
 
 	sdkapp "github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa"
 	poakeeper "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/keeper"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
@@ -80,15 +79,6 @@ func NewSimApp(
 	sdkAppConfig.WithEpochs = false
 	sdkAppConfig.WithFeeGrant = false
 	sdkAppConfig.OptimisticExecutionEnabled = poaConfig.EnableOptimisticExecution
-	sdkAppConfig.AnteHandlerProvider = func(app *sdkapp.SDKApp, txConfig client.TxConfig) (sdk.AnteHandler, error) {
-		return NewAnteHandler(ante.HandlerOptions{
-			AccountKeeper:   app.AccountKeeper,
-			BankKeeper:      app.BankKeeper,
-			FeegrantKeeper:  app.FeeGrantKeeper,
-			SignModeHandler: txConfig.SignModeHandler(),
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-		})
-	}
 	sdkAppConfig.Keys = append(slices.Clone(sdkAppConfig.Keys), poatypes.StoreKey)
 	sdkAppConfig.TransientStoreKeys = append(slices.Clone(sdkAppConfig.TransientStoreKeys), poatypes.TransientStoreKey)
 	sdkAppConfig.ModuleAccountPerms[govtypes.ModuleName] = []string{authtypes.Burner, authtypes.Staking}
@@ -134,6 +124,17 @@ func NewSimApp(
 		panic(err)
 	}
 	sharedApp.LoadModules()
+	anteHandler, err := NewAnteHandler(ante.HandlerOptions{
+		AccountKeeper:   sharedApp.AccountKeeper,
+		BankKeeper:      sharedApp.BankKeeper,
+		FeegrantKeeper:  sharedApp.FeeGrantKeeper,
+		SignModeHandler: sharedApp.TxConfig().SignModeHandler(),
+		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+	})
+	if err != nil {
+		panic(err)
+	}
+	sharedApp.SetAnteHandler(anteHandler)
 
 	simApp := &SimApp{
 		SDKApp:    sharedApp,

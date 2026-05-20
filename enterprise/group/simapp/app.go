@@ -24,13 +24,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/keeper"
 	groupmodule "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/module"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -142,15 +140,6 @@ func NewSimApp(
 		vestingtypes.ModuleName,
 		group.ModuleName,
 	}
-	sdkAppConfig.AnteHandlerProvider = func(sdkApp *app.SDKApp, txConfig client.TxConfig) (sdk.AnteHandler, error) {
-		return NewAnteHandler(ante.HandlerOptions{
-			AccountKeeper:   sdkApp.AccountKeeper,
-			BankKeeper:      sdkApp.BankKeeper,
-			SignModeHandler: txConfig.SignModeHandler(),
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-		})
-	}
-
 	sdkApp := app.NewSDKApp(logger, db, nil, sdkAppConfig)
 
 	groupConfig := group.DefaultConfig()
@@ -181,6 +170,16 @@ func NewSimApp(
 	}
 
 	sdkApp.LoadModules()
+	anteHandler, err := NewAnteHandler(ante.HandlerOptions{
+		AccountKeeper:   sdkApp.AccountKeeper,
+		BankKeeper:      sdkApp.BankKeeper,
+		SignModeHandler: sdkApp.TxConfig().SignModeHandler(),
+		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+	})
+	if err != nil {
+		panic(err)
+	}
+	sdkApp.SetAnteHandler(anteHandler)
 
 	simApp := &SimApp{
 		SDKApp:      sdkApp,

@@ -17,12 +17,11 @@ package simapp
 import (
 	"slices"
 
+	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sigtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 )
 
 type PoAConfig struct {

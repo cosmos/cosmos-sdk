@@ -3,7 +3,6 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
@@ -62,7 +61,7 @@ func (app *SDKApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	for _, addr := range jailAllowedAddrs {
 		_, err := sdk.ValAddressFromBech32(addr)
 		if err != nil {
-			log.Fatal(err)
+			panic(err)
 		}
 		allowedAddrsMap[addr] = true
 	}
@@ -134,6 +133,9 @@ func (app *SDKApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 		}
 		return false
 	})
+	if err != nil {
+		panic(fmt.Errorf("error while reinitializing validators: %w", err))
+	}
 
 	// reinitialize all delegations
 	for _, del := range dels {
@@ -219,7 +221,7 @@ func (app *SDKApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 
 	_, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	/* Handle slashing state. */

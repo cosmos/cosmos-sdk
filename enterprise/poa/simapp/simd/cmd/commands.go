@@ -205,11 +205,9 @@ func newApp(
 	db dbm.DB,
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
-	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	return simapp.NewSimApp(
 		logger, db, true,
 		appOpts,
-		baseappOptions...,
 	)
 }
 

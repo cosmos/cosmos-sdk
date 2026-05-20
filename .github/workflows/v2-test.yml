@@ -19,14 +19,14 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "1.23"
           check-latest: true
           cache: true
           cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
+      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -43,14 +43,14 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "1.23"
           check-latest: true
           cache: true
           cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
+      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -67,14 +67,14 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "1.23"
           check-latest: true
           cache: true
           cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
+      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -91,14 +91,14 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "1.23"
           check-latest: true
           cache: true
           cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
+      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -115,14 +115,14 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "1.23"
           check-latest: true
           cache: true
           cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
+      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -137,10 +137,10 @@ jobs:
   test-system-v2:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-tags: true
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "1.23"
           check-latest: true
@@ -148,7 +148,7 @@ jobs:
           cache-dependency-path: |
             simapp/v2/go.sum
             systemtest/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
+      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -167,7 +167,7 @@ jobs:
         if: env.GIT_DIFF
         run: |
           COSMOS_BUILD_OPTIONS=v2 make test-system
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: failure()
         with:
           name: "testnet-setup"

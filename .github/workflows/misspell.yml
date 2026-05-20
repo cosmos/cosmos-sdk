@@ -14,13 +14,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Run codespell
         continue-on-error: true
         run: |
           sudo apt-get install codespell -y
           codespell -w --skip="*.pulsar.go,*.pb.go,*.pb.gw.go,*.cosmos_orm.go,*.json,*.git,*.js,crypto/keys,fuzz,*.h,proto/tendermint,*.bin,go.sum,go.mod,.github" --ignore-words=.github/.codespellignore
-      - uses: peter-evans/create-pull-request@v7
+      - uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7.0.11
         if: github.event_name != 'pull_request'
         with:
           commit-message: "chore: spelling errors fixes"

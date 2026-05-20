@@ -14,18 +14,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-      - uses: bufbuild/buf-setup-action@v1.38.0
-      - uses: bufbuild/buf-lint-action@v1
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: bufbuild/buf-setup-action@058316dbc9b9f2adb1bcfc8b2fce48d74e7292d9 # v1.38.0
+      - uses: bufbuild/buf-lint-action@06f9dd823d873146471cfaaf108a993fe00e5325 # v1.1.1
         with:
           input: "proto"
 
   break-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: bufbuild/buf-setup-action@v1.38.0
-      - uses: bufbuild/buf-breaking-action@v1
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: bufbuild/buf-setup-action@058316dbc9b9f2adb1bcfc8b2fce48d74e7292d9 # v1.38.0
+      - uses: bufbuild/buf-breaking-action@c57b3d842a5c3f3b454756ef65305a50a587c5ba # v1.1.4
         with:
           input: "proto"
           against: "https://github.com/${{ github.repository }}.git#branch=${{ github.event.pull_request.base.ref }},ref=HEAD~1,subdir=proto"

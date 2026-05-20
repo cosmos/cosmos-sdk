@@ -1,0 +1,2562 @@
+diff --git a/.github/workflows/auto-assign-prs.yml b/.github/workflows/auto-assign-prs.yml
+index c7bbd8c5db..ad956a15cf 100644
+--- a/.github/workflows/auto-assign-prs.yml
++++ b/.github/workflows/auto-assign-prs.yml
+@@ -10,10 +10,10 @@ jobs:
+ 
+     steps:
+       - name: Check out the repository
+-        uses: actions/checkout@v4
++        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+ 
+       - name: Assign reviewers as assignees
+-        uses: actions/github-script@v7
++        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+         with:
+           github-token: ${{ secrets.PRBOT_PAT }}
+           script: |
+diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
+index d2a99a8f05..380c435fd6 100644
+--- a/.github/workflows/build.yml
++++ b/.github/workflows/build.yml
+@@ -21,8 +21,8 @@ jobs:
+         # go-arch: ["amd64", "arm", "arm64"]
+         go-arch: ["amd64", "arm64"] # drop 32 bit support for now (and maybe forever)
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -33,7 +33,7 @@ jobs:
+       - name: Restore rocksdb libraries cache
+         id: cache-rocksdb
+         if: matrix.go-arch == 'amd64'
+-        uses: actions/cache/restore@v4
++        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+         with:
+           path: |
+             /usr/local/lib/librocksdb.*
+diff --git a/.github/workflows/cache-rocksdb.yml b/.github/workflows/cache-rocksdb.yml
+index 5db3dff15d..9a5d724ea2 100644
+--- a/.github/workflows/cache-rocksdb.yml
++++ b/.github/workflows/cache-rocksdb.yml
+@@ -19,7 +19,7 @@ jobs:
+       cache-hit: ${{ steps.cache-rocksdb.outputs.cache-hit }}
+ 
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+ 
+       - name: Get rocksdb version
+         run: ./.github/scripts/get-rocksdb-version.sh
+@@ -29,7 +29,7 @@ jobs:
+ 
+       - name: Restore rocksdb libraries cache
+         id: cache-rocksdb
+-        uses: actions/cache/restore@v4
++        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+         with:
+           path: |
+             /usr/local/lib/librocksdb.*
+@@ -43,7 +43,7 @@ jobs:
+     needs: check-cache-rocksdb
+     if: needs.check-cache-rocksdb.outputs.cache-hit != 'true'
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+ 
+       - name: Get rocksdb version
+         run: ./.github/scripts/get-rocksdb-version.sh
+@@ -54,7 +54,7 @@ jobs:
+         run: ./.github/scripts/install-rocksdb.sh
+ 
+       - name: Saves rocksdb libraries cache
+-        uses: actions/cache/save@v4
++        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+         with:
+           path: |
+             /usr/local/lib/librocksdb.*
+diff --git a/.github/workflows/changelog-reminder.yml b/.github/workflows/changelog-reminder.yml
+index 6f71ec6b9a..d1da71f851 100644
+--- a/.github/workflows/changelog-reminder.yml
++++ b/.github/workflows/changelog-reminder.yml
+@@ -13,7 +13,7 @@ jobs:
+     # Skip draft PRs and PRs starting with: revert, test, chore, ci, docs, style, build, refactor
+     if: "!github.event.pull_request.draft && !contains(github.event.pull_request.title, 'revert') && !contains(github.event.pull_request.title, 'test') && !contains(github.event.pull_request.title, 'chore') && !contains(github.event.pull_request.title, 'ci') && !contains(github.event.pull_request.title, 'docs') && !contains(github.event.pull_request.title, 'style') && !contains(github.event.pull_request.title, 'build') && !contains(github.event.pull_request.title, 'refactor')"
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: mskelton/changelog-reminder-action@v3
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: mskelton/changelog-reminder-action@41fc0852a6e00fc4506a5d7b8a4178062743133a # v3.0.0
+         with:
+           message: "@${{ github.actor }} your pull request is missing a changelog!"
+diff --git a/.github/workflows/clean-action-artifacts.yml b/.github/workflows/clean-action-artifacts.yml
+index b84b15d4bb..e23c91b5bc 100644
+--- a/.github/workflows/clean-action-artifacts.yml
++++ b/.github/workflows/clean-action-artifacts.yml
+@@ -12,6 +12,6 @@ jobs:
+ 
+     steps:
+       - name: Remove old artifacts
+-        uses: c-hive/gha-remove-artifacts@v1
++        uses: c-hive/gha-remove-artifacts@44fc7acaf1b3d0987da0e8d4707a989d80e9554b # v1.4.0
+         with:
+           age: "7 days"
+diff --git a/.github/workflows/codeql-analysis.yml b/.github/workflows/codeql-analysis.yml
+index da75289545..0e1bc50fb4 100644
+--- a/.github/workflows/codeql-analysis.yml
++++ b/.github/workflows/codeql-analysis.yml
+@@ -26,14 +26,14 @@ jobs:
+ 
+     steps:
+       - name: Checkout repository
+-        uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+       # Initializes the CodeQL tools for scanning.
+       - name: Initialize CodeQL
+-        uses: github/codeql-action/init@v3
++        uses: github/codeql-action/init@458d36d7d4f47d0dd16ca424c1d3cda0060f1360 # v3.35.5
+         with:
+           languages: "go"
+           config-file: ./.github/codeql/config.yml
+@@ -46,7 +46,7 @@ jobs:
+       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
+       # If this step fails, then you should remove it and run the build manually (see below)
+       - name: Autobuild
+-        uses: github/codeql-action/autobuild@v3
++        uses: github/codeql-action/autobuild@458d36d7d4f47d0dd16ca424c1d3cda0060f1360 # v3.35.5
+ 
+       # ℹ️ Command-line programs to run using the OS shell.
+       # 📚 https://git.io/JvXDl
+@@ -60,4 +60,4 @@ jobs:
+       #   make release
+ 
+       - name: Perform CodeQL Analysis
+-        uses: github/codeql-action/analyze@v3
++        uses: github/codeql-action/analyze@458d36d7d4f47d0dd16ca424c1d3cda0060f1360 # v3.35.5
+diff --git a/.github/workflows/consensuswarn.yml b/.github/workflows/consensuswarn.yml
+index dbbc4243a8..3a1e16f82a 100644
+--- a/.github/workflows/consensuswarn.yml
++++ b/.github/workflows/consensuswarn.yml
+@@ -13,7 +13,7 @@ jobs:
+       pull-requests: write # For reading the PR and posting comment
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: orijtech/consensuswarn@main
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: orijtech/consensuswarn@84343282daee37612365f5cbc5f7a606cf89716c #main
+         with:
+           roots: "github.com/cosmos/cosmos-sdk/baseapp.BaseApp.PrepareProposal,github.com/cosmos/cosmos-sdk/baseapp.BaseApp.ProcessProposal,github.com/cosmos/cosmos-sdk/baseapp.BaseApp.FinalizeBlock,github.com/cosmos/cosmos-sdk/baseapp.BaseApp.Commit,github.com/cosmos/cosmos-sdk/baseapp.BaseApp.VerifyVoteExtension"
+diff --git a/.github/workflows/dependabot-update-all.yml b/.github/workflows/dependabot-update-all.yml
+index 9baac6edc2..99104bd501 100644
+--- a/.github/workflows/dependabot-update-all.yml
++++ b/.github/workflows/dependabot-update-all.yml
+@@ -14,17 +14,17 @@ jobs:
+     if: ${{ github.actor == 'dependabot[bot]' }}
+     steps:
+       - name: Generate Token
+-        uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69 # v1
++        uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69 # v1.11.0
+         id: app-token
+         with:
+           app-id: "${{ secrets.APP_ID }}"
+           private-key: "${{ secrets.APP_PRIVATE_KEY }}"
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           repository: ${{ github.event.pull_request.head.repo.full_name }}
+           ref: ${{ github.event.pull_request.head.ref }}
+           token: "${{ steps.app-token.outputs.token }}"
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -41,7 +41,7 @@ jobs:
+           ./scripts/go-update-dep-all.sh ${{ format('{0}@v{1}', steps.deps.outputs.name, steps.deps.outputs.version) }}
+           ./scripts/go-mod-tidy-all.sh
+       - name: Commit changes
+-        uses: EndBug/add-and-commit@v9
++        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
+         with:
+           default_author: user_info
+           message: "${{ github.event.pull_request.title }} for all modules"
+diff --git a/.github/workflows/dependencies-review.yml b/.github/workflows/dependencies-review.yml
+index 553b6efbf3..3be26df74b 100644
+--- a/.github/workflows/dependencies-review.yml
++++ b/.github/workflows/dependencies-review.yml
+@@ -11,13 +11,13 @@ jobs:
+     runs-on: ubuntu-latest
+     steps:
+       - name: "Checkout Repository"
+-        uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+       - name: "Dependency Review"
+-        uses: actions/dependency-review-action@v4
++        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+         with:
+           base-ref: ${{ github.event.pull_request.base.sha || 'main' }}
+           head-ref: ${{ github.event.pull_request.head.sha || github.ref }}
+diff --git a/.github/workflows/docker.yml b/.github/workflows/docker.yml
+index a22b16c54b..88a465169f 100644
+--- a/.github/workflows/docker.yml
++++ b/.github/workflows/docker.yml
+@@ -33,13 +33,13 @@ jobs:
+   build:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           fetch-depth: 0
+ 
+       - name: Extract Docker metadata
+         id: meta
+-        uses: docker/metadata-action@v5
++        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+         with:
+           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+           tags: |
+@@ -50,18 +50,18 @@ jobs:
+             latest=false
+ 
+       - name: Set up Docker Buildx
+-        uses: docker/setup-buildx-action@v3
++        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+ 
+       - name: Log into registry ${{ env.REGISTRY }}
+         if: ${{ github.event_name != 'pull_request' }}
+-        uses: docker/login-action@v3
++        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+         with:
+           registry: ${{ env.REGISTRY }}
+           username: ${{ github.actor }}
+           password: ${{ secrets.GITHUB_TOKEN }}
+ 
+       - name: Publish to GitHub Packages
+-        uses: docker/build-push-action@v6
++        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+         with:
+           platforms: linux/amd64,linux/arm64
+           push: ${{ github.event_name != 'pull_request' }}
+diff --git a/.github/workflows/issue_labeler.yml b/.github/workflows/issue_labeler.yml
+index 82a36ebd63..f0b927e03c 100644
+--- a/.github/workflows/issue_labeler.yml
++++ b/.github/workflows/issue_labeler.yml
+@@ -7,7 +7,7 @@ jobs:
+   triage:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: github/issue-labeler@v3.4
++      - uses: github/issue-labeler@c1b0f9f52a63158c4adc09425e858e87b32e9685 # v3.4
+         if: join(github.event.issue.labels) == ''
+         with:
+           repo-token: "${{ secrets.GITHUB_TOKEN }}"
+diff --git a/.github/workflows/issues.yml b/.github/workflows/issues.yml
+index 52ec0c89ee..2d65ca1661 100644
+--- a/.github/workflows/issues.yml
++++ b/.github/workflows/issues.yml
+@@ -11,7 +11,7 @@ jobs:
+     name: Add issue to project
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/add-to-project@v1.0.2
++      - uses: actions/add-to-project@244f685bbc3b7adfa8466e08b698b5577571133e # v1.0.2
+         with:
+           project-url: https://github.com/orgs/cosmos/projects/26
+ # add all issues opened to the issue board for triage and assignment
+diff --git a/.github/workflows/lint-pr.yml b/.github/workflows/lint-pr.yml
+index 6c5cd2fc2f..aaf1159f98 100644
+--- a/.github/workflows/lint-pr.yml
++++ b/.github/workflows/lint-pr.yml
+@@ -17,12 +17,12 @@ jobs:
+       statuses: write # for amannn/action-semantic-pull-request to mark status of analyzed PR
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: amannn/action-semantic-pull-request@v5.5.3
++      - uses: amannn/action-semantic-pull-request@0723387faaf9b38adef4775cd42cfd5155ed6017 # v5.5.3
+         id: lint_pr_title
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+ 
+-      - uses: marocchino/sticky-pull-request-comment@v2
++      - uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2.9.4
+         # When the previous steps fails, the workflow would stop. By adding this
+         # condition you can continue the execution with the populated error message.
+         if: always() && (steps.lint_pr_title.outputs.error_message != null)
+@@ -41,7 +41,7 @@ jobs:
+ 
+       # Delete a previous comment when the issue has been resolved
+       - if: ${{ steps.lint_pr_title.outputs.error_message == null }}
+-        uses: marocchino/sticky-pull-request-comment@v2
++        uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2.9.4
+         with:
+           header: pr-title-lint-error
+           delete: true
+diff --git a/.github/workflows/lint.yml b/.github/workflows/lint.yml
+index dc3f603cea..2cfb9b852e 100644
+--- a/.github/workflows/lint.yml
++++ b/.github/workflows/lint.yml
+@@ -14,12 +14,12 @@ jobs:
+     name: golangci-lint
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -33,7 +33,7 @@ jobs:
+         run: sudo chown $(whoami) /usr/local/lib /usr/local/include
+       - name: Restore rocksdb libraries cache
+         id: cache-rocksdb
+-        uses: actions/cache/restore@v4
++        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+         with:
+           path: |
+             /usr/local/lib/librocksdb.*
+@@ -51,7 +51,7 @@ jobs:
+           make lint
+         env:
+           ROCKSDB: 1
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         if: steps.lint_long.outcome == 'skipped'
+         with:
+           PATTERNS: |
+@@ -65,7 +65,7 @@ jobs:
+         env:
+           GIT_DIFF: ${{ env.GIT_DIFF }}
+           LINT_DIFF: 1
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         if: steps.lint_long.outcome == 'skipped'
+         with:
+           PATTERNS: |
+diff --git a/.github/workflows/md-link-checker.yml b/.github/workflows/md-link-checker.yml
+index a9ed26810b..32652f3626 100644
+--- a/.github/workflows/md-link-checker.yml
++++ b/.github/workflows/md-link-checker.yml
+@@ -7,9 +7,9 @@ jobs:
+   markdown-link-check:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+       - run: cd docs && sh ./pre.sh
+-      - uses: gaurav-nelson/github-action-markdown-link-check@1.0.15
++      - uses: gaurav-nelson/github-action-markdown-link-check@d53a906aa6b22b8979d33bc86170567e619495ec # 1.0.15
+         with:
+           folder-path: "docs"
+       - run: cd docs && sh ./post.sh
+@@ -20,7 +20,7 @@ jobs:
+     if: ${{ failure() }}
+     steps:
+       - name: Notify Slack on failure
+-        uses: rtCamp/action-slack-notify@v2.3.2
++        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
+         env:
+           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+           SLACK_CHANNEL: sdk-sims
+diff --git a/.github/workflows/misspell.yml b/.github/workflows/misspell.yml
+index 5b3129caf9..a030c20ed6 100644
+--- a/.github/workflows/misspell.yml
++++ b/.github/workflows/misspell.yml
+@@ -14,13 +14,13 @@ jobs:
+     runs-on: ubuntu-latest
+ 
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+       - name: Run codespell
+         continue-on-error: true
+         run: |
+           sudo apt-get install codespell -y
+           codespell -w --skip="*.pulsar.go,*.pb.go,*.pb.gw.go,*.cosmos_orm.go,*.json,*.git,*.js,crypto/keys,fuzz,*.h,proto/tendermint,*.bin,go.sum,go.mod,.github" --ignore-words=.github/.codespellignore
+-      - uses: peter-evans/create-pull-request@v7
++      - uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7.0.11
+         if: github.event_name != 'pull_request'
+         with:
+           commit-message: "chore: spelling errors fixes"
+diff --git a/.github/workflows/pr-go-mod-tidy-mocks.yml b/.github/workflows/pr-go-mod-tidy-mocks.yml
+index 76b5ad1f86..6d0afb30b2 100644
+--- a/.github/workflows/pr-go-mod-tidy-mocks.yml
++++ b/.github/workflows/pr-go-mod-tidy-mocks.yml
+@@ -16,9 +16,9 @@ jobs:
+     runs-on: ubuntu-latest
+     steps:
+       - name: Check out code
+-        uses: actions/checkout@v4
++        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+       - name: Set up Go
+-        uses: actions/setup-go@v5
++        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -36,9 +36,9 @@ jobs:
+     runs-on: ubuntu-latest
+     steps:
+       - name: Check out code
+-        uses: actions/checkout@v4
++        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+       - name: Set up Go
+-        uses: actions/setup-go@v5
++        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+diff --git a/.github/workflows/pr-reminder.yml b/.github/workflows/pr-reminder.yml
+index ea03bac8d5..955d8b106f 100644
+--- a/.github/workflows/pr-reminder.yml
++++ b/.github/workflows/pr-reminder.yml
+@@ -12,10 +12,10 @@ jobs:
+     runs-on: ubuntu-latest
+     steps:
+       - name: Checkout repository
+-        uses: actions/checkout@v4
++        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+ 
+       - name: List open pull requests using GitHub Script
+-        uses: actions/github-script@v7
++        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+         id: pr-list
+         with:
+           script: |
+@@ -38,7 +38,7 @@ jobs:
+ 
+       - name: Send Slack Reminder
+         if: steps.pr-list.outputs.result != ''
+-        uses: rtCamp/action-slack-notify@v2.3.2
++        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
+         env:
+           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+           SLACK_CHANNEL: pr-github
+diff --git a/.github/workflows/proto-docker.yml b/.github/workflows/proto-docker.yml
+index c1924b5693..976be8f056 100644
+--- a/.github/workflows/proto-docker.yml
++++ b/.github/workflows/proto-docker.yml
+@@ -32,17 +32,17 @@ jobs:
+       packages: write
+     steps:
+       # set VERSION to new version when making changes, when merged to main the image will automatically be pushed
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+ 
+       - name: Set up QEMU
+-        uses: docker/setup-qemu-action@v3
++        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+ 
+       - name: Set up Docker Buildx
+-        uses: docker/setup-buildx-action@v3
++        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+ 
+       - name: Extract metadata (tags, labels) for Docker
+         id: meta
+-        uses: docker/metadata-action@v5
++        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+         with:
+           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+           # modify value when deploying a new version
+@@ -50,7 +50,7 @@ jobs:
+             type=semver,pattern={{version}},value=${{ inputs.tags }}
+ 
+       - name: Login to GitHub Container Registry
+-        uses: docker/login-action@v3
++        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+         if: ${{ github.event_name != 'pull_request' }}
+         with:
+           registry: ${{ env.REGISTRY }}
+@@ -58,7 +58,7 @@ jobs:
+           password: ${{ secrets.GITHUB_TOKEN }}
+ 
+       - name: Publish to GHCR
+-        uses: docker/build-push-action@v6
++        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+         with:
+           context: ./contrib/devtools
+           platforms: linux/amd64,linux/arm64
+diff --git a/.github/workflows/proto.yml b/.github/workflows/proto.yml
+index d5f05958f9..b18d00d658 100644
+--- a/.github/workflows/proto.yml
++++ b/.github/workflows/proto.yml
+@@ -14,18 +14,18 @@ jobs:
+     runs-on: ubuntu-latest
+     timeout-minutes: 5
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: bufbuild/buf-setup-action@v1.38.0
+-      - uses: bufbuild/buf-lint-action@v1
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: bufbuild/buf-setup-action@058316dbc9b9f2adb1bcfc8b2fce48d74e7292d9 # v1.38.0
++      - uses: bufbuild/buf-lint-action@06f9dd823d873146471cfaaf108a993fe00e5325 # v1.1.1
+         with:
+           input: "proto"
+ 
+   break-check:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: bufbuild/buf-setup-action@v1.38.0
+-      - uses: bufbuild/buf-breaking-action@v1
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: bufbuild/buf-setup-action@058316dbc9b9f2adb1bcfc8b2fce48d74e7292d9 # v1.38.0
++      - uses: bufbuild/buf-breaking-action@c57b3d842a5c3f3b454756ef65305a50a587c5ba # v1.1.4
+         with:
+           input: "proto"
+           against: "https://github.com/${{ github.repository }}.git#branch=${{ github.event.pull_request.base.ref }},ref=HEAD~1,subdir=proto"
+diff --git a/.github/workflows/release-confix.yml b/.github/workflows/release-confix.yml
+index da465a0881..59b674b128 100644
+--- a/.github/workflows/release-confix.yml
++++ b/.github/workflows/release-confix.yml
+@@ -13,8 +13,8 @@ jobs:
+       contents: write # for goreleaser/goreleaser-action to create a GitHub release
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -28,7 +28,7 @@ jobs:
+           git tag -d ${{ env.RELEASE_VERSION }} || echo "No such a tag exists before"
+           git tag ${{ env.RELEASE_VERSION }} HEAD
+       - name: Run GoReleaser
+-        uses: goreleaser/goreleaser-action@v3
++        uses: goreleaser/goreleaser-action@b508e2e3ef3b19d4e4146d4f8fb3ba9db644a757 # v3.2.0
+         with:
+           # stick to version v0.179.0(https://github.com/cosmos/cosmos-sdk/issues/11125)
+           version: v0.179.0
+diff --git a/.github/workflows/release-cosmovisor.yml b/.github/workflows/release-cosmovisor.yml
+index acef3820e2..06f2daad1e 100644
+--- a/.github/workflows/release-cosmovisor.yml
++++ b/.github/workflows/release-cosmovisor.yml
+@@ -13,8 +13,8 @@ jobs:
+       contents: write # for goreleaser/goreleaser-action to create a GitHub release
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -28,7 +28,7 @@ jobs:
+           git tag -d ${{ env.RELEASE_VERSION }} || echo "No such a tag exists before"
+           git tag ${{ env.RELEASE_VERSION }} HEAD
+       - name: Run GoReleaser
+-        uses: goreleaser/goreleaser-action@v3
++        uses: goreleaser/goreleaser-action@b508e2e3ef3b19d4e4146d4f8fb3ba9db644a757 # v3.2.0
+         with:
+           # stick to version v0.179.0(https://github.com/cosmos/cosmos-sdk/issues/11125)
+           version: v0.179.0
+diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
+index 098d70ba8d..2e65c9558b 100644
+--- a/.github/workflows/release.yml
++++ b/.github/workflows/release.yml
+@@ -16,16 +16,16 @@ jobs:
+       contents: write # for goreleaser/goreleaser-action to create a GitHub release
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+       - name: Install Go
+-        uses: actions/setup-go@v5
++        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+       - name: Unshallow
+         run: git fetch --prune --unshallow
+       - name: Create release
+-        uses: goreleaser/goreleaser-action@v3
++        uses: goreleaser/goreleaser-action@b508e2e3ef3b19d4e4146d4f8fb3ba9db644a757 # v3.2.0
+         with:
+           args: release --clean --release-notes ./RELEASE_NOTES.md
+         env:
+@@ -37,7 +37,7 @@ jobs:
+     runs-on: ubuntu-latest
+     steps:
+       - name: Notify Slack on success
+-        uses: rtCamp/action-slack-notify@v2.3.2
++        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
+         env:
+           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+           SLACK_CHANNEL: cosmos-tech
+diff --git a/.github/workflows/sims-047.yml b/.github/workflows/sims-047.yml
+index 3da50f38de..e8906e4b0e 100644
+--- a/.github/workflows/sims-047.yml
++++ b/.github/workflows/sims-047.yml
+@@ -16,10 +16,10 @@ jobs:
+     runs-on: ubuntu-latest
+     if: "!contains(github.event.head_commit.message, 'skip-sims')"
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           ref: "release/v0.47.x"
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -31,13 +31,13 @@ jobs:
+     runs-on: ubuntu-latest
+     needs: build
+     steps:
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+       - name: Install runsim
+         run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
+-      - uses: actions/cache@v4
++      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+         with:
+           path: ~/go/bin
+           key: ${{ runner.os }}-go-runsim-binary
+@@ -47,14 +47,14 @@ jobs:
+     needs: [build, install-runsim]
+     timeout-minutes: 60
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           ref: "release/v0.47.x"
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+-      - uses: actions/cache@v4
++      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+         with:
+           path: ~/go/bin
+           key: ${{ runner.os }}-go-runsim-binary
+@@ -66,14 +66,14 @@ jobs:
+     runs-on: ubuntu-latest
+     needs: [build, install-runsim]
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           ref: "release/v0.47.x"
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+-      - uses: actions/cache@v4
++      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+         with:
+           path: ~/go/bin
+           key: ${{ runner.os }}-go-runsim-binary
+@@ -85,14 +85,14 @@ jobs:
+     runs-on: ubuntu-latest
+     needs: [build, install-runsim]
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           ref: "release/v0.47.x"
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+-      - uses: actions/cache@v4
++      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+         with:
+           path: ~/go/bin
+           key: ${{ runner.os }}-go-runsim-binary
+@@ -106,7 +106,7 @@ jobs:
+     runs-on: ubuntu-latest
+     if: ${{ success() }}
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+       - name: Get previous workflow status
+         uses: ./.github/actions/last-workflow-status
+         id: last_status
+@@ -115,7 +115,7 @@ jobs:
+ 
+       - name: Notify Slack on success
+         if: ${{ steps.last_status.outputs.last_status == 'failure' }}
+-        uses: rtCamp/action-slack-notify@v2.3.2
++        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
+         env:
+           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+           SLACK_CHANNEL: sdk-sims
+@@ -134,7 +134,7 @@ jobs:
+     if: ${{ failure() }}
+     steps:
+       - name: Notify Slack on failure
+-        uses: rtCamp/action-slack-notify@v2.3.2
++        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
+         env:
+           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+           SLACK_CHANNEL: sdk-sims
+diff --git a/.github/workflows/sims-050.yml b/.github/workflows/sims-050.yml
+index 6896a7d41b..b1e079736c 100644
+--- a/.github/workflows/sims-050.yml
++++ b/.github/workflows/sims-050.yml
+@@ -16,10 +16,10 @@ jobs:
+     runs-on: ubuntu-latest
+     if: "!contains(github.event.head_commit.message, 'skip-sims')"
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           ref: "release/v0.50.x"
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -31,13 +31,13 @@ jobs:
+     runs-on: ubuntu-latest
+     needs: build
+     steps:
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+       - name: Install runsim
+         run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
+-      - uses: actions/cache@v4
++      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+         with:
+           path: ~/go/bin
+           key: ${{ runner.os }}-go-runsim-binary
+@@ -47,14 +47,14 @@ jobs:
+     needs: [build, install-runsim]
+     timeout-minutes: 60
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           ref: "release/v0.50.x"
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+-      - uses: actions/cache@v4
++      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+         with:
+           path: ~/go/bin
+           key: ${{ runner.os }}-go-runsim-binary
+@@ -66,14 +66,14 @@ jobs:
+     runs-on: ubuntu-latest
+     needs: [build, install-runsim]
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           ref: "release/v0.50.x"
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+-      - uses: actions/cache@v4
++      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+         with:
+           path: ~/go/bin
+           key: ${{ runner.os }}-go-runsim-binary
+@@ -85,14 +85,14 @@ jobs:
+     runs-on: ubuntu-latest
+     needs: [build, install-runsim]
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           ref: "release/v0.50.x"
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+-      - uses: actions/cache@v4
++      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+         with:
+           path: ~/go/bin
+           key: ${{ runner.os }}-go-runsim-binary
+@@ -106,7 +106,7 @@ jobs:
+     runs-on: ubuntu-latest
+     if: ${{ success() }}
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+       - name: Get previous workflow status
+         uses: ./.github/actions/last-workflow-status
+         id: last_status
+@@ -115,7 +115,7 @@ jobs:
+ 
+       - name: Notify Slack on success
+         if: ${{ steps.last_status.outputs.last_status == 'failure' }}
+-        uses: rtCamp/action-slack-notify@v2.3.2
++        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
+         env:
+           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+           SLACK_CHANNEL: sdk-sims
+@@ -134,7 +134,7 @@ jobs:
+     if: ${{ failure() }}
+     steps:
+       - name: Notify Slack on failure
+-        uses: rtCamp/action-slack-notify@v2.3.2
++        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
+         env:
+           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+           SLACK_CHANNEL: sdk-sims
+diff --git a/.github/workflows/sims-052.yml b/.github/workflows/sims-052.yml
+index 2d2ff553ee..2245b75241 100644
+--- a/.github/workflows/sims-052.yml
++++ b/.github/workflows/sims-052.yml
+@@ -18,10 +18,10 @@ jobs:
+     runs-on: large-sdk-runner
+     if: "!contains(github.event.head_commit.message, 'skip-sims')"
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           ref: "release/v0.52.x"
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -32,10 +32,10 @@ jobs:
+     needs: [build]
+     timeout-minutes: 60
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           ref: "release/v0.52.x"
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -48,10 +48,10 @@ jobs:
+     needs: [build]
+     timeout-minutes: 60
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           ref: "release/v0.52.x"
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -64,10 +64,10 @@ jobs:
+     needs: [build]
+     timeout-minutes: 60
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           ref: "release/v0.52.x"
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -80,10 +80,10 @@ jobs:
+     needs: [build]
+     timeout-minutes: 60
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           ref: "release/v0.52.x"
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -102,7 +102,7 @@ jobs:
+     runs-on: large-sdk-runner
+     if: ${{ success() }}
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+       - name: Get previous workflow status
+         uses: ./.github/actions/last-workflow-status
+         id: last_status
+@@ -111,7 +111,7 @@ jobs:
+ 
+       - name: Notify Slack on success
+         if: ${{ steps.last_status.outputs.last_status == 'failure' }}
+-        uses: rtCamp/action-slack-notify@v2.3.2
++        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
+         env:
+           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+           SLACK_CHANNEL: sdk-sims
+@@ -135,7 +135,7 @@ jobs:
+     if: ${{ failure() }}
+     steps:
+       - name: Notify Slack on failure
+-        uses: rtCamp/action-slack-notify@v2.3.2
++        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
+         env:
+           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+           SLACK_CHANNEL: sdk-sims
+diff --git a/.github/workflows/sims-nightly.yml b/.github/workflows/sims-nightly.yml
+index 9879c20b27..743535ac7b 100644
+--- a/.github/workflows/sims-nightly.yml
++++ b/.github/workflows/sims-nightly.yml
+@@ -18,8 +18,8 @@ jobs:
+   test-sim-multi-seed-long:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -35,7 +35,7 @@ jobs:
+     if: ${{ success() }}
+     steps:
+       - name: Check out repository
+-        uses: actions/checkout@v4
++        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+       - name: Get previous workflow status
+         uses: ./.github/actions/last-workflow-status
+         id: last_status
+@@ -44,7 +44,7 @@ jobs:
+ 
+       - name: Notify Slack on success
+         if: ${{ steps.last_status.outputs.last_status == 'failure' }}
+-        uses: rtCamp/action-slack-notify@v2.3.2
++        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
+         env:
+           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+           SLACK_CHANNEL: sdk-sims
+@@ -62,7 +62,7 @@ jobs:
+     if: ${{ failure() }}
+     steps:
+       - name: Notify Slack on failure
+-        uses: rtCamp/action-slack-notify@v2.3.2
++        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
+         env:
+           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+           SLACK_CHANNEL: sdk-sims
+diff --git a/.github/workflows/sims.yml b/.github/workflows/sims.yml
+index 0fcba8e5cf..1e375eea31 100644
+--- a/.github/workflows/sims.yml
++++ b/.github/workflows/sims.yml
+@@ -18,8 +18,8 @@ jobs:
+     runs-on: large-sdk-runner
+     if: "!contains(github.event.head_commit.message, 'skip-sims')"
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -30,8 +30,8 @@ jobs:
+     needs: [build]
+     timeout-minutes: 60
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -44,8 +44,8 @@ jobs:
+     needs: [build]
+     timeout-minutes: 60
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -58,8 +58,8 @@ jobs:
+     needs: [build]
+     timeout-minutes: 60
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -72,8 +72,8 @@ jobs:
+     needs: [build]
+     timeout-minutes: 60
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -93,7 +93,7 @@ jobs:
+     if: ${{ success() }}
+     steps:
+       - name: Check out repository
+-        uses: actions/checkout@v4
++        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+       - name: Get previous workflow status
+         uses: ./.github/actions/last-workflow-status
+         id: last_status
+@@ -102,7 +102,7 @@ jobs:
+ 
+       - name: Notify Slack on success
+         if: ${{ steps.last_status.outputs.last_status == 'failure' }}
+-        uses: rtCamp/action-slack-notify@v2.3.2
++        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
+         env:
+           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+           SLACK_CHANNEL: sdk-sims
+@@ -126,7 +126,7 @@ jobs:
+     if: ${{ failure() }}
+     steps:
+       - name: Notify Slack on failure
+-        uses: rtCamp/action-slack-notify@v2.3.2
++        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
+         env:
+           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+           SLACK_CHANNEL: sdk-sims
+diff --git a/.github/workflows/software-compat-v052.yml b/.github/workflows/software-compat-v052.yml
+index 999f3a97a9..0483199368 100644
+--- a/.github/workflows/software-compat-v052.yml
++++ b/.github/workflows/software-compat-v052.yml
+@@ -10,13 +10,13 @@ jobs:
+     runs-on: ubuntu-latest
+     steps:
+       - name: Check out source
+-        uses: actions/checkout@v4
++        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           sparse-checkout: |
+             .github/scripts/check-compat.sh
+           sparse-checkout-cone-mode: false
+       - name: Set up Go
+-        uses: actions/setup-go@v5
++        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -37,7 +37,7 @@ jobs:
+     runs-on: ubuntu-latest
+     if: ${{ success() }}
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+       - name: Get previous workflow status
+         uses: ./.github/actions/last-workflow-status
+         id: last_status
+@@ -46,7 +46,7 @@ jobs:
+ 
+       - name: Notify Slack on success
+         if: ${{ steps.last_status.outputs.last_status == 'failure' }}
+-        uses: rtCamp/action-slack-notify@v2.3.2
++        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
+         env:
+           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+           SLACK_CHANNEL: sdk-sims
+@@ -64,7 +64,7 @@ jobs:
+     if: ${{ failure() }}
+     steps:
+       - name: Notify Slack on failure
+-        uses: rtCamp/action-slack-notify@v2.3.2
++        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
+         env:
+           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+           SLACK_CHANNEL: sdk-sims
+diff --git a/.github/workflows/stale.yml b/.github/workflows/stale.yml
+index 4df554bf37..658bc79da6 100644
+--- a/.github/workflows/stale.yml
++++ b/.github/workflows/stale.yml
+@@ -13,7 +13,7 @@ jobs:
+       pull-requests: write  # for actions/stale to close stale PRs
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/stale@v9
++      - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9.1.0
+         with:
+           repo-token: ${{ secrets.GITHUB_TOKEN }}
+           stale-pr-message: "This pull request has been automatically marked as stale because it has not had
+diff --git a/.github/workflows/test.yml b/.github/workflows/test.yml
+index ba729ff56a..ca66cd60ff 100644
+--- a/.github/workflows/test.yml
++++ b/.github/workflows/test.yml
+@@ -18,8 +18,8 @@ jobs:
+   split-test-files:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -27,19 +27,19 @@ jobs:
+         run: go list ./... > pkgs.txt
+       - name: Split pkgs into 4 files
+         run: split -d -n l/4 pkgs.txt pkgs.txt.part.
+-      - uses: actions/upload-artifact@v4
++      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+         with:
+           name: "${{ github.sha }}-00"
+           path: ./pkgs.txt.part.00
+-      - uses: actions/upload-artifact@v4
++      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+         with:
+           name: "${{ github.sha }}-01"
+           path: ./pkgs.txt.part.01
+-      - uses: actions/upload-artifact@v4
++      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+         with:
+           name: "${{ github.sha }}-02"
+           path: ./pkgs.txt.part.02
+-      - uses: actions/upload-artifact@v4
++      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+         with:
+           name: "${{ github.sha }}-03"
+           path: ./pkgs.txt.part.03
+@@ -52,14 +52,14 @@ jobs:
+       matrix:
+         part: ["00", "01", "02", "03"]
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -70,14 +70,14 @@ jobs:
+             **/go.sum
+             **/Makefile
+             Makefile
+-      - uses: actions/download-artifact@v4
++      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+         with:
+           name: "${{ github.sha }}-${{ matrix.part }}"
+       - name: test & coverage report creation
+         if: env.GIT_DIFF
+         run: |
+           cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -race -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='ledger test_ledger_mock'
+-      - uses: actions/upload-artifact@v4
++      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+         if: env.GIT_DIFF
+         with:
+           name: "${{ github.sha }}-${{ matrix.part }}-coverage"
+@@ -86,14 +86,14 @@ jobs:
+   test-integration:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -108,7 +108,7 @@ jobs:
+         if: env.GIT_DIFF
+         run: |
+           make test-integration-cov
+-      - uses: actions/upload-artifact@v4
++      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+         if: env.GIT_DIFF
+         with:
+           name: "${{ github.sha }}-integration-coverage"
+@@ -117,10 +117,10 @@ jobs:
+   test-system: # v2 system tests are in v2-test.yml
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           fetch-tags: true
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -128,7 +128,7 @@ jobs:
+           cache-dependency-path: |
+             simapp/go.sum
+             systemtest/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -147,7 +147,7 @@ jobs:
+         if: env.GIT_DIFF
+         run: |
+           make test-system
+-      - uses: actions/upload-artifact@v4
++      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+         if: failure()
+         with:
+           name: "testnet-setup"
+@@ -158,8 +158,8 @@ jobs:
+     runs-on: ubuntu-latest
+     needs: [tests, test-integration]
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -168,34 +168,34 @@ jobs:
+             go.sum
+             **/go.mod
+             **/go.sum
+-      - uses: actions/download-artifact@v4
++      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+         if: env.GIT_DIFF
+         with:
+           name: "${{ github.sha }}-00-coverage"
+-      - uses: actions/download-artifact@v4
++      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+         if: env.GIT_DIFF
+         with:
+           name: "${{ github.sha }}-01-coverage"
+-      - uses: actions/download-artifact@v4
++      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+         if: env.GIT_DIFF
+         with:
+           name: "${{ github.sha }}-02-coverage"
+-      - uses: actions/download-artifact@v4
++      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+         if: env.GIT_DIFF
+         with:
+           name: "${{ github.sha }}-03-coverage"
+-      - uses: actions/download-artifact@v4
++      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+         if: env.GIT_DIFF
+         with:
+           name: "${{ github.sha }}-integration-coverage"
+-      - uses: actions/download-artifact@v4
++      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+         if: env.GIT_DIFF
+         with:
+           name: "${{ github.sha }}-e2e-coverage"
+         continue-on-error: true
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -203,14 +203,14 @@ jobs:
+   test-sim-nondeterminism:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -236,14 +236,14 @@ jobs:
+   test-clientv2:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: client/v2/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -257,7 +257,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -267,14 +267,14 @@ jobs:
+   test-core:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: core/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -288,7 +288,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -297,14 +297,14 @@ jobs:
+   test-coretesting:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: core/testing/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -320,14 +320,14 @@ jobs:
+   test-depinject:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.21"
+           check-latest: false
+           cache: true
+           cache-dependency-path: depinject/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -341,7 +341,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -349,14 +349,14 @@ jobs:
+   test-errors:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.20"
+           check-latest: true
+           cache: true
+           cache-dependency-path: errors/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -370,7 +370,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -380,14 +380,14 @@ jobs:
+   test-math:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.20"
+           check-latest: true
+           cache: true
+           cache-dependency-path: math/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -401,7 +401,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -411,13 +411,13 @@ jobs:
+   test-schema:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.12"
+           cache: true
+           cache-dependency-path: schema/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -431,7 +431,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -441,13 +441,13 @@ jobs:
+   test-schema-testing:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           cache: true
+           cache-dependency-path: schema/testing/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -461,7 +461,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -471,13 +471,13 @@ jobs:
+   test-indexer-postgres:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           cache: true
+           cache-dependency-path: indexer/postgres/tests/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -497,7 +497,7 @@ jobs:
+           go run github.com/dylandreimerink/gocovmerge/cmd/gocovmerge@latest cov.out tests/cov.out > coverage.out
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -507,14 +507,14 @@ jobs:
+   test-simapp:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: simapp/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -530,14 +530,14 @@ jobs:
+   test-simapp-v2:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -572,14 +572,14 @@ jobs:
+   test-collections:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: collections/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -593,7 +593,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -603,14 +603,14 @@ jobs:
+   test-collections-protocodec:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: collections/protocodec/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -626,14 +626,14 @@ jobs:
+   test-orm:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: orm/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -647,7 +647,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -657,14 +657,14 @@ jobs:
+   test-cosmovisor:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: tools/cosmovisor/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -678,7 +678,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -688,14 +688,14 @@ jobs:
+   test-confix:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: tools/confix/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -709,7 +709,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -719,14 +719,14 @@ jobs:
+   test-hubl:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: tools/hubl/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -740,7 +740,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -750,14 +750,14 @@ jobs:
+   test-store:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: store/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -770,7 +770,7 @@ jobs:
+         run: sudo chown $(whoami) /usr/local/lib /usr/local/include
+       - name: Restore rocksdb libraries cache
+         id: cache-rocksdb
+-        uses: actions/cache/restore@v4
++        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+         with:
+           path: |
+             /usr/local/lib/librocksdb.*
+@@ -788,7 +788,7 @@ jobs:
+           go test -ldflags "-r /usr/local/lib" -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -800,14 +800,14 @@ jobs:
+     strategy:
+       fail-fast: false
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: store/v2/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -820,7 +820,7 @@ jobs:
+         run: sudo chown $(whoami) /usr/local/lib /usr/local/include
+       - name: Restore rocksdb libraries cache
+         id: cache-rocksdb
+-        uses: actions/cache/restore@v4
++        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+         with:
+           path: |
+             /usr/local/lib/librocksdb.*
+@@ -838,7 +838,7 @@ jobs:
+           go test -ldflags "-r /usr/local/lib" -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -848,14 +848,14 @@ jobs:
+   test-log:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.21"
+           check-latest: true
+           cache: true
+           cache-dependency-path: log/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -869,7 +869,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -886,14 +886,14 @@ jobs:
+   test-x-accounts:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/accounts/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -907,7 +907,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -917,14 +917,14 @@ jobs:
+   test-x-accounts-base:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/accounts/defaults/base/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -940,14 +940,14 @@ jobs:
+   test-x-accounts-lockup:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/accounts/defaults/lockup/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -963,14 +963,14 @@ jobs:
+   test-x-accounts-multisig:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/accounts/multisig/lockup/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -986,14 +986,14 @@ jobs:
+   test-x-tx:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/tx/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1007,7 +1007,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1017,14 +1017,14 @@ jobs:
+   test-x-nft:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/nft/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1038,7 +1038,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1048,14 +1048,14 @@ jobs:
+   test-x-circuit:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/circuit/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1069,7 +1069,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1079,14 +1079,14 @@ jobs:
+   test-x-distribution:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/distribution/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1100,7 +1100,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1110,14 +1110,14 @@ jobs:
+   test-x-protocolpool:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/protocolpool/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1131,7 +1131,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1141,14 +1141,14 @@ jobs:
+   test-x-feegrant:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/feegrant/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1162,7 +1162,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1172,14 +1172,14 @@ jobs:
+   test-x-evidence:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/evidence/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1193,7 +1193,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1202,14 +1202,14 @@ jobs:
+   test-x-params:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/params/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1223,7 +1223,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1232,14 +1232,14 @@ jobs:
+   test-x-upgrade:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/upgrade/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1253,7 +1253,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1262,14 +1262,14 @@ jobs:
+   test-x-group:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/group/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1283,7 +1283,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1292,14 +1292,14 @@ jobs:
+   test-x-gov:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/gov/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1313,7 +1313,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1323,14 +1323,14 @@ jobs:
+   test-x-slashing:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/slashing/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1344,7 +1344,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1354,14 +1354,14 @@ jobs:
+   test-x-staking:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/staking/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1375,7 +1375,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1385,14 +1385,14 @@ jobs:
+   test-x-authz:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/authz/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1406,7 +1406,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1416,14 +1416,14 @@ jobs:
+   test-x-bank:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/bank/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1437,7 +1437,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1447,14 +1447,14 @@ jobs:
+   test-x-mint:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/mint/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1468,7 +1468,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1478,14 +1478,14 @@ jobs:
+   test-x-epochs:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/epochs/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1499,7 +1499,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1509,14 +1509,14 @@ jobs:
+   test-x-consensus:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: x/consensus/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1530,7 +1530,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+@@ -1540,14 +1540,14 @@ jobs:
+   test-tools-benchmark:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23.2"
+           check-latest: true
+           cache: true
+           cache-dependency-path: tools/benchmark/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -1561,7 +1561,7 @@ jobs:
+           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace' ./...
+       - name: sonarcloud
+         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
+-        uses: SonarSource/sonarcloud-github-action@master
++        uses: SonarSource/sonarcloud-github-action@ffc3010689be73b8e5ae0c57ce35968afd7909e8 # v5.0.0
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+diff --git a/.github/workflows/v2-test.yml b/.github/workflows/v2-test.yml
+index ee2cccea49..1e6a59f1ba 100644
+--- a/.github/workflows/v2-test.yml
++++ b/.github/workflows/v2-test.yml
+@@ -19,14 +19,14 @@ jobs:
+     strategy:
+       fail-fast: false
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -43,14 +43,14 @@ jobs:
+     strategy:
+       fail-fast: false
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -67,14 +67,14 @@ jobs:
+     strategy:
+       fail-fast: false
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -91,14 +91,14 @@ jobs:
+     strategy:
+       fail-fast: false
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -115,14 +115,14 @@ jobs:
+     strategy:
+       fail-fast: false
+     steps:
+-      - uses: actions/checkout@v4
+-      - uses: actions/setup-go@v5
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+           cache: true
+           cache-dependency-path: go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -137,10 +137,10 @@ jobs:
+   test-system-v2:
+     runs-on: ubuntu-latest
+     steps:
+-      - uses: actions/checkout@v4
++      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+         with:
+           fetch-tags: true
+-      - uses: actions/setup-go@v5
++      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+         with:
+           go-version: "1.23"
+           check-latest: true
+@@ -148,7 +148,7 @@ jobs:
+           cache-dependency-path: |
+             simapp/v2/go.sum
+             systemtest/go.sum
+-      - uses: technote-space/get-diff-action@v6.1.2
++      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+         id: git_diff
+         with:
+           PATTERNS: |
+@@ -167,7 +167,7 @@ jobs:
+         if: env.GIT_DIFF
+         run: |
+           COSMOS_BUILD_OPTIONS=v2 make test-system
+-      - uses: actions/upload-artifact@v4
++      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+         if: failure()
+         with:
+           name: "testnet-setup"

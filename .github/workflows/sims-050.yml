@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: "release/v0.50.x"
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "1.23"
           check-latest: true
@@ -31,13 +31,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "1.23"
           check-latest: true
       - name: Install runsim
         run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -47,14 +47,14 @@ jobs:
     needs: [build, install-runsim]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: "release/v0.50.x"
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "1.23"
           check-latest: true
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -66,14 +66,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: "release/v0.50.x"
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "1.23"
           check-latest: true
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -85,14 +85,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: "release/v0.50.x"
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "1.23"
           check-latest: true
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -106,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ success() }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Get previous workflow status
         uses: ./.github/actions/last-workflow-status
         id: last_status
@@ -115,7 +115,7 @@ jobs:
 
       - name: Notify Slack on success
         if: ${{ steps.last_status.outputs.last_status == 'failure' }}
-        uses: rtCamp/action-slack-notify@v2.3.2
+        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: sdk-sims
@@ -134,7 +134,7 @@ jobs:
     if: ${{ failure() }}
     steps:
       - name: Notify Slack on failure
-        uses: rtCamp/action-slack-notify@v2.3.2
+        uses: rtCamp/action-slack-notify@c33737706dea87cd7784c687dadc9adf1be59990 # v2.3.2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: sdk-sims

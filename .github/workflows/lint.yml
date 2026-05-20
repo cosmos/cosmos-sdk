@@ -14,12 +14,12 @@ jobs:
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "1.23"
           check-latest: true
-      - uses: technote-space/get-diff-action@v6.1.2
+      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -33,7 +33,7 @@ jobs:
         run: sudo chown $(whoami) /usr/local/lib /usr/local/include
       - name: Restore rocksdb libraries cache
         id: cache-rocksdb
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             /usr/local/lib/librocksdb.*
@@ -51,7 +51,7 @@ jobs:
           make lint
         env:
           ROCKSDB: 1
-      - uses: technote-space/get-diff-action@v6.1.2
+      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
         if: steps.lint_long.outcome == 'skipped'
         with:
           PATTERNS: |
@@ -65,7 +65,7 @@ jobs:
         env:
           GIT_DIFF: ${{ env.GIT_DIFF }}
           LINT_DIFF: 1
-      - uses: technote-space/get-diff-action@v6.1.2
+      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
         if: steps.lint_long.outcome == 'skipped'
         with:
           PATTERNS: |

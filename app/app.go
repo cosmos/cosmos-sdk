@@ -375,6 +375,10 @@ func (app *SDKApp) loadModules() {
 	if err != nil {
 		panic(err)
 	}
+	if len(app.cfg.Upgrades) > 0 {
+		var appI AppI = app
+		RegisterUpgradeHandlers[AppI](appI, app.cfg.Upgrades...)
+	}
 
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), services.NewAutoCLIQueryService(app.moduleManager.Modules))
 	reflectionSvc, err := services.NewReflectionService()

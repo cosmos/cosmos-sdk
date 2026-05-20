@@ -164,3 +164,17 @@ func TestSetAnteHandlerSetsFeegrantInterfaceWhenEnabled(t *testing.T) {
 		t.Fatal("expected feegrant keeper interface to be set when enabled")
 	}
 }
+
+func TestLoadModulesRegistersConfiguredUpgrades(t *testing.T) {
+	cfg := DefaultSDKAppConfig("app", testAppOptions(t))
+	cfg.Upgrades = []Upgrade[AppI]{
+		{Name: "test-upgrade"},
+	}
+
+	app := NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
+	app.LoadModules()
+
+	if !app.UpgradeKeeper().HasHandler("test-upgrade") {
+		t.Fatal("expected configured upgrade handler to be registered")
+	}
+}

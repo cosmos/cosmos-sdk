@@ -20,9 +20,9 @@ import (
 // a validator may have inside the unbonding window.
 const MaxConsKeyRotations = 1
 
-// HasPendingConsKeyRotation returns whether the validator has a pending
-// consensus key rotation inside the unbonding window.
-func (k Keeper) HasPendingConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress) (bool, error) {
+// HasConsKeyRotationInUnbondingWindow returns whether the validator has
+// performed a consensus key rotation inside current the unbonding window.
+func (k Keeper) HasConsKeyRotationInUnbondingWindow(ctx context.Context, valAddr sdk.ValAddress) (bool, error) {
 	return k.storeService.OpenKVStore(ctx).Has(types.GetValidatorConsKeyRotationKey(valAddr))
 }
 

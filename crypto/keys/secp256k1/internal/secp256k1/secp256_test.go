@@ -3,7 +3,6 @@
 // the LICENSE file.
 
 //go:build !gofuzz && cgo
-// +build !gofuzz,cgo
 
 package secp256k1
 

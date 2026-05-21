@@ -614,6 +614,8 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
+// RotateConsPubKey defines a method for changing a validators consensus key to
+// a new key.
 func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateConsPubKey) (*types.MsgRotateConsPubKeyResponse, error) {
 	newPk, ok := msg.NewPubkey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {

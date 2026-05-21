@@ -1229,7 +1229,7 @@ func (s *KeeperTestSuite) TestMsgRotateConsPubKey() {
 				valAddr, _ := createValidator(stakingtypes.Bonded)
 				oldPubKey := ed25519.GenPrivKey().PubKey()
 				dummy := sdk.ValAddress(ed25519.GenPrivKey().PubKey().Address())
-				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, dummy, oldPubKey, stakingtypes.DefaultKeyRotationFee))
+				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, dummy, oldPubKey, ed25519.GenPrivKey().PubKey(), stakingtypes.DefaultKeyRotationFee))
 				return &stakingtypes.MsgRotateConsPubKey{
 					ValidatorAddress: valAddr.String(),
 					NewPubkey:        newAny(oldPubKey),

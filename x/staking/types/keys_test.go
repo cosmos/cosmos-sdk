@@ -262,6 +262,21 @@ func TestGetRotatedConsAddrIndexKey(t *testing.T) {
 	}
 }
 
+func TestGetUnappliedConsKeyRotationKey(t *testing.T) {
+	tests := []struct {
+		valAddr sdk.ValAddress
+		wantHex string
+	}{
+		{sdk.ValAddress(keysAddr1), "941463d771218209d8bd03c482f69dfba57310f08609"},
+		{sdk.ValAddress(keysAddr2), "94145ef3b5f25c54946d4a89fc0d09d2f126614540f2"},
+		{sdk.ValAddress(keysAddr3), "94143ab62f0d93849be495e21e3e9013a517038f45bd"},
+	}
+	for i, tt := range tests {
+		got := hex.EncodeToString(types.GetUnappliedConsKeyRotationKey(tt.valAddr))
+		require.Equal(t, tt.wantHex, got, "Keys did not match on test case %d", i)
+	}
+}
+
 func TestGetHistoricalInfoKey(t *testing.T) {
 	tests := []struct {
 		height int64

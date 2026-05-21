@@ -671,7 +671,7 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	}
 
 	// record the key rotation in the store
-	if err := k.SetConsKeyRotation(ctx, valAddr, oldPk, fee); err != nil {
+	if err := k.SetConsKeyRotation(ctx, valAddr, oldPk, newPk, fee); err != nil {
 		return nil, err
 	}
 

@@ -89,6 +89,14 @@ var (
 	// unbonding period in the end blocker (determined by the
 	// ConsKeyRotationQueueKey).
 	RotatedConsAddrIndexKey = []byte{0x93} // prefix for the previously rotated consensus address lookup
+
+	// UnappliedConsKeyRotationKey is the drain queue of rotations that the
+	// msg server has accepted but the end blocker has not yet performed.
+	// Each entry holds the new pubkey to apply. The end blocker iterates
+	// this prefix once per block, applies each rotation, and deletes the
+	// entry. The other three rotation stores remain so the rotation can be
+	// tracked through the rest of the unbonding period.
+	UnappliedConsKeyRotationKey = []byte{0x94} // prefix for unapplied consensus key rotations, keyed by valAddr
 )
 
 // UnbondingType defines the type of unbonding operation
@@ -505,4 +513,10 @@ func GetValidatorConsKeyRotationKey(valAddr sdk.ValAddress) []byte {
 // GetRotatedConsAddrIndexKey returns the lookup key for a previously rotated consensus address.
 func GetRotatedConsAddrIndexKey(oldConsAddr sdk.ConsAddress) []byte {
 	return append(RotatedConsAddrIndexKey, address.MustLengthPrefix(oldConsAddr)...)
+}
+
+// GetUnappliedConsKeyRotationKey returns the key for a rotation that the
+// msg server has queued and the end blocker has not yet applied.
+func GetUnappliedConsKeyRotationKey(valAddr sdk.ValAddress) []byte {
+	return append(UnappliedConsKeyRotationKey, address.MustLengthPrefix(valAddr)...)
 }

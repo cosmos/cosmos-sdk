@@ -174,6 +174,12 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 		panic(fmt.Sprintf("not bonded pool balance is different from not bonded coins: %s <-> %s", notBondedBalance, notBondedCoins))
 	}
 
+	// materialize the key rotation fee pool so it exists from genesis. fees
+	// only ever transit through it, so it carries no genesis balance.
+	if keyRotationFeePool := k.GetKeyRotationFeePool(ctx); keyRotationFeePool == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.KeyRotationFeePoolName))
+	}
+
 	// don't need to run CometBFT updates if we exported
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {

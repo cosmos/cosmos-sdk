@@ -111,10 +111,11 @@ func initFixture(tb testing.TB) *fixture {
 	authority := authtypes.NewModuleAddress("gov")
 
 	maccPerms := map[string][]string{
-		minttypes.ModuleName:    {authtypes.Minter},
-		types.ModuleName:        {authtypes.Minter},
-		types.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		types.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		minttypes.ModuleName:         {authtypes.Minter},
+		types.ModuleName:             {authtypes.Minter},
+		types.BondedPoolName:         {authtypes.Burner, authtypes.Staking},
+		types.NotBondedPoolName:      {authtypes.Burner, authtypes.Staking},
+		types.KeyRotationFeePoolName: {authtypes.Burner},
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(

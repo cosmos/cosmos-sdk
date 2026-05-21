@@ -671,17 +671,16 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, types.ErrExceedingMaxConsPubKeyRotations
 	}
 
-	// burn the rotation fee. NotBondedPool is used as the transit account
-	// because BurnCoins requires a module account with Burner permission.
-
-	// TODO: is there an easier way to burn without having to go to the not
-	// bonded pool/module account first? seems like no
+	// route the rotation fee through the dedicated key rotation fee pool
+	// module account before burning. The pool is a burner module account so
+	// the fee is fully removed from supply and never mingles with bonded or
+	// unbonded staking balances.
 	fee := types.DefaultKeyRotationFee
 	feeCoins := sdk.NewCoins(fee)
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), types.NotBondedPoolName, feeCoins); err != nil {
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), types.KeyRotationFeePoolName, feeCoins); err != nil {
 		return nil, err
 	}
-	if err := k.bankKeeper.BurnCoins(ctx, types.NotBondedPoolName, feeCoins); err != nil {
+	if err := k.bankKeeper.BurnCoins(ctx, types.KeyRotationFeePoolName, feeCoins); err != nil {
 		return nil, err
 	}
 

@@ -1242,10 +1242,10 @@ func (s *KeeperTestSuite) TestMsgRotateConsPubKey() {
 			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
 				valAddr, _ := createValidator(stakingtypes.Bonded)
 				s.bankKeeper.EXPECT().
-					SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(valAddr), stakingtypes.NotBondedPoolName, gomock.Any()).
+					SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(valAddr), stakingtypes.KeyRotationFeePoolName, gomock.Any()).
 					Return(nil)
 				s.bankKeeper.EXPECT().
-					BurnCoins(gomock.Any(), stakingtypes.NotBondedPoolName, gomock.Any()).
+					BurnCoins(gomock.Any(), stakingtypes.KeyRotationFeePoolName, gomock.Any()).
 					Return(nil)
 				return &stakingtypes.MsgRotateConsPubKey{
 					ValidatorAddress: valAddr.String(),
@@ -1260,10 +1260,10 @@ func (s *KeeperTestSuite) TestMsgRotateConsPubKey() {
 				// submit a valid rotation for valAddr
 				valAddr, _ := createValidator(stakingtypes.Bonded)
 				s.bankKeeper.EXPECT().
-					SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(valAddr), stakingtypes.NotBondedPoolName, gomock.Any()).
+					SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(valAddr), stakingtypes.KeyRotationFeePoolName, gomock.Any()).
 					Return(nil)
 				s.bankKeeper.EXPECT().
-					BurnCoins(gomock.Any(), stakingtypes.NotBondedPoolName, gomock.Any()).
+					BurnCoins(gomock.Any(), stakingtypes.KeyRotationFeePoolName, gomock.Any()).
 					Return(nil)
 				valid := &stakingtypes.MsgRotateConsPubKey{
 					ValidatorAddress: valAddr.String(),

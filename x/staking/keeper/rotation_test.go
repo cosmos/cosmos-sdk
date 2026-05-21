@@ -205,7 +205,7 @@ func (s *KeeperTestSuite) TestPruneMaturedConsKeyRotations() {
 				require.NoError(err)
 				require.False(hasQueue, "matured queue entry should be pruned")
 
-				hasPending, err := s.stakingKeeper.HasPendingConsKeyRotation(s.ctx, e.valAddr)
+				hasPending, err := s.stakingKeeper.HasConsKeyRotationInUnbondingWindow(s.ctx, e.valAddr)
 				require.NoError(err)
 				require.False(hasPending, "matured per-validator entry should be pruned")
 
@@ -219,7 +219,7 @@ func (s *KeeperTestSuite) TestPruneMaturedConsKeyRotations() {
 				require.NoError(err)
 				require.True(hasQueue, "future queue entry should remain")
 
-				hasPending, err := s.stakingKeeper.HasPendingConsKeyRotation(s.ctx, e.valAddr)
+				hasPending, err := s.stakingKeeper.HasConsKeyRotationInUnbondingWindow(s.ctx, e.valAddr)
 				require.NoError(err)
 				require.True(hasPending, "future per-validator entry should remain")
 

@@ -56,7 +56,7 @@ func TestRotateConsPubKey_MsgServerQueuesAndEndBlockerApplies(t *testing.T) {
 
 	// per-validator pending index recorded (gates further rotations inside the
 	// unbonding window)
-	hasPending, err := f.stakingKeeper.HasPendingConsKeyRotation(f.sdkCtx, valAddr)
+	hasPending, err := f.stakingKeeper.HasConsKeyRotationInUnbondingWindow(f.sdkCtx, valAddr)
 	assert.NilError(t, err)
 	assert.Assert(t, hasPending)
 
@@ -106,7 +106,7 @@ func TestRotateConsPubKey_MsgServerQueuesAndEndBlockerApplies(t *testing.T) {
 	// the per-validator pending index intentionally persists past the end
 	// blocker so that further rotations are gated until the end blocker
 	// prunes it after maturity
-	hasPendingAfter, err := f.stakingKeeper.HasPendingConsKeyRotation(f.sdkCtx, valAddr)
+	hasPendingAfter, err := f.stakingKeeper.HasConsKeyRotationInUnbondingWindow(f.sdkCtx, valAddr)
 	assert.NilError(t, err)
 	assert.Assert(t, hasPendingAfter)
 }
@@ -149,7 +149,7 @@ func TestRotateConsPubKey_PruneClearsRotationStateAfterUnbonding(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Assert(t, !has, "maturity queue entry should be pruned")
 
-	hasPending, err := f.stakingKeeper.HasPendingConsKeyRotation(f.sdkCtx, valAddr)
+	hasPending, err := f.stakingKeeper.HasConsKeyRotationInUnbondingWindow(f.sdkCtx, valAddr)
 	assert.NilError(t, err)
 	assert.Assert(t, !hasPending, "per-validator pending index should be pruned")
 

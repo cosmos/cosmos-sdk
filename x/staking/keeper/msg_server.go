@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"slices"
 	"strconv"
 	"time"
@@ -634,7 +635,11 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	}
 
 	// reject a key currently in use by some validator
-	if existing, err := k.GetValidatorByConsAddr(ctx, newConsAddr); err == nil && existing.OperatorAddress != "" {
+	existing, err := k.GetValidatorByConsAddr(ctx, newConsAddr)
+	if err != nil && !errors.Is(err, types.ErrNoValidatorFound) {
+		return nil, err
+	}
+	if err == nil && existing.OperatorAddress != "" {
 		return nil, types.ErrConsensusPubKeyAlreadyUsedForValidator
 	}
 
@@ -658,7 +663,7 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	}
 
 	// enforce the per validator rotation limit inside the unbonding window
-	pending, err := k.HasPendingConsKeyRotation(ctx, valAddr)
+	pending, err := k.HasConsKeyRotationInUnbondingWindow(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}

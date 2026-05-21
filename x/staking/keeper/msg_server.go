@@ -644,6 +644,9 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	if err != nil {
 		return nil, types.ErrNoValidatorFound
 	}
+
+	// TODO: this is likely too strict, we probably only need to restrict to
+	// not allowing tombstoned validators to rotate
 	if status := validator.GetStatus(); status != types.Bonded {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "validator status is not bonded, got %s", status)
 	}
@@ -663,10 +666,17 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, types.ErrExceedingMaxConsPubKeyRotations
 	}
 
-	// transfer the rotation fee from the validators account to the
-	// distribution module, which forwards it to the community pool
+	// burn the rotation fee. NotBondedPool is used as the transit account
+	// because BurnCoins requires a module account with Burner permission.
+
+	// TODO: is there an easier way to burn without having to go to the not
+	// bonded pool/module account first? seems like no
 	fee := types.DefaultKeyRotationFee
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), types.DistributionModuleName, sdk.NewCoins(fee)); err != nil {
+	feeCoins := sdk.NewCoins(fee)
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), types.NotBondedPoolName, feeCoins); err != nil {
+		return nil, err
+	}
+	if err := k.bankKeeper.BurnCoins(ctx, types.NotBondedPoolName, feeCoins); err != nil {
 		return nil, err
 	}
 

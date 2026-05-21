@@ -23,10 +23,6 @@ const (
 
 	// RouterKey is the msg router key for the staking module
 	RouterKey = ModuleName
-
-	// DistributionModuleName is the name of the distribution module account, which
-	// receives the consensus key rotation fee.
-	DistributionModuleName = "distribution"
 )
 
 // Keys for store prefixes

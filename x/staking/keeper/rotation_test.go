@@ -1,7 +1,11 @@
 package keeper_test
 
 import (
+	"errors"
 	"testing"
+	"time"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -12,44 +16,35 @@ import (
 func (s *KeeperTestSuite) TestApplyConsKeyRotation() {
 	require := s.Require()
 
-	createValidator := func() (sdk.ValAddress, cryptotypes.PubKey) {
+	createValidator := func() (stakingtypes.Validator, sdk.ValAddress, cryptotypes.PubKey) {
 		pk := ed25519.GenPrivKey().PubKey()
 		valAddr := sdk.ValAddress(pk.Address())
 		v, err := stakingtypes.NewValidator(valAddr.String(), pk, stakingtypes.Description{Moniker: "v"})
 		require.NoError(err)
 		v.Status = stakingtypes.Bonded
+		v.Tokens = sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
+		v.DelegatorShares = math.LegacyNewDecFromInt(v.Tokens)
 		require.NoError(s.stakingKeeper.SetValidator(s.ctx, v))
 		require.NoError(s.stakingKeeper.SetValidatorByConsAddr(s.ctx, v))
-		return valAddr, pk
+		return v, valAddr, pk
 	}
 
 	testCases := []struct {
-		name      string
-		setup     func() (valAddr sdk.ValAddress, oldPk, newPk cryptotypes.PubKey)
-		expErr    bool
-		expErrMsg string
+		name  string
+		setup func() (validator stakingtypes.Validator, valAddr sdk.ValAddress, oldPk, newPk cryptotypes.PubKey)
 	}{
 		{
 			name: "successful rotation",
-			setup: func() (sdk.ValAddress, cryptotypes.PubKey, cryptotypes.PubKey) {
-				valAddr, oldPk := createValidator()
-				return valAddr, oldPk, ed25519.GenPrivKey().PubKey()
+			setup: func() (stakingtypes.Validator, sdk.ValAddress, cryptotypes.PubKey, cryptotypes.PubKey) {
+				v, valAddr, oldPk := createValidator()
+				return v, valAddr, oldPk, ed25519.GenPrivKey().PubKey()
 			},
-		},
-		{
-			name: "validator not found",
-			setup: func() (sdk.ValAddress, cryptotypes.PubKey, cryptotypes.PubKey) {
-				missing := sdk.ValAddress(ed25519.GenPrivKey().PubKey().Address())
-				return missing, nil, ed25519.GenPrivKey().PubKey()
-			},
-			expErr:    true,
-			expErrMsg: stakingtypes.ErrNoValidatorFound.Error(),
 		},
 		{
 			name: "rotate to same key is a no-op",
-			setup: func() (sdk.ValAddress, cryptotypes.PubKey, cryptotypes.PubKey) {
-				valAddr, oldPk := createValidator()
-				return valAddr, oldPk, oldPk
+			setup: func() (stakingtypes.Validator, sdk.ValAddress, cryptotypes.PubKey, cryptotypes.PubKey) {
+				v, valAddr, oldPk := createValidator()
+				return v, valAddr, oldPk, oldPk
 			},
 		},
 	}
@@ -58,20 +53,18 @@ func (s *KeeperTestSuite) TestApplyConsKeyRotation() {
 		s.T().Run(tc.name, func(t *testing.T) {
 			s.SetupTest()
 
-			valAddr, oldPk, newPk := tc.setup()
+			validator, valAddr, oldPk, newPk := tc.setup()
 
-			err := s.stakingKeeper.ApplyConsKeyRotation(s.ctx, valAddr, newPk)
-			if tc.expErr {
-				require.Error(err)
-				require.Contains(err.Error(), tc.expErrMsg)
-				return
-			}
+			updates, err := s.stakingKeeper.ApplyConsKeyRotation(s.ctx, validator, newPk, sdk.DefaultPowerReduction)
 			require.NoError(err)
+			require.Len(updates, 2)
+			require.Equal(int64(0), updates[0].Power)
+			require.Equal(int64(10), updates[1].Power)
 
 			// validator's stored ConsensusPubkey must now resolve to newPk
-			v, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
+			stored, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
 			require.NoError(err)
-			gotConsAddr, err := v.GetConsAddr()
+			gotConsAddr, err := stored.GetConsAddr()
 			require.NoError(err)
 			require.Equal(sdk.ConsAddress(newPk.Address()).Bytes(), gotConsAddr)
 
@@ -97,16 +90,19 @@ func (s *KeeperTestSuite) TestIterateUnappliedConsKeyRotations() {
 		newPk   cryptotypes.PubKey
 	}
 
+	errStop := errors.New("stop")
+
 	testCases := []struct {
 		name      string
 		seedCount int
-		stopAfter int
+		stopAfter int // 0 = no stop
 		expectLen int
+		expectErr error
 	}{
-		{"empty store", 0, 0, 0},
-		{"single entry", 1, 0, 1},
-		{"three entries", 3, 0, 3},
-		{"stop after first of three", 3, 1, 1},
+		{name: "empty store", seedCount: 0, expectLen: 0},
+		{name: "single entry", seedCount: 1, expectLen: 1},
+		{name: "three entries", seedCount: 3, expectLen: 3},
+		{name: "stop with error after first of three", seedCount: 3, stopAfter: 1, expectLen: 1, expectErr: errStop},
 	}
 
 	for _, tc := range testCases {
@@ -124,11 +120,18 @@ func (s *KeeperTestSuite) TestIterateUnappliedConsKeyRotations() {
 			}
 
 			var observed []entry
-			err := s.stakingKeeper.IterateUnappliedConsKeyRotations(s.ctx, func(valAddr sdk.ValAddress, newPk cryptotypes.PubKey) bool {
+			err := s.stakingKeeper.IterateUnappliedConsKeyRotations(s.ctx, func(valAddr sdk.ValAddress, newPk cryptotypes.PubKey) error {
 				observed = append(observed, entry{valAddr, newPk})
-				return tc.stopAfter > 0 && len(observed) >= tc.stopAfter
+				if tc.stopAfter > 0 && len(observed) >= tc.stopAfter {
+					return errStop
+				}
+				return nil
 			})
-			require.NoError(err)
+			if tc.expectErr != nil {
+				require.ErrorIs(err, tc.expectErr)
+			} else {
+				require.NoError(err)
+			}
 			require.Len(observed, tc.expectLen)
 
 			// each observed entry must round trip to one of the seeded entries
@@ -142,10 +145,87 @@ func (s *KeeperTestSuite) TestIterateUnappliedConsKeyRotations() {
 				}
 				require.True(found, "observed entry not in seeded set: %s", got.valAddr)
 			}
+		})
+	}
+}
 
-			// non-stop cases must observe every seeded entry
-			if tc.stopAfter == 0 {
-				require.Len(observed, len(seeded))
+func (s *KeeperTestSuite) TestPruneMaturedConsKeyRotations() {
+	require := s.Require()
+
+	type rec struct {
+		valAddr  sdk.ValAddress
+		consAddr sdk.ConsAddress
+		maturity time.Time
+	}
+
+	queueRotation := func() rec {
+		oldPk := ed25519.GenPrivKey().PubKey()
+		valAddr := sdk.ValAddress(oldPk.Address())
+		newPk := ed25519.GenPrivKey().PubKey()
+		maturity := s.ctx.BlockTime().Add(stakingtypes.DefaultUnbondingTime)
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk, stakingtypes.DefaultKeyRotationFee))
+		return rec{valAddr, sdk.ConsAddress(oldPk.Address()), maturity}
+	}
+
+	testCases := []struct {
+		name       string
+		matured    int
+		notMatured int
+	}{
+		{name: "empty queue", matured: 0, notMatured: 0},
+		{name: "single matured entry", matured: 1, notMatured: 0},
+		{name: "single not yet matured entry", matured: 0, notMatured: 1},
+		{name: "mixed matured and future", matured: 2, notMatured: 2},
+	}
+
+	for _, tc := range testCases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			s.SetupTest()
+
+			baseTime := s.ctx.BlockTime()
+			var maturedEntries, futureEntries []rec
+
+			// queue matured entries by rewinding the context so their maturity
+			// (queueTime + unbondingTime) falls strictly before baseTime
+			s.ctx = s.ctx.WithBlockTime(baseTime.Add(-stakingtypes.DefaultUnbondingTime - time.Hour))
+			for i := 0; i < tc.matured; i++ {
+				maturedEntries = append(maturedEntries, queueRotation())
+			}
+
+			// queue future entries at baseTime so their maturity is in the future
+			s.ctx = s.ctx.WithBlockTime(baseTime)
+			for i := 0; i < tc.notMatured; i++ {
+				futureEntries = append(futureEntries, queueRotation())
+			}
+
+			require.NoError(s.stakingKeeper.PruneMaturedConsKeyRotations(s.ctx))
+
+			for _, e := range maturedEntries {
+				hasQueue, err := s.stakingKeeper.HasConsKeyRotationQueueEntry(s.ctx, e.maturity, e.valAddr)
+				require.NoError(err)
+				require.False(hasQueue, "matured queue entry should be pruned")
+
+				hasPending, err := s.stakingKeeper.HasPendingConsKeyRotation(s.ctx, e.valAddr)
+				require.NoError(err)
+				require.False(hasPending, "matured per-validator entry should be pruned")
+
+				hasCons, err := s.stakingKeeper.HasRotatedConsAddr(s.ctx, e.consAddr)
+				require.NoError(err)
+				require.False(hasCons, "matured rotated cons addr entry should be pruned")
+			}
+
+			for _, e := range futureEntries {
+				hasQueue, err := s.stakingKeeper.HasConsKeyRotationQueueEntry(s.ctx, e.maturity, e.valAddr)
+				require.NoError(err)
+				require.True(hasQueue, "future queue entry should remain")
+
+				hasPending, err := s.stakingKeeper.HasPendingConsKeyRotation(s.ctx, e.valAddr)
+				require.NoError(err)
+				require.True(hasPending, "future per-validator entry should remain")
+
+				hasCons, err := s.stakingKeeper.HasRotatedConsAddr(s.ctx, e.consAddr)
+				require.NoError(err)
+				require.True(hasCons, "future rotated cons addr entry should remain")
 			}
 		})
 	}

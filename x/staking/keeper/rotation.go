@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -29,6 +30,12 @@ func (k Keeper) HasPendingConsKeyRotation(ctx context.Context, valAddr sdk.ValAd
 // rotated away from and is still inside its unbonding window.
 func (k Keeper) HasRotatedConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (bool, error) {
 	return k.storeService.OpenKVStore(ctx).Has(types.GetRotatedConsAddrIndexKey(consAddr))
+}
+
+// HasConsKeyRotationQueueEntry returns whether the maturity queue holds an
+// entry at the given maturity for the given validator.
+func (k Keeper) HasConsKeyRotationQueueEntry(ctx context.Context, maturity time.Time, valAddr sdk.ValAddress) (bool, error) {
+	return k.storeService.OpenKVStore(ctx).Has(types.GetConsKeyRotationQueueKey(maturity, valAddr))
 }
 
 // SetConsKeyRotation writes to indexes that track a pending consensus key
@@ -73,13 +80,7 @@ func (k Keeper) SetConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress, 
 // and returns the validator updates needed to retire each old key at zero
 // power and instate each new key at the validator's current power.
 func (k Keeper) ApplyPendingConsKeyRotations(ctx context.Context, powerReduction math.Int) ([]abci.ValidatorUpdate, error) {
-	var (
-		// used to defer the removal of UnappliedConsensusKeyRotationKeys until
-		// after iteration
-		rotatedValidators []sdk.ValAddress
-
-		totalUpdates abci.ValidatorUpdates
-	)
+	var totalUpdates abci.ValidatorUpdates
 
 	store := k.storeService.OpenKVStore(ctx)
 	err := k.IterateUnappliedConsKeyRotations(ctx, func(valAddr sdk.ValAddress, newPubKey cryptotypes.PubKey) error {
@@ -96,20 +97,10 @@ func (k Keeper) ApplyPendingConsKeyRotations(ctx context.Context, powerReduction
 		}
 		totalUpdates = append(totalUpdates, updates...)
 
-		// defer removal until after iteration
-		rotatedValidators = append(rotatedValidators, valAddr)
-
-		return nil
+		return store.Delete(types.GetUnappliedConsKeyRotationKey(valAddr))
 	})
 	if err != nil {
 		return nil, err
-	}
-
-	// perform removal of pending rotation for each validator that rotated
-	for _, rotatedValidator := range rotatedValidators {
-		if err := store.Delete(types.GetUnappliedConsKeyRotationKey(rotatedValidator)); err != nil {
-			return nil, err
-		}
 	}
 
 	return totalUpdates, nil
@@ -129,6 +120,13 @@ func (k Keeper) ApplyConsKeyRotation(ctx context.Context, validator types.Valida
 	// power
 	updates[0] = validator.ABCIValidatorUpdateZero()
 
+	// capture the old cons addr before the in-memory swap below, so that we
+	// can delete the old by cons addr index entry further down
+	oldConsAddr, err := validator.GetConsAddr()
+	if err != nil {
+		return nil, err
+	}
+
 	// update the validator in memory to use the new cons addr
 	newAny, err := codectypes.NewAnyWithValue(newPubKey)
 	if err != nil {
@@ -146,14 +144,9 @@ func (k Keeper) ApplyConsKeyRotation(ctx context.Context, validator types.Valida
 		return nil, err
 	}
 
-	store := k.storeService.OpenKVStore(ctx)
-	oldConsAddr, err := validator.GetConsAddr()
-	if err != nil {
-		return nil, err
-	}
-
 	// remove the store entry for the previous cons addr pointing to the
 	// validator
+	store := k.storeService.OpenKVStore(ctx)
 	if err := store.Delete(types.GetValidatorByConsAddrKey(oldConsAddr)); err != nil {
 		return nil, err
 	}
@@ -164,6 +157,47 @@ func (k Keeper) ApplyConsKeyRotation(ctx context.Context, validator types.Valida
 	}
 
 	return updates, nil
+}
+
+// PruneMaturedConsKeyRotations removes every rotation whose unbonding window
+// has elapsed at the current block time. It deletes the entries from the
+// maturity queue, the per validator pending index, and the rotated consensus
+// address index.
+func (k Keeper) PruneMaturedConsKeyRotations(ctx context.Context) (err error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	blockTime := sdkCtx.BlockHeader().Time
+
+	store := k.storeService.OpenKVStore(ctx)
+	iterator, err := store.Iterator(
+		types.ConsKeyRotationQueueKey,
+		storetypes.PrefixEndBytes(types.GetConsKeyRotationQueueTimePrefix(blockTime)),
+	)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = errors.Join(err, iterator.Close())
+	}()
+
+	for ; iterator.Valid(); iterator.Next() {
+		_, valAddr, err := types.ParseConsKeyRotationQueueKey(iterator.Key())
+		if err != nil {
+			return err
+		}
+		oldConsAddr := sdk.ConsAddress(iterator.Value())
+
+		if err := store.Delete(iterator.Key()); err != nil {
+			return err
+		}
+		if err := store.Delete(types.GetValidatorConsKeyRotationKey(valAddr)); err != nil {
+			return err
+		}
+		if err := store.Delete(types.GetRotatedConsAddrIndexKey(oldConsAddr)); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // IterateUnappliedConsKeyRotations walks every rotation queued by the msg

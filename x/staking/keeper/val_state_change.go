@@ -113,6 +113,12 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 		)
 	}
 
+	// prune consensus key rotations that have fallen out of the current
+	// unbonding period.
+	if err := k.PruneMaturedConsKeyRotations(ctx); err != nil {
+		return nil, err
+	}
+
 	return validatorUpdates, nil
 }
 

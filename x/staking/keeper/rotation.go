@@ -180,6 +180,7 @@ func (k Keeper) PruneMaturedConsKeyRotations(ctx context.Context) (err error) {
 	}()
 
 	for ; iterator.Valid(); iterator.Next() {
+		// TODO: migrate ValidatorSigningInfo from oldConsAddr to newConsAddr
 		_, valAddr, err := types.ParseConsKeyRotationQueueKey(iterator.Key())
 		if err != nil {
 			return err

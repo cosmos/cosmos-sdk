@@ -1201,15 +1201,19 @@ func (s *KeeperTestSuite) TestMsgRotateConsPubKey() {
 			expErr: stakingtypes.ErrNoValidatorFound.Error(),
 		},
 		{
-			name: "validator not bonded",
+			name: "validator jailed",
 			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
-				valAddr, _ := createValidator(stakingtypes.Unbonded)
+				valAddr, _ := createValidator(stakingtypes.Bonded)
+				v, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
+				require.NoError(err)
+				v.Jailed = true
+				require.NoError(s.stakingKeeper.SetValidator(s.ctx, v))
 				return &stakingtypes.MsgRotateConsPubKey{
 					ValidatorAddress: valAddr.String(),
 					NewPubkey:        newAny(ed25519.GenPrivKey().PubKey()),
 				}
 			},
-			expErr: "validator status is not bonded",
+			expErr: "validator is jailed",
 		},
 		{
 			name: "new pubkey already used by another validator",

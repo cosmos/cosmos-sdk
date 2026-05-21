@@ -65,9 +65,30 @@ var (
 	// NOTE: keys in range 0x81–0x87 were previously used in liquid staking forks of the staking module.
 	// Module developers MUST NOT use these keys and MUST consider them "reserved".
 
-	ConsKeyRotationQueueKey     = []byte{0x91} // prefix for the consensus key rotation maturity queue, keyed by (time, valAddr)
+	// ConsKeyRotationQueueKey allows us to iterate over key rotations
+	// happening by time, so that the end blocker can quickly determine which
+	// key rotations we can stop keeping track of since they have fallen out of
+	// the current unbonding period.
+	ConsKeyRotationQueueKey = []byte{0x91} // prefix for the consensus key rotation maturity queue, keyed by (time, valAddr)
+
+	// ValidatorConsKeyRotationKey allows us lookup key rotations happening by
+	// validator address, so we can quickly determine in the msg server how
+	// many key rotations this validator has done in the unbonding period to
+	// enforce the max key rotation limit. This is pruned when the key rotation
+	// falls out of the current unbonding period in the end blocker (determined
+	// by the ConsKeyRotationQueueKey).
 	ValidatorConsKeyRotationKey = []byte{0x92} // prefix for a validator's pending consensus key rotation, keyed by valAddr
-	RotatedConsAddrIndexKey     = []byte{0x93} // prefix for the previously rotated consensus address lookup
+
+	// RotatedConsAddrIndexKey allows us to lookup what an old consensus key
+	// has changed to. This allows us to ensure that a validator does not
+	// rotate to a consensus key that was previously used within the current
+	// unbondong period (e.g. val 1 changes from key A->B, val 2 cannot change
+	// from C->A). This lookup also allows slashing/evidence handling to
+	// associate an infraction on an old consensus key to the new consensus
+	// key. This is pruned when the key rotation falls out of the current
+	// unbonding period in the end blocker (determined by the
+	// ConsKeyRotationQueueKey).
+	RotatedConsAddrIndexKey = []byte{0x93} // prefix for the previously rotated consensus address lookup
 )
 
 // UnbondingType defines the type of unbonding operation

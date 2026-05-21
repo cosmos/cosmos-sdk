@@ -647,10 +647,8 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, types.ErrNoValidatorFound
 	}
 
-	// TODO: this is likely too strict, we probably only need to restrict to
-	// not allowing tombstoned validators to rotate
-	if status := validator.GetStatus(); status != types.Bonded {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "validator status is not bonded, got %s", status)
+	if validator.IsJailed() {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "validator is jailed")
 	}
 
 	// shouldnt ever happen

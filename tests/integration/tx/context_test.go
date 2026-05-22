@@ -33,7 +33,6 @@ func TestDefineCustomGetSigners(t *testing.T) {
 	_, err := simtestutil.SetupAtGenesis(
 		depinject.Configs(
 			configurator.NewAppConfig(
-				configurator.ParamsModule(),
 				configurator.AuthModule(),
 				configurator.StakingModule(),
 				configurator.BankModule(),
@@ -61,7 +60,6 @@ func TestDefineCustomGetSigners(t *testing.T) {
 	_, err = simtestutil.SetupAtGenesis(
 		depinject.Configs(
 			configurator.NewAppConfig(
-				configurator.ParamsModule(),
 				configurator.AuthModule(),
 				configurator.StakingModule(),
 				configurator.BankModule(),

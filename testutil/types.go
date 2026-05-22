@@ -16,7 +16,6 @@ const (
 	MintModuleName                  = "mint"
 	NFTModuleName                   = "nft"
 	ParamsModuleName                = "params"
-	ProtocolPoolModuleName          = "protocolpool"
 	SlashingModuleName              = "slashing"
 	StakingModuleName               = "staking"
 	AuthTxConfigDepinjectModuleName = "tx"

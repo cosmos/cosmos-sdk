@@ -26,10 +26,12 @@ func (k Keeper) HasConsKeyRotationInUnbondingWindow(ctx context.Context, valAddr
 	return k.storeService.OpenKVStore(ctx).Has(types.GetValidatorConsKeyRotationKey(valAddr))
 }
 
-// HasRotatedConsAddr returns whether the given consensus address was previously
-// rotated away from and is still inside its unbonding window.
-func (k Keeper) HasRotatedConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (bool, error) {
-	return k.storeService.OpenKVStore(ctx).Has(types.GetRotatedConsAddrIndexKey(consAddr))
+// IsConsAddrLockedByRotation returns whether the given consensus address is
+// locked by a key rotation, either because some validator previously rotated
+// away from it (and is still inside the unbonding window) or because some
+// validator has enqueued a pending rotation targeting it.
+func (k Keeper) IsConsAddrLockedByRotation(ctx context.Context, consAddr sdk.ConsAddress) (bool, error) {
+	return k.storeService.OpenKVStore(ctx).Has(types.GetRotationLockedConsAddrIndexKey(consAddr))
 }
 
 // HasConsKeyRotationQueueEntry returns whether the maturity queue holds an
@@ -51,6 +53,7 @@ func (k Keeper) SetConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress, 
 	maturity := sdkCtx.BlockHeader().Time.Add(unbondingTime)
 
 	oldConsAddr := sdk.ConsAddress(oldPubKey.Address())
+	newConsAddr := sdk.ConsAddress(newPubKey.Address())
 
 	store := k.storeService.OpenKVStore(ctx)
 
@@ -65,7 +68,15 @@ func (k Keeper) SetConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress, 
 		return err
 	}
 
-	if err := store.Set(types.GetRotatedConsAddrIndexKey(oldConsAddr), valAddr); err != nil {
+	// lock both the old and new cons addrs so that no validator can rotate
+	// to either while the rotation is pending or within the unbonding
+	// window. The new addr entry is cleared when the rotation is applied
+	// in the end blocker (after which it is the validator's live cons
+	// addr). The old addr entry is cleared when the rotation matures.
+	if err := store.Set(types.GetRotationLockedConsAddrIndexKey(oldConsAddr), valAddr); err != nil {
+		return err
+	}
+	if err := store.Set(types.GetRotationLockedConsAddrIndexKey(newConsAddr), valAddr); err != nil {
 		return err
 	}
 
@@ -96,6 +107,14 @@ func (k Keeper) ApplyPendingConsKeyRotations(ctx context.Context, powerReduction
 			return err
 		}
 		totalUpdates = append(totalUpdates, updates...)
+
+		// the new cons addr is now the validator's live cons addr; further
+		// rotations targeting it are blocked by the by cons addr lookup,
+		// so release its rotation lock entry. The old cons addr entry
+		// stays until the rotation matures.
+		if err := store.Delete(types.GetRotationLockedConsAddrIndexKey(sdk.ConsAddress(newPubKey.Address()))); err != nil {
+			return err
+		}
 
 		return store.Delete(types.GetUnappliedConsKeyRotationKey(valAddr))
 	})
@@ -193,7 +212,7 @@ func (k Keeper) PruneMaturedConsKeyRotations(ctx context.Context) (err error) {
 		if err := store.Delete(types.GetValidatorConsKeyRotationKey(valAddr)); err != nil {
 			return err
 		}
-		if err := store.Delete(types.GetRotatedConsAddrIndexKey(oldConsAddr)); err != nil {
+		if err := store.Delete(types.GetRotationLockedConsAddrIndexKey(oldConsAddr)); err != nil {
 			return err
 		}
 	}

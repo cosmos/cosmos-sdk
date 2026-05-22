@@ -624,13 +624,14 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	}
 	newConsAddr := sdk.ConsAddress(newPk.Address())
 
-	// reject reuse of a key that some validator rotated away from inside the
-	// unbonding window
-	rotated, err := k.HasRotatedConsAddr(ctx, newConsAddr)
+	// reject a key locked by a rotation, either because some validator
+	// rotated away from it inside the unbonding window or because some
+	// validator already has a pending rotation targeting it
+	locked, err := k.IsConsAddrLockedByRotation(ctx, newConsAddr)
 	if err != nil {
 		return nil, err
 	}
-	if rotated {
+	if locked {
 		return nil, types.ErrConsensusPubKeyInRotationHistory
 	}
 

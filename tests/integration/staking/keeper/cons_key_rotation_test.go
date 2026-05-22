@@ -70,7 +70,7 @@ func TestRotateConsPubKey_MsgServerQueuesAndEndBlockerApplies(t *testing.T) {
 
 	// rotated cons addr index recorded so the old key still resolves to this
 	// validator for slashing/evidence routing
-	hasRotated, err := f.stakingKeeper.HasRotatedConsAddr(f.sdkCtx, oldConsAddr)
+	hasRotated, err := f.stakingKeeper.IsConsAddrLockedByRotation(f.sdkCtx, oldConsAddr)
 	assert.NilError(t, err)
 	assert.Assert(t, hasRotated)
 
@@ -153,7 +153,7 @@ func TestRotateConsPubKey_PruneClearsRotationStateAfterUnbonding(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Assert(t, !hasPending, "per-validator pending index should be pruned")
 
-	hasRotated, err := f.stakingKeeper.HasRotatedConsAddr(f.sdkCtx, oldConsAddr)
+	hasRotated, err := f.stakingKeeper.IsConsAddrLockedByRotation(f.sdkCtx, oldConsAddr)
 	assert.NilError(t, err)
 	assert.Assert(t, !hasRotated, "rotated cons addr index should be pruned")
 }

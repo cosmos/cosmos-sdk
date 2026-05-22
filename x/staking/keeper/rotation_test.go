@@ -209,7 +209,7 @@ func (s *KeeperTestSuite) TestPruneMaturedConsKeyRotations() {
 				require.NoError(err)
 				require.False(hasPending, "matured per-validator entry should be pruned")
 
-				hasCons, err := s.stakingKeeper.HasRotatedConsAddr(s.ctx, e.consAddr)
+				hasCons, err := s.stakingKeeper.IsConsAddrLockedByRotation(s.ctx, e.consAddr)
 				require.NoError(err)
 				require.False(hasCons, "matured rotated cons addr entry should be pruned")
 			}
@@ -223,7 +223,7 @@ func (s *KeeperTestSuite) TestPruneMaturedConsKeyRotations() {
 				require.NoError(err)
 				require.True(hasPending, "future per-validator entry should remain")
 
-				hasCons, err := s.stakingKeeper.HasRotatedConsAddr(s.ctx, e.consAddr)
+				hasCons, err := s.stakingKeeper.IsConsAddrLockedByRotation(s.ctx, e.consAddr)
 				require.NoError(err)
 				require.True(hasCons, "future rotated cons addr entry should remain")
 			}

@@ -247,7 +247,7 @@ func TestGetValidatorConsKeyRotationKey(t *testing.T) {
 	}
 }
 
-func TestGetRotatedConsAddrIndexKey(t *testing.T) {
+func TestGetRotationLockedConsAddrIndexKey(t *testing.T) {
 	tests := []struct {
 		consAddr sdk.ConsAddress
 		wantHex  string
@@ -257,7 +257,7 @@ func TestGetRotatedConsAddrIndexKey(t *testing.T) {
 		{sdk.ConsAddress(keysAddr3), "93143ab62f0d93849be495e21e3e9013a517038f45bd"},
 	}
 	for i, tt := range tests {
-		got := hex.EncodeToString(types.GetRotatedConsAddrIndexKey(tt.consAddr))
+		got := hex.EncodeToString(types.GetRotationLockedConsAddrIndexKey(tt.consAddr))
 		require.Equal(t, tt.wantHex, got, "Keys did not match on test case %d", i)
 	}
 }

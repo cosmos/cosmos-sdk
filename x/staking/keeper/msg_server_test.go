@@ -1242,6 +1242,20 @@ func (s *KeeperTestSuite) TestMsgRotateConsPubKey() {
 			expErr: stakingtypes.ErrConsensusPubKeyInRotationHistory.Error(),
 		},
 		{
+			name: "new pubkey is the target of another pending rotation",
+			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
+				valAddr, _ := createValidator(stakingtypes.Bonded)
+				targetPubKey := ed25519.GenPrivKey().PubKey()
+				dummy := sdk.ValAddress(ed25519.GenPrivKey().PubKey().Address())
+				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, dummy, ed25519.GenPrivKey().PubKey(), targetPubKey, stakingtypes.DefaultKeyRotationFee))
+				return &stakingtypes.MsgRotateConsPubKey{
+					ValidatorAddress: valAddr.String(),
+					NewPubkey:        newAny(targetPubKey),
+				}
+			},
+			expErr: stakingtypes.ErrConsensusPubKeyInRotationHistory.Error(),
+		},
+		{
 			name: "valid msg",
 			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
 				valAddr, _ := createValidator(stakingtypes.Bonded)

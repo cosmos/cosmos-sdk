@@ -75,16 +75,17 @@ var (
 	// by the ConsKeyRotationQueueKey).
 	ValidatorConsKeyRotationKey = []byte{0x92} // prefix for a validator's pending consensus key rotation, keyed by valAddr
 
-	// RotatedConsAddrIndexKey allows us to lookup what an old consensus key
-	// has changed to. This allows us to ensure that a validator does not
-	// rotate to a consensus key that was previously used within the current
-	// unbondong period (e.g. val 1 changes from key A->B, val 2 cannot change
-	// from C->A). This lookup also allows slashing/evidence handling to
-	// associate an infraction on an old consensus key to the new consensus
-	// key. This is pruned when the key rotation falls out of the current
-	// unbonding period in the end blocker (determined by the
-	// ConsKeyRotationQueueKey).
-	RotatedConsAddrIndexKey = []byte{0x93} // prefix for the previously rotated consensus address lookup
+	// RotationLockedConsAddrIndexKey marks a consensus address as locked by
+	// a key rotation, either because some validator previously rotated away
+	// from it (and is still inside its unbonding window) or because some
+	// validator has enqueued a pending rotation targeting it. In both cases
+	// the address must not be the target of a new rotation. The old key
+	// lookup also lets slashing/evidence handling associate an infraction
+	// on an old consensus key with the new consensus key. The old key entry
+	// is pruned when its rotation falls out of the unbonding window
+	// (determined by the ConsKeyRotationQueueKey); the new key entry is
+	// removed when the rotation is applied in the end blocker.
+	RotationLockedConsAddrIndexKey = []byte{0x93} // prefix for the rotation-locked consensus address lookup
 
 	// UnappliedConsKeyRotationKey is the drain queue of rotations that the
 	// msg server has accepted but the end blocker has not yet performed.
@@ -506,9 +507,10 @@ func GetValidatorConsKeyRotationKey(valAddr sdk.ValAddress) []byte {
 	return append(ValidatorConsKeyRotationKey, address.MustLengthPrefix(valAddr)...)
 }
 
-// GetRotatedConsAddrIndexKey returns the lookup key for a previously rotated consensus address.
-func GetRotatedConsAddrIndexKey(oldConsAddr sdk.ConsAddress) []byte {
-	return append(RotatedConsAddrIndexKey, address.MustLengthPrefix(oldConsAddr)...)
+// GetRotationLockedConsAddrIndexKey returns the lookup key for a consensus
+// address that is locked by a pending or recently completed rotation.
+func GetRotationLockedConsAddrIndexKey(consAddr sdk.ConsAddress) []byte {
+	return append(RotationLockedConsAddrIndexKey, address.MustLengthPrefix(consAddr)...)
 }
 
 // GetUnappliedConsKeyRotationKey returns the key for a rotation that the

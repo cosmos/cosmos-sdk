@@ -663,12 +663,12 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey for validator's current key, got %T", validator.ConsensusPubkey.GetCachedValue())
 	}
 
-	// enforce the per validator rotation limit inside the unbonding window
-	pending, err := k.HasConsKeyRotationInUnbondingWindow(ctx, valAddr)
+	// enforce the one rotation per validator limit inside the unbonding window
+	hasRotated, err := k.HasConsKeyRotationInUnbondingWindow(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}
-	if pending {
+	if hasRotated {
 		return nil, types.ErrExceedingMaxConsPubKeyRotations
 	}
 
@@ -676,8 +676,7 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	// module account before burning. The pool is a burner module account so
 	// the fee is fully removed from supply and never mingles with bonded or
 	// unbonded staking balances.
-	fee := types.DefaultKeyRotationFee
-	feeCoins := sdk.NewCoins(fee)
+	feeCoins := sdk.NewCoins(types.DefaultKeyRotationFee)
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), types.KeyRotationFeePoolName, feeCoins); err != nil {
 		return nil, err
 	}
@@ -686,7 +685,7 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	}
 
 	// record the key rotation in the store
-	if err := k.SetConsKeyRotation(ctx, valAddr, oldPk, newPk, fee); err != nil {
+	if err := k.SetConsKeyRotation(ctx, valAddr, oldPk, newPk); err != nil {
 		return nil, err
 	}
 

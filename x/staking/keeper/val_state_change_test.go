@@ -35,7 +35,7 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdatesWithKeyRotation()
 
 	// queue a key rotation for the same validator
 	newPk := ed25519.GenPrivKey().PubKey()
-	require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk, stakingtypes.DefaultKeyRotationFee))
+	require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
 
 	updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
 	require.NoError(err)

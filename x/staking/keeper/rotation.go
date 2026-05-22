@@ -17,10 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// MaxConsKeyRotations is the maximum number of pending consensus key rotations
-// a validator may have inside the unbonding window.
-const MaxConsKeyRotations = 1
-
 // HasConsKeyRotationInUnbondingWindow returns whether the validator has
 // performed a consensus key rotation inside current the unbonding window.
 func (k Keeper) HasConsKeyRotationInUnbondingWindow(ctx context.Context, valAddr sdk.ValAddress) (bool, error) {
@@ -44,7 +40,7 @@ func (k Keeper) HasConsKeyRotationQueueEntry(ctx context.Context, maturity time.
 // SetConsKeyRotation writes to indexes that track a pending consensus key
 // rotation. The new pubkey is written to the unapplied queue so the end
 // blocker can perform the rotation in this block.
-func (k Keeper) SetConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress, oldPubKey, newPubKey cryptotypes.PubKey, fee sdk.Coin) error {
+func (k Keeper) SetConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress, oldPubKey, newPubKey cryptotypes.PubKey) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	unbondingTime, err := k.UnbondingTime(ctx)

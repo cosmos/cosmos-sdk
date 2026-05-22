@@ -116,7 +116,7 @@ func (s *KeeperTestSuite) TestIterateUnappliedConsKeyRotations() {
 					newPk:   ed25519.GenPrivKey().PubKey(),
 				}
 				oldPk := ed25519.GenPrivKey().PubKey()
-				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, seeded[i].valAddr, oldPk, seeded[i].newPk, stakingtypes.DefaultKeyRotationFee))
+				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, seeded[i].valAddr, oldPk, seeded[i].newPk))
 			}
 
 			var observed []entry
@@ -163,7 +163,7 @@ func (s *KeeperTestSuite) TestPruneMaturedConsKeyRotations() {
 		valAddr := sdk.ValAddress(oldPk.Address())
 		newPk := ed25519.GenPrivKey().PubKey()
 		maturity := s.ctx.BlockTime().Add(stakingtypes.DefaultUnbondingTime)
-		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk, stakingtypes.DefaultKeyRotationFee))
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
 		return rec{valAddr, sdk.ConsAddress(oldPk.Address()), maturity}
 	}
 

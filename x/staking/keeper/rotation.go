@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"time"
@@ -182,54 +183,87 @@ func (k Keeper) ApplyConsKeyRotation(ctx context.Context, validator types.Valida
 // has elapsed at the current block time. It deletes the entries from the
 // maturity queue, the per validator pending index, and the rotated consensus
 // address index.
-func (k Keeper) PruneMaturedConsKeyRotations(ctx context.Context) (err error) {
+func (k Keeper) PruneMaturedConsKeyRotations(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockHeader().Time
 
+	keys, err := k.maturedConsKeyRotationKeys(ctx, blockTime)
+	if err != nil {
+		return err
+	}
+
+	store := k.storeService.OpenKVStore(ctx)
+	for _, key := range keys {
+		if err := store.Delete(key); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// maturedConsKeyRotationKeys walks the maturity queue up to blockTime and
+// returns the full set of keys to delete to retire each matured rotation.
+func (k Keeper) maturedConsKeyRotationKeys(ctx context.Context, blockTime time.Time) (keys [][]byte, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	iterator, err := store.Iterator(
 		types.ConsKeyRotationQueueKey,
 		storetypes.PrefixEndBytes(types.GetConsKeyRotationQueueTimePrefix(blockTime)),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer func() {
 		err = errors.Join(err, iterator.Close())
 	}()
 
+	// TODO: migrate ValidatorSigningInfo from oldConsAddr to newConsAddr
 	for ; iterator.Valid(); iterator.Next() {
-		// TODO: migrate ValidatorSigningInfo from oldConsAddr to newConsAddr
-		_, valAddr, err := types.ParseConsKeyRotationQueueKey(iterator.Key())
-		if err != nil {
-			return err
+		maturity, valAddr, perr := types.ParseConsKeyRotationQueueKey(iterator.Key())
+		if perr != nil {
+			return nil, perr
 		}
 		oldConsAddr := sdk.ConsAddress(iterator.Value())
 
-		if err := store.Delete(iterator.Key()); err != nil {
-			return err
-		}
-		if err := store.Delete(types.GetValidatorConsKeyRotationKey(valAddr)); err != nil {
-			return err
-		}
-		if err := store.Delete(types.GetRotationLockedConsAddrIndexKey(oldConsAddr)); err != nil {
-			return err
-		}
+		keys = append(keys,
+			types.GetConsKeyRotationQueueKey(maturity, valAddr),
+			types.GetValidatorConsKeyRotationKey(valAddr),
+			types.GetRotationLockedConsAddrIndexKey(oldConsAddr),
+		)
 	}
-
-	return nil
+	return keys, nil
 }
 
 // IterateUnappliedConsKeyRotations walks every rotation queued by the msg
-// server that the end blocker has not yet applied, in valAddr sorted order.
+// server that the end blocker has not yet applied, in valAddr sorted order. It
+// is safe to delete store keys within the supplied callback.
 func (k Keeper) IterateUnappliedConsKeyRotations(
 	ctx context.Context,
 	cb func(valAddr sdk.ValAddress, newPubKey cryptotypes.PubKey) error,
-) (err error) {
+) error {
+	rotations, err := k.unappliedConsKeyRotations(ctx)
+	if err != nil {
+		return err
+	}
+	for _, r := range rotations {
+		if err := cb(r.valAddr, r.newPubKey); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type unappliedConsKeyRotation struct {
+	valAddr   sdk.ValAddress
+	newPubKey cryptotypes.PubKey
+}
+
+// unappliedConsKeyRotations returns every rotation queued by the msg server
+// that the end blocker has not yet applied.
+func (k Keeper) unappliedConsKeyRotations(ctx context.Context) (rotations []unappliedConsKeyRotation, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	iterator, err := store.Iterator(types.UnappliedConsKeyRotationKey, storetypes.PrefixEndBytes(types.UnappliedConsKeyRotationKey))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer func() {
 		err = errors.Join(err, iterator.Close())
@@ -237,16 +271,13 @@ func (k Keeper) IterateUnappliedConsKeyRotations(
 
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()
-		valAddr := sdk.ValAddress(key[len(types.UnappliedConsKeyRotationKey)+1:])
+		valAddr := sdk.ValAddress(bytes.Clone(key[len(types.UnappliedConsKeyRotationKey)+1:]))
 
 		var newPubKey cryptotypes.PubKey
 		if err := k.cdc.UnmarshalInterface(iterator.Value(), &newPubKey); err != nil {
-			return err
+			return nil, err
 		}
-
-		if err := cb(valAddr, newPubKey); err != nil {
-			return err
-		}
+		rotations = append(rotations, unappliedConsKeyRotation{valAddr: valAddr, newPubKey: newPubKey})
 	}
-	return nil
+	return rotations, nil
 }

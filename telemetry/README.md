@@ -71,8 +71,8 @@ extensions:
 For a full list of configurable options see: https://github.com/open-telemetry/opentelemetry-configuration/blob/main/examples/kitchen-sink.yaml.
 NOTE: the go implementation may not support all options, so check the go [otelconf](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) documentation carefully to see what is actually supported.
 
-3. set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of the configuration file:
-   `export OTEL_EXPERIMENTAL_CONFIG_FILE=path/to/config.yaml`
+3. set the `OTEL_CONFIG_FILE` environment variable to the path of the configuration file:
+   `export OTEL_CONFIG_FILE=path/to/config.yaml`
 4. start your application or tests
 5. view the data in Grafana LGTM at http://localhost:3000/. The Drilldown views are suggested for getting started.
 
@@ -90,7 +90,7 @@ While manual OpenTelemetry initialization is still supported, this package provi
 point of initialization such that end users can just use the official
 OpenTelemetry declarative configuration
 spec: https://opentelemetry.io/docs/languages/sdk-configuration/declarative-configuration/
-End users only need to set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of
+End users only need to set the `OTEL_CONFIG_FILE` environment variable to the path of
 an OpenTelemetry configuration file, or fill out the otel.yaml file in the node's config directory and that's it.
 All the documentation necessary is provided in the OpenTelemetry documentation.
 

@@ -97,6 +97,6 @@ func TestChainUpgrade(t *testing.T) {
 
 	// smoke test that new version runs
 	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
-	got := cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
+	got := cli.Run("tx", "distribution", "fund-community-pool", "100stake", "--from=node0")
 	systest.RequireTxSuccess(t, got)
 }

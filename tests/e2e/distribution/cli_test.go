@@ -9,16 +9,13 @@ import (
 )
 
 func TestE2ETestSuite(t *testing.T) {
-	suite.Run(t, NewE2ETestSuite(false))
-	suite.Run(t, NewE2ETestSuite(true))
+	suite.Run(t, NewE2ETestSuite())
 }
 
 func TestGRPCQueryTestSuite(t *testing.T) {
-	suite.Run(t, NewGRPCQueryTestSuite(false))
-	suite.Run(t, NewGRPCQueryTestSuite(true))
+	suite.Run(t, NewGRPCQueryTestSuite())
 }
 
 func TestWithdrawAllSuite(t *testing.T) {
-	suite.Run(t, NewWithdrawAllTestSuite(false))
-	suite.Run(t, NewWithdrawAllTestSuite(true))
+	suite.Run(t, NewWithdrawAllTestSuite())
 }

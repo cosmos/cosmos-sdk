@@ -70,7 +70,7 @@ func MsgWithdrawDelegatorRewardFactory(k keeper.Keeper, sk types.StakingKeeper) 
 
 		for _, v := range outstanding {
 			if !testData.IsSendEnabledDenom(v.Denom) {
-				reporter.Skipf("denom send not enabled: " + v.Denom)
+				reporter.Skipf("%s", "denom send not enabled: "+v.Denom)
 				return nil, nil
 			}
 		}

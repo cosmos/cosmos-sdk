@@ -19,12 +19,12 @@ func GenesisCoreCommand(txConfig client.TxConfig, moduleBasics module.BasicManag
 
 // Commands adds core sdk's sub-commands into genesis command.
 func Commands(txConfig client.TxConfig, moduleBasics module.BasicManager, defaultNodeHome string) *cobra.Command {
-	return CommandsWithCustomMigrationMap(txConfig, moduleBasics, defaultNodeHome, MigrationMap)
+	return CommandsWithCustomMigrationMap(txConfig, moduleBasics, defaultNodeHome)
 }
 
 // CommandsWithCustomMigrationMap adds core sdk's sub-commands into genesis command with custom migration map.
 // This custom migration map can be used by the application to add its own migration map.
-func CommandsWithCustomMigrationMap(txConfig client.TxConfig, moduleBasics module.BasicManager, defaultNodeHome string, migrationMap genutiltypes.MigrationMap) *cobra.Command {
+func CommandsWithCustomMigrationMap(txConfig client.TxConfig, moduleBasics module.BasicManager, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "genesis",
 		Short:                      "Application's genesis-related subcommands",
@@ -36,7 +36,6 @@ func CommandsWithCustomMigrationMap(txConfig client.TxConfig, moduleBasics modul
 
 	cmd.AddCommand(
 		GenTxCmd(moduleBasics, txConfig, banktypes.GenesisBalancesIterator{}, defaultNodeHome, txConfig.SigningContext().ValidatorAddressCodec()),
-		MigrateGenesisCmd(migrationMap),
 		CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, defaultNodeHome, gentxModule.GenTxValidator, txConfig.SigningContext().ValidatorAddressCodec()),
 		ValidateGenesisCmd(moduleBasics),
 		AddGenesisAccountCmd(defaultNodeHome, txConfig.SigningContext().AddressCodec()),

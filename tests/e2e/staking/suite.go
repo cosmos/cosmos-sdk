@@ -139,7 +139,7 @@ func (s *E2ETestSuite) TestBlockResults() {
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())
 
-	// Create a HTTP rpc client.
+	// Create an HTTP rpc client.
 	rpcClient, err := http.New(val.RPCAddress, "/websocket")
 	require.NoError(err)
 

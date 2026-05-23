@@ -278,7 +278,7 @@ func TestResetCircuitBreaker(t *testing.T) {
 		lastEvent(ft.ctx),
 	)
 
-	// user tries to reset a message they dont have permission to reset
+	// user tries to reset a message they don't have permission to reset
 	url = "cosmos.staking.v1beta1.MsgCreateValidator"
 	// give restricted perms to a user
 	someMsgs := &types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{url2}}

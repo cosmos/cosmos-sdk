@@ -225,6 +225,21 @@ func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier
 	}
 }
 
+// txGasForBlockAccounting returns the gas to count against MaxGas for tx.
+// Prefers the ante-reported gasWanted; falls back to the tx's declared
+// GetGas() when the ante returned 0 so a buggy/permissive ante can't let a
+// proposer slip a block past MaxGas. Used by both PrepareProposal selection
+// and ProcessProposal verification so the two paths stay in agreement.
+func txGasForBlockAccounting(tx sdk.Tx, gasWanted uint64) uint64 {
+	if gasWanted > 0 {
+		return gasWanted
+	}
+	if gasTx, ok := tx.(sdk.GasTx); ok {
+		return gasTx.GetGas()
+	}
+	return 0
+}
+
 // SetTxSelector sets the TxSelector function on the DefaultProposalHandler.
 func (h *DefaultProposalHandler) SetTxSelector(ts TxSelector) {
 	h.txSelector = ts
@@ -425,13 +440,13 @@ func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHan
 		}
 
 		for _, txBytes := range req.Txs {
-			_, gasWanted, err := h.txVerifier.ProcessProposalVerifyTx(txBytes)
+			tx, gasWanted, err := h.txVerifier.ProcessProposalVerifyTx(txBytes)
 			if err != nil {
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
 
 			if maxBlockGas > 0 {
-				totalTxGas += gasWanted
+				totalTxGas += txGasForBlockAccounting(tx, gasWanted)
 				if totalTxGas > uint64(maxBlockGas) {
 					return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 				}
@@ -522,8 +537,9 @@ func (ts *defaultTxSelector) SelectTxForProposal(_ context.Context, maxTxBytes, 
 		// If there is a max block gas limit, add the tx only if the limit has
 		// not been met.
 		if maxBlockGas > 0 {
-			if (gasWanted + ts.totalTxGas) <= maxBlockGas {
-				ts.totalTxGas += gasWanted
+			txGas := txGasForBlockAccounting(memTx, gasWanted)
+			if (txGas + ts.totalTxGas) <= maxBlockGas {
+				ts.totalTxGas += txGas
 				ts.totalTxBytes += txSize
 				ts.selectedTxs = append(ts.selectedTxs, txBz)
 			}

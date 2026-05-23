@@ -109,22 +109,14 @@ func (k Keeper) setProtocolVersion(ctx context.Context, v uint64) error {
 // getProtocolVersion gets the protocol version from state
 func (k Keeper) getProtocolVersion(ctx context.Context) (uint64, error) {
 	store := k.storeService.OpenKVStore(ctx)
-	ok, err := store.Has([]byte{types.ProtocolVersionByte})
+	pvBytes, err := store.Get([]byte{types.ProtocolVersionByte})
 	if err != nil {
 		return 0, err
 	}
-
-	if ok {
-		pvBytes, err := store.Get([]byte{types.ProtocolVersionByte})
-		if err != nil {
-			return 0, err
-		}
-
-		protocolVersion := binary.BigEndian.Uint64(pvBytes)
-		return protocolVersion, nil
+	if pvBytes == nil {
+		return 0, nil
 	}
-	// default value
-	return 0, nil
+	return binary.BigEndian.Uint64(pvBytes), nil
 }
 
 // SetModuleVersionMap saves a given version map to state

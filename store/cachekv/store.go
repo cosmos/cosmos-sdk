@@ -101,8 +101,15 @@ func (store *GStore[V]) Set(key []byte, value V) {
 
 // Has implements types.KVStore.
 func (store *GStore[V]) Has(key []byte) bool {
-	value := store.Get(key)
-	return !store.isZero(value)
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
+
+	types.AssertValidKey(key)
+
+	if cacheValue, ok := store.cache[conv.UnsafeBytesToStr(key)]; ok {
+		return !store.isZero(cacheValue.value)
+	}
+	return store.parent.Has(key)
 }
 
 // Delete implements types.KVStore.

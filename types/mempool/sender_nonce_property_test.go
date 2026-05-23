@@ -55,7 +55,7 @@ func testMempoolProperties(t *rapid.T) {
 	senderTxRaw := getSenderTxMap(txs)
 
 	for _, tx := range txs {
-		err := mp.Insert(ctx, tx)
+		err := mp.Insert(ctx, tx, mempool.InsertOption{})
 		require.NoError(t, err)
 	}
 

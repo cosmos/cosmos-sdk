@@ -113,12 +113,12 @@ func (snm *SenderNonceMempool) NextSenderTx(sender string) sdk.Tx {
 	}
 
 	cursor := senderIndex.Front()
-	return cursor.Value.(Tx).Tx
+	return cursor.Value.(PooledTx).Tx
 }
 
-// InsertWithOption adds a tx to the mempool. It returns an error if the tx does not have
+// Insert adds a tx to the mempool. It returns an error if the tx does not have
 // at least one signer. Note, priority is ignored.
-func (snm *SenderNonceMempool) InsertWithOption(_ context.Context, tx sdk.Tx, option InsertOption) error {
+func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx, option InsertOption) error {
 	snm.mtx.Lock()
 	defer snm.mtx.Unlock()
 	if snm.maxTx > 0 && len(snm.existingTx) >= snm.maxTx {
@@ -128,7 +128,7 @@ func (snm *SenderNonceMempool) InsertWithOption(_ context.Context, tx sdk.Tx, op
 		return nil
 	}
 
-	memTx := NewMempoolTx(tx, option.GasWanted)
+	memTx := NewPooledTx(tx, option.GasWanted)
 
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
@@ -157,15 +157,6 @@ func (snm *SenderNonceMempool) InsertWithOption(_ context.Context, tx sdk.Tx, op
 	snm.existingTx[key] = true
 
 	return nil
-}
-
-func (snm *SenderNonceMempool) Insert(ctx context.Context, tx sdk.Tx) error {
-	var gasLimit uint64
-	if gasTx, ok := tx.(sdk.GasTx); ok {
-		gasLimit = gasTx.GetGas()
-	}
-
-	return snm.InsertWithOption(ctx, tx, InsertOption{GasWanted: gasLimit})
 }
 
 // Select returns an iterator ordering transactions in the mempool with the lowest
@@ -208,7 +199,7 @@ func (snm *SenderNonceMempool) doSelect(_ context.Context, _ [][]byte) Iterator 
 }
 
 // SelectBy will hold the mutex during the iteration, callback returns if continue.
-func (snm *SenderNonceMempool) SelectBy(ctx context.Context, txs [][]byte, callback func(Tx) bool) {
+func (snm *SenderNonceMempool) SelectBy(ctx context.Context, txs [][]byte, callback func(PooledTx) bool) {
 	snm.mtx.Lock()
 	defer snm.mtx.Unlock()
 
@@ -306,8 +297,8 @@ func (i *senderNonceMempoolIterator) Next() Iterator {
 	return nil
 }
 
-func (i *senderNonceMempoolIterator) Tx() Tx {
-	return i.currentTx.Value.(Tx)
+func (i *senderNonceMempoolIterator) Tx() PooledTx {
+	return i.currentTx.Value.(PooledTx)
 }
 
 func removeAtIndex[T any](slice []T, index int) []T {

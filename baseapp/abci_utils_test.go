@@ -683,7 +683,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 
 			for _, v := range tc.txInputs {
 				app.EXPECT().PrepareProposalVerifyTx(v.tx).Return(v.bz, nil).AnyTimes()
-				s.NoError(mp.Insert(s.ctx.WithPriority(v.priority), v.tx))
+				s.NoError(mp.Insert(s.ctx.WithPriority(v.priority), v.tx, mempool.InsertOption{}))
 				tc.req.Txs = append(tc.req.Txs, v.bz)
 			}
 

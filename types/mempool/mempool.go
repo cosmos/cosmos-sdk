@@ -7,29 +7,29 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type Tx struct {
+// PooledTx pairs a tx with the gas wanted reported by the ante at insert time,
+// so callers read the authoritative value without re-running the ante.
+type PooledTx struct {
 	Tx        sdk.Tx
 	GasWanted uint64
 }
 
-func NewMempoolTx(tx sdk.Tx, gasWanted uint64) Tx {
-	return Tx{
+func NewPooledTx(tx sdk.Tx, gasWanted uint64) PooledTx {
+	return PooledTx{
 		Tx:        tx,
 		GasWanted: gasWanted,
 	}
 }
 
+// InsertOption carries ante-reported metadata threaded through Mempool.Insert.
 type InsertOption struct {
 	GasWanted uint64
 }
 
 type Mempool interface {
-	// Insert attempts to insert a Tx into the app-side mempool returning
-	// an error upon failure.
-	Insert(context.Context, sdk.Tx) error
-
-	// InsertWithOption with a custom option, e.g. gas wanted.
-	InsertWithOption(context.Context, sdk.Tx, InsertOption) error
+	// Insert attempts to insert a tx into the app-side mempool, returning an
+	// error upon failure.
+	Insert(context.Context, sdk.Tx, InsertOption) error
 
 	// Select returns an Iterator over the app-side mempool. If txs are specified,
 	// then they shall be incorporated into the Iterator. The Iterator is not thread-safe to use.
@@ -50,7 +50,7 @@ type ExtMempool interface {
 	Mempool
 
 	// SelectBy use callback to iterate over the mempool, it's thread-safe to use.
-	SelectBy(context.Context, [][]byte, func(Tx) bool)
+	SelectBy(context.Context, [][]byte, func(PooledTx) bool)
 
 	// RemoveWithReason removes a transaction from the mempool with specific reason
 	// allowing the mempool to handle the removal differently.
@@ -84,7 +84,7 @@ type Iterator interface {
 	Next() Iterator
 
 	// Tx returns the transaction at the current position of the iterator.
-	Tx() Tx
+	Tx() PooledTx
 }
 
 var (
@@ -94,7 +94,7 @@ var (
 
 // SelectBy is compatible with old interface to avoid breaking api.
 // In v0.52+, this function is removed and SelectBy is merged into Mempool interface.
-func SelectBy(ctx context.Context, mempool Mempool, txs [][]byte, callback func(Tx) bool) {
+func SelectBy(ctx context.Context, mempool Mempool, txs [][]byte, callback func(PooledTx) bool) {
 	if ext, ok := mempool.(ExtMempool); ok {
 		ext.SelectBy(ctx, txs, callback)
 		return

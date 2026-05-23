@@ -302,7 +302,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			selectedTxsNums        int
 			selectedTxsSignersSeqs = make(map[string]uint64)
 		)
-		mempool.SelectBy(ctx, h.mempool, req.Txs, func(memTx mempool.Tx) bool {
+		mempool.SelectBy(ctx, h.mempool, req.Txs, func(memTx mempool.PooledTx) bool {
 			unorderedTx, ok := memTx.Tx.(sdk.TxWithUnordered)
 			isUnordered := ok && unorderedTx.GetUnordered()
 			txSignersSeqs := make(map[string]uint64)

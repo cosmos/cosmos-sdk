@@ -25,13 +25,6 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) error {
 		if err := k.AllocateTokens(ctx, previousTotalPower, ctx.VoteInfos()); err != nil {
 			return err
 		}
-
-		// send whole coins from community pool to x/protocolpool if enabled
-		if k.HasExternalCommunityPool() {
-			if err := k.sendCommunityPoolToExternalPool(ctx); err != nil {
-				return err
-			}
-		}
 	}
 
 	// record the proposer for when we pay out on the next block

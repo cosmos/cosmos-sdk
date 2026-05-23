@@ -215,8 +215,8 @@ func parseHashFromInput(in []byte) ([]byte, error) {
 	}
 
 	// Try to find the txhash from yaml output.
-	lines := strings.Split(string(in), "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(string(in), "\n")
+	for line := range lines {
 		if strings.HasPrefix(line, "txhash:") {
 			hash := strings.TrimSpace(line[len("txhash:"):])
 			return hex.DecodeString(hash)

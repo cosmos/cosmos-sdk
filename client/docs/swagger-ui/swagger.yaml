@@ -1258,7 +1258,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/auth/v1beta1/address_by_id/{id}:
+  /cosmos/auth/v1beta1/address_by_id/{accountId}:
     get:
       summary: AccountAddressByID returns account address based on account number.
       operationId: AccountAddressByID
@@ -1465,6 +1465,12 @@ paths:
                           "value": "1.212s"
                         }
       parameters:
+        - name: accountId
+          description: account_id is the account number of the address to be queried.
+          in: path
+          required: true
+          type: string
+          format: uint64
         - name: id
           description: |-
             Deprecated, use account_id instead
@@ -1472,16 +1478,10 @@ paths:
             id is the account number of the address to be queried. This field
             should have been an uint64 (like all account numbers), and will be
             updated to uint64 in a future version of the auth query.
-          in: path
-          required: true
-          type: string
-          format: int64
-        - name: accountId
-          description: account_id is the account number of the address to be queried.
           in: query
           required: false
           type: string
-          format: uint64
+          format: int64
       tags:
         - Query
   /cosmos/auth/v1beta1/bech32:
@@ -6747,6 +6747,11 @@ paths:
                     description: >-
                       ABCIParams configure functionality specific to the
                       Application Blockchain Interface.
+                  authority:
+                    type: object
+                    properties:
+                      authority:
+                        type: string
               appHash:
                 type: string
                 format: byte
@@ -7197,6 +7202,11 @@ paths:
                     description: >-
                       ABCIParams configure functionality specific to the
                       Application Blockchain Interface.
+                  authority:
+                    type: object
+                    properties:
+                      authority:
+                        type: string
               appHash:
                 type: string
                 format: byte
@@ -11950,6 +11960,11 @@ paths:
                     description: >-
                       ABCIParams configure functionality specific to the
                       Application Blockchain Interface.
+                  authority:
+                    type: object
+                    properties:
+                      authority:
+                        type: string
             description: >-
               QueryParamsResponse defines the response type for querying
               x/consensus parameters.
@@ -11976,7 +11991,6 @@ paths:
   /cosmos/distribution/v1beta1/community_pool:
     get:
       summary: CommunityPool queries the community pool coins.
-      description: 'WARNING: This query will fail if an external community pool is used.'
       operationId: CommunityPool
       responses:
         '200':
@@ -20660,350 +20674,6 @@ paths:
 
                       A value of "0" indicates an unlimited (infinite) maximum
                       supply.
-            description: >-
-              QueryParamsResponse is the response type for the Query/Params RPC
-              method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      tags:
-        - Query
-  /cosmos/params/v1beta1/params:
-    get:
-      summary: |-
-        Params queries a specific parameter of a module, given its subspace and
-        key.
-      operationId: Params
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              param:
-                description: param defines the queried parameter.
-                type: object
-                properties:
-                  subspace:
-                    type: string
-                  key:
-                    type: string
-                  value:
-                    type: string
-            description: >-
-              QueryParamsResponse is response type for the Query/Params RPC
-              method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: subspace
-          description: subspace defines the module to query the parameter for.
-          in: query
-          required: false
-          type: string
-        - name: key
-          description: key defines the key of the parameter in the subspace.
-          in: query
-          required: false
-          type: string
-      tags:
-        - Query
-  /cosmos/params/v1beta1/subspaces:
-    get:
-      summary: >-
-        Subspaces queries for all registered subspaces and all keys for a
-        subspace.
-      operationId: Subspaces
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              subspaces:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    subspace:
-                      type: string
-                    keys:
-                      type: array
-                      items:
-                        type: string
-                  description: >-
-                    Subspace defines a parameter subspace name and all the keys
-                    that exist for
-
-                    the subspace.
-            description: >-
-              QuerySubspacesResponse defines the response types for querying for
-              all
-
-              registered subspaces and all keys for a subspace.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      tags:
-        - Query
-  /cosmos/protocolpool/v1/community_pool:
-    get:
-      summary: CommunityPool queries the community pool coins.
-      operationId: ProtocolpoolCommunityPool
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              pool:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    denom:
-                      type: string
-                    amount:
-                      type: string
-                  description: >-
-                    Coin defines a token with a denomination and an amount.
-
-
-                    NOTE: The amount field is an Int which implements the custom
-                    method
-
-                    signatures required by gogoproto.
-                description: pool defines community pool's coins.
-            description: >-
-              QueryCommunityPoolResponse is the response type for the
-              Query/CommunityPool
-
-              RPC method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      tags:
-        - Query
-  /cosmos/protocolpool/v1/continuous_funds:
-    get:
-      summary: ContinuousFunds queries all continuous funds in the store.
-      operationId: ContinuousFunds
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              continuousFunds:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    recipient:
-                      type: string
-                      description: >-
-                        Recipient is the address string of the account receiving
-                        funds.
-                    percentage:
-                      type: string
-                      description: >-
-                        Percentage is the percentage of funds to be allocated
-                        from Community pool.
-                    expiry:
-                      type: string
-                      format: date-time
-                      description: >-
-                        Optional, if expiry is set, removes the state object
-                        when expired.
-                  description: >-
-                    ContinuousFund defines the fields of continuous fund
-                    proposal.
-                description: ContinuousFunds defines all continuous funds in state.
-            description: >-
-              QueryUnclaimedBudgetResponse is the response type for the
-              Query/ContinuousFunds
-
-              RPC method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      tags:
-        - Query
-  /cosmos/protocolpool/v1/continuous_funds/{recipient}:
-    get:
-      summary: >-
-        ContinuousFund queries a continuous fund by the recipient is is
-        associated with.
-      operationId: ContinuousFund
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              continuousFund:
-                description: >-
-                  ContinuousFunds is the given continuous fund returned in the
-                  query.
-                type: object
-                properties:
-                  recipient:
-                    type: string
-                    description: >-
-                      Recipient is the address string of the account receiving
-                      funds.
-                  percentage:
-                    type: string
-                    description: >-
-                      Percentage is the percentage of funds to be allocated from
-                      Community pool.
-                  expiry:
-                    type: string
-                    format: date-time
-                    description: >-
-                      Optional, if expiry is set, removes the state object when
-                      expired.
-            description: >-
-              QueryUnclaimedBudgetResponse is the response type for the
-              Query/ContinuousFund
-
-              RPC method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: recipient
-          description: >-
-            recipient is the recipient address to query unclaimed budget amount
-            for.
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /cosmos/protocolpool/v1/params:
-    get:
-      summary: Params returns the total set of x/protocolpool parameters.
-      operationId: ProtocolpoolParams
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              params:
-                type: object
-                properties:
-                  enabledDistributionDenoms:
-                    type: array
-                    items:
-                      type: string
-                    description: >-
-                      EnabledDistributionDenoms lists the denoms that are
-                      allowed to be distributed.
-
-                      This is to avoid spending time distributing undesired
-                      tokens to continuous funds and budgets.
-                  distributionFrequency:
-                    type: string
-                    format: uint64
-                    description: >-
-                      DistributionFrequency is the frequency (in terms of
-                      blocks) that funds are distributed out from the
-
-                      x/protocolpool module.
-                description: Params defines the parameters for the protocolpool module.
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -30352,485 +30022,6 @@ paths:
       tags:
         - Query
 definitions:
-  cosmos.app.v1alpha1.Config:
-    type: object
-    properties:
-      modules:
-        type: array
-        items:
-          type: object
-          properties:
-            name:
-              type: string
-              description: >-
-                name is the unique name of the module within the app. It should
-                be a name
-
-                that persists between different versions of a module so that
-                modules
-
-                can be smoothly upgraded to new versions.
-
-
-                For example, for the module cosmos.bank.module.v1.Module, we may
-                chose
-
-                to simply name the module "bank" in the app. When we upgrade to
-
-                cosmos.bank.module.v2.Module, the app-specific name "bank" stays
-                the same
-
-                and the framework knows that the v2 module should receive all
-                the same state
-
-                that the v1 module had. Note: modules should provide info on
-                which versions
-
-                they can migrate from in the ModuleDescriptor.can_migrate_from
-                field.
-            config:
-              description: >-
-                config is the config object for the module. Module config
-                messages should
-
-                define a ModuleDescriptor using the
-                cosmos.app.v1alpha1.is_module extension.
-              type: object
-              properties:
-                '@type':
-                  type: string
-                  description: >-
-                    A URL/resource name that uniquely identifies the type of the
-                    serialized
-
-                    protocol buffer message. This string must contain at least
-
-                    one "/" character. The last segment of the URL's path must
-                    represent
-
-                    the fully qualified name of the type (as in
-
-                    `path/google.protobuf.Duration`). The name should be in a
-                    canonical form
-
-                    (e.g., leading "." is not accepted).
-
-
-                    In practice, teams usually precompile into the binary all
-                    types that they
-
-                    expect it to use in the context of Any. However, for URLs
-                    which use the
-
-                    scheme `http`, `https`, or no scheme, one can optionally set
-                    up a type
-
-                    server that maps type URLs to message definitions as
-                    follows:
-
-
-                    * If no scheme is provided, `https` is assumed.
-
-                    * An HTTP GET on the URL must yield a
-                    [google.protobuf.Type][]
-                      value in binary format, or produce an error.
-                    * Applications are allowed to cache lookup results based on
-                    the
-                      URL, or have them precompiled into a binary to avoid any
-                      lookup. Therefore, binary compatibility needs to be preserved
-                      on changes to types. (Use versioned type names to manage
-                      breaking changes.)
-
-                    Note: this functionality is not currently available in the
-                    official
-
-                    protobuf release, and it is not used for type URLs beginning
-                    with
-
-                    type.googleapis.com. As of May 2023, there are no widely
-                    used type server
-
-                    implementations and no plans to implement one.
-
-
-                    Schemes other than `http`, `https` (or the empty scheme)
-                    might be
-
-                    used with implementation specific semantics.
-              additionalProperties: {}
-            golangBindings:
-              type: array
-              items:
-                type: object
-                properties:
-                  interfaceType:
-                    type: string
-                    title: >-
-                      interface_type is the interface type which will be bound
-                      to a specific implementation type
-                  implementation:
-                    type: string
-                    title: >-
-                      implementation is the implementing type which will be
-                      supplied when an input of type interface is requested
-                description: >-
-                  GolangBinding is an explicit interface type to implementing
-                  type binding for dependency injection.
-              description: >-
-                golang_bindings specifies explicit interface to implementation
-                type bindings which
-
-                depinject uses to resolve interface inputs to provider
-                functions.  The scope of this
-
-                field's configuration is module specific.
-          description: ModuleConfig is a module configuration for an app.
-        description: modules are the module configurations for the app.
-      golangBindings:
-        type: array
-        items:
-          type: object
-          properties:
-            interfaceType:
-              type: string
-              title: >-
-                interface_type is the interface type which will be bound to a
-                specific implementation type
-            implementation:
-              type: string
-              title: >-
-                implementation is the implementing type which will be supplied
-                when an input of type interface is requested
-          description: >-
-            GolangBinding is an explicit interface type to implementing type
-            binding for dependency injection.
-        description: >-
-          golang_bindings specifies explicit interface to implementation type
-          bindings which
-
-          depinject uses to resolve interface inputs to provider functions.  The
-          scope of this
-
-          field's configuration is global (not module specific).
-    description: >-
-      Config represents the configuration for a Cosmos SDK ABCI app.
-
-      It is intended that all state machine logic including the version of
-
-      baseapp and tx handlers (and possibly even Tendermint) that an app needs
-
-      can be described in a config object. For compatibility, the framework
-      should
-
-      allow a mixture of declarative and imperative app wiring, however, apps
-
-      that strive for the maximum ease of maintainability should be able to
-      describe
-
-      their state machine with a config object alone.
-  cosmos.app.v1alpha1.GolangBinding:
-    type: object
-    properties:
-      interfaceType:
-        type: string
-        title: >-
-          interface_type is the interface type which will be bound to a specific
-          implementation type
-      implementation:
-        type: string
-        title: >-
-          implementation is the implementing type which will be supplied when an
-          input of type interface is requested
-    description: >-
-      GolangBinding is an explicit interface type to implementing type binding
-      for dependency injection.
-  cosmos.app.v1alpha1.ModuleConfig:
-    type: object
-    properties:
-      name:
-        type: string
-        description: >-
-          name is the unique name of the module within the app. It should be a
-          name
-
-          that persists between different versions of a module so that modules
-
-          can be smoothly upgraded to new versions.
-
-
-          For example, for the module cosmos.bank.module.v1.Module, we may chose
-
-          to simply name the module "bank" in the app. When we upgrade to
-
-          cosmos.bank.module.v2.Module, the app-specific name "bank" stays the
-          same
-
-          and the framework knows that the v2 module should receive all the same
-          state
-
-          that the v1 module had. Note: modules should provide info on which
-          versions
-
-          they can migrate from in the ModuleDescriptor.can_migrate_from field.
-      config:
-        description: >-
-          config is the config object for the module. Module config messages
-          should
-
-          define a ModuleDescriptor using the cosmos.app.v1alpha1.is_module
-          extension.
-        type: object
-        properties:
-          '@type':
-            type: string
-            description: >-
-              A URL/resource name that uniquely identifies the type of the
-              serialized
-
-              protocol buffer message. This string must contain at least
-
-              one "/" character. The last segment of the URL's path must
-              represent
-
-              the fully qualified name of the type (as in
-
-              `path/google.protobuf.Duration`). The name should be in a
-              canonical form
-
-              (e.g., leading "." is not accepted).
-
-
-              In practice, teams usually precompile into the binary all types
-              that they
-
-              expect it to use in the context of Any. However, for URLs which
-              use the
-
-              scheme `http`, `https`, or no scheme, one can optionally set up a
-              type
-
-              server that maps type URLs to message definitions as follows:
-
-
-              * If no scheme is provided, `https` is assumed.
-
-              * An HTTP GET on the URL must yield a [google.protobuf.Type][]
-                value in binary format, or produce an error.
-              * Applications are allowed to cache lookup results based on the
-                URL, or have them precompiled into a binary to avoid any
-                lookup. Therefore, binary compatibility needs to be preserved
-                on changes to types. (Use versioned type names to manage
-                breaking changes.)
-
-              Note: this functionality is not currently available in the
-              official
-
-              protobuf release, and it is not used for type URLs beginning with
-
-              type.googleapis.com. As of May 2023, there are no widely used type
-              server
-
-              implementations and no plans to implement one.
-
-
-              Schemes other than `http`, `https` (or the empty scheme) might be
-
-              used with implementation specific semantics.
-        additionalProperties: {}
-      golangBindings:
-        type: array
-        items:
-          type: object
-          properties:
-            interfaceType:
-              type: string
-              title: >-
-                interface_type is the interface type which will be bound to a
-                specific implementation type
-            implementation:
-              type: string
-              title: >-
-                implementation is the implementing type which will be supplied
-                when an input of type interface is requested
-          description: >-
-            GolangBinding is an explicit interface type to implementing type
-            binding for dependency injection.
-        description: >-
-          golang_bindings specifies explicit interface to implementation type
-          bindings which
-
-          depinject uses to resolve interface inputs to provider functions.  The
-          scope of this
-
-          field's configuration is module specific.
-    description: ModuleConfig is a module configuration for an app.
-  cosmos.app.v1alpha1.QueryConfigResponse:
-    type: object
-    properties:
-      config:
-        description: config is the current app config.
-        type: object
-        properties:
-          modules:
-            type: array
-            items:
-              type: object
-              properties:
-                name:
-                  type: string
-                  description: >-
-                    name is the unique name of the module within the app. It
-                    should be a name
-
-                    that persists between different versions of a module so that
-                    modules
-
-                    can be smoothly upgraded to new versions.
-
-
-                    For example, for the module cosmos.bank.module.v1.Module, we
-                    may chose
-
-                    to simply name the module "bank" in the app. When we upgrade
-                    to
-
-                    cosmos.bank.module.v2.Module, the app-specific name "bank"
-                    stays the same
-
-                    and the framework knows that the v2 module should receive
-                    all the same state
-
-                    that the v1 module had. Note: modules should provide info on
-                    which versions
-
-                    they can migrate from in the
-                    ModuleDescriptor.can_migrate_from field.
-                config:
-                  description: >-
-                    config is the config object for the module. Module config
-                    messages should
-
-                    define a ModuleDescriptor using the
-                    cosmos.app.v1alpha1.is_module extension.
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com. As of May 2023, there are no widely
-                        used type server
-
-                        implementations and no plans to implement one.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
-                  additionalProperties: {}
-                golangBindings:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      interfaceType:
-                        type: string
-                        title: >-
-                          interface_type is the interface type which will be
-                          bound to a specific implementation type
-                      implementation:
-                        type: string
-                        title: >-
-                          implementation is the implementing type which will be
-                          supplied when an input of type interface is requested
-                    description: >-
-                      GolangBinding is an explicit interface type to
-                      implementing type binding for dependency injection.
-                  description: >-
-                    golang_bindings specifies explicit interface to
-                    implementation type bindings which
-
-                    depinject uses to resolve interface inputs to provider
-                    functions.  The scope of this
-
-                    field's configuration is module specific.
-              description: ModuleConfig is a module configuration for an app.
-            description: modules are the module configurations for the app.
-          golangBindings:
-            type: array
-            items:
-              type: object
-              properties:
-                interfaceType:
-                  type: string
-                  title: >-
-                    interface_type is the interface type which will be bound to
-                    a specific implementation type
-                implementation:
-                  type: string
-                  title: >-
-                    implementation is the implementing type which will be
-                    supplied when an input of type interface is requested
-              description: >-
-                GolangBinding is an explicit interface type to implementing type
-                binding for dependency injection.
-            description: >-
-              golang_bindings specifies explicit interface to implementation
-              type bindings which
-
-              depinject uses to resolve interface inputs to provider functions. 
-              The scope of this
-
-              field's configuration is global (not module specific).
-    description: QueryConfigResponse is the Query/Config response type.
   google.protobuf.Any:
     type: object
     properties:
@@ -36390,6 +35581,11 @@ definitions:
             description: >-
               ABCIParams configure functionality specific to the Application
               Blockchain Interface.
+          authority:
+            type: object
+            properties:
+              authority:
+                type: string
       appHash:
         type: string
         format: byte
@@ -37883,6 +37079,11 @@ definitions:
             description: >-
               ABCIParams configure functionality specific to the Application
               Blockchain Interface.
+          authority:
+            type: object
+            properties:
+              authority:
+                type: string
       appHash:
         type: string
         format: byte
@@ -38989,6 +38190,11 @@ definitions:
     description: >-
       ABCIParams configure functionality specific to the Application Blockchain
       Interface.
+  tendermint.types.AuthorityParams:
+    type: object
+    properties:
+      authority:
+        type: string
   tendermint.types.Block:
     type: object
     properties:
@@ -39831,6 +39037,11 @@ definitions:
         description: >-
           ABCIParams configure functionality specific to the Application
           Blockchain Interface.
+      authority:
+        type: object
+        properties:
+          authority:
+            type: string
     description: |-
       ConsensusParams contains consensus critical parameters that determine the
       validity of blocks.
@@ -41922,6 +41133,11 @@ definitions:
             description: >-
               ABCIParams configure functionality specific to the Application
               Blockchain Interface.
+          authority:
+            type: object
+            properties:
+              authority:
+                type: string
     description: >-
       QueryParamsResponse defines the response type for querying x/consensus
       parameters.
@@ -45967,206 +45183,6 @@ definitions:
               maximum supply for the token.
 
               A value of "0" indicates an unlimited (infinite) maximum supply.
-    description: QueryParamsResponse is the response type for the Query/Params RPC method.
-  cosmos.params.v1beta1.ParamChange:
-    type: object
-    properties:
-      subspace:
-        type: string
-      key:
-        type: string
-      value:
-        type: string
-    description: |-
-      ParamChange defines an individual parameter change, for use in
-      ParameterChangeProposal.
-  cosmos.params.v1beta1.QueryParamsResponse:
-    type: object
-    properties:
-      param:
-        description: param defines the queried parameter.
-        type: object
-        properties:
-          subspace:
-            type: string
-          key:
-            type: string
-          value:
-            type: string
-    description: QueryParamsResponse is response type for the Query/Params RPC method.
-  cosmos.params.v1beta1.QuerySubspacesResponse:
-    type: object
-    properties:
-      subspaces:
-        type: array
-        items:
-          type: object
-          properties:
-            subspace:
-              type: string
-            keys:
-              type: array
-              items:
-                type: string
-          description: >-
-            Subspace defines a parameter subspace name and all the keys that
-            exist for
-
-            the subspace.
-    description: |-
-      QuerySubspacesResponse defines the response types for querying for all
-      registered subspaces and all keys for a subspace.
-  cosmos.params.v1beta1.Subspace:
-    type: object
-    properties:
-      subspace:
-        type: string
-      keys:
-        type: array
-        items:
-          type: string
-    description: |-
-      Subspace defines a parameter subspace name and all the keys that exist for
-      the subspace.
-  cosmos.protocolpool.v1.ContinuousFund:
-    type: object
-    properties:
-      recipient:
-        type: string
-        description: Recipient is the address string of the account receiving funds.
-      percentage:
-        type: string
-        description: >-
-          Percentage is the percentage of funds to be allocated from Community
-          pool.
-      expiry:
-        type: string
-        format: date-time
-        description: Optional, if expiry is set, removes the state object when expired.
-    description: ContinuousFund defines the fields of continuous fund proposal.
-  cosmos.protocolpool.v1.Params:
-    type: object
-    properties:
-      enabledDistributionDenoms:
-        type: array
-        items:
-          type: string
-        description: >-
-          EnabledDistributionDenoms lists the denoms that are allowed to be
-          distributed.
-
-          This is to avoid spending time distributing undesired tokens to
-          continuous funds and budgets.
-      distributionFrequency:
-        type: string
-        format: uint64
-        description: >-
-          DistributionFrequency is the frequency (in terms of blocks) that funds
-          are distributed out from the
-
-          x/protocolpool module.
-    description: Params defines the parameters for the protocolpool module.
-  cosmos.protocolpool.v1.QueryCommunityPoolResponse:
-    type: object
-    properties:
-      pool:
-        type: array
-        items:
-          type: object
-          properties:
-            denom:
-              type: string
-            amount:
-              type: string
-          description: |-
-            Coin defines a token with a denomination and an amount.
-
-            NOTE: The amount field is an Int which implements the custom method
-            signatures required by gogoproto.
-        description: pool defines community pool's coins.
-    description: >-
-      QueryCommunityPoolResponse is the response type for the
-      Query/CommunityPool
-
-      RPC method.
-  cosmos.protocolpool.v1.QueryContinuousFundResponse:
-    type: object
-    properties:
-      continuousFund:
-        description: ContinuousFunds is the given continuous fund returned in the query.
-        type: object
-        properties:
-          recipient:
-            type: string
-            description: Recipient is the address string of the account receiving funds.
-          percentage:
-            type: string
-            description: >-
-              Percentage is the percentage of funds to be allocated from
-              Community pool.
-          expiry:
-            type: string
-            format: date-time
-            description: Optional, if expiry is set, removes the state object when expired.
-    description: >-
-      QueryUnclaimedBudgetResponse is the response type for the
-      Query/ContinuousFund
-
-      RPC method.
-  cosmos.protocolpool.v1.QueryContinuousFundsResponse:
-    type: object
-    properties:
-      continuousFunds:
-        type: array
-        items:
-          type: object
-          properties:
-            recipient:
-              type: string
-              description: Recipient is the address string of the account receiving funds.
-            percentage:
-              type: string
-              description: >-
-                Percentage is the percentage of funds to be allocated from
-                Community pool.
-            expiry:
-              type: string
-              format: date-time
-              description: >-
-                Optional, if expiry is set, removes the state object when
-                expired.
-          description: ContinuousFund defines the fields of continuous fund proposal.
-        description: ContinuousFunds defines all continuous funds in state.
-    description: >-
-      QueryUnclaimedBudgetResponse is the response type for the
-      Query/ContinuousFunds
-
-      RPC method.
-  cosmos.protocolpool.v1.QueryParamsResponse:
-    type: object
-    properties:
-      params:
-        type: object
-        properties:
-          enabledDistributionDenoms:
-            type: array
-            items:
-              type: string
-            description: >-
-              EnabledDistributionDenoms lists the denoms that are allowed to be
-              distributed.
-
-              This is to avoid spending time distributing undesired tokens to
-              continuous funds and budgets.
-          distributionFrequency:
-            type: string
-            format: uint64
-            description: >-
-              DistributionFrequency is the frequency (in terms of blocks) that
-              funds are distributed out from the
-
-              x/protocolpool module.
-        description: Params defines the parameters for the protocolpool module.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   cosmos.slashing.v1beta1.Params:
     type: object

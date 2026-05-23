@@ -23,19 +23,18 @@ import (
 type WithdrawAllTestSuite struct {
 	suite.Suite
 
-	externalPoolEnabled bool
-	cfg                 network.Config
-	network             *network.Network
+	cfg     network.Config
+	network *network.Network
 }
 
-func NewWithdrawAllTestSuite(externalPoolEnabled bool) *WithdrawAllTestSuite {
-	return &WithdrawAllTestSuite{externalPoolEnabled: externalPoolEnabled}
+func NewWithdrawAllTestSuite() *WithdrawAllTestSuite {
+	return &WithdrawAllTestSuite{}
 }
 
 func (s *WithdrawAllTestSuite) SetupSuite() {
 	s.T().Log("setting up withdraw all e2e test suite")
 
-	cfg := initNetworkConfig(s.T(), s.externalPoolEnabled)
+	cfg := initNetworkConfig(s.T())
 	cfg.NumValidators = 2
 	s.cfg = cfg
 

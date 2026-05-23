@@ -21,12 +21,14 @@ There are two semantics around the new lifecycle method:
 * It runs before the `BeginBlocker` of all modules
 * It can modify consensus parameters in storage, and signal the caller through the return value.
 
-When it returns `ConsensusParamsChanged=true`, the caller must refresh the consensus parameters in the deliver context:
+When it returns `ConsensusParamsChanged=true`, the caller must refresh the consensus parameters in the finalize context and update the block gas meter accordingly. Conceptually, this looks like:
 
 ```
-app.finalizeBlockState.ctx = app.finalizeBlockState.ctx.WithConsensusParams(app.GetConsensusParams())
+ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+gasMeter := app.getBlockGasMeter(ctx)
+ctx = ctx.WithBlockGasMeter(gasMeter)
 ```
 
-The new ctx must be passed to all the other lifecycle methods.
+The new finalize context must then be used for all the other lifecycle methods in the block.
 
 <!-- TODO: leaving this here to update docs with core api changes  -->

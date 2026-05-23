@@ -2,7 +2,7 @@
 
 set -e
 
-CMDS='git go gofmt goimports misspell'
+CMDS='git go gofmt gci misspell'
 STAGED_GO_FILES=$(git diff --cached --name-only -- '*.go')
 
 f_echo_stderr() {
@@ -20,6 +20,11 @@ f_check_cmds() {
   done
 }
 
+f_is_generated() {
+  local file="$1"
+  head -n 5 "$file" | grep -Eq '^// Code generated .* DO NOT EDIT\.$'
+}
+
 f_check_cmds
 
 if [[ $STAGED_GO_FILES != "" ]]; then
@@ -29,9 +34,13 @@ if [[ $STAGED_GO_FILES != "" ]]; then
       continue
     fi
 
+    if f_is_generated "$file"; then
+      continue
+    fi
+
     gofmt -w -s $file
     misspell -w $file
-    goimports -w -local github.com/cosmos/cosmos-sdk $file
+    gci write -s standard -s default -s "prefix(cosmossdk.io)" -s "prefix(github.com/cosmos/cosmos-sdk)" $file
     git add $file
 
   done

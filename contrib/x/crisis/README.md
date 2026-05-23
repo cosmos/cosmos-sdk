@@ -34,7 +34,7 @@ with the standard gas consumption method.
 The ConstantFee param is stored in the module params state with the prefix of `0x01`,
 it can be updated with governance or the address with authority.
 
-* Params: `mint/params -> legacy_amino(sdk.Coin)`
+* Params: `crisis/params -> legacy_amino(sdk.Coin)`
 
 ## Messages
 

@@ -118,22 +118,18 @@ type AppModule struct {
 	keeper        *keeper.Keeper
 	accountKeeper govtypes.AccountKeeper
 	bankKeeper    govtypes.BankKeeper
-
-	// legacySubspace is used solely for migration of x/params managed parameters
-	legacySubspace govtypes.ParamSubspace
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec, keeper *keeper.Keeper,
-	ak govtypes.AccountKeeper, bk govtypes.BankKeeper, ss govtypes.ParamSubspace,
+	ak govtypes.AccountKeeper, bk govtypes.BankKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
-		legacySubspace: ss,
 	}
 }
 
@@ -149,26 +145,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	v1beta1.RegisterMsgServer(cfg.MsgServer(), keeper.NewLegacyMsgServerImpl(am.accountKeeper.GetModuleAddress(govtypes.ModuleName).String(), msgServer))
 	v1.RegisterMsgServer(cfg.MsgServer(), msgServer)
 
-	legacyQueryServer := keeper.NewLegacyQueryServer(am.keeper)
-	v1beta1.RegisterQueryServer(cfg.QueryServer(), legacyQueryServer)
 	v1.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
 
-	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
-	if err := cfg.RegisterMigration(govtypes.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/gov from version 1 to 2: %v", err))
-	}
-
-	if err := cfg.RegisterMigration(govtypes.ModuleName, 2, m.Migrate2to3); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/gov from version 2 to 3: %v", err))
-	}
-
-	if err := cfg.RegisterMigration(govtypes.ModuleName, 3, m.Migrate3to4); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/gov from version 3 to 4: %v", err))
-	}
-
-	if err := cfg.RegisterMigration(govtypes.ModuleName, 4, m.Migrate4to5); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/gov from version 4 to 5: %v", err))
-	}
+	_ = keeper.NewMigrator(am.keeper)
 }
 
 // InitGenesis performs genesis initialization for the gov module. It returns
@@ -176,13 +155,13 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState v1.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.accountKeeper, am.bankKeeper, am.keeper, &genesisState)
+	keeper.InitGenesis(ctx, am.accountKeeper, am.bankKeeper, am.keeper, &genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the gov
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs, err := ExportGenesis(ctx, am.keeper)
+	gs, err := keeper.ExportGenesis(ctx, am.keeper)
 	if err != nil {
 		panic(err)
 	}

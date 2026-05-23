@@ -27,15 +27,15 @@ import (
 	"go.uber.org/mock/gomock"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/snapshots"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -374,6 +374,82 @@ func TestABCI_ExtendVote(t *testing.T) {
 	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
 	require.NoError(t, err)
 	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
+}
+
+// TestABCI_ExtendVote_PanicRecovery tests that when ExtendVoteHandler panics,
+// the panic is recovered and the error contains the panic message.
+func TestABCI_ExtendVote_PanicRecovery(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+
+	panicMsg := "test panic message for ExtendVote"
+	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+		panic(panicMsg)
+	})
+
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+	})
+
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	_, err := app.InitChain(
+		&abci.RequestInitChain{
+			InitialHeight: 1,
+			ConsensusParams: &cmtproto.ConsensusParams{
+				Abci: &cmtproto.ABCIParams{
+					VoteExtensionsEnableHeight: 1,
+				},
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	// Call ExtendVote which should panic and recover
+	_, err = app.ExtendVote(context.Background(), &abci.RequestExtendVote{Height: 1, Hash: []byte("thehash")})
+
+	// The error should contain the panic message
+	require.Error(t, err)
+	require.Contains(t, err.Error(), panicMsg)
+	require.Contains(t, err.Error(), "recovered application panic in ExtendVote")
+}
+
+// TestABCI_VerifyVoteExtension_PanicRecovery tests that when VerifyVoteExtensionHandler panics,
+// the panic is recovered and the error contains the panic message.
+func TestABCI_VerifyVoteExtension_PanicRecovery(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+
+	panicMsg := "test panic message for VerifyVoteExtension"
+	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+		return &abci.ResponseExtendVote{VoteExtension: []byte("extension")}, nil
+	})
+
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+		panic(panicMsg)
+	})
+
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	_, err := app.InitChain(
+		&abci.RequestInitChain{
+			InitialHeight: 1,
+			ConsensusParams: &cmtproto.ConsensusParams{
+				Abci: &cmtproto.ABCIParams{
+					VoteExtensionsEnableHeight: 1,
+				},
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	// Call VerifyVoteExtension which should panic and recover
+	_, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 1, Hash: []byte("thehash"), VoteExtension: []byte("extension")})
+
+	// The error should contain the panic message
+	require.Error(t, err)
+	require.Contains(t, err.Error(), panicMsg)
+	require.Contains(t, err.Error(), "recovered application panic in VerifyVoteExtension")
 }
 
 // TestABCI_OnlyVerifyVoteExtension makes sure we can call VerifyVoteExtension
@@ -807,6 +883,46 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	}
 }
 
+func TestABCI_AnteHandlerContextValuesReachMsgServer(t *testing.T) {
+	type sdkCtxKey struct{}
+	type goCtxKey struct{}
+
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
+			ctx = ctx.WithValue(sdkCtxKey{}, "sdk-value")
+			ctx = ctx.WithContext(context.WithValue(ctx.Context(), goCtxKey{}, "go-value"))
+			return ctx, nil
+		})
+	}
+
+	executed := false
+	suite := NewBaseAppSuite(t, anteOpt)
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), mockCounterServer{
+		incrementCounterFn: func(ctx context.Context, _ *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
+			sdkCtx := sdk.UnwrapSDKContext(ctx)
+			executed = true
+			require.Equal(t, "sdk-value", sdkCtx.Value(sdkCtxKey{}))
+			require.Equal(t, "go-value", sdkCtx.Value(goCtxKey{}))
+			require.Equal(t, "sdk-value", ctx.Value(sdkCtxKey{}))
+			require.Equal(t, "go-value", ctx.Value(goCtxKey{}))
+			return &baseapptestutil.MsgCreateCounterResponse{}, nil
+		},
+	})
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	txbz, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	_, result, err := suite.baseApp.Simulate(txbz)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	require.True(t, executed)
+}
+
 func TestABCI_InvalidTransaction(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
@@ -1031,6 +1147,7 @@ func TestABCI_TxGasLimits(t *testing.T) {
 func TestABCI_MaxBlockGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
 	anteOpt := func(bapp *baseapp.BaseApp) {
+		baseapp.EnableBlockGasMeter()(bapp)
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasGranted))
 

@@ -61,6 +61,21 @@ you are incentivized to not withdraw until after this event, increasing the
 worth of your existing _accum_. See [#2764](https://github.com/cosmos/cosmos-sdk/issues/2764)
 for further details.
 
+### Bank send restrictions and when called from Begin/EndBlocker hooks
+
+x/distribution sends rewards and commission via
+`bankKeeper.SendCoinsFromModuleToAccount`, which runs any registered
+`SendRestrictionFunc`. The resolver added in
+[#26406](https://github.com/cosmos/cosmos-sdk/pull/26406) handles addresses in
+the bank module's blocked set by falling back (delegator → community pool for
+rewards, validator owner → community pool for commission), but it cannot
+intercept custom `SendRestrictionFunc` rejections. If a chain registers a
+restriction that can error on transfers from the distribution module account to
+a delegator or validator, that error will surface during the reward-withdrawal
+hooks fired from BeginBlocker / EndBlocker / validator-removal paths and cause
+large problems. Restrictions wired onto these flows must be unconditionally
+non-failing for the distribution module's outflows.
+
 ## Effect on Staking
 
 Charging commission on Atom provisions while also allowing for Atom-provisions
@@ -125,29 +140,6 @@ is created which might need to reference the historical record, the reference co
 Each time one object which previously needed to reference the historical record is deleted, the reference
 count is decremented. If the reference count hits zero, the historical record is deleted.
 
-### External Community Pool Keepers
-
-An external pool community keeper is defined as:
-
-```go
-// ExternalCommunityPoolKeeper is the interface that an external community pool module keeper must fulfill
-// for x/distribution to properly accept it as a community pool fund destination.
-type ExternalCommunityPoolKeeper interface {
-	// GetCommunityPoolModule gets the module name that funds should be sent to for the community pool.
-	// This is the address that x/distribution will send funds to for external management.
-	GetCommunityPoolModule() string
-	// FundCommunityPool allows an account to directly fund the community fund pool.
-	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, senderAddr sdk.AccAddress) error
-	// DistributeFromCommunityPool distributes funds from the community pool module account to
-	// a receiver address.
-	DistributeFromCommunityPool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
-}
-```
-
-By default, the distribution module will use a community pool implementation that is internal.  An external community pool 
-can be provided to the module which will have funds be diverted to it instead of the internal implementation.  The reference
-external community pool maintained by the Cosmos SDK is [`x/protocolpool`](../protocolpool/README.md).
-
 ## State
 
 ### FeePool
@@ -185,35 +177,45 @@ Validator distribution information for the relevant validator is updated each ti
 2. any delegator withdraws from a validator, or
 3. the validator withdraws its commission.
 
-* ValidatorDistInfo: `0x02 | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(validatorDistribution)`
+3цThe following state is stored per validator:
+
+* ValidatorOutstandingRewards: `0x02 | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(ValidatorOutstandingRewards)`
+* ValidatorCurrentRewards: `0x06 | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(ValidatorCurrentRewards)`
+* ValidatorAccumulatedCommission: `0x07 | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(ValidatorAccumulatedCommission)`
 
 ```go
-type ValidatorDistInfo struct {
-    OperatorAddress     sdk.AccAddress
-    SelfBondRewards     sdkmath.DecCoins
-    ValidatorCommission types.ValidatorAccumulatedCommission
+type ValidatorCurrentRewards struct {
+    Rewards sdk.DecCoins
+    Period  uint64
+}
+
+type ValidatorAccumulatedCommission struct {
+    Commission sdk.DecCoins
 }
 ```
 
 ### Delegation Distribution
 
-Each delegation distribution only needs to record the height at which it last
-withdrew fees. Because a delegation must withdraw fees each time it's
-properties change (aka bonded tokens etc.) its properties will remain constant
-and the delegator's _accumulation_ factor can be calculated passively knowing
-only the height of the last withdrawal and its current properties.
+Each delegation distribution needs to track the starting info for calculating rewards.
+The `DelegatorStartingInfo` tracks the previous validator period, the delegation's amount
+of staking token, and the creation height (to check later on if any slashes have occurred).
 
-* DelegationDistInfo: `0x02 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(delegatorDist)`
+NOTE: Even though validators are slashed to whole staking tokens, the delegators within 
+the validator may be left with less than a full token, thus `sdk.Dec` is used.
+
+* DelegatorStartingInfo: `0x04 | ValOperatorAddrLen (1 byte) | ValOperatorAddr | AccAddrLen (1 byte) | AccAddr -> ProtocolBuffer(DelegatorStartingInfo)`
 
 ```go
-type DelegationDistInfo struct {
-    WithdrawalHeight int64    // last time this delegation withdrew rewards
+type DelegatorStartingInfo struct {
+    PreviousPeriod uint64       // period at which the delegation was created
+    Stake          math.LegacyDec // amount of staking token delegated
+    Height         uint64       // height at which delegation was created
 }
 ```
 
 ### Params
 
-The distribution module stores it's params in state with the prefix of `0x09`,
+The distribution module stores its params in state with the prefix of `0x09`,
 it can be updated with governance or the address with authority.
 
 * Params: `0x09 | ProtocolBuffer(Params)`
@@ -249,56 +251,6 @@ through the messages `FundCommunityPool`, `WithdrawValidatorCommission` and
 The community pool gets `community_tax * fees`, plus any remaining dust after
 validators get their rewards that are always rounded down to the nearest
 integer value.
-
-#### Using an External Community Pool
-
-Starting with Cosmos SDK v0.53.0, an external community pool, such as `x/protocolpool`, can be used in place of the `x/distribution` managed community pool.
-
-
-Please view the warning in the next section before deciding to use an external community pool.
-
-```go
-// ExternalCommunityPoolKeeper is the interface that an external community pool module keeper must fulfill
-// for x/distribution to properly accept it as a community pool fund destination.
-type ExternalCommunityPoolKeeper interface {
-	// GetCommunityPoolModule gets the module name that funds should be sent to for the community pool.
-	// This is the address that x/distribution will send funds to for external management.
-	GetCommunityPoolModule() string
-	// FundCommunityPool allows an account to directly fund the community fund pool.
-	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, senderAddr sdk.AccAddress) error
-	// DistributeFromCommunityPool distributes funds from the community pool module account to
-	// a receiver address.
-	DistributeFromCommunityPool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
-}
-```
-
-```go
-app.DistrKeeper = distrkeeper.NewKeeper(
-    appCodec,
-    runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
-    app.AccountKeeper,
-    app.BankKeeper,
-    app.StakingKeeper,
-    authtypes.FeeCollectorName,
-    authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-    distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper), // New option.
-)
-```
-
-#### External Community Pool Usage Warning
-
-When using an external community pool with `x/distribution`, the following handlers will return an error:
-
-**QueryService**
-
-* `CommunityPool`
-
-**MsgService**
-
-* `CommunityPoolSpend`
-* `FundCommunityPool`
-
-If you have services that rely on this functionality from `x/distribution`, please update them to use the `x/protocolpool` equivalents.
 
 #### Reward To the Validators
 
@@ -381,7 +333,7 @@ The starting height of the delegation is set to the current validator period, an
 The amount withdrawn is deducted from the `ValidatorOutstandingRewards` variable for the validator.
 
 In the F1 distribution, the total rewards are calculated per validator period, and a delegator receives a piece of those rewards in proportion to their stake in the validator.
-In basic F1, the total rewards that all the delegators are entitled to between to periods is calculated the following way.
+In basic F1, the total rewards that all the delegators are entitled to between two periods is calculated the following way.
 Let `R(X)` be the total accumulated rewards up to period `X` divided by the tokens staked at that time. The delegator allocation is `R(X) * delegator_stake`.
 Then the rewards for all the delegators for staking between periods `A` and `B` are `(R(B) - R(A)) * total stake`.
 However, these calculated rewards don't account for slashing.
@@ -418,12 +370,6 @@ The amount withdrawn is deducted from the `ValidatorOutstandingRewards` variable
 Only integer amounts can be sent. If the accumulated awards have decimals, the amount is truncated before the withdrawal is sent, and the remainder is left to be withdrawn later.
 
 ### FundCommunityPool
-
-:::warning
-
-This handler will return an error if an `ExternalCommunityPool` is used.
-
-:::
 
 This message sends coins directly from the sender to the community pool.
 
@@ -595,10 +541,10 @@ The distribution module emits the following events:
 
 The distribution module contains the following parameters:
 
-| Key                 | Type         | Example                    |
-| ------------------- | ------------ | -------------------------- |
-| communitytax        | string (dec) | "0.020000000000000000" [0] |
-| withdrawaddrenabled | bool         | true                       |
+| Key                   | Type         | Example                    |
+| --------------------- | ------------ | -------------------------- |
+| community_tax         | string (dec) | "0.020000000000000000" [0] |
+| withdraw_addr_enabled | bool         | true                       |
 
 * [0] `communitytax` must be positive and cannot exceed 1.00.
 * `baseproposerreward` and `bonusproposerreward` were parameters that are deprecated in v0.47 and are not used.

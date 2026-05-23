@@ -239,7 +239,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 
 func TestGenPrivKeyFromSecret(t *testing.T) {
 	// curve order N
-	N := secp.S256().N
+	N := secp.S256().N //nolint:staticcheck // TODO: migrate off deprecated elliptic.Curve (SA1019)
 	tests := []struct {
 		name   string
 		secret []byte

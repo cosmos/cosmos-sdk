@@ -10,8 +10,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"cosmossdk.io/x/tx/decode"
-	"cosmossdk.io/x/tx/internal/testpb"
+	"github.com/cosmos/cosmos-sdk/x/tx/decode"
+	"github.com/cosmos/cosmos-sdk/x/tx/internal/testpb"
 )
 
 func errUnknownField(typ string, tagNum int, wireType protowire.Type) error {

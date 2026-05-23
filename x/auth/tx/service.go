@@ -175,6 +175,11 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 
 	blockTxs := block.Data.Txs
 	blockTxsLn := uint64(len(blockTxs))
+
+	if limit > blockTxsLn {
+		limit = blockTxsLn
+	}
+
 	txs := make([]*txtypes.Tx, 0, limit)
 	if offset >= blockTxsLn && blockTxsLn != 0 {
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("out of range: cannot paginate %d txs with offset %d and limit %d", blockTxsLn, offset, limit)

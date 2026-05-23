@@ -1,9 +1,7 @@
 package gaskv
 
 import (
-	"io"
-
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 var _ types.KVStore = &Store{}
@@ -115,11 +113,6 @@ func (gs *GStore[V]) ReverseIterator(start, end []byte) types.GIterator[V] {
 // CacheWrap implements KVStore - it PANICS as you cannot cache a GasKVStore.
 func (gs *GStore[V]) CacheWrap() types.CacheWrap {
 	panic("cannot CacheWrap a GasKVStore")
-}
-
-// CacheWrapWithTrace implements the KVStore interface.
-func (gs *GStore[V]) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
-	panic("cannot CacheWrapWithTrace a GasKVStore")
 }
 
 func (gs *GStore[V]) iterator(start, end []byte, ascending bool) types.GIterator[V] {

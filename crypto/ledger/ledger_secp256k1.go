@@ -22,7 +22,7 @@ const AppName = "Cosmos"
 
 type (
 	// discoverLedgerFn defines a Ledger discovery function that returns a
-	// connected device or an error upon failure. Its allows a method to avoid CGO
+	// connected device or an error upon failure. It allows a method to avoid CGO
 	// dependencies when Ledger support is potentially not enabled.
 	discoverLedgerFn func() (SECP256K1, error)
 
@@ -290,7 +290,7 @@ func convertDERtoBER(signatureDER []byte) ([]byte, error) {
 	sModNScalar.SetByteSlice(s.Bytes())
 	// based on https://github.com/tendermint/btcd/blob/ec996c5/btcec/signature.go#L33-L50
 	if sModNScalar.IsOverHalfOrder() {
-		s = new(big.Int).Sub(secp.S256().N, s)
+		s = new(big.Int).Sub(secp.S256().N, s) //nolint:staticcheck // TODO: migrate off deprecated elliptic.Curve (SA1019)
 	}
 
 	sigBytes := make([]byte, 64)

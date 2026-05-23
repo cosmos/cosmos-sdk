@@ -61,5 +61,11 @@ func (msg *MsgKeyValue) ValidateBasic() error {
 	if msg.Value == nil {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be nil")
 	}
+	if len(msg.Signer) == 0 {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "signer cannot be empty")
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid signer: %v", err)
+	}
 	return nil
 }

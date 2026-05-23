@@ -22,3 +22,4 @@ func (NoOpMempool) Select(context.Context, [][]byte) Iterator                   
 func (NoOpMempool) SelectBy(context.Context, [][]byte, func(Tx) bool)            {}
 func (NoOpMempool) CountTx() int                                                 { return 0 }
 func (NoOpMempool) Remove(sdk.Tx) error                                          { return nil }
+func (NoOpMempool) RemoveWithReason(context.Context, sdk.Tx, RemoveReason) error { return nil }

@@ -23,7 +23,7 @@ developers and end-users, see the
 Briefly, the Cosmos SDK takes state snapshots at regular height intervals given
 by `state-sync.snapshot-interval` and stores them as binary files in the
 filesystem under `<node_home>/data/snapshots/`, with metadata in a LevelDB database
-`<node_home>/data/snapshots/metadata.db`. The number of recent snapshots to keep are given by
+`<node_home>/data/snapshots/metadata.db`. The number of recent snapshots to keep is given by
 `state-sync.snapshot-keep-recent`.
 
 Snapshots are taken asynchronously, i.e. new blocks will be applied concurrently

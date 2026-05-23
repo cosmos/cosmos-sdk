@@ -40,7 +40,7 @@ type ExtensionPayloadReader = func() ([]byte, error)
 type ExtensionPayloadWriter = func([]byte) error
 
 // ExtensionSnapshotter is an extension Snapshotter that is appended to the snapshot stream.
-// ExtensionSnapshotter has an unique name and manages its own internal formats.
+// ExtensionSnapshotter has a unique name and manages its own internal formats.
 type ExtensionSnapshotter interface {
 	// SnapshotName returns the name of snapshotter, it should be unique in the manager.
 	SnapshotName() string

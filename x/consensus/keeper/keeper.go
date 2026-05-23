@@ -11,13 +11,11 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"
-	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var StoreKey = "Consensus"
@@ -42,10 +40,6 @@ func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, au
 	}
 }
 
-func (k *Keeper) GetAuthority() string {
-	return k.authority
-}
-
 // Querier
 
 var _ types.QueryServer = Keeper{}
@@ -64,9 +58,19 @@ func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types
 
 var _ types.MsgServer = Keeper{}
 
+func (k *Keeper) GetAuthority() string {
+	return k.authority
+}
+
+// UpdateParams updates consensus parameters. Note that the new authority value
+// takes effect at the start of the next block, when BeginBlock loads fresh
+// consensus params from the store. Within the same block as this update,
+// ValidateAuthority still checks against the old authority.
 func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
-	if k.GetAuthority() != msg.Authority {
-		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if err := sdk.ValidateAuthority(sdkCtx, k.authority, msg.Authority); err != nil {
+		return nil, err
 	}
 
 	consensusParams, err := msg.ToProtoConsensusParams()
@@ -91,8 +95,6 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	if err := nextParams.ValidateBasic(); err != nil {
 		return nil, err
 	}
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	if err := params.ValidateUpdate(&consensusParams, sdkCtx.BlockHeader().Height); err != nil {
 		return nil, err

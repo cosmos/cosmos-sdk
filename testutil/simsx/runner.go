@@ -13,7 +13,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -75,7 +75,6 @@ func Run[T SimulationApp](
 	appFactory func(
 		logger log.Logger,
 		db dbm.DB,
-		traceStore io.Writer,
 		loadLatest bool,
 		appOpts servertypes.AppOptions,
 		baseAppOptions ...func(*baseapp.BaseApp),
@@ -101,7 +100,6 @@ func RunWithSeeds[T SimulationApp](
 	appFactory func(
 		logger log.Logger,
 		db dbm.DB,
-		traceStore io.Writer,
 		loadLatest bool,
 		appOpts servertypes.AppOptions,
 		baseAppOptions ...func(*baseapp.BaseApp),
@@ -121,7 +119,6 @@ func RunWithSeedsAndRandAcc[T SimulationApp](
 	appFactory func(
 		logger log.Logger,
 		db dbm.DB,
-		traceStore io.Writer,
 		loadLatest bool,
 		appOpts servertypes.AppOptions,
 		baseAppOptions ...func(*baseapp.BaseApp),
@@ -157,7 +154,7 @@ func RunWithSeedsAndRandAcc[T SimulationApp](
 func RunWithSeed[T SimulationApp](
 	tb testing.TB,
 	cfg simtypes.Config,
-	appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db dbm.DB, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seed int64,
 	fuzzSeed []byte,
@@ -171,7 +168,7 @@ func RunWithSeed[T SimulationApp](
 func RunWithSeedAndRandAcc[T SimulationApp](
 	tb testing.TB,
 	cfg simtypes.Config,
-	appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db dbm.DB, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seed int64,
 	fuzzSeed []byte,
@@ -256,7 +253,7 @@ type (
 // TestInstance is a generic type that represents an instance of a SimulationApp used for testing simulations.
 // It contains the following fields:
 //   - App: The instance of the SimulationApp under test.
-//   - DB: The LevelDB database for the simulation app.
+//   - DB: The simulation app database (backend chosen via simtypes.Config.DBBackend).
 //   - WorkDir: The temporary working directory for the simulation app.
 //   - Cfg: The configuration flags for the simulator.
 //   - AppLogger: The logger used for logging in the app during the simulation, with seed value attached.
@@ -350,13 +347,13 @@ func safeUint(p int) uint32 {
 
 // NewSimulationAppInstance initializes and returns a TestInstance of a SimulationApp.
 // The function takes a testing.T instance, a simtypes.Config instance, and an appFactory function as parameters.
-// It creates a temporary working directory and a LevelDB database for the simulation app.
+// It creates a temporary working directory and a simulation database using the backend from simtypes.Config.DBBackend.
 // The function then initializes a logger based on the verbosity flag and sets the logger's seed to the test configuration's seed.
 // The database is closed and cleaned up on test completion.
 func NewSimulationAppInstance[T SimulationApp](
 	tb testing.TB,
 	tCfg simtypes.Config,
-	appFactory func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
+	appFactory func(logger log.Logger, db dbm.DB, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) T,
 ) TestInstance[T] {
 	tb.Helper()
 	workDir := tb.TempDir()
@@ -380,7 +377,7 @@ func NewSimulationAppInstance[T SimulationApp](
 	if tCfg.FauxMerkle {
 		opts = append(opts, FauxMerkleModeOpt)
 	}
-	app := appFactory(logger, db, nil, true, appOptions, opts...)
+	app := appFactory(logger, db, true, appOptions, opts...)
 	if !cli.FlagSigverifyTxValue {
 		app.SetNotSigverifyTx()
 	}

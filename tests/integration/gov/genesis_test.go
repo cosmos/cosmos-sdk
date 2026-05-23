@@ -9,7 +9,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -30,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -48,7 +47,6 @@ type suite struct {
 }
 
 var appConfig = configurator.NewAppConfig(
-	configurator.ParamsModule(),
 	configurator.AuthModule(),
 	configurator.StakingModule(),
 	configurator.BankModule(),
@@ -109,7 +107,7 @@ func TestImportExportQueues(t *testing.T) {
 	distributionGenState := s1.DistrKeeper.ExportGenesis(ctx)
 
 	// export the state and import it into a new app
-	govGenState, _ := gov.ExportGenesis(ctx, s1.GovKeeper)
+	govGenState, _ := keeper.ExportGenesis(ctx, s1.GovKeeper)
 	genesisState := s1.appBuilder.DefaultGenesis()
 
 	genesisState[authtypes.ModuleName] = s1.cdc.MustMarshalJSON(authGenState)

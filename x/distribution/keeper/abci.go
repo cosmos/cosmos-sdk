@@ -9,8 +9,8 @@ import (
 // BeginBlocker sets the proposer for determining distribution during endblock
 // and distribute rewards for the previous block.
 func (k Keeper) BeginBlocker(ctx sdk.Context) error {
-	start := telemetry.Now()
-	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker)
+	start := telemetry.Now()                                                                     //nolint:staticcheck // TODO: switch to OpenTelemetry
+	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker) //nolint:staticcheck // TODO: switch to OpenTelemetry
 
 	// determine the total power signing the block
 	var previousTotalPower int64
@@ -24,13 +24,6 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) error {
 	if height > 1 {
 		if err := k.AllocateTokens(ctx, previousTotalPower, ctx.VoteInfos()); err != nil {
 			return err
-		}
-
-		// send whole coins from community pool to x/protocolpool if enabled
-		if k.HasExternalCommunityPool() {
-			if err := k.sendCommunityPoolToExternalPool(ctx); err != nil {
-				return err
-			}
 		}
 	}
 

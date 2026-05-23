@@ -17,11 +17,11 @@ export CHAIN_ID=cosmoshub-1
 export DENOM=uatom
 export GH_URL=https://github.com/cosmos/gaia
 export BINARY_VERSION=v1.0.0
-export GO_VERSION=1.17
+export GO_VERSION=1.26.3
 export PRELAUNCH_GENESIS_URL=https://raw.githubusercontent.com/cosmos/mainnet/main/cosmoshub-1/genesis-prelaunch.json
 export GENTXS_DIR=~/go/src/github.com/cosmos/mainnet/$CHAIN_ID/gentxs
 ```
 
-Though this script is handy for verifying the gentxs locally, it is advised to use Github Action to validate gentxs.
+Though this script is handy for verifying the gentxs locally, it is advised to use GitHub Action to validate gentxs.
 An example can be found here:
 https://github.com/regen-network/mainnet/blob/0bcd387671b9574e893289e39c08a1643cac7d62/.github/workflows/validate-gentx.yml

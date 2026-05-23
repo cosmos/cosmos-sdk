@@ -10,8 +10,8 @@ import (
 
 // BeginBlocker of epochs module.
 func (k *Keeper) BeginBlocker(ctx sdk.Context) error {
-	start := telemetry.Now()
-	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker)
+	start := telemetry.Now()                                                                     //nolint:staticcheck // TODO: switch to OpenTelemetry
+	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker) //nolint:staticcheck // TODO: switch to OpenTelemetry
 
 	blockTime := ctx.BlockTime()
 	blockHeight := ctx.BlockHeight()

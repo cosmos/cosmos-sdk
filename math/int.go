@@ -406,12 +406,12 @@ func (i Int) Abs() Int {
 
 // MinInt return the minimum of the ints
 func MinInt(i1, i2 Int) Int {
-	return Int{min(i1.i, i2.i)}
+	return Int{new(big.Int).Set(min(i1.i, i2.i))}
 }
 
 // MaxInt returns the maximum between two integers.
-func MaxInt(i, i2 Int) Int {
-	return Int{max(i.i, i2.i)}
+func MaxInt(i1, i2 Int) Int {
+	return Int{new(big.Int).Set(max(i1.i, i2.i))}
 }
 
 // String returns human-readable string

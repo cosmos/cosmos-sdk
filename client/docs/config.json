@@ -116,23 +116,6 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/cosmos/params/v1beta1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "Params"
-        }
-      }
-    },
-    {
-      "url": "./tmp-swagger-gen/cosmos/protocolpool/v1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "ProtocolpoolParams",
-          "CommunityPool": "ProtocolpoolCommunityPool"
-        }
-      }
-    },
-    {
       "url": "./tmp-swagger-gen/cosmos/slashing/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {

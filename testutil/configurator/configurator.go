@@ -13,16 +13,12 @@ import (
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
-	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
-	protocolpoolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
-
-	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 // Config should never need to be instantiated manually and is solely used for ModuleOption.
@@ -54,10 +50,8 @@ func defaultConfig() *Config {
 			"genutil",
 			"authz",
 			"feegrant",
-			"params",
 			"consensus",
 			"vesting",
-			"protocolpool",
 			"nft",
 			"group",
 		},
@@ -73,12 +67,9 @@ func defaultConfig() *Config {
 			"evidence",
 			"authz",
 			"feegrant",
-			"params",
 			"consensus",
 			"upgrade",
 			"vesting",
-			"protocolpool",
-			"protocolpool",
 			"nft",
 			"group",
 		},
@@ -94,12 +85,9 @@ func defaultConfig() *Config {
 			"evidence",
 			"authz",
 			"feegrant",
-			"params",
 			"consensus",
 			"upgrade",
 			"vesting",
-			"protocolpool",
-			"protocolpool",
 			"nft",
 			"group",
 		},
@@ -158,19 +146,8 @@ func AuthModule() ModuleOption {
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
 					{Account: "gov", Permissions: []string{"burner"}},
 					{Account: "nft"},
-					{Account: protocolpooltypes.ModuleName},
-					{Account: protocolpooltypes.ProtocolPoolEscrowAccount},
 				},
 			}),
-		}
-	}
-}
-
-func ParamsModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs["params"] = &appv1alpha1.ModuleConfig{
-			Name:   "params",
-			Config: appconfig.WrapAny(&paramsmodulev1.Module{}),
 		}
 	}
 }
@@ -285,15 +262,6 @@ func AuthzModule() ModuleOption {
 		config.ModuleConfigs["authz"] = &appv1alpha1.ModuleConfig{
 			Name:   "authz",
 			Config: appconfig.WrapAny(&authzmodulev1.Module{}),
-		}
-	}
-}
-
-func ProtocolPoolModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs[protocolpooltypes.ModuleName] = &appv1alpha1.ModuleConfig{
-			Name:   protocolpooltypes.ModuleName,
-			Config: appconfig.WrapAny(&protocolpoolmodulev1.Module{}),
 		}
 	}
 }

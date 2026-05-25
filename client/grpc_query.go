@@ -121,7 +121,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply a
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "request cannot be nil")
 	}
 	reqVal := reflect.ValueOf(req)
-	if reqVal.Kind() == reflect.Ptr && reqVal.IsNil() {
+	if reqVal.Kind() == reflect.Pointer && reqVal.IsNil() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "request cannot be nil")
 	}
 

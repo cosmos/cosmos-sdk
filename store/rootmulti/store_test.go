@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/v2/internal/maps"
+	"github.com/cosmos/cosmos-sdk/store/v2/internal/kv"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/transient"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
@@ -542,6 +543,42 @@ func TestMultiStoreQuery(t *testing.T) {
 	qres, err = multi.Query(&query)
 	require.NoError(t, err)
 	require.Equal(t, v2, qres.Value)
+}
+
+func TestMultiStoreQuery_SubspaceHistoricalHeight(t *testing.T) {
+	db := dbm.NewMemDB()
+	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	require.NoError(t, multi.LoadLatestVersion())
+
+	prefix := []byte("pfx/")
+	k1 := append(prefix, 'a')
+	k2 := append(prefix, 'b')
+	v1old, v2, v1new := []byte("v1old"), []byte("v2"), []byte("v1new")
+
+	store1 := multi.GetStoreByName("store1").(types.KVStore)
+	store1.Set(k1, v1old)
+	store1.Set(k2, v2)
+	h1 := multi.Commit().Version
+
+	store1 = multi.GetStoreByName("store1").(types.KVStore)
+	store1.Set(k1, v1new)
+	multi.Commit()
+
+	qres, err := multi.Query(&types.RequestQuery{Path: "/store1/subspace", Data: prefix, Height: h1})
+	require.NoError(t, err)
+	require.Equal(t, uint32(0), qres.Code)
+
+	var pairs kv.Pairs
+	require.NoError(t, pairs.Unmarshal(qres.Value))
+	require.Len(t, pairs.Pairs, 2)
+	require.Equal(t, v1old, pairs.Pairs[0].Value)
+	require.Equal(t, v2, pairs.Pairs[1].Value)
+
+	qresH2, err := multi.Query(&types.RequestQuery{Path: "/store1/subspace", Data: prefix, Height: h1 + 1})
+	require.NoError(t, err)
+	var pairsH2 kv.Pairs
+	require.NoError(t, pairsH2.Unmarshal(qresH2.Value))
+	require.Equal(t, v1new, pairsH2.Pairs[0].Value)
 }
 
 func TestMultiStore_Pruning(t *testing.T) {

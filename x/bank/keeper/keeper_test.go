@@ -1144,6 +1144,40 @@ func (suite *KeeperTestSuite) TestSendCoins() {
 	require.Equal(newBarCoin(25), coins[0], "expected only bar coins in the account balance, got: %v", coins)
 }
 
+// TestSendCoinsSkipsHasAccountForExistingRecipient pins down the optimization
+// introduced for https://github.com/cosmos/cosmos-sdk/issues/24228: when the
+// recipient already holds a balance in one of the input denoms, BaseSendKeeper
+// must not probe `auth` via HasAccount (and therefore must not call
+// SetAccount). A future regression that unconditionally re-adds the probe
+// would fail this test.
+func (suite *KeeperTestSuite) TestSendCoinsSkipsHasAccountForExistingRecipient() {
+	ctx := suite.ctx
+	require := suite.Require()
+
+	sender := accAddrs[0]
+	recipient := accAddrs[1]
+	senderAcc := authtypes.NewBaseAccountWithAddress(sender)
+
+	// Fund both accounts so the recipient has a prior balance in foo.
+	suite.mockFundAccount(sender)
+	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, sender, sdk.NewCoins(newFooCoin(100))))
+	suite.mockFundAccount(recipient)
+	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, recipient, sdk.NewCoins(newFooCoin(10))))
+
+	// Only GetAccount on the sender is expected. HasAccount must NOT be
+	// called for the recipient because the prior balance implies an existing
+	// account.
+	suite.authKeeper.EXPECT().GetAccount(ctx, sender).Return(senderAcc)
+	suite.authKeeper.EXPECT().HasAccount(gomock.Any(), gomock.Any()).Times(0)
+	suite.authKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), gomock.Any()).Times(0)
+	suite.authKeeper.EXPECT().SetAccount(gomock.Any(), gomock.Any()).Times(0)
+
+	require.NoError(suite.bankKeeper.SendCoins(ctx, sender, recipient, sdk.NewCoins(newFooCoin(25))))
+
+	require.Equal(sdk.NewCoins(newFooCoin(75)), suite.bankKeeper.GetAllBalances(ctx, sender))
+	require.Equal(sdk.NewCoins(newFooCoin(35)), suite.bankKeeper.GetAllBalances(ctx, recipient))
+}
+
 func (suite *KeeperTestSuite) TestSendCoinsWithRestrictions() {
 	type restrictionArgs struct {
 		ctx      context.Context

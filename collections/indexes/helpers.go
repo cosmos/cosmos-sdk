@@ -120,7 +120,7 @@ func ScanValues[K, V any, I iterator[K], Idx collections.Indexes[K, V]](
 		}
 
 		if f(value) {
-			return err
+			return nil
 		}
 	}
 

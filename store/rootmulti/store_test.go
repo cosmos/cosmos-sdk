@@ -17,8 +17,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/v2/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
-	sdkmaps "github.com/cosmos/cosmos-sdk/store/v2/internal/maps"
 	"github.com/cosmos/cosmos-sdk/store/v2/internal/kv"
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/v2/internal/maps"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/transient"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"

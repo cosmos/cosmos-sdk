@@ -87,6 +87,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth/tx) [#26517](https://github.com/cosmos/cosmos-sdk/pull/26517) Return a decode error instead of panicking when a transaction's `SignerInfos` and `Signatures` counts disagree in `GetSignaturesV2`, or a multisig's `ModeInfos` and sub-signature counts disagree in `ModeInfoAndSigToSignatureData`.
 * (x/auth/ante) [#26573](https://github.com/cosmos/cosmos-sdk/pull/26573) Reject tx with extra SignerInfos in SetPubKeyDecorator.
 
+### Client Breaking
+
+* (x/auth/tx) [#26399](https://github.com/cosmos/cosmos-sdk/pull/26399) `GetTxsEvent` now returns `InvalidArgument` when the deprecated `GetTxsEventRequest.pagination` field is populated, instead of silently ignoring it. Use the top-level `page`, `limit`, and `order_by` request fields instead.
+
 ### Deprecated
 
 ## [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) - 2026-04-15

@@ -1,6 +1,8 @@
 package types_test
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -212,6 +214,126 @@ func TestMetadataValidate(t *testing.T) {
 				Display: "atom",
 			},
 			true,
+		},
+		{
+			"too many denom units",
+			types.Metadata{
+				Name:        "Test Token",
+				Symbol:      "TEST",
+				Description: "Token with too many denom units.",
+				DenomUnits: func() []*types.DenomUnit {
+					units := make([]*types.DenomUnit, types.MaxDenomUnits+1)
+					for i := 0; i <= types.MaxDenomUnits; i++ {
+						units[i] = &types.DenomUnit{Denom: fmt.Sprintf("unit%d", i), Exponent: uint32(i)}
+					}
+					return units
+				}(),
+				Base:    "unit0",
+				Display: fmt.Sprintf("unit%d", types.MaxDenomUnits),
+			},
+			true,
+		},
+		{
+			"max denom units",
+			types.Metadata{
+				Name:        "Test Token",
+				Symbol:      "TEST",
+				Description: "Token with max allowed denom units.",
+				DenomUnits: func() []*types.DenomUnit {
+					units := make([]*types.DenomUnit, types.MaxDenomUnits)
+					for i := 0; i < types.MaxDenomUnits; i++ {
+						units[i] = &types.DenomUnit{Denom: fmt.Sprintf("unit%d", i), Exponent: uint32(i)}
+					}
+					return units
+				}(),
+				Base:    "unit0",
+				Display: fmt.Sprintf("unit%d", types.MaxDenomUnits-1),
+			},
+			false,
+		},
+		{
+			"too many aliases",
+			types.Metadata{
+				Name:        "Cosmos Hub Atom",
+				Symbol:      "ATOM",
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{
+						Denom:    "uatom",
+						Exponent: 0,
+						Aliases: func() []string {
+							aliases := make([]string, types.MaxAliases+1)
+							for i := 0; i <= types.MaxAliases; i++ {
+								aliases[i] = fmt.Sprintf("alias%d", i)
+							}
+							return aliases
+						}(),
+					},
+				},
+				Base:    "uatom",
+				Display: "uatom",
+			},
+			true,
+		},
+		{
+			"max aliases",
+			types.Metadata{
+				Name:        "Cosmos Hub Atom",
+				Symbol:      "ATOM",
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{
+						Denom:    "uatom",
+						Exponent: 0,
+						Aliases: func() []string {
+							aliases := make([]string, types.MaxAliases)
+							for i := 0; i < types.MaxAliases; i++ {
+								aliases[i] = fmt.Sprintf("alias%d", i)
+							}
+							return aliases
+						}(),
+					},
+				},
+				Base:    "uatom",
+				Display: "uatom",
+			},
+			false,
+		},
+		{
+			"alias too long",
+			types.Metadata{
+				Name:        "Cosmos Hub Atom",
+				Symbol:      "ATOM",
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{
+						Denom:    "uatom",
+						Exponent: 0,
+						Aliases:  []string{strings.Repeat("a", types.MaxAliasLength+1)},
+					},
+				},
+				Base:    "uatom",
+				Display: "uatom",
+			},
+			true,
+		},
+		{
+			"max alias length",
+			types.Metadata{
+				Name:        "Cosmos Hub Atom",
+				Symbol:      "ATOM",
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{
+						Denom:    "uatom",
+						Exponent: 0,
+						Aliases:  []string{strings.Repeat("a", types.MaxAliasLength)},
+					},
+				},
+				Base:    "uatom",
+				Display: "uatom",
+			},
+			false,
 		},
 	}
 

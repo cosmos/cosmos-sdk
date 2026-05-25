@@ -70,3 +70,29 @@ func TestNewTxConfigPropagatesCustomGetSigners(t *testing.T) {
 	// fresh context from defaults and the lookup below failed.
 	require.Same(t, interfaceRegistry.SigningContext(), txConfig.SigningContext())
 }
+
+// TestNewTxConfigWithExplicitSigningOptions covers the branch where the caller
+// supplies SigningOptions directly. The function must build a fresh signing
+// context from those options (not reuse the codec's interface-registry
+// context) and must default FileResolver to the interface registry when
+// unset.
+func TestNewTxConfigWithExplicitSigningOptions(t *testing.T) {
+	interfaceRegistry := types.NewInterfaceRegistry()
+	protoCodec := codec.NewProtoCodec(interfaceRegistry)
+
+	signingOpts := &txsigning.Options{
+		AddressCodec:          address.NewBech32Codec("cosmos"),
+		ValidatorAddressCodec: address.NewBech32Codec("cosmosvaloper"),
+	}
+
+	txConfig, err := tx.NewTxConfigWithOptions(protoCodec, tx.ConfigOptions{
+		SigningOptions: signingOpts,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, txConfig.SigningContext())
+	// A new context was built from the supplied SigningOptions, so it must not
+	// be the interface registry's own signing context.
+	require.NotSame(t, interfaceRegistry.SigningContext(), txConfig.SigningContext())
+	// FileResolver default came from the interface registry.
+	require.NotNil(t, signingOpts.FileResolver)
+}

@@ -80,6 +80,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [#25893](https://github.com/cosmos/cosmos-sdk/pull/25893) Fix CancelAll cancellation by clearing blocker ESTIMATE marks before waking suspended executors.
 * (crypto) [#26529](https://github.com/cosmos/cosmos-sdk/pull/26529) Validate the SEC1 tag byte (`0x02`/`0x03`) when unmarshaling a `secp256k1.PubKey`, rejecting malformed compressed keys that previously passed the length-only check.
 
+### Client Breaking
+
+* (x/auth/tx) [#26399](https://github.com/cosmos/cosmos-sdk/pull/26399) `GetTxsEvent` now returns `InvalidArgument` when the deprecated `GetTxsEventRequest.pagination` field is populated, instead of silently ignoring it. Use the top-level `page`, `limit`, and `order_by` request fields instead.
+
 ### Deprecated
 
 ## [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) - 2026-04-15

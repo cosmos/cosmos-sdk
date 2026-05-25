@@ -76,13 +76,10 @@ func WeightedOperations(
 			weightMsgWithdrawValidatorCommission,
 			SimulateMsgWithdrawValidatorCommission(txConfig, ak, bk, k, sk),
 		),
-	}
-
-	if !k.HasExternalCommunityPool() {
-		ops = append(ops, simulation.NewWeightedOperation(
+		simulation.NewWeightedOperation(
 			weightMsgFundCommunityPool,
 			SimulateMsgFundCommunityPool(txConfig, ak, bk, k, sk),
-		))
+		),
 	}
 
 	return ops

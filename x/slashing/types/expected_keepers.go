@@ -1,13 +1,12 @@
 package types
 
 import (
-	context "context"
+	"context"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -23,15 +22,6 @@ type BankKeeper interface {
 	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	LockedCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
-}
-
-// ParamSubspace defines the expected Subspace interface
-type ParamSubspace interface {
-	HasKeyTable() bool
-	WithKeyTable(table paramtypes.KeyTable) paramtypes.Subspace
-	Get(ctx sdk.Context, key []byte, ptr any)
-	GetParamSet(ctx sdk.Context, ps paramtypes.ParamSet)
-	SetParamSet(ctx sdk.Context, ps paramtypes.ParamSet)
 }
 
 // StakingKeeper expected staking keeper

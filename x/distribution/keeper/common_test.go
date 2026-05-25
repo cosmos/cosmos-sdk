@@ -5,7 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 var (
@@ -20,6 +19,5 @@ var (
 	valConsAddr2 = sdk.ConsAddress(valConsPk2.Address())
 
 	distrAcc        = authtypes.NewEmptyModuleAccount(types.ModuleName)
-	protocolPoolAcc = authtypes.NewEmptyModuleAccount(protocolpooltypes.ProtocolPoolEscrowAccount)
 	feeCollectorAcc = authtypes.NewEmptyModuleAccount("fee_collector")
 )

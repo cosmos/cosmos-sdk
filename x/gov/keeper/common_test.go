@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
+	corestoretypes "cosmossdk.io/core/store"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -57,6 +58,7 @@ func setupGovKeeper(t *testing.T) (
 	*govtestutil.MockBankKeeper,
 	*govtestutil.MockStakingKeeper,
 	*govtestutil.MockDistributionKeeper,
+	corestoretypes.KVStoreService,
 	moduletestutil.TestEncodingConfig,
 	sdk.Context,
 ) {
@@ -115,7 +117,7 @@ func setupGovKeeper(t *testing.T) (
 	v1.RegisterMsgServer(msr, keeper.NewMsgServerImpl(govKeeper))
 	banktypes.RegisterMsgServer(msr, nil) // Nil is fine here as long as we never execute the proposal's Msgs.
 
-	return govKeeper, acctKeeper, bankKeeper, stakingKeeper, distributionKeeper, encCfg, ctx
+	return govKeeper, acctKeeper, bankKeeper, stakingKeeper, distributionKeeper, storeService, encCfg, ctx
 }
 
 // trackMockBalances sets up expected calls on the Mock BankKeeper, and also

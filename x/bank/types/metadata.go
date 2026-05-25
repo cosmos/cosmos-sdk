@@ -8,6 +8,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// MaxDenomUnits caps the number of DenomUnit entries a Metadata message may
+// carry, blocking the abuse vector flagged in #26012 where an attacker can
+// construct an arbitrarily large message because there is no semantic size
+// limit on the slice. Real-world tokens publish a handful of units (base /
+// milli / micro / display etc.); 100 leaves ample headroom for unusual
+// reference-currency mappings.
+const MaxDenomUnits = 100
+
+// MaxDenomUnitAliases caps the number of aliases per DenomUnit for the same
+// reason. Production usage is one to three aliases per unit; 32 absorbs niche
+// shorthand sets without admitting unbounded payloads.
+const MaxDenomUnitAliases = 32
+
 // Validate performs a basic validation of the coin metadata fields. It checks:
 //   - Name and Symbol are not blank
 //   - Base and Display denominations are valid coin denominations
@@ -15,6 +28,12 @@ import (
 //   - Base denomination has exponent 0
 //   - Denomination units are sorted in ascending order
 //   - Denomination units not duplicated
+//
+// Validate intentionally does NOT enforce MaxDenomUnits / MaxDenomUnitAliases:
+// it is called from InitGenesis (genesis.go) over already-stored state, and
+// rejecting historically valid metadata at chain restart has no safe recovery
+// path. Use ValidateBounds at write-time entry points (e.g. a future
+// MsgSetDenomMetadata or direct keeper writes) to enforce the caps.
 func (m Metadata) Validate() error {
 	if strings.TrimSpace(m.Name) == "" {
 		return errors.New("name field cannot be blank")
@@ -77,7 +96,10 @@ func (m Metadata) Validate() error {
 	return nil
 }
 
-// Validate performs a basic validation of the denomination unit fields
+// Validate performs a basic validation of the denomination unit fields.
+//
+// Like Metadata.Validate, this does not enforce MaxDenomUnitAliases; use
+// ValidateBounds for write-path enforcement.
 func (du DenomUnit) Validate() error {
 	if err := sdk.ValidateDenom(du.Denom); err != nil {
 		return fmt.Errorf("invalid denom unit: %w", err)
@@ -96,5 +118,29 @@ func (du DenomUnit) Validate() error {
 		seenAliases[alias] = true
 	}
 
+	return nil
+}
+
+// ValidateBounds enforces the size caps from #26012 (MaxDenomUnits and
+// MaxDenomUnitAliases). Callers on the write path — gRPC msg-server handlers,
+// gov-proposal handlers, or direct keeper writes — should run this in
+// addition to Validate. It is deliberately a separate function so that
+// existing on-chain state with historically large metadata can still be
+// re-imported via InitGenesis (which only calls Validate).
+func (m Metadata) ValidateBounds() error {
+	if len(m.DenomUnits) > MaxDenomUnits {
+		return fmt.Errorf(
+			"too many denom units: %d (max %d)",
+			len(m.DenomUnits), MaxDenomUnits,
+		)
+	}
+	for _, du := range m.DenomUnits {
+		if len(du.Aliases) > MaxDenomUnitAliases {
+			return fmt.Errorf(
+				"too many aliases on denom unit %s: %d (max %d)",
+				du.Denom, len(du.Aliases), MaxDenomUnitAliases,
+			)
+		}
+	}
 	return nil
 }

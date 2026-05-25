@@ -51,6 +51,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (docs) [#25918](https://github.com/cosmos/cosmos-sdk/issues/25918) Regenerate Swagger API spec to reflect current proto state, including `authority` field on consensus params and removal of stale module-config definitions.
+* (x/bank) [#26426](https://github.com/cosmos/cosmos-sdk/pull/26426) Add `Metadata.ValidateBounds` plus exported `MaxDenomUnits` (100) and `MaxDenomUnitAliases` (32) so write-path callers can reject malicious oversized denom metadata (#26012). `Metadata.Validate` is left bound-unaware so already-stored over-cap metadata can still be re-imported during genesis.
 
 ### Bug Fixes
 

@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -213,6 +214,16 @@ func TestMetadataValidate(t *testing.T) {
 			},
 			true,
 		},
+		{
+			"denom units at exact cap (Validate is bound-unaware)",
+			buildMetadataWithDenomUnits(types.MaxDenomUnits),
+			false,
+		},
+		{
+			"over-cap denom units accepted by Validate (use ValidateBounds for the cap)",
+			buildMetadataWithDenomUnits(types.MaxDenomUnits + 1),
+			false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -226,6 +237,71 @@ func TestMetadataValidate(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestMetadataValidateBounds covers the write-time size guard introduced for
+// #26012. Validate intentionally lets historically large stored metadata
+// through (so genesis re-import keeps working); ValidateBounds is the entry
+// point that callers on the write path should run to enforce the caps.
+func TestMetadataValidateBounds(t *testing.T) {
+	t.Run("within both caps", func(t *testing.T) {
+		md := buildMetadataWithDenomUnits(types.MaxDenomUnits)
+		md.DenomUnits[0].Aliases = buildAliases(types.MaxDenomUnitAliases)
+		require.NoError(t, md.ValidateBounds())
+	})
+
+	t.Run("denom-unit count over cap", func(t *testing.T) {
+		md := buildMetadataWithDenomUnits(types.MaxDenomUnits + 1)
+		err := md.ValidateBounds()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "too many denom units")
+	})
+
+	t.Run("alias count over cap on inner unit", func(t *testing.T) {
+		md := buildMetadataWithDenomUnits(2)
+		md.DenomUnits[0].Aliases = buildAliases(types.MaxDenomUnitAliases + 1)
+		err := md.ValidateBounds()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "too many aliases")
+		require.Contains(t, err.Error(), md.DenomUnits[0].Denom)
+	})
+}
+
+// buildMetadataWithDenomUnits returns a Metadata where DenomUnits has exactly
+// `n` entries (base + n-1 ascending-exponent units) so the count-cap rule from
+// #26012 is exercised without tripping the existing sort/duplicate checks.
+func buildMetadataWithDenomUnits(n int) types.Metadata {
+	units := make([]*types.DenomUnit, 0, n)
+	units = append(units, &types.DenomUnit{Denom: "uatom", Exponent: 0})
+	for i := 1; i < n; i++ {
+		units = append(units, &types.DenomUnit{
+			Denom:    fmt.Sprintf("atom%d", i),
+			Exponent: uint32(i),
+		})
+	}
+	// Last unit doubles as the display denom so the existing hasDisplay
+	// invariant is satisfied for the cap-respecting case.
+	display := "uatom"
+	if n > 1 {
+		display = units[n-1].Denom
+	}
+	return types.Metadata{
+		Name:        "Cosmos Hub Atom",
+		Symbol:      "ATOM",
+		Description: "Synthetic metadata exercising the DenomUnits length cap.",
+		DenomUnits:  units,
+		Base:        "uatom",
+		Display:     display,
+	}
+}
+
+// buildAliases returns `n` distinct, non-blank alias strings.
+func buildAliases(n int) []string {
+	aliases := make([]string, n)
+	for i := 0; i < n; i++ {
+		aliases[i] = fmt.Sprintf("alias%d", i)
+	}
+	return aliases
 }
 
 func TestMarshalJSONMetaData(t *testing.T) {

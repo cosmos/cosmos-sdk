@@ -79,7 +79,6 @@ func TestReversePairIteratorPrimaryKeysCloseError(t *testing.T) {
 	closeErr := errors.New("close error")
 	sk, ctx := deps()
 
-	// Write data using the real store.
 	sb := collections.NewSchemaBuilder(sk)
 	keyCodec := collections.PairKeyCodec(collections.StringKey, collections.StringKey)
 	idxMap := collections.NewIndexedMap(
@@ -91,7 +90,6 @@ func TestReversePairIteratorPrimaryKeysCloseError(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, idxMap.Set(ctx, collections.Join("address1", "osmo"), 100))
 
-	// Iterate over the same underlying data but via a store that returns a close error.
 	errSk := closeErrKVStoreService{KVStoreService: sk, closeErr: closeErr}
 	sb2 := collections.NewSchemaBuilder(errSk)
 	idxMap2 := collections.NewIndexedMap(
@@ -108,8 +106,6 @@ func TestReversePairIteratorPrimaryKeysCloseError(t *testing.T) {
 	require.ErrorIs(t, err, closeErr)
 }
 
-// closeErrKVStoreService wraps a KVStoreService so every iterator it produces
-// returns the specified error from Close.
 type closeErrKVStoreService struct {
 	store.KVStoreService
 	closeErr error

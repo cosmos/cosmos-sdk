@@ -29,7 +29,7 @@ func NormalizeVoteOption(option string) string {
 // NormalizeWeightedVoteOptions - normalize vote options param string
 func NormalizeWeightedVoteOptions(options string) string {
 	newOptions := []string{}
-	for _, option := range strings.Split(options, ",") {
+	for option := range strings.SplitSeq(options, ",") {
 		fields := strings.Split(option, "=")
 		fields[0] = NormalizeVoteOption(fields[0])
 		if len(fields) < 2 {

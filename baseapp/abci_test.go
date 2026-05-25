@@ -2701,3 +2701,65 @@ func TestABCI_Race_Commit_Query(t *testing.T) {
 
 	require.Equal(t, int64(1001), app.GetContextForCheckTx(nil).BlockHeight())
 }
+
+// TestABCI_ExecuteGenesisTx_PropagatesEvents pins down the fix from #25984:
+// BaseApp.ExecuteGenesisTx must re-emit the genesis transaction's events on
+// the finalize-block state's EventManager. Without that, gen-tx events are
+// confined to the per-tx result and dropped (ResponseInitChain has no
+// top-level events field), which breaks indexers that rely on events alone
+// to track chain state at genesis.
+func TestABCI_ExecuteGenesisTx_PropagatesEvents(t *testing.T) {
+	var (
+		txBytes []byte
+		appRef  *baseapp.BaseApp
+	)
+
+	initChainerOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetInitChainer(func(_ sdk.Context, _ *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+			require.NoError(t, appRef.ExecuteGenesisTx(txBytes))
+			return &abci.ResponseInitChain{}, nil
+		})
+	}
+
+	suite := NewBaseAppSuite(t, baseapp.SetChainID("test-chain-id"), initChainerOpt)
+	appRef = suite.baseApp
+
+	deliverKey := []byte("genesis-counter")
+	baseapptestutil.RegisterCounterServer(
+		suite.baseApp.MsgServiceRouter(),
+		CounterServerImpl{t, capKey1, deliverKey},
+	)
+
+	// Build a tx whose handler emits a known event.
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	var err error
+	txBytes, err = suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	_, err = suite.baseApp.InitChain(&abci.RequestInitChain{
+		ChainId:         "test-chain-id",
+		ConsensusParams: &cmtproto.ConsensusParams{},
+		AppStateBytes:   []byte("{}"),
+	})
+	require.NoError(t, err)
+
+	events := getFinalizeBlockStateCtx(suite.baseApp).EventManager().Events()
+
+	var sawCounterEvent bool
+	for _, ev := range events {
+		if ev.Type != sdk.EventTypeMessage {
+			continue
+		}
+		for _, attr := range ev.Attributes {
+			if attr.Key == "update_counter" && attr.Value == "0" {
+				sawCounterEvent = true
+				break
+			}
+		}
+		if sawCounterEvent {
+			break
+		}
+	}
+	require.True(t, sawCounterEvent,
+		"genesis-tx event was not propagated to the finalize-state EventManager; events=%+v", events)
+}

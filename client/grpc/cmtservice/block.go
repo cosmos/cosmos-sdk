@@ -41,3 +41,12 @@ func GetProtoBlock(ctx context.Context, clientCtx client.Context, height *int64)
 
 	return protoBlockID, protoBlock, nil
 }
+
+func getBlockResults(ctx context.Context, clientCtx client.Context, height *int64) (*coretypes.ResultBlockResults, error) {
+	node, err := clientCtx.GetNode()
+	if err != nil {
+		return nil, err
+	}
+
+	return node.BlockResults(ctx, height)
+}

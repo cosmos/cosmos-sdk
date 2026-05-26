@@ -27,15 +27,15 @@ import (
 	"go.uber.org/mock/gomock"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/snapshots"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -883,6 +883,46 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	}
 }
 
+func TestABCI_AnteHandlerContextValuesReachMsgServer(t *testing.T) {
+	type sdkCtxKey struct{}
+	type goCtxKey struct{}
+
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
+			ctx = ctx.WithValue(sdkCtxKey{}, "sdk-value")
+			ctx = ctx.WithContext(context.WithValue(ctx.Context(), goCtxKey{}, "go-value"))
+			return ctx, nil
+		})
+	}
+
+	executed := false
+	suite := NewBaseAppSuite(t, anteOpt)
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), mockCounterServer{
+		incrementCounterFn: func(ctx context.Context, _ *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
+			sdkCtx := sdk.UnwrapSDKContext(ctx)
+			executed = true
+			require.Equal(t, "sdk-value", sdkCtx.Value(sdkCtxKey{}))
+			require.Equal(t, "go-value", sdkCtx.Value(goCtxKey{}))
+			require.Equal(t, "sdk-value", ctx.Value(sdkCtxKey{}))
+			require.Equal(t, "go-value", ctx.Value(goCtxKey{}))
+			return &baseapptestutil.MsgCreateCounterResponse{}, nil
+		},
+	})
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	txbz, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	_, result, err := suite.baseApp.Simulate(txbz)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	require.True(t, executed)
+}
+
 func TestABCI_InvalidTransaction(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
@@ -1107,6 +1147,7 @@ func TestABCI_TxGasLimits(t *testing.T) {
 func TestABCI_MaxBlockGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
 	anteOpt := func(bapp *baseapp.BaseApp) {
+		baseapp.EnableBlockGasMeter()(bapp)
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasGranted))
 
@@ -2611,6 +2652,60 @@ func TestFinalizeBlockDeferResponseHandle(t *testing.T) {
 	})
 	require.Empty(t, res)
 	require.NotEmpty(t, err)
+}
+
+// TestABCI_Race_GRPC_Query_During_Commit reproduces the scenario reported in
+// #22368: a gRPC-style query goroutine calling BaseApp.Query while another
+// goroutine drives FinalizeBlock/Commit in a tight loop. With prior racy
+// state-management code (before the state.Manager / state.State RW-mutex
+// work in #24655 and follow-ups), `go test -race` would flag a DATA RACE on
+// fields touched by Commit and read by CreateQueryContext. This test guards
+// against any regression.
+func TestABCI_Race_GRPC_Query_During_Commit(t *testing.T) {
+	suite := NewBaseAppSuite(t, baseapp.SetChainID("test-chain-id"))
+	app := suite.baseApp
+
+	_, err := app.InitChain(&abci.RequestInitChain{
+		ChainId:         "test-chain-id",
+		ConsensusParams: &cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 5_000_000}},
+		InitialHeight:   1,
+	})
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	var queries atomic.Uint64
+
+	queryLoop := func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				// height=0 forces app.Query to read app.LastBlockHeight()
+				// and CreateQueryContext to walk both check + finalize
+				// states. Path is intentionally invalid; we only care
+				// about the state-access path executing without races.
+				_, _ = app.Query(ctx, &abci.RequestQuery{Path: "/store/main/key", Data: []byte("k"), Height: 0})
+				queries.Add(1)
+			}
+		}
+	}
+
+	for i := 0; i < 16; i++ {
+		go queryLoop()
+	}
+
+	for i := 0; i < 200; i++ {
+		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+		require.NoError(t, err)
+		_, err = app.Commit()
+		require.NoError(t, err)
+	}
+
+	cancel()
+	require.Greater(t, queries.Load(), uint64(0), "no concurrent queries ran")
 }
 
 func TestABCI_Race_Commit_Query(t *testing.T) {

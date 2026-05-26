@@ -24,7 +24,7 @@ func (es EventService) EventManager(ctx context.Context) event.Manager {
 var _ event.Manager = (*Events)(nil)
 
 type Events struct {
-	sdk.EventManagerI
+	*sdk.EventManager
 }
 
 func NewEventManager(ctx context.Context) event.Manager {

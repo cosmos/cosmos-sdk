@@ -1,0 +1,95 @@
+// IMPORTANT LICENSE NOTICE
+//
+// SPDX-License-Identifier: CosmosLabs-Evaluation-Only
+//
+// This file is NOT licensed under the Apache License 2.0.
+//
+// Licensed under the Cosmos Labs Source Available Evaluation License, which forbids:
+// - commercial use,
+// - production use, and
+// - redistribution.
+//
+// See https://github.com/cosmos/cosmos-sdk/blob/main/enterprise/group/LICENSE for full terms.
+// Copyright (c) 2026 Cosmos Labs US Inc.
+
+package v2_test
+
+import (
+	"encoding/binary"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
+	v3 "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/migrations/v2"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+)
+
+func TestMigrateGenState(t *testing.T) {
+	tests := []struct {
+		name     string
+		oldState *authtypes.GenesisState
+		newState *authtypes.GenesisState
+	}{
+		{
+			name: "group policy accounts are replaced by base accounts",
+			oldState: authtypes.NewGenesisState(authtypes.DefaultParams(), authtypes.GenesisAccounts{
+				&authtypes.ModuleAccount{
+					BaseAccount: &authtypes.BaseAccount{
+						Address:       "cosmos1jv65s3grqf6v6jl3dp4t6c9t9rk99cd88lyufl",
+						AccountNumber: 3,
+					},
+					Name:        "distribution",
+					Permissions: []string{},
+				},
+				&authtypes.ModuleAccount{
+					BaseAccount: &authtypes.BaseAccount{
+						Address:       "cosmos1q32tjg5qm3n9fj8wjgpd7gl98prefntrckjkyvh8tntp7q33zj0s5tkjrk",
+						AccountNumber: 8,
+					},
+					Name:        "cosmos1q32tjg5qm3n9fj8wjgpd7gl98prefntrckjkyvh8tntp7q33zj0s5tkjrk",
+					Permissions: []string{},
+				},
+			}),
+			newState: authtypes.NewGenesisState(authtypes.DefaultParams(), authtypes.GenesisAccounts{
+				&authtypes.ModuleAccount{
+					BaseAccount: &authtypes.BaseAccount{
+						Address:       "cosmos1jv65s3grqf6v6jl3dp4t6c9t9rk99cd88lyufl",
+						AccountNumber: 3,
+					},
+					Name:        "distribution",
+					Permissions: []string{},
+				},
+				func() *authtypes.BaseAccount {
+					baseAccount := &authtypes.BaseAccount{
+						Address:       "cosmos1q32tjg5qm3n9fj8wjgpd7gl98prefntrckjkyvh8tntp7q33zj0s5tkjrk",
+						AccountNumber: 8,
+					}
+
+					k := make([]byte, 8)
+					binary.BigEndian.PutUint64(k, 0)
+					c, err := authtypes.NewModuleCredential(group.ModuleName, []byte{v3.GroupPolicyTablePrefix}, k)
+					if err != nil {
+						panic(err)
+					}
+					err = baseAccount.SetPubKey(c)
+					if err != nil {
+						panic(err)
+					}
+
+					return baseAccount
+				}(),
+			},
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Error(t, authtypes.ValidateGenesis(*tc.oldState))
+			actualState := v3.MigrateGenState(tc.oldState)
+			require.Equal(t, tc.newState, actualState)
+			require.NoError(t, authtypes.ValidateGenesis(*actualState))
+		})
+	}
+}

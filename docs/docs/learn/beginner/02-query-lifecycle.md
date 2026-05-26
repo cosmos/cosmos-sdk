@@ -96,21 +96,21 @@ At this point in the lifecycle, the user has created a CLI command with all of t
 
 In our case (querying an address's delegations), `MyQuery` contains an [address](./03-accounts.md#addresses) `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it is ultimately relayed to a consensus engine (e.g. CometBFT) of a full-node that has no inherent knowledge of the application types. Thus, the `codec` of `client.Context` is used to marshal the address.
 
-Here is what the code looks like for the CLI command:
+Here is what the Protobuf definition for this query looks like:
 
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/staking/client/cli/query.go#L315-L318
+```protobuf reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/staking/v1beta1/query.proto#L240-L251
 ```
 
 #### gRPC Query Client Creation
 
-The Cosmos SDK leverages code generated from Protobuf services to make queries. The `staking` module's `MyQuery` service generates a `queryClient`, which the CLI uses to make queries. Here is the relevant code:
+The Cosmos SDK leverages code generated from Protobuf services to make queries. The `staking` module's query service generates a `QueryClient`, and the CLI uses AutoCLI configuration to expose it as the `simd query staking delegations` command. The mapping between the CLI command and the underlying RPC method is defined in the module's AutoCLI options:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/staking/client/cli/query.go#L308-L343
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/staking/autocli.go#L13-L81
 ```
 
-Under the hood, the `client.Context` has a `Query()` function used to retrieve the pre-configured node and relay a query to it; the function takes the query fully-qualified service method name as path (in our case: `/cosmos.staking.v1beta1.Query/Delegations`), and arguments as parameters. It first retrieves the RPC Client (called the [**node**](../advanced/03-node.md)) configured by the user to relay this query to, and creates the `ABCIQueryOptions` (parameters formatted for the ABCI call). The node is then used to make the ABCI call, `ABCIQueryWithOptions()`.
+Under the hood, the `client.Context` has a `Query()` function used to retrieve the pre-configured node and relay a query to it; the function takes the query fully-qualified service method name as path (in our case: `/cosmos.staking.v1beta1.Query/DelegatorDelegations`), and arguments as parameters. It first retrieves the RPC Client (called the [**node**](../advanced/03-node.md)) configured by the user to relay this query to, and creates the `ABCIQueryOptions` (parameters formatted for the ABCI call). The node is then used to make the ABCI call, `ABCIQueryWithOptions()`.
 
 Here is what the code looks like:
 
@@ -128,7 +128,7 @@ Read more about ABCI Clients and CometBFT RPC in the [CometBFT documentation](ht
 
 When a query is received by the full-node after it has been relayed from the underlying consensus engine, it is at that point being handled within an environment that understands application-specific types and has a copy of the state. [`baseapp`](../advanced/00-baseapp.md) implements the ABCI [`Query()`](../advanced/00-baseapp.md#query) function and handles gRPC queries. The query route is parsed, and it matches the fully-qualified service method name of an existing service method (most likely in one of the modules), then `baseapp` relays the request to the relevant module.
 
-Since `MyQuery` has a Protobuf fully-qualified service method name from the `staking` module (recall `/cosmos.staking.v1beta1.Query/Delegations`), `baseapp` first parses the path, then uses its own internal `GRPCQueryRouter` to retrieve the corresponding gRPC handler, and routes the query to the module. The gRPC handler is responsible for recognizing this query, retrieving the appropriate values from the application's stores, and returning a response. Read more about query services [here](../../build/building-modules/04-query-services.md).
+Since `MyQuery` has a Protobuf fully-qualified service method name from the `staking` module (recall `/cosmos.staking.v1beta1.Query/DelegatorDelegations`), `baseapp` first parses the path, then uses its own internal `GRPCQueryRouter` to retrieve the corresponding gRPC handler, and routes the query to the module. The gRPC handler is responsible for recognizing this query, retrieving the appropriate values from the application's stores, and returning a response. Read more about query services [here](../../build/building-modules/04-query-services.md).
 
 Once a result is received from the querier, `baseapp` begins the process of returning a response to the user.
 

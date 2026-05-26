@@ -10,7 +10,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	errorsmod "cosmossdk.io/errors"
-	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -24,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 // GetMultiSignCommand returns the multi-sign command
@@ -399,9 +399,9 @@ func readSignaturesFromFile(ctx client.Context, filename string) (sigs []signing
 	}
 
 	newString := strings.TrimSuffix(string(bz), "\n")
-	lines := strings.Split(newString, "\n")
+	lines := strings.SplitSeq(newString, "\n")
 
-	for _, bz := range lines {
+	for bz := range lines {
 		sig, err := ctx.TxConfig.UnmarshalSignatureJSON([]byte(bz))
 		if err != nil {
 			return nil, err

@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 // DefaultPage is the default `page` number for queries.
@@ -16,12 +16,9 @@ import (
 const DefaultPage = 1
 
 // DefaultLimit is the default `limit` for queries
-// if the `limit` is not supplied, paginate will use `DefaultLimit`
+// if the `limit` is not supplied or exceeds the maximum
+// allowed value, paginate will use `DefaultLimit`
 const DefaultLimit = 100
-
-// PaginationMaxLimit is the maximum limit the paginate function can handle
-// which equals the maximum value that can be stored in uint64
-var PaginationMaxLimit uint64 = math.MaxUint64
 
 // ParsePagination validates PageRequest and returns page number & limit.
 func ParsePagination(pageReq *PageRequest) (page, limit int, err error) {
@@ -89,6 +86,12 @@ func Paginate(
 	}
 
 	end := pageRequest.Offset + pageRequest.Limit
+	if end < pageRequest.Offset {
+		// Saturate to MaxUint64 when offset+limit overflows. Without this,
+		// a caller passing an absurdly large limit would wrap end back to a
+		// small number and the loop would return zero results.
+		end = math.MaxUint64
+	}
 
 	for ; iterator.Valid(); iterator.Next() {
 		count++

@@ -19,13 +19,13 @@ import (
 	"go.uber.org/mock/gomock"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -33,7 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -235,6 +234,22 @@ func (suite *KeeperTestSuite) mockValidateBalance(acc sdk.AccountI) {
 
 func (suite *KeeperTestSuite) mockSpendableCoins(ctx sdk.Context, acc sdk.AccountI) {
 	suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
+}
+
+func (suite *KeeperTestSuite) findTransferEventByRecipient(ctx sdk.Context, expectedRecipient string) abci.Event {
+	events := ctx.EventManager().ABCIEvents()
+	for _, event := range events {
+		if event.Type != banktypes.EventTypeTransfer {
+			continue
+		}
+		for _, attr := range event.Attributes {
+			if attr.Key == banktypes.AttributeKeyRecipient && attr.Value == expectedRecipient {
+				return event
+			}
+		}
+	}
+	suite.Require().Failf("transfer event with recipient %s not found", expectedRecipient)
+	return abci.Event{} // unreachable
 }
 
 func (suite *KeeperTestSuite) mockDelegateCoinsFromAccountToModule(acc *authtypes.BaseAccount, moduleAcc *authtypes.ModuleAccount) {
@@ -1298,6 +1313,236 @@ func (suite *KeeperTestSuite) TestSendCoinsWithRestrictions() {
 			suite.Assert().Equal(tc.expBals.to2.String(), to2Bal.String(), "toAddr2 balance")
 		})
 	}
+}
+
+// TestSendCoinsEventsWithRestrictions verifies that events contain the correct
+// updated address strings when send restrictions modify the recipient address.
+func (suite *KeeperTestSuite) TestSendCoinsEventsWithRestrictions() {
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	require := suite.Require()
+
+	balances := sdk.NewCoins(newFooCoin(1000), newBarCoin(500))
+	fromAddr := accAddrs[0]
+	fromAcc := authtypes.NewBaseAccountWithAddress(fromAddr)
+	originalToAddr := accAddrs[1]
+	updatedToAddr := accAddrs[2] // This is the address the restriction will change to
+
+	suite.mockFundAccount(accAddrs[0])
+	require.NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, accAddrs[0], balances))
+
+	// Create a restriction that changes the recipient address
+	restrictionNewTo := func(newToAddr sdk.AccAddress) banktypes.SendRestrictionFn {
+		return func(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+			return newToAddr, nil
+		}
+	}
+
+	existingSendRestrictionFn := suite.bankKeeper.GetSendRestrictionFn()
+	defer suite.bankKeeper.SetSendRestriction(existingSendRestrictionFn)
+	suite.bankKeeper.SetSendRestriction(restrictionNewTo(updatedToAddr))
+
+	amt := sdk.NewCoins(newFooCoin(50))
+	suite.mockSendCoins(suite.ctx, fromAcc, updatedToAddr)
+	require.NoError(suite.bankKeeper.SendCoins(suite.ctx, fromAddr, originalToAddr, amt))
+
+	addressCodec := suite.authKeeper.AddressCodec()
+	expectedToAddrString, err := addressCodec.BytesToString(updatedToAddr)
+	require.NoError(err)
+	expectedFromAddrString, err := addressCodec.BytesToString(fromAddr)
+	require.NoError(err)
+
+	transferEvent := suite.findTransferEventByRecipient(ctx, expectedToAddrString)
+	var recipientAddr string
+	var senderAddr string
+	for _, attr := range transferEvent.Attributes {
+		if attr.Key == banktypes.AttributeKeyRecipient {
+			recipientAddr = attr.Value
+		}
+		if attr.Key == banktypes.AttributeKeySender {
+			senderAddr = attr.Value
+		}
+	}
+	require.Equal(expectedToAddrString, recipientAddr, "recipient address in event should be the updated address")
+	require.Equal(expectedFromAddrString, senderAddr, "sender address in event should be correct")
+	require.NotEqual(originalToAddr.String(), recipientAddr, "recipient address should not be the original address")
+}
+
+// TestInputOutputCoinsEventsWithRestrictions verifies that events contain the correct
+// updated address strings when send restrictions modify recipient addresses in InputOutputCoins.
+func (suite *KeeperTestSuite) TestInputOutputCoinsEventsWithRestrictions() {
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	require := suite.Require()
+
+	balances := sdk.NewCoins(newFooCoin(1000), newBarCoin(500))
+	fromAddr := accAddrs[0]
+	fromAcc := authtypes.NewBaseAccountWithAddress(fromAddr)
+	originalToAddr1 := accAddrs[1]
+	originalToAddr2 := accAddrs[2]
+	updatedToAddr1 := accAddrs[3] // Restriction will change first output to this
+	updatedToAddr2 := accAddrs[4] // Restriction will change second output to this
+
+	suite.mockFundAccount(accAddrs[0])
+	require.NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, accAddrs[0], balances))
+
+	// Create a restriction that changes recipient addresses
+	restrictionNewTo := func(newToAddrs ...sdk.AccAddress) banktypes.SendRestrictionFn {
+		i := -1
+		return func(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+			i++
+			if i < len(newToAddrs) {
+				return newToAddrs[i], nil
+			}
+			return toAddr, nil
+		}
+	}
+
+	existingSendRestrictionFn := suite.bankKeeper.GetSendRestrictionFn()
+	defer suite.bankKeeper.SetSendRestriction(existingSendRestrictionFn)
+	suite.bankKeeper.SetSendRestriction(restrictionNewTo(updatedToAddr1, updatedToAddr2))
+
+	input := banktypes.Input{
+		Address: fromAddr.String(),
+		Coins:   sdk.NewCoins(newFooCoin(100)),
+	}
+	outputs := []banktypes.Output{
+		{Address: originalToAddr1.String(), Coins: sdk.NewCoins(newFooCoin(50))},
+		{Address: originalToAddr2.String(), Coins: sdk.NewCoins(newFooCoin(50))},
+	}
+
+	suite.mockInputOutputCoins([]sdk.AccountI{fromAcc}, []sdk.AccAddress{updatedToAddr1, updatedToAddr2})
+	require.NoError(suite.bankKeeper.InputOutputCoins(suite.ctx, input, outputs))
+
+	addressCodec := suite.authKeeper.AddressCodec()
+	expectedToAddr1String, err := addressCodec.BytesToString(updatedToAddr1)
+	require.NoError(err)
+	expectedToAddr2String, err := addressCodec.BytesToString(updatedToAddr2)
+	require.NoError(err)
+
+	transferEvent1 := suite.findTransferEventByRecipient(ctx, expectedToAddr1String)
+	transferEvent2 := suite.findTransferEventByRecipient(ctx, expectedToAddr2String)
+	for _, attr := range transferEvent1.Attributes {
+		if attr.Key == banktypes.AttributeKeyRecipient {
+			require.NotEqual(originalToAddr1.String(), attr.Value, "should not contain original address 1")
+			require.NotEqual(originalToAddr2.String(), attr.Value, "should not contain original address 2")
+		}
+	}
+	for _, attr := range transferEvent2.Attributes {
+		if attr.Key == banktypes.AttributeKeyRecipient {
+			require.NotEqual(originalToAddr1.String(), attr.Value, "should not contain original address 1")
+			require.NotEqual(originalToAddr2.String(), attr.Value, "should not contain original address 2")
+		}
+	}
+}
+
+// TestSendCoinsToVirtualEventsWithRestrictions verifies that events contain the correct
+// updated address strings when send restrictions modify the recipient address in SendCoinsToVirtual.
+func (suite *KeeperTestSuite) TestSendCoinsToVirtualEventsWithRestrictions() {
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	require := suite.Require()
+
+	balances := sdk.NewCoins(newFooCoin(1000), newBarCoin(500))
+	fromAddr := accAddrs[0]
+	fromAcc := authtypes.NewBaseAccountWithAddress(fromAddr)
+	originalToAddr := accAddrs[1]
+	updatedToAddr := accAddrs[2] // This is the address the restriction will change to
+
+	suite.mockFundAccount(accAddrs[0])
+	require.NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, accAddrs[0], balances))
+
+	// Create a restriction that changes the recipient address
+	restrictionNewTo := func(newToAddr sdk.AccAddress) banktypes.SendRestrictionFn {
+		return func(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+			return newToAddr, nil
+		}
+	}
+
+	existingSendRestrictionFn := suite.bankKeeper.GetSendRestrictionFn()
+	defer suite.bankKeeper.SetSendRestriction(existingSendRestrictionFn)
+	suite.bankKeeper.SetSendRestriction(restrictionNewTo(updatedToAddr))
+
+	amt := sdk.NewCoins(newFooCoin(50))
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, fromAcc.GetAddress()).Return(fromAcc)
+	require.NoError(suite.bankKeeper.SendCoinsToVirtual(suite.ctx, fromAddr, originalToAddr, amt))
+
+	addressCodec := suite.authKeeper.AddressCodec()
+	expectedToAddrString, err := addressCodec.BytesToString(updatedToAddr)
+	require.NoError(err)
+	expectedFromAddrString, err := addressCodec.BytesToString(fromAddr)
+	require.NoError(err)
+
+	transferEvent := suite.findTransferEventByRecipient(ctx, expectedToAddrString)
+	var recipientAddr string
+	var senderAddr string
+	for _, attr := range transferEvent.Attributes {
+		if attr.Key == banktypes.AttributeKeyRecipient {
+			recipientAddr = attr.Value
+		}
+		if attr.Key == banktypes.AttributeKeySender {
+			senderAddr = attr.Value
+		}
+	}
+	require.Equal(expectedToAddrString, recipientAddr, "recipient address in event should be the updated address")
+	require.Equal(expectedFromAddrString, senderAddr, "sender address in event should be correct")
+	require.NotEqual(originalToAddr.String(), recipientAddr, "recipient address should not be the original address")
+}
+
+// TestSendCoinsFromVirtualEventsWithRestrictions verifies that events contain the correct
+// updated address strings when send restrictions modify the recipient address in SendCoinsFromVirtual.
+func (suite *KeeperTestSuite) TestSendCoinsFromVirtualEventsWithRestrictions() {
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	require := suite.Require()
+
+	balances := sdk.NewCoins(newFooCoin(1000), newBarCoin(500))
+	fromAddr := accAddrs[0]
+	fromAcc := authtypes.NewBaseAccountWithAddress(fromAddr)
+	originalToAddr := accAddrs[1]
+	updatedToAddr := accAddrs[2] // This is the address the restriction will change to
+
+	suite.mockFundAccount(accAddrs[0])
+	require.NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, accAddrs[0], balances))
+
+	// First, send coins to virtual to set up the test
+	// Do this WITHOUT a restriction so virtual coins are stored under originalToAddr
+	amt := sdk.NewCoins(newFooCoin(50))
+	// SendCoinsToVirtual only needs GetAccount for the sender, not module account functions
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, fromAcc.GetAddress()).Return(fromAcc)
+	require.NoError(suite.bankKeeper.SendCoinsToVirtual(suite.ctx, fromAddr, originalToAddr, amt))
+
+	// Create a restriction that changes the recipient address
+	restrictionNewTo := func(newToAddr sdk.AccAddress) banktypes.SendRestrictionFn {
+		return func(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+			return newToAddr, nil
+		}
+	}
+
+	existingSendRestrictionFn := suite.bankKeeper.GetSendRestrictionFn()
+	defer suite.bankKeeper.SetSendRestriction(existingSendRestrictionFn)
+	suite.bankKeeper.SetSendRestriction(restrictionNewTo(updatedToAddr))
+
+	// SendCoinsToVirtual stored coins under originalToAddr, so we send from there
+	suite.authKeeper.EXPECT().HasAccount(suite.ctx, updatedToAddr).Return(true)
+	require.NoError(suite.bankKeeper.SendCoinsFromVirtual(suite.ctx, originalToAddr, originalToAddr, amt))
+
+	addressCodec := suite.authKeeper.AddressCodec()
+	expectedToAddrString, err := addressCodec.BytesToString(updatedToAddr)
+	require.NoError(err)
+	expectedFromAddrString, err := addressCodec.BytesToString(originalToAddr)
+	require.NoError(err)
+
+	transferEvent := suite.findTransferEventByRecipient(ctx, expectedToAddrString)
+	var recipientAddr string
+	var senderAddr string
+	for _, attr := range transferEvent.Attributes {
+		if attr.Key == banktypes.AttributeKeyRecipient {
+			recipientAddr = attr.Value
+		}
+		if attr.Key == banktypes.AttributeKeySender {
+			senderAddr = attr.Value
+		}
+	}
+	require.Equal(expectedToAddrString, recipientAddr, "recipient address in event should be the updated address")
+	require.Equal(expectedFromAddrString, senderAddr, "sender address in event should be correct")
+	require.NotEqual(originalToAddr.String(), recipientAddr, "recipient address should not be the original address")
 }
 
 func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
@@ -2719,68 +2964,6 @@ func copyAndSortCoins(coins sdk.Coins) sdk.Coins {
 	rv := make(sdk.Coins, len(coins))
 	copy(rv, coins)
 	return rv.Sort()
-}
-
-type mockSubspace struct {
-	ps banktypes.Params
-}
-
-func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
-	*ps.(*banktypes.Params) = ms.ps
-}
-
-func (ms mockSubspace) Get(ctx sdk.Context, key []byte, ptr any) {}
-
-func (suite *KeeperTestSuite) TestMigrator_Migrate3to4() {
-	bankKeeper := suite.bankKeeper
-	ctx := sdk.UnwrapSDKContext(suite.ctx)
-	require := suite.Require()
-
-	for _, def := range []bool{true, false} {
-		params := banktypes.Params{DefaultSendEnabled: def}
-		require.NoError(bankKeeper.SetParams(ctx, params))
-
-		suite.T().Run(fmt.Sprintf("default %t does not change", def), func(t *testing.T) {
-			legacySubspace := func(ps banktypes.Params) mockSubspace {
-				return mockSubspace{ps: ps}
-			}(banktypes.NewParams(def))
-
-			migrator := keeper.NewMigrator(bankKeeper, legacySubspace)
-			require.NoError(migrator.Migrate3to4(ctx))
-
-			actual := bankKeeper.GetParams(ctx)
-			require.Equal(params.DefaultSendEnabled, actual.DefaultSendEnabled)
-		})
-	}
-
-	for _, def := range []bool{true, false} {
-		params := banktypes.Params{
-			SendEnabled: []*banktypes.SendEnabled{
-				{Denom: fmt.Sprintf("truecoin%t", def), Enabled: true},
-				{Denom: fmt.Sprintf("falsecoin%t", def), Enabled: false},
-			},
-		}
-
-		require.NoError(bankKeeper.SetParams(ctx, params))
-
-		suite.T().Run(fmt.Sprintf("default %t send enabled info moved to store", def), func(t *testing.T) {
-			legacySubspace := func(ps banktypes.Params) mockSubspace {
-				return mockSubspace{ps: ps}
-			}(banktypes.NewParams(def))
-
-			migrator := keeper.NewMigrator(bankKeeper, legacySubspace)
-			require.NoError(migrator.Migrate3to4(ctx))
-
-			newParams := bankKeeper.GetParams(ctx)
-			require.Len(newParams.SendEnabled, 0) //nolint // just using this for testing when migrating legacy
-			require.Equal(def, newParams.DefaultSendEnabled)
-
-			for _, se := range params.SendEnabled {
-				actual := bankKeeper.IsSendEnabledDenom(ctx, se.Denom)
-				require.Equal(se.Enabled, actual, se.Denom)
-			}
-		})
-	}
 }
 
 func (suite *KeeperTestSuite) TestSetParams() {

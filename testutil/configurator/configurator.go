@@ -6,7 +6,6 @@ import (
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
-	circuitmodulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
@@ -14,18 +13,12 @@ import (
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
-	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
-	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
-	protocolpoolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
-
-	groupmodulev1 "github.com/cosmos/cosmos-sdk/contrib/api/group/module/v1"
-	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 // Config should never need to be instantiated manually and is solely used for ModuleOption.
@@ -39,9 +32,10 @@ type Config struct {
 }
 
 func defaultConfig() *Config {
-	return &Config{
+	cfg := &Config{
 		ModuleConfigs: make(map[string]*appv1alpha1.ModuleConfig),
 		PreBlockersOrder: []string{
+			"auth",
 			"upgrade",
 		},
 		BeginBlockersOrder: []string{
@@ -56,13 +50,10 @@ func defaultConfig() *Config {
 			"genutil",
 			"authz",
 			"feegrant",
-			"nft",
-			"group",
-			"params",
 			"consensus",
 			"vesting",
-			"circuit",
-			"protocolpool",
+			"nft",
+			"group",
 		},
 		EndBlockersOrder: []string{
 			"gov",
@@ -76,14 +67,11 @@ func defaultConfig() *Config {
 			"evidence",
 			"authz",
 			"feegrant",
-			"nft",
-			"group",
-			"params",
 			"consensus",
 			"upgrade",
 			"vesting",
-			"circuit",
-			"protocolpool",
+			"nft",
+			"group",
 		},
 		InitGenesisOrder: []string{
 			"auth",
@@ -97,17 +85,16 @@ func defaultConfig() *Config {
 			"evidence",
 			"authz",
 			"feegrant",
-			"nft",
-			"group",
-			"params",
 			"consensus",
 			"upgrade",
 			"vesting",
-			"circuit",
-			"protocolpool",
+			"nft",
+			"group",
 		},
 		setInitGenesis: true,
 	}
+
+	return cfg
 }
 
 type ModuleOption func(config *Config)
@@ -159,19 +146,8 @@ func AuthModule() ModuleOption {
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
 					{Account: "gov", Permissions: []string{"burner"}},
 					{Account: "nft"},
-					{Account: protocolpooltypes.ModuleName},
-					{Account: protocolpooltypes.ProtocolPoolEscrowAccount},
 				},
 			}),
-		}
-	}
-}
-
-func ParamsModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs["params"] = &appv1alpha1.ModuleConfig{
-			Name:   "params",
-			Config: appconfig.WrapAny(&paramsmodulev1.Module{}),
 		}
 	}
 }
@@ -286,42 +262,6 @@ func AuthzModule() ModuleOption {
 		config.ModuleConfigs["authz"] = &appv1alpha1.ModuleConfig{
 			Name:   "authz",
 			Config: appconfig.WrapAny(&authzmodulev1.Module{}),
-		}
-	}
-}
-
-func GroupModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs["group"] = &appv1alpha1.ModuleConfig{
-			Name:   "group",
-			Config: appconfig.WrapAny(&groupmodulev1.Module{}),
-		}
-	}
-}
-
-func NFTModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs["nft"] = &appv1alpha1.ModuleConfig{
-			Name:   "nft",
-			Config: appconfig.WrapAny(&nftmodulev1.Module{}),
-		}
-	}
-}
-
-func CircuitModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs["circuit"] = &appv1alpha1.ModuleConfig{
-			Name:   "circuit",
-			Config: appconfig.WrapAny(&circuitmodulev1.Module{}),
-		}
-	}
-}
-
-func ProtocolPoolModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs[protocolpooltypes.ModuleName] = &appv1alpha1.ModuleConfig{
-			Name:   protocolpooltypes.ModuleName,
-			Config: appconfig.WrapAny(&protocolpoolmodulev1.Module{}),
 		}
 	}
 }

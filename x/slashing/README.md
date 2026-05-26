@@ -562,7 +562,7 @@ slash_fraction_downtime: "0.010000000000000000"
 The `signing-info` command allows users to query signing-info of the validator using consensus public key.
 
 ```shell
-simd query slashing signing-infos [flags]
+simd query slashing signing-info [validator-conspub/address] [flags]
 ```
 
 Example:

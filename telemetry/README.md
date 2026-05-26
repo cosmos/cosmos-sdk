@@ -7,6 +7,7 @@ start the [Grafana LGTM docker image](https://hub.docker.com/r/grafana/otel-lgtm
 ```shell
 docker run -p 3000:3000 -p 4317:4317 -p 4318:4318 --rm -ti grafana/otel-lgtm
 ```
+
 ## Environment Variable
 
 Using the environment variable method will instantiate the OpenTelemetry SDK before global meters and spans. 
@@ -55,9 +56,14 @@ logger_provider:
             endpoint: http://localhost:4317
 
 
-cosmos_extra:
-  instrument_host: true
-  instrument_runtime: true
+extensions:
+  instruments:
+    host: {} # enable optional host instrumentation with go.opentelemetry.io/contrib/instrumentation/host
+    runtime: {} # enable optional runtime instrumentation with go.opentelemetry.io/contrib/instrumentation/runtime
+    diskio: {} # enable optional disk I/O instrumentation using gopsutil
+    # diskio with options:
+    # diskio:
+    #   disable_virtual_device_filter: true  # include virtual devices (loopback, RAID, partitions) on Linux
   propagators:
     - tracecontext
 ```
@@ -65,8 +71,8 @@ cosmos_extra:
 For a full list of configurable options see: https://github.com/open-telemetry/opentelemetry-configuration/blob/main/examples/kitchen-sink.yaml.
 NOTE: the go implementation may not support all options, so check the go [otelconf](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) documentation carefully to see what is actually supported.
 
-3. set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of the configuration file:
-   `export OTEL_EXPERIMENTAL_CONFIG_FILE=path/to/config.yaml`
+3. set the `OTEL_CONFIG_FILE` environment variable to the path of the configuration file:
+   `export OTEL_CONFIG_FILE=path/to/config.yaml`
 4. start your application or tests
 5. view the data in Grafana LGTM at http://localhost:3000/. The Drilldown views are suggested for getting started.
 
@@ -84,7 +90,7 @@ While manual OpenTelemetry initialization is still supported, this package provi
 point of initialization such that end users can just use the official
 OpenTelemetry declarative configuration
 spec: https://opentelemetry.io/docs/languages/sdk-configuration/declarative-configuration/
-End users only need to set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of
+End users only need to set the `OTEL_CONFIG_FILE` environment variable to the path of
 an OpenTelemetry configuration file, or fill out the otel.yaml file in the node's config directory and that's it.
 All the documentation necessary is provided in the OpenTelemetry documentation.
 
@@ -95,7 +101,8 @@ Otherwise, ensure the otel.yaml file in the node's config directory is filled ou
 
 IMPORTANT: Make sure Shutdown() is called when the application is shutting down.
 
-Tests can use the TestingInit function at startup to accomplish this.
+
+Tests can use the TestingMain function at startup to accomplish this.
 
 If these steps are followed, developers can follow the official golang otel conventions
 of declaring package-level tracer and meter instances using otel.Tracer() and otel.Meter().

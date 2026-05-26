@@ -13,8 +13,9 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/x/tx/signing/aminojson"
-	"cosmossdk.io/x/tx/signing/testutil"
+
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/testutil"
 )
 
 func TestAminoJsonSignMode(t *testing.T) {

@@ -5,30 +5,49 @@ import (
 	"fmt"
 	"os"
 
-	"go.opentelemetry.io/contrib/instrumentation/host"
-	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/contrib/otelconf"
 	"go.opentelemetry.io/contrib/propagators/b3"
 	"go.opentelemetry.io/contrib/propagators/jaeger"
 	"go.opentelemetry.io/otel"
+	otellog "go.opentelemetry.io/otel/log"
 	logglobal "go.opentelemetry.io/otel/log/global"
 	lognoop "go.opentelemetry.io/otel/log/noop"
 	metricnoop "go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/propagation"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"go.yaml.in/yaml/v3"
+
+	// Register instruments via init()
+	"github.com/cosmos/cosmos-sdk/telemetry/registry"
+	_ "github.com/cosmos/cosmos-sdk/telemetry/util/diskio"
+	_ "github.com/cosmos/cosmos-sdk/telemetry/util/host"
+	_ "github.com/cosmos/cosmos-sdk/telemetry/util/runtime"
 )
 
 const (
 	OtelFileName = "otel.yaml"
 
-	otelConfigEnvVar = "OTEL_EXPERIMENTAL_CONFIG_FILE"
+	otelConfigEnvVar = "OTEL_CONFIG_FILE"
 )
 
 var (
 	openTelemetrySDK *otelconf.SDK
 	shutdownFuncs    []func(context.Context) error
 )
+
+// IsOtelLoggerEnabled reports whether the global OTel log pipeline has active exporters.
+// It returns false for the noop provider or any real provider with no log processors configured.
+func IsOtelLoggerEnabled() bool {
+	l := logglobal.GetLoggerProvider().Logger("")
+	// check if loggers are enabled at SeverityFatal4, which is the most severe level.
+	// If this returns false, it means either the provider is a noop or there are no processors configured to handle logs at any severity level.
+	// NOTE: there are some edge cases in the future where maybe a real logger
+	// could be filtering out our messages, based on logger name or event name
+	// but for now this filtering doesn't exist and this check should be sufficient
+	return l.Enabled(context.Background(), otellog.EnabledParameters{
+		Severity: otellog.SeverityFatal4,
+	})
+}
 
 func init() {
 	if otelFilePath := os.Getenv(otelConfigEnvVar); otelFilePath != "" {
@@ -45,14 +64,13 @@ func init() {
 // Note that a late initialization of the open telemetry SDK causes meters/tracers to utilize a delegate, which incurs
 // an atomic load.
 // In our benchmarks, we saw only a few nanoseconds incurred from this atomic operation.
-// If you wish to avoid this overhead entirely, you may set the OTEL_EXPERIMENTAL_CONFIG_FILE environment variable,'
+// If you wish to avoid this overhead entirely, you may set the OTEL_CONFIG_FILE environment variable,'
 // and the OpenTelemetry SDK will be instantiated via init.
 // This will eliminate the atomic operation overhead.
 func InitializeOpenTelemetry(filePath string) error {
 	if openTelemetrySDK != nil {
 		return nil
 	}
-	var err error
 
 	var opts []otelconf.ConfigurationOption
 
@@ -80,30 +98,27 @@ func InitializeOpenTelemetry(filePath string) error {
 
 	opts = append(opts, otelconf.WithOpenTelemetryConfiguration(*cfg))
 
-	// parse cosmos extra config
-	var extraCfg extraConfig
-	err = yaml.Unmarshal(bz, &extraCfg)
-	if err == nil {
-		if extraCfg.CosmosExtra != nil {
-			extra := *extraCfg.CosmosExtra
-			if extra.InstrumentHost {
-				fmt.Println("Initializing host instrumentation")
-				if err := host.Start(); err != nil {
-					return fmt.Errorf("failed to start host instrumentation: %w", err)
-				}
+	// parse extensions config (features not yet supported by otelconf)
+	var supplemental struct {
+		Extensions *ExtensionOptions `yaml:"extensions"`
+	}
+	if err := yaml.Unmarshal(bz, &supplemental); err == nil && supplemental.Extensions != nil {
+		extra := *supplemental.Extensions
+		for name, cfg := range extra.Instruments {
+			inst := registry.Get(name)
+			if inst == nil {
+				return fmt.Errorf("unknown instrument: %s", name)
 			}
-			if extra.InstrumentRuntime {
-				fmt.Println("Initializing runtime instrumentation")
-				if err := runtime.Start(); err != nil {
-					return fmt.Errorf("failed to start runtime instrumentation: %w", err)
-				}
+			fmt.Printf("Initializing %s instrumentation\n", name)
+			if err := inst.Start(cfg); err != nil {
+				return fmt.Errorf("failed to start %s instrumentation: %w", name, err)
 			}
+		}
 
-			// TODO: this code should be removed once propagation is properly supported by otelconf.
-			if len(extra.Propagators) > 0 {
-				propagator := initPropagator(extra.Propagators)
-				otel.SetTextMapPropagator(propagator)
-			}
+		// TODO: this code should be removed once propagation is properly supported by otelconf.
+		if len(extra.Propagators) > 0 {
+			propagator := initPropagator(extra.Propagators)
+			otel.SetTextMapPropagator(propagator)
 		}
 	}
 
@@ -116,7 +131,8 @@ func InitializeOpenTelemetry(filePath string) error {
 	// setup otel global providers
 	otel.SetTracerProvider(openTelemetrySDK.TracerProvider())
 	otel.SetMeterProvider(openTelemetrySDK.MeterProvider())
-	logglobal.SetLoggerProvider(openTelemetrySDK.LoggerProvider())
+	loggerProvider := openTelemetrySDK.LoggerProvider()
+	logglobal.SetLoggerProvider(loggerProvider)
 
 	return nil
 }
@@ -157,19 +173,16 @@ func setNoop() {
 	logglobal.SetLoggerProvider(lognoop.NewLoggerProvider())
 }
 
-type extraConfig struct {
-	CosmosExtra *cosmosExtra `json:"cosmos_extra" yaml:"cosmos_extra" mapstructure:"cosmos_extra"`
-}
-
-// cosmosExtra provides extensions to the OpenTelemetry declarative configuration.
-// These options allow features not yet supported by otelconf, such as writing traces/metrics/logs to local
-// files, enabling additional host/runtime instrumentation, and configuring custom propagators.
+// ExtensionOptions provides configuration for OpenTelemetry features not yet
+// supported by [otelconf], such as writing traces/metrics/logs to local files,
+// enabling additional host/runtime instrumentation, and configuring custom
+// propagators.
 //
-// When present in otel.yaml under the `cosmos_extra` key, these fields
+// When present in otel.yaml under the `extensions` key, these fields
 // augment/override portions of the OpenTelemetry SDK initialization.
 //
 // For an example configuration, see the README in this package.
-type cosmosExtra struct {
+type ExtensionOptions struct {
 	// TraceFile is an optional path to a file where spans should be exported
 	// using the stdouttrace exporter. If empty, no file-based trace export is
 	// configured.
@@ -189,13 +202,17 @@ type cosmosExtra struct {
 	// the stdoutlog exporter. If unset, log exporting to file is disabled.
 	LogsFile string `json:"logs_file" yaml:"logs_file" mapstructure:"logs_file"`
 
-	// InstrumentHost enables collection of host-level metrics such as CPU,
-	// memory, and network statistics using the otel host instrumentation.
-	InstrumentHost bool `json:"instrument_host" yaml:"instrument_host" mapstructure:"instrument_host"`
-
-	// InstrumentRuntime enables runtime instrumentation that reports Go runtime
-	// metrics such as GC activity, heap usage, and goroutine count.
-	InstrumentRuntime bool `json:"instrument_runtime" yaml:"instrument_runtime" mapstructure:"instrument_runtime"`
+	// Instruments is a map of instrument names to their optional configuration.
+	// Presence of a key enables the instrument. The value is an optional map of
+	// instrument-specific settings. See each instrument package for available options.
+	//
+	// Example:
+	//   instruments:
+	//     host: {}
+	//     runtime: {}
+	//     diskio:
+	//       disable_virtual_device_filter: true
+	Instruments map[string]map[string]any `json:"instruments" yaml:"instruments" mapstructure:"instruments"`
 
 	// Propagators configures additional or alternative TextMapPropagators
 	// (e.g. "tracecontext", "baggage", "b3", "b3multi", "jaeger").

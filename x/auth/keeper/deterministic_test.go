@@ -11,11 +11,11 @@ import (
 
 	"cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -122,6 +122,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 		accs := suite.createAndSetAccounts(t, 1)
 		req := &types.QueryAccountRequest{Address: accs[0].GetAddress().String()}
 		testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.Account, 0, true)
+
+		for _, acc := range accs {
+			suite.accountKeeper.RemoveAccount(suite.ctx, acc)
+		}
 	})
 
 	// Regression tests
@@ -183,6 +187,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 		accs := suite.createAndSetAccounts(t, 1)
 		req := &types.QueryAccountAddressByIDRequest{AccountId: accs[0].GetAccountNumber()}
 		testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.AccountAddressByID, 0, true)
+
+		for _, acc := range accs {
+			suite.accountKeeper.RemoveAccount(suite.ctx, acc)
+		}
 	})
 
 	// Regression test
@@ -229,6 +237,10 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
 
 		req := &types.QueryAccountInfoRequest{Address: accs[0].GetAddress().String()}
 		testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.AccountInfo, 0, true)
+
+		for _, acc := range accs {
+			suite.accountKeeper.RemoveAccount(suite.ctx, acc)
+		}
 	})
 
 	// Regression test
@@ -314,7 +326,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 
 	queryClient := suite.createAndReturnQueryClient(suite.accountKeeper)
 	req := &types.QueryModuleAccountsRequest{}
-	testdata.DeterministicIterations(suite.ctx, suite.T(), req, queryClient.ModuleAccounts, 8565, false)
+	testdata.DeterministicIterations(suite.ctx, suite.T(), req, queryClient.ModuleAccounts, 8709, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
@@ -361,5 +373,5 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 
 	queryClient := suite.createAndReturnQueryClient(suite.accountKeeper)
 	req := &types.QueryModuleAccountByNameRequest{Name: "mint"}
-	testdata.DeterministicIterations(suite.ctx, suite.T(), req, queryClient.ModuleAccountByName, 1372, false)
+	testdata.DeterministicIterations(suite.ctx, suite.T(), req, queryClient.ModuleAccountByName, 1399, false)
 }

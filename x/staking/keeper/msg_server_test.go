@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
@@ -339,7 +340,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				MinSelfDelegation: &newSelfDel,
 			},
 			expErr:    true,
-			expErrMsg: "validator does not exist",
+			expErrMsg: stakingtypes.ErrNoValidatorFound.Error(),
 		},
 		{
 			name: "change commission rate in <24hrs",
@@ -353,7 +354,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				MinSelfDelegation: &newSelfDel,
 			},
 			expErr:    true,
-			expErrMsg: "commission cannot be changed more than once in 24h",
+			expErrMsg: stakingtypes.ErrCommissionUpdateTime.Error(),
 		},
 		{
 			name: "minimum self delegation cannot decrease",
@@ -367,7 +368,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				MinSelfDelegation: &lowSelfDel,
 			},
 			expErr:    true,
-			expErrMsg: "minimum self delegation cannot be decrease",
+			expErrMsg: stakingtypes.ErrMinSelfDelegationDecreased.Error(),
 		},
 		{
 			name: "validator self-delegation must be greater than min self delegation",
@@ -381,7 +382,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				MinSelfDelegation: &highSelfDel,
 			},
 			expErr:    true,
-			expErrMsg: "validator's self delegation must be greater than their minimum self delegation",
+			expErrMsg: stakingtypes.ErrSelfDelegationBelowMinimum.Error(),
 		},
 		{
 			name: "valid msg",
@@ -995,6 +996,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		input     *stakingtypes.MsgUpdateParams
 		expErr    bool
 		expErrMsg string
+		setup     func()
 	}{
 		{
 			name: "valid params",
@@ -1003,6 +1005,9 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 				Params:    stakingtypes.DefaultParams(),
 			},
 			expErr: false,
+			setup: func() {
+				s.bankKeeper.EXPECT().GetSupply(gomock.Any(), stakingtypes.DefaultParams().BondDenom).Return(sdk.NewInt64Coin(stakingtypes.DefaultParams().BondDenom, 1000000))
+			},
 		},
 		{
 			name: "invalid authority",
@@ -1062,6 +1067,25 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			expErrMsg: "bond denom cannot be blank",
 		},
 		{
+			name: "invalid bond denom - zero supply",
+			input: &stakingtypes.MsgUpdateParams{
+				Authority: keeper.GetAuthority(),
+				Params: stakingtypes.Params{
+					MinCommissionRate: stakingtypes.DefaultMinCommissionRate,
+					UnbondingTime:     stakingtypes.DefaultUnbondingTime,
+					MaxValidators:     stakingtypes.DefaultMaxValidators,
+					MaxEntries:        stakingtypes.DefaultMaxEntries,
+					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
+					BondDenom:         "ghosttoken",
+				},
+			},
+			expErr:    true,
+			expErrMsg: "does not exist or has zero supply",
+			setup: func() {
+				s.bankKeeper.EXPECT().GetSupply(gomock.Any(), "ghosttoken").Return(sdk.NewInt64Coin("ghosttoken", 0))
+			},
+		},
+		{
 			name: "max validators must be positive",
 			input: &stakingtypes.MsgUpdateParams{
 				Authority: keeper.GetAuthority(),
@@ -1113,6 +1137,11 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
+			// Setup mocks if specified
+			if tc.setup != nil {
+				tc.setup()
+			}
+
 			_, err := msgServer.UpdateParams(ctx, tc.input)
 			if tc.expErr {
 				require.Error(err)
@@ -1122,4 +1151,51 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestUpdateParamsAuthority() {
+	ctx, keeper, msgServer := s.ctx, s.stakingKeeper, s.msgServer
+	require := s.Require()
+
+	keeperAuthority := keeper.GetAuthority()
+	overrideAuthority := sdk.AccAddress("override_authority___").String()
+	bondDenom := stakingtypes.DefaultParams().BondDenom
+
+	s.Run("fallback to keeper authority", func() {
+		s.bankKeeper.EXPECT().GetSupply(gomock.Any(), bondDenom).Return(sdk.NewCoin(bondDenom, math.NewInt(1000000))).AnyTimes()
+
+		_, err := msgServer.UpdateParams(ctx, &stakingtypes.MsgUpdateParams{
+			Authority: keeperAuthority,
+			Params:    stakingtypes.DefaultParams(),
+		})
+		require.NoError(err)
+
+		_, err = msgServer.UpdateParams(ctx, &stakingtypes.MsgUpdateParams{
+			Authority: overrideAuthority,
+			Params:    stakingtypes.DefaultParams(),
+		})
+		require.Error(err)
+		require.Contains(err.Error(), "invalid authority")
+	})
+
+	s.Run("consensus params authority takes precedence", func() {
+		ctxOverride := ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Authority: &cmtproto.AuthorityParams{Authority: overrideAuthority},
+		})
+
+		s.bankKeeper.EXPECT().GetSupply(gomock.Any(), bondDenom).Return(sdk.NewCoin(bondDenom, math.NewInt(1000000))).AnyTimes()
+
+		_, err := msgServer.UpdateParams(ctxOverride, &stakingtypes.MsgUpdateParams{
+			Authority: overrideAuthority,
+			Params:    stakingtypes.DefaultParams(),
+		})
+		require.NoError(err)
+
+		_, err = msgServer.UpdateParams(ctxOverride, &stakingtypes.MsgUpdateParams{
+			Authority: keeperAuthority,
+			Params:    stakingtypes.DefaultParams(),
+		})
+		require.Error(err)
+		require.Contains(err.Error(), "invalid authority")
+	})
 }

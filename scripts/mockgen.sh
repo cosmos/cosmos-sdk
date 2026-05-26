@@ -8,10 +8,9 @@ $mockgen_cmd -source=types/module/module.go -package mock -destination testutil/
 $mockgen_cmd -source=types/module/mock_appmodule_test.go -package mock -destination testutil/mock/types_mock_appmodule.go
 $mockgen_cmd -source=types/invariant.go -package mock -destination testutil/mock/types_invariant.go
 $mockgen_cmd -package mock -destination testutil/mock/grpc_server.go github.com/cosmos/gogoproto/grpc Server
-$mockgen_cmd -package mock -destination testutil/mock/logger.go cosmossdk.io/log Logger
+$mockgen_cmd -package mock -destination testutil/mock/logger.go cosmossdk.io/log/v2 Logger
 $mockgen_cmd -source=x/feegrant/expected_keepers.go -package testutil -destination x/feegrant/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/mint/types/expected_keepers.go -package testutil -destination x/mint/testutil/expected_keepers_mocks.go
-$mockgen_cmd -source=x/params/proposal_handler_test.go -package testutil -destination x/params/testutil/staking_keeper_mock.go
 $mockgen_cmd -source=x/auth/tx/config/expected_keepers.go -package testutil -destination x/auth/tx/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/auth/types/expected_keepers.go -package testutil -destination x/auth/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/auth/ante/expected_keepers.go -package testutil -destination x/auth/ante/testutil/expected_keepers_mocks.go
@@ -24,4 +23,3 @@ $mockgen_cmd -source=x/genutil/types/expected_keepers.go -package testutil -dest
 $mockgen_cmd -source=x/gov/testutil/expected_keepers.go -package testutil -destination x/gov/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/staking/types/expected_keepers.go -package testutil -destination x/staking/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/auth/vesting/types/expected_keepers.go -package testutil -destination x/auth/vesting/testutil/expected_keepers_mocks.go
-$mockgen_cmd -source=x/protocolpool/types/expected_keepers.go -package testutil -destination x/protocolpool/testutil/expected_keepers_mocks.go

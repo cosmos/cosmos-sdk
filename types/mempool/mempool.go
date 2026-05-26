@@ -26,12 +26,34 @@ type Mempool interface {
 
 // ExtMempool is an extension of Mempool interface introduced in v0.50
 // for not be breaking in a patch release.
-// In v0.52+, this interface will be merged into Mempool interface.
+// In v0.54+, this function is removed and RemoveWithReason is merged into Mempool interface.
 type ExtMempool interface {
 	Mempool
 
 	// SelectBy use callback to iterate over the mempool, it's thread-safe to use.
 	SelectBy(context.Context, [][]byte, func(sdk.Tx) bool)
+
+	// RemoveWithReason removes a transaction from the mempool with specific reason
+	// allowing the mempool to handle the removal differently.
+	RemoveWithReason(context.Context, sdk.Tx, RemoveReason) error
+}
+
+// RemovalCaller is the origin of the removal
+type RemovalCaller string
+
+// Various callers
+const (
+	CallerRunTxRecheck                 RemovalCaller = "run_tx.recheck"
+	CallerRunTxFinalize                RemovalCaller = "run_tx.finalize"
+	CallerPrepareProposalRemoveInvalid RemovalCaller = "prepare_proposal.remove_invalid"
+)
+
+// RemoveReason is the reason for removing a transaction from the mempool.
+type RemoveReason struct {
+	Caller RemovalCaller
+
+	// Error is an optional error that caused the removal.
+	Error error
 }
 
 // Iterator defines an app-side mempool iterator interface that is as minimal as
@@ -64,4 +86,14 @@ func SelectBy(ctx context.Context, mempool Mempool, txs [][]byte, callback func(
 	for iter != nil && callback(iter.Tx()) {
 		iter = iter.Next()
 	}
+}
+
+// RemoveWithReason is compatible with old interface to avoid breaking api.
+// In v0.54+, this function is removed and RemoveWithReason is merged into Mempool interface.
+func RemoveWithReason(ctx context.Context, mempool Mempool, tx sdk.Tx, reason RemoveReason) error {
+	if ext, ok := mempool.(ExtMempool); ok {
+		return ext.RemoveWithReason(ctx, tx, reason)
+	}
+
+	return mempool.Remove(tx)
 }

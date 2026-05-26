@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/tidwall/btree"
+	"github.com/cosmos/btree"
 
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 var _ types.Iterator = (*memIterator[[]byte])(nil)

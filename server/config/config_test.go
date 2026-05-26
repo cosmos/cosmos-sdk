@@ -382,6 +382,14 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 			},
 		},
 		{
+			name: "overlapping ranges",
+			setupViper: func(v *viper.Viper) {
+				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [0, 1000], "localhost:9092": [900, 1500]}`)
+			},
+			expectError: true,
+			errorMsg:    "overlaps with existing range",
+		},
+		{
 			name: "invalid array length (too few elements)",
 			setupViper: func(v *viper.Viper) {
 				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [100]}`)
@@ -437,5 +445,82 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestConfigTemplate_HistoricalGRPCAddressBlockRange(t *testing.T) {
+	tests := []struct {
+		name     string
+		config   map[BlockRange]string
+		expected string
+	}{
+		{
+			name:     "empty config",
+			config:   nil,
+			expected: `historical-grpc-address-block-range = "{}"`,
+		},
+		{
+			name: "single entry",
+			config: map[BlockRange]string{
+				{0, 1000}: "localhost:9091",
+			},
+			expected: `historical-grpc-address-block-range = "{\"localhost:9091\": [0, 1000]}"`,
+		},
+		{
+			name: "multiple entries",
+			config: map[BlockRange]string{
+				{0, 1000}:    "localhost:9091",
+				{1001, 2000}: "localhost:9092",
+				{2001, 3000}: "localhost:9093",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := DefaultConfig()
+			cfg.GRPC.HistoricalGRPCAddressBlockRange = tt.config
+
+			var buffer bytes.Buffer
+			err := configTemplate.Execute(&buffer, cfg)
+			require.NoError(t, err)
+
+			output := buffer.String()
+			if tt.expected != "" {
+				require.Contains(t, output, tt.expected)
+			}
+
+			v := viper.New()
+			v.SetConfigType("toml")
+			require.NoError(t, v.ReadConfig(&buffer))
+
+			parsedCfg, err := GetConfig(v)
+			require.NoError(t, err)
+
+			if tt.config == nil {
+				require.Empty(t, parsedCfg.GRPC.HistoricalGRPCAddressBlockRange)
+			} else {
+				require.Equal(t, len(tt.config), len(parsedCfg.GRPC.HistoricalGRPCAddressBlockRange))
+				for blockRange, address := range tt.config {
+					parsedAddr, exists := parsedCfg.GRPC.HistoricalGRPCAddressBlockRange[blockRange]
+					require.True(t, exists, "Block range %v should exist", blockRange)
+					require.Equal(t, address, parsedAddr)
+				}
+			}
+		})
+	}
+}
+
+func Test_rangesOverlap(t *testing.T) {
+	tests := []struct {
+		a, b   BlockRange
+		expect bool
+	}{
+		{BlockRange{0, 10}, BlockRange{11, 20}, false},
+		{BlockRange{0, 10}, BlockRange{5, 15}, true},
+		{BlockRange{0, 10}, BlockRange{10, 20}, true},
+	}
+	for _, tt := range tests {
+		require.Equal(t, tt.expect, rangesOverlap(tt.a, tt.b))
 	}
 }

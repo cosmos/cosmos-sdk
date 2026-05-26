@@ -3,17 +3,16 @@ package tx
 import (
 	"fmt"
 
-	txsigning "cosmossdk.io/x/tx/signing"
-	"cosmossdk.io/x/tx/signing/aminojson"
-	"cosmossdk.io/x/tx/signing/direct"
-	"cosmossdk.io/x/tx/signing/directaux"
-	"cosmossdk.io/x/tx/signing/textual"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/direct"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/directaux"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual"
 )
 
 type config struct {
@@ -188,17 +187,31 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 	var err error
 	if configOptions.SigningContext == nil {
 		if configOptions.SigningOptions == nil {
-			configOptions.SigningOptions, err = NewDefaultSigningOptions()
+			// Reuse the SigningContext from the codec's interface registry.
+			// This propagates SigningOptions (including CustomGetSigners) that
+			// were applied via NewInterfaceRegistryWithOptions; building a
+			// fresh context from NewDefaultSigningOptions would drop them. See
+			// https://github.com/cosmos/cosmos-sdk/issues/22200.
+			if ir := protoCodec.InterfaceRegistry(); ir != nil {
+				configOptions.SigningContext = ir.SigningContext()
+			} else {
+				configOptions.SigningOptions, err = NewDefaultSigningOptions()
+				if err != nil {
+					return nil, err
+				}
+				configOptions.SigningContext, err = txsigning.NewContext(*configOptions.SigningOptions)
+				if err != nil {
+					return nil, err
+				}
+			}
+		} else {
+			if configOptions.SigningOptions.FileResolver == nil {
+				configOptions.SigningOptions.FileResolver = protoCodec.InterfaceRegistry()
+			}
+			configOptions.SigningContext, err = txsigning.NewContext(*configOptions.SigningOptions)
 			if err != nil {
 				return nil, err
 			}
-		}
-		if configOptions.SigningOptions.FileResolver == nil {
-			configOptions.SigningOptions.FileResolver = protoCodec.InterfaceRegistry()
-		}
-		configOptions.SigningContext, err = txsigning.NewContext(*configOptions.SigningOptions)
-		if err != nil {
-			return nil, err
 		}
 	}
 	txConfig.signingContext = configOptions.SigningContext

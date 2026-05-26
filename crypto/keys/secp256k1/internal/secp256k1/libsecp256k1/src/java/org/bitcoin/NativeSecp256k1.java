@@ -79,7 +79,7 @@ public class NativeSecp256k1 {
      * libsecp256k1 Create an ECDSA signature.
      *
      * @param data Message hash, 32 bytes
-     * @param key Secret key, 32 bytes
+     * @param sec Secret key, 32 bytes
      *
      * Return values
      * @param sig byte array of signature

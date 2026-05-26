@@ -200,11 +200,13 @@ Developers can now build systems with:
 ```go
 func myCustomVotingFunction(
   ctx context.Context,
-  k Keeper,
+  k keeper.Keeper,
   proposal v1.Proposal,
-  validators map[string]v1.ValidatorGovInfo,
-) (totalVoterPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, err error) {
+) (totalVoterPower math.LegacyDec, totalValPower math.Int, results map[v1.VoteOption]math.LegacyDec, err error) {
   // ... tally logic
+  // totalVoterPower is the sum of voting power that actually voted
+  // totalValPower is the sum of all active validator power (for quorum calculation)
+  return totalVoterPower, totalValPower, results, nil
 }
 
 govKeeper := govkeeper.NewKeeper(
@@ -212,12 +214,11 @@ govKeeper := govkeeper.NewKeeper(
   runtime.NewKVStoreService(keys[govtypes.StoreKey]),
   app.AccountKeeper,
   app.BankKeeper,
-  app.StakingKeeper,
   app.DistrKeeper,
   app.MsgServiceRouter(),
   govConfig,
   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-  govkeeper.WithCustomCalculateVoteResultsAndVotingPowerFn(myCustomVotingFunction),
+  govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(app.StakingKeeper),
 )
 ```
 
@@ -432,10 +433,13 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.pr
 This type is used in a temp map when tallying
 
 ```go
-  type ValidatorGovInfo struct {
-    Minus     sdk.Dec
-    Vote      Vote
-  }
+type ValidatorGovInfo struct {
+    Address             sdk.ValAddress      // address of the validator operator
+    BondedTokens        math.Int            // Power of a Validator
+    DelegatorShares     math.LegacyDec      // Total outstanding delegator shares
+    DelegatorDeductions math.LegacyDec      // Delegator deductions from validator's delegators voting independently
+    Vote                WeightedVoteOptions // Vote of the validator
+}
 ```
 
 ## Stores
@@ -686,14 +690,18 @@ The governance module contains the following parameters:
 | voting_period                 | string (time ns) | "172800000000000" (17280s)              |
 | quorum                        | string (dec)     | "0.334000000000000000"                  |
 | threshold                     | string (dec)     | "0.500000000000000000"                  |
-| veto                          | string (dec)     | "0.334000000000000000"                  |
-| expedited_threshold           | string (time ns) | "0.667000000000000000"                  |
-| expedited_voting_period       | string (time ns) | "86400000000000" (8600s)                |
+| veto_threshold                | string (dec)     | "0.334000000000000000"                  |
+| min_initial_deposit_ratio     | string (dec)     | "0.000000000000000000"                  |
+| proposal_cancel_ratio         | string (dec)     | "0.500000000000000000"                  |
+| proposal_cancel_dest          | string           | "" (empty = burn)                       |
+| expedited_voting_period       | string (time ns) | "86400000000000" (86400s)               |
+| expedited_threshold           | string (dec)     | "0.667000000000000000"                  |
 | expedited_min_deposit         | array (coins)    | [{"denom":"uatom","amount":"50000000"}] |
-| burn_proposal_deposit_prevote | bool             | false                                    |
 | burn_vote_quorum              | bool             | false                                   |
+| burn_proposal_deposit_prevote | bool             | false                                   |
 | burn_vote_veto                | bool             | true                                    |
-| min_initial_deposit_ratio                | string             | "0.1"                                    |
+| min_deposit_ratio             | string (dec)     | "0.010000000000000000"                  |
+
 
 
 **NOTE**: The governance module contains parameters that are objects unlike other
@@ -764,26 +772,6 @@ deposits:
 pagination:
   next_key: null
   total: "0"
-```
-
-##### param
-
-The `param` command allows users to query a given parameter for the `gov` module.
-
-```bash
-simd query gov param [param-type] [flags]
-```
-
-Example:
-
-```bash
-simd query gov param voting
-```
-
-Example Output:
-
-```bash
-voting_period: "172800000000000"
 ```
 
 ##### params
@@ -2532,7 +2520,7 @@ The gov module has two locations for metadata where users can provide further co
 
 ### Proposal
 
-Location: off-chain as json object stored on IPFS (mirrors [group proposal](../../contrib/x/group/README.md#metadata))
+Location: off-chain as json object stored on IPFS (mirrors [group proposal](../../enterprise/group/README.md#metadata))
 
 ```json
 {
@@ -2552,7 +2540,7 @@ In v0.46, the `authors` field is a comma-separated string. Frontends are encoura
 
 ### Vote
 
-Location: on-chain as json within 255 character limit (mirrors [group vote](../../contrib/x/group/README.md#metadata))
+Location: on-chain as json within 255 character limit (mirrors [group vote](../../enterprise/group/README.md#metadata))
 
 ```json
 {

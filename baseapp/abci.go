@@ -12,19 +12,20 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	otelattr "go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
 	coreheader "cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/store/rootmulti"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -394,6 +395,22 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 	return app.abciHandlers.CheckTxHandler(runTx, req)
 }
 
+// InsertTx inserts a tx into the applications mempool.
+func (app *BaseApp) InsertTx(req *abci.RequestInsertTx) (*abci.ResponseInsertTx, error) {
+	if app.abciHandlers.InsertTxHandler == nil {
+		return nil, errors.New("InsertTx handler not set")
+	}
+	return app.abciHandlers.InsertTxHandler(req)
+}
+
+// ReapTxs returns new valid txs from the applications mempool.
+func (app *BaseApp) ReapTxs(req *abci.RequestReapTxs) (*abci.ResponseReapTxs, error) {
+	if app.abciHandlers.ReapTxsHandler == nil {
+		return nil, errors.New("ReapTxs handler not set")
+	}
+	return app.abciHandlers.ReapTxsHandler(req)
+}
+
 // PrepareProposal implements the PrepareProposal ABCI method and returns a
 // ResponsePrepareProposal object to the client. The PrepareProposal method is
 // responsible for allowing the block proposer to perform application-dependent
@@ -484,7 +501,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 	defer span.End()
 	resp, err = app.abciHandlers.PrepareProposalHandler(ctx, req)
 	if err != nil {
-		app.logger.Error("failed to prepare proposal", "height", req.Height, "time", req.Time, "err", err)
+		app.logger.ErrorContext(ctx, "failed to prepare proposal", "height", req.Height, "time", req.Time, "err", err)
 		return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
 	}
 
@@ -667,7 +684,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	// add a deferred recover handler in case extendVote panics
 	defer func() {
 		if r := recover(); r != nil {
-			app.logger.Error(
+			app.logger.ErrorContext(ctx,
 				"panic recovered in ExtendVote",
 				"height", req.Height,
 				"hash", fmt.Sprintf("%X", req.Hash),
@@ -679,7 +696,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 
 	resp, err = app.abciHandlers.ExtendVoteHandler(ctx, req)
 	if err != nil {
-		app.logger.Error("failed to extend vote", "height", req.Height, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
+		app.logger.ErrorContext(ctx, "failed to extend vote", "height", req.Height, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abci.ResponseExtendVote{VoteExtension: []byte{}}, nil
 	}
 
@@ -727,7 +744,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	// add a deferred recover handler in case verifyVoteExt panics
 	defer func() {
 		if r := recover(); r != nil {
-			app.logger.Error(
+			app.logger.ErrorContext(ctx,
 				"panic recovered in VerifyVoteExtension",
 				"height", req.Height,
 				"hash", fmt.Sprintf("%X", req.Hash),
@@ -752,7 +769,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 
 	resp, err = app.abciHandlers.VerifyVoteExtensionHandler(ctx, req)
 	if err != nil {
-		app.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
+		app.logger.ErrorContext(ctx, "failed to verify vote extension", "height", req.Height, "err", err)
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 
@@ -764,6 +781,9 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 // only used to handle early cancellation, for anything related to state app.stateManager.GetState(execModeFinalize).Context()
 // must be used.
 func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	start := time.Now()
+	defer measureSince(goCtx, func() metric.Int64Histogram { return inst.InternalFinalizeTime }, start)
+
 	var events []abci.Event
 
 	if err := app.checkHalt(req.Height, req.Time); err != nil {
@@ -774,12 +794,10 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		return nil, err
 	}
 
-	if app.cms.TracingEnabled() {
-		app.cms.SetTracingContext(storetypes.TraceContext(
-			map[string]any{"blockHeight": req.Height},
-		))
-	}
-
+	// NOTE: Header populated here is intentionally partial; it omits Version, LastBlockID,
+	// LastCommitHash, DataHash, ValidatorsHash, ConsensusHash, LastResultsHash, and EvidenceHash.
+	// As a result, the HistoricalInfo headers stored by x/staking are unreliable and cannot reproduce
+	// the correct Header hash. Please use req.Hash instead.
 	header := cmtproto.Header{
 		ChainID:            app.chainID,
 		Height:             req.Height,
@@ -792,11 +810,13 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	// finalizeBlockState should be set on InitChain or ProcessProposal. If it is
 	// nil, it means we are replaying this block and we need to set the state here
 	// given that during block replay ProcessProposal is not executed by CometBFT.
+	gfsStart := time.Now()
 	finalizeState := app.stateManager.GetState(execModeFinalize)
 	if finalizeState == nil {
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 		finalizeState = app.stateManager.GetState(execModeFinalize)
 	}
+	measureSince(goCtx, func() metric.Int64Histogram { return inst.GetFinalizeStateTime }, gfsStart)
 	ctx := finalizeState.Context().WithContext(goCtx)
 	ctx, span := ctx.StartSpan(tracer, "internalFinalizeBlock")
 	defer span.End()
@@ -832,14 +852,18 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 			WithHeaderHash(req.Hash))
 	}
 
+	pbStart := time.Now()
 	preblockEvents, err := app.preBlock(req)
+	measureSince(ctx, func() metric.Int64Histogram { return inst.PreBlockTime }, pbStart)
 	if err != nil {
 		return nil, err
 	}
 
 	events = append(events, preblockEvents...)
 
+	bbStart := time.Now()
 	beginBlock, err := app.beginBlock(req)
+	measureSince(ctx, func() metric.Int64Histogram { return inst.BeginBlockTime }, bbStart)
 	if err != nil {
 		return nil, err
 	}
@@ -867,14 +891,12 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	//
 	// NOTE: Not all raw transactions may adhere to the sdk.Tx interface, e.g.
 	// vote extensions, so skip those.
+	eweStart := time.Now()
 	txResults, err := app.executeTxsWithExecutor(ctx, finalizeState.MultiStore, req.Txs)
+	measureSince(ctx, func() metric.Int64Histogram { return inst.ExecuteWithExecutorTime }, eweStart)
 	if err != nil {
 		// usually due to canceled
 		return nil, err
-	}
-
-	if finalizeState.MultiStore.TracingEnabled() {
-		finalizeState.MultiStore = finalizeState.MultiStore.SetTracingContext(nil).(storetypes.CacheMultiStore)
 	}
 
 	var (
@@ -896,7 +918,9 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 			WithBlockGasUsed(blockGasUsed).
 			WithBlockGasWanted(blockGasWanted),
 	)
+	ebStart := time.Now()
 	endBlock, err := app.endBlock()
+	measureSince(ctx, func() metric.Int64Histogram { return inst.EndBlockTime }, ebStart)
 	if err != nil {
 		return nil, err
 	}
@@ -941,7 +965,13 @@ func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, ms storetypes.Mu
 // extensions into the proposal, which should not themselves be executed in cases
 // where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.ResponseFinalizeBlock, err error) {
+	fbStart := time.Now()
 	defer func() {
+		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.FinalizeBlockTime }, fbStart)
+	}()
+
+	defer func() {
+		slStart := time.Now()
 		if res == nil {
 			return
 		}
@@ -951,18 +981,30 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 				app.logger.Error("ListenFinalizeBlock listening hook failed", "height", req.Height, "err", err)
 			}
 		}
+		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.StreamingListenerTime }, slStart)
 	}()
 
 	if app.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
+		ainStart := time.Now()
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
+		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.OEAbortIfNeededTime }, ainStart)
+		if aborted {
+			if inst != nil {
+				inst.OEAborted.Add(app.metricsCtx(), 1)
+			}
+		}
 		// Wait for the OE to finish, regardless of whether it was aborted or not
+		oeStart := time.Now()
 		res, err = app.optimisticExec.WaitResult()
+		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.OETime }, oeStart)
 
 		// only return if we are not aborting
 		if !aborted {
 			if res != nil {
+				whStart := time.Now()
 				res.AppHash = app.workingHash()
+				measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.WorkingHashTime }, whStart)
 			}
 
 			return res, err
@@ -974,9 +1016,13 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	}
 
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
+	nonOEStart := time.Now()
 	res, err = app.internalFinalizeBlock(context.Background(), req)
+	measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.NonOEInternalFinalize }, nonOEStart)
 	if res != nil {
+		whStart := time.Now()
 		res.AppHash = app.workingHash()
+		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.WorkingHashTime }, whStart)
 	}
 
 	return res, err
@@ -1039,7 +1085,7 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 
 		for _, abciListener := range abciListeners {
 			if err := abciListener.ListenCommit(ctx, *resp, changeSet); err != nil {
-				app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
+				app.logger.ErrorContext(ctx, "Commit listening hook failed", "height", blockHeight, "err", err)
 			}
 		}
 	}
@@ -1059,7 +1105,9 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	// The SnapshotIfApplicable method will create the snapshot by starting the goroutine
 	app.snapshotManager.SnapshotIfApplicable(header.Height)
 
-	blockCounter.Add(ctx, 1)
+	if inst != nil {
+		inst.BlockCount.Add(ctx, 1)
+	}
 
 	return resp, nil
 }
@@ -1297,7 +1345,7 @@ func (bapp *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, chec
 	// use custom query multi-store if provided
 	qms := bapp.qms
 	if qms == nil {
-		qms = bapp.cms.(storetypes.MultiStore)
+		qms = bapp.cms
 	}
 
 	lastBlockHeight := qms.LatestVersion()

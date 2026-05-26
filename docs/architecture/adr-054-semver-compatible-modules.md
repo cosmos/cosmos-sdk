@@ -300,7 +300,7 @@ Currently, two generated structs for the same protobuf type cannot exist in the 
 build flags (see https://developers.google.com/protocol-buffers/docs/reference/go/faq#fix-namespace-conflict).
 A relatively simple mitigation to this issue would be to set up the protobuf code to not register protobuf types
 globally if they are generated in an `internal/` package. This will require modules to register their types manually
-with the app-level level protobuf registry, this is similar to what modules already do with the `InterfaceRegistry`
+with the app-level protobuf registry, this is similar to what modules already do with the `InterfaceRegistry`
 and amino codec.
 
 If modules _only_ do ADR 033 message passing then a naive and non-performant solution for

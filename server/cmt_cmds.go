@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -381,7 +381,7 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 					return err
 				}
 
-				app := appCreator(logger, db, nil, serverCtx.Viper)
+				app := appCreator(logger, db, serverCtx.Viper)
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
 

@@ -290,7 +290,7 @@ func convertDERtoBER(signatureDER []byte) ([]byte, error) {
 	sModNScalar.SetByteSlice(s.Bytes())
 	// based on https://github.com/tendermint/btcd/blob/ec996c5/btcec/signature.go#L33-L50
 	if sModNScalar.IsOverHalfOrder() {
-		s = new(big.Int).Sub(secp.S256().N, s)
+		s = new(big.Int).Sub(secp.S256().N, s) //nolint:staticcheck // TODO: migrate off deprecated elliptic.Curve (SA1019)
 	}
 
 	sigBytes := make([]byte, 64)

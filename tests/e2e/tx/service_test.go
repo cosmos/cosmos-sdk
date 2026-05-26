@@ -710,6 +710,7 @@ func (s *E2ETestSuite) TestGetBlockWithTxs_GRPC() {
 		{"with pagination request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 1}}, false, "", 1},
 		{"page all request", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, "", 1},
 		{"block with 0 tx", &tx.GetBlockWithTxsRequest{Height: s.txHeight - 1, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, "", 0},
+		{"query limit with large value", &tx.GetBlockWithTxsRequest{Height: s.txHeight, Pagination: &query.PageRequest{Offset: 0, Limit: 50000000}}, false, "", 1},
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
@@ -730,6 +731,21 @@ func (s *E2ETestSuite) TestGetBlockWithTxs_GRPC() {
 			}
 		})
 	}
+}
+
+func (s *E2ETestSuite) TestGetBlockWithTxs_LimitCappedToBlockTxCount() {
+	// When the requested limit exceeds the number of txs in the block,
+	// the response should contain exactly the block's tx count, not be
+	// capped at query.DefaultLimit.
+	grpcRes, err := s.queryClient.GetBlockWithTxs(context.Background(), &tx.GetBlockWithTxsRequest{
+		Height:     s.txHeight,
+		Pagination: &query.PageRequest{Offset: 0, Limit: 50_000_000},
+	})
+	s.Require().NoError(err)
+	// The block has 2 txs; the limit should be capped to the block's tx count
+	// rather than query.DefaultLimit.
+	s.Require().Len(grpcRes.Txs, 2)
+	s.Require().Equal(uint64(2), grpcRes.Pagination.Total)
 }
 
 func (s *E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {

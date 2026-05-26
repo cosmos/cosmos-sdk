@@ -11,7 +11,8 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	govv1 "cosmossdk.io/api/cosmos/gov/v1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/x/tx/internal/testpb"
+
+	"github.com/cosmos/cosmos-sdk/x/tx/internal/testpb"
 )
 
 var deeplyNestedRepeatedSigner = &testpb.DeeplyNestedRepeatedSigner{

@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/x/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 var (
@@ -183,7 +183,7 @@ func (registry *interfaceRegistry) RegisterInterface(protoName string, iface any
 //
 // Returns an error if not, and nil if so.
 func (registry *interfaceRegistry) EnsureRegistered(impl any) error {
-	if reflect.ValueOf(impl).Kind() != reflect.Ptr {
+	if reflect.ValueOf(impl).Kind() != reflect.Pointer {
 		return fmt.Errorf("%T is not a pointer", impl)
 	}
 
@@ -336,7 +336,7 @@ func (r *statefulUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	r.maxCalls.count--
 
 	rv := reflect.ValueOf(iface)
-	if rv.Kind() != reflect.Ptr {
+	if rv.Kind() != reflect.Pointer {
 		return errors.New("UnpackAny expects a pointer")
 	}
 

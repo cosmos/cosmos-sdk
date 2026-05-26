@@ -12,6 +12,7 @@ The following fuzz tests are available:
 
 - **Crypto HD**: `FuzzCryptoHDNewParamsFromPath`, `FuzzCryptoHDDerivePrivateKeyForPath`
 - **Types**: `FuzzTypesParseTimeBytes`, `FuzzTypesParseDecCoin`, `FuzzTypesParseCoin`, `FuzzTypesVerifyAddressFormat`, `FuzzTypesDecSetString`
+- **Group (enterprise)**: `FuzzNewDecFromString`, `FuzzNewPositiveDecFromString`, `FuzzNewNonNegativeDecFromString`, `FuzzTallyResultGetCounts`, `FuzzTallyResultTotalCounts`, `FuzzVoteOptionFromString` (in `enterprise/group`)
 - **Tendermint**: `FuzzTendermintAminoDecodeTime`
 - **Crypto Types**: `FuzzCryptoTypesCompactBitArrayMarshalUnmarshal`
 - **Unknown Proto**: `FuzzUnknownProto`

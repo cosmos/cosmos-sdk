@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -18,7 +17,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -156,7 +155,6 @@ func (e *mockExporter) SetDefaultExportApp() {
 func (e *mockExporter) Export(
 	logger log.Logger,
 	db dbm.DB,
-	traceWriter io.Writer,
 	height int64,
 	forZeroHeight bool,
 	jailAllowedAddrs []string,

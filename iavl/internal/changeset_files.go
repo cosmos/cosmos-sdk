@@ -48,8 +48,10 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*Ch
 	}
 	dir := filepath.Join(treeDir, dirName)
 
-	err = os.MkdirAll(dir, 0o755)
-	if err != nil {
+	if err := os.Mkdir(dir, 0o755); err != nil {
+		if errors.Is(err, os.ErrExist) {
+			return nil, fmt.Errorf("changeset dir %s already exists; remove it before creating a new changeset", dir)
+		}
 		return nil, fmt.Errorf("failed to create changeset dir: %w", err)
 	}
 

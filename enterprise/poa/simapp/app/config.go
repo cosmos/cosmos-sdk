@@ -48,7 +48,7 @@ func DefaultPoAConfig() PoAConfig {
 		EnabledSignModes:          append(slices.Clone(authtx.DefaultSignModes), sigtypes.SignMode_SIGN_MODE_TEXTUAL),
 		ModuleAccountPermissions: map[string][]string{
 			authtypes.FeeCollectorName: nil,
-			govtypes.ModuleName:        {authtypes.Burner, authtypes.Staking},
+			govtypes.ModuleName:        {authtypes.Burner},
 			poatypes.ModuleName:        nil,
 		},
 	}

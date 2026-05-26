@@ -1,13 +1,20 @@
 package app
 
 import (
+	"encoding/json"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"cosmossdk.io/log/v2"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -100,9 +107,10 @@ func TestNewSDKAppRegistersTransientStoreKeys(t *testing.T) {
 type testCustomModule struct {
 	module.AppModule
 
-	name  string
-	perms map[string][]string
-	keys  map[string]*storetypes.KVStoreKey
+	name          string
+	perms         map[string][]string
+	keys          map[string]*storetypes.KVStoreKey
+	transientKeys map[string]*storetypes.TransientStoreKey
 }
 
 func (m testCustomModule) Name() string {
@@ -117,6 +125,45 @@ func (m testCustomModule) StoreKeys() map[string]*storetypes.KVStoreKey {
 	return m.keys
 }
 
+func (m testCustomModule) TransientStoreKeys() map[string]*storetypes.TransientStoreKey {
+	return m.transientKeys
+}
+
+type testGenesisModule struct {
+	name string
+}
+
+func (m testGenesisModule) Name() string { return m.name }
+
+func (testGenesisModule) RegisterLegacyAminoCodec(*codec.LegacyAmino) {}
+
+func (testGenesisModule) RegisterInterfaces(codectypes.InterfaceRegistry) {}
+
+func (testGenesisModule) RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux) {}
+
+func (testGenesisModule) DefaultGenesis(codec.JSONCodec) json.RawMessage { return nil }
+
+func (testGenesisModule) ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error {
+	return nil
+}
+
+func (testGenesisModule) InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate {
+	return nil
+}
+
+func (testGenesisModule) ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage { return nil }
+
+func newTestCustomModule(name, storeKey string) testCustomModule {
+	return testCustomModule{
+		AppModule: module.NewGenesisOnlyAppModule(testGenesisModule{name: name}),
+		name:      name,
+		perms:     map[string][]string{},
+		keys: map[string]*storetypes.KVStoreKey{
+			storeKey: storetypes.NewKVStoreKey(storeKey),
+		},
+	}
+}
+
 func TestAddModulesFailsAfterLoadModules(t *testing.T) {
 	app := &SDKApp{
 		moduleManager: &module.Manager{},
@@ -125,6 +172,35 @@ func TestAddModulesFailsAfterLoadModules(t *testing.T) {
 	err := app.AddModules(testCustomModule{name: "custom"})
 	if err == nil {
 		t.Fatal("expected AddModules to fail after LoadModules")
+	}
+}
+
+func TestAddModulesAfterLoadModulesDoesNotMutateAppState(t *testing.T) {
+	cfg := DefaultSDKAppConfig("app", testAppOptions(t))
+	app := NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
+	app.LoadModules()
+
+	originalStoreKeyCount := len(app.storeKeys)
+	originalCustomModuleCount := len(app.customModules)
+	originalBeginBlockerCount := len(app.orderBeginBlockers)
+
+	err := app.AddModules(testCustomModule{
+		name: "custom",
+		keys: map[string]*storetypes.KVStoreKey{
+			"custom": storetypes.NewKVStoreKey("custom"),
+		},
+	})
+	if err == nil {
+		t.Fatal("expected AddModules to fail after LoadModules")
+	}
+	if len(app.storeKeys) != originalStoreKeyCount {
+		t.Fatal("expected store keys to remain unchanged after failed AddModules")
+	}
+	if len(app.customModules) != originalCustomModuleCount {
+		t.Fatal("expected custom modules to remain unchanged after failed AddModules")
+	}
+	if len(app.orderBeginBlockers) != originalBeginBlockerCount {
+		t.Fatal("expected ordering slices to remain unchanged after failed AddModules")
 	}
 }
 
@@ -142,6 +218,118 @@ func TestAddModulesRejectsModuleAccountPermissions(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatal("expected AddModules to reject module account permissions")
+	}
+}
+
+func TestAddModulesRegistersTransientStoreKeysBeforeLoadModules(t *testing.T) {
+	cfg := DefaultSDKAppConfig("app", testAppOptions(t))
+	app := NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
+	customModule := newTestCustomModule("custom", "custom_store")
+	customModule.transientKeys = map[string]*storetypes.TransientStoreKey{
+		"custom_tstore": storetypes.NewTransientStoreKey("custom_tstore"),
+	}
+
+	err := app.AddModules(customModule)
+	if err != nil {
+		t.Fatalf("expected AddModules to succeed, got: %v", err)
+	}
+
+	if app.GetTransientStoreKey("custom_tstore") == nil {
+		t.Fatal("expected transient store key to be registered before LoadModules")
+	}
+
+	app.LoadModules()
+
+	if app.GetTransientStoreKey("custom_tstore") == nil {
+		t.Fatal("expected transient store key to remain registered after LoadModules")
+	}
+}
+
+func TestAddModulesBeforeLoadModulesRegistersInManagerAndOrdering(t *testing.T) {
+	cfg := DefaultSDKAppConfig("app", testAppOptions(t))
+	app := NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
+	customModule := newTestCustomModule("custom", "custom_store")
+
+	if err := app.AddModules(customModule); err != nil {
+		t.Fatalf("expected AddModules before LoadModules to succeed, got: %v", err)
+	}
+	if app.GetKey("custom_store") == nil {
+		t.Fatal("expected custom store key to be registered before LoadModules")
+	}
+
+	app.LoadModules()
+
+	if _, found := app.ModuleManager().Modules["custom"]; !found {
+		t.Fatal("expected custom module to be present in module manager after LoadModules")
+	}
+	if !containsModule(app.ModuleManager().OrderBeginBlockers, "custom") {
+		t.Fatal("expected custom module in begin blocker ordering")
+	}
+	if !containsModule(app.ModuleManager().OrderInitGenesis, "custom") {
+		t.Fatal("expected custom module in init genesis ordering")
+	}
+}
+
+func TestAddModulesRejectsDuplicateKVStoreKeysWithoutMutation(t *testing.T) {
+	app := &SDKApp{
+		storeKeys: map[string]*storetypes.KVStoreKey{
+			"dup_key": storetypes.NewKVStoreKey("dup_key"),
+		},
+		transientStoreKeys: map[string]*storetypes.TransientStoreKey{},
+	}
+
+	originalStoreKeyCount := len(app.storeKeys)
+	originalCustomModuleCount := len(app.customModules)
+
+	err := app.AddModules(testCustomModule{
+		name:  "custom",
+		perms: map[string][]string{},
+		keys: map[string]*storetypes.KVStoreKey{
+			"dup_key": storetypes.NewKVStoreKey("dup_key"),
+		},
+	})
+	if err == nil {
+		t.Fatal("expected AddModules to reject duplicate KV store key")
+	}
+	if len(app.storeKeys) != originalStoreKeyCount {
+		t.Fatal("expected store keys to remain unchanged after duplicate key rejection")
+	}
+	if len(app.customModules) != originalCustomModuleCount {
+		t.Fatal("expected custom modules to remain unchanged after duplicate key rejection")
+	}
+}
+
+func TestAddModulesRejectsDuplicateTransientStoreKeysWithoutMutation(t *testing.T) {
+	app := &SDKApp{
+		storeKeys: map[string]*storetypes.KVStoreKey{
+			"custom_store": storetypes.NewKVStoreKey("custom_store"),
+		},
+		transientStoreKeys: map[string]*storetypes.TransientStoreKey{
+			"dup_tkey": storetypes.NewTransientStoreKey("dup_tkey"),
+		},
+	}
+
+	originalTransientCount := len(app.transientStoreKeys)
+	originalCustomModuleCount := len(app.customModules)
+
+	err := app.AddModules(testCustomModule{
+		name:  "custom",
+		perms: map[string][]string{},
+		keys: map[string]*storetypes.KVStoreKey{
+			"custom_store_2": storetypes.NewKVStoreKey("custom_store_2"),
+		},
+		transientKeys: map[string]*storetypes.TransientStoreKey{
+			"dup_tkey": storetypes.NewTransientStoreKey("dup_tkey"),
+		},
+	})
+	if err == nil {
+		t.Fatal("expected AddModules to reject duplicate transient store key")
+	}
+	if len(app.transientStoreKeys) != originalTransientCount {
+		t.Fatal("expected transient store keys to remain unchanged after duplicate key rejection")
+	}
+	if len(app.customModules) != originalCustomModuleCount {
+		t.Fatal("expected custom modules to remain unchanged after duplicate key rejection")
 	}
 }
 
@@ -177,4 +365,32 @@ func TestLoadModulesRegistersConfiguredUpgrades(t *testing.T) {
 	if !app.UpgradeKeeper().HasHandler("test-upgrade") {
 		t.Fatal("expected configured upgrade handler to be registered")
 	}
+}
+
+func TestLoadModulesIsIdempotent(t *testing.T) {
+	cfg := DefaultSDKAppConfig("app", testAppOptions(t))
+	app := NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
+
+	app.LoadModules()
+	firstManager := app.ModuleManager()
+	firstBeginOrderCount := len(firstManager.OrderBeginBlockers)
+
+	app.LoadModules()
+	secondManager := app.ModuleManager()
+
+	if firstManager != secondManager {
+		t.Fatal("expected LoadModules to keep the same module manager instance on subsequent calls")
+	}
+	if len(secondManager.OrderBeginBlockers) != firstBeginOrderCount {
+		t.Fatal("expected LoadModules to avoid mutating module ordering on subsequent calls")
+	}
+}
+
+func containsModule(modules []string, name string) bool {
+	for _, moduleName := range modules {
+		if moduleName == name {
+			return true
+		}
+	}
+	return false
 }

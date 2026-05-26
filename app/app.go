@@ -184,6 +184,8 @@ func NewSDKApp(
 	traceStore io.Writer,
 	appConfig SDKAppConfig,
 ) *SDKApp {
+	logger.Info("starting SDK app construction")
+
 	if err := appConfig.Validate(); err != nil {
 		panic(err)
 	}
@@ -196,10 +198,6 @@ func NewSDKApp(
 		append(defaultKeys, appConfig.Keys...)...,
 	)
 	transientStoreKeys := storetypes.NewTransientStoreKeys(appConfig.TransientStoreKeys...)
-	if err := bApp.RegisterStreamingServices(appConfig.AppOpts, storeKeys); err != nil {
-		panic(err)
-	}
-
 	sdkApp := &SDKApp{
 		cfg:                appConfig,
 		BaseApp:            bApp,
@@ -233,6 +231,14 @@ func NewSDKApp(
 	sdkApp.initEpochsModule(appConfig)
 
 	sdkApp.processHooks()
+
+	sdkApp.Logger().Info(
+		fmt.Sprintf(
+			"finished SDK app construction (required modules: %d, optional modules: %d)",
+			len(sdkApp.requiredModules),
+			len(sdkApp.optionalModules),
+		),
+	)
 
 	return sdkApp
 }
@@ -339,10 +345,20 @@ func appendIfMissing(order []string, moduleName string) []string {
 }
 
 func (app *SDKApp) LoadModules() {
+	app.Logger().Info("LoadModules called")
 	app.loaded.Do(app.loadModules)
 }
 
 func (app *SDKApp) loadModules() {
+	app.Logger().Info(
+		fmt.Sprintf(
+			"loading modules (required: %d, optional: %d, custom: %d)",
+			len(app.requiredModules),
+			len(app.optionalModules),
+			len(app.customModules),
+		),
+	)
+
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	app.moduleManager = module.NewManager(
@@ -370,16 +386,19 @@ func (app *SDKApp) loadModules() {
 	app.moduleManager.SetOrderInitGenesis(app.orderInitGenesis...)
 	app.moduleManager.SetOrderExportGenesis(app.orderExportGenesis...)
 
+	app.Logger().Info("registering module services")
 	app.configurator = module.NewConfigurator(app.encodingConfig.Codec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	err := app.moduleManager.RegisterServices(app.configurator)
 	if err != nil {
 		panic(err)
 	}
 	if len(app.cfg.Upgrades) > 0 {
+		app.Logger().Info(fmt.Sprintf("registering configured upgrades: %d", len(app.cfg.Upgrades)))
 		var appI AppI = app
 		RegisterUpgradeHandlers[AppI](appI, app.cfg.Upgrades...)
 	}
 
+	app.Logger().Info("registering AutoCLI and reflection services")
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), services.NewAutoCLIQueryService(app.moduleManager.Modules))
 	reflectionSvc, err := services.NewReflectionService()
 	if err != nil {
@@ -394,27 +413,38 @@ func (app *SDKApp) loadModules() {
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(app.encodingConfig.Codec, app.AccountKeeper, authsims.RandomGenesisAccounts),
 	}
+	app.Logger().Info("initializing simulation manager")
 	app.simulationManager = module.NewSimulationManagerFromAppModules(app.moduleManager.Modules, overrideModules)
 
 	app.simulationManager.RegisterStoreDecoders()
 
 	// Configure execution mode after all modules are loaded so custom module store keys
 	// are included in the BlockSTM conflict-detection store set.
+	app.Logger().Info("configuring execution mode")
 	app.configureExecutionMode()
 
 	// initialize BaseApp
+	app.Logger().Info("wiring baseapp lifecycle handlers")
 	app.SetInitChainer(app.InitChainer)
 	app.SetPreBlocker(app.PreBlocker)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 
 	// default pre and post handlers
+	app.Logger().Info("setting default ante and post handlers")
 	app.setAnteHandler(app.TxConfig())
 	app.setPostHandler()
 
 	// initialize stores
+	app.Logger().Info("mounting KV and transient stores")
 	app.MountKVStores(app.storeKeys)
 	app.MountTransientStores(app.transientStoreKeys)
+
+	if err := app.RegisterStreamingServices(app.cfg.AppOpts, app.storeKeys); err != nil {
+		panic(err)
+	}
+
+	app.Logger().Info("module loading complete")
 }
 
 // Name returns the Name of the App

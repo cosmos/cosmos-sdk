@@ -40,14 +40,16 @@ func NewStore(db db.DB, dir string) (*Store, error) {
 	if dir == "" {
 		return nil, errors.Wrap(storetypes.ErrLogic, "snapshot directory not given")
 	}
-	err := os.MkdirAll(dir, 0o755)
-	if err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, errors.Wrapf(err, "failed to create snapshot directory %q", dir)
+	}
+	if err := syncDir(filepath.Dir(dir)); err != nil {
+		return nil, errors.Wrapf(err, "failed to sync parent of snapshot directory %q", dir)
 	}
 
 	return &Store{
 		db:     db,
-		dir:    dir,
+		dir:    filepath.Clean(dir),
 		saving: make(map[uint64]bool),
 	}, nil
 }

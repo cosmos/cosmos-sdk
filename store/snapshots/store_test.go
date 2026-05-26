@@ -334,7 +334,9 @@ func TestStore_Save(t *testing.T) {
 }
 
 // TestStore_Save_ChunksWrittenToDisk verifies that chunk files exist on disk with correct
-// contents after Save returns.
+// contents after Save returns. This is a write-path sanity check; crash-durability
+// (that Sync() forces data to stable storage) is a kernel contract that cannot be
+// verified in a unit test without crashing the process.
 func TestStore_Save_ChunksWrittenToDisk(t *testing.T) {
 	tempdir := GetTempDir(t)
 	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)

@@ -272,7 +272,9 @@ func (s *Store) Save(
 			if err := os.MkdirAll(dir, 0o755); err != nil {
 				return nil, errors.Wrapf(err, "failed to create snapshot directory %q", dir)
 			}
-
+			if err := syncDir(filepath.Dir(dir)); err != nil {
+				return nil, err
+			}
 			dirCreated = true
 		}
 
@@ -301,9 +303,8 @@ func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types
 	if err != nil {
 		return errors.Wrapf(err, "failed to create snapshot chunk file %q", path)
 	}
-	fileClosed := false
 	defer func() {
-		if !fileClosed {
+		if chunkFile != nil {
 			if cerr := chunkFile.Close(); cerr != nil && err == nil {
 				err = errors.Wrapf(cerr, "failed to close snapshot chunk file %d", index)
 			}
@@ -315,25 +316,16 @@ func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types
 		return errors.Wrapf(err, "failed to generate snapshot chunk %d", index)
 	}
 
-	if err := chunkFile.Sync(); err != nil {
-		return errors.Wrapf(err, "failed to sync snapshot chunk file %d", index)
-	}
-
-	fileClosed = true
-	if cerr := chunkFile.Close(); cerr != nil {
-		return errors.Wrapf(cerr, "failed to close snapshot chunk file %d", index)
-	}
-
-	if err := syncDir(filepath.Dir(path)); err != nil {
+	if err := syncAndClose(chunkFile); err != nil {
+		chunkFile = nil
 		return err
 	}
+	chunkFile = nil
 
 	snapshot.Metadata.ChunkHashes = append(snapshot.Metadata.ChunkHashes, chunkHasher.Sum(nil))
 	return nil
 }
 
-// saveChunkContent saves the chunk to disk and syncs before returning so the
-// data is durable even if the process crashes immediately after.
 func (s *Store) saveChunkContent(chunk []byte, index uint32, snapshot *types.Snapshot) error {
 	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
 	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
@@ -344,16 +336,18 @@ func (s *Store) saveChunkContent(chunk []byte, index uint32, snapshot *types.Sna
 		f.Close()
 		return errors.Wrapf(err, "failed to write snapshot chunk %d", index)
 	}
-	// After Sync returns, the chunk data is durable. A subsequent Close failure
-	// does not affect durability but is still reported so callers can detect it.
+	return syncAndClose(f)
+}
+
+func syncAndClose(f *os.File) error {
 	if err := f.Sync(); err != nil {
 		f.Close()
-		return errors.Wrapf(err, "failed to sync snapshot chunk file %d", index)
+		return errors.Wrapf(err, "failed to sync %q", f.Name())
 	}
 	if err := f.Close(); err != nil {
-		return errors.Wrapf(err, "failed to close snapshot chunk file %d", index)
+		return errors.Wrapf(err, "failed to close %q", f.Name())
 	}
-	return syncDir(filepath.Dir(path))
+	return syncDir(filepath.Dir(f.Name()))
 }
 
 // syncDir fsyncs dirPath so the directory entry for a newly created file is durable.
@@ -366,7 +360,10 @@ func syncDir(dirPath string) error {
 		dir.Close()
 		return errors.Wrapf(err, "failed to sync directory %q", dirPath)
 	}
-	return errors.Wrapf(dir.Close(), "failed to close directory %q after sync", dirPath)
+	if err := dir.Close(); err != nil {
+		return errors.Wrapf(err, "failed to close directory %q after sync", dirPath)
+	}
+	return nil
 }
 
 // saveSnapshot saves snapshot metadata to the database.

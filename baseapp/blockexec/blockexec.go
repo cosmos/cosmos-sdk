@@ -7,17 +7,16 @@ import (
 
 	"github.com/spf13/cast"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Option overrides default behaviour in Apply.
+// Option overrides default behavior in Apply.
 type Option func(*options)
 
 type options struct {

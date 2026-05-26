@@ -33,7 +33,8 @@ func (app SimApp) RegisterUpgradeHandlers() {
 
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{},
+			Added:   []string{},
+			Deleted: []string{"protocolpool"},
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades

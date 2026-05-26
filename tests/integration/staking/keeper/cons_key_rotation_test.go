@@ -260,7 +260,7 @@ func bondConsKeyRotationValidator(t *testing.T, f *fixture, consPk cryptotypes.P
 	_, err = f.stakingKeeper.Delegate(f.sdkCtx, addrs[0], f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 100), types.Unbonded, v, true)
 	assert.NilError(t, err)
 
-	applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, -1)
+	applyValidatorSetUpdates(t, f.sdkCtx, f.stakingKeeper, 1)
 
 	return valAddr, addrs[0]
 }

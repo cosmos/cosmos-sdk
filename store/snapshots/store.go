@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 
 	db "github.com/cosmos/cosmos-db"
@@ -349,6 +350,12 @@ func syncAndClose(f *os.File) error {
 }
 
 func mkdirAllSync(dir, stableBase string, perm os.FileMode) error {
+	dir = filepath.Clean(dir)
+	stableBase = filepath.Clean(stableBase)
+	rel, err := filepath.Rel(stableBase, dir)
+	if err != nil || rel == "." || rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+		return errors.Wrapf(storetypes.ErrLogic, "stableBase %q is not an ancestor of %q", stableBase, dir)
+	}
 	if err := os.MkdirAll(dir, perm); err != nil {
 		return err
 	}
@@ -357,9 +364,6 @@ func mkdirAllSync(dir, stableBase string, perm os.FileMode) error {
 			return err
 		}
 		if d == stableBase {
-			break
-		}
-		if next := filepath.Dir(d); next == d {
 			break
 		}
 	}

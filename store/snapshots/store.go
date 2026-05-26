@@ -269,9 +269,6 @@ func (s *Store) Save(
 		// the whole operation will fail anyway.
 		if !dirCreated {
 			dir := s.pathSnapshot(height, format)
-			if err := os.MkdirAll(dir, 0o755); err != nil {
-				return nil, errors.Wrapf(err, "failed to create snapshot directory %q", dir)
-			}
 			if err := mkdirAllSync(dir, s.dir, 0o755); err != nil {
 				return nil, err
 			}
@@ -360,6 +357,9 @@ func mkdirAllSync(dir, stableBase string, perm os.FileMode) error {
 			return err
 		}
 		if d == stableBase {
+			break
+		}
+		if next := filepath.Dir(d); next == d {
 			break
 		}
 	}

@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
-	goruntime "runtime"
-	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -20,7 +18,7 @@ import (
 	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
+	"github.com/cosmos/cosmos-sdk/baseapp/blockexec"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -250,40 +248,13 @@ func NewSimApp(
 		epochstypes.StoreKey,
 	)
 
-	workers := cast.ToInt(appOpts.Get(server.FlagBlockSTMWorkers))
-	if workers <= 0 {
-		workers = min(goruntime.GOMAXPROCS(0), goruntime.NumCPU())
-	}
-
-	kvStoreKeys := make([]storetypes.StoreKey, 0, len(keys))
+	stores := make([]storetypes.StoreKey, 0, len(keys))
 	for _, k := range keys {
-		kvStoreKeys = append(kvStoreKeys, k)
+		stores = append(stores, k)
 	}
-	sort.Slice(kvStoreKeys, func(i, j int) bool {
-		return kvStoreKeys[i].Name() < kvStoreKeys[j].Name()
-	})
-
-	preEstimate := cast.ToBool(appOpts.Get(server.FlagBlockSTMPreEstimate))
-	executor := cast.ToString(appOpts.Get(server.FlagBlockExecutor))
-	if executor == "" {
-		executor = config.DefaultBlockExecutor
-	}
-
-	switch executor {
-	case config.BlockExecutorBlockSTM:
-		bApp.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(
-			txConfig.TxDecoder(),
-			kvStoreKeys,
-			workers,
-			preEstimate,
-			func(storetypes.MultiStore) string { return sdk.DefaultBondDenom },
-		))
-		bApp.SetDisableBlockGasMeter(true)
-	case config.BlockExecutorSequential:
-		// Use BaseApp's default sequential execution.
-	default:
-		panic(fmt.Errorf("unknown block executor: %s", executor))
-	}
+	blockexec.Apply(bApp, appOpts, stores, txConfig.TxDecoder(),
+		func(storetypes.MultiStore) string { return sdk.DefaultBondDenom },
+	)
 
 	// register streaming services
 	if err := bApp.RegisterStreamingServices(appOpts, keys); err != nil {

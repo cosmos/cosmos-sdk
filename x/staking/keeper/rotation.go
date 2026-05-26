@@ -139,7 +139,8 @@ func (k Keeper) ApplyConsKeyRotations(ctx context.Context) (err error) {
 	// deleted mid-iteration.
 	var entries []matured
 	for ; iterator.Valid(); iterator.Next() {
-		_, valAddr, err := types.ParseConsKeyRotationApplyQueueKey(iterator.Key())
+		keyCopy := append([]byte(nil), iterator.Key()...)
+		_, valAddr, err := types.ParseConsKeyRotationApplyQueueKey(keyCopy)
 		if err != nil {
 			return err
 		}
@@ -147,7 +148,6 @@ func (k Keeper) ApplyConsKeyRotations(ctx context.Context) (err error) {
 		if uerr := k.cdc.UnmarshalInterface(iterator.Value(), &newPubKey); uerr != nil {
 			return uerr
 		}
-		keyCopy := append([]byte(nil), iterator.Key()...)
 		entries = append(entries, matured{key: keyCopy, valAddr: valAddr, newPubKey: newPubKey})
 	}
 

@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Breaking Changes
 
 * (mempool) [#25338](https://github.com/cosmos/cosmos-sdk/pull/25338) Respect gas wanted returned by the ante handler for block selection. Adds `InsertWithOption` to the `Mempool` interface (carries the ante-reported `GasWanted`) and changes the `SelectBy` callback to receive a `mempool.Tx` wrapper that exposes the stored value.
+* (tx) [#26456](https://github.com/cosmos/cosmos-sdk/pull/26456) Remove `SIGN_MODE_TEXTUAL` and all associated implementation (`x/tx/signing/textual`, `x/auth/tx/textual.go`, `TextualCoinMetadataQueryFn`). The proto enum value is reserved to prevent future reuse. ADR-050 is marked archived.
 * (modules) [#26421](https://github.com/cosmos/cosmos-sdk/pull/26421) Remove the `x/protocolpool` module and its API/proto surface from the SDK. Applications upgrading from v0.54 should include `protocolpool` in deleted store upgrades.
 * (genutils) [#26468](https://github.com/cosmos/cosmos-sdk/pull/26468) Consolidate ExportGenesisFileWithTime arguments to preserve consensus params.
 

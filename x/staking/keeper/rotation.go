@@ -232,6 +232,12 @@ func (k Keeper) ConsKeyRotationUpdates(ctx context.Context, powerReduction math.
 		}
 		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
+			// the validator may have been removed earlier in the same block
+			// (e.g., evidence-driven tombstoning). ApplyConsKeyRotation also
+			// no-ops in this case, so skip emitting an update for it.
+			if errors.Is(err, types.ErrNoValidatorFound) {
+				continue
+			}
 			return nil, err
 		}
 		var newPubKey cryptotypes.PubKey

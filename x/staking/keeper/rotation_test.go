@@ -244,6 +244,30 @@ func (s *KeeperTestSuite) TestProcessConsKeyRotations() {
 		require.True(hasOld)
 	})
 
+	s.T().Run("emit skips removed validator", func(t *testing.T) {
+		s.SetupTest()
+
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+		v, valAddr := s.bondedValidator(oldPk)
+
+		s.ctx = s.ctx.WithBlockHeight(100)
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+
+		// drop the validator in the same block, after the rotation is queued
+		// but before emit runs. RemoveValidator only works on unbonded records.
+		v.Status = stakingtypes.Unbonded
+		v.Tokens = math.ZeroInt()
+		v.DelegatorShares = math.LegacyZeroDec()
+		require.NoError(s.stakingKeeper.SetValidator(s.ctx, v))
+		require.NoError(s.stakingKeeper.RemoveValidator(s.ctx, valAddr))
+
+		// still at the write height, so emit runs against the queued entry
+		updates, err := s.stakingKeeper.ProcessConsKeyRotations(s.ctx, sdk.DefaultPowerReduction)
+		require.NoError(err)
+		require.Empty(updates)
+	})
+
 	s.T().Run("drain skips removed validator and still clears queue and lock", func(t *testing.T) {
 		s.SetupTest()
 

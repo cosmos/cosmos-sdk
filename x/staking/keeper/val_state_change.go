@@ -144,6 +144,25 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	totalPower := math.ZeroInt()
 	amtFromBondedToNotBonded, amtFromNotBondedToBonded := math.ZeroInt(), math.ZeroInt()
 
+	// process cons key rotations first so:
+	// 1. the (old_key@0, new_key@power) pair is emitted before any other
+	//    update for this validator in this block. comet applies in slice order,
+	//    so a later main loop emit's power wins.
+	// 2. drain's swap of validator.ConsensusPubkey is visible to subsequent
+	//    reads in this EndBlock.
+	rotationUpdates, err := k.ProcessConsKeyRotations(ctx, powerReduction)
+	if err != nil {
+		return nil, err
+	}
+	updates = append(updates, rotationUpdates...)
+
+	// load the set of in-flight rotations once so the bonded loop emits below
+	// can substitute the new cons key.
+	pendingRotations, err := k.PendingConsKeyRotations(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// Retrieve the last validator set.
 	// The persistent set is updated later in this function.
 	// (see LastValidatorPowerKey).
@@ -205,7 +224,11 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 
 		// update the validator set if power has changed
 		if !found || oldPower != newPower {
-			updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
+			pk, err := pendingRotations.EffectiveKeyForABCIUpdate(valAddr, validator)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get effective key for validator %X: %w", valAddr, err)
+			}
+			updates = append(updates, validator.ABCIValidatorUpdateWithPubKey(powerReduction, pk))
 
 			if err = k.SetLastValidatorPower(ctx, valAddr, newPower); err != nil {
 				return nil, err
@@ -241,19 +264,12 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 			return nil, err
 		}
 
-		updates = append(updates, validator.ABCIValidatorUpdateZero())
+		pk, err := pendingRotations.EffectiveKeyForABCIUpdate(sdk.ValAddress(valAddrBytes), validator)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get effective key for validator %X: %w", sdk.ValAddress(valAddrBytes), err)
+		}
+		updates = append(updates, validator.ABCIValidatorUpdateZeroWithPubKey(pk))
 	}
-
-	// apply pending consensus key rotations. each rotation emits a zero
-	// power update for the old key followed by a current power update for
-	// the new key. an old key that already received a power change earlier
-	// in this updates list is correctly retired because cometbft applies
-	// updates in order.
-	rotationUpdates, err := k.ApplyPendingConsKeyRotations(ctx, powerReduction)
-	if err != nil {
-		return nil, err
-	}
-	updates = append(updates, rotationUpdates...)
 
 	// Update the pools based on the recent updates in the validator set:
 	// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred

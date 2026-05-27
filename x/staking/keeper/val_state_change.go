@@ -365,10 +365,12 @@ func (a *validatorUpdateAccumulator) Append(update abci.ValidatorUpdate) error {
 		return err
 	}
 
-	// if the validator this update is for has a previous update that is
-	// cancellable, and this update is dropping the validators power to 0, then
-	// cancel the previous update
+	// if we already have an existing entry for this validator, update it rather
+	// than append a new entry
 	if idx, ok := a.indexByAddress[key]; ok {
+		// if the validator this update is for has a previous update that is
+		// cancellable, and this update is dropping the validators power to 0, then
+		// cancel the previous update and dont include a new update
 		if _, cancellable := a.cancellable[key]; cancellable && update.Power == 0 {
 			a.entries[idx].deleted = true
 			delete(a.indexByAddress, key)

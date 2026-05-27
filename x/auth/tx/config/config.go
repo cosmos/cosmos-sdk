@@ -146,4 +146,3 @@ func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler,
 
 	return anteHandler, nil
 }
-

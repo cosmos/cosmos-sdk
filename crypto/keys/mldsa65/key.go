@@ -122,10 +122,11 @@ var (
 // is not intended for account-level use; SDK accounts should not derive
 // addresses from this key.
 func (pubKey PubKey) Address() crypto.Address {
-	if len(pubKey.Key) != mldsa.PubKeySize {
-		panic("mldsa65 pubkey is incorrect size")
+	pk, err := mldsa.NewPubKeyFromBytes(pubKey.Key)
+	if err != nil {
+		panic(fmt.Sprintf("mldsa65 pubkey: %v", err))
 	}
-	return mldsa.PubKey(pubKey.Key).Address()
+	return pk.Address()
 }
 
 // VerifySignature verifies the given signature against msg.

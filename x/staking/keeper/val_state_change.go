@@ -8,6 +8,7 @@ import (
 	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/core/address"
@@ -141,6 +142,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	}
 	maxValidators := params.MaxValidators
 	powerReduction := k.PowerReduction(ctx)
+	updateSet := newValidatorUpdateAccumulator()
 	totalPower := math.ZeroInt()
 	amtFromBondedToNotBonded, amtFromNotBondedToBonded := math.ZeroInt(), math.ZeroInt()
 
@@ -154,7 +156,9 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	if err != nil {
 		return nil, err
 	}
-	updates = append(updates, rotationUpdates...)
+	if err := updateSet.AppendCancellable(rotationUpdates); err != nil {
+		return nil, err
+	}
 
 	// load the set of in-flight rotations once so the bonded loop emits below
 	// can substitute the new cons key.
@@ -228,7 +232,9 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 			if err != nil {
 				return nil, fmt.Errorf("failed to get effective key for validator %X: %w", valAddr, err)
 			}
-			updates = append(updates, validator.ABCIValidatorUpdateWithPubKey(powerReduction, pk))
+			if err := updateSet.Append(validator.ABCIValidatorUpdateWithPubKey(powerReduction, pk)); err != nil {
+				return nil, err
+			}
 
 			if err = k.SetLastValidatorPower(ctx, valAddr, newPower); err != nil {
 				return nil, err
@@ -268,8 +274,12 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		if err != nil {
 			return nil, fmt.Errorf("failed to get effective key for validator %X: %w", sdk.ValAddress(valAddrBytes), err)
 		}
-		updates = append(updates, validator.ABCIValidatorUpdateZeroWithPubKey(pk))
+		if err := updateSet.Append(validator.ABCIValidatorUpdateZeroWithPubKey(pk)); err != nil {
+			return nil, err
+		}
 	}
+
+	updates = updateSet.Updates()
 
 	// Update the pools based on the recent updates in the validator set:
 	// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred
@@ -303,6 +313,95 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	}
 
 	return updates, err
+}
+
+// validatorUpdateEntry stores an update and whether it was cancelled.
+type validatorUpdateEntry struct {
+	update  abci.ValidatorUpdate
+	deleted bool
+}
+
+// validatorUpdateAccumulator coalesces validator updates by Comet address.
+type validatorUpdateAccumulator struct {
+	entries        []validatorUpdateEntry
+	indexByAddress map[string]int
+	cancellable    map[string]struct{}
+}
+
+// newValidatorUpdateAccumulator creates an empty validator update accumulator.
+func newValidatorUpdateAccumulator() *validatorUpdateAccumulator {
+	return &validatorUpdateAccumulator{
+		indexByAddress: make(map[string]int),
+		cancellable:    make(map[string]struct{}),
+	}
+}
+
+// AppendCancellable appends updates where keys are introduced by this same
+// update batch. If a later zero-power update for the same key is appended, the
+// add is cancelled instead of converted into a removal for a key CometBFT has
+// not added yet.
+func (a *validatorUpdateAccumulator) AppendCancellable(updates []abci.ValidatorUpdate) error {
+	for _, update := range updates {
+		if err := a.Append(update); err != nil {
+			return err
+		}
+		if update.Power <= 0 {
+			continue
+		}
+
+		key, err := validatorUpdateAddress(update)
+		if err != nil {
+			return err
+		}
+		a.cancellable[key] = struct{}{}
+	}
+	return nil
+}
+
+// Append adds or replaces a validator update for its Comet address.
+func (a *validatorUpdateAccumulator) Append(update abci.ValidatorUpdate) error {
+	key, err := validatorUpdateAddress(update)
+	if err != nil {
+		return err
+	}
+
+	// if the validator this update is for has a previous update that is
+	// cancellable, and this update is dropping the validators power to 0, then
+	// cancel the previous update
+	if idx, ok := a.indexByAddress[key]; ok {
+		if _, cancellable := a.cancellable[key]; cancellable && update.Power == 0 {
+			a.entries[idx].deleted = true
+			delete(a.indexByAddress, key)
+			delete(a.cancellable, key)
+			return nil
+		}
+		a.entries[idx].update = update
+		return nil
+	}
+
+	a.indexByAddress[key] = len(a.entries)
+	a.entries = append(a.entries, validatorUpdateEntry{update: update})
+	return nil
+}
+
+// Updates returns the non-cancelled updates in first-seen order.
+func (a *validatorUpdateAccumulator) Updates() []abci.ValidatorUpdate {
+	updates := make([]abci.ValidatorUpdate, 0, len(a.entries))
+	for _, entry := range a.entries {
+		if !entry.deleted {
+			updates = append(updates, entry.update)
+		}
+	}
+	return updates
+}
+
+// validatorUpdateAddress returns the Comet validator address for an update.
+func validatorUpdateAddress(update abci.ValidatorUpdate) (string, error) {
+	pk, err := cryptoenc.PubKeyFromProto(update.PubKey)
+	if err != nil {
+		return "", err
+	}
+	return string(pk.Address()), nil
 }
 
 // Validator state transitions

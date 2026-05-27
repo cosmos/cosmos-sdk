@@ -5,6 +5,8 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmttypes "github.com/cometbft/cometbft/types"
+	testrequire "github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
@@ -16,86 +18,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// TestApplyAndReturnValidatorSetUpdatesWithKeyRotation exercises the EndBlocker
-// path where a queued cons key rotation runs in the same block as a power
-// change for the same validator. With the deferred-apply design, the rotation
-// (old@0, new@power) pair is emitted first, and any subsequent main-loop emit
-// for the validator is routed through the new cons key so CometBFT's set ends
-// up at new@power after applying updates in order.
-func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdatesWithKeyRotation() {
-	require := s.Require()
-
-	powerReduction := s.stakingKeeper.PowerReduction(s.ctx)
-
-	// set up a bonded validator with 10 consensus power. LastValidatorPower
-	// is intentionally not seeded, so the main loop will discover a power
-	// change and append an update.
-	oldPk := ed25519.GenPrivKey().PubKey()
-	valAddr := sdk.ValAddress(oldPk.Address())
-	v, err := stakingtypes.NewValidator(valAddr.String(), oldPk, stakingtypes.Description{Moniker: "v"})
-	require.NoError(err)
-	v.Status = stakingtypes.Bonded
-	v.Tokens = sdk.TokensFromConsensusPower(10, powerReduction)
-	v.DelegatorShares = math.LegacyNewDecFromInt(v.Tokens)
-	require.NoError(s.stakingKeeper.SetValidator(s.ctx, v))
-	require.NoError(s.stakingKeeper.SetValidatorByConsAddr(s.ctx, v))
-	require.NoError(s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, v))
-
-	// queue a key rotation for the same validator
-	newPk := ed25519.GenPrivKey().PubKey()
-	require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
-
-	updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
-	require.NoError(err)
-
-	// expected list, in order:
-	//   [0] old @ 0   (rotation retiring the old key, emitted first)
-	//   [1] new @ 10  (rotation instating the new key)
-	//   [2] new @ 10  (main-loop power-change emit, routed through the new
-	//                  cons key by effectiveConsKeyForUpdate because the
-	//                  rotation applyHeight is within the emit window)
-	require.Len(updates, 3)
-
-	oldCmtPk, err := cryptocodec.ToCmtProtoPublicKey(oldPk)
-	require.NoError(err)
-	newCmtPk, err := cryptocodec.ToCmtProtoPublicKey(newPk)
-	require.NoError(err)
-
-	require.Equal(oldCmtPk, updates[0].PubKey)
-	require.Equal(int64(0), updates[0].Power)
-
-	require.Equal(newCmtPk, updates[1].PubKey)
-	require.Equal(int64(10), updates[1].Power)
-
-	require.Equal(newCmtPk, updates[2].PubKey)
-	require.Equal(int64(10), updates[2].Power)
-
-	// the main-loop emit must not reference the old cons key — that is the
-	// regression the routing helper prevents.
-	for i, u := range updates[1:] {
-		require.NotEqual(oldCmtPk, u.PubKey, "post-rotation emit %d still references old cons key", i+1)
-	}
-
-	// simulate cometbft applying the updates in order, last write wins per
-	// key. the final state must have the old key removed and the new key at
-	// the validator's current power.
-	finalPower := map[string]int64{}
-	for _, u := range updates {
-		bz, err := u.PubKey.Marshal()
-		require.NoError(err)
-		finalPower[string(bz)] = u.Power
-	}
-
-	oldBz, err := oldCmtPk.Marshal()
-	require.NoError(err)
-	newBz, err := newCmtPk.Marshal()
-	require.NoError(err)
-
-	require.Equal(int64(0), finalPower[string(oldBz)])
-	require.Equal(int64(10), finalPower[string(newBz)])
+type cometValidator struct {
+	pk    cryptotypes.PubKey
+	power int64
 }
 
-func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdates_RotationEmitSequence() {
+func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdates() {
 	require := s.Require()
 
 	s.T().Run("baseline rotation only", func(t *testing.T) {
@@ -117,6 +45,7 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdates_RotationEmitSequ
 		require.Equal(int64(0), updates[0].Power)
 		require.Equal(cmtPk(t, newPk), updates[1].PubKey)
 		require.Equal(int64(10), updates[1].Power)
+		requireCometAppliesValidatorUpdates(t, updates, cometValidator{pk: oldPk, power: 10})
 
 		// H+1 EndBlock: nothing happens; drain and emit passes both no-op.
 		s.ctx = s.ctx.WithBlockHeight(H + 1)
@@ -135,132 +64,6 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdates_RotationEmitSequ
 		got, err := stored.GetConsAddr()
 		require.NoError(err)
 		require.Equal(sdk.ConsAddress(newPk.Address()).Bytes(), got)
-	})
-
-	s.T().Run("jail at H emits rotation pair plus zero power on new key", func(t *testing.T) {
-		s.SetupTest()
-		// bonded -> unbonding transition during EndBlock moves tokens between
-		// the bonded and not-bonded module accounts; stub the bank side so
-		// the keeper logic can run end to end.
-		s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		const H = int64(10)
-		oldPk := ed25519.GenPrivKey().PubKey()
-		newPk := ed25519.GenPrivKey().PubKey()
-
-		s.ctx = s.ctx.WithBlockHeight(H)
-		valAddr := s.bondedValidatorAtPower(oldPk, 10)
-		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
-		// jailing resolves via OLD cons addr — the deferred swap has not run.
-		require.NoError(s.stakingKeeper.Jail(s.ctx, sdk.ConsAddress(oldPk.Address())))
-
-		updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
-		require.NoError(err)
-		require.Len(updates, 3)
-		// rotation pair first
-		require.Equal(cmtPk(t, oldPk), updates[0].PubKey)
-		require.Equal(int64(0), updates[0].Power)
-		require.Equal(cmtPk(t, newPk), updates[1].PubKey)
-		require.Equal(int64(10), updates[1].Power)
-		// jail emit, routed through the helper, references NEW
-		require.Equal(cmtPk(t, newPk), updates[2].PubKey)
-		require.Equal(int64(0), updates[2].Power)
-
-		// CometBFT's view at H+2: validator absent under both keys.
-		set := applyCometSet(t, updates)
-		require.NotContains(set, string(mustMarshal(t, cmtPk(t, oldPk))))
-		require.NotContains(set, string(mustMarshal(t, cmtPk(t, newPk))))
-
-		_ = valAddr
-	})
-
-	s.T().Run("jail at H+1 emits zero power on new key", func(t *testing.T) {
-		s.SetupTest()
-		s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		const H = int64(10)
-		oldPk := ed25519.GenPrivKey().PubKey()
-		newPk := ed25519.GenPrivKey().PubKey()
-
-		s.ctx = s.ctx.WithBlockHeight(H)
-		valAddr := s.bondedValidatorAtPower(oldPk, 10)
-		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
-
-		// H EndBlock: emit rotation pair, no state swap yet.
-		hUpdates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
-		require.NoError(err)
-		require.Len(hUpdates, 2)
-
-		// H+1: slashing routes jail via VoteInfo's OLD cons addr. The
-		// byConsAddr index for OLD still resolves because the swap is deferred.
-		s.ctx = s.ctx.WithBlockHeight(H + 1)
-		require.NoError(s.stakingKeeper.Jail(s.ctx, sdk.ConsAddress(oldPk.Address())))
-		updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
-		require.NoError(err)
-		require.Len(updates, 1)
-		// the jail emit must reference NEW so CometBFT's H+3 set (which has
-		// the new key from H's rotation pair) sees the zero power update.
-		require.Equal(cmtPk(t, newPk), updates[0].PubKey)
-		require.Equal(int64(0), updates[0].Power)
-
-		// H+2: drain runs; validator is already jailed, but the swap on the
-		// operator record still applies. No new emits.
-		s.ctx = s.ctx.WithBlockHeight(H + 2)
-		updates, err = s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
-		require.NoError(err)
-		require.Empty(updates)
-	})
-
-	s.T().Run("power change at H+1 emits new key at the new power", func(t *testing.T) {
-		s.SetupTest()
-		const H = int64(10)
-		oldPk := ed25519.GenPrivKey().PubKey()
-		newPk := ed25519.GenPrivKey().PubKey()
-
-		s.ctx = s.ctx.WithBlockHeight(H)
-		valAddr := s.bondedValidatorAtPower(oldPk, 10)
-		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
-
-		// H EndBlock: emit rotation pair.
-		hUpdates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
-		require.NoError(err)
-		require.Len(hUpdates, 2)
-
-		// H+1: validator's power moves from 10 to 25 (e.g. delegation).
-		s.ctx = s.ctx.WithBlockHeight(H + 1)
-		s.setValidatorPower(valAddr, 25)
-		updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
-		require.NoError(err)
-		require.Len(updates, 1)
-		require.Equal(cmtPk(t, newPk), updates[0].PubKey) // routed via helper
-		require.Equal(int64(25), updates[0].Power)
-	})
-
-	s.T().Run("power change at H emits rotation pair plus new key at new power", func(t *testing.T) {
-		s.SetupTest()
-		const H = int64(10)
-		oldPk := ed25519.GenPrivKey().PubKey()
-		newPk := ed25519.GenPrivKey().PubKey()
-
-		s.ctx = s.ctx.WithBlockHeight(H)
-		valAddr := s.bondedValidatorAtPower(oldPk, 10)
-		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
-		s.setValidatorPower(valAddr, 25)
-
-		updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
-		require.NoError(err)
-		require.Len(updates, 3)
-		require.Equal(cmtPk(t, oldPk), updates[0].PubKey)
-		require.Equal(int64(0), updates[0].Power)
-		// rotation emit reads validator's current state (already power 25)
-		require.Equal(cmtPk(t, newPk), updates[1].PubKey)
-		require.Equal(int64(25), updates[1].Power)
-		// main loop emit, routed via helper
-		require.Equal(cmtPk(t, newPk), updates[2].PubKey)
-		require.Equal(int64(25), updates[2].Power)
-
-		// no post-rotation emit references OLD
-		for i, u := range updates[1:] {
-			require.NotEqual(cmtPk(t, oldPk), u.PubKey, "update %d still references old key", i+1)
-		}
 	})
 
 	s.T().Run("two validators rotate at H", func(t *testing.T) {
@@ -288,6 +91,10 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdates_RotationEmitSequ
 		require.Equal(int64(10), set[string(mustMarshal(t, cmtPk(t, newPk2)))])
 		require.NotContains(set, string(mustMarshal(t, cmtPk(t, oldPk1))))
 		require.NotContains(set, string(mustMarshal(t, cmtPk(t, oldPk2))))
+		requireCometAppliesValidatorUpdates(t, updates,
+			cometValidator{pk: oldPk1, power: 10},
+			cometValidator{pk: oldPk2, power: 10},
+		)
 
 		// H+2 EndBlock: both rotations drain, no further emits.
 		s.ctx = s.ctx.WithBlockHeight(H + 2)
@@ -308,17 +115,237 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdates_RotationEmitSequ
 		require.NoError(err)
 		require.Equal(sdk.ConsAddress(newPk2.Address()).Bytes(), got2)
 	})
+
+	s.T().Run("validator rotates and changes power at H", func(t *testing.T) {
+		s.SetupTest()
+		const H = int64(10)
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+		s.ctx = s.ctx.WithBlockHeight(H)
+
+		// initial validator set is a oldPk at 10 power
+		valAddr := s.bondedValidatorAtPower(oldPk, 10)
+
+		// setup a rotation to newPk
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+
+		// validator also is undergoing a power change from 10 -> 25
+		s.setValidatorPower(valAddr, 25)
+
+		updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+
+		// ensure returned updates apply on top of initialCometVals validator set
+		initialCometVals := cometValidator{pk: oldPk, power: 10}
+		valSet := requireCometAppliesValidatorUpdates(t, updates, initialCometVals)
+
+		// ensure after applying the updates the old pk is out of the set
+		require.False(valSet.HasAddress(oldPk.Address()))
+
+		// ensure after applying the updates the new pk has the updated power
+		// including the power change after the rotation
+		_, newCmtVal := valSet.GetByAddress(newPk.Address())
+		require.NotNil(newCmtVal)
+		require.Equal(int64(25), newCmtVal.VotingPower)
+
+		// ensure that after advancing two heights, the staking state is
+		// properly updated to reflect the rotation
+		s.ctx = s.ctx.WithBlockHeight(H + 2)
+		updates, err = s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+		require.Empty(updates)
+
+		stored, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
+		require.NoError(err)
+		got, err := stored.GetConsAddr()
+		require.NoError(err)
+		require.Equal(sdk.ConsAddress(newPk.Address()).Bytes(), got)
+	})
+
+	s.T().Run("validator rotates and is jailed at H", func(t *testing.T) {
+		s.SetupTest()
+		s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		const H = int64(10)
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+		s.ctx = s.ctx.WithBlockHeight(H)
+
+		// initial validator set is a oldPk at 10 power
+		valAddr := s.bondedValidatorAtPower(oldPk, 10)
+
+		// setup a rotation to newPk
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+
+		// validator also is being jailed in the same block as the rotation
+		require.NoError(s.stakingKeeper.Jail(s.ctx, sdk.ConsAddress(oldPk.Address())))
+
+		updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+
+		// add a bystander so comet is testing the update batch, not rejecting
+		// because the validator set would become empty
+		bystander := randomCometValidator()
+
+		// ensure returned updates apply on top of initialCometVals validator set
+		valSet := requireCometAppliesValidatorUpdates(t, updates,
+			cometValidator{pk: oldPk, power: 10},
+			bystander,
+		)
+
+		// ensure after applying the updates the old pk is out of the set
+		require.False(valSet.HasAddress(oldPk.Address()))
+
+		// ensure after applying the updates the new pk was not added
+		// because the validator was jailed before comet applied the rotation
+		require.False(valSet.HasAddress(newPk.Address()))
+
+		// ensure that after advancing two heights, the staking state is
+		// properly updated to reflect the rotation
+		s.ctx = s.ctx.WithBlockHeight(H + stakingtypes.ConsensusUpdateDelay)
+		updates, err = s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+		require.Empty(updates)
+
+		stored, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
+		require.NoError(err)
+		got, err := stored.GetConsAddr()
+		require.NoError(err)
+		require.Equal(sdk.ConsAddress(newPk.Address()).Bytes(), got)
+	})
+
+	s.T().Run("validator rotates at H and is jailed at H+1", func(t *testing.T) {
+		s.SetupTest()
+		s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		const H = int64(10)
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+
+		s.ctx = s.ctx.WithBlockHeight(H)
+		// initial validator set is a oldPk at 10 power
+		valAddr := s.bondedValidatorAtPower(oldPk, 10)
+
+		// setup a rotation to newPk
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+
+		updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+
+		// ensure returned updates apply on top of initialCometVals validator set
+		valSet := requireCometAppliesValidatorUpdates(t, updates, cometValidator{pk: oldPk, power: 10})
+
+		// ensure after applying the updates the old pk is out of the set
+		require.False(valSet.HasAddress(oldPk.Address()))
+
+		// ensure after applying the updates the new pk has the original power
+		_, newCmtVal := valSet.GetByAddress(newPk.Address())
+		require.NotNil(newCmtVal)
+		require.Equal(int64(10), newCmtVal.VotingPower)
+
+		// validator is jailed in the block after the rotation update is emitted
+		s.ctx = s.ctx.WithBlockHeight(H + 1)
+		require.NoError(s.stakingKeeper.Jail(s.ctx, sdk.ConsAddress(oldPk.Address())))
+		updates, err = s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+
+		// add a bystander so comet is testing the update batch, not rejecting
+		// because the validator set would become empty
+		bystander := randomCometValidator()
+		valSet = requireCometAppliesValidatorUpdates(t, updates,
+			cometValidator{pk: newPk, power: 10},
+			bystander,
+		)
+
+		// ensure after applying the updates the new pk is out of the set
+		require.False(valSet.HasAddress(newPk.Address()))
+
+		// ensure that after advancing two heights, the staking state is
+		// properly updated to reflect the rotation
+		s.ctx = s.ctx.WithBlockHeight(H + 2)
+		updates, err = s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+		require.Empty(updates)
+
+		stored, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
+		require.NoError(err)
+		got, err := stored.GetConsAddr()
+		require.NoError(err)
+		require.Equal(sdk.ConsAddress(newPk.Address()).Bytes(), got)
+	})
+
+	s.T().Run("validator rotates and changes power while another validator enters at H", func(t *testing.T) {
+		s.SetupTest()
+		const H = int64(10)
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+		otherPk := ed25519.GenPrivKey().PubKey()
+		s.ctx = s.ctx.WithBlockHeight(H)
+
+		// initial validator set is a oldPk at 10 power
+		valAddr := s.bondedValidatorAtPower(oldPk, 10)
+
+		// setup a rotation to newPk
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+
+		// validator also is undergoing a power change from 10 -> 15
+		s.setValidatorPower(valAddr, 15)
+
+		// another validator is entering the set at 9 power
+		s.bondedValidatorAtPowerWithoutLastPower(sdk.ValAddress(otherPk.Address()), otherPk, 9)
+
+		updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+
+		// ensure returned updates apply on top of initialCometVals validator set
+		valSet := requireCometAppliesValidatorUpdates(t, updates, cometValidator{pk: oldPk, power: 10})
+
+		// ensure after applying the updates the old pk is out of the set
+		require.False(valSet.HasAddress(oldPk.Address()))
+
+		// ensure after applying the updates the new pk has the updated power
+		// including the power change after the rotation
+		_, newCmtVal := valSet.GetByAddress(newPk.Address())
+		require.NotNil(newCmtVal)
+		require.Equal(int64(15), newCmtVal.VotingPower)
+
+		// ensure after applying the updates the other validator is in the set
+		_, otherCmtVal := valSet.GetByAddress(otherPk.Address())
+		require.NotNil(otherCmtVal)
+		require.Equal(int64(9), otherCmtVal.VotingPower)
+
+		// ensure that after advancing two heights, the staking state is
+		// properly updated to reflect the rotation
+		s.ctx = s.ctx.WithBlockHeight(H + stakingtypes.ConsensusUpdateDelay)
+		updates, err = s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+		require.Empty(updates)
+
+		stored, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
+		require.NoError(err)
+		got, err := stored.GetConsAddr()
+		require.NoError(err)
+		require.Equal(sdk.ConsAddress(newPk.Address()).Bytes(), got)
+	})
 }
 
-// bondedValidatorAtPower stores a bonded validator with the given consensus
-// pubkey and seeds every index ApplyAndReturnValidatorSetUpdates reads:
-// the operator-keyed validator record, the byConsAddr index, the power
-// index, and LastValidatorPower. With LastValidatorPower seeded, the main
-// loop will not emit a power-change update unless the test mutates the
-// validator's tokens.
 func (s *KeeperTestSuite) bondedValidatorAtPower(pk cryptotypes.PubKey, power int64) sdk.ValAddress {
+	return s.bondedValidatorAtPowerWithOperator(sdk.ValAddress(pk.Address()), pk, power, true)
+}
+
+func (s *KeeperTestSuite) bondedValidatorAtPowerWithoutLastPower(
+	valAddr sdk.ValAddress,
+	pk cryptotypes.PubKey,
+	power int64,
+) sdk.ValAddress {
+	return s.bondedValidatorAtPowerWithOperator(valAddr, pk, power, false)
+}
+
+func (s *KeeperTestSuite) bondedValidatorAtPowerWithOperator(
+	valAddr sdk.ValAddress,
+	pk cryptotypes.PubKey,
+	power int64,
+	seedLastPower bool,
+) sdk.ValAddress {
 	require := s.Require()
-	valAddr := sdk.ValAddress(pk.Address())
 	v, err := stakingtypes.NewValidator(valAddr.String(), pk, stakingtypes.Description{Moniker: "v"})
 	require.NoError(err)
 	v.Status = stakingtypes.Bonded
@@ -327,7 +354,9 @@ func (s *KeeperTestSuite) bondedValidatorAtPower(pk cryptotypes.PubKey, power in
 	require.NoError(s.stakingKeeper.SetValidator(s.ctx, v))
 	require.NoError(s.stakingKeeper.SetValidatorByConsAddr(s.ctx, v))
 	require.NoError(s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, v))
-	require.NoError(s.stakingKeeper.SetLastValidatorPower(s.ctx, valAddr, power))
+	if seedLastPower {
+		require.NoError(s.stakingKeeper.SetLastValidatorPower(s.ctx, valAddr, power))
+	}
 	return valAddr
 }
 
@@ -385,4 +414,36 @@ func mustMarshal(t *testing.T, pk cmtprotocrypto.PublicKey) []byte {
 		t.Fatalf("Marshal: %v", err)
 	}
 	return bz
+}
+
+func randomCometValidator() cometValidator {
+	return cometValidator{
+		pk:    ed25519.GenPrivKey().PubKey(),
+		power: 1,
+	}
+}
+
+func requireCometAppliesValidatorUpdates(
+	t *testing.T,
+	updates []abci.ValidatorUpdate,
+	initialValidators ...cometValidator,
+) *cmttypes.ValidatorSet {
+	t.Helper()
+
+	initialUpdates := make([]abci.ValidatorUpdate, 0, len(initialValidators))
+	for _, validator := range initialValidators {
+		initialUpdates = append(initialUpdates, abci.ValidatorUpdate{
+			PubKey: cmtPk(t, validator.pk),
+			Power:  validator.power,
+		})
+	}
+
+	initialCmtVals, err := cmttypes.PB2TM.ValidatorUpdates(initialUpdates)
+	testrequire.NoError(t, err)
+	valSet := cmttypes.NewValidatorSet(initialCmtVals)
+
+	cmtUpdates, err := cmttypes.PB2TM.ValidatorUpdates(updates)
+	testrequire.NoError(t, err)
+	testrequire.NoError(t, valSet.UpdateWithChangeSet(cmtUpdates))
+	return valSet
 }

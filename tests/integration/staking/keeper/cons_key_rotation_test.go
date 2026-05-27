@@ -5,6 +5,7 @@ import (
 	"time"
 
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"gotest.tools/v3/assert"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -241,6 +242,50 @@ func TestRotateConsPubKey_SecondRotationAfterPruningSucceeds(t *testing.T) {
 	storedConsAddr, err := stored.GetConsAddr()
 	assert.NilError(t, err)
 	assert.DeepEqual(t, sdk.ConsAddress(pkA.Address()).Bytes(), storedConsAddr)
+}
+
+func TestRotateConsPubKey_PowerChangeUpdatesAcceptedByComet(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
+
+	oldPk := ed25519.GenPrivKey().PubKey()
+	newPk := ed25519.GenPrivKey().PubKey()
+	valAddr, _ := bondConsKeyRotationValidator(t, f, oldPk)
+	validator, err := f.stakingKeeper.GetValidator(f.sdkCtx, valAddr)
+	assert.NilError(t, err)
+	initialCmtVals, err := cmttypes.PB2TM.ValidatorUpdates([]cmtabcitypes.ValidatorUpdate{
+		validator.ABCIValidatorUpdate(f.stakingKeeper.PowerReduction(f.sdkCtx)),
+	})
+	assert.NilError(t, err)
+	valSet := cmttypes.NewValidatorSet(initialCmtVals)
+
+	_, err = msgServer.RotateConsPubKey(f.sdkCtx, &types.MsgRotateConsPubKey{
+		ValidatorAddress: valAddr.String(),
+		NewPubkey:        newPubKeyAny(t, newPk),
+	})
+	assert.NilError(t, err)
+
+	// Force a same-height power update for the rotating validator. Staking must
+	// coalesce this with the rotation's new-key update before returning the
+	// batch to CometBFT.
+	validator, err = f.stakingKeeper.GetValidator(f.sdkCtx, valAddr)
+	assert.NilError(t, err)
+	validator, _ = validator.AddTokensFromDel(f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 1))
+	keeper.TestingUpdateValidator(f.stakingKeeper, f.sdkCtx, validator, false)
+
+	updates, err := f.stakingKeeper.ApplyAndReturnValidatorSetUpdates(f.sdkCtx)
+	assert.NilError(t, err)
+	assert.Equal(t, 2, len(updates), "%v", updates)
+
+	cmtUpdates, err := cmttypes.PB2TM.ValidatorUpdates(updates)
+	assert.NilError(t, err)
+
+	assert.NilError(t, valSet.UpdateWithChangeSet(cmtUpdates))
+	assert.Assert(t, !valSet.HasAddress(oldPk.Address()))
+	_, newCmtVal := valSet.GetByAddress(newPk.Address())
+	assert.Assert(t, newCmtVal != nil)
+	assert.Equal(t, int64(101), newCmtVal.VotingPower)
 }
 
 // bondConsKeyRotationValidator creates and bonds a single validator under

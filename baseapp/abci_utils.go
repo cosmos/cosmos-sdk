@@ -213,9 +213,6 @@ type (
 		txVerifier       ProposalTxVerifier
 		txSelector       TxSelector
 		signerExtAdapter mempool.SignerExtractionAdapter
-
-		// fastPrepareProposal together with NoOpMempool will bypass tx selector
-		fastPrepareProposal bool
 	}
 )
 
@@ -226,12 +223,6 @@ func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier
 		txSelector:       NewDefaultTxSelector(),
 		signerExtAdapter: mempool.NewDefaultSignerExtractionAdapter(),
 	}
-}
-
-func NewDefaultProposalHandlerFast(mp mempool.Mempool, txVerifier ProposalTxVerifier) *DefaultProposalHandler {
-	h := NewDefaultProposalHandler(mp, txVerifier)
-	h.fastPrepareProposal = true
-	return h
 }
 
 // SetTxSelector sets the TxSelector function on the DefaultProposalHandler.
@@ -261,9 +252,10 @@ func (h *DefaultProposalHandler) SetSignerExtractionAdapter(signerExtAdapter mem
 // is used in both steps, and applications must ensure that this is the case in
 // non-default handlers.
 //
-// - If no mempool is set or if the mempool is a no-op mempool, the transactions
-// requested from CometBFT will simply be returned, which, by default, are in
-// FIFO order.
+// - If no mempool is set or if the mempool is a no-op mempool, and MaxGas is
+// not enforced, transactions requested from CometBFT are returned as-is (FIFO
+// by default). If MaxGas is enforced, transactions are decoded and selected to
+// enforce gas/size limits.
 func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 		var maxBlockGas uint64
@@ -273,15 +265,14 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 
 		defer h.txSelector.Clear()
 
-		// If the mempool is nil or NoOp we simply return the transactions
-		// requested from CometBFT, which, by default, should be in FIFO order.
-		//
-		// Note, we still need to ensure the transactions returned respect req.MaxTxBytes.
+		// If the mempool is nil or NoOp we return the transactions requested
+		// from CometBFT (FIFO by default). CometBFT already enforces
+		// req.MaxTxBytes upstream; we only walk the tx list when MaxGas is
+		// enforced, since gas accounting is application-level.
 		_, isNoOp := h.mempool.(mempool.NoOpMempool)
 		if h.mempool == nil || isNoOp {
-			if h.fastPrepareProposal {
-				txs := h.txSelector.SelectTxForProposalFast(ctx, req.Txs)
-				return &abci.ResponsePrepareProposal{Txs: txs}, nil
+			if maxBlockGas == 0 {
+				return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
 			}
 
 			for _, txBz := range req.Txs {
@@ -504,11 +495,6 @@ type TxSelector interface {
 	// return <true> if the caller should halt the transaction selection loop
 	// (typically over a mempool) or <false> otherwise.
 	SelectTxForProposal(ctx context.Context, maxTxBytes, maxBlockGas uint64, memTx sdk.Tx, txBz []byte) bool
-	// SelectTxForProposalFast is called in the case of NoOpMempool,
-	// where cometbft already checked the block gas/size limit,
-	// so the tx selector should simply accept them all to the proposal.
-	// But extra validations on the tx are still possible though.
-	SelectTxForProposalFast(ctx context.Context, txs [][]byte) [][]byte
 }
 
 type defaultTxSelector struct {
@@ -561,8 +547,4 @@ func (ts *defaultTxSelector) SelectTxForProposal(_ context.Context, maxTxBytes, 
 
 	// check if we've reached capacity; if so, we cannot select any more transactions
 	return ts.totalTxBytes >= maxTxBytes || (maxBlockGas > 0 && (ts.totalTxGas >= maxBlockGas))
-}
-
-func (ts *defaultTxSelector) SelectTxForProposalFast(ctx context.Context, txs [][]byte) [][]byte {
-	return txs
 }

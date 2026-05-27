@@ -478,9 +478,6 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app)
 	handler := ph.PrepareProposalHandler()
 
-	phf := baseapp.NewDefaultProposalHandlerFast(mempool.NoOpMempool{}, app)
-	handlerFast := phf.PrepareProposalHandler()
-
 	// build a tx
 	_, _, addr := testdata.KeyTestPubAddr()
 	builder := txConfig.NewTxBuilder()
@@ -504,13 +501,15 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 		req         *abci.RequestPrepareProposal
 		expectedTxs int
 	}{
-		"small max tx bytes": {
+		// No MaxGas: NoOp trusts CometBFT's MaxTxBytes enforcement upstream
+		// and returns req.Txs verbatim.
+		"no max gas, small max tx bytes": {
 			ctx: s.ctx,
 			req: &abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
 				MaxTxBytes: 10,
 			},
-			expectedTxs: 0,
+			expectedTxs: 5,
 		},
 		"small max gas": {
 			ctx: s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
@@ -524,21 +523,21 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 			},
 			expectedTxs: 0,
 		},
-		"large max tx bytes": {
+		"no max gas, large max tx bytes": {
 			ctx: s.ctx,
 			req: &abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
 				MaxTxBytes: 465,
 			},
-			expectedTxs: 3,
+			expectedTxs: 5,
 		},
-		"large max tx bytes len calculation": {
+		"no max gas, large max tx bytes len calculation": {
 			ctx: s.ctx,
 			req: &abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
 				MaxTxBytes: 456,
 			},
-			expectedTxs: 2,
+			expectedTxs: 5,
 		},
 		"max gas and tx bytes": {
 			ctx: s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
@@ -561,10 +560,6 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 				resp, err := handler(tc.ctx, tc.req)
 				s.Require().NoError(err)
 				s.Require().Len(resp.Txs, tc.expectedTxs)
-
-				resp, err = handlerFast(tc.ctx, tc.req)
-				s.Require().NoError(err)
-				s.Require().Equal(resp.Txs, tc.req.Txs)
 			}
 		})
 	}

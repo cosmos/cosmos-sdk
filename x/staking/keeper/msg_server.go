@@ -616,10 +616,7 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, err
 	}
 
-	newPk, ok := msg.NewPubkey.GetCachedValue().(cryptotypes.PubKey)
-	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", msg.NewPubkey.GetCachedValue())
-	}
+	newPk := msg.NewPubkey.GetCachedValue().(cryptotypes.PubKey)
 	newConsAddr := sdk.ConsAddress(newPk.Address())
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

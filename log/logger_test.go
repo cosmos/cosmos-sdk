@@ -3,6 +3,7 @@ package log_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -10,6 +11,20 @@ import (
 
 	"cosmossdk.io/log/v2"
 )
+
+type mockTestingT struct {
+	logs []string
+}
+
+func (m *mockTestingT) Log(args ...interface{}) {
+	m.logs = append(m.logs, fmt.Sprint(args...))
+}
+
+func (m *mockTestingT) Logf(format string, args ...interface{}) {
+	m.logs = append(m.logs, fmt.Sprintf(format, args...))
+}
+
+func (m *mockTestingT) Helper() {}
 
 func inner() error {
 	return errors.New("seems we have an error here")
@@ -58,4 +73,33 @@ func TestLoggerOptionStackTrace(t *testing.T) {
 	if strings.Count(buf.String(), "logger_test.go") > 0 {
 		t.Fatalf("stack trace found, got: %s", buf.String())
 	}
+}
+
+func TestNewTestLogger(t *testing.T) {
+	m := &mockTestingT{}
+	logger := log.NewTestLogger(m)
+	logger.Info("hello test")
+
+	if len(m.logs) == 0 {
+		t.Fatal("expected logs, got none")
+	}
+	found := false
+	for _, l := range m.logs {
+		if strings.Contains(l, "hello test") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected 'hello test' in logs, got: %v", m.logs)
+	}
+}
+
+func TestNewTestLoggerNilPanic(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatal("expected panic for nil TestingT")
+		}
+	}()
+	log.NewTestLogger(nil)
 }

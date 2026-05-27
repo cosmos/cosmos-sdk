@@ -43,6 +43,9 @@ func NewTestLoggerError(t TestingT) Logger {
 }
 
 func newTestLogger(t TestingT, lvl zerolog.Level) Logger {
+	if t == nil {
+		panic("log: nil TestingT")
+	}
 	cw := zerolog.ConsoleWriter{
 		NoColor:    true,
 		TimeFormat: time.Kitchen,

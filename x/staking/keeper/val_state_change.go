@@ -315,7 +315,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	return updates, err
 }
 
-// validatorUpdateEntry stores an update and whether it was cancelled.
+// validatorUpdateEntry stores an update and whether it was canceled.
 type validatorUpdateEntry struct {
 	update  abci.ValidatorUpdate
 	deleted bool
@@ -338,7 +338,7 @@ func newValidatorUpdateAccumulator() *validatorUpdateAccumulator {
 
 // AppendCancellable appends updates where keys are introduced by this same
 // update batch. If a later zero-power update for the same key is appended, the
-// add is cancelled instead of converted into a removal for a key CometBFT has
+// add is canceled instead of converted into a removal for a key CometBFT has
 // not added yet.
 func (a *validatorUpdateAccumulator) AppendCancellable(updates []abci.ValidatorUpdate) error {
 	for _, update := range updates {
@@ -386,7 +386,7 @@ func (a *validatorUpdateAccumulator) Append(update abci.ValidatorUpdate) error {
 	return nil
 }
 
-// Updates returns the non-cancelled updates in first-seen order.
+// Updates returns the non-canceled updates in first-seen order.
 func (a *validatorUpdateAccumulator) Updates() []abci.ValidatorUpdate {
 	updates := make([]abci.ValidatorUpdate, 0, len(a.entries))
 	for _, entry := range a.entries {

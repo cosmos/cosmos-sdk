@@ -15,8 +15,10 @@ func TestBech32ifPbKey(t *testing.T) {
 	require := require.New(t)
 	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	priv, err := ledger.NewPrivKeySecp256k1Unsafe(path)
-	if err != nil && err.Error() == "ledger nano S: support for ledger devices is not available in this executable" {
-		t.Skip(err.Error())
+	if err != nil {
+		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
+		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
+		return
 	}
 	require.Nil(err, "%s", err)
 	require.NotNil(priv)

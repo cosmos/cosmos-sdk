@@ -134,11 +134,7 @@ func TestProposalQueues(t *testing.T) {
 }
 
 func TestSetHooks(t *testing.T) {
-<<<<<<< HEAD
-	govKeeper, _, _, _, _, _, _ := setupGovKeeper(t)
-=======
-	govKeeper, _, _, _, _, _, _, _ := setupGovKeeper(t) //nolint:dogsled // only govKeeper needed in this test
->>>>>>> fb4d258a0 (fix: resolve pre-existing lint and test failures (#26457))
+	govKeeper, _, _, _, _, _, _ := setupGovKeeper(t) //nolint:dogsled // only govKeeper needed in this test
 	require.Empty(t, govKeeper.Hooks())
 
 	govHooksReceiver := MockGovHooksReceiver{}

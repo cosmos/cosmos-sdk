@@ -610,7 +610,6 @@ func BenchmarkPrepareProposalNoOpMempool(b *testing.B) {
 		}
 		req := &abci.RequestPrepareProposal{Txs: txs, MaxTxBytes: 1 << 30}
 		for _, tc := range testCases {
-			tc := tc
 			b.Run(fmt.Sprintf("n=%d/%s", n, tc.name), func(b *testing.B) {
 				for range b.N {
 					if _, err := handler(tc.ctx, req); err != nil {

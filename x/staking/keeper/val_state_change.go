@@ -340,6 +340,11 @@ func newValidatorUpdateAccumulator() *validatorUpdateAccumulator {
 // update batch. If a later zero-power update for the same key is appended, the
 // add is canceled instead of converted into a removal for a key CometBFT has
 // not added yet.
+//
+// Callers must not append another positive-power update for a key after a
+// zero-power update has canceled its same-batch add; canceled keys are not
+// tombstoned and a later positive update would reintroduce the key. This is
+// likely not what you want if you have previously set a keys power to 0.
 func (a *validatorUpdateAccumulator) AppendCancellable(updates []abci.ValidatorUpdate) error {
 	for _, update := range updates {
 		if err := a.Append(update); err != nil {

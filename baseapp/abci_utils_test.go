@@ -2,6 +2,8 @@ package baseapp_test
 
 import (
 	"bytes"
+	"fmt"
+	"math"
 	"sort"
 	"testing"
 
@@ -562,6 +564,61 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 				s.Require().Len(resp.Txs, tc.expectedTxs)
 			}
 		})
+	}
+}
+
+// BenchmarkPrepareProposalNoOpMempool measures PrepareProposalHandler with a
+// NoOp mempool at varying block sizes, comparing the fast path (no MaxGas —
+// returns req.Txs verbatim, O(1)) against the slow path (MaxGas enforced —
+// decodes and gas-accounts every tx, O(n)).
+func BenchmarkPrepareProposalNoOpMempool(b *testing.B) {
+	cdc := codectestutil.CodecOptions{}.NewCodec()
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+	app := baseapp.NewBaseApp(b.Name(), log.NewNopLogger(), dbm.NewMemDB(), txConfig.TxDecoder())
+
+	_, _, addr := testdata.KeyTestPubAddr()
+	builder := txConfig.NewTxBuilder()
+	require.NoError(b, builder.SetMsgs(&baseapptestutil.MsgCounter{Signer: addr.String()}))
+	builder.SetGasLimit(100)
+	require.NoError(b, builder.SetSignatures(signingtypes.SignatureV2{
+		PubKey: secp256k1.GenPrivKeyFromSecret([]byte("test")).PubKey(),
+		Data:   &signingtypes.SingleSignatureData{},
+	}))
+	txBz, err := txConfig.TxEncoder()(builder.GetTx())
+	require.NoError(b, err)
+
+	handler := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app).PrepareProposalHandler()
+	fastCtx := sdk.Context{}.WithLogger(log.NewNopLogger())
+	// MaxGas set to MaxInt64 so the gas budget is effectively unlimited but
+	// the slow-path decode + select loop still runs.
+	slowCtx := fastCtx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{MaxGas: math.MaxInt64},
+	})
+	testCases := []struct {
+		name string
+		ctx  sdk.Context
+	}{
+		{name: "fast", ctx: fastCtx},
+		{name: "slow", ctx: slowCtx},
+	}
+
+	for _, n := range []int{10, 100, 1000} {
+		txs := make([][]byte, n)
+		for i := range txs {
+			txs[i] = txBz
+		}
+		req := &abci.RequestPrepareProposal{Txs: txs, MaxTxBytes: 1 << 30}
+		for _, tc := range testCases {
+			tc := tc
+			b.Run(fmt.Sprintf("n=%d/%s", n, tc.name), func(b *testing.B) {
+				for range b.N {
+					if _, err := handler(tc.ctx, req); err != nil {
+						b.Fatal(err)
+					}
+				}
+			})
+		}
 	}
 }
 

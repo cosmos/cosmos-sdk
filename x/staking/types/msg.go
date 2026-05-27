@@ -1,6 +1,8 @@
 package types
 
 import (
+	"slices"
+
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -20,6 +22,8 @@ var (
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
 	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
 	_ sdk.Msg                            = &MsgUpdateParams{}
+	_ sdk.Msg                            = &MsgRotateConsPubKey{}
+	_ codectypes.UnpackInterfacesMessage = (*MsgRotateConsPubKey)(nil)
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -91,6 +95,57 @@ func (msg MsgCreateValidator) Validate(ac address.Codec) error {
 func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var pubKey cryptotypes.PubKey
 	return unpacker.UnpackAny(msg.Pubkey, &pubKey)
+}
+
+// NewMsgRotateConsPubKey creates a new MsgRotateConsPubKey instance.
+func NewMsgRotateConsPubKey(valAddr string, pubKey cryptotypes.PubKey) (*MsgRotateConsPubKey, error) {
+	var pkAny *codectypes.Any
+	if pubKey != nil {
+		var err error
+		if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
+			return nil, err
+		}
+	}
+	return &MsgRotateConsPubKey{
+		ValidatorAddress: valAddr,
+		NewPubkey:        pkAny,
+	}, nil
+}
+
+// Validate validates the MsgRotateConsPubKey sdk msg.
+func (msg MsgRotateConsPubKey) Validate(ac address.Codec) error {
+	if _, err := ac.StringToBytes(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+
+	if msg.NewPubkey == nil {
+		return ErrEmptyValidatorPubKey
+	}
+
+	if _, ok := msg.NewPubkey.GetCachedValue().(cryptotypes.PubKey); !ok {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", msg.NewPubkey.GetCachedValue())
+	}
+
+	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces.
+func (msg MsgRotateConsPubKey) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var pubKey cryptotypes.PubKey
+	return unpacker.UnpackAny(msg.NewPubkey, &pubKey)
+}
+
+// ValidateConsensusPubKeyType validates a consensus pubkey against the list of
+// supported pubkey types advertised in consensus params.
+func ValidateConsensusPubKeyType(pubKey cryptotypes.PubKey, supportedTypes []string) error {
+	if pubKey == nil || slices.Contains(supportedTypes, pubKey.Type()) {
+		return nil
+	}
+
+	return errorsmod.Wrapf(
+		ErrValidatorPubKeyTypeNotSupported,
+		"got: %s, expected: %s", pubKey.Type(), supportedTypes,
+	)
 }
 
 // NewMsgEditValidator creates a new MsgEditValidator instance

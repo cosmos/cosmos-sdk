@@ -7,6 +7,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/v2/gaskv"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
@@ -116,4 +117,34 @@ func TestGasKVStoreOutOfGasIterator(t *testing.T) {
 	iterator := st.Iterator(nil, nil)
 	iterator.Next()
 	require.Panics(t, func() { iterator.Value() }, "Expected out-of-gas")
+}
+
+// TestGasKVStoreHasPlusGetVsGet verifies that replacing a Has+Get pair with a
+// single Get saves exactly HasCost gas. This prevents silent regressions in
+// callers such as bank.getSendEnabled that were updated to use Get only.
+func TestGasKVStoreHasPlusGetVsGet(t *testing.T) {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	mem.Set(keyFmt(1), valFmt(1))
+
+	cfg := types.KVGasConfig()
+
+	meterGet := types.NewGasMeter(10000)
+	stGet := gaskv.NewStore(cachekv.NewStore(mem), meterGet, cfg)
+	_ = stGet.Get(keyFmt(1))
+	gasGet := meterGet.GasConsumed()
+
+	meterHasGet := types.NewGasMeter(10000)
+	stHasGet := gaskv.NewStore(cachekv.NewStore(mem), meterHasGet, cfg)
+	_ = stHasGet.Has(keyFmt(1))
+	_ = stHasGet.Get(keyFmt(1))
+	gasHasGet := meterHasGet.GasConsumed()
+
+	require.Equal(t, cfg.HasCost, gasHasGet-gasGet,
+		"Has+Get must charge exactly HasCost more gas than Get alone")
+
+	expectedGet := cfg.ReadCostFlat +
+		cfg.ReadCostPerByte*types.Gas(len(keyFmt(1))) +
+		cfg.ReadCostPerByte*types.Gas(len(valFmt(1)))
+	require.Equal(t, expectedGet, gasGet,
+		"Get must charge ReadCostFlat + key bytes + value bytes")
 }

@@ -20,7 +20,7 @@ var (
 // GMVMemoryView wraps `MVMemory` for execution of a single transaction.
 type GMVMemoryView[V any] struct {
 	ctx       context.Context
-	storage   storetypes.GKVStore[V]
+	storage   GStorage[V]
 	mvData    *GMVData[V]
 	scheduler *Scheduler
 	store     int
@@ -30,18 +30,18 @@ type GMVMemoryView[V any] struct {
 	writeSet *GMemDB[V]
 }
 
-func NewMVView(ctx context.Context, store int, storage storetypes.Store, mvData MVStore, scheduler *Scheduler, txn TxnIndex) MVView {
+func NewMVView(ctx context.Context, store int, storage Storage, mvData MVStore, scheduler *Scheduler, txn TxnIndex) MVView {
 	switch data := mvData.(type) {
 	case *GMVData[any]:
-		return NewGMVMemoryView(ctx, store, storage.(storetypes.ObjKVStore), data, scheduler, txn)
+		return NewGMVMemoryView(ctx, store, storage.(ObjKVStorage), data, scheduler, txn)
 	case *GMVData[[]byte]:
-		return NewGMVMemoryView(ctx, store, storage.(storetypes.KVStore), data, scheduler, txn)
+		return NewGMVMemoryView(ctx, store, storage.(KVStorage), data, scheduler, txn)
 	default:
 		panic("unsupported value type")
 	}
 }
 
-func NewGMVMemoryView[V any](ctx context.Context, store int, storage storetypes.GKVStore[V], mvData *GMVData[V], scheduler *Scheduler, txn TxnIndex) *GMVMemoryView[V] {
+func NewGMVMemoryView[V any](ctx context.Context, store int, storage GStorage[V], mvData *GMVData[V], scheduler *Scheduler, txn TxnIndex) *GMVMemoryView[V] {
 	return &GMVMemoryView[V]{
 		ctx:       ctx,
 		store:     store,

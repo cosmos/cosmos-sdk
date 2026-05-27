@@ -46,11 +46,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (abci) [#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) Add support for new application side mempool ABCI methods. 
 * (abci) [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) Add support for new ABCI methods, `InsertTx` and `ReapTxs`.
+* (blockstm) [#25909](https://github.com/cosmos/cosmos-sdk/pull/25909) Cache pre-state to optimize value-based validation.
 * (deps) [#26388](https://github.com/cosmos/cosmos-sdk/pull/26388) Bump CometBFT version to v0.39.3.
+* (crypto) [#26436](https://github.com/cosmos/cosmos-sdk/pull/26436) Add ML-DSA-65 (FIPS 204) post-quantum validator consensus key type, with SDK key wrappers, Amino + interface-registry registration, multisig support, and a `hd.MlDsa65Type` constant.
 
 ### Improvements
 
 * (docs) [#25918](https://github.com/cosmos/cosmos-sdk/issues/25918) Regenerate Swagger API spec to reflect current proto state, including `authority` field on consensus params and removal of stale module-config definitions.
+* (baseapp) [#22368](https://github.com/cosmos/cosmos-sdk/issues/22368) Add `-race`-mode regression test (`TestABCI_Race_GRPC_Query_During_Commit`) covering concurrent `BaseApp.Query` and `FinalizeBlock`/`Commit`. Pins down the state-management mutex work added in #24655 and follow-ups so the data race reported against v0.50.x cannot regress silently.
 
 ### Bug Fixes
 
@@ -58,6 +61,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#26353](https://github.com/cosmos/cosmos-sdk/pull/26353) Fix leading comma in `proposal_messages` event attribute emitted by `SubmitProposal`.
 * (telemetry) [#26390](https://github.com/cosmos/cosmos-sdk/pull/26390) Fix env var for otel telemetry initialization.
 * (x/staking) [#26408](https://github.com/cosmos/cosmos-sdk/pull/26408) Fix `MsgBeginRedelegate` failure when redelegating all shares from an unbonded source validator that is removed after unbonding.
+* (x/auth/tx) [#26422](https://github.com/cosmos/cosmos-sdk/pull/26422) Reuse the signing context from the codec's `InterfaceRegistry` when `ConfigOptions.SigningOptions` is unset so that `CustomGetSigners` registered via `NewInterfaceRegistryWithOptions` are honored by `NewTxConfig` / `NewTxConfigWithOptions`.
 
 ### Deprecated
 

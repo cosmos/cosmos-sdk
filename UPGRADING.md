@@ -333,3 +333,8 @@ Genesis import applies the same trim. `InitGenesis` now compares the imported al
 ### Periodic Vesting Overflow Check
 
 `PeriodicVestingAccount.Validate` now checks for int64 overflow after each period length is added ([#26987](https://github.com/cosmos/cosmos-sdk/pull/26987)). Before, period lengths that summed past 2^64 could wrap back to an end time just after the start time and pass validation, so every coin vested almost at once. `MsgCreatePeriodicVestingAccount` with such periods used to succeed and now fails, so all nodes must switch at the same height through a coordinated upgrade. No store migration is needed. Accounts already in state are not touched, but `ValidateGenesis` rejects them, so an exported genesis that contains one fails validation.
+## store / x/bank (unreleased)
+
+### bank: IsSendEnabled gas change
+
+`cachekv.Has` now performs a true existence check without loading the value ([#26849](https://github.com/cosmos/cosmos-sdk/pull/26849)). `bank.getSendEnabled` and `upgrade.getProtocolVersion` no longer make redundant `Has` calls, so every `IsSendEnabled` check on the `SendCoins` hot path charges `HasCost` (1000 gas at default `KVGasConfig`) less. `GasUsed` for `SendCoins` and other bank send paths is lower; chains or scripts asserting exact gas values must be updated.

@@ -98,6 +98,14 @@ func TestValidateGenesis(t *testing.T) {
 				},
 			}
 		}, true},
+		{"consensus key rotation history to live validator key", func(data *types.GenesisState) {
+			data.Validators = cloneValidators(genValidators2)
+			data.ConsensusKeyRotationHistory = []types.ConsensusKeyRotationHistory{{
+				ValidatorAddress:    valAddr,
+				OldConsensusAddress: sdk.ConsAddress(livePk.Address()).String(),
+				MaturityTime:        maturity,
+			}}
+		}, true},
 		{"negative pending consensus key rotation apply height", func(data *types.GenesisState) {
 			data.Validators = cloneValidators(genValidators1)
 			data.ConsensusKeyRotationHistory = []types.ConsensusKeyRotationHistory{{

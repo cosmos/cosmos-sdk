@@ -274,6 +274,7 @@ func (d *GMVData[V]) ValidateReadSet(ctx context.Context, txn TxnIndex, rs *Read
 		}
 	}
 
+	gs := storage.(GStorage[V])
 	for _, desc := range rs.HasReads {
 		value, version, estimate := d.Read(ctx, desc.Key, txn)
 		if estimate {
@@ -290,7 +291,7 @@ func (d *GMVData[V]) ValidateReadSet(ctx context.Context, txn TxnIndex, rs *Read
 		if desc.FromStorage {
 			continue
 		}
-		if storage.(GStorage[V]).Has(desc.Key) != desc.Exists {
+		if gs == nil || gs.Has(desc.Key) != desc.Exists {
 			return false
 		}
 	}

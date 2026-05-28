@@ -64,8 +64,9 @@ func (s *GCachedStorage[V]) Get(key []byte) V {
 	return v
 }
 
-// Has returns whether key exists in the underlying storage.
-// Misses populate the value cache via Get so subsequent Has/Get calls hit the cache.
+// Has returns whether key exists. Cache misses load the value via Get to
+// warm the cache; stores with a cheaper Has trade that for fewer re-loads
+// on subsequent Has/Get.
 func (s *GCachedStorage[V]) Has(key []byte) bool {
 	if e, ok := s.cache.Load(string(key)); ok {
 		return !s.isZero(e.(cacheEntry[V]).v)

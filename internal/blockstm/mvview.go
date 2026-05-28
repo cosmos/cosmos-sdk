@@ -143,7 +143,8 @@ func (s *GMVMemoryView[V]) Has(key []byte) bool {
 			exists = !s.mvData.isZero(value)
 			measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewReadMVData }, start)
 		} else {
-			// Probe storage existence directly to avoid loading the full value.
+			// Existence probe; on miss GCachedStorage.Has loads via Get to
+			// warm the cache for subsequent Has/Get on the same key.
 			exists = s.storage.Has(key)
 			fromStorage = true
 			measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewReadStorage }, start)

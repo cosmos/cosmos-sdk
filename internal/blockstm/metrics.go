@@ -200,6 +200,15 @@ func (i *instrument) Start(cfg map[string]any) error {
 	return nil
 }
 
+// instNow returns time.Now() when instrumentation is active, zero time otherwise.
+// Gating the syscall here saves the per-call overhead when inst is nil.
+func instNow() time.Time {
+	if inst == nil {
+		return time.Time{}
+	}
+	return time.Now()
+}
+
 // measureSince records the duration in milliseconds since start on the given histogram.
 // Safe to call when inst is nil.
 func measureSince(ctx context.Context, get func() metric.Int64Histogram, start time.Time) {

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"sync/atomic"
-	"time"
 
 	"go.opentelemetry.io/otel/metric"
 
@@ -77,7 +76,7 @@ func (d *GMVData[V]) getIndexOrDefault(ctx context.Context, key Key) *BitmapInde
 
 // Consolidate returns wroteNewLocation
 func (d *GMVData[V]) Consolidate(ctx context.Context, version TxnVersion, writeSet *GMemDB[V]) bool {
-	start := time.Now()
+	start := instNow()
 	defer measureSince(ctx, func() metric.Int64Histogram { return inst.MVDataConsolidate }, start)
 
 	if writeSet == nil || writeSet.Len() == 0 {
@@ -201,7 +200,7 @@ func (d *GMVData[V]) deleteIndex(ctx context.Context, key Key, txn TxnIndex) {
 // If the key is found but value is an estimate, returns `(value, version, true)`.
 // If the key is found, returns `(value, version, false)`, `value` can be zero value which means deleted.
 func (d *GMVData[V]) Read(ctx context.Context, key Key, txn TxnIndex) (V, TxnVersion, bool) {
-	start := time.Now()
+	start := instNow()
 	defer measureSince(ctx, func() metric.Int64Histogram { return inst.MVDataRead }, start)
 	var zero V
 	if txn == 0 {

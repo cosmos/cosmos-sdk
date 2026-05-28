@@ -58,7 +58,6 @@ func TestNewAutoCLIQueryServiceAppOptions(t *testing.T) {
 	}
 }
 
-
 func TestNewReflectionServiceFileDescriptors(t *testing.T) {
 	svc, err := NewReflectionService()
 	if err != nil {

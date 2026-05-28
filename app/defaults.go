@@ -50,7 +50,6 @@ var (
 		evidencetypes.StoreKey,
 	}
 
-
 	// NOTE: upgrade module is required to be prioritized
 	defaultOrderPreBlockers = []string{
 		upgradetypes.ModuleName,

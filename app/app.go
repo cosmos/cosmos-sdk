@@ -760,4 +760,3 @@ func (app *SDKApp) UpgradeKeeper() *upgradekeeper.Keeper {
 func (app *SDKApp) EncodingConfig() EncodingConfig {
 	return app.encodingConfig
 }
-

@@ -81,6 +81,8 @@ func (s *GMVMemoryView[V]) WriteCount() int {
 	return s.writeSet.Len()
 }
 
+// Callers must not mutate key after the call: Get and Has store it by
+// reference in the read set.
 func (s *GMVMemoryView[V]) Get(key []byte) V {
 	start := time.Now()
 	if s.writeSet != nil {
@@ -115,8 +117,42 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 	}
 }
 
+// See Get for the key-aliasing contract.
 func (s *GMVMemoryView[V]) Has(key []byte) bool {
-	return !s.mvData.isZero(s.Get(key))
+	start := time.Now()
+	if s.writeSet != nil {
+		if value, found := s.writeSet.OverlayGet(key); found {
+			measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewReadWriteSet }, start)
+			return !s.mvData.isZero(value)
+		}
+	}
+
+	for {
+		value, version, estimate := s.mvData.Read(s.ctx, key, s.txn)
+		if estimate {
+			estimateStart := time.Now()
+			s.waitFor(version.Index)
+			measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewEstimateWait }, estimateStart)
+			continue
+		}
+
+		var (
+			exists      bool
+			fromStorage bool
+		)
+		if version.Valid() {
+			exists = !s.mvData.isZero(value)
+			measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewReadMVData }, start)
+		} else {
+			// Probe storage existence directly to avoid loading the full value.
+			exists = s.storage.Has(key)
+			fromStorage = true
+			measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewReadStorage }, start)
+		}
+
+		s.readSet.HasReads = append(s.readSet.HasReads, HasDescriptor{Key: key, Exists: exists, FromStorage: fromStorage})
+		return exists
+	}
 }
 
 func (s *GMVMemoryView[V]) Set(key []byte, value V) {

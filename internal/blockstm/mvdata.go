@@ -261,7 +261,7 @@ func (d *GMVData[V]) Iterator(
 
 // ValidateReadSet validates the read descriptors,
 // returns true if valid.
-func (d *GMVData[V]) ValidateReadSet(ctx context.Context, txn TxnIndex, rs *ReadSet) bool {
+func (d *GMVData[V]) ValidateReadSet(ctx context.Context, txn TxnIndex, rs *ReadSet, storage Storage) bool {
 	for _, desc := range rs.Reads {
 		_, version, estimate := d.Read(ctx, desc.Key, txn)
 		if estimate {
@@ -271,6 +271,27 @@ func (d *GMVData[V]) ValidateReadSet(ctx context.Context, txn TxnIndex, rs *Read
 		if version != desc.Version {
 			// previously read entry from data, now NOT_FOUND,
 			// or read some entry, but not the same version as before
+			return false
+		}
+	}
+
+	for _, desc := range rs.HasReads {
+		value, version, estimate := d.Read(ctx, desc.Key, txn)
+		if estimate {
+			return false
+		}
+		if version.Valid() {
+			if (!d.isZero(value)) != desc.Exists {
+				return false
+			}
+			continue
+		}
+		// No MVData entry. Storage is immutable, so FromStorage reads are still valid.
+		// Otherwise the original MVData writer was aborted and we must re-check storage.
+		if desc.FromStorage {
+			continue
+		}
+		if storage.(GStorage[V]).Has(desc.Key) != desc.Exists {
 			return false
 		}
 	}

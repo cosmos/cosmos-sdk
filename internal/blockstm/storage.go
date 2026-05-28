@@ -31,6 +31,7 @@ type GStorage[V any] interface {
 	Storage
 
 	Get(key []byte) V
+	Has(key []byte) bool
 
 	Iterator(start, end []byte) storetypes.GIterator[V]
 	ReverseIterator(start, end []byte) storetypes.GIterator[V]
@@ -42,14 +43,15 @@ type GStorage[V any] interface {
 // it'll bypass cache when doing iteration.
 type GCachedStorage[V any] struct {
 	GStorage[V]
-	cache sync.Map
+	cache  sync.Map
+	isZero func(V) bool
 }
 
 // cacheEntry boxes V so a cached zero-value any never reaches sync.Map as a nil interface.
 type cacheEntry[V any] struct{ v V }
 
-func NewGCachedStorage[V any](storage GStorage[V]) *GCachedStorage[V] {
-	return &GCachedStorage[V]{GStorage: storage}
+func NewGCachedStorage[V any](storage GStorage[V], isZero func(V) bool) *GCachedStorage[V] {
+	return &GCachedStorage[V]{GStorage: storage, isZero: isZero}
 }
 
 func (s *GCachedStorage[V]) Get(key []byte) V {
@@ -62,6 +64,17 @@ func (s *GCachedStorage[V]) Get(key []byte) V {
 	return v
 }
 
+// Has returns whether key exists in the underlying storage.
+// Misses populate the value cache via Get so subsequent Has/Get calls hit the cache.
+func (s *GCachedStorage[V]) Has(key []byte) bool {
+	if e, ok := s.cache.Load(string(key)); ok {
+		return !s.isZero(e.(cacheEntry[V]).v)
+	}
+	v := s.GStorage.Get(key)
+	s.cache.Store(string(key), cacheEntry[V]{v: v})
+	return !s.isZero(v)
+}
+
 // MultiStoreToCachedStorage convert MultiStore to an array of GStorage, wrap each store with a cache.
 func MultiStoreToCachedStorage(ms MultiStore, stores map[storetypes.StoreKey]int) []Storage {
 	storage := make([]Storage, len(stores))
@@ -69,9 +82,9 @@ func MultiStoreToCachedStorage(ms MultiStore, stores map[storetypes.StoreKey]int
 		store := ms.GetStore(key)
 		switch v := store.(type) {
 		case storetypes.KVStore:
-			storage[i] = NewGCachedStorage(v)
+			storage[i] = NewGCachedStorage[[]byte](v, storetypes.BytesIsZero)
 		case storetypes.ObjKVStore:
-			storage[i] = NewGCachedStorage(v)
+			storage[i] = NewGCachedStorage[any](v, storetypes.AnyIsZero)
 		default:
 			panic("unsupported store type")
 		}

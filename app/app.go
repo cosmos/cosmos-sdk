@@ -95,8 +95,9 @@ var _ AppI = &SDKApp{}
 // Custom modules must be added before LoadModules. AddModules after LoadModules
 // returns an error without mutating app state.
 //
-// Module account permissions must be declared in SDKAppConfig.ModuleAccountPerms
-// before NewSDKApp; AddModules rejects any module that declares its own perms.
+// Module account permissions may be supplied in SDKAppConfig.ModuleAccountPerms
+// before NewSDKApp, or declared by custom modules via ModuleAccountPermissions()
+// and merged automatically during AddModules.
 type SDKApp struct {
 	loadMu sync.Mutex
 	loaded bool

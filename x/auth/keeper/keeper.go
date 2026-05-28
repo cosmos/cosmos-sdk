@@ -130,7 +130,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 //
-// Deprecated: pass nil for maccPerms and call LoadMaccPerms after all modules have been registered.
+// Callers using SDKApp may pass nil for maccPerms and call LoadMaccPerms after all modules have been registered.
 func NewAccountKeeper(
 	cdc codec.BinaryCodec, storeService store.KVStoreService, proto func() sdk.AccountI,
 	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string, opts ...InitOption,

@@ -199,7 +199,6 @@ func (app *SDKApp) initMintModule(cfg SDKAppConfig) {
 	if cfg.WithMint {
 		app.Logger().Info("initializing mint keeper")
 
-		// TODO pipe in mintfn etc
 		mintKeeper := mintkeeper.NewKeeper(
 			app.encodingConfig.Codec,
 			runtime.NewKVStoreService(app.mustGetStoreKey(minttypes.StoreKey)),
@@ -371,8 +370,6 @@ func (app *SDKApp) initUpgradeModule(cfg SDKAppConfig) {
 // - Distribution Keeper is initialized
 // - storeKeys are populated
 func (app *SDKApp) initGovModule(cfg SDKAppConfig) {
-	// TODO add optionality and gov configs
-	// TODO should this be an option?
 	app.Logger().Info("initializing gov keeper")
 
 	// Register the proposal types

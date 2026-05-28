@@ -80,8 +80,8 @@ func (s *GMVMemoryView[V]) WriteCount() int {
 	return s.writeSet.Len()
 }
 
-// Callers must not mutate key after the call: Get and Has store it by
-// reference in the read set.
+// Get reads key from MVData or storage. Callers must not mutate key after the
+// call: Get and Has store it by reference in the read set.
 func (s *GMVMemoryView[V]) Get(key []byte) V {
 	start := instNow()
 	if s.writeSet != nil {
@@ -116,7 +116,7 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 	}
 }
 
-// See Get for the key-aliasing contract.
+// Has reports whether key exists. See Get for the key-aliasing contract.
 func (s *GMVMemoryView[V]) Has(key []byte) bool {
 	start := instNow()
 	if s.writeSet != nil {

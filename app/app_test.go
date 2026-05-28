@@ -84,13 +84,16 @@ func TestNewSDKAppWithOptimisticExecutionEnabledLoadsModules(t *testing.T) {
 	app.LoadModules()
 }
 
-func TestNewSDKAppRegistersConfigStoreKeys(t *testing.T) {
+func TestAddModulesRegistersCustomStoreKey(t *testing.T) {
 	cfg := DefaultSDKAppConfig("app", testAppOptions(t))
-	cfg.Keys = []string{"custom_test_key"}
-
 	app := NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
+
+	if err := app.AddModules(newTestCustomModule("custom", "custom_test_key")); err != nil {
+		t.Fatalf("expected AddModules to succeed, got: %v", err)
+	}
+
 	if app.GetKey("custom_test_key") == nil {
-		t.Fatal("expected custom key from SDKAppConfig.Keys to be registered")
+		t.Fatal("expected custom store key to be registered via AddModules")
 	}
 }
 
@@ -204,20 +207,65 @@ func TestAddModulesAfterLoadModulesDoesNotMutateAppState(t *testing.T) {
 	}
 }
 
-func TestAddModulesRejectsModuleAccountPermissions(t *testing.T) {
-	app := &SDKApp{
-		storeKeys:          map[string]*storetypes.KVStoreKey{},
-		transientStoreKeys: map[string]*storetypes.TransientStoreKey{},
+func TestAddModulesAcceptsAndMergesModuleAccountPermissions(t *testing.T) {
+	cfg := DefaultSDKAppConfig("app", testAppOptions(t))
+	app := NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
+
+	mod := newTestCustomModule("custmod", "custmod_store")
+	mod.perms = map[string][]string{"custmod": {authtypes.Minter}}
+
+	if err := app.AddModules(mod); err != nil {
+		t.Fatalf("expected AddModules to accept module account permissions, got: %v", err)
+	}
+	if _, ok := app.moduleAccountPerms["custmod"]; !ok {
+		t.Fatal("expected custmod perm to be merged into moduleAccountPerms")
+	}
+	custAddr := authtypes.NewModuleAddress("custmod").String()
+	if !app.BankKeeper.GetBlockedAddresses()[custAddr] {
+		t.Fatal("expected custmod address to be blocked in BankKeeper immediately after AddModules")
+	}
+}
+
+func TestAddModulesRejectsDuplicateModuleAccountPermissions(t *testing.T) {
+	cfg := DefaultSDKAppConfig("app", testAppOptions(t))
+	app := NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
+
+	modA := newTestCustomModule("modA", "modA_store")
+	modA.perms = map[string][]string{"shared": nil}
+	if err := app.AddModules(modA); err != nil {
+		t.Fatalf("first AddModules should succeed, got: %v", err)
 	}
 
-	err := app.AddModules(testCustomModule{
-		name: "custom",
-		perms: map[string][]string{
-			"custom": {authtypes.Minter},
-		},
-	})
-	if err == nil {
-		t.Fatal("expected AddModules to reject module account permissions")
+	originalPermCount := len(app.moduleAccountPerms)
+	originalBlockedCount := len(app.BankKeeper.GetBlockedAddresses())
+
+	modB := newTestCustomModule("modB", "modB_store")
+	modB.perms = map[string][]string{"shared": nil}
+	if err := app.AddModules(modB); err == nil {
+		t.Fatal("expected AddModules to reject duplicate module account permission")
+	}
+	if len(app.moduleAccountPerms) != originalPermCount {
+		t.Fatal("expected moduleAccountPerms to be unchanged after duplicate perm rejection")
+	}
+	if len(app.BankKeeper.GetBlockedAddresses()) != originalBlockedCount {
+		t.Fatal("expected blocked addresses to be unchanged after duplicate perm rejection")
+	}
+}
+
+func TestLoadModulesAppliesCustomPermsToAccountKeeper(t *testing.T) {
+	cfg := DefaultSDKAppConfig("app", testAppOptions(t))
+	app := NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
+
+	mod := newTestCustomModule("custmod", "custmod_store")
+	mod.perms = map[string][]string{"custmod": nil}
+	if err := app.AddModules(mod); err != nil {
+		t.Fatalf("AddModules failed: %v", err)
+	}
+
+	app.LoadModules()
+
+	if _, ok := app.AccountKeeper.GetModulePermissions()["custmod"]; !ok {
+		t.Fatal("expected custmod perm to appear in AccountKeeper after LoadModules")
 	}
 }
 
@@ -309,9 +357,13 @@ func TestAddModulesRejectsDuplicateTransientStoreKeysWithoutMutation(t *testing.
 		},
 	}
 
+	originalStoreKeyCount := len(app.storeKeys)
 	originalTransientCount := len(app.transientStoreKeys)
 	originalCustomModuleCount := len(app.customModules)
 
+	// the module introduces a new KV key (custom_store_2) and a duplicate transient
+	// key. the duplicate check must prevent custom_store_2 from leaking into
+	// app.storeKeys even though the KV key itself is not the collision.
 	err := app.AddModules(testCustomModule{
 		name:  "custom",
 		perms: map[string][]string{},
@@ -324,6 +376,9 @@ func TestAddModulesRejectsDuplicateTransientStoreKeysWithoutMutation(t *testing.
 	})
 	if err == nil {
 		t.Fatal("expected AddModules to reject duplicate transient store key")
+	}
+	if len(app.storeKeys) != originalStoreKeyCount {
+		t.Fatal("expected KV store keys to remain unchanged after transient key collision")
 	}
 	if len(app.transientStoreKeys) != originalTransientCount {
 		t.Fatal("expected transient store keys to remain unchanged after duplicate key rejection")

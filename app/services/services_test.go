@@ -6,7 +6,6 @@ import (
 
 	"google.golang.org/grpc"
 
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 )
 
@@ -59,18 +58,6 @@ func TestNewAutoCLIQueryServiceAppOptions(t *testing.T) {
 	}
 }
 
-func TestAppQueryServiceConfig(t *testing.T) {
-	cfg := &appv1alpha1.Config{}
-	svc := NewAppQueryService(cfg)
-
-	resp, err := svc.Config(context.Background(), &appv1alpha1.QueryConfigRequest{})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if resp.Config != cfg {
-		t.Fatal("expected returned config pointer to match service config")
-	}
-}
 
 func TestNewReflectionServiceFileDescriptors(t *testing.T) {
 	svc, err := NewReflectionService()

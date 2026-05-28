@@ -74,7 +74,6 @@ type SDKAppConfig struct {
 
 	WithUnorderedTx bool
 
-	Keys               []string
 	TransientStoreKeys []string
 	OrderPreBlockers   []string
 	OrderBeginBlockers []string
@@ -186,7 +185,9 @@ func (appConfig SDKAppConfig) Validate() error {
 	if cast.ToString(appConfig.AppOpts.Get(flags.FlagHome)) == "" {
 		return fmt.Errorf("app opts must include --home")
 	}
-
+	if appConfig.ModuleAccountPerms == nil {
+		return fmt.Errorf("module account perms must not be nil; use DefaultSDKAppConfig or provide an explicit map")
+	}
 	if appConfig.BlockSTM != nil && appConfig.BlockSTM.Workers < 1 {
 		return fmt.Errorf("blockstm workers must be >= 1")
 	}

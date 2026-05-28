@@ -23,7 +23,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sigtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -37,7 +36,6 @@ type PoAConfig struct {
 	EnableOptimisticExecution bool
 	EnableSecp256k1Support    bool
 	EnabledSignModes          []sigtypes.SignMode
-	ModuleAccountPermissions  map[string][]string
 }
 
 func DefaultPoAConfig() PoAConfig {
@@ -46,11 +44,6 @@ func DefaultPoAConfig() PoAConfig {
 		EnableOptimisticExecution: true,
 		EnableSecp256k1Support:    true,
 		EnabledSignModes:          append(slices.Clone(authtx.DefaultSignModes), sigtypes.SignMode_SIGN_MODE_TEXTUAL),
-		ModuleAccountPermissions: map[string][]string{
-			authtypes.FeeCollectorName: nil,
-			govtypes.ModuleName:        {authtypes.Burner},
-			poatypes.ModuleName:        nil,
-		},
 	}
 }
 
@@ -78,11 +71,7 @@ func NewPoAAppConfig(
 	sdkAppConfig.WithEpochs = false
 	sdkAppConfig.WithFeeGrant = false
 	sdkAppConfig.OptimisticExecutionEnabled = poaConfig.EnableOptimisticExecution
-	sdkAppConfig.Keys = append(slices.Clone(sdkAppConfig.Keys), poatypes.StoreKey)
 	sdkAppConfig.TransientStoreKeys = append(slices.Clone(sdkAppConfig.TransientStoreKeys), poatypes.TransientStoreKey)
-	for moduleName, perms := range poaConfig.ModuleAccountPermissions {
-		sdkAppConfig.ModuleAccountPerms[moduleName] = slices.Clone(perms)
-	}
 	sdkAppConfig.OrderBeginBlockers = append(slices.Clone(sdkAppConfig.OrderBeginBlockers), poatypes.ModuleName)
 	sdkAppConfig.OrderEndBlockers = []string{
 		genutiltypes.ModuleName,

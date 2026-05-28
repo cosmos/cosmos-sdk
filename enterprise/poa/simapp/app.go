@@ -109,10 +109,13 @@ func newPoAAppWithSDKConfig(
 		return poakeeper.NewPOACalculateVoteResultsAndVotingPowerFn(*poaKeeper)(ctx, k, proposal)
 	}
 
+	poaStoreKey := storetypes.NewKVStoreKey(poatypes.StoreKey)
+
 	poaApp := sdkapp.NewSDKApp(logger, db, nil, sdkAppConfig)
+
 	poaKeeper = poakeeper.NewKeeper(
 		poaApp.AppCodec(),
-		runtime.NewKVStoreService(poaApp.GetKey(poatypes.StoreKey)),
+		runtime.NewKVStoreService(poaStoreKey),
 		runtime.NewTransientStoreService(poaApp.GetTransientStoreKey(poatypes.TransientStoreKey)),
 		poaApp.AccountKeeper,
 		poaApp.BankKeeper,
@@ -123,7 +126,7 @@ func newPoAAppWithSDKConfig(
 		poaAppModule = poa.NewAppModule(poaApp.AppCodec(), poaKeeper, poa.WithSecp256k1Support())
 	}
 
-	if err := poaApp.AddModules(poaModule{AppModule: poaAppModule}); err != nil {
+	if err := poaApp.AddModules(poaModule{AppModule: poaAppModule, storeKey: poaStoreKey}); err != nil {
 		panic(err)
 	}
 	poaApp.LoadModules()
@@ -156,12 +159,15 @@ func newPoAAppWithSDKConfig(
 
 type poaModule struct {
 	poa.AppModule
+	storeKey *storetypes.KVStoreKey
 }
 
-func (poaModule) StoreKeys() map[string]*storetypes.KVStoreKey {
-	return map[string]*storetypes.KVStoreKey{}
+func (m poaModule) StoreKeys() map[string]*storetypes.KVStoreKey {
+	return map[string]*storetypes.KVStoreKey{
+		m.storeKey.Name(): m.storeKey,
+	}
 }
 
 func (poaModule) ModuleAccountPermissions() map[string][]string {
-	return map[string][]string{}
+	return map[string][]string{poatypes.ModuleName: nil}
 }

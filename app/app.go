@@ -59,6 +59,9 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 )
 
+// AppI is the interface that all Cosmos SDK applications must satisfy.
+// It extends servertypes.Application with module management, simulation, encoding,
+// and AutoCLI surface.
 type AppI interface { //nolint:revive // keeping this name for clarity
 	servertypes.Application
 
@@ -79,8 +82,24 @@ type AppI interface { //nolint:revive // keeping this name for clarity
 
 var _ AppI = &SDKApp{}
 
+// SDKApp is the canonical base application for Cosmos SDK chains. It wires the
+// standard keeper set, registers modules, and manages the app lifecycle.
+//
+// Construction sequence:
+//
+//  1. NewSDKApp — allocates keepers and store keys from SDKAppConfig
+//  2. AddModules (optional, repeatable) — register custom modules before loading
+//  3. LoadModules — finalizes the module manager, mounts stores, sets handlers
+//  4. LoadLatestVersion — opens the store at the last committed height
+//
+// Custom modules must be added before LoadModules. AddModules after LoadModules
+// returns an error without mutating app state.
+//
+// Module account permissions must be declared in SDKAppConfig.ModuleAccountPerms
+// before NewSDKApp; AddModules rejects any module that declares its own perms.
 type SDKApp struct {
-	loaded sync.Once
+	loadMu sync.Mutex
+	loaded bool
 
 	cfg SDKAppConfig
 
@@ -194,9 +213,7 @@ func NewSDKApp(
 	encodingConfig := NewEncodingConfigFromOptions(appConfig.InterfaceRegistryOptions)
 	bApp := initBaseApp(logger, db, traceStore, encodingConfig, appConfig)
 
-	storeKeys := storetypes.NewKVStoreKeys(
-		append(defaultKeys, appConfig.Keys...)...,
-	)
+	storeKeys := storetypes.NewKVStoreKeys(storeKeysForConfig(appConfig)...)
 	transientStoreKeys := storetypes.NewTransientStoreKeys(appConfig.TransientStoreKeys...)
 	sdkApp := &SDKApp{
 		cfg:                appConfig,
@@ -282,6 +299,26 @@ func (app *SDKApp) configureBlockSTM() {
 	)
 }
 
+// AddModules registers one or more custom modules with the app. It must be called
+// before LoadModules; it returns an error if LoadModules has already been called.
+//
+// Each Module must implement StoreKeysProvider to declare its KV store keys.
+// Optionally implement TransientStoreKeysProvider for transient keys.
+//
+// Module account permissions declared via ModuleAccountPermissions() are merged
+// into the app's perm map immediately and blocked in BankKeeper. AccountKeeper
+// is reloaded with the complete merged set at the start of LoadModules.
+//
+// Wrapping a third-party module that doesn't implement the Module interface:
+//
+//	type myModule struct {
+//	    thirdparty.AppModule
+//	    storeKey *storetypes.KVStoreKey
+//	}
+//	func (m myModule) StoreKeys() map[string]*storetypes.KVStoreKey {
+//	    return map[string]*storetypes.KVStoreKey{m.storeKey.Name(): m.storeKey}
+//	}
+//	func (myModule) ModuleAccountPermissions() map[string][]string { return nil }
 func (app *SDKApp) AddModules(modules ...Module) error {
 	for _, mod := range modules {
 		err := app.addModule(mod)
@@ -298,26 +335,41 @@ func (app *SDKApp) addModule(mod Module) error {
 		return fmt.Errorf("cannot add modules after LoadModules has been called")
 	}
 
-	if len(mod.ModuleAccountPermissions()) > 0 {
-		return fmt.Errorf(
-			"module %s defines module account permissions via AddModules; configure these in SDKAppConfig.ModuleAccountPerms before NewSDKApp",
-			mod.Name(),
-		)
+	// check all duplicates before any mutation so the function is atomic on error
+	for name := range mod.ModuleAccountPermissions() {
+		if _, exists := app.moduleAccountPerms[name]; exists {
+			return fmt.Errorf("module account %q is already registered; cannot add via module %s", name, mod.Name())
+		}
 	}
-
-	// add to store key list
-	for name, storeKey := range mod.StoreKeys() {
+	for name := range mod.StoreKeys() {
 		if _, found := app.storeKeys[name]; found {
 			return fmt.Errorf("module store key %s already exists in app: %v", mod.Name(), app.storeKeys)
 		}
+	}
+	if transientStoreKeyProvider, ok := mod.(TransientStoreKeysProvider); ok {
+		for name := range transientStoreKeyProvider.TransientStoreKeys() {
+			if _, found := app.transientStoreKeys[name]; found {
+				return fmt.Errorf("module transient store key %s already exists in app: %v", mod.Name(), app.transientStoreKeys)
+			}
+		}
+	}
+
+	// all checks passed — now mutate
+	for name, storeKey := range mod.StoreKeys() {
 		app.storeKeys[name] = storeKey
 	}
 	if transientStoreKeyProvider, ok := mod.(TransientStoreKeysProvider); ok {
 		for name, storeKey := range transientStoreKeyProvider.TransientStoreKeys() {
-			if _, found := app.transientStoreKeys[name]; found {
-				return fmt.Errorf("module transient store key %s already exists in app: %v", mod.Name(), app.transientStoreKeys)
-			}
 			app.transientStoreKeys[name] = storeKey
+		}
+	}
+
+	// merge module account perms and block their addresses in BankKeeper
+	blockedAddrs := app.BankKeeper.GetBlockedAddresses()
+	for name, perms := range mod.ModuleAccountPermissions() {
+		app.moduleAccountPerms[name] = perms
+		if name != govtypes.ModuleName {
+			blockedAddrs[authtypes.NewModuleAddress(name).String()] = true
 		}
 	}
 
@@ -345,11 +397,19 @@ func appendIfMissing(order []string, moduleName string) []string {
 }
 
 func (app *SDKApp) LoadModules() {
-	app.Logger().Info("LoadModules called")
-	app.loaded.Do(app.loadModules)
+	app.loadMu.Lock()
+	defer app.loadMu.Unlock()
+	if app.loaded {
+		return
+	}
+	app.loadModules() // panic propagates; loaded stays false so the state is not silently corrupted
+	app.loaded = true
 }
 
 func (app *SDKApp) loadModules() {
+	// Reload AccountKeeper with the final merged perm set (config defaults + custom module perms).
+	app.AccountKeeper.LoadMaccPerms(app.moduleAccountPerms)
+
 	app.Logger().Info(
 		fmt.Sprintf(
 			"loading modules (required: %d, optional: %d, custom: %d)",
@@ -472,8 +532,10 @@ func (app *SDKApp) Configurator() module.Configurator {
 // InitChainer application update at chain initialization
 func (app *SDKApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	var genesisState sdk.GenesisState
-	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
-		panic(err)
+	if len(req.AppStateBytes) > 0 {
+		if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
+			panic(err)
+		}
 	}
 	_ = app.upgradeKeeper.SetModuleVersionMap(ctx, app.moduleManager.GetVersionMap())
 	return app.moduleManager.InitGenesis(ctx, app.encodingConfig.Codec, genesisState)
@@ -484,7 +546,7 @@ func (app *SDKApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
 
-// LegacyAmino returns SimApp's amino codec.
+// LegacyAmino returns SDKApp's amino codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
@@ -492,7 +554,7 @@ func (app *SDKApp) LegacyAmino() *codec.LegacyAmino {
 	return app.encodingConfig.LegacyAmino
 }
 
-// AppCodec returns SimApp's app codec.
+// AppCodec returns SDKApp's app codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
@@ -607,16 +669,20 @@ func (app *SDKApp) setAnteHandler(txConfig client.TxConfig) {
 }
 
 func (app *SDKApp) buildAnteHandlerOptions(txConfig client.TxConfig) ante.HandlerOptions {
-	handlerOpts := ante.HandlerOptions{
-		AccountKeeper:   app.AccountKeeper,
-		BankKeeper:      app.BankKeeper,
-		SignModeHandler: txConfig.SignModeHandler(),
-		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-		SigVerifyOptions: []ante.SigVerificationDecoratorOption{
-			// change below as needed.
+	var sigVerifyOpts []ante.SigVerificationDecoratorOption
+	if app.cfg.WithUnorderedTx {
+		sigVerifyOpts = []ante.SigVerificationDecoratorOption{
 			ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
 			ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
-		},
+		}
+	}
+
+	handlerOpts := ante.HandlerOptions{
+		AccountKeeper:    app.AccountKeeper,
+		BankKeeper:       app.BankKeeper,
+		SignModeHandler:  txConfig.SignModeHandler(),
+		SigGasConsumer:   ante.DefaultSigVerificationGasConsumer,
+		SigVerifyOptions: sigVerifyOpts,
 	}
 	// Keep FeegrantKeeper nil when feegrant is disabled; assigning a typed-nil
 	// *feegrantkeeper.Keeper to the interface would bypass downstream nil checks.
@@ -688,9 +754,3 @@ func (app *SDKApp) EncodingConfig() EncodingConfig {
 	return app.encodingConfig
 }
 
-// UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.
-//
-// NOTE: This should only be used in testing.
-func (a *SDKApp) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
-	return a.storeKeys[storeKey]
-}

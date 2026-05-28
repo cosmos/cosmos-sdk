@@ -37,21 +37,19 @@ var (
 		govtypes.ModuleName:            {authtypes.Burner},
 	}
 
-	defaultKeys = []string{
+	// requiredKeys are always mounted regardless of optional module flags.
+	requiredKeys = []string{
 		authtypes.StoreKey,
 		banktypes.StoreKey,
 		stakingtypes.StoreKey,
-		minttypes.StoreKey,
 		distrtypes.StoreKey,
 		slashingtypes.StoreKey,
 		govtypes.StoreKey,
 		consensusparamtypes.StoreKey,
 		upgradetypes.StoreKey,
-		feegrant.StoreKey,
 		evidencetypes.StoreKey,
-		authzkeeper.StoreKey,
-		epochstypes.StoreKey,
 	}
+
 
 	// NOTE: upgrade module is required to be prioritized
 	defaultOrderPreBlockers = []string{
@@ -134,3 +132,22 @@ var (
 		},
 	}
 )
+
+// storeKeysForConfig returns the full list of KV store key names to mount,
+// including required keys, flag-gated optional keys, and any caller-supplied keys.
+func storeKeysForConfig(cfg SDKAppConfig) []string {
+	keys := append([]string{}, requiredKeys...)
+	if cfg.WithMint {
+		keys = append(keys, minttypes.StoreKey)
+	}
+	if cfg.WithFeeGrant {
+		keys = append(keys, feegrant.StoreKey)
+	}
+	if cfg.WithAuthz {
+		keys = append(keys, authzkeeper.StoreKey)
+	}
+	if cfg.WithEpochs {
+		keys = append(keys, epochstypes.StoreKey)
+	}
+	return keys
+}

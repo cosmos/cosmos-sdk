@@ -38,7 +38,7 @@ func NewBankSpeedTest() *cobra.Command {
 			}
 			defer db.Close()
 			chainID := "foo"
-			app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(dir), baseapp.SetChainID(chainID))
+			app := simapp.NewSimApp(log.NewNopLogger(), db, true, simtestutil.NewAppOptionsWithFlagHome(dir), baseapp.SetChainID(chainID))
 			gen := generator{
 				app:      app,
 				accounts: make([]accountInfo, 0),

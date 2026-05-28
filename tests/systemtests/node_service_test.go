@@ -17,7 +17,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/node"
-	"github.com/cosmos/cosmos-sdk/testutil/systemtests"
+	"github.com/cosmos/cosmos-sdk/tools/systemtests"
 )
 
 // TestNodeStatusGRPC tests the Status gRPC endpoint to verify earliest_store_height.

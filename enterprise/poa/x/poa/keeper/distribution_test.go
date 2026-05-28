@@ -19,11 +19,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestProportionalDistribution(t *testing.T) {
@@ -37,10 +37,9 @@ func TestProportionalDistribution(t *testing.T) {
 		validatorAddr1, _ := createValidator(t, f, 1, 100)
 		validatorAddr2, _ := createValidator(t, f, 2, 300)
 
-		// Add fees to fee collector
-		feeCollector := f.authKeeper.GetModuleAccount(f.ctx, authtypes.FeeCollectorName)
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Query validator 1 - should show 25% (250 stake) as pending
@@ -57,9 +56,10 @@ func TestProportionalDistribution(t *testing.T) {
 		expectedFees2 := sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(750))}
 		require.Equal(t, expectedFees2, resp2.Fees.Fees)
 
-		// Verify fee collector still has all fees (lazy distribution)
-		feeCollectorBalance := f.bankKeeper.GetAllBalances(f.ctx, feeCollector.GetAddress())
-		require.Equal(t, fees, feeCollectorBalance)
+		// Verify poa module still has all fees (lazy distribution)
+		poaModule := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
+		poaModuleBalance := f.bankKeeper.GetAllBalances(f.ctx, poaModule.GetAddress())
+		require.Equal(t, fees, poaModuleBalance)
 	})
 
 	t.Run("equal power results in equal distribution", func(t *testing.T) {
@@ -70,9 +70,9 @@ func TestProportionalDistribution(t *testing.T) {
 		validatorAddr2, _ := createValidator(t, f, 2, 100)
 		validatorAddr3, _ := createValidator(t, f, 3, 100)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 300))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		expectedAmount := math.LegacyNewDec(100)
@@ -110,15 +110,15 @@ func TestProportionalDistribution(t *testing.T) {
 	t.Run("no validators with lazy distribution", func(t *testing.T) {
 		f := setupTest(t)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
-		// With lazy distribution, fees remain in fee collector (no panic)
-		feeCollector := f.authKeeper.GetModuleAccount(f.ctx, authtypes.FeeCollectorName)
-		feeCollectorBalance := f.bankKeeper.GetAllBalances(f.ctx, feeCollector.GetAddress())
-		require.Equal(t, fees, feeCollectorBalance)
+		// With lazy distribution, fees remain in poa module (no panic)
+		poaModule := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
+		poaModuleBalance := f.bankKeeper.GetAllBalances(f.ctx, poaModule.GetAddress())
+		require.Equal(t, fees, poaModuleBalance)
 	})
 
 	t.Run("accumulated fees persist across multiple blocks", func(t *testing.T) {
@@ -130,7 +130,7 @@ func TestProportionalDistribution(t *testing.T) {
 
 		// Block 1: Add 200 stake
 		fees1 := sdk.NewCoins(sdk.NewInt64Coin("stake", 200))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees1)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees1)
 		require.NoError(t, err)
 
 		// Each validator should show 100 stake pending
@@ -141,7 +141,7 @@ func TestProportionalDistribution(t *testing.T) {
 
 		// Block 2: Add another 200 stake
 		fees2 := sdk.NewCoins(sdk.NewInt64Coin("stake", 200))
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees2)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees2)
 		require.NoError(t, err)
 
 		// Each validator should now show 200 stake total (100 + 100)
@@ -167,7 +167,7 @@ func TestProportionalDistribution(t *testing.T) {
 
 		// Add 1000 stake to distribute
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Validator 1: 10% = 100 stake
@@ -196,12 +196,12 @@ func TestProportionalDistribution(t *testing.T) {
 		validatorAddr1, _ := createValidator(t, f, 1, 100)
 		validatorAddr2, _ := createValidator(t, f, 2, 300)
 
-		// Add multiple denominations to fee collector
+		// Add multiple denominations to poa module
 		fees := sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 1000),
 			sdk.NewInt64Coin("atom", 400),
 		)
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Validator 1: 25% of each denom
@@ -237,7 +237,7 @@ func TestProportionalDistribution(t *testing.T) {
 		// Distribute 10 tokens
 		// Validator has 100 power out of 300 total = (100/300) * 10 tokens
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		expectedAmount, err := math.LegacyNewDecFromStr("3.333333333333333333")
@@ -259,14 +259,14 @@ func TestProportionalDistribution(t *testing.T) {
 		require.Equal(t, int64(3), balance.Amount.Int64())
 
 		// Check remainder is preserved (exact decimal remainder)
-		accFeesAfter, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFeesAfter, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		expectedRemainder, err := math.LegacyNewDecFromStr("0.333333333333333333")
 		require.NoError(t, err)
-		require.Equal(t, expectedRemainder, accFeesAfter.AmountOf("stake"))
+		require.Equal(t, expectedRemainder, accFeesAfter.Fees.AmountOf("stake"))
 
 		// Distribute another 10 tokens
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Validator should now have exact total of previous remainder + new distribution (via query)
@@ -285,10 +285,10 @@ func TestProportionalDistribution(t *testing.T) {
 		require.Equal(t, int64(6), balanceAfterSecond.Amount.Int64())
 
 		// Check new remainder is preserved (exact value)
-		accFeesAfterSecondWithdraw, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFeesAfterSecondWithdraw, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		expectedSecondRemainder := expectedTotal.Sub(math.LegacyNewDec(3))
-		require.Equal(t, expectedSecondRemainder, accFeesAfterSecondWithdraw.AmountOf("stake"))
+		require.Equal(t, expectedSecondRemainder, accFeesAfterSecondWithdraw.Fees.AmountOf("stake"))
 	})
 
 	t.Run("dust does not accumulate perpetually - remainders become whole coins", func(t *testing.T) {
@@ -313,7 +313,7 @@ func TestProportionalDistribution(t *testing.T) {
 
 		for i := 0; i < 10; i++ {
 			fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 11))
-			err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+			err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 			require.NoError(t, err)
 
 			// Track what should have been distributed this block
@@ -341,20 +341,20 @@ func TestProportionalDistribution(t *testing.T) {
 		require.Equal(t, int64(15), balance.Amount.Int64())
 
 		// Check remainder is preserved
-		accFeesAfter, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFeesAfter, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		// This is rounded slightly because of the constant checkpointing at every distribution
 		// If we don't checkpoint every time, we end up with 0.714285714285714286.
 		// Both cases are "correct", but checkpointing every block simulated someone withdrawing at every block.
 		expectedRemainder, err := math.LegacyNewDecFromStr("0.714285714285714290")
 		require.NoError(t, err)
-		require.Equal(t, expectedRemainder, accFeesAfter.AmountOf("stake"))
+		require.Equal(t, expectedRemainder, accFeesAfter.Fees.AmountOf("stake"))
 
 		// Continue distributing for 10 more blocks
 		totalDistributedSecond := math.LegacyZeroDec()
 		for i := 0; i < 10; i++ {
 			fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 11))
-			err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+			err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 			require.NoError(t, err)
 
 			distributed := math.LegacyNewDec(11).Mul(validatorPower).Quo(totalPower)
@@ -380,21 +380,21 @@ func TestProportionalDistribution(t *testing.T) {
 		require.Equal(t, int64(31), balanceSecond.Amount.Int64()) // 15 + 16
 
 		// Final remainder check
-		accFeesFinal, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFeesFinal, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		// This is rounded slightly because of the constant checkpointing at every distribution
 		// If we don't checkpoint every time, we end up with 0.428571428571428572.
 		// Both cases are "correct", but checkpointing every block simulated someone withdrawing at every block.
 		finalRemainder, err := math.LegacyNewDecFromStr("0.428571428571428580")
 		require.NoError(t, err)
-		require.Equal(t, finalRemainder, accFeesFinal.AmountOf("stake"))
+		require.Equal(t, finalRemainder, accFeesFinal.Fees.AmountOf("stake"))
 
 		// PROOF: Total distributed = Total withdrawn + Current remainder
 		// Total distributed over 20 blocks = sum of actual validator allocations
-		validator1CurrentFees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		validator1CurrentFees, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		totalWithdrawn := math.LegacyNewDec(31)
-		totalEverDistributed := validator1CurrentFees.AmountOf("stake").Add(totalWithdrawn)
+		totalEverDistributed := validator1CurrentFees.Fees.AmountOf("stake").Add(totalWithdrawn)
 		proofSum := totalWithdrawn.Add(finalRemainder)
 		require.Equal(t, totalEverDistributed, proofSum, "Total distributed must equal total withdrawn + remainder")
 
@@ -413,39 +413,38 @@ func TestCheckpointAllValidators(t *testing.T) {
 		_, consAddr1 := createValidator(t, f, 1, 100)
 		_, consAddr2 := createValidator(t, f, 2, 300)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
-		// Before checkpoint, validators should have zero accumulated fees
-		accFees1Before, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
-		require.NoError(t, err)
-		require.True(t, accFees1Before.IsZero())
+		// Before checkpoint, validators should have nil entry in store
+		_, err = f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
+		require.ErrorIs(t, err, collections.ErrNotFound)
 
 		// Checkpoint all validators
 		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// After checkpoint, validator 1 should have 25% (250 stake)
-		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
-		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(250))}, accFees1)
+		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(250))}, accFees1.Fees)
 
 		// Validator 2 should have 75% (750 stake)
-		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr2.String())
 		require.NoError(t, err)
-		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(750))}, accFees2)
+		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(750))}, accFees2.Fees)
 
 		// Total allocated should be 1000
 		totalAllocated, err := f.poaKeeper.getTotalAllocated(f.ctx)
 		require.NoError(t, err)
 		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(1000))}, totalAllocated)
 
-		// Fee collector balance should remain unchanged (lazy distribution)
-		feeCollector := f.authKeeper.GetModuleAccount(f.ctx, authtypes.FeeCollectorName)
-		feeCollectorBalance := f.bankKeeper.GetAllBalances(f.ctx, feeCollector.GetAddress())
-		require.Equal(t, fees, feeCollectorBalance)
+		// POA module balance should remain unchanged (lazy distribution)
+		poaModule := f.authKeeper.GetModuleAccount(f.ctx, poatypes.ModuleName)
+		poaModuleBalance := f.bankKeeper.GetAllBalances(f.ctx, poaModule.GetAddress())
+		require.Equal(t, fees, poaModuleBalance)
 	})
 
 	t.Run("checkpoint with no fees does nothing", func(t *testing.T) {
@@ -459,14 +458,13 @@ func TestCheckpointAllValidators(t *testing.T) {
 		err := f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
-		// All validators should have no fees
-		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
-		require.NoError(t, err)
-		require.True(t, accFees1.IsZero())
+		// Before checkpoint, validators should have nil entry in store
+		_, err = f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
+		require.ErrorIs(t, err, collections.ErrNotFound)
 
-		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
-		require.NoError(t, err)
-		require.True(t, accFees2.IsZero())
+		// Before checkpoint, validators should have nil entry in store
+		_, err = f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr2.String())
+		require.ErrorIs(t, err, collections.ErrNotFound)
 
 		// Total allocated should be 0
 		totalAllocated, err := f.poaKeeper.getTotalAllocated(f.ctx)
@@ -481,9 +479,9 @@ func TestCheckpointAllValidators(t *testing.T) {
 		_, consAddr1 := createValidator(t, f, 1, 100)
 		_, consAddr2 := createValidator(t, f, 2, 0)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Checkpoint all validators
@@ -491,14 +489,13 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Validator 1 should get 100% (all fees)
-		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
-		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees1)
+		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees1.Fees)
 
 		// Validator 2 should have no fees
-		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
-		require.NoError(t, err)
-		require.True(t, accFees2.IsZero())
+		_, err = f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr2.String())
+		require.ErrorIs(t, err, collections.ErrNotFound)
 	})
 
 	t.Run("multiple checkpoints accumulate correctly", func(t *testing.T) {
@@ -510,33 +507,33 @@ func TestCheckpointAllValidators(t *testing.T) {
 
 		// First checkpoint
 		fees1 := sdk.NewCoins(sdk.NewInt64Coin("stake", 200))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees1)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees1)
 		require.NoError(t, err)
 
 		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Each should have 100
-		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
-		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees1)
+		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees1.Fees)
 
 		// Second checkpoint
 		fees2 := sdk.NewCoins(sdk.NewInt64Coin("stake", 200))
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees2)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees2)
 		require.NoError(t, err)
 
 		err = f.poaKeeper.checkpointAllValidators(f.ctx)
 		require.NoError(t, err)
 
 		// Each should now have 200
-		accFees1After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1After, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
-		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(200))}, accFees1After)
+		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(200))}, accFees1After.Fees)
 
-		accFees2After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2After, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr2.String())
 		require.NoError(t, err)
-		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(200))}, accFees2After)
+		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(200))}, accFees2After.Fees)
 
 		// Total allocated should be 400
 		totalAllocated, err := f.poaKeeper.getTotalAllocated(f.ctx)
@@ -556,7 +553,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 			sdk.NewInt64Coin("stake", 1000),
 			sdk.NewInt64Coin("atom", 400),
 		)
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Checkpoint all
@@ -564,22 +561,22 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Validator 1: 25% of each
-		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		expectedFees1 := sdk.DecCoins{
 			sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(100)),
 			sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(250)),
 		}
-		require.Equal(t, expectedFees1, accFees1)
+		require.Equal(t, expectedFees1, accFees1.Fees)
 
 		// Validator 2: 75% of each
-		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr2.String())
 		require.NoError(t, err)
 		expectedFees2 := sdk.DecCoins{
 			sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(300)),
 			sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(750)),
 		}
-		require.Equal(t, expectedFees2, accFees2)
+		require.Equal(t, expectedFees2, accFees2.Fees)
 	})
 
 	t.Run("checkpoint before power change maintains correct distribution", func(t *testing.T) {
@@ -591,25 +588,25 @@ func TestCheckpointAllValidators(t *testing.T) {
 
 		// Add fees
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 200))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
-		// SetValidatorPower should checkpoint before changing power
-		err = f.poaKeeper.SetValidatorPower(f.ctx, consAddr1, 200)
+		// UpdateValidator should checkpoint before changing power
+		err = f.poaKeeper.UpdateValidator(f.ctx, consAddr1, poatypes.Validator{Power: 200})
 		require.NoError(t, err)
 
 		// Both validators should have received 100 stake (before power change)
-		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
-		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees1)
+		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees1.Fees)
 
-		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr2.String())
 		require.NoError(t, err)
-		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees2)
+		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees2.Fees)
 
 		// Add more fees after power change
 		fees2 := sdk.NewCoins(sdk.NewInt64Coin("stake", 300))
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees2)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees2)
 		require.NoError(t, err)
 
 		// Checkpoint again
@@ -618,14 +615,14 @@ func TestCheckpointAllValidators(t *testing.T) {
 
 		// Now validator 1 has 200 power out of 300 total = 2/3 of new fees
 		// Validator 1: 100 (old) + 200 (2/3 of 300) = 300
-		accFees1After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1After, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
-		require.Equal(t, math.LegacyNewDec(300), accFees1After.AmountOf("stake"))
+		require.Equal(t, math.LegacyNewDec(300), accFees1After.Fees.AmountOf("stake"))
 
 		// Validator 2: 100 (old) + 100 (1/3 of 300) = 200
-		accFees2After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2After, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr2.String())
 		require.NoError(t, err)
-		require.Equal(t, math.LegacyNewDec(200), accFees2After.AmountOf("stake"))
+		require.Equal(t, math.LegacyNewDec(200), accFees2After.Fees.AmountOf("stake"))
 	})
 
 	t.Run("checkpoint with zero total power does nothing", func(t *testing.T) {
@@ -635,9 +632,9 @@ func TestCheckpointAllValidators(t *testing.T) {
 		_, _ = createValidator(t, f, 1, 0)
 		_, _ = createValidator(t, f, 2, 0)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Checkpoint should succeed but not allocate (total power is 0)
@@ -658,7 +655,7 @@ func TestCheckpointAllValidators(t *testing.T) {
 
 		// Add fees
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Checkpoint once to allocate all fees
@@ -675,9 +672,9 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Validator fees should remain the same
-		accFees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
-		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees)
+		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees.Fees)
 	})
 
 	t.Run("checkpoint before creating new validator maintains correct distribution", func(t *testing.T) {
@@ -689,29 +686,29 @@ func TestCheckpointAllValidators(t *testing.T) {
 
 		// Add fees
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 200))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Create a new validator - should checkpoint existing validators first
 		_, consAddr3 := createValidator(t, f, 3, 100)
 
 		// Existing validators should have received 100 stake each (before new validator joined)
-		accFees1, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
-		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees1)
+		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees1.Fees)
 
-		accFees2, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr2.String())
 		require.NoError(t, err)
-		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees2)
+		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, accFees2.Fees)
 
 		// New validator should have no fees yet
-		accFees3, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr3)
-		require.NoError(t, err)
-		require.True(t, accFees3.IsZero())
+		accFees3, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr3.String())
+		require.ErrorIs(t, err, collections.ErrNotFound)
+		require.True(t, accFees3.Fees.IsZero())
 
 		// Add more fees after new validator joined
 		fees2 := sdk.NewCoins(sdk.NewInt64Coin("stake", 300))
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees2)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees2)
 		require.NoError(t, err)
 
 		// Checkpoint again
@@ -719,18 +716,18 @@ func TestCheckpointAllValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Validators 1 and 2: 100 (before) + 100 (new share) each
-		accFees1After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr1)
+		accFees1After, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
-		require.Equal(t, math.LegacyNewDec(200), accFees1After.AmountOf("stake"))
+		require.Equal(t, math.LegacyNewDec(200), accFees1After.Fees.AmountOf("stake"))
 
-		accFees2After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr2)
+		accFees2After, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr2.String())
 		require.NoError(t, err)
-		require.Equal(t, math.LegacyNewDec(200), accFees2After.AmountOf("stake"))
+		require.Equal(t, math.LegacyNewDec(200), accFees2After.Fees.AmountOf("stake"))
 
 		// Validator 3: 0 (before) + 100 (new share)
-		accFees3After, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr3)
+		accFees3After, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr3.String())
 		require.NoError(t, err)
-		require.Equal(t, math.LegacyNewDec(100), accFees3After.AmountOf("stake"))
+		require.Equal(t, math.LegacyNewDec(100), accFees3After.Fees.AmountOf("stake"))
 	})
 }
 
@@ -764,7 +761,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 
 		// Add very small amount that creates only decimal fees
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1))
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Checkpoint to allocate fees
@@ -772,11 +769,11 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Validator should have 0.25 stake (25% of 1)
-		accFees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		accFees, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr.String())
 		require.NoError(t, err)
 		expectedAmount, err := math.LegacyNewDecFromStr("0.25")
 		require.NoError(t, err)
-		require.Equal(t, expectedAmount, accFees.AmountOf("stake"))
+		require.Equal(t, expectedAmount, accFees.Fees.AmountOf("stake"))
 
 		// Try to withdraw - should succeed but transfer 0 coins (only decimal)
 		coins, err := f.poaKeeper.WithdrawValidatorFees(f.ctx, validatorAddrSdk)
@@ -788,9 +785,9 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.Equal(t, int64(0), balance.Amount.Int64())
 
 		// Accumulated fees should still have the decimal remainder
-		accFeesAfter, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		accFeesAfter, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr.String())
 		require.NoError(t, err)
-		require.Equal(t, expectedAmount, accFeesAfter.AmountOf("stake"))
+		require.Equal(t, expectedAmount, accFeesAfter.Fees.AmountOf("stake"))
 	})
 
 	t.Run("withdraw updates total allocated correctly", func(t *testing.T) {
@@ -803,7 +800,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 
 		// Add fees
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Checkpoint
@@ -850,7 +847,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 			sdk.NewInt64Coin("atom", 75),
 			sdk.NewInt64Coin("osmo", 200),
 		)
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Checkpoint to allocate fees
@@ -858,11 +855,11 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify allocated fees for all denominations
-		allocatedFees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		allocatedFees, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr.String())
 		require.NoError(t, err)
-		require.Equal(t, math.LegacyNewDec(150), allocatedFees.AmountOf("stake"))
-		require.Equal(t, math.LegacyNewDec(75), allocatedFees.AmountOf("atom"))
-		require.Equal(t, math.LegacyNewDec(200), allocatedFees.AmountOf("osmo"))
+		require.Equal(t, math.LegacyNewDec(150), allocatedFees.Fees.AmountOf("stake"))
+		require.Equal(t, math.LegacyNewDec(75), allocatedFees.Fees.AmountOf("atom"))
+		require.Equal(t, math.LegacyNewDec(200), allocatedFees.Fees.AmountOf("osmo"))
 
 		// Withdraw all fees
 		coins, err := f.poaKeeper.WithdrawValidatorFees(f.ctx, validatorAddrSdk)
@@ -885,9 +882,9 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.Equal(t, int64(200), osmoBalance.Amount.Int64())
 
 		// Verify allocated fees are now zero for all denominations
-		allocatedFeesAfter, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		allocatedFeesAfter, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr.String())
 		require.NoError(t, err)
-		require.True(t, allocatedFeesAfter.IsZero())
+		require.True(t, allocatedFeesAfter.Fees.IsZero())
 
 		// Verify total allocated is zero
 		totalAllocated, err := f.poaKeeper.getTotalAllocated(f.ctx)
@@ -909,7 +906,7 @@ func TestWithdrawValidatorFees(t *testing.T) {
 			sdk.NewInt64Coin("stake", 10), // Validator gets 2.5
 			sdk.NewInt64Coin("atom", 7),   // Validator gets 1.75
 		)
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Checkpoint to allocate fees
@@ -923,10 +920,10 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify allocated fees
-		allocatedFees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		allocatedFees, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr.String())
 		require.NoError(t, err)
-		require.Equal(t, expectedStake, allocatedFees.AmountOf("stake"))
-		require.Equal(t, expectedAtom, allocatedFees.AmountOf("atom"))
+		require.Equal(t, expectedStake, allocatedFees.Fees.AmountOf("stake"))
+		require.Equal(t, expectedAtom, allocatedFees.Fees.AmountOf("atom"))
 
 		// Withdraw - should get whole coins only
 		coins, err := f.poaKeeper.WithdrawValidatorFees(f.ctx, validatorAddrSdk)
@@ -945,21 +942,21 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.Equal(t, int64(1), atomBalance.Amount.Int64()) // 1.75 -> 1
 
 		// Verify decimal remainders are preserved
-		allocatedFeesAfter, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		allocatedFeesAfter, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr.String())
 		require.NoError(t, err)
 
 		stakeRemainder := expectedStake.Sub(math.LegacyNewDec(2)) // 0.5
-		require.Equal(t, stakeRemainder, allocatedFeesAfter.AmountOf("stake"))
+		require.Equal(t, stakeRemainder, allocatedFeesAfter.Fees.AmountOf("stake"))
 
 		atomRemainder := expectedAtom.Sub(math.LegacyNewDec(1)) // 0.75
-		require.Equal(t, atomRemainder, allocatedFeesAfter.AmountOf("atom"))
+		require.Equal(t, atomRemainder, allocatedFeesAfter.Fees.AmountOf("atom"))
 
 		// Add more fees
 		fees2 := sdk.NewCoins(
 			sdk.NewInt64Coin("stake", 10),
 			sdk.NewInt64Coin("atom", 7),
 		)
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees2)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees2)
 		require.NoError(t, err)
 
 		// Checkpoint again
@@ -967,14 +964,14 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify remainders accumulate with new fees
-		allocatedFeesSecond, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		allocatedFeesSecond, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr.String())
 		require.NoError(t, err)
 
 		expectedStakeTotal := stakeRemainder.Add(expectedStake) // 0.5 + 2.5 = 3.0
 		expectedAtomTotal := atomRemainder.Add(expectedAtom)    // 0.75 + 1.75 = 2.5
 
-		require.Equal(t, expectedStakeTotal, allocatedFeesSecond.AmountOf("stake"))
-		require.Equal(t, expectedAtomTotal, allocatedFeesSecond.AmountOf("atom"))
+		require.Equal(t, expectedStakeTotal, allocatedFeesSecond.Fees.AmountOf("stake"))
+		require.Equal(t, expectedAtomTotal, allocatedFeesSecond.Fees.AmountOf("atom"))
 
 		// Withdraw again
 		coins2, err := f.poaKeeper.WithdrawValidatorFees(f.ctx, validatorAddrSdk)
@@ -993,59 +990,15 @@ func TestWithdrawValidatorFees(t *testing.T) {
 		require.Equal(t, int64(3), atomBalanceSecond.Amount.Int64()) // 1 + 2
 
 		// Verify new remainders
-		allocatedFeesFinal, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
+		allocatedFeesFinal, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr.String())
 		require.NoError(t, err)
 
 		// Stake: 3.0 - 3 = 0.0 (exactly zero, no remainder)
-		require.True(t, allocatedFeesFinal.AmountOf("stake").IsZero())
+		require.True(t, allocatedFeesFinal.Fees.AmountOf("stake").IsZero())
 
 		// Atom: 2.5 - 2 = 0.5 (has remainder)
 		finalAtomRemainder := expectedAtomTotal.Sub(math.LegacyNewDec(2))
-		require.Equal(t, finalAtomRemainder, allocatedFeesFinal.AmountOf("atom"))
-	})
-}
-
-func TestGetValidatorAllocatedFees(t *testing.T) {
-	t.Run("get fees for non-existent validator returns error", func(t *testing.T) {
-		f := setupTest(t)
-
-		// Try to get fees for non-existent validator
-		nonExistentConsAddr := sdk.ConsAddress("nonexistent")
-		_, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, nonExistentConsAddr)
-		require.Error(t, err)
-	})
-
-	t.Run("get fees for existing validator with no fees", func(t *testing.T) {
-		f := setupTest(t)
-
-		// Create validator
-		_, consAddr := createValidator(t, f, 1, 100)
-
-		// Get fees - should be zero
-		fees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
-		require.NoError(t, err)
-		require.True(t, fees.IsZero())
-	})
-
-	t.Run("get fees for existing validator with fees", func(t *testing.T) {
-		f := setupTest(t)
-
-		// Create validator
-		_, consAddr := createValidator(t, f, 1, 100)
-
-		// Add fees
-		feeCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, feeCoins)
-		require.NoError(t, err)
-
-		// Checkpoint
-		err = f.poaKeeper.checkpointAllValidators(f.ctx)
-		require.NoError(t, err)
-
-		// Get fees - should be 100
-		fees, err := f.poaKeeper.getValidatorAllocatedFees(f.ctx, consAddr)
-		require.NoError(t, err)
-		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(100))}, fees)
+		require.Equal(t, finalAtomRemainder, allocatedFeesFinal.Fees.AmountOf("atom"))
 	})
 }
 
@@ -1115,7 +1068,7 @@ func TestCalculateValidatorPendingFees(t *testing.T) {
 }
 
 func TestGetUnallocatedFees(t *testing.T) {
-	t.Run("returns zero when fee collector is empty", func(t *testing.T) {
+	t.Run("returns zero when poa module is empty", func(t *testing.T) {
 		f := setupTest(t)
 
 		unallocated, err := f.poaKeeper.getUnallocatedFees(f.ctx)
@@ -1126,9 +1079,9 @@ func TestGetUnallocatedFees(t *testing.T) {
 	t.Run("returns all fees when nothing allocated", func(t *testing.T) {
 		f := setupTest(t)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		unallocated, err := f.poaKeeper.getUnallocatedFees(f.ctx)
@@ -1142,9 +1095,9 @@ func TestGetUnallocatedFees(t *testing.T) {
 		// Create validator
 		_, _ = createValidator(t, f, 1, 100)
 
-		// Add fees to fee collector
+		// Add fees to poa module
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Allocate some fees
@@ -1153,7 +1106,7 @@ func TestGetUnallocatedFees(t *testing.T) {
 
 		// Add more fees
 		moreFees := sdk.NewCoins(sdk.NewInt64Coin("stake", 500))
-		err = f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, moreFees)
+		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, moreFees)
 		require.NoError(t, err)
 
 		unallocated, err := f.poaKeeper.getUnallocatedFees(f.ctx)
@@ -1170,7 +1123,7 @@ func TestGetUnallocatedFees(t *testing.T) {
 			sdk.NewInt64Coin("stake", 1000),
 			sdk.NewInt64Coin("atom", 400),
 		)
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		unallocated, err := f.poaKeeper.getUnallocatedFees(f.ctx)
@@ -1189,7 +1142,7 @@ func TestGetUnallocatedFees(t *testing.T) {
 
 		// Add fees
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-		err := f.bankKeeper.MintCoins(f.ctx, authtypes.FeeCollectorName, fees)
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 		require.NoError(t, err)
 
 		// Allocate all fees

@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/rootmulti"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*baseapp.BaseApp) {

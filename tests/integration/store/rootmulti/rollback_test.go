@@ -57,7 +57,7 @@ func TestRollback(t *testing.T) {
 	assert.Equal(t, target, app.LastBlockHeight())
 
 	// recreate app to have clean check state
-	app = simapp.NewSimApp(options.Logger, options.DB, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	app = simapp.NewSimApp(options.Logger, options.DB, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 	store = app.NewContext(true).KVStore(app.GetKey("bank"))
 	assert.DeepEqual(t, []byte("value5"), store.Get([]byte("key")))
 

@@ -16,6 +16,7 @@ message ConsensusParams {
   ValidatorParams validator = 3;
   VersionParams   version   = 4;
   ABCIParams      abci      = 5;
+  AuthorityParams authority = 6;
 }
 
 // BlockParams contains limits on the block size.
@@ -88,4 +89,8 @@ message ABCIParams {
   // passed to the application for validation in VerifyVoteExtension and given
   // to the application to use when proposing a block during PrepareProposal.
   int64 vote_extensions_enable_height = 1;
+}
+
+message AuthorityParams {
+  string authority = 1;
 }

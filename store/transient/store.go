@@ -1,10 +1,10 @@
 package transient
 
 import (
-	"cosmossdk.io/store/internal"
-	"cosmossdk.io/store/internal/btree"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/internal"
+	"github.com/cosmos/cosmos-sdk/store/v2/internal/btree"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 var (

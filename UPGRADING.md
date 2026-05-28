@@ -1,89 +1,28 @@
 # Upgrade Reference
 
-This document provides a quick reference for the upgrades from `v0.53.x` to `v0.54.x` of Cosmos SDK.
-
-Note, always read the **App Wiring Changes** section for more information on application wiring updates.
-
-## TLDR
-
-For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/CHANGELOG.md).
-
-## x/gov
-
-### Keeper Initialization
-
-The `x/gov` module has been decoupled from `x/staking`. The `keeper.NewKeeper` constructor now requires a `CalculateVoteResultsAndVotingPowerFn` parameter instead of a `StakingKeeper`.
-
-**Before:**
-
-```go
-govKeeper := keeper.NewKeeper(
-    cdc,
-    storeService,
-    authKeeper,
-    bankKeeper,
-    stakingKeeper,  // StakingKeeper parameter
-    distrKeeper,
-    router,
-    config,
-    authority,
-)
-```
-
-**After:**
+This document provides a reference for upgrading from `v0.54.x` to `v0.55.x` of Cosmos SDK.
 
 
-```go
-govKeeper := keeper.NewKeeper(
-    cdc,
-    storeService,
-    authKeeper,
-    bankKeeper,
-    keeper.NewDefaultCalculateVoteResultsAndVotingPower(stakingKeeper),  // Function parameter
-    distrKeeper,
-    router,
-    config,
-    authority,
-)
-```
+For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.55.x/CHANGELOG.md).
 
-For applications using depinject, the governance module now accepts an optional `CalculateVoteResultsAndVotingPowerFn`. If not provided, it will use the `StakingKeeper` (also optional) to create the default function.
+## Table of Contents
 
-### GovHooks Interface
+* [New Features and Non-Breaking Changes](#new-features-and-non-breaking-changes)
+    * [ML-DSA-65 Validator Keys](#ml-dsa-65-validator-consensus-keys) 
 
-The `AfterProposalSubmission` hook now includes the proposer address as a parameter.
 
-**Before:**
 
-```go
-func (h MyGovHooks) AfterProposalSubmission(ctx context.Context, proposalID uint64) error {
-    // implementation
-}
-```
+## New Features and Non-Breaking Changes
 
-**After:**
+These changes are informational and optional to adopt during the upgrade; they are not required for a successful migration.
 
-```go
-func (h MyGovHooks) AfterProposalSubmission(ctx context.Context, proposalID uint64, proposerAddr sdk.AccAddress) error {
-    // implementation
-}
-```
+### ML-DSA-65 Validator Consensus Keys
 
-## Adoption of OpenTelemetry and Deprecation of `github.com/hashicorp/go-metrics`
+Cosmos SDK v0.54 registers the NIST ML-DSA-65 (FIPS 204) post-quantum signature scheme as a supported validator consensus key type. The new `cosmos.crypto.mldsa65.PubKey` / `PrivKey` proto messages, Amino routes (`cometbft/PubKeyMlDsa65`, `cometbft/PrivKeyMlDsa65`), interface-registry registration, multisig amino route, and `hd.MlDsa65Type` constant are all enabled by default.
 
-Existing Cosmos SDK telemetry support is provided by `github.com/hashicorp/go-metrics` which is undermaintained and only supported metrics instrumentation.
-OpenTelemetry provides an integrated solution for metrics, traces, and logging which is widely adopted and actively maintained.
-The existing wrapper functions in the `telemetry` package required acquiring mutex locks and map lookups for every metric operation which is sub-optimal. OpenTelemetry's API uses atomic concurrency wherever possible and should introduce less performance overhead during metric collection.
+**Action required:** none. Existing chains continue to accept only the consensus key types listed in `genesis.consensus_params.validator.pub_key_types` (still `["ed25519"]` by default). No state-machine-relevant behavior changes for chains that do not opt in.
 
-The [README.md](telemetry/README.md) in the `telemetry` package provides more details on usage, but below is a quick summary:
+**To opt in (new chains):** set `genesis.consensus_params.validator.pub_key_types` to `["ml_dsa_65"]` (or a list including it). Validators must then submit `MsgCreateValidator` with a `mldsa65.PubKey`. Test harnesses can use the new `testutil/network.Config.ValidatorConsensusKeyType` field together with `genutil.InitializeNodeValidatorFilesFromMnemonicWithKeyType` to spin up an in-process testnet pinned to ML-DSA-65.
 
-1. application developers should follow the official [go OpenTelemetry](https://pkg.go.dev/go.opentelemetry.io/otel) guidelines when instrumenting their applications.
-2. node operators who want to configure OpenTelemetry exporters should set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of a yaml file which follows the OpenTelemetry declarative configuration format specified here: https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf. As long as the `telemetry` package has been imported somewhere (it should already be imported if you are using the SDK), OpenTelemetry will be initialized automatically based on the configuration file.
+**Operational considerations:** ML-DSA-65 keys and signatures are substantially larger than ed25519 (pubkey 1952 bytes vs 32, signature 3309 bytes vs 64). Chains enabling this key type should review `consensus_params.block.max_bytes` and gossip framing limits accordingly. The cometbft commit lift in this release expanded `MaxSignatureSize` and the per-validator `MaxCommitSigBytes` to accommodate the larger signatures; downstream applications relying on the previous fixed values may need to be re-examined.
 
-NOTE: the go implementation of [otelconf](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) is still under development and we will update our usage of it as it matures.
-
-## Log v2
-
-The log package has been bumped to v2 as new methods have been added to support tracer correlation with logs. Logs can be scraped with OpenTelemetry's [FileLog Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/filelogreceiver).
-You may have to make additional changes to your log backend to properly extract the trace_id, span_id, and trace_flags from the logs.
-For applications using depinject, the governance module now accepts an optional `CalculateVoteResultsAndVotingPowerFn`. If not provided, it will use the `StakingKeeper` (also optional) to create the default function.

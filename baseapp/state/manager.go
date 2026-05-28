@@ -11,9 +11,9 @@ import (
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log/v2"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/config"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

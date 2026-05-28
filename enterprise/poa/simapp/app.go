@@ -17,7 +17,6 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -28,7 +27,6 @@ import (
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log/v2"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -48,6 +46,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	sigtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -115,7 +114,6 @@ func init() {
 func NewSimApp(
 	logger log.Logger,
 	db dbm.DB,
-	traceStore io.Writer,
 	loadLatest bool,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
@@ -145,7 +143,6 @@ func NewSimApp(
 	baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
-	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetTxEncoder(txConfig.TxEncoder())
@@ -191,6 +188,7 @@ func NewSimApp(
 		map[string][]string{
 			authtypes.FeeCollectorName: nil,
 			govtypes.ModuleName:        {authtypes.Burner, authtypes.Staking},
+			poatypes.ModuleName:        nil,
 		},
 		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
@@ -252,10 +250,10 @@ func NewSimApp(
 			app.AccountKeeper, nil, app,
 			txConfig,
 		),
-		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
-		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, nil),
+		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
+		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
-		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper, nil),
+		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		poa.NewAppModule(appCodec, app.POAKeeper, poa.WithSecp256k1Support()), // poa.WithSecp256k1Support() is an optional parameter to allow Secp256k1 keys as validators
 	)
 
@@ -311,7 +309,7 @@ func NewSimApp(
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.ModuleManager.Modules))
 
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(app.encodingConfig.Codec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
+		authtypes.ModuleName: auth.NewAppModule(app.encodingConfig.Codec, app.AccountKeeper, authsims.RandomGenesisAccounts),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 

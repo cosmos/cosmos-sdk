@@ -33,7 +33,6 @@ capabilities of your blockchain or further specialize it.
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
 * [Epochs](./epochs/README.md) - Registration so SDK modules can have logic to be executed on timed tickers.
 * [Feegrant](./feegrant/README.md) - Grant fee allowances for executing transactions.
-* [ProtocolPool](./protocolpool/README.md) - Extended management of community pool functionality.
 
 ## Deprecated Modules
 

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
 
-	"github.com/cosmos/cosmos-sdk/testutil/systemtests"
+	"github.com/cosmos/cosmos-sdk/tools/systemtests"
 )
 
 func TestStakeUnstake(t *testing.T) {

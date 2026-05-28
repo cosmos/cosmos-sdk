@@ -11,21 +11,15 @@ import (
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/crypto/tmhash"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	protov2 "google.golang.org/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store"
-	"cosmossdk.io/store/snapshots"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/config"
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
@@ -33,6 +27,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/store/v2"
+	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -61,25 +58,6 @@ const (
 )
 
 var _ servertypes.ABCI = (*BaseApp)(nil)
-
-var (
-	tracer       = otel.Tracer("cosmos-sdk/baseapp")
-	meter        = otel.Meter("cosmos-sdk/baseapp")
-	blockCounter metric.Int64Counter
-	txCounter    metric.Int64Counter
-)
-
-func init() {
-	var err error
-	blockCounter, err = meter.Int64Counter("block.count")
-	if err != nil {
-		panic(err)
-	}
-	txCounter, err = meter.Int64Counter("tx.count")
-	if err != nil {
-		panic(err)
-	}
-}
 
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
@@ -182,6 +160,7 @@ type BaseApp struct {
 	// when disabled, the block gas meter in context is a noop one.
 	//
 	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
+	// Defaults to true (block gas meter disabled by default).
 	disableBlockGasMeter bool
 
 	// Optional alternative tx runner, used for block-stm parallel transaction execution. If nil, default txRunner is used.
@@ -195,17 +174,18 @@ func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
-		logger:           logger.With(log.ModuleKey, "baseapp"),
-		name:             name,
-		db:               db,
-		cms:              store.NewCommitMultiStore(db, logger),
-		storeLoader:      DefaultStoreLoader,
-		grpcQueryRouter:  NewGRPCQueryRouter(),
-		msgServiceRouter: NewMsgServiceRouter(),
-		txDecoder:        txDecoder,
-		fauxMerkleMode:   false,
-		sigverifyTx:      true,
-		gasConfig:        config.GasConfig{QueryGasLimit: math.MaxUint64},
+		logger:               logger.With(log.ModuleKey, "baseapp"),
+		name:                 name,
+		db:                   db,
+		cms:                  store.NewCommitMultiStore(db, logger),
+		storeLoader:          DefaultStoreLoader,
+		grpcQueryRouter:      NewGRPCQueryRouter(),
+		msgServiceRouter:     NewMsgServiceRouter(),
+		txDecoder:            txDecoder,
+		fauxMerkleMode:       false,
+		sigverifyTx:          true,
+		gasConfig:            config.GasConfig{QueryGasLimit: math.MaxUint64},
+		disableBlockGasMeter: true,
 	}
 
 	for _, option := range options {
@@ -659,17 +639,9 @@ func (app *BaseApp) getContextForTx(mode sdk.ExecMode, txBytes []byte, txIndex i
 
 // cacheTxContext returns a new context based off of the provided context with
 // a branched multi-store.
-func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, storetypes.CacheMultiStore) {
+func (app *BaseApp) cacheTxContext(ctx sdk.Context) (sdk.Context, storetypes.CacheMultiStore) {
 	ms := ctx.MultiStore()
 	msCache := ms.CacheMultiStore()
-	if msCache.TracingEnabled() {
-		msCache = msCache.SetTracingContext(
-			map[string]any{
-				"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
-			},
-		).(storetypes.CacheMultiStore)
-	}
-
 	return ctx.WithMultiStore(msCache), msCache
 }
 
@@ -885,12 +857,12 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		}
 	}
 
-	mempoolCtx := ctx
+	// Default to the current context so CheckTx without an AnteHandler still
+	// passes a valid context to the mempool.
+	anteCtx := ctx
 	var anteMSCache storetypes.CacheMultiStore
 
 	if app.anteHandler != nil {
-		var anteCtx sdk.Context
-
 		// Branch context before AnteHandler call in case it aborts.
 		// This is required for both CheckTx and DeliverTx.
 		// Ref: https://github.com/cosmos/cosmos-sdk/issues/2772
@@ -898,23 +870,26 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		// NOTE: Alternatively, we could require that AnteHandler ensures that
 		// writes do not happen if aborted/failed.  This may have some
 		// performance benefits, but it'll be more difficult to get right.
-		anteCtx, anteMSCache = app.cacheTxContext(ctx, txBytes)
+		anteCtx, anteMSCache = app.cacheTxContext(ctx)
 		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
-		anteCtx, anteSpan := anteCtx.StartSpan(tracer, "anteHandler")
-		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
+
+		var anteSpan trace.Span
+		anteCtx, anteSpan = anteCtx.StartSpan(tracer, "anteHandler")
+		anteCtx, err = app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 		anteSpan.End()
-		if !newCtx.IsZero() {
+
+		if !anteCtx.IsZero() {
 			// Restore the parent span without discarding values attached by the
 			// ante handler to the stdlib context.
-			newCtx = newCtx.WithContext(trace.ContextWithSpan(newCtx.Context(), trace.SpanFromContext(ctx.Context())))
+			anteCtx = anteCtx.WithContext(trace.ContextWithSpan(anteCtx.Context(), trace.SpanFromContext(ctx.Context())))
 
-			// At this point, newCtx.MultiStore() is a store branch, or something else
+			// At this point, anteCtx.MultiStore() is a store branch, or something else
 			// replaced by the AnteHandler. We want the original multistore.
 			//
 			// Also, in the case of the tx aborting, we need to track gas consumed via
 			// the instantiated gas meter in the AnteHandler, so we update the context
 			// prior to returning.
-			ctx = newCtx.WithMultiStore(ms)
+			ctx = anteCtx.WithMultiStore(ms)
 		}
 
 		events := ctx.EventManager().Events()
@@ -939,7 +914,7 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		}
 
 		if mode == execModeCheck {
-			mempoolCtx = ctx.WithMultiStore(anteMSCache)
+			anteCtx = ctx.WithMultiStore(anteMSCache)
 		} else {
 			anteMSCache.Write()
 			anteEvents = events.ToABCIEvents()
@@ -948,13 +923,13 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 
 	switch mode {
 	case execModeCheck:
-		if err := app.mempool.Insert(mempoolCtx, tx); err != nil {
+		if err := app.mempool.Insert(anteCtx, tx); err != nil {
 			return gInfo, nil, anteEvents, err
 		}
 
 		if anteMSCache != nil {
 			anteMSCache.Write()
-			anteEvents = mempoolCtx.EventManager().Events().ToABCIEvents()
+			anteEvents = anteCtx.EventManager().ABCIEvents()
 		}
 	case execModeFinalize:
 		reason := mempool.RemoveReason{Caller: mempool.CallerRunTxFinalize}
@@ -967,7 +942,7 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 	// Create a new Context based off of the existing Context with a MultiStore branch
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.
-	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
+	runMsgCtx, msCache := app.cacheTxContext(ctx)
 
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
@@ -1010,7 +985,9 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 
 			msCache.Write()
 
-			txCounter.Add(ctx, 1)
+			if inst != nil {
+				inst.TxCount.Add(ctx, 1)
+			}
 		}
 
 		if len(anteEvents) > 0 && (mode == execModeFinalize || mode == execModeSimulate) {

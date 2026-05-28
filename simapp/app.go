@@ -3,7 +3,6 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"maps"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -17,7 +16,6 @@ import (
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log/v2"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -34,6 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -81,9 +80,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/protocolpool"
-	protocolpoolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
-	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -104,14 +100,12 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:                  nil,
-		distrtypes.ModuleName:                       nil,
-		minttypes.ModuleName:                        {authtypes.Minter},
-		stakingtypes.BondedPoolName:                 {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:              {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:                         {authtypes.Burner},
-		protocolpooltypes.ModuleName:                nil,
-		protocolpooltypes.ProtocolPoolEscrowAccount: nil,
+		authtypes.FeeCollectorName:     nil,
+		distrtypes.ModuleName:          nil,
+		minttypes.ModuleName:           {authtypes.Minter},
+		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:            {authtypes.Burner},
 	}
 )
 
@@ -146,10 +140,9 @@ type SimApp struct {
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 
 	// supplementary keepers
-	FeeGrantKeeper     feegrantkeeper.Keeper
-	AuthzKeeper        authzkeeper.Keeper
-	EpochsKeeper       *epochskeeper.Keeper
-	ProtocolPoolKeeper protocolpoolkeeper.Keeper
+	FeeGrantKeeper feegrantkeeper.Keeper
+	AuthzKeeper    authzkeeper.Keeper
+	EpochsKeeper   *epochskeeper.Keeper
 
 	// the module manager
 	ModuleManager      *module.Manager
@@ -174,7 +167,6 @@ func init() {
 func NewSimApp(
 	logger log.Logger,
 	db dbm.DB,
-	traceStore io.Writer,
 	loadLatest bool,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
@@ -235,7 +227,6 @@ func NewSimApp(
 	baseAppOptions = append(baseAppOptions, voteExtOp, baseapp.SetOptimisticExecution())
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
-	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetTxEncoder(txConfig.TxEncoder())
@@ -254,7 +245,6 @@ func NewSimApp(
 		evidencetypes.StoreKey,
 		authzkeeper.StoreKey,
 		epochstypes.StoreKey,
-		protocolpooltypes.StoreKey,
 	)
 
 	// register streaming services
@@ -336,14 +326,6 @@ func NewSimApp(
 		// mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn)), custom mintFn can be added here
 	)
 
-	app.ProtocolPoolKeeper = protocolpoolkeeper.NewKeeper(
-		appCodec,
-		runtime.NewKVStoreService(keys[protocolpooltypes.StoreKey]),
-		app.AccountKeeper,
-		app.BankKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
@@ -352,7 +334,6 @@ func NewSimApp(
 		app.StakingKeeper,
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper),
 	)
 
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
@@ -467,21 +448,20 @@ func NewSimApp(
 			app.AccountKeeper, app.StakingKeeper, app,
 			txConfig,
 		),
-		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
+		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
-		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, nil),
+		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
-		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, nil),
-		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, nil, nil),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, nil, app.interfaceRegistry),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, nil),
-		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, nil),
+		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper),
+		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, nil),
+		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.interfaceRegistry),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper, app.AccountKeeper.AddressCodec()),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		epochs.NewAppModule(app.EpochsKeeper),
-		protocolpool.NewAppModule(app.ProtocolPoolKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
@@ -511,7 +491,6 @@ func NewSimApp(
 	app.ModuleManager.SetOrderBeginBlockers(
 		minttypes.ModuleName,
 		distrtypes.ModuleName,
-		protocolpooltypes.ModuleName,
 		slashingtypes.ModuleName,
 		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
@@ -525,7 +504,6 @@ func NewSimApp(
 		stakingtypes.ModuleName,
 		genutiltypes.ModuleName,
 		feegrant.ModuleName,
-		protocolpooltypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -547,13 +525,11 @@ func NewSimApp(
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		epochstypes.ModuleName,
-		protocolpooltypes.ModuleName,
 	}
 
 	exportModuleOrder := []string{
 		consensusparamtypes.ModuleName,
 		authtypes.ModuleName,
-		protocolpooltypes.ModuleName, // Must be exported before bank
 		banktypes.ModuleName,
 		distrtypes.ModuleName,
 		stakingtypes.ModuleName,
@@ -601,7 +577,7 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
+		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 

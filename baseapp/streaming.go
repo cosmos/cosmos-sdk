@@ -8,11 +8,10 @@ import (
 
 	"github.com/spf13/cast"
 
-	"cosmossdk.io/store/streaming"
-	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/streaming"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 const (

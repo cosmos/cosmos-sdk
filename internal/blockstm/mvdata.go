@@ -2,13 +2,14 @@ package blockstm
 
 import (
 	"bytes"
+	"context"
 	"sync/atomic"
 	"time"
 
-	storetypes "cosmossdk.io/store/types"
+	"go.opentelemetry.io/otel/metric"
 
 	tree2 "github.com/cosmos/cosmos-sdk/internal/blockstm/tree"
-	"github.com/cosmos/cosmos-sdk/telemetry"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 // IndexBTreeDegree use smaller degree since we do copy-on-write.
@@ -64,23 +65,24 @@ func NewGMVData[V any](blockSize int, isZero func(V) bool, valueLen func(V) int)
 }
 
 // getIndex returns `nil` if not found
-func (d *GMVData[V]) getIndex(key Key) *BitmapIndex {
-	outer, _ := d.index.Get(indexEntry{Key: key})
+func (d *GMVData[V]) getIndex(ctx context.Context, key Key) *BitmapIndex {
+	outer, _ := d.index.Get(ctx, indexEntry{Key: key})
 	return outer.Index
 }
 
 // getIndexOrDefault set a new tree atomically if not found.
-func (d *GMVData[V]) getIndexOrDefault(key Key) *BitmapIndex {
-	return d.index.GetOrDefault(indexEntry{Key: key}, (*indexEntry).Init).Index
+func (d *GMVData[V]) getIndexOrDefault(ctx context.Context, key Key) *BitmapIndex {
+	return d.index.GetOrDefault(ctx, indexEntry{Key: key}, (*indexEntry).Init).Index
 }
 
 // Consolidate returns wroteNewLocation
-func (d *GMVData[V]) Consolidate(version TxnVersion, writeSet *GMemDB[V]) bool {
-	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVDataConsolidate) //nolint:staticcheck // TODO: switch to OpenTelemetry
+func (d *GMVData[V]) Consolidate(ctx context.Context, version TxnVersion, writeSet *GMemDB[V]) bool {
+	start := time.Now()
+	defer measureSince(ctx, func() metric.Int64Histogram { return inst.MVDataConsolidate }, start)
 
 	if writeSet == nil || writeSet.Len() == 0 {
 		// delete old indexes
-		d.ConsolidateEmpty(version.Index)
+		d.ConsolidateEmpty(ctx, version.Index)
 		return false
 	}
 
@@ -92,7 +94,7 @@ func (d *GMVData[V]) Consolidate(version TxnVersion, writeSet *GMemDB[V]) bool {
 	var wroteNewLocation bool
 	if prevData == nil {
 		writeSet.Scan(func(key Key, _ V) bool {
-			d.Set(key, version.Index)
+			d.setIndex(ctx, key, version.Index)
 			return true
 		})
 		wroteNewLocation = true
@@ -101,11 +103,11 @@ func (d *GMVData[V]) Consolidate(version TxnVersion, writeSet *GMemDB[V]) bool {
 		DiffMemDB(prevData.WriteSet, writeSet, func(key Key, is_new bool) bool {
 			if is_new {
 				// new key, add to index
-				d.Set(key, version.Index)
+				d.setIndex(ctx, key, version.Index)
 				wroteNewLocation = true
 			} else {
 				// deleted key, delete from index
-				d.Delete(key, version.Index)
+				d.deleteIndex(ctx, key, version.Index)
 			}
 			return true
 		})
@@ -114,11 +116,11 @@ func (d *GMVData[V]) Consolidate(version TxnVersion, writeSet *GMemDB[V]) bool {
 	return wroteNewLocation
 }
 
-func (d *GMVData[V]) ConsolidateEmpty(txn TxnIndex) {
+func (d *GMVData[V]) ConsolidateEmpty(ctx context.Context, txn TxnIndex) {
 	old := d.data[txn].Swap(nil)
 	if old != nil {
 		old.WriteSet.Scan(func(key Key, _ V) bool {
-			d.Delete(key, txn)
+			d.deleteIndex(ctx, key, txn)
 			return true
 		})
 	}
@@ -162,7 +164,7 @@ func (d *GMVData[V]) ClearEstimates(txn TxnIndex) {
 	}
 }
 
-func (d *GMVData[V]) InitWithEstimates(txn TxnIndex, estimates Locations) {
+func (d *GMVData[V]) InitWithEstimates(ctx context.Context, txn TxnIndex, estimates Locations) {
 	var zero V
 
 	// populate writeset to keep it consistent with index
@@ -176,19 +178,19 @@ func (d *GMVData[V]) InitWithEstimates(txn TxnIndex, estimates Locations) {
 	})
 
 	for _, key := range estimates {
-		d.Set(key, txn)
+		d.setIndex(ctx, key, txn)
 	}
 }
 
-// Set add txn to the key's bitmap index.
-func (d *GMVData[V]) Set(key Key, txn TxnIndex) {
-	idx := d.getIndexOrDefault(key)
+// setIndex adds txn to the key's bitmap index.
+func (d *GMVData[V]) setIndex(ctx context.Context, key Key, txn TxnIndex) {
+	idx := d.getIndexOrDefault(ctx, key)
 	idx.Set(txn)
 }
 
-// Delete removes txn from the key's bitmap index.
-func (d *GMVData[V]) Delete(key Key, txn TxnIndex) {
-	tree := d.getIndex(key)
+// deleteIndex removes txn from the key's bitmap index.
+func (d *GMVData[V]) deleteIndex(ctx context.Context, key Key, txn TxnIndex) {
+	tree := d.getIndex(ctx, key)
 	if tree != nil {
 		tree.Delete(txn)
 	}
@@ -198,14 +200,15 @@ func (d *GMVData[V]) Delete(key Key, txn TxnIndex) {
 // If the key is not found, returns `(zero, InvalidTxnVersion, false)`.
 // If the key is found but value is an estimate, returns `(value, version, true)`.
 // If the key is found, returns `(value, version, false)`, `value` can be zero value which means deleted.
-func (d *GMVData[V]) Read(key Key, txn TxnIndex) (V, TxnVersion, bool) {
-	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVDataRead) //nolint:staticcheck // TODO: switch to OpenTelemetry
+func (d *GMVData[V]) Read(ctx context.Context, key Key, txn TxnIndex) (V, TxnVersion, bool) {
+	start := time.Now()
+	defer measureSince(ctx, func() metric.Int64Histogram { return inst.MVDataRead }, start)
 	var zero V
 	if txn == 0 {
 		return zero, InvalidTxnVersion, false
 	}
 
-	store := d.getIndex(key)
+	store := d.getIndex(ctx, key)
 	if store == nil {
 		return zero, InvalidTxnVersion, false
 	}
@@ -258,9 +261,9 @@ func (d *GMVData[V]) Iterator(
 
 // ValidateReadSet validates the read descriptors,
 // returns true if valid.
-func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, rs *ReadSet) bool {
+func (d *GMVData[V]) ValidateReadSet(ctx context.Context, txn TxnIndex, rs *ReadSet) bool {
 	for _, desc := range rs.Reads {
-		_, version, estimate := d.Read(desc.Key, txn)
+		_, version, estimate := d.Read(ctx, desc.Key, txn)
 		if estimate {
 			// previously read entry from data, now ESTIMATE
 			return false
@@ -315,8 +318,8 @@ func (d *GMVData[V]) validateIterator(desc IteratorDescriptor, txn TxnIndex) boo
 	return i == len(desc.Reads)
 }
 
-func (d *GMVData[V]) Snapshot() (snapshot []GKVPair[V]) {
-	d.SnapshotTo(func(key Key, value V) bool {
+func (d *GMVData[V]) Snapshot(ctx context.Context) (snapshot []GKVPair[V]) {
+	d.SnapshotTo(ctx, func(key Key, value V) bool {
 		snapshot = append(snapshot, GKVPair[V]{key, value})
 		return true
 	})
@@ -325,8 +328,8 @@ func (d *GMVData[V]) Snapshot() (snapshot []GKVPair[V]) {
 
 // SnapshotTo is only called after the parallel execution is done,
 // so we don't protect with locks and assume data is consistent.
-func (d *GMVData[V]) SnapshotTo(cb func(Key, V) bool) {
-	d.index.Scan(func(outer indexEntry) bool {
+func (d *GMVData[V]) SnapshotTo(ctx context.Context, cb func(Key, V) bool) {
+	d.index.Scan(ctx, func(outer indexEntry) bool {
 		txn, ok := outer.Index.Max()
 		if !ok {
 			return true
@@ -341,9 +344,9 @@ func (d *GMVData[V]) SnapshotTo(cb func(Key, V) bool) {
 	})
 }
 
-func (d *GMVData[V]) SnapshotToStore(store storetypes.Store) {
+func (d *GMVData[V]) SnapshotToStore(ctx context.Context, store storetypes.Store) {
 	kv := store.(storetypes.GKVStore[V])
-	d.SnapshotTo(func(key Key, value V) bool {
+	d.SnapshotTo(ctx, func(key Key, value V) bool {
 		if d.isZero(value) {
 			kv.Delete(key)
 		} else {

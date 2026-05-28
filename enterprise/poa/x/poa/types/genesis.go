@@ -35,7 +35,10 @@ import (
 // uniqueness when importing genesis. Parameter validation happens in the
 // keeper when params are set.
 func (s *GenesisState) ValidateBasic() error {
-	return ValidateValidatorSet(s.Validators)
+	if err := ValidateValidatorSet(s.Validators); err != nil {
+		return err
+	}
+	return ValidateAllocatedFees(s.AllocatedFees)
 }
 
 // Validate performs full validation on the GenesisState.
@@ -53,6 +56,13 @@ func (s *GenesisState) Validate(ac address.Codec) error {
 	// Validate params with address codec
 	if err := s.Params.Validate(ac); err != nil {
 		return fmt.Errorf("invalid params: %w", err)
+	}
+
+	// Validate allocated fees with address codec
+	for i, entry := range s.AllocatedFees {
+		if err := entry.Validate(ac); err != nil {
+			return fmt.Errorf("allocated fees at index %d: %w", i, err)
+		}
 	}
 
 	return nil

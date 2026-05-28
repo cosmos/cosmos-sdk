@@ -1,9 +1,10 @@
 package blockstm
 
 import (
+	"context"
 	"sync/atomic"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 type (
@@ -13,23 +14,29 @@ type (
 
 // MVMemory implements `Algorithm 2 The MVMemory module`
 type MVMemory struct {
-	storage     MultiStore
-	scheduler   *Scheduler
-	stores      map[storetypes.StoreKey]int
-	data        []MVStore
+	scheduler *Scheduler
+	// map StoreKey to array index
+	stores map[storetypes.StoreKey]int
+
+	// multi-version data structure for each store
+	data []MVStore
+	// parent storage for each store
+	storage []Storage
+
+	// read sets of transactions
 	lastReadSet []atomic.Pointer[MultiReadSet]
 }
 
 func NewMVMemory(
 	block_size int, stores map[storetypes.StoreKey]int,
-	storage MultiStore, scheduler *Scheduler,
+	storage []Storage, scheduler *Scheduler,
 ) *MVMemory {
 	return NewMVMemoryWithEstimates(block_size, stores, storage, scheduler, nil)
 }
 
 func NewMVMemoryWithEstimates(
 	block_size int, stores map[storetypes.StoreKey]int,
-	storage MultiStore, scheduler *Scheduler, estimates []MultiLocations,
+	storage []Storage, scheduler *Scheduler, estimates []MultiLocations,
 ) *MVMemory {
 	data := make([]MVStore, len(stores))
 	for key, i := range stores {
@@ -45,9 +52,10 @@ func NewMVMemoryWithEstimates(
 	}
 
 	// init with pre-estimates
+	ctx := context.Background()
 	for txn, est := range estimates {
 		for store, locs := range est {
-			mv.data[store].InitWithEstimates(TxnIndex(txn), locs)
+			mv.data[store].InitWithEstimates(ctx, TxnIndex(txn), locs)
 		}
 	}
 
@@ -73,31 +81,31 @@ func (mv *MVMemory) ClearEstimates(txn TxnIndex) {
 	}
 }
 
-func (mv *MVMemory) ValidateReadSet(txn TxnIndex) bool {
+func (mv *MVMemory) ValidateReadSet(ctx context.Context, txn TxnIndex) bool {
 	// Invariant: at least one `Record` call has been made for `txn`
 	rs := *mv.lastReadSet[txn].Load()
 	for store, readSet := range rs {
-		if !mv.data[store].ValidateReadSet(txn, readSet) {
+		if !mv.data[store].ValidateReadSet(ctx, txn, readSet) {
 			return false
 		}
 	}
 	return true
 }
 
-func (mv *MVMemory) WriteSnapshot(storage MultiStore) {
+func (mv *MVMemory) WriteSnapshot(ctx context.Context, parent MultiStore) {
 	for name, i := range mv.stores {
-		mv.data[i].SnapshotToStore(storage.GetStore(name))
+		mv.data[i].SnapshotToStore(ctx, parent.GetStore(name))
 	}
 }
 
 // View creates a view for a particular transaction.
-func (mv *MVMemory) View(txn TxnIndex) *MultiMVMemoryView {
-	return NewMultiMVMemoryView(mv, txn)
+func (mv *MVMemory) View(ctx context.Context, txn TxnIndex) *MultiMVMemoryView {
+	return NewMultiMVMemoryView(ctx, mv, txn)
 }
 
-func (mv *MVMemory) newMVView(name storetypes.StoreKey, txn TxnIndex) MVView {
+func (mv *MVMemory) newMVView(ctx context.Context, name storetypes.StoreKey, txn TxnIndex) MVView {
 	i := mv.stores[name]
-	return NewMVView(i, mv.storage.GetStore(name), mv.GetMVStore(i), mv.scheduler, txn)
+	return NewMVView(ctx, i, mv.storage[i], mv.GetMVStore(i), mv.scheduler, txn)
 }
 
 func (mv *MVMemory) GetMVStore(i int) MVStore {

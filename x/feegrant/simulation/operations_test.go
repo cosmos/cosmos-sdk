@@ -35,7 +35,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -63,7 +62,6 @@ func (suite *SimTestSuite) SetupTest() {
 				configurator.StakingModule(),
 				configurator.TxModule(),
 				configurator.ConsensusModule(),
-				configurator.ParamsModule(),
 				configurator.GenutilModule(),
 				configurator.FeegrantModule(),
 			),

@@ -1420,8 +1420,6 @@ type QueryClient interface {
 	// DelegatorWithdrawAddress queries withdraw address of a delegator.
 	DelegatorWithdrawAddress(ctx context.Context, in *QueryDelegatorWithdrawAddressRequest, opts ...grpc.CallOption) (*QueryDelegatorWithdrawAddressResponse, error)
 	// CommunityPool queries the community pool coins.
-	//
-	// WARNING: This query will fail if an external community pool is used.
 	CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error)
 	// ValidatorHistoricalRewards queries historical rewards for a validator at a specific period.
 	ValidatorHistoricalRewards(ctx context.Context, in *QueryValidatorHistoricalRewardsRequest, opts ...grpc.CallOption) (*QueryValidatorHistoricalRewardsResponse, error)
@@ -1578,8 +1576,6 @@ type QueryServer interface {
 	// DelegatorWithdrawAddress queries withdraw address of a delegator.
 	DelegatorWithdrawAddress(context.Context, *QueryDelegatorWithdrawAddressRequest) (*QueryDelegatorWithdrawAddressResponse, error)
 	// CommunityPool queries the community pool coins.
-	//
-	// WARNING: This query will fail if an external community pool is used.
 	CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
 	// ValidatorHistoricalRewards queries historical rewards for a validator at a specific period.
 	ValidatorHistoricalRewards(context.Context, *QueryValidatorHistoricalRewardsRequest) (*QueryValidatorHistoricalRewardsResponse, error)

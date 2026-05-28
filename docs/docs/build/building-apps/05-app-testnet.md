@@ -204,9 +204,9 @@ Next we will add a newTestnetApp helper function:
 ```diff
 // newTestnetApp starts by running the normal newApp method. From there, the app interface returned is modified in order
 // for a testnet to be created from the provided app.
-func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+func newTestnetApp(logger log.Logger, db cometbftdb.DB, appOpts servertypes.AppOptions) servertypes.Application {
 	// Create an app and type cast to an SimApp
-	app := newApp(logger, db, traceStore, appOpts)
+	app := newApp(logger, db, appOpts)
 	simApp, ok := app.(*simapp.SimApp)
 	if !ok {
 		panic("app created from newApp is not of type simApp")

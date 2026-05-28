@@ -1,7 +1,6 @@
 package distribution
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,19 +20,18 @@ import (
 type GRPCQueryTestSuite struct {
 	suite.Suite
 
-	externalPoolEnabled bool
-	cfg                 network.Config
-	network             *network.Network
+	cfg     network.Config
+	network *network.Network
 }
 
-func NewGRPCQueryTestSuite(externalPoolEnabled bool) *GRPCQueryTestSuite {
-	return &GRPCQueryTestSuite{externalPoolEnabled: externalPoolEnabled}
+func NewGRPCQueryTestSuite() *GRPCQueryTestSuite {
+	return &GRPCQueryTestSuite{}
 }
 
 func (s *GRPCQueryTestSuite) SetupSuite() {
 	s.T().Log("setting up grpc e2e test suite")
 
-	cfg := initNetworkConfig(s.T(), s.externalPoolEnabled)
+	cfg := initNetworkConfig(s.T())
 
 	cfg.NumValidators = 1
 	s.cfg = cfg
@@ -492,16 +490,9 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorCommunityPoolGRPC() {
 		s.Run(tc.name, func() {
 			resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 
-			switch {
-			case tc.expErr:
+			if tc.expErr {
 				s.Require().Error(err)
-			case s.externalPoolEnabled:
-				s.Require().NoError(err)
-				var errMessage sdktestutil.ErrorResponse
-				s.Require().NoError(json.Unmarshal(resp, &errMessage))
-				s.Require().Equal(2, errMessage.Code)
-				s.Require().Equal("external community pool is enabled - use the CommunityPool query exposed by the external community pool: invalid request: unknown request", errMessage.Message)
-			default:
+			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())

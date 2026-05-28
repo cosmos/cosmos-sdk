@@ -144,7 +144,7 @@ func (k Keeper) ExportPendingConsKeyRotations(ctx context.Context, exportedIniti
 			// if we import the genesis without modifying the apply height, we
 			// will comet will not know about this key rotation and we will
 			// update sdk state without updating comet. thus, we push the apply
-			// height forward so hat the abci updates can be reemitted and
+			// height forward so that the abci updates can be reemitted and
 			// comet properly updated
 			applyHeight = exportedInitialHeight + types.ConsensusUpdateDelay
 		}

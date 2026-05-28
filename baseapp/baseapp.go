@@ -914,6 +914,8 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		}
 
 		if mode == execModeCheck {
+			// In CheckTx, mempool insertion must see ante writes before they are
+			// committed to the parent multistore.
 			anteCtx = ctx.WithMultiStore(anteMSCache)
 		} else {
 			anteMSCache.Write()

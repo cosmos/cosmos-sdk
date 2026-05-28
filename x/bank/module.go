@@ -4,19 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"maps"
-	"slices"
-	"sort"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -25,12 +18,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // ConsensusVersion defines the current x/bank module consensus version.
@@ -185,101 +176,3 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 	return am.keeper.CreditVirtualAccounts(ctx)
 }
 
-// App Wiring Setup
-
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-		appmodule.Invoke(InvokeSetSendRestrictions),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	Config       *modulev1.Module
-	Cdc          codec.Codec
-	StoreService corestore.KVStoreService
-	Logger       log.Logger
-
-	AccountKeeper types.AccountKeeper
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	BankKeeper keeper.BaseKeeper
-	Module     appmodule.AppModule
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	// Configure blocked module accounts.
-	//
-	// Default behavior for blockedAddresses is to regard any module mentioned in
-	// AccountKeeper's module account permissions as blocked.
-	blockedAddresses := make(map[string]bool)
-	if len(in.Config.BlockedModuleAccountsOverride) > 0 {
-		for _, moduleName := range in.Config.BlockedModuleAccountsOverride {
-			blockedAddresses[authtypes.NewModuleAddress(moduleName).String()] = true
-		}
-	} else {
-		for _, permission := range in.AccountKeeper.GetModulePermissions() {
-			blockedAddresses[permission.GetAddress().String()] = true
-		}
-	}
-
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	bankKeeper := keeper.NewBaseKeeper(
-		in.Cdc,
-		in.StoreService,
-		in.AccountKeeper,
-		blockedAddresses,
-		authority.String(),
-		in.Logger,
-	)
-	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
-
-	return ModuleOutputs{BankKeeper: bankKeeper, Module: m}
-}
-
-func InvokeSetSendRestrictions(
-	config *modulev1.Module,
-	keeper keeper.BaseKeeper,
-	restrictions map[string]types.SendRestrictionFn,
-) error {
-	if config == nil {
-		return nil
-	}
-
-	modules := slices.Collect(maps.Keys(restrictions))
-	order := config.RestrictionsOrder
-	if len(order) == 0 {
-		order = modules
-		sort.Strings(order)
-	}
-
-	if len(order) != len(modules) {
-		return fmt.Errorf("len(restrictions order: %v) != len(restriction modules: %v)", order, modules)
-	}
-
-	if len(modules) == 0 {
-		return nil
-	}
-
-	for _, module := range order {
-		restriction, ok := restrictions[module]
-		if !ok {
-			return fmt.Errorf("can't find send restriction for module %s", module)
-		}
-
-		keeper.AppendSendRestriction(restriction)
-	}
-
-	return nil
-}

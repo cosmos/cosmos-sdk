@@ -886,13 +886,10 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 	}
 
 	mempoolCtx := ctx
-	var commitAnteCache func()
+	var anteMSCache storetypes.CacheMultiStore
 
 	if app.anteHandler != nil {
-		var (
-			anteCtx sdk.Context
-			msCache storetypes.CacheMultiStore
-		)
+		var anteCtx sdk.Context
 
 		// Branch context before AnteHandler call in case it aborts.
 		// This is required for both CheckTx and DeliverTx.
@@ -901,7 +898,7 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		// NOTE: Alternatively, we could require that AnteHandler ensures that
 		// writes do not happen if aborted/failed.  This may have some
 		// performance benefits, but it'll be more difficult to get right.
-		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
+		anteCtx, anteMSCache = app.cacheTxContext(ctx, txBytes)
 		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
 		anteCtx, anteSpan := anteCtx.StartSpan(tracer, "anteHandler")
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
@@ -941,18 +938,11 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 			return gInfo, nil, nil, err
 		}
 
-		commitAnteCache = func() {
-			if msCache != nil {
-				msCache.Write()
-			}
-			anteEvents = events.ToABCIEvents()
-		}
-
 		if mode == execModeCheck {
-			mempoolCtx = ctx.WithMultiStore(msCache)
+			mempoolCtx = ctx.WithMultiStore(anteMSCache)
 		} else {
-			commitAnteCache()
-			commitAnteCache = nil
+			anteMSCache.Write()
+			anteEvents = events.ToABCIEvents()
 		}
 	}
 
@@ -962,8 +952,9 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 			return gInfo, nil, anteEvents, err
 		}
 
-		if commitAnteCache != nil {
-			commitAnteCache()
+		if anteMSCache != nil {
+			anteMSCache.Write()
+			anteEvents = mempoolCtx.EventManager().Events().ToABCIEvents()
 		}
 	case execModeFinalize:
 		reason := mempool.RemoveReason{Caller: mempool.CallerRunTxFinalize}

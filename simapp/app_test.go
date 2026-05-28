@@ -1,11 +1,14 @@
 package simapp
 
 import (
+	"bytes"
 	"encoding/json"
 	"testing"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
@@ -17,6 +20,9 @@ import (
 	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -93,6 +99,194 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	app2 := NewSimApp(logger.With("instance", "second"), db, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 	_, err = app2.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
+}
+
+func TestSimAppExportImportWithPendingConsensusKeyRotation(t *testing.T) {
+	oldPk := ed25519.GenPrivKey().PubKey()
+	oldCmtPk, err := cryptocodec.ToCmtPubKeyInterface(oldPk)
+	require.NoError(t, err)
+
+	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{
+		cmttypes.NewValidator(oldCmtPk, 1),
+	})
+
+	senderPrivKey := secp256k1.GenPrivKey()
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	app := SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, banktypes.Balance{
+		Address: acc.GetAddress().String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction))),
+	})
+
+	newPk := ed25519.GenPrivKey().PubKey()
+	ctx := app.NewContextLegacy(true, cmtproto.Header{
+		Height: app.LastBlockHeight(),
+		Time:   time.Unix(100, 0).UTC(),
+	})
+	valAddr := sdk.ValAddress(oldPk.Address())
+	require.NoError(t, app.StakingKeeper.SetConsKeyRotation(ctx, valAddr, oldPk, newPk))
+
+	exported, err := app.ExportAppStateAndValidators(false, nil, nil)
+	require.NoError(t, err)
+	require.Len(t, exported.Validators, 1)
+	require.True(t, bytes.Equal(oldPk.Address().Bytes(), exported.Validators[0].PubKey.Address()))
+
+	reqValidators := make([]abci.ValidatorUpdate, len(exported.Validators))
+	for i, validator := range exported.Validators {
+		pk, err := cryptocodec.FromCmtPubKeyInterface(validator.PubKey)
+		require.NoError(t, err)
+		protoPk, err := cryptocodec.ToCmtProtoPublicKey(pk)
+		require.NoError(t, err)
+		reqValidators[i] = abci.ValidatorUpdate{
+			PubKey: protoPk,
+			Power:  validator.Power,
+		}
+	}
+
+	newApp := NewSimApp(log.NewTestLogger(t), dbm.NewMemDB(), true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	_, err = newApp.InitChain(&abci.RequestInitChain{
+		Validators:      reqValidators,
+		ConsensusParams: &exported.ConsensusParams,
+		AppStateBytes:   exported.AppState,
+		InitialHeight:   exported.Height,
+	})
+	require.NoError(t, err)
+
+	finalizeRes, err := newApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+		Time:   time.Unix(101, 0).UTC(),
+	})
+	require.NoError(t, err)
+	require.Len(t, finalizeRes.ValidatorUpdates, 2)
+	reemittedPk, err := cryptocodec.FromCmtProtoPublicKey(finalizeRes.ValidatorUpdates[1].PubKey)
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(newPk.Address().Bytes(), reemittedPk.Address().Bytes()))
+	_, err = newApp.Commit()
+	require.NoError(t, err)
+
+	for newApp.LastBlockHeight() < int64(1)+stakingtypes.ConsensusUpdateDelay {
+		_, err = newApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: newApp.LastBlockHeight() + 1,
+			Time:   time.Unix(101+newApp.LastBlockHeight(), 0).UTC(),
+		})
+		require.NoError(t, err)
+		_, err = newApp.Commit()
+		require.NoError(t, err)
+	}
+
+	queryCtx := newApp.NewContextLegacy(true, cmtproto.Header{Height: newApp.LastBlockHeight()})
+	stored, err := newApp.StakingKeeper.GetValidator(queryCtx, valAddr)
+	require.NoError(t, err)
+	storedConsAddr, err := stored.GetConsAddr()
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(newPk.Address().Bytes(), storedConsAddr))
+
+	pending, err := newApp.StakingKeeper.PendingConsKeyRotations(queryCtx)
+	require.NoError(t, err)
+	require.Empty(t, pending)
+	hasOldLock, err := newApp.StakingKeeper.IsConsAddrLockedByRotation(queryCtx, sdk.ConsAddress(oldPk.Address()))
+	require.NoError(t, err)
+	require.True(t, hasOldLock)
+	hasNewLock, err := newApp.StakingKeeper.IsConsAddrLockedByRotation(queryCtx, sdk.ConsAddress(newPk.Address()))
+	require.NoError(t, err)
+	require.False(t, hasNewLock)
+}
+
+func TestSimAppExportImportForZeroHeightWithPendingConsensusKeyRotation(t *testing.T) {
+	oldPk := ed25519.GenPrivKey().PubKey()
+	oldCmtPk, err := cryptocodec.ToCmtPubKeyInterface(oldPk)
+	require.NoError(t, err)
+
+	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{
+		cmttypes.NewValidator(oldCmtPk, 1),
+	})
+
+	senderPrivKey := secp256k1.GenPrivKey()
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	app := SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, banktypes.Balance{
+		Address: acc.GetAddress().String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction))),
+	})
+
+	newPk := ed25519.GenPrivKey().PubKey()
+	ctx := app.NewContextLegacy(true, cmtproto.Header{
+		Height: app.LastBlockHeight(),
+		Time:   time.Unix(100, 0).UTC(),
+	})
+	valAddr := sdk.ValAddress(oldPk.Address())
+	require.NoError(t, app.StakingKeeper.SetConsKeyRotation(ctx, valAddr, oldPk, newPk))
+
+	exported, err := app.ExportAppStateAndValidators(true, nil, nil)
+	require.NoError(t, err)
+	require.Equal(t, int64(0), exported.Height)
+	require.Len(t, exported.Validators, 1)
+	require.True(t, bytes.Equal(oldPk.Address().Bytes(), exported.Validators[0].PubKey.Address()))
+
+	var appState GenesisState
+	require.NoError(t, json.Unmarshal(exported.AppState, &appState))
+	var stakingGenesis stakingtypes.GenesisState
+	app.AppCodec().MustUnmarshalJSON(appState[stakingtypes.ModuleName], &stakingGenesis)
+	require.Len(t, stakingGenesis.PendingConsensusKeyRotations, 1)
+	require.Equal(t, int64(1)+stakingtypes.ConsensusUpdateDelay, stakingGenesis.PendingConsensusKeyRotations[0].ApplyHeight)
+
+	reqValidators := make([]abci.ValidatorUpdate, len(exported.Validators))
+	for i, validator := range exported.Validators {
+		pk, err := cryptocodec.FromCmtPubKeyInterface(validator.PubKey)
+		require.NoError(t, err)
+		protoPk, err := cryptocodec.ToCmtProtoPublicKey(pk)
+		require.NoError(t, err)
+		reqValidators[i] = abci.ValidatorUpdate{
+			PubKey: protoPk,
+			Power:  validator.Power,
+		}
+	}
+
+	newApp := NewSimApp(log.NewTestLogger(t), dbm.NewMemDB(), true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	_, err = newApp.InitChain(&abci.RequestInitChain{
+		Validators:      reqValidators,
+		ConsensusParams: &exported.ConsensusParams,
+		AppStateBytes:   exported.AppState,
+		InitialHeight:   exported.Height,
+	})
+	require.NoError(t, err)
+
+	finalizeRes, err := newApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+		Time:   time.Unix(101, 0).UTC(),
+	})
+	require.NoError(t, err)
+	require.Len(t, finalizeRes.ValidatorUpdates, 2)
+	reemittedPk, err := cryptocodec.FromCmtProtoPublicKey(finalizeRes.ValidatorUpdates[1].PubKey)
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(newPk.Address().Bytes(), reemittedPk.Address().Bytes()))
+	_, err = newApp.Commit()
+	require.NoError(t, err)
+
+	for newApp.LastBlockHeight() < int64(1)+stakingtypes.ConsensusUpdateDelay {
+		_, err = newApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: newApp.LastBlockHeight() + 1,
+			Time:   time.Unix(101+newApp.LastBlockHeight(), 0).UTC(),
+		})
+		require.NoError(t, err)
+		_, err = newApp.Commit()
+		require.NoError(t, err)
+	}
+
+	queryCtx := newApp.NewContextLegacy(true, cmtproto.Header{Height: newApp.LastBlockHeight()})
+	stored, err := newApp.StakingKeeper.GetValidator(queryCtx, valAddr)
+	require.NoError(t, err)
+	storedConsAddr, err := stored.GetConsAddr()
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(newPk.Address().Bytes(), storedConsAddr))
+
+	pending, err := newApp.StakingKeeper.PendingConsKeyRotations(queryCtx)
+	require.NoError(t, err)
+	require.Empty(t, pending)
+	hasOldLock, err := newApp.StakingKeeper.IsConsAddrLockedByRotation(queryCtx, sdk.ConsAddress(oldPk.Address()))
+	require.NoError(t, err)
+	require.True(t, hasOldLock)
+	hasNewLock, err := newApp.StakingKeeper.IsConsAddrLockedByRotation(queryCtx, sdk.ConsAddress(newPk.Address()))
+	require.NoError(t, err)
+	require.False(t, hasNewLock)
 }
 
 func TestRunMigrations(t *testing.T) {

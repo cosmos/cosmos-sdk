@@ -41,7 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Breaking Changes
 
 * (modules) [#26421](https://github.com/cosmos/cosmos-sdk/pull/26421) Remove the `x/protocolpool` module and its API/proto surface from the SDK. Applications upgrading from v0.54 should include `protocolpool` in deleted store upgrades.
-* (genutils) [#XXXXX](https://github.com/cosmos/cosmos-sdk/pull/XXXXX) Consolidate ExportGenesisFileWithTime arguments to preserve consensus params.
+* (genutils) [#26468](https://github.com/cosmos/cosmos-sdk/pull/26468) Consolidate ExportGenesisFileWithTime arguments to preserve consensus params.
 
 ### Features
 

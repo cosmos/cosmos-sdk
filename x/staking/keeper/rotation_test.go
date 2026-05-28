@@ -135,7 +135,7 @@ func (s *KeeperTestSuite) TestPendingConsKeyRotations() {
 		rotation, ok := got[string(valAddr)]
 		require.True(ok)
 		require.True(rotation.NewPubKey.Equals(newPk))
-		require.Equal(int64(100+stakingtypes.ConsensusUpdateDelay), rotation.ApplyHeight)
+		require.Equal(100+stakingtypes.ConsensusUpdateDelay, rotation.ApplyHeight)
 	})
 
 	s.T().Run("drained entry is no longer returned", func(t *testing.T) {

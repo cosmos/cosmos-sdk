@@ -69,8 +69,6 @@ type SDKAppConfig struct {
 	WithEpochs   bool
 	WithFeeGrant bool
 	WithMint     bool
-	// TODO gov optional?
-	// TODO any other optional modules?
 
 	WithUnorderedTx bool
 

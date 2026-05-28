@@ -77,6 +77,17 @@ func TestSimGenesisAccountValidate(t *testing.T) {
 			},
 			true,
 		},
+		{
+			"module account with vesting coins passes validation — no cross-field rejection",
+			app.SimGenesisAccount{
+				BaseAccount:     authtypes.NewBaseAccount(sdk.AccAddress(crypto.AddressHash([]byte("testmod"))), nil, 0, 0),
+				ModuleName:      "testmod",
+				OriginalVesting: coins,
+				StartTime:       vestingStart.Unix(),
+				EndTime:         vestingStart.Add(1 * time.Hour).Unix(),
+			},
+			false,
+		},
 	}
 
 	for _, tc := range testCases {

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"runtime"
 	"sync"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -56,6 +55,7 @@ import (
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 )
 
@@ -247,8 +247,6 @@ func NewSDKApp(
 	sdkApp.initEvidenceModule(appConfig)
 	sdkApp.initEpochsModule(appConfig)
 
-	sdkApp.processHooks()
-
 	sdkApp.Logger().Info(
 		fmt.Sprintf(
 			"finished SDK app construction (required modules: %d, optional modules: %d)",
@@ -279,9 +277,6 @@ func (app *SDKApp) configureBlockSTM() {
 	stores := app.GetStoreKeys()
 
 	workers := app.cfg.BlockSTM.Workers
-	if workers < 1 {
-		workers = runtime.GOMAXPROCS(0)
-	}
 
 	var coinDenom func(storetypes.MultiStore) string
 	if app.cfg.BlockSTM.Estimate {
@@ -343,13 +338,13 @@ func (app *SDKApp) addModule(mod Module) error {
 	}
 	for name := range mod.StoreKeys() {
 		if _, found := app.storeKeys[name]; found {
-			return fmt.Errorf("module store key %s already exists in app: %v", mod.Name(), app.storeKeys)
+			return fmt.Errorf("store key %q already registered, cannot add module %s", name, mod.Name())
 		}
 	}
 	if transientStoreKeyProvider, ok := mod.(TransientStoreKeysProvider); ok {
 		for name := range transientStoreKeyProvider.TransientStoreKeys() {
 			if _, found := app.transientStoreKeys[name]; found {
-				return fmt.Errorf("module transient store key %s already exists in app: %v", mod.Name(), app.transientStoreKeys)
+				return fmt.Errorf("transient store key %q already registered, cannot add module %s", name, mod.Name())
 			}
 		}
 	}
@@ -407,6 +402,15 @@ func (app *SDKApp) LoadModules() {
 }
 
 func (app *SDKApp) loadModules() {
+	// Collect staking hooks from custom modules before finalizing hook wiring.
+	var extraStakingHooks []stakingtypes.StakingHooks
+	for _, mod := range app.customModules {
+		if h, ok := mod.(StakingHooksProvider); ok {
+			extraStakingHooks = append(extraStakingHooks, h.StakingHooks())
+		}
+	}
+	app.processHooks(extraStakingHooks)
+
 	// Reload AccountKeeper with the final merged perm set (config defaults + custom module perms).
 	app.AccountKeeper.LoadMaccPerms(app.moduleAccountPerms)
 
@@ -534,10 +538,12 @@ func (app *SDKApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*ab
 	var genesisState sdk.GenesisState
 	if len(req.AppStateBytes) > 0 {
 		if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
-			panic(err)
+			return nil, err
 		}
 	}
-	_ = app.upgradeKeeper.SetModuleVersionMap(ctx, app.moduleManager.GetVersionMap())
+	if err := app.upgradeKeeper.SetModuleVersionMap(ctx, app.moduleManager.GetVersionMap()); err != nil {
+		return nil, err
+	}
 	return app.moduleManager.InitGenesis(ctx, app.encodingConfig.Codec, genesisState)
 }
 

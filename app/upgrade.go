@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 
 	"go.uber.org/zap"
 
@@ -22,7 +23,13 @@ func RegisterUpgradeHandlers[T AppI](app T, upgrades ...Upgrade[T]) {
 		panic("upgrade keeper is nil")
 	}
 
+	seen := make(map[string]struct{}, len(upgrades))
 	for _, upgrade := range upgrades {
+		if _, dup := seen[upgrade.Name]; dup {
+			panic(fmt.Sprintf("duplicate upgrade name %q", upgrade.Name))
+		}
+		seen[upgrade.Name] = struct{}{}
+
 		app.UpgradeKeeper().SetUpgradeHandler(
 			upgrade.Name,
 			func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {

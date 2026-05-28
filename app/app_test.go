@@ -59,11 +59,14 @@ func TestBlockedAddressesExcludesGovModuleAddress(t *testing.T) {
 }
 
 func TestConfigureExecutionModeUsesSerialWhenBlockSTMIsNil(t *testing.T) {
-	app := &SDKApp{
-		cfg: SDKAppConfig{},
-	}
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("configureExecutionMode panicked with nil BlockSTM: %v", r)
+		}
+	}()
 
-	app.configureExecutionMode()
+	a := &SDKApp{cfg: SDKAppConfig{}}
+	a.configureExecutionMode()
 }
 
 func TestNewSDKAppWithOptimisticExecutionEnabledLoadsModules(t *testing.T) {

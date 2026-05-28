@@ -215,8 +215,7 @@ func (app *SDKApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	}
 
 	if err := iter.Close(); err != nil {
-		app.Logger().Error("error while closing the key-value store reverse prefix iterator: ", err)
-		return
+		panic(fmt.Errorf("error closing validator iterator: %w", err))
 	}
 
 	_, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)

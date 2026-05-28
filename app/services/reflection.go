@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"slices"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
@@ -26,7 +27,7 @@ func NewReflectionService() (*ReflectionService, error) {
 
 func (r ReflectionService) FileDescriptors(_ context.Context, _ *reflectionv1.FileDescriptorsRequest) (*reflectionv1.FileDescriptorsResponse, error) {
 	return &reflectionv1.FileDescriptorsResponse{
-		Files: r.files.File,
+		Files: slices.Clone(r.files.File),
 	}, nil
 }
 

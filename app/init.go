@@ -176,7 +176,7 @@ func (app *SDKApp) initStakingModule(cfg SDKAppConfig) {
 		app.AccountKeeper,
 		app.BankKeeper,
 		cfg.ModuleAuthority,
-		authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr), // TODO config option
+		authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
 		authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
 	)
 
@@ -228,7 +228,6 @@ func (app *SDKApp) initMintModule(cfg SDKAppConfig) {
 func (app *SDKApp) initDistrModules(cfg SDKAppConfig) {
 	app.Logger().Info("initializing distribution keeper")
 
-	// TODO optional?
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		app.encodingConfig.Codec,
 		runtime.NewKVStoreService(app.mustGetStoreKey(distrtypes.StoreKey)),
@@ -300,13 +299,13 @@ func (app *SDKApp) initFeeGrantModule(cfg SDKAppConfig) {
 	}
 }
 
-func (app *SDKApp) processHooks() {
-	// set staking hooks
+func (app *SDKApp) processHooks(extra []stakingtypes.StakingHooks) {
+	hooks := []stakingtypes.StakingHooks{
+		app.DistrKeeper.Hooks(),
+		app.SlashingKeeper.Hooks(),
+	}
 	app.StakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(
-			app.DistrKeeper.Hooks(),
-			app.SlashingKeeper.Hooks(),
-		),
+		stakingtypes.NewMultiStakingHooks(append(hooks, extra...)...),
 	)
 }
 

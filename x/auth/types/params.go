@@ -11,6 +11,16 @@ const (
 	DefaultTxSizeCostPerByte      uint64 = 10
 	DefaultSigVerifyCostED25519   uint64 = 590
 	DefaultSigVerifyCostSecp256k1 uint64 = 1000
+
+	// DefaultSigVerifyCostMlDsa65 is the gas cost of one ML-DSA-65 (FIPS 204)
+	// signature verification. Derived from a verification benchmark relative to
+	// the secp256k1 anchor (1000):
+	//
+	//	BenchmarkVerification/secp256k1   120147 ns/op
+	//	BenchmarkVerification/ml_dsa_65    95544 ns/op   (~0.80x)
+	//
+	// The large ML-DSA signature is additionally charged via TxSizeCostPerByte.
+	DefaultSigVerifyCostMlDsa65 uint64 = 750
 )
 
 // NewParams creates a new Params object
@@ -45,6 +55,11 @@ func DefaultParams() Params {
 // because we don't compare the cgo implementation of secp256k1, which is faster.
 func (p Params) SigVerifyCostSecp256r1() uint64 {
 	return p.SigVerifyCostSecp256k1 / 2
+}
+
+// SigVerifyCostMlDsa65 returns the gas fee of an ML-DSA-65 signature verification.
+func (p Params) SigVerifyCostMlDsa65() uint64 {
+	return DefaultSigVerifyCostMlDsa65
 }
 
 func validateTxSigLimit(i any) error {

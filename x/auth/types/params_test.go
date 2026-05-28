@@ -18,6 +18,12 @@ func TestParamsEqual(t *testing.T) {
 	require.NotEqual(t, p1, p2)
 }
 
+func TestSigVerifyCostMlDsa65(t *testing.T) {
+	p := types.DefaultParams()
+	require.Equal(t, types.DefaultSigVerifyCostMlDsa65, p.SigVerifyCostMlDsa65())
+	require.Positive(t, p.SigVerifyCostMlDsa65())
+}
+
 func TestParams_Validate(t *testing.T) {
 	tests := []struct {
 		name    string

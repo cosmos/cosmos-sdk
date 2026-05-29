@@ -108,7 +108,7 @@ func UnsafeNewStore(tree *iavl.MutableTree) *Store {
 // Any mutable operations executed will result in a panic.
 func (st *Store) GetImmutable(version int64) (*Store, error) {
 	if !st.VersionExists(version) {
-		return nil, errors.New("version mismatch on immutable IAVL tree; version does not exist. Version has either been pruned, or is for a future block height")
+		return nil, iavl.ErrVersionDoesNotExist
 	}
 
 	iTree, err := st.tree.GetImmutable(version)
@@ -333,8 +333,12 @@ func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err e
 		// Must convert store.Tree to iavl.MutableTree with given version to use in CreateProof
 		iTree, err := tree.GetImmutable(res.Height)
 		if err != nil {
-			// sanity check: If value for given version was retrieved, immutable tree must also be retrievable
-			panic(fmt.Sprintf("version exists in store but could not retrieve corresponding versioned tree in store, %s", err.Error()))
+			if errors.Is(err, iavl.ErrVersionDoesNotExist) {
+				res.Log = iavl.ErrVersionDoesNotExist.Error()
+				res.Value = nil
+				break
+			}
+			panic(fmt.Sprintf("could not retrieve versioned tree for /key proof at height %d: %s", res.Height, err.Error()))
 		}
 		mtree := &iavl.MutableTree{
 			ImmutableTree: iTree,
@@ -358,7 +362,11 @@ func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err e
 
 		immutableStore, err := st.GetImmutable(res.Height)
 		if err != nil {
-			panic(fmt.Sprintf("version exists in store but could not retrieve corresponding versioned tree in /subspace path, %s", err.Error()))
+			if errors.Is(err, iavl.ErrVersionDoesNotExist) {
+				res.Log = iavl.ErrVersionDoesNotExist.Error()
+				break
+			}
+			panic(fmt.Sprintf("could not retrieve versioned tree for /subspace at height %d: %s", res.Height, err.Error()))
 		}
 
 		iterator := types.KVStorePrefixIterator(immutableStore, subspace)

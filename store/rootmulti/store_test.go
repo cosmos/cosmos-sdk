@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	iavltree "github.com/cosmos/iavl"
 	dbm "github.com/cosmos/cosmos-db"
+	iavltree "github.com/cosmos/iavl"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -553,8 +553,8 @@ func TestMultiStoreQuery_SubspaceHistoricalHeight(t *testing.T) {
 	require.NoError(t, multi.LoadLatestVersion())
 
 	prefix := []byte("pfx/")
-	k1 := append(prefix, 'a')
-	k2 := append(prefix, 'b')
+	k1 := []byte("pfx/a")
+	k2 := []byte("pfx/b")
 	v1old, v2, v1new := []byte("v1old"), []byte("v2"), []byte("v1new")
 
 	store1 := multi.GetStoreByName("store1").(types.KVStore)
@@ -589,7 +589,7 @@ func TestMultiStoreQuery_SubspaceHeightZero(t *testing.T) {
 	require.NoError(t, multi.LoadLatestVersion())
 
 	prefix := []byte("pfx/")
-	k1 := append(prefix, 'a')
+	k1 := []byte("pfx/a")
 	v1old, v1new := []byte("v1old"), []byte("v1new")
 
 	store1 := multi.GetStoreByName("store1").(types.KVStore)
@@ -635,7 +635,7 @@ func TestMultiStoreQuery_SubspacePrunedHeight(t *testing.T) {
 	require.NoError(t, multi.LoadLatestVersion())
 
 	prefix := []byte("pfx/")
-	k1 := append(prefix, 'a')
+	k1 := []byte("pfx/a")
 
 	store1 := multi.GetStoreByName("store1").(types.KVStore)
 	store1.Set(k1, []byte("v1"))

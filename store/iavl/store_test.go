@@ -133,7 +133,7 @@ func TestGetImmutable(t *testing.T) {
 	require.Nil(t, err)
 
 	_, err = store.GetImmutable(cID.Version + 1)
-	require.Error(t, err)
+	require.ErrorIs(t, err, iavl.ErrVersionDoesNotExist)
 
 	newStore, err := store.GetImmutable(cID.Version - 1)
 	require.NoError(t, err)
@@ -590,6 +590,12 @@ func TestIAVLStoreQuery(t *testing.T) {
 	qres, err = iavlStore.Query(&querySubBad)
 	require.NoError(t, err)
 	require.Equal(t, uint32(0), qres.Code)
+	require.Equal(t, iavl.ErrVersionDoesNotExist.Error(), qres.Log)
+	require.Nil(t, qres.Value)
+
+	queryKeyBad := types.RequestQuery{Path: "/key", Data: k1, Height: 9999, Prove: true}
+	qres, err = iavlStore.Query(&queryKeyBad)
+	require.NoError(t, err)
 	require.Equal(t, iavl.ErrVersionDoesNotExist.Error(), qres.Log)
 	require.Nil(t, qres.Value)
 }

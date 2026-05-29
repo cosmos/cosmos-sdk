@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Breaking Changes
 
 * (modules) [#26421](https://github.com/cosmos/cosmos-sdk/pull/26421) Remove the `x/protocolpool` module and its API/proto surface from the SDK. Applications upgrading from v0.54 should include `protocolpool` in deleted store upgrades.
+* (genutils) [#26468](https://github.com/cosmos/cosmos-sdk/pull/26468) Consolidate ExportGenesisFileWithTime arguments to preserve consensus params.
 
 ### Features
 
@@ -49,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [#26208](https://github.com/cosmos/cosmos-sdk/pull/26208) Add Block-STM configuration support: `block-executor`, `block-stm-workers` and `block-stm-pre-estimate`.
 * (blockstm) [#25909](https://github.com/cosmos/cosmos-sdk/pull/25909) Cache pre-state to optimize value-based validation.
 * (deps) [#26388](https://github.com/cosmos/cosmos-sdk/pull/26388) Bump CometBFT version to v0.39.3.
+* (crypto) [#26436](https://github.com/cosmos/cosmos-sdk/pull/26436) Add ML-DSA-65 (FIPS 204) post-quantum validator consensus key type, with SDK key wrappers, Amino + interface-registry registration, multisig support, and a `hd.MlDsa65Type` constant.
 
 ### Improvements
 
@@ -173,6 +175,7 @@ This patch release contains only minor dependency bumps.
 * (x/group) [#25920](https://github.com/cosmos/cosmos-sdk/pull/25920) Expand voting period check to verify period is positive instead of nonzero.
 * (types/address) [#25944] (https://github.com/cosmos/cosmos-sdk/pull/25944) correct sort comparator in Compose to satisfy strict weak ordering.
 * (baseapp) [#26063](https://github.com/cosmos/cosmos-sdk/pull/26063) Fixes an issue where values embedded in context during ante handling were wiped after the handlers returned.
+* (collections/indexes) [#25942](https://github.com/cosmos/cosmos-sdk/pull/25942) handle iterator close errors in index helpers.
 
 ### Deprecated
 

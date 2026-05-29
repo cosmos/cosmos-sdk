@@ -38,7 +38,7 @@ func TestParams_Validate(t *testing.T) {
 		{"invalid SECP256k1 signature verification cost", types.NewParams(types.DefaultMaxMemoCharacters, types.DefaultTxSigLimit, types.DefaultTxSizeCostPerByte,
 			types.DefaultSigVerifyCostED25519, 0, types.DefaultSigVerifyCostMlDsa65), fmt.Errorf("invalid SECP256k1 signature verification cost: 0")},
 		{"invalid ML-DSA-65 signature verification cost", types.NewParams(types.DefaultMaxMemoCharacters, types.DefaultTxSigLimit, types.DefaultTxSizeCostPerByte,
-			types.DefaultSigVerifyCostED25519, types.DefaultSigVerifyCostSecp256k1, 0), fmt.Errorf("invalid ED25519 signature verification cost: 0")},
+			types.DefaultSigVerifyCostED25519, types.DefaultSigVerifyCostSecp256k1, 0), fmt.Errorf("invalid ML-DSA-65 signature verification cost: 0")},
 		{"invalid max memo characters", types.NewParams(0, types.DefaultTxSigLimit, types.DefaultTxSizeCostPerByte,
 			types.DefaultSigVerifyCostED25519, types.DefaultSigVerifyCostSecp256k1, types.DefaultSigVerifyCostMlDsa65), fmt.Errorf("invalid max memo characters: 0")},
 		{"invalid tx size cost per byte", types.NewParams(types.DefaultMaxMemoCharacters, types.DefaultTxSigLimit, 0,

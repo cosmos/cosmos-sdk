@@ -228,7 +228,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryParameters() {
 	suite.Require().NoError(err)
 
 	req := &types.QueryParamsRequest{}
-	testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.Params, 1042, false)
+	testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.Params, 1048, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {

@@ -93,7 +93,7 @@ func TestUndecodableProposal_ActiveProposalFails(t *testing.T) {
 	// Write a proposal with an unregistered Any type URL directly into the KV
 	// store, simulating a proposal that was valid under a previous binary but
 	// becomes undecodable after a binary upgrade removes the message type.
-	storeKey := s.App.UnsafeFindStoreKey(types.StoreKey)
+	storeKey := s.App.GetKey(types.StoreKey)
 	require.NotNil(t, storeKey)
 	bz, err := proto.Marshal(&v1.Proposal{
 		Id:       proposalID,
@@ -126,7 +126,7 @@ func TestUndecodableProposal_InactiveProposalFails(t *testing.T) {
 	const proposalID uint64 = 9902
 	endTime := ctx.BlockTime()
 
-	storeKey := s.App.UnsafeFindStoreKey(types.StoreKey)
+	storeKey := s.App.GetKey(types.StoreKey)
 	require.NotNil(t, storeKey)
 	bz, err := proto.Marshal(&v1.Proposal{
 		Id:       proposalID,

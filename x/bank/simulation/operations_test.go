@@ -8,25 +8,16 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdkapp "github.com/cosmos/cosmos-sdk/app"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 type SimTestSuite struct {
@@ -37,29 +28,17 @@ type SimTestSuite struct {
 	bankKeeper    keeper.Keeper
 	cdc           codec.Codec
 	txConfig      client.TxConfig
-	app           *runtime.App
+	app           *sdkapp.SDKApp
 }
 
 func (suite *SimTestSuite) SetupTest() {
-	var (
-		appBuilder *runtime.AppBuilder
-		err        error
-	)
-	suite.app, err = simtestutil.Setup(
-		depinject.Configs(
-			configurator.NewAppConfig(
-				configurator.AuthModule(),
-				configurator.BankModule(),
-				configurator.StakingModule(),
-				configurator.ConsensusModule(),
-				configurator.TxModule(),
-			),
-			depinject.Supply(log.NewNopLogger()),
-		), &suite.accountKeeper, &suite.bankKeeper, &suite.cdc, &suite.txConfig, &appBuilder)
-
-	suite.NoError(err)
-
-	suite.ctx = suite.app.NewContext(false)
+	ta := testapp.Setup(suite.T())
+	suite.app = ta
+	suite.accountKeeper = ta.AccountKeeper
+	suite.bankKeeper = ta.BankKeeper
+	suite.cdc = ta.AppCodec()
+	suite.txConfig = ta.TxConfig()
+	suite.ctx = testapp.NewContext(ta)
 }
 
 // TestWeightedOperations tests the weights of the operations.
@@ -84,7 +63,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 
 	for i, w := range weightedOps {
-		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, suite.ctx.ChainID())
 		suite.Require().NoError(err)
 
 		// the following checks are very much dependent from the ordering of the output given
@@ -112,7 +91,7 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 
 	// execute operation
 	op := simulation.SimulateMsgSend(suite.txConfig, suite.accountKeeper, suite.bankKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
 	var msg types.MsgSend
@@ -142,7 +121,7 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 
 	// execute operation
 	op := simulation.SimulateMsgMultiSend(suite.txConfig, suite.accountKeeper, suite.bankKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, suite.ctx.ChainID())
 	require := suite.Require()
 	require.NoError(err)
 
@@ -182,7 +161,7 @@ func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 	s = rand.NewSource(1)
 	r = rand.New(s)
 
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, suite.ctx.ChainID())
 	suite.Require().Error(err)
 
 	var msg types.MsgSend
@@ -213,7 +192,7 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSendToModuleAccount() {
 	// execute operation
 	op := simulation.SimulateMsgMultiSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, mAccCount)
 
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, suite.ctx.ChainID())
 	suite.Require().Error(err)
 
 	var msg types.MsgMultiSend
@@ -235,7 +214,7 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	for _, account := range accounts {
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
-		suite.Require().NoError(testutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins))
+		suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins))
 	}
 
 	return accounts

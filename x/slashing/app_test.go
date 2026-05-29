@@ -8,21 +8,17 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/sims"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -43,38 +39,24 @@ func TestSlashingMsgs(t *testing.T) {
 	acc1 := &authtypes.BaseAccount{
 		Address: addr1.String(),
 	}
-	accs := []sims.GenesisAccount{{GenesisAccount: acc1, Coins: sdk.Coins{genCoin}}}
+	genAccs := []authtypes.GenesisAccount{acc1}
+	balances := []banktypes.Balance{{
+		Address: addr1.String(),
+		Coins:   sdk.Coins{genCoin},
+	}}
 
-	startupCfg := sims.DefaultStartUpConfig()
-	startupCfg.GenesisAccounts = accs
-
-	var (
-		stakingKeeper  *stakingkeeper.Keeper
-		bankKeeper     bankkeeper.Keeper
-		slashingKeeper keeper.Keeper
-	)
-
-	app, err := sims.SetupWithConfiguration(
-		depinject.Configs(
-			configurator.NewAppConfig(
-				configurator.AuthModule(),
-				configurator.StakingModule(),
-				configurator.SlashingModule(),
-				configurator.TxModule(),
-				configurator.ConsensusModule(),
-				configurator.BankModule(),
-			),
-			depinject.Supply(log.NewNopLogger()),
-		),
-		startupCfg, &stakingKeeper, &bankKeeper, &slashingKeeper)
+	valSet, err := simtestutil.CreateRandomValidatorSet()
 	require.NoError(t, err)
 
-	baseApp := app.BaseApp
+	ta := testapp.SetupWithGenesisValSet(t, valSet, genAccs, balances...)
+	stakingKeeper := ta.StakingKeeper
+	bankKeeper := ta.BankKeeper
+	slashingKeeper := ta.SlashingKeeper
+
+	baseApp := ta.BaseApp
 
 	ctxCheck := baseApp.NewContext(true)
 	require.True(t, sdk.Coins{genCoin}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
-
-	require.NoError(t, err)
 
 	description := stakingtypes.NewDescription("foo_moniker", "", "", "", "")
 	commission := stakingtypes.NewCommissionRates(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec())
@@ -84,13 +66,13 @@ func TestSlashingMsgs(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	header := cmtproto.Header{Height: app.LastBlockHeight() + 1}
+	header := cmtproto.Header{Height: ta.LastBlockHeight() + 1}
 	txConfig := moduletestutil.MakeTestTxConfig()
-	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, ta.BaseApp, header, []sdk.Msg{createValidatorMsg}, "test-chain", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
+	_, err = ta.FinalizeBlock(&abci.RequestFinalizeBlock{Height: ta.LastBlockHeight() + 1})
 	require.NoError(t, err)
 
 	ctxCheck = baseApp.NewContext(true)
@@ -102,13 +84,13 @@ func TestSlashingMsgs(t *testing.T) {
 	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))
 	unjailMsg := &types.MsgUnjail{ValidatorAddr: sdk.ValAddress(addr1).String()}
 
-	ctxCheck = app.NewContext(true)
+	ctxCheck = ta.NewContext(true)
 	_, err = slashingKeeper.GetValidatorSigningInfo(ctxCheck, sdk.ConsAddress(valAddr))
 	require.NoError(t, err)
 
 	// unjail should fail with unknown validator
-	header = cmtproto.Header{Height: app.LastBlockHeight() + 1}
-	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, false, false, priv1)
+	header = cmtproto.Header{Height: ta.LastBlockHeight() + 1}
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, ta.BaseApp, header, []sdk.Msg{unjailMsg}, "test-chain", []uint64{0}, []uint64{1}, false, false, priv1)
 	require.Error(t, err)
 	require.True(t, errors.Is(err, types.ErrValidatorNotJailed))
 }

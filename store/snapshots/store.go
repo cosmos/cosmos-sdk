@@ -44,7 +44,20 @@ func NewStore(db db.DB, dir string) (*Store, error) {
 	}
 
 	dir = filepath.Clean(dir)
-	if err := mkdirAllSync(dir, filepath.Dir(dir), 0o755); err != nil {
+
+	stableBase := filepath.Dir(dir)
+	for {
+		if _, err := os.Stat(stableBase); err == nil {
+			break
+		}
+		parent := filepath.Dir(stableBase)
+		if parent == stableBase {
+			break
+		}
+		stableBase = parent
+	}
+
+	if err := mkdirAllSync(dir, stableBase, 0o755); err != nil {
 		return nil, errors.Wrapf(err, "failed to create snapshot directory %q", dir)
 	}
 

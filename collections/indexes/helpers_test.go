@@ -1,6 +1,7 @@
 package indexes
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -87,3 +88,39 @@ func TestHelpers(t *testing.T) {
 	})
 	require.NoError(t, err)
 }
+
+func TestCloseError(t *testing.T) {
+	sk, ctx := deps()
+	sb := collections.NewSchemaBuilder(sk)
+	keyCodec := collections.PairKeyCodec(collections.StringKey, collections.StringKey)
+	indexedMap := collections.NewIndexedMap(
+		sb,
+		collections.NewPrefix("balances"), "balances",
+		keyCodec,
+		collections.Uint64Value,
+		balanceIndex{
+			Denom: NewReversePair[Amount](sb, collections.NewPrefix("denom_index"), "denom_index", keyCodec),
+		},
+	)
+
+	closeErr := errors.New("close error")
+	newMock := func() *mockEmptyIter { return &mockEmptyIter{closeErr: closeErr} }
+
+	err := ScanValues(ctx, indexedMap, newMock(), func(Amount) bool { return false })
+	require.ErrorIs(t, err, closeErr)
+
+	err = ScanKeyValues(ctx, indexedMap, newMock(), func(collections.KeyValue[collections.Pair[Address, Denom], Amount]) bool { return false })
+	require.ErrorIs(t, err, closeErr)
+}
+
+// mockEmptyIter is an empty iterator whose Close returns an error.
+type mockEmptyIter struct {
+	closeErr error
+}
+
+func (m *mockEmptyIter) PrimaryKey() (collections.Pair[string, string], error) {
+	return collections.Join("", ""), nil
+}
+func (m *mockEmptyIter) Next()        {}
+func (m *mockEmptyIter) Valid() bool  { return false }
+func (m *mockEmptyIter) Close() error { return m.closeErr }

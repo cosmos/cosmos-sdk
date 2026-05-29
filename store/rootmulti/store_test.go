@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"fmt"
 	"math/rand"
@@ -654,6 +655,55 @@ func TestMultiStoreQuery_SubspacePrunedHeight(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, iavltree.ErrVersionDoesNotExist.Error(), qres.Log)
 	require.Nil(t, qres.Value)
+}
+
+// FuzzSubspaceQuery verifies /subspace query invariants across arbitrary prefix and height inputs.
+// To run: go test -fuzz=FuzzSubspaceQuery -fuzztime=30s ./store/rootmulti/...
+func FuzzSubspaceQuery(f *testing.F) {
+	db := dbm.NewMemDB()
+	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	require.NoError(f, multi.LoadLatestVersion())
+
+	store1 := multi.GetStoreByName("store1").(types.KVStore)
+	store1.Set([]byte("a"), []byte("val-a"))
+	store1.Set([]byte("a\x00"), []byte("val-a0"))
+	store1.Set([]byte("\x00"), []byte("val-null"))
+	hLatest := multi.Commit().Version
+
+	f.Add([]byte("a"), hLatest)
+	f.Add([]byte(""), hLatest)
+	f.Add([]byte("\x00"), hLatest)
+	f.Add([]byte("a\x00"), hLatest)
+	f.Add([]byte("a"), int64(0))
+	f.Add([]byte("a"), int64(1))
+	f.Add([]byte("a"), hLatest+1)
+
+	f.Fuzz(func(t *testing.T, prefix []byte, height int64) {
+		qres, err := multi.Query(&types.RequestQuery{
+			Path:   "/store1/subspace",
+			Data:   prefix,
+			Height: height,
+		})
+
+		if len(prefix) == 0 {
+			require.Error(t, err)
+			return
+		}
+		require.NoError(t, err)
+
+		if height < 0 || height > hLatest {
+			require.Equal(t, iavltree.ErrVersionDoesNotExist.Error(), qres.Log)
+			require.Nil(t, qres.Value)
+			return
+		}
+
+		var pairs kv.Pairs
+		require.NoError(t, pairs.Unmarshal(qres.Value))
+		for _, p := range pairs.Pairs {
+			require.True(t, len(p.Key) >= len(prefix) && bytes.Equal(p.Key[:len(prefix)], prefix),
+				"key %x does not have prefix %x", p.Key, prefix)
+		}
+	})
 }
 
 func TestMultiStore_Pruning(t *testing.T) {

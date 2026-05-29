@@ -31,6 +31,11 @@ func (a *App) registerRuntimeServices(cfg module.Configurator) error {
 	return nil
 }
 
+// ProvideCometInfoService returns a comet.BlockInfoService backed by the SDK context.
+func ProvideCometInfoService() comet.BlockInfoService {
+	return cometInfoService{}
+}
+
 var _ comet.BlockInfoService = cometInfoService{}
 
 type cometInfoService struct{}

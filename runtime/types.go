@@ -3,10 +3,20 @@ package runtime
 import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
+	"cosmossdk.io/core/address"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+)
+
+type (
+	// ValidatorAddressCodec is an alias for address.Codec for validator addresses.
+	ValidatorAddressCodec = address.Codec
+
+	// ConsensusAddressCodec is an alias for address.Codec for validator consensus addresses.
+	ConsensusAddressCodec = address.Codec
 )
 
 const ModuleName = "runtime"

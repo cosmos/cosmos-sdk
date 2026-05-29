@@ -19,17 +19,14 @@ import (
 
 	"github.com/cometbft/cometbft/node"
 	cmtclient "github.com/cometbft/cometbft/rpc/client"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/log/v2"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -39,15 +36,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import auth as a blank
@@ -175,91 +169,6 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 	}
 }
 
-// MinimumAppConfig defines the minimum of modules required for a call to New to succeed
-func MinimumAppConfig() depinject.Config {
-	return configurator.NewAppConfig(
-		configurator.AuthModule(),
-		configurator.BankModule(),
-		configurator.GenutilModule(),
-		configurator.StakingModule(),
-		configurator.ConsensusModule(),
-		configurator.TxModule(),
-	)
-}
-
-// DefaultConfigWithAppConfig returns a network configuration constructed using
-// the provided app config. It sets an infinite gas limit on queries by passing zero
-// as the query gas limit (i.e. disabling gas metering for queries). This config is
-// suitable for testing scenarios where queries are allowed to consume unbounded gas.
-//
-// It is equivalent to calling DefaultConfigWithAppConfigWithQueryGasLimit(appConfig, 0).
-func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
-	return DefaultConfigWithAppConfigWithQueryGasLimit(appConfig, 0)
-}
-
-// DefaultConfigWithAppConfigWithQueryGasLimit returns a network configuration constructed
-// using the provided app config and the specified query gas limit.
-func DefaultConfigWithAppConfigWithQueryGasLimit(appConfig depinject.Config, queryGasLimit uint64) (Config, error) {
-	var (
-		appBuilder        *runtime.AppBuilder
-		txConfig          client.TxConfig
-		legacyAmino       *codec.LegacyAmino
-		cdc               codec.Codec
-		interfaceRegistry codectypes.InterfaceRegistry
-	)
-
-	if err := depinject.Inject(
-		depinject.Configs(
-			appConfig,
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&appBuilder,
-		&txConfig,
-		&cdc,
-		&legacyAmino,
-		&interfaceRegistry,
-	); err != nil {
-		return Config{}, err
-	}
-
-	cfg := DefaultConfig(func() TestFixture {
-		return TestFixture{}
-	})
-	cfg.Codec = cdc
-	cfg.TxConfig = txConfig
-	cfg.LegacyAmino = legacyAmino
-	cfg.InterfaceRegistry = interfaceRegistry
-	cfg.GenesisState = appBuilder.DefaultGenesis()
-	cfg.AppConstructor = func(val ValidatorI) servertypes.Application {
-		// we build a unique app instance for every validator here
-		var appBuilder *runtime.AppBuilder
-		if err := depinject.Inject(
-			depinject.Configs(
-				appConfig,
-				depinject.Supply(val.GetCtx().Logger),
-			),
-			&appBuilder); err != nil {
-			panic(err)
-		}
-		app := appBuilder.Build(
-			dbm.NewMemDB(),
-			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
-			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
-			baseapp.SetChainID(cfg.ChainID),
-			baseapp.SetQueryGasLimit(queryGasLimit),
-		)
-
-		testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
-
-		if err := app.Load(true); err != nil {
-			panic(err)
-		}
-
-		return app
-	}
-
-	return cfg, nil
-}
 
 type (
 	// Network defines a local in-process testing network using SimApp. It can be

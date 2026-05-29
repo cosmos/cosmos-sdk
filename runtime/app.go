@@ -28,6 +28,12 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
+// BaseAppOption is a function that can be used to customize BaseApp.
+type BaseAppOption func(*baseapp.BaseApp)
+
+// IsManyPerContainerType indicates that this is a depinject.ManyPerContainerType.
+func (b BaseAppOption) IsManyPerContainerType() {}
+
 // App is a wrapper around BaseApp and ModuleManager that can be used in hybrid
 // app.go/app config scenarios or directly as a servertypes.Application instance.
 // To get an instance of *App, *AppBuilder must be requested as a dependency

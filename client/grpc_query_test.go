@@ -6,32 +6,29 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
+	sdkapp "github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"cosmossdk.io/log/v2"
 )
 
 type IntegrationTestSuite struct {
@@ -47,26 +44,15 @@ type IntegrationTestSuite struct {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	var (
-		interfaceRegistry codectypes.InterfaceRegistry
-		bankKeeper        bankkeeper.BaseKeeper
-		appBuilder        *runtime.AppBuilder
-		cdc               codec.Codec
-	)
 
-	// TODO duplicated from testutils/sims/app_helpers.go
-	// need more composable startup options for simapp, this test needed a handle to the closed over genesis account
-	// to query balances
-	err := depinject.Inject(
-		depinject.Configs(
-			testutil.AppConfig,
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&interfaceRegistry, &bankKeeper, &appBuilder, &cdc)
-	s.NoError(err)
-
-	app := appBuilder.Build(dbm.NewMemDB())
-	err = app.Load(true)
+	opts := sims.AppOptionsMap{
+		flags.FlagHome:    s.T().TempDir(),
+		flags.FlagChainID: "test-chain",
+	}
+	cfg := sdkapp.DefaultSDKAppConfig("app", opts)
+	app := sdkapp.NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
+	app.LoadModules()
+	err := app.LoadLatestVersion()
 	s.NoError(err)
 
 	valSet, err := sims.CreateRandomValidatorSet()
@@ -81,6 +67,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(s.genesisAccountBalance))),
 	}
 
+	cdc := app.AppCodec()
 	genesisState, err := sims.GenesisStateWithValSet(cdc, app.DefaultGenesis(), valSet, []authtypes.GenesisAccount{acc}, balance)
 	s.NoError(err)
 
@@ -106,8 +93,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.ctx = app.NewContext(false)
 	s.cdc = cdc
-	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, interfaceRegistry)
-	types.RegisterQueryServer(queryHelper, bankKeeper)
+	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.BankKeeper)
 	testdata.RegisterQueryServer(queryHelper, testdata.QueryImpl{})
 	s.bankClient = types.NewQueryClient(queryHelper)
 	s.testClient = testdata.NewQueryClient(queryHelper)

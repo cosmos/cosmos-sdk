@@ -6,30 +6,26 @@ import (
 	"testing"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
+	sdkapp "github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	testutilsims "github.com/cosmos/cosmos-sdk/testutil/sims"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 )
 
 const (
@@ -49,8 +45,7 @@ type paginationTestSuite struct {
 	bankKeeper    bankkeeper.Keeper
 	accountKeeper authkeeper.AccountKeeper
 	cdc           codec.Codec
-	interfaceReg  codectypes.InterfaceRegistry
-	app           *runtime.App
+	app           *sdkapp.SDKApp
 }
 
 func TestPaginationTestSuite(t *testing.T) {
@@ -58,30 +53,23 @@ func TestPaginationTestSuite(t *testing.T) {
 }
 
 func (s *paginationTestSuite) SetupTest() {
-	var (
-		bankKeeper    bankkeeper.Keeper
-		accountKeeper authkeeper.AccountKeeper
-		reg           codectypes.InterfaceRegistry
-		cdc           codec.Codec
-	)
-
-	app, err := testutilsims.Setup(
-		depinject.Configs(
-			configurator.NewAppConfig(
-				configurator.AuthModule(),
-				configurator.BankModule(),
-				configurator.ConsensusModule(),
-				configurator.OmitInitGenesis(),
-			),
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&bankKeeper, &accountKeeper, &reg, &cdc)
-
+	opts := simtestutil.AppOptionsMap{
+		flags.FlagHome:    s.T().TempDir(),
+		flags.FlagChainID: "test-chain",
+	}
+	cfg := sdkapp.DefaultSDKAppConfig("app", opts)
+	app := sdkapp.NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
+	app.LoadModules()
+	err := app.LoadLatestVersion()
 	s.NoError(err)
 
 	ctx := app.NewContextLegacy(false, cmtproto.Header{Height: 1})
 
-	s.ctx, s.bankKeeper, s.accountKeeper, s.cdc, s.app, s.interfaceReg = ctx, bankKeeper, accountKeeper, cdc, app, reg
+	s.ctx = ctx
+	s.bankKeeper = app.BankKeeper
+	s.accountKeeper = app.AccountKeeper
+	s.cdc = app.AppCodec()
+	s.app = app
 }
 
 func (s *paginationTestSuite) TestParsePagination() {
@@ -104,7 +92,7 @@ func (s *paginationTestSuite) TestParsePagination() {
 }
 
 func (s *paginationTestSuite) TestPagination() {
-	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.interfaceReg)
+	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.bankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -222,7 +210,7 @@ func (s *paginationTestSuite) TestPagination() {
 }
 
 func (s *paginationTestSuite) TestReversePagination() {
-	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.interfaceReg)
+	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.bankKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
@@ -364,7 +352,7 @@ func (s *paginationTestSuite) TestPaginate() {
 	pageReq := &query.PageRequest{Key: nil, Limit: 1, CountTotal: true}
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq, false)
 	balResult := sdk.NewCoins()
-	authStore := s.ctx.KVStore(s.app.UnsafeFindStoreKey(types.StoreKey))
+	authStore := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
 	balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key, value []byte) error {

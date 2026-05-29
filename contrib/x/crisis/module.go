@@ -6,26 +6,17 @@ import (
 	"fmt"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	modulev1 "github.com/cosmos/cosmos-sdk/contrib/api/cosmos/crisis/module/v1"
 	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/keeper"
 	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
-	"github.com/cosmos/cosmos-sdk/server"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // ConsensusVersion defines the current x/crisis module consensus version.
@@ -163,67 +154,3 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 	return nil
 }
 
-// App Wiring Setup
-
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	Config       *modulev1.Module
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
-	AppOpts      servertypes.AppOptions `optional:"true"`
-
-	BankKeeper   types.SupplyKeeper
-	AddressCodec address.Codec
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	Module       appmodule.AppModule
-	CrisisKeeper *keeper.Keeper
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	var invalidCheckPeriod uint
-	if in.AppOpts != nil {
-		invalidCheckPeriod = cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
-	}
-
-	feeCollectorName := in.Config.FeeCollectorName
-	if feeCollectorName == "" {
-		feeCollectorName = authtypes.FeeCollectorName
-	}
-
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	k := keeper.NewKeeper(
-		in.Cdc,
-		in.StoreService,
-		invalidCheckPeriod,
-		in.BankKeeper,
-		feeCollectorName,
-		authority.String(),
-		in.AddressCodec,
-	)
-
-	var skipGenesisInvariants bool
-	if in.AppOpts != nil {
-		skipGenesisInvariants = cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
-	}
-
-	m := NewAppModule(k, skipGenesisInvariants)
-
-	return ModuleOutputs{CrisisKeeper: k, Module: m}
-}

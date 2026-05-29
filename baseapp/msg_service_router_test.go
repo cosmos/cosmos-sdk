@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -13,19 +14,29 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	signtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 // newTestBaseApp creates a minimal BaseApp for router unit tests (no modules, no InitChain).
 func newTestBaseApp(t *testing.T, logger log.Logger) (*baseapp.BaseApp, codectypes.InterfaceRegistry) {
 	t.Helper()
 
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
+		ProtoFiles: gogoproto.HybridResolver,
+		SigningOptions: txsigning.Options{
+			AddressCodec:          address.Bech32Codec{Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix()},
+			ValidatorAddressCodec: address.Bech32Codec{Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix()},
+		},
+	})
+	require.NoError(t, err)
 	std.RegisterInterfaces(interfaceRegistry)
 
 	cdc := codec.NewProtoCodec(interfaceRegistry)
@@ -137,9 +148,9 @@ func TestMsgService(t *testing.T) {
 
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
-	sigV2 := signing.SignatureV2{
+	sigV2 := signtypes.SignatureV2{
 		PubKey: priv.PubKey(),
-		Data: &signing.SingleSignatureData{
+		Data: &signtypes.SingleSignatureData{
 			SignMode:  defaultSignMode,
 			Signature: nil,
 		},

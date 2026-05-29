@@ -32,7 +32,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -93,13 +92,6 @@ func GenesisStateWithValidatorAndFeeAccount(t *testing.T, cdc codec.Codec, app *
 	require.NoError(t, err)
 
 	return genesisState
-}
-
-// makeMinimalApp builds a bare-bones SDKApp suitable for router unit tests.
-// The app is at genesis level (no InitChain called).
-func makeMinimalApp(t *testing.T) *sdkapp.SDKApp {
-	t.Helper()
-	return testapp.Setup(t)
 }
 
 type MsgKeyValueImpl struct{}

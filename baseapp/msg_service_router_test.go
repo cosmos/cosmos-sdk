@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	dbm "github.com/cosmos/cosmos-db"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log/v2"

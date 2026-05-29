@@ -274,25 +274,27 @@ func (d *GMVData[V]) ValidateReadSet(ctx context.Context, txn TxnIndex, rs *Read
 		}
 	}
 
-	gs := storage.(GStorage[V])
-	for _, desc := range rs.HasReads {
-		value, version, estimate := d.Read(ctx, desc.Key, txn)
-		if estimate {
-			return false
-		}
-		if version.Valid() {
-			if (!d.isZero(value)) != desc.Exists {
+	if len(rs.HasReads) > 0 {
+		gs, _ := storage.(GStorage[V])
+		for _, desc := range rs.HasReads {
+			value, version, estimate := d.Read(ctx, desc.Key, txn)
+			if estimate {
 				return false
 			}
-			continue
-		}
-		// No MVData entry. Storage is immutable, so FromStorage reads are still valid.
-		// Otherwise the original MVData writer was aborted and we must re-check storage.
-		if desc.FromStorage {
-			continue
-		}
-		if gs == nil || gs.Has(desc.Key) != desc.Exists {
-			return false
+			if version.Valid() {
+				if (!d.isZero(value)) != desc.Exists {
+					return false
+				}
+				continue
+			}
+			// No MVData entry. Storage is immutable, so FromStorage reads are still valid.
+			// Otherwise the original MVData writer was aborted and we must re-check storage.
+			if desc.FromStorage {
+				continue
+			}
+			if gs == nil || gs.Has(desc.Key) != desc.Exists {
+				return false
+			}
 		}
 	}
 

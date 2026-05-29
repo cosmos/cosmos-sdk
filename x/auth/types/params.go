@@ -24,13 +24,14 @@ const (
 )
 
 // NewParams creates a new Params object
-func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64) Params {
+func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1, sigVerifyCostMlDsa65 uint64) Params {
 	return Params{
 		MaxMemoCharacters:      maxMemoCharacters,
 		TxSigLimit:             txSigLimit,
 		TxSizeCostPerByte:      txSizeCostPerByte,
 		SigVerifyCostED25519:   sigVerifyCostED25519,
 		SigVerifyCostSecp256k1: sigVerifyCostSecp256k1,
+		SigVerifyCostMlDsa65:   sigVerifyCostMlDsa65,
 	}
 }
 
@@ -57,11 +58,6 @@ func (p Params) SigVerifyCostSecp256r1() uint64 {
 	return p.SigVerifyCostSecp256k1 / 2
 }
 
-// SigVerifyCostMlDsa65 returns the gas fee of an ML-DSA-65 signature verification.
-func (p Params) SigVerifyCostMlDsa65() uint64 {
-	return DefaultSigVerifyCostMlDsa65
-}
-
 func validateTxSigLimit(i any) error {
 	v, ok := i.(uint64)
 	if !ok {
@@ -70,6 +66,19 @@ func validateTxSigLimit(i any) error {
 
 	if v == 0 {
 		return fmt.Errorf("invalid tx signature limit: %d", v)
+	}
+
+	return nil
+}
+
+func validateSigVerifyCostMlDsa65(i any) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("invalid ML-DSA-65 signature verification cost: %d", v)
 	}
 
 	return nil
@@ -136,6 +145,9 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateSigVerifyCostSecp256k1(p.SigVerifyCostSecp256k1); err != nil {
+		return err
+	}
+	if err := validateSigVerifyCostMlDsa65(p.SigVerifyCostMlDsa65); err != nil {
 		return err
 	}
 	if err := validateMaxMemoCharacters(p.MaxMemoCharacters); err != nil {

@@ -585,7 +585,7 @@ func DefaultSigVerificationGasConsumer(
 		return nil
 
 	case *mldsa65.PubKey:
-		meter.ConsumeGas(params.SigVerifyCostMlDsa65(), "ante verify: ml_dsa_65")
+		meter.ConsumeGas(params.SigVerifyCostMlDsa65, "ante verify: ml_dsa_65")
 		return nil
 
 	case multisig.PubKey:

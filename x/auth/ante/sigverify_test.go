@@ -137,7 +137,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 		{"PubKeyEd25519", args{storetypes.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, p.SigVerifyCostED25519, false},
 		{"PubKeySecp256k1", args{storetypes.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, p.SigVerifyCostSecp256k1, false},
 		{"PubKeySecp256r1", args{storetypes.NewInfiniteGasMeter(), nil, skR1.PubKey(), params}, p.SigVerifyCostSecp256r1(), false},
-		{"PubKeyMlDsa65", args{storetypes.NewInfiniteGasMeter(), nil, skMlDsa65.PubKey(), params}, p.SigVerifyCostMlDsa65(), false},
+		{"PubKeyMlDsa65", args{storetypes.NewInfiniteGasMeter(), nil, skMlDsa65.PubKey(), params}, p.SigVerifyCostMlDsa65, false},
 		{"Multisig", args{storetypes.NewInfiniteGasMeter(), multisignature1, multisigKey1, params}, expectedCost1, false},
 		{"unknown key", args{storetypes.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
 	}

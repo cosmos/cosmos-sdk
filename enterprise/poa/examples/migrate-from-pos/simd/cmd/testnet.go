@@ -512,8 +512,15 @@ func collectGenFiles(
 
 		genFile := nodeConfig.GenesisFile()
 
-		// overwrite each validator's genesis file to have a canonical genesis time
-		if err := genutil.ExportGenesisFileWithTime(genFile, chainID, nil, appState, genTime); err != nil {
+		// overwrite each validator's genesis file to have a canonical genesis
+		// time and the collected app state, preserving any custom
+		// ConsensusParams loaded from the existing genesis (e.g. opt-in
+		// validator key types like ml_dsa_65).
+		appGenesis.AppState = appState
+		if appGenesis.Consensus != nil {
+			appGenesis.Consensus.Validators = nil
+		}
+		if err := genutil.ExportGenesisFileWithTime(genFile, appGenesis, genTime); err != nil {
 			return err
 		}
 	}

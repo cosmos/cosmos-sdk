@@ -2,7 +2,6 @@ package genutil
 
 import (
 	"crypto/sha256"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -16,7 +15,6 @@ import (
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/privval"
-	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/go-bip39"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -34,18 +32,13 @@ func ExportGenesisFile(genesis *types.AppGenesis, genFile string) error {
 	return genesis.SaveAs(genFile)
 }
 
-// ExportGenesisFileWithTime creates and writes the genesis configuration to disk.
-// An error is returned if building or writing the configuration to file fails.
-func ExportGenesisFileWithTime(genFile, chainID string, validators []cmttypes.GenesisValidator, appState json.RawMessage, genTime time.Time) error {
-	appGenesis := types.NewAppGenesisWithVersion(chainID, appState)
+// ExportGenesisFileWithTime overwrites the genesis file at genFile with
+// appGenesis, applying genTime as the genesis time. All other fields on
+// appGenesis (validators, consensus params, app state, app hash, initial
+// height, etc.) are preserved as the caller set them.
+func ExportGenesisFileWithTime(genFile string, appGenesis *types.AppGenesis, genTime time.Time) error {
 	appGenesis.GenesisTime = genTime
-	appGenesis.Consensus.Validators = validators
-
-	if err := appGenesis.ValidateAndComplete(); err != nil {
-		return err
-	}
-
-	return appGenesis.SaveAs(genFile)
+	return ExportGenesisFile(appGenesis, genFile)
 }
 
 // InitializeNodeValidatorFiles creates private validator and p2p configuration files.

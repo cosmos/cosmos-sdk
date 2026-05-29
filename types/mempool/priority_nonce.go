@@ -507,6 +507,9 @@ func IsEmpty[C comparable](mempool Mempool) error {
 	if mp.priorityIndex.Len() != 0 {
 		return fmt.Errorf("priorityIndex not empty")
 	}
+	if len(mp.scores) != 0 {
+		return fmt.Errorf("scores has %d stale entries", len(mp.scores))
+	}
 	if len(mp.priorityCounts) != 0 {
 		return fmt.Errorf("priorityCounts has %d stale entries", len(mp.priorityCounts))
 	}

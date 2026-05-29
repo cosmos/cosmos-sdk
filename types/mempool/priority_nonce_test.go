@@ -866,9 +866,7 @@ func TestPriorityNonceMempool_CleanupOnRemove(t *testing.T) {
 	require.NoError(t, mp.Remove(txs[0]))
 	require.NoError(t, mp.Remove(txs[1]))
 
-	require.NotPanics(t, func() {
-		require.Nil(t, mp.NextSenderTx(sa.String()))
-	})
+	require.Nil(t, mp.NextSenderTx(sa.String()))
 
 	require.NoError(t, mp.Remove(txs[2]))
 

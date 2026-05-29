@@ -9,85 +9,33 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 	"gotest.tools/v3/assert"
 
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/testutil/testapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 type fixture struct {
 	ctx               sdk.Context
-	appQueryClient    appv1alpha1.QueryClient
 	autocliInfoClient autocliv1.QueryClient
 	reflectionClient  reflectionv1.ReflectionServiceClient
 }
 
-func initFixture(t assert.TestingT) *fixture {
+func initFixture(t testing.TB) *fixture {
 	f := &fixture{}
 
-	var interfaceRegistry codectypes.InterfaceRegistry
-
-	app, err := simtestutil.Setup(
-		depinject.Configs(
-			configurator.NewAppConfig(
-				configurator.AuthModule(),
-				configurator.TxModule(),
-				configurator.ConsensusModule(),
-				configurator.BankModule(),
-				configurator.StakingModule(),
-			),
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&interfaceRegistry,
-	)
-	assert.NilError(t, err)
-
+	app := testapp.Setup(t)
 	f.ctx = app.NewContext(false)
 	queryHelper := &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: app.GRPCQueryRouter(),
 		Ctx:             f.ctx,
 	}
-	f.appQueryClient = appv1alpha1.NewQueryClient(queryHelper)
 	f.autocliInfoClient = autocliv1.NewQueryClient(queryHelper)
 	f.reflectionClient = reflectionv1.NewReflectionServiceClient(queryHelper)
 
 	return f
-}
-
-func TestQueryAppConfig(t *testing.T) {
-	t.Parallel()
-	f := initFixture(t)
-
-	res, err := f.appQueryClient.Config(f.ctx, &appv1alpha1.QueryConfigRequest{}) //nolint:staticcheck // used for testing the deprecated code
-	assert.NilError(t, err)
-	// app config is not nil
-	assert.Assert(t, res != nil && res.Config != nil)
-
-	moduleConfigs := map[string]*appv1alpha1.ModuleConfig{}
-	for _, module := range res.Config.Modules {
-		moduleConfigs[module.Name] = module
-	}
-
-	// has all expected modules
-	for _, modName := range []string{"auth", "bank", "tx", "consensus", "runtime", "staking"} {
-		modConfig := moduleConfigs[modName]
-		if modConfig == nil {
-			t.Fatalf("missing %s", modName)
-		}
-		assert.Assert(t, modConfig.Config != nil)
-	}
 }
 
 func TestReflectionService(t *testing.T) {

@@ -24,8 +24,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
@@ -60,26 +58,18 @@ func TestIntegrationTestSuite(t *testing.T) {
 }
 
 func (s *IntegrationTestSuite) SetupTest() {
-	app, err := simtestutil.Setup(
-		depinject.Configs(
-			grouptestutil.AppConfig,
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&s.interfaceRegistry,
-		&s.bankKeeper,
-		&s.stakingKeeper,
-		&s.groupKeeper,
-	)
-	s.Require().NoError(err)
+	app, groupKeeper := grouptestutil.SetupApp(s.T())
+
+	s.interfaceRegistry = app.InterfaceRegistry()
+	s.bankKeeper = app.BankKeeper
+	s.stakingKeeper = app.StakingKeeper
+	s.groupKeeper = groupKeeper
 
 	ctx := app.NewContext(false)
-
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
-
 	s.ctx = ctx
 
 	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, math.NewInt(30000000))
-
 	s.addressCodec = codecaddress.NewBech32Codec("cosmos")
 }
 

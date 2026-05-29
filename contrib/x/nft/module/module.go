@@ -109,6 +109,11 @@ func (am AppModule) IsOnePerModuleType() {}
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
+// ModuleAccountPermissions returns the module account permissions for the nft module.
+func (AppModule) ModuleAccountPermissions() map[string][]string {
+	return map[string][]string{nft.ModuleName: nil}
+}
+
 // InitGenesis performs genesis initialization for the nft module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {

@@ -51,7 +51,9 @@ func (m nftAppModule) StoreKeys() map[string]*storetypes.KVStoreKey {
 	return map[string]*storetypes.KVStoreKey{m.storeKey.Name(): m.storeKey}
 }
 
-func (nftAppModule) ModuleAccountPermissions() map[string][]string { return nil }
+func (nftAppModule) ModuleAccountPermissions() map[string][]string {
+	return map[string][]string{nft.ModuleName: nil}
+}
 
 var _ sdkapp.Module = nftAppModule{}
 
@@ -82,7 +84,11 @@ func setupWithNFT(t *testing.T) (*sdkapp.SDKApp, nftkeeper.Keeper) {
 	cfg := sdkapp.DefaultSDKAppConfig("app", opts)
 	ta := sdkapp.NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
 
-	// Create the NFT store key and keeper before LoadModules.
+	// Pre-register NFT module account permission so NewKeeper can validate it
+	// before AddModules+LoadModules run. AddModules will add it to moduleAccountPerms
+	// and LoadModules will persist it via LoadMaccPerms.
+	ta.AccountKeeper.AddModuleAccountPerm(nft.ModuleName, nil)
+
 	nftStoreKey := storetypes.NewKVStoreKey(nft.StoreKey)
 	nftSvc := runtime.NewKVStoreService(nftStoreKey)
 	k := nftkeeper.NewKeeper(nftSvc, ta.AppCodec(), ta.AccountKeeper, ta.BankKeeper)
@@ -247,7 +253,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 
 	for i, w := range weightedOps {
-		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, suite.app.ChainID())
 		suite.Require().NoError(err)
 
 		// the following checks are very much dependent from the ordering of the output given
@@ -292,7 +298,7 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	// execute operation
 	registry := suite.interfaceRegistry
 	op := simulation.SimulateMsgSend(codec.NewProtoCodec(registry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.nftKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, ctx, accounts, suite.app.ChainID())
 	suite.Require().NoError(err)
 
 	var msg nft.MsgSend

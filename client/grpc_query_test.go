@@ -76,6 +76,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// init chain will set the validator set and initialize the genesis accounts
 	_, err = app.InitChain(&abci.RequestInitChain{
+		ChainId:         "test-chain",
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: sims.DefaultConsensusParams,
 		AppStateBytes:   stateBytes,

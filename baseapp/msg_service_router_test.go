@@ -25,10 +25,7 @@ import (
 func newTestBaseApp(t *testing.T, logger log.Logger) (*baseapp.BaseApp, codectypes.InterfaceRegistry) {
 	t.Helper()
 
-	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
-		ProtoFiles: nil,
-	})
-	require.NoError(t, err)
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
 
 	cdc := codec.NewProtoCodec(interfaceRegistry)

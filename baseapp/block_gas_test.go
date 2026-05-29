@@ -32,7 +32,6 @@ import (
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var blockMaxGas = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
@@ -102,6 +101,10 @@ func TestBaseApp_BlockGas(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
+		priv1, _, addr1 := testdata.KeyTestPubAddr()
+		feeCoin := sdk.NewCoin("atom", sdkmath.NewInt(150))
+		feeAmount := sdk.NewCoins(feeCoin)
+
 		bapp, bankKeeper, accountKeeper, txConfig, cdc, interfaceRegistry := newBlockGasApp(t)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -122,10 +125,12 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				key:          bankStoreKey,
 			})
 
-			genState := GenesisStateWithSingleValidator(t, cdc, bapp)
+			// Include addr1 in genesis so its account number is committed before FinalizeBlock.
+			genState := GenesisStateWithValidatorAndFeeAccount(t, cdc, bapp, priv1.PubKey(), feeAmount)
 			stateBytes, err := cmtjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
 			_, err = bapp.InitChain(&abci.RequestInitChain{
+				ChainId:         "test-chain",
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: simtestutil.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
@@ -134,18 +139,9 @@ func TestBaseApp_BlockGas(t *testing.T) {
 
 			ctx := bapp.NewContext(false)
 
-			// tx fee
-			feeCoin := sdk.NewCoin("atom", sdkmath.NewInt(150))
-			feeAmount := sdk.NewCoins(feeCoin)
-
-			// test account and fund
-			priv1, _, addr1 := testdata.KeyTestPubAddr()
-			err = bankKeeper.MintCoins(ctx, minttypes.ModuleName, feeAmount)
-			require.NoError(t, err)
-			err = bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr1, feeAmount)
-			require.NoError(t, err)
-			require.Equal(t, feeCoin.Amount, bankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount)
-			seq := accountKeeper.GetAccount(ctx, addr1).GetSequence()
+			acc1 := accountKeeper.GetAccount(ctx, addr1)
+			require.NotNil(t, acc1)
+			seq := acc1.GetSequence()
 			require.Equal(t, uint64(0), seq)
 
 			// msg and signatures
@@ -162,7 +158,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 
 			senderAccountNumber := accountKeeper.GetAccount(ctx, addr1).GetAccountNumber()
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{senderAccountNumber}, []uint64{0}
-			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, bapp.ChainID())
 			require.NoError(t, err)
 
 			rsp, err := bapp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
@@ -184,7 +180,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed
-			baseGas := uint64(58359) // baseGas is the gas consumed before tx msg
+			baseGas := uint64(44189) // baseGas is the gas consumed by ante handler before msg execution
 			expGasConsumed := min(addUint64Saturating(tc.gasToConsume, baseGas), uint64(simtestutil.DefaultConsensusParams.Block.MaxGas))
 			require.Equal(t, int(expGasConsumed), int(ctx.BlockGasMeter().GasConsumed()))
 			// tx fee is always deducted

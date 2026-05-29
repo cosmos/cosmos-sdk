@@ -28,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -66,6 +67,29 @@ func GenesisStateWithSingleValidator(t *testing.T, cdc codec.Codec, app *sdkapp.
 
 	genesisState := app.DefaultGenesis()
 	genesisState, err = simtestutil.GenesisStateWithValSet(cdc, genesisState, valSet, []authtypes.GenesisAccount{acc}, balances...)
+	require.NoError(t, err)
+
+	return genesisState
+}
+
+// GenesisStateWithValidatorAndFeeAccount initializes GenesisState with a single validator
+// and an additional funded fee-paying account (feeAccPubKey) for signing tests.
+func GenesisStateWithValidatorAndFeeAccount(t *testing.T, cdc codec.Codec, app *sdkapp.SDKApp, feeAccPubKey cryptotypes.PubKey, feeCoins sdk.Coins) map[string]json.RawMessage {
+	t.Helper()
+
+	privVal := mock.NewPV()
+	pubKey, err := privVal.GetPubKey()
+	require.NoError(t, err)
+
+	validator := cmttypes.NewValidator(pubKey, 1)
+	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
+
+	feeAcc := authtypes.NewBaseAccount(feeAccPubKey.Address().Bytes(), feeAccPubKey, 0, 0)
+	genesisState := app.DefaultGenesis()
+	genesisState, err = simtestutil.GenesisStateWithValSet(cdc, genesisState, valSet,
+		[]authtypes.GenesisAccount{feeAcc},
+		banktypes.Balance{Address: feeAcc.GetAddress().String(), Coins: feeCoins},
+	)
 	require.NoError(t, err)
 
 	return genesisState

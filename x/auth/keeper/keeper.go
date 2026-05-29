@@ -229,6 +229,13 @@ func (ak AccountKeeper) LoadMaccPerms(maccPerms map[string][]string) {
 	}
 }
 
+// AddModuleAccountPerm adds or replaces a single module account permission without
+// clearing the full set. Used by addModule to make perms available immediately after
+// AddModules, before LoadModules is called.
+func (ak AccountKeeper) AddModuleAccountPerm(name string, perms []string) {
+	ak.permAddrs[name] = types.NewPermissionsForAddress(name, perms)
+}
+
 // ValidatePermissions validates that the module account has been granted
 // permissions within its set of allowed permissions.
 func (ak AccountKeeper) ValidatePermissions(macc sdk.ModuleAccountI) error {

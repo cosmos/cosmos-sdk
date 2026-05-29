@@ -360,10 +360,12 @@ func (app *SDKApp) addModule(mod Module) error {
 		}
 	}
 
-	// merge module account perms and block their addresses in BankKeeper
+	// merge module account perms, make them available in AccountKeeper immediately,
+	// and block their addresses in BankKeeper
 	blockedAddrs := app.BankKeeper.GetBlockedAddresses()
 	for name, perms := range mod.ModuleAccountPermissions() {
 		app.moduleAccountPerms[name] = perms
+		app.AccountKeeper.AddModuleAccountPerm(name, perms)
 		if name != govtypes.ModuleName {
 			blockedAddrs[authtypes.NewModuleAddress(name).String()] = true
 		}

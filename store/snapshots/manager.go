@@ -299,6 +299,13 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 		return err
 	}
 
+	restoreStarted := false
+	defer func() {
+		if !restoreStarted {
+			m.endLocked()
+		}
+	}()
+
 	// Start an asynchronous snapshot restoration, passing chunks and completion status via channels.
 	chChunkIDs := make(chan uint32, chunkIDBufferSize)
 	chDone := make(chan restoreDone, 1)
@@ -319,6 +326,7 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 		close(chDone)
 	}()
 
+	restoreStarted = true
 	m.chRestore = chChunkIDs
 	m.chRestoreDone = chDone
 	m.restoreSnapshot = &snapshot

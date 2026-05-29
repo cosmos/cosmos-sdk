@@ -3,6 +3,7 @@ package snapshots
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	stderrors "errors"
 	"hash"
 	"io"
 	"math"
@@ -11,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 
 	db "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
@@ -40,16 +42,15 @@ func NewStore(db db.DB, dir string) (*Store, error) {
 	if dir == "" {
 		return nil, errors.Wrap(storetypes.ErrLogic, "snapshot directory not given")
 	}
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+
+	dir = filepath.Clean(dir)
+	if err := mkdirAllSync(dir, filepath.Dir(dir), 0o755); err != nil {
 		return nil, errors.Wrapf(err, "failed to create snapshot directory %q", dir)
-	}
-	if err := syncDir(filepath.Dir(dir)); err != nil {
-		return nil, errors.Wrapf(err, "failed to sync parent of snapshot directory %q", dir)
 	}
 
 	return &Store{
 		db:     db,
-		dir:    filepath.Clean(dir),
+		dir:    dir,
 		saving: make(map[uint64]bool),
 	}, nil
 }
@@ -380,6 +381,11 @@ func syncDir(dirPath string) error {
 	}
 	if err := dir.Sync(); err != nil {
 		dir.Close()
+		// Some filesystems (e.g. tmpfs, FAT, certain network mounts) do not support
+		// directory fsync and return EINVAL or ENOTSUP. Treat these as non-fatal.
+		if stderrors.Is(err, syscall.EINVAL) || stderrors.Is(err, syscall.ENOTSUP) {
+			return nil
+		}
 		return errors.Wrapf(err, "failed to sync directory %q", dirPath)
 	}
 	if err := dir.Close(); err != nil {

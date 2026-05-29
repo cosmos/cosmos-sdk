@@ -104,7 +104,7 @@ func UnsafeNewStore(tree *iavl.MutableTree) *Store {
 // GetImmutable returns a reference to a new store backed by an immutable IAVL
 // tree at a specific version (height) without any pruning options. This should
 // be used for querying and iteration only. If the version does not exist or has
-// been pruned, an empty immutable IAVL tree will be used.
+// been pruned, iavl.ErrVersionDoesNotExist is returned.
 // Any mutable operations executed will result in a panic.
 func (st *Store) GetImmutable(version int64) (*Store, error) {
 	if !st.VersionExists(version) {

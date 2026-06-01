@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/math"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,17 +38,13 @@ func (k Keeper) HasConsKeyRotationQueueEntry(ctx context.Context, maturity time.
 	return k.storeService.OpenKVStore(ctx).Has(types.GetConsKeyRotationQueueKey(maturity, valAddr))
 }
 
-// SetConsKeyRotation writes to indexes that track a pending consensus key
-// rotation. The new pubkey is written to the unapplied queue so the end
-// blocker can perform the rotation in this block.
+// SetConsKeyRotation writes the indexes that track a pending consensus key
+// rotation.
 func (k Keeper) SetConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress, oldPubKey, newPubKey cryptotypes.PubKey) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	unbondingTime, err := k.UnbondingTime(ctx)
+	maturesAt, err := k.rotationMaturityTime(ctx)
 	if err != nil {
 		return err
 	}
-	maturity := sdkCtx.BlockHeader().Time.Add(unbondingTime)
 
 	oldConsAddr := sdk.ConsAddress(oldPubKey.Address())
 	newConsAddr := sdk.ConsAddress(newPubKey.Address())
@@ -57,10 +54,12 @@ func (k Keeper) SetConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress, 
 	// add to queue keyed by time so that we can iterate rotations happening by
 	// time and quickly remove ones that have matured (fallen out of the
 	// current unbonding period).
-	if err := store.Set(types.GetConsKeyRotationQueueKey(maturity, valAddr), oldConsAddr); err != nil {
+	if err := store.Set(types.GetConsKeyRotationQueueKey(maturesAt, valAddr), oldConsAddr); err != nil {
 		return err
 	}
 
+	// mark this validator has having rotated (used to block future rotation
+	// for this validator within the current unbonding period).
 	if err := store.Set(types.GetValidatorConsKeyRotationKey(valAddr), []byte{}); err != nil {
 		return err
 	}
@@ -81,98 +80,249 @@ func (k Keeper) SetConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress, 
 	if err != nil {
 		return err
 	}
-	return store.Set(types.GetUnappliedConsKeyRotationKey(valAddr), newPubKeyBz)
+
+	// add the rotation to the apply queue, so the end blocker can:
+	// 1. iterate the queue and emit validator power updates for rotations that
+	//    are behind their apply height.
+	// 2. iterate the queue and update staking state for validators who should
+	//    have their rotations applied to sdk state (at apply height).
+	applyHeight := rotationApplyHeight(ctx)
+	return store.Set(types.GetConsKeyRotationApplyQueueKey(applyHeight, valAddr), newPubKeyBz)
 }
 
-// ApplyPendingConsKeyRotations applies every rotation queued by the msg server
-// and returns the validator updates needed to retire each old key at zero
-// power and instate each new key at the validator's current power.
-func (k Keeper) ApplyPendingConsKeyRotations(ctx context.Context, powerReduction math.Int) ([]abci.ValidatorUpdate, error) {
-	var totalUpdates abci.ValidatorUpdates
-
-	store := k.storeService.OpenKVStore(ctx)
-	err := k.IterateUnappliedConsKeyRotations(ctx, func(valAddr sdk.ValAddress, newPubKey cryptotypes.PubKey) error {
-		validator, err := k.GetValidator(ctx, valAddr)
-		if err != nil {
-			return err
-		}
-
-		// handles updating state with the validators new consensus key and
-		// creating abci updates to pass to comet
-		updates, err := k.ApplyConsKeyRotation(ctx, validator, newPubKey, powerReduction)
-		if err != nil {
-			return err
-		}
-		totalUpdates = append(totalUpdates, updates...)
-
-		// the new cons addr is now the validator's live cons addr; further
-		// rotations targeting it are blocked by the by cons addr lookup,
-		// so release its rotation lock entry. The old cons addr entry
-		// stays until the rotation matures.
-		if err := store.Delete(types.GetRotationLockedConsAddrIndexKey(sdk.ConsAddress(newPubKey.Address()))); err != nil {
-			return err
-		}
-
-		return store.Delete(types.GetUnappliedConsKeyRotationKey(valAddr))
-	})
-	if err != nil {
+// ProcessConsKeyRotations performs the two passes over the height-keyed apply
+// queue called once per EndBlock from ApplyAndReturnValidatorSetUpdates:
+//
+//   - Drain (mature): for every entry with applyHeight <= currentHeight, apply
+//     the SDK-side state swap (validator.ConsensusPubkey and byConsAddr index),
+//     delete the queue entry, and release the new-addr rotation lock. The
+//     old-addr lock persists until unbonding-window pruning.
+//   - Emit (new this block): for every entry with applyHeight ==
+//     currentHeight + ConsensusUpdateDelay, build and append the
+//     (old@0, new@power) ValidatorUpdate pair. The entry is not deleted here;
+//     it remains until its applyHeight matures.
+//
+// The drain pass runs first so that subsequent transition emits in the same
+// EndBlock read the post-swap ConsensusPubkey.
+func (k Keeper) ProcessConsKeyRotations(ctx context.Context, powerReduction math.Int) ([]abci.ValidatorUpdate, error) {
+	if err := k.ApplyConsKeyRotations(ctx); err != nil {
 		return nil, err
 	}
-
-	return totalUpdates, nil
+	return k.ConsKeyRotationUpdates(ctx, powerReduction)
 }
 
-// ApplyConsKeyRotation switches the validator's consensus pubkey to newPubKey
-// in x/staking state. The validator record is updated, the old by cons address
-// index entry is deleted, and the new by cons address index entry is written.
-func (k Keeper) ApplyConsKeyRotation(ctx context.Context, validator types.Validator, newPubKey cryptotypes.PubKey, powerReduction math.Int) (abci.ValidatorUpdates, error) {
-	// we will have two validator updates for every consensus key rotation
-	// since a key rotation to comet looks like a validator becoming 0 power
-	// (the old cons addr) and a new validator coming online with the new cons
-	// addr that has the same power as the old validator.
-	updates := make([]abci.ValidatorUpdate, 2)
+// ApplyConsKeyRotations iterates every apply queue entry whose applyHeight has
+// been reached, performs the state swap, and clears the queue entry plus the
+// new addr rotation lock.
+func (k Keeper) ApplyConsKeyRotations(ctx context.Context) (err error) {
+	store := k.storeService.OpenKVStore(ctx)
 
-	// create a validator update that will mark its current cons addr as 0
-	// power
-	updates[0] = validator.ABCIValidatorUpdateZero()
+	// iterate (-, currentHeight+1) which covers every applyHeight <= currentHeight
+	currentHeight := sdk.UnwrapSDKContext(ctx).BlockHeight()
+	iterator, err := store.Iterator(
+		types.ConsKeyRotationApplyQueueKey,
+		storetypes.PrefixEndBytes(types.GetConsKeyRotationApplyQueueHeightPrefix(currentHeight)),
+	)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = errors.Join(err, iterator.Close())
+	}()
 
-	// capture the old cons addr before the in-memory swap below, so that we
-	// can delete the old by cons addr index entry further down
+	type matured struct {
+		key       []byte
+		valAddr   sdk.ValAddress
+		newPubKey cryptotypes.PubKey
+	}
+	// collect first; SDK store iterators do not promise safety when keys are
+	// deleted mid-iteration.
+	var entries []matured
+	for ; iterator.Valid(); iterator.Next() {
+		keyCopy := append([]byte(nil), iterator.Key()...)
+		_, valAddr, err := types.ParseConsKeyRotationApplyQueueKey(keyCopy)
+		if err != nil {
+			return err
+		}
+		var newPubKey cryptotypes.PubKey
+		if uerr := k.cdc.UnmarshalInterface(iterator.Value(), &newPubKey); uerr != nil {
+			return uerr
+		}
+		entries = append(entries, matured{key: keyCopy, valAddr: valAddr, newPubKey: newPubKey})
+	}
+
+	for _, e := range entries {
+		if aerr := k.ApplyConsKeyRotation(ctx, e.valAddr, e.newPubKey); aerr != nil {
+			return aerr
+		}
+
+		// the new cons addr is now the validator's live cons addr. further
+		// rotations targeting it are blocked by the by cons addr lookup, so
+		// release its rotation lock entry. The old cons addr entry stays
+		// until the rotation matures.
+		if derr := store.Delete(types.GetRotationLockedConsAddrIndexKey(sdk.ConsAddress(e.newPubKey.Address()))); derr != nil {
+			return derr
+		}
+
+		// delete the entry from the apply queue
+		if derr := store.Delete(e.key); derr != nil {
+			return derr
+		}
+	}
+	return nil
+}
+
+// ApplyConsKeyRotation swaps the validator's ConsensusPubkey to newPubKey
+// and updates the byConsAddr index. Returns nil silently if the validator no
+// longer exists.
+func (k Keeper) ApplyConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress, newPubKey cryptotypes.PubKey) error {
+	validator, err := k.GetValidator(ctx, valAddr)
+	if err != nil {
+		// this could happen if the validator is removed (unbonds) between when
+		// the rotation was enqueued, and now when we are actually applying it
+		// (since there is a 2 block delay between enqueue and apply).
+		if errors.Is(err, types.ErrNoValidatorFound) {
+			return nil
+		}
+		return err
+	}
+
 	oldConsAddr, err := validator.GetConsAddr()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// update the validator in memory to use the new cons addr
 	newAny, err := codectypes.NewAnyWithValue(newPubKey)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	validator.ConsensusPubkey = newAny
 
-	// create a validator update that will mark its new cons addr with the same
-	// power as its previous cons addr
-	updates[1] = validator.ABCIValidatorUpdate(powerReduction)
-
-	// set the validator in the store (keyed by operator address, which didnt
-	// change) to the updated validator with the new cons addr
 	if err := k.SetValidator(ctx, validator); err != nil {
-		return nil, err
+		return err
 	}
 
-	// remove the store entry for the previous cons addr pointing to the
-	// validator
 	store := k.storeService.OpenKVStore(ctx)
 	if err := store.Delete(types.GetValidatorByConsAddrKey(oldConsAddr)); err != nil {
+		return err
+	}
+	return k.SetValidatorByConsAddr(ctx, validator)
+}
+
+// ConsKeyRotationUpdates returns power updates for each validator
+// rotating their consensus keys.
+func (k Keeper) ConsKeyRotationUpdates(ctx context.Context, powerReduction math.Int) (updates []abci.ValidatorUpdate, err error) {
+	store := k.storeService.OpenKVStore(ctx)
+
+	// iterate all entries in the apply queue that are equal to applyHeight
+	applyHeight := rotationApplyHeight(ctx)
+	prefix := types.GetConsKeyRotationApplyQueueHeightPrefix(applyHeight)
+	iterator, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
+	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		err = errors.Join(err, iterator.Close())
+	}()
 
-	// create a new store entry for the new cons addr pointing to the validator
-	if err := k.SetValidatorByConsAddr(ctx, validator); err != nil {
-		return nil, err
+	for ; iterator.Valid(); iterator.Next() {
+		_, valAddr, err := types.ParseConsKeyRotationApplyQueueKey(iterator.Key())
+		if err != nil {
+			return nil, err
+		}
+		validator, err := k.GetValidator(ctx, valAddr)
+		if err != nil {
+			// the validator may have been removed earlier in the same block
+			// (e.g., evidence-driven tombstoning). ApplyConsKeyRotation also
+			// no-ops in this case, so skip emitting an update for it.
+			if errors.Is(err, types.ErrNoValidatorFound) {
+				continue
+			}
+			return nil, err
+		}
+		var newPubKey cryptotypes.PubKey
+		if err := k.cdc.UnmarshalInterface(iterator.Value(), &newPubKey); err != nil {
+			return nil, err
+		}
+		pair, err := k.ConsKeyRotationUpdate(validator, newPubKey, powerReduction)
+		if err != nil {
+			return nil, err
+		}
+		updates = append(updates, pair...)
 	}
-
 	return updates, nil
+}
+
+// ConsKeyRotationUpdate builds the (old@0, new@power) ABCI ValidatorUpdate
+// pair that announces a cons key rotation to CometBFT. It does not mutate
+// state.
+func (k Keeper) ConsKeyRotationUpdate(validator types.Validator, newPubKey cryptotypes.PubKey, powerReduction math.Int) (abci.ValidatorUpdates, error) {
+	oldTmProtoPk, err := validator.CmtConsPublicKey()
+	if err != nil {
+		return nil, fmt.Errorf("converting validators existing cons key to tm proto: %w", err)
+	}
+	newTmProtoPk, err := cryptocodec.ToCmtProtoPublicKey(newPubKey)
+	if err != nil {
+		return nil, fmt.Errorf("converting validators new cons key to tm proto: %w", err)
+	}
+
+	return []abci.ValidatorUpdate{
+		{
+			PubKey: oldTmProtoPk,
+			Power:  0,
+		},
+		{
+			PubKey: newTmProtoPk,
+			Power:  validator.ConsensusPower(powerReduction),
+		},
+	}, nil
+}
+
+type PendingRotations map[string]cryptotypes.PubKey
+
+func (pr PendingRotations) EffectiveKeyForABCIUpdate(valAddr sdk.ValAddress, validator types.Validator) (cryptotypes.PubKey, error) {
+	// if this validator has a pending rotation, use the pk that they are
+	// rotating to
+	if pk, ok := pr[string(valAddr)]; ok {
+		return pk, nil
+	}
+
+	// the validator is not in the pending rotation set, use their current
+	// consensus key
+	return validator.ConsPubKey()
+}
+
+// PendingConsKeyRotations scans the apply queue once and returns every
+// rotation still in flight, keyed by string(valAddr). It is intended to be
+// called once per EndBlock after ProcessConsKeyRotations so the bonded loop
+// can substitute the new cons key on per-validator emits via an O(1) map
+// lookup instead of repeated store reads.
+func (k Keeper) PendingConsKeyRotations(ctx context.Context) (rotations PendingRotations, err error) {
+	store := k.storeService.OpenKVStore(ctx)
+	iterator, err := store.Iterator(
+		types.ConsKeyRotationApplyQueueKey,
+		storetypes.PrefixEndBytes(types.ConsKeyRotationApplyQueueKey),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = errors.Join(err, iterator.Close())
+	}()
+
+	rotations = make(map[string]cryptotypes.PubKey)
+	for ; iterator.Valid(); iterator.Next() {
+		_, valAddr, err := types.ParseConsKeyRotationApplyQueueKey(iterator.Key())
+		if err != nil {
+			return nil, err
+		}
+		var newPubKey cryptotypes.PubKey
+		if err := k.cdc.UnmarshalInterface(iterator.Value(), &newPubKey); err != nil {
+			return nil, err
+		}
+		rotations[string(valAddr)] = newPubKey
+	}
+	return rotations, nil
 }
 
 // PruneMaturedConsKeyRotations removes every rotation whose unbonding window
@@ -214,9 +364,9 @@ func (k Keeper) maturedConsKeyRotationKeys(ctx context.Context, blockTime time.T
 
 	// TODO: migrate ValidatorSigningInfo from oldConsAddr to newConsAddr
 	for ; iterator.Valid(); iterator.Next() {
-		maturity, valAddr, perr := types.ParseConsKeyRotationQueueKey(iterator.Key())
-		if perr != nil {
-			return nil, perr
+		maturity, valAddr, err := types.ParseConsKeyRotationQueueKey(iterator.Key())
+		if err != nil {
+			return nil, err
 		}
 		oldConsAddr := sdk.ConsAddress(iterator.Value())
 
@@ -229,51 +379,19 @@ func (k Keeper) maturedConsKeyRotationKeys(ctx context.Context, blockTime time.T
 	return keys, nil
 }
 
-// IterateUnappliedConsKeyRotations walks every rotation queued by the msg
-// server that the end blocker has not yet applied, in valAddr sorted order. It
-// is safe to delete store keys within the supplied callback.
-func (k Keeper) IterateUnappliedConsKeyRotations(
-	ctx context.Context,
-	cb func(valAddr sdk.ValAddress, newPubKey cryptotypes.PubKey) error,
-) error {
-	rotations, err := k.unappliedConsKeyRotations(ctx)
-	if err != nil {
-		return err
-	}
-	for _, r := range rotations {
-		if err := cb(r.valAddr, r.newPubKey); err != nil {
-			return err
-		}
-	}
-	return nil
+// rotationApplyHeight returns the height that a rotation should be applied at
+// given the current context.
+func rotationApplyHeight(ctx context.Context) int64 {
+	return sdk.UnwrapSDKContext(ctx).BlockHeight() + types.ConsensusUpdateDelay
 }
 
-type unappliedConsKeyRotation struct {
-	valAddr   sdk.ValAddress
-	newPubKey cryptotypes.PubKey
-}
-
-// unappliedConsKeyRotations returns every rotation queued by the msg server
-// that the end blocker has not yet applied.
-func (k Keeper) unappliedConsKeyRotations(ctx context.Context) (rotations []unappliedConsKeyRotation, err error) {
-	store := k.storeService.OpenKVStore(ctx)
-	iterator, err := store.Iterator(types.UnappliedConsKeyRotationKey, storetypes.PrefixEndBytes(types.UnappliedConsKeyRotationKey))
+// rotationMaturityTime returns the time that a rotation will mature at given
+// the current context.
+func (k Keeper) rotationMaturityTime(ctx context.Context) (time.Time, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	unbondingTime, err := k.UnbondingTime(ctx)
 	if err != nil {
-		return nil, err
+		return time.Time{}, err
 	}
-	defer func() {
-		err = errors.Join(err, iterator.Close())
-	}()
-
-	for ; iterator.Valid(); iterator.Next() {
-		key := iterator.Key()
-		valAddr := sdk.ValAddress(bytes.Clone(key[len(types.UnappliedConsKeyRotationKey)+1:]))
-
-		var newPubKey cryptotypes.PubKey
-		if err := k.cdc.UnmarshalInterface(iterator.Value(), &newPubKey); err != nil {
-			return nil, err
-		}
-		rotations = append(rotations, unappliedConsKeyRotation{valAddr: valAddr, newPubKey: newPubKey})
-	}
-	return rotations, nil
+	return sdkCtx.BlockHeader().Time.Add(unbondingTime), nil
 }

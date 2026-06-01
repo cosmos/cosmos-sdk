@@ -262,18 +262,70 @@ func TestGetRotationLockedConsAddrIndexKey(t *testing.T) {
 	}
 }
 
-func TestGetUnappliedConsKeyRotationKey(t *testing.T) {
+func TestGetConsKeyRotationApplyQueueKey(t *testing.T) {
 	tests := []struct {
-		valAddr sdk.ValAddress
-		wantHex string
+		name        string
+		applyHeight int64
+		valAddr     sdk.ValAddress
 	}{
-		{sdk.ValAddress(keysAddr1), "941463d771218209d8bd03c482f69dfba57310f08609"},
-		{sdk.ValAddress(keysAddr2), "94145ef3b5f25c54946d4a89fc0d09d2f126614540f2"},
-		{sdk.ValAddress(keysAddr3), "94143ab62f0d93849be495e21e3e9013a517038f45bd"},
+		{"zero height keysAddr1", 0, sdk.ValAddress(keysAddr1)},
+		{"small height keysAddr2", 42, sdk.ValAddress(keysAddr2)},
+		{"large height keysAddr3", math2.MaxInt64, sdk.ValAddress(keysAddr3)},
 	}
-	for i, tt := range tests {
-		got := hex.EncodeToString(types.GetUnappliedConsKeyRotationKey(tt.valAddr))
-		require.Equal(t, tt.wantHex, got, "Keys did not match on test case %d", i)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			bz := types.GetConsKeyRotationApplyQueueKey(tt.applyHeight, tt.valAddr)
+			gotHeight, gotValAddr, err := types.ParseConsKeyRotationApplyQueueKey(bz)
+			require.NoError(t, err)
+			require.Equal(t, tt.applyHeight, gotHeight)
+			require.Equal(t, tt.valAddr, gotValAddr)
+		})
+	}
+}
+
+func TestGetConsKeyRotationApplyQueueKeyOrder(t *testing.T) {
+	valAddr := sdk.ValAddress(keysAddr1)
+	endKey := types.GetConsKeyRotationApplyQueueKey(100, valAddr)
+
+	keyA := types.GetConsKeyRotationApplyQueueKey(50, valAddr)
+	keyB := types.GetConsKeyRotationApplyQueueKey(99, valAddr)
+	keyC := types.GetConsKeyRotationApplyQueueKey(101, valAddr)
+
+	require.Equal(t, -1, bytes.Compare(keyA, endKey))
+	require.Equal(t, -1, bytes.Compare(keyB, endKey))
+	require.Equal(t, 1, bytes.Compare(keyC, endKey))
+}
+
+func TestGetConsKeyRotationApplyQueueHeightPrefix(t *testing.T) {
+	prefix := types.GetConsKeyRotationApplyQueueHeightPrefix(42)
+	full := types.GetConsKeyRotationApplyQueueKey(42, sdk.ValAddress(keysAddr1))
+	require.True(t, bytes.HasPrefix(full, prefix))
+	require.Equal(t, len(types.ConsKeyRotationApplyQueueKey)+8, len(prefix))
+}
+
+func TestParseConsKeyRotationApplyQueueKey_Errors(t *testing.T) {
+	valAddr := sdk.ValAddress(keysAddr1)
+	tests := []struct {
+		name           string
+		buildKey       func() []byte
+		expErrContains string
+	}{
+		{
+			name: "wrong prefix",
+			buildKey: func() []byte {
+				bz := types.GetConsKeyRotationApplyQueueKey(1, valAddr)
+				bz[0] = 0xff
+				return bz
+			},
+			expErrContains: "invalid prefix",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, _, err := types.ParseConsKeyRotationApplyQueueKey(tt.buildKey())
+			require.Error(t, err)
+			require.Contains(t, err.Error(), tt.expErrContains)
+		})
 	}
 }
 

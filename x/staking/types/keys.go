@@ -87,14 +87,27 @@ var (
 	// removed when the rotation is applied in the end blocker.
 	RotationLockedConsAddrIndexKey = []byte{0x93} // prefix for the rotation-locked consensus address lookup
 
-	// UnappliedConsKeyRotationKey is the drain queue of rotations that the
-	// msg server has accepted but the end blocker has not yet performed.
-	// Each entry holds the new pubkey to apply. The end blocker iterates
-	// this prefix once per block, applies each rotation, and deletes the
-	// entry. The other three rotation stores remain so the rotation can be
-	// tracked through the rest of the unbonding period.
-	UnappliedConsKeyRotationKey = []byte{0x94} // prefix for unapplied consensus key rotations, keyed by valAddr
+	// ConsKeyRotationApplyQueueKey is the prefix for the height-keyed queue
+	// of cons key rotations whose ValidatorUpdates have been (or will be)
+	// emitted to CometBFT at the height the entry was written, and whose
+	// SDK-side state mutation will be applied when currentHeight reaches
+	// applyHeight = writeHeight + ConsensusUpdateDelay.
+	//
+	// Key format: 0x94 || BigEndian(applyHeight uint64) || lengthPrefix(valAddr)
+	// Value:      marshaled cryptotypes.PubKey (the new consensus pubkey)
+	ConsKeyRotationApplyQueueKey = []byte{0x94}
 )
+
+// ConsensusUpdateDelay is CometBFT's two-block validator-update delay.
+// ValidatorUpdates returned from EndBlock at height H first take effect at
+// height H+ConsensusUpdateDelay. We schedule SDK-side cons key state swaps to
+// match this so that validator.ConsensusPubkey always equals the key CometBFT
+// is actually using.
+//
+// Pinned by CometBFT (state/execution.go in v0.39.3:
+// lastHeightValsChanged = header.Height + 1 + 1; state/state.go documents
+// the invariant).
+const ConsensusUpdateDelay int64 = 2
 
 // UnbondingType defines the type of unbonding operation
 type UnbondingType int
@@ -513,8 +526,39 @@ func GetRotationLockedConsAddrIndexKey(consAddr sdk.ConsAddress) []byte {
 	return append(RotationLockedConsAddrIndexKey, address.MustLengthPrefix(consAddr)...)
 }
 
-// GetUnappliedConsKeyRotationKey returns the key for a rotation that the
-// msg server has queued and the end blocker has not yet applied.
-func GetUnappliedConsKeyRotationKey(valAddr sdk.ValAddress) []byte {
-	return append(UnappliedConsKeyRotationKey, address.MustLengthPrefix(valAddr)...)
+// GetConsKeyRotationApplyQueueKey returns the queue key for a rotation whose
+// SDK-side state swap will be performed when the chain reaches applyHeight.
+func GetConsKeyRotationApplyQueueKey(applyHeight int64, valAddr sdk.ValAddress) []byte {
+	prefix := GetConsKeyRotationApplyQueueHeightPrefix(applyHeight)
+	valBz := address.MustLengthPrefix(valAddr)
+	key := make([]byte, len(prefix)+len(valBz))
+	copy(key, prefix)
+	copy(key[len(prefix):], valBz)
+	return key
+}
+
+// GetConsKeyRotationApplyQueueHeightPrefix returns the iteration prefix for
+// every entry in the apply queue at the given applyHeight.
+func GetConsKeyRotationApplyQueueHeightPrefix(applyHeight int64) []byte {
+	heightBz := sdk.Uint64ToBigEndian(uint64(applyHeight))
+	prefix := make([]byte, len(ConsKeyRotationApplyQueueKey)+len(heightBz))
+	copy(prefix, ConsKeyRotationApplyQueueKey)
+	copy(prefix[len(ConsKeyRotationApplyQueueKey):], heightBz)
+	return prefix
+}
+
+// ParseConsKeyRotationApplyQueueKey extracts the applyHeight and validator
+// address from an apply queue key.
+func ParseConsKeyRotationApplyQueueKey(bz []byte) (int64, sdk.ValAddress, error) {
+	prefixLen := len(ConsKeyRotationApplyQueueKey)
+	if prefix := bz[:prefixLen]; !bytes.Equal(prefix, ConsKeyRotationApplyQueueKey) {
+		return 0, nil, fmt.Errorf("invalid prefix; expected: %X, got: %X", ConsKeyRotationApplyQueueKey, prefix)
+	}
+
+	kv.AssertKeyAtLeastLength(bz, prefixLen+8+1)
+	applyHeight := int64(sdk.BigEndianToUint64(bz[prefixLen : prefixLen+8]))
+
+	valAddrLen := int(bz[prefixLen+8])
+	kv.AssertKeyAtLeastLength(bz, prefixLen+8+1+valAddrLen)
+	return applyHeight, sdk.ValAddress(bz[prefixLen+8+1 : prefixLen+8+1+valAddrLen]), nil
 }

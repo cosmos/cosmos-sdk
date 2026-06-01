@@ -16,10 +16,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Covers msg-server queuing plus end-blocker application: the fee transfer,
-// all four store indexes, the deferred swap of the validators stored
-// ConsensusPubkey, and the two ABCI updates CometBFT needs to retire the old
-// key at zero power and instate the new key at the current power.
+// Covers msg-server queuing plus the EndBlocker's two-phase drain: the fee
+// transfer, all four store indexes, the queue entry at the correct apply
+// height, the pre-apply read-back of the unchanged ConsensusPubkey, and the
+// post-apply swap of the validator's ConsensusPubkey and byConsAddr index.
 func TestRotateConsPubKey_MsgServerQueuesAndEndBlockerApplies(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
@@ -42,6 +42,7 @@ func TestRotateConsPubKey_MsgServerQueuesAndEndBlockerApplies(t *testing.T) {
 	powerBefore := valBefore.ConsensusPower(powerReduction)
 	assert.Assert(t, powerBefore > 0)
 
+	writeHeight := f.sdkCtx.BlockHeight()
 	_, err = msgServer.RotateConsPubKey(f.sdkCtx, &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, newPk),
@@ -74,16 +75,36 @@ func TestRotateConsPubKey_MsgServerQueuesAndEndBlockerApplies(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Assert(t, hasRotated)
 
-	// validators stored ConsensusPubkey is unchanged until the end blocker runs
+	// validators stored ConsensusPubkey is unchanged before the apply height.
+	// The deferred design keeps the SDK view aligned with CometBFT's active
+	// key, which only switches at writeHeight + ConsensusUpdateDelay.
 	preEndBlocker, err := f.stakingKeeper.GetValidator(f.sdkCtx, valAddr)
 	assert.NilError(t, err)
 	preConsAddr, err := preEndBlocker.GetConsAddr()
 	assert.NilError(t, err)
 	assert.DeepEqual(t, oldConsAddr.Bytes(), preConsAddr)
 
-	// advance one block at the current block time so the end blocker applies
-	// the rotation but does not yet prune (maturity is in the future)
+	// advance one block at the current block time. With the deferred apply
+	// design the EndBlocker emit pass runs but the SDK-side state swap does
+	// not yet land (applyHeight = writeHeight + 2 has not been reached).
 	advanceBlock(t, f, f.sdkCtx.BlockHeader().Time)
+
+	stillOld, err := f.stakingKeeper.GetValidator(f.sdkCtx, valAddr)
+	assert.NilError(t, err)
+	stillOldConsAddr, err := stillOld.GetConsAddr()
+	assert.NilError(t, err)
+	assert.DeepEqual(t, oldConsAddr.Bytes(), stillOldConsAddr)
+	byOld, err := f.stakingKeeper.GetValidatorByConsAddr(f.sdkCtx, oldConsAddr)
+	assert.NilError(t, err)
+	assert.Equal(t, valAddr.String(), byOld.OperatorAddress)
+
+	// at the apply height (writeHeight + 2), the drain pass swaps state.
+	// invoke the EndBlocker pass directly at the apply height because the
+	// integration fixture's EndBlocker runs with the captured initial block
+	// height and does not advance with FinalizeBlock.
+	applyCtx := f.sdkCtx.WithBlockHeight(writeHeight + types.ConsensusUpdateDelay)
+	_, err = f.stakingKeeper.ProcessConsKeyRotations(applyCtx, powerReduction)
+	assert.NilError(t, err)
 
 	// old by-cons-addr index is gone
 	_, err = f.stakingKeeper.GetValidatorByConsAddr(f.sdkCtx, oldConsAddr)
@@ -103,9 +124,9 @@ func TestRotateConsPubKey_MsgServerQueuesAndEndBlockerApplies(t *testing.T) {
 	assert.DeepEqual(t, newConsAddr.Bytes(), storedConsAddr)
 	assert.Equal(t, powerBefore, stored.ConsensusPower(powerReduction))
 
-	// the per-validator pending index intentionally persists past the end
-	// blocker so that further rotations are gated until the end blocker
-	// prunes it after maturity
+	// the per-validator pending index intentionally persists past the apply
+	// so that further rotations are gated until the end blocker prunes it
+	// after maturity
 	hasPendingAfter, err := f.stakingKeeper.HasConsKeyRotationInUnbondingWindow(f.sdkCtx, valAddr)
 	assert.NilError(t, err)
 	assert.Assert(t, hasPendingAfter)
@@ -134,8 +155,8 @@ func TestRotateConsPubKey_PruneClearsRotationStateAfterUnbonding(t *testing.T) {
 	assert.NilError(t, err)
 	maturity := f.sdkCtx.BlockHeader().Time.Add(unbondingTime)
 
-	// first block at current time: applies the rotation, maturity is in
-	// the future so no pruning happens
+	// first block at current time: maturity is in the future so no pruning
+	// happens
 	advanceBlock(t, f, f.sdkCtx.BlockHeader().Time)
 
 	has, err := f.stakingKeeper.HasConsKeyRotationQueueEntry(f.sdkCtx, maturity, valAddr)
@@ -164,6 +185,7 @@ func TestRotateConsPubKey_SecondRotationAfterPruningSucceeds(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
+	powerReduction := f.stakingKeeper.PowerReduction(f.sdkCtx)
 
 	pkA := ed25519.GenPrivKey().PubKey()
 	pkB := ed25519.GenPrivKey().PubKey()
@@ -171,6 +193,7 @@ func TestRotateConsPubKey_SecondRotationAfterPruningSucceeds(t *testing.T) {
 	valAddr, _ := bondConsKeyRotationValidator(t, f, pkA)
 
 	// first rotation A -> B
+	writeHeight := f.sdkCtx.BlockHeight()
 	_, err := msgServer.RotateConsPubKey(f.sdkCtx, &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, pkB),
@@ -185,6 +208,14 @@ func TestRotateConsPubKey_SecondRotationAfterPruningSucceeds(t *testing.T) {
 	})
 	assert.ErrorContains(t, err, types.ErrExceedingMaxConsPubKeyRotations.Error())
 
+	// drive the SDK-side state swap at writeHeight + ConsensusUpdateDelay so
+	// the validators stored ConsensusPubkey becomes pkB and the byConsAddr
+	// index moves accordingly. The integration fixture's EndBlocker keeps the
+	// captured block height, so the drain pass is invoked here directly.
+	applyCtx := f.sdkCtx.WithBlockHeight(writeHeight + types.ConsensusUpdateDelay)
+	_, err = f.stakingKeeper.ProcessConsKeyRotations(applyCtx, powerReduction)
+	assert.NilError(t, err)
+
 	// advance past maturity and let the end blocker prune
 	unbondingTime, err := f.stakingKeeper.UnbondingTime(f.sdkCtx)
 	assert.NilError(t, err)
@@ -192,12 +223,18 @@ func TestRotateConsPubKey_SecondRotationAfterPruningSucceeds(t *testing.T) {
 
 	// second rotation back to pkA (the original key) succeeds: the rotation
 	// history was cleared by pruning
+	writeHeight = f.sdkCtx.BlockHeight()
 	_, err = msgServer.RotateConsPubKey(f.sdkCtx, &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, pkA),
 	})
 	assert.NilError(t, err)
 	advanceBlock(t, f, f.sdkCtx.BlockHeader().Time)
+
+	// drive the drain again for this second rotation
+	applyCtx = f.sdkCtx.WithBlockHeight(writeHeight + types.ConsensusUpdateDelay)
+	_, err = f.stakingKeeper.ProcessConsKeyRotations(applyCtx, powerReduction)
+	assert.NilError(t, err)
 
 	stored, err := f.stakingKeeper.GetValidator(f.sdkCtx, valAddr)
 	assert.NilError(t, err)
@@ -236,8 +273,8 @@ func newPubKeyAny(t *testing.T, pk cryptotypes.PubKey) *codectypes.Any {
 }
 
 // advanceBlock advances the chain by one block at blockTime, driving the
-// staking end blocker through the real ABCI flow so that pending consensus
-// key rotations are applied and any matured rotation entries are pruned.
+// staking end blocker through the real ABCI flow so that any matured rotation
+// entries are pruned.
 func advanceBlock(t *testing.T, f *fixture, blockTime time.Time) {
 	t.Helper()
 	_, err := f.app.FinalizeBlock(&cmtabcitypes.RequestFinalizeBlock{

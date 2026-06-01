@@ -198,6 +198,10 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 				panic(fmt.Sprintf("validator %s not found", lv.Address))
 			}
 
+			// TODO: when cons key rotation queues become part of GenesisState,
+			// route this through PendingConsKeyRotations / EffectiveKeyForABCIUpdate
+			// so a rotation in flight at the upgrade boundary emits under the
+			// new cons key.
 			update := validator.ABCIValidatorUpdate(k.PowerReduction(ctx))
 			update.Power = lv.Power // keep the next-val-set offset, use the last power for the first block
 			res = append(res, update)

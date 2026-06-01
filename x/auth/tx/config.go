@@ -187,17 +187,31 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 	var err error
 	if configOptions.SigningContext == nil {
 		if configOptions.SigningOptions == nil {
-			configOptions.SigningOptions, err = NewDefaultSigningOptions()
+			// Reuse the SigningContext from the codec's interface registry.
+			// This propagates SigningOptions (including CustomGetSigners) that
+			// were applied via NewInterfaceRegistryWithOptions; building a
+			// fresh context from NewDefaultSigningOptions would drop them. See
+			// https://github.com/cosmos/cosmos-sdk/issues/22200.
+			if ir := protoCodec.InterfaceRegistry(); ir != nil {
+				configOptions.SigningContext = ir.SigningContext()
+			} else {
+				configOptions.SigningOptions, err = NewDefaultSigningOptions()
+				if err != nil {
+					return nil, err
+				}
+				configOptions.SigningContext, err = txsigning.NewContext(*configOptions.SigningOptions)
+				if err != nil {
+					return nil, err
+				}
+			}
+		} else {
+			if configOptions.SigningOptions.FileResolver == nil {
+				configOptions.SigningOptions.FileResolver = protoCodec.InterfaceRegistry()
+			}
+			configOptions.SigningContext, err = txsigning.NewContext(*configOptions.SigningOptions)
 			if err != nil {
 				return nil, err
 			}
-		}
-		if configOptions.SigningOptions.FileResolver == nil {
-			configOptions.SigningOptions.FileResolver = protoCodec.InterfaceRegistry()
-		}
-		configOptions.SigningContext, err = txsigning.NewContext(*configOptions.SigningOptions)
-		if err != nil {
-			return nil, err
 		}
 	}
 	txConfig.signingContext = configOptions.SigningContext

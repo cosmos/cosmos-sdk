@@ -57,7 +57,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import consensus as a blank
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/params"  // import params as a blank
 	_ "github.com/cosmos/cosmos-sdk/x/staking" // import staking as a blank
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -130,6 +129,21 @@ type Config struct {
 	APIAddress       string                     // REST API listen address (including port)
 	GRPCAddress      string                     // GRPC server listen address (including port)
 	PrintMnemonic    bool                       // print the mnemonic of first validator as log output for testing
+
+	// ValidatorConsensusKeyType selects the consensus (priv_validator_key.json)
+	// signature scheme used by EVERY validator in the spun-up network, and is
+	// the single pubkey type written into the genesis
+	// ConsensusParams.Validator.PubKeyTypes list. Empty string preserves the
+	// historical behavior (ed25519). Other recognized values are "secp256k1",
+	// "bls12_381", and "ml_dsa_65".
+	//
+	// Semantics are exclusive replacement, not additive: setting this to
+	// "ml_dsa_65" produces a network that accepts ML-DSA-65 validator keys
+	// only and will reject an ed25519 validator at MsgCreateValidator time.
+	// There is intentionally no way to bring up a heterogeneous validator
+	// set via this field; tests that need a mix of key types must build the
+	// AppGenesis ConsensusParams themselves.
+	ValidatorConsensusKeyType string
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -165,7 +179,6 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 func MinimumAppConfig() depinject.Config {
 	return configurator.NewAppConfig(
 		configurator.AuthModule(),
-		configurator.ParamsModule(),
 		configurator.BankModule(),
 		configurator.GenutilModule(),
 		configurator.StakingModule(),
@@ -473,7 +486,17 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		cmtCfg.P2P.AddrBookStrict = false
 		cmtCfg.P2P.AllowDuplicateIP = true
 
-		nodeID, pubKey, err := genutil.InitializeNodeValidatorFiles(cmtCfg)
+		var (
+			nodeID string
+			pubKey cryptotypes.PubKey
+		)
+		if cfg.ValidatorConsensusKeyType == "" {
+			nodeID, pubKey, err = genutil.InitializeNodeValidatorFiles(cmtCfg)
+		} else {
+			nodeID, pubKey, err = genutil.InitializeNodeValidatorFilesFromMnemonicWithKeyType(
+				cmtCfg, "", cfg.ValidatorConsensusKeyType,
+			)
+		}
 		if err != nil {
 			return nil, err
 		}

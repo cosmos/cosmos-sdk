@@ -40,15 +40,30 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+* (modules) [#26421](https://github.com/cosmos/cosmos-sdk/pull/26421) Remove the `x/protocolpool` module and its API/proto surface from the SDK. Applications upgrading from v0.54 should include `protocolpool` in deleted store upgrades.
+* (genutils) [#26468](https://github.com/cosmos/cosmos-sdk/pull/26468) Consolidate ExportGenesisFileWithTime arguments to preserve consensus params.
+
 ### Features
 
 * (abci) [#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) Add support for new application side mempool ABCI methods. 
 * (abci) [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) Add support for new ABCI methods, `InsertTx` and `ReapTxs`.
+* (blockstm) [#25909](https://github.com/cosmos/cosmos-sdk/pull/25909) Cache pre-state to optimize value-based validation.
+* (deps) [#26388](https://github.com/cosmos/cosmos-sdk/pull/26388) Bump CometBFT version to v0.39.3.
+* (crypto) [#26436](https://github.com/cosmos/cosmos-sdk/pull/26436) Add ML-DSA-65 (FIPS 204) post-quantum validator consensus key type, with SDK key wrappers, Amino + interface-registry registration, multisig support, and a `hd.MlDsa65Type` constant.
+* (blockstm) [#26467](https://github.com/cosmos/cosmos-sdk/pull/26467) Track existence for `Has()` reads to reduce false conflicts.
 
 ### Improvements
 
+* (docs) [#25918](https://github.com/cosmos/cosmos-sdk/issues/25918) Regenerate Swagger API spec to reflect current proto state, including `authority` field on consensus params and removal of stale module-config definitions.
+* (baseapp) [#22368](https://github.com/cosmos/cosmos-sdk/issues/22368) Add `-race`-mode regression test (`TestABCI_Race_GRPC_Query_During_Commit`) covering concurrent `BaseApp.Query` and `FinalizeBlock`/`Commit`. Pins down the state-management mutex work added in #24655 and follow-ups so the data race reported against v0.50.x cannot regress silently.
+
 ### Bug Fixes
 
+* (x/distribution) [#26406](https://github.com/cosmos/cosmos-sdk/pull/26406) Add fallback paths (delegator/validator owner, then community pool) when withdrawing delegator rewards or validator commission to a blocked address during `Begin/EndBlockers`. user msg initiated paths still return `ErrUnauthorized` when withdrawing to blocked addresses.
+* (x/gov) [#26353](https://github.com/cosmos/cosmos-sdk/pull/26353) Fix leading comma in `proposal_messages` event attribute emitted by `SubmitProposal`.
+* (telemetry) [#26390](https://github.com/cosmos/cosmos-sdk/pull/26390) Fix env var for otel telemetry initialization.
+* (x/staking) [#26408](https://github.com/cosmos/cosmos-sdk/pull/26408) Fix `MsgBeginRedelegate` failure when redelegating all shares from an unbonded source validator that is removed after unbonding.
+* (x/auth/tx) [#26422](https://github.com/cosmos/cosmos-sdk/pull/26422) Reuse the signing context from the codec's `InterfaceRegistry` when `ConfigOptions.SigningOptions` is unset so that `CustomGetSigners` registered via `NewInterfaceRegistryWithOptions` are honored by `NewTxConfig` / `NewTxConfigWithOptions`.
 * (blockstm) [#25893](https://github.com/cosmos/cosmos-sdk/pull/25893) Fix CancelAll cancellation by clearing blocker ESTIMATE marks before waking suspended executors.
 
 ### Deprecated
@@ -70,6 +85,8 @@ This patch release contains only minor dependency bumps.
 * (x/consensus) [#25607](https://github.com/cosmos/cosmos-sdk/pull/25607) Add `AuthorityParams` to consensus params. When set, the consensus params authority takes precedence over per-keeper authority for all module parameter updates. Keeper constructor signatures are unchanged.
 * (x/staking) [#25724](https://github.com/cosmos/cosmos-sdk/issues/25724) Validate `BondDenom` in `MsgUpdateParams` to prevent setting non-existent or zero-supply denoms.
 * [#25778](https://github.com/cosmos/cosmos-sdk/pull/25778) Update `log` to log v2.
+* [#25546](https://github.com/cosmos/cosmos-sdk/pull/25546) Removed `x/params`:
+    * Removes all `legacySubspace` arguments from Keeper and Module instantiation
 * [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will no longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
     * `x/group`
     * `x/nft`
@@ -159,6 +176,7 @@ This patch release contains only minor dependency bumps.
 * (x/group) [#25920](https://github.com/cosmos/cosmos-sdk/pull/25920) Expand voting period check to verify period is positive instead of nonzero.
 * (types/address) [#25944] (https://github.com/cosmos/cosmos-sdk/pull/25944) correct sort comparator in Compose to satisfy strict weak ordering.
 * (baseapp) [#26063](https://github.com/cosmos/cosmos-sdk/pull/26063) Fixes an issue where values embedded in context during ante handling were wiped after the handlers returned.
+* (collections/indexes) [#25942](https://github.com/cosmos/cosmos-sdk/pull/25942) handle iterator close errors in index helpers.
 
 ### Deprecated
 
@@ -246,8 +264,6 @@ This patch update also includes minor dependency bumps.
 * (client) [#18557](https://github.com/cosmos/cosmos-sdk/pull/18557) Add `--qrcode` flag to `keys show` command to support displaying keys address QR code.
 * (x/auth) [#24030](https://github.com/cosmos/cosmos-sdk/pull/24030) Allow usage of ed25519 keys for transaction signing.
 * (baseapp) [#24163](https://github.com/cosmos/cosmos-sdk/pull/24163) Add `StreamingManager` to baseapp to extend the abci listeners.
-* (x/protocolpool) [#23933](https://github.com/cosmos/cosmos-sdk/pull/23933) Add x/protocolpool module.
-    * x/distribution can now utilize an externally managed community pool. NOTE: this will make the message handlers for FundCommunityPool and CommunityPoolSpend error, as well as the query handler for CommunityPool.
 * (client) [#18101](https://github.com/cosmos/cosmos-sdk/pull/18101) Add a `keyring-default-keyname` in `client.toml` for specifying a default key name, and skip the need to use the `--from` flag when signing transactions.
 * (x/gov) [#24355](https://github.com/cosmos/cosmos-sdk/pull/24355) Allow users to set a custom CalculateVoteResultsAndVotingPower function to be used in govkeeper.Tally.
 * (x/mint) [#24436](https://github.com/cosmos/cosmos-sdk/pull/24436) Allow users to set a custom minting function used in the `x/mint` begin blocker.
@@ -302,7 +318,6 @@ This patch update also includes minor dependency bumps.
 * (x/auth) [#19239](https://github.com/cosmos/cosmos-sdk/pull/19239) Sets from flag in multi-sign command to avoid no key name provided error.
 * (x/auth) [#23741](https://github.com/cosmos/cosmos-sdk/pull/23741) Support legacy global AccountNumber for legacy compatibility.
 * (baseapp) [#24526](https://github.com/cosmos/cosmos-sdk/pull/24526) Fix incorrect retention height when `commitHeight` equals `minRetainBlocks`.
-* (x/protocolpool) [#24594](https://github.com/cosmos/cosmos-sdk/pull/24594) Fix NPE when initializing module via depinject.
 * (x/epochs) [#24610](https://github.com/cosmos/cosmos-sdk/pull/24610) Fix semantics of `CurrentEpochStartHeight` being set before epoch has started.
 
 ## [v0.50.13](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.13) - 2025-03-12

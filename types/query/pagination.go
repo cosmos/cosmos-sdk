@@ -2,6 +2,7 @@ package query
 
 import (
 	"fmt"
+	"math"
 
 	db "github.com/cosmos/cosmos-db"
 	"google.golang.org/grpc/codes"
@@ -85,6 +86,12 @@ func Paginate(
 	}
 
 	end := pageRequest.Offset + pageRequest.Limit
+	if end < pageRequest.Offset {
+		// Saturate to MaxUint64 when offset+limit overflows. Without this,
+		// a caller passing an absurdly large limit would wrap end back to a
+		// small number and the loop would return zero results.
+		end = math.MaxUint64
+	}
 
 	for ; iterator.Valid(); iterator.Next() {
 		count++

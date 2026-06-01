@@ -14,7 +14,6 @@ linters:
     - dogsled
     - errcheck
     - errorlint
-    - goconst
     - gocritic
     - gosec
     - govet
@@ -109,6 +108,9 @@ linters:
           - gosec
         text: "G115: integer overflow conversion"
       - linters:
+          - govet
+        text: "Constant reflect.Ptr should be inlined"
+      - linters:
           - nolintlint
         text: leading space
     paths:
@@ -120,7 +122,6 @@ linters:
       - crypto/keys/secp256k1/internal/*
       - types/coin_regex.go
       - testutil/testdata
-      - x/params
       - contrib
       - third_party$
       - builtin$
@@ -153,7 +154,6 @@ formatters:
       - crypto/keys/secp256k1/internal/*
       - types/coin_regex.go
       - testutil/testdata
-      - x/params
       - contrib
       - third_party$
       - builtin$

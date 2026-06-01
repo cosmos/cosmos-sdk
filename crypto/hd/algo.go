@@ -21,6 +21,10 @@ const (
 	// Bls12_381Type represents the Bls12_381Type signature system.
 	// It is currently not supported for end-user keys (wallets/ledgers).
 	Bls12_381Type = PubKeyType("bls12_381")
+	// MlDsa65Type represents the NIST ML-DSA-65 (FIPS 204) post-quantum
+	// signature scheme. It is currently not supported for end-user keys
+	// (wallets/ledgers) and is intended for validator key use.
+	MlDsa65Type = PubKeyType("ml_dsa_65")
 )
 
 // Secp256k1 uses the Bitcoin secp256k1 ECDSA parameters.

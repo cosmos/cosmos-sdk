@@ -30,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
 )
 
 const (
@@ -71,7 +70,6 @@ func (s *paginationTestSuite) SetupTest() {
 			configurator.NewAppConfig(
 				configurator.AuthModule(),
 				configurator.BankModule(),
-				configurator.ParamsModule(),
 				configurator.ConsensusModule(),
 				configurator.OmitInitGenesis(),
 			),
@@ -211,6 +209,16 @@ func (s *paginationTestSuite) TestPagination() {
 	s.Require().NoError(err)
 	s.Require().LessOrEqual(res.Balances.Len(), 0)
 	s.Require().Nil(res.Pagination.NextKey)
+
+	s.T().Log("verify offset+limit overflow returns the page instead of nothing")
+	// A limit large enough that offset+limit wraps a uint64 used to make
+	// Paginate skip everything. It should walk the remaining rows after
+	// the offset like a normal large limit would.
+	pageReq = &query.PageRequest{Offset: 12, Limit: 0xFFFFFFFFFFFFFFFF, CountTotal: false}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq, false)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
+	s.Require().NoError(err)
+	s.Require().Equal(res.Balances.Len(), numBalances-12)
 }
 
 func (s *paginationTestSuite) TestReversePagination() {

@@ -23,7 +23,6 @@ import (
 	gov_v1_api "cosmossdk.io/api/cosmos/gov/v1"
 	gov_v1beta1_api "cosmossdk.io/api/cosmos/gov/v1beta1"
 	mintapi "cosmossdk.io/api/cosmos/mint/v1beta1"
-	paramsapi "cosmossdk.io/api/cosmos/params/v1beta1"
 	slashingapi "cosmossdk.io/api/cosmos/slashing/v1beta1"
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
 	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
@@ -40,7 +39,6 @@ import (
 	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -222,7 +220,6 @@ var (
 		GenType(&minttypes.Params{}, &mintapi.Params{}, GenOpts),
 
 		// params
-		GenType(&proposal.ParameterChangeProposal{}, &paramsapi.ParameterChangeProposal{}, GenOpts),
 
 		GenType(&slashingtypes.Params{}, &slashingapi.Params{}, GenOpts.WithDisallowNil()),
 

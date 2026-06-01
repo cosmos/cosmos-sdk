@@ -56,7 +56,7 @@ func TestCancelAllClearsBlockerEstimate(t *testing.T) {
 	estimates[1] = MultiLocations{0: Locations{Key([]byte("k"))}}
 
 	scheduler := NewScheduler(3)
-	mv := NewMVMemoryWithEstimates(3, stores, storage, scheduler, estimates)
+	mv := NewMVMemoryWithEstimates(3, stores, MultiStoreToStorage(storage, stores), scheduler, estimates)
 
 	// tx1 is Executing (the blocker, NOT suspended).
 	_, ok := scheduler.txnStatus[1].TrySetExecuting()

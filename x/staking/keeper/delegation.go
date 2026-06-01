@@ -1073,8 +1073,13 @@ func (k Keeper) getBeginInfo(
 	ctx context.Context, valSrcAddr sdk.ValAddress,
 ) (completionTime time.Time, height int64, completeNow bool, err error) {
 	validator, err := k.GetValidator(ctx, valSrcAddr)
-	if err != nil && errors.Is(err, types.ErrNoValidatorFound) {
+	if err != nil && !errors.Is(err, types.ErrNoValidatorFound) {
 		return time.Time{}, 0, false, err
+	}
+	if errors.Is(err, types.ErrNoValidatorFound) {
+		// The source validator may have been removed by Unbond when it was already
+		// unbonded and this redelegation consumed its final remaining shares.
+		return time.Time{}, 0, true, nil
 	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	unbondingTime, err := k.UnbondingTime(ctx)
@@ -1082,9 +1087,8 @@ func (k Keeper) getBeginInfo(
 		return time.Time{}, 0, false, err
 	}
 
-	// TODO: When would the validator not be found?
 	switch {
-	case errors.Is(err, types.ErrNoValidatorFound) || validator.IsBonded():
+	case validator.IsBonded():
 		// the longest wait - just unbonding period from now
 		completionTime = sdkCtx.BlockHeader().Time.Add(unbondingTime)
 		height = sdkCtx.BlockHeight()

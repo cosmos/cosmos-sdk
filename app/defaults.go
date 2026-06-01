@@ -1,8 +1,6 @@
 package app
 
 import (
-	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,19 +21,20 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 var (
 	defaultModuleAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
 	defaultMaccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
-		minttypes.ModuleName:           {authtypes.Minter},
+		authtypes.FeeCollectorName:          nil,
+		distrtypes.ModuleName:               nil,
+		minttypes.ModuleName:                {authtypes.Minter},
 		stakingtypes.BondedPoolName:         {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName:      {authtypes.Burner, authtypes.Staking},
 		stakingtypes.KeyRotationFeePoolName: {authtypes.Burner},
-		govtypes.ModuleName:            {authtypes.Burner},
+		govtypes.ModuleName:                 {authtypes.Burner},
 	}
 
 	// requiredKeys are always mounted regardless of optional module flags.

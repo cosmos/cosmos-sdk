@@ -30,13 +30,13 @@ import (
 )
 
 // Setup creates an SDKApp initialized with one validator and one funded genesis account.
-func Setup(t testing.TB) *app.SDKApp {
-	t.Helper()
+func Setup(tb testing.TB) *app.SDKApp {
+	tb.Helper()
 
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	if err != nil {
-		t.Fatalf("failed to get pub key: %v", err)
+		tb.Fatalf("failed to get pub key: %v", err)
 	}
 	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{
 		cmttypes.NewValidator(pubKey, 1),
@@ -50,15 +50,15 @@ func Setup(t testing.TB) *app.SDKApp {
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
 	}}
 
-	return SetupWithGenesisValSet(t, valSet, genAccs, balances...)
+	return SetupWithGenesisValSet(tb, valSet, genAccs, balances...)
 }
 
 // SetupWithGenesisValSet creates an SDKApp initialized with the given validator set and genesis accounts.
-func SetupWithGenesisValSet(t testing.TB, valSet *cmttypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *app.SDKApp {
-	t.Helper()
+func SetupWithGenesisValSet(tb testing.TB, valSet *cmttypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *app.SDKApp {
+	tb.Helper()
 
 	opts := simtestutil.AppOptionsMap{
-		flags.FlagHome:    t.TempDir(),
+		flags.FlagHome:    tb.TempDir(),
 		flags.FlagChainID: "test-chain",
 	}
 
@@ -67,17 +67,17 @@ func SetupWithGenesisValSet(t testing.TB, valSet *cmttypes.ValidatorSet, genAccs
 	sdkApp.LoadModules()
 
 	if err := sdkApp.LoadLatestVersion(); err != nil {
-		t.Fatalf("failed to load latest version: %v", err)
+		tb.Fatalf("failed to load latest version: %v", err)
 	}
 
 	genesisState, err := genesisStateWithValSet(sdkApp.AppCodec(), sdkApp.DefaultGenesis(), valSet, genAccs, balances...)
 	if err != nil {
-		t.Fatalf("failed to create genesis state: %v", err)
+		tb.Fatalf("failed to create genesis state: %v", err)
 	}
 
 	stateBytes, err := cmtjson.MarshalIndent(genesisState, "", " ")
 	if err != nil {
-		t.Fatalf("failed to marshal genesis state: %v", err)
+		tb.Fatalf("failed to marshal genesis state: %v", err)
 	}
 
 	_, err = sdkApp.InitChain(&abci.RequestInitChain{
@@ -87,7 +87,7 @@ func SetupWithGenesisValSet(t testing.TB, valSet *cmttypes.ValidatorSet, genAccs
 		AppStateBytes:   stateBytes,
 	})
 	if err != nil {
-		t.Fatalf("failed to init chain: %v", err)
+		tb.Fatalf("failed to init chain: %v", err)
 	}
 
 	_, err = sdkApp.FinalizeBlock(&abci.RequestFinalizeBlock{
@@ -95,7 +95,7 @@ func SetupWithGenesisValSet(t testing.TB, valSet *cmttypes.ValidatorSet, genAccs
 		NextValidatorsHash: valSet.Hash(),
 	})
 	if err != nil {
-		t.Fatalf("failed to finalize block: %v", err)
+		tb.Fatalf("failed to finalize block: %v", err)
 	}
 
 	return sdkApp
@@ -175,7 +175,7 @@ func genesisStateWithValSet(
 // to get a test context instead of calling sdkApp.NewContext(false) directly,
 // which returns a context with an empty chain ID.
 func NewContext(sdkApp *app.SDKApp) sdk.Context {
-	return sdkApp.BaseApp.NewContext(false).WithChainID(sdkApp.BaseApp.ChainID())
+	return sdkApp.NewContext(false).WithChainID(sdkApp.ChainID())
 }
 
 // NextBlock advances the app by one block. It finalizes the current block,

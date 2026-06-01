@@ -234,15 +234,8 @@ type appOptionsWithDefaults struct {
 
 func (a appOptionsWithDefaults) Get(key string) any {
 	v := a.base.Get(key)
-	switch t := v.(type) {
-	case nil:
+	if v == nil {
 		return a.defaults[key]
-	case string:
-		if t == "" {
-			if dv, ok := a.defaults[key]; ok {
-				return dv
-			}
-		}
 	}
 	return v
 }

@@ -288,7 +288,7 @@ func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx context.Context, modu
 
 	// create a new module account
 	macc := types.NewEmptyModuleAccount(moduleName, perms...)
-	maccI := (ak.NewAccount(ctx, macc)).(sdk.ModuleAccountI) // set the account number
+	maccI := ak.NewAccount(ctx, macc).(sdk.ModuleAccountI) // set the account number
 	ak.SetModuleAccount(ctx, maccI)
 
 	return maccI, perms

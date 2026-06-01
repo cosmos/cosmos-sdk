@@ -69,7 +69,8 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	cdc := suite.codec
 	appParams := make(simtypes.AppParams)
 
-	weightedOps := simulation.WeightedOperations(suite.interfaceRegistry, appParams, cdc, suite.txConfig, suite.accountKeeper,
+	weightedOps := simulation.WeightedOperations(
+		suite.interfaceRegistry, appParams, cdc, suite.txConfig, suite.accountKeeper,
 		suite.bankKeeper, suite.groupKeeper, cdc,
 	)
 
@@ -190,7 +191,8 @@ func (suite *SimTestSuite) TestSimulateCreateGroupPolicy() {
 	acc := accounts[0]
 
 	// setup a group
-	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
+	_, err := suite.groupKeeper.CreateGroup(
+		suite.ctx,
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -231,7 +233,8 @@ func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 
 	// setup a group
 	ctx := suite.ctx
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := suite.groupKeeper.CreateGroup(
+		ctx,
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -283,7 +286,8 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 	// setup a group
 	ctx := suite.ctx
 	addr := acc.Address.String()
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := suite.groupKeeper.CreateGroup(
+		ctx,
 		&group.MsgCreateGroup{
 			Admin: addr,
 			Members: []group.MemberRequest{
@@ -347,7 +351,8 @@ func (suite *SimTestSuite) TestSimulateVote() {
 	// setup a group
 	ctx := suite.ctx
 	addr := acc.Address.String()
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := suite.groupKeeper.CreateGroup(
+		ctx,
 		&group.MsgCreateGroup{
 			Admin: addr,
 			Members: []group.MemberRequest{
@@ -412,7 +417,8 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	// setup a group
 	ctx := suite.ctx
 	addr := acc.Address.String()
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := suite.groupKeeper.CreateGroup(
+		ctx,
 		&group.MsgCreateGroup{
 			Admin: addr,
 			Members: []group.MemberRequest{
@@ -483,7 +489,8 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAdmin() {
 	acc := accounts[0]
 
 	// setup a group
-	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
+	_, err := suite.groupKeeper.CreateGroup(
+		suite.ctx,
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -523,7 +530,8 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMetadata() {
 	acc := accounts[0]
 
 	// setup a group
-	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
+	_, err := suite.groupKeeper.CreateGroup(
+		suite.ctx,
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -563,7 +571,8 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMembers() {
 	acc := accounts[0]
 
 	// setup a group
-	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
+	_, err := suite.groupKeeper.CreateGroup(
+		suite.ctx,
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -604,7 +613,8 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 
 	// setup a group
 	ctx := suite.ctx
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := suite.groupKeeper.CreateGroup(
+		ctx,
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -655,7 +665,8 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 
 	// setup a group
 	ctx := suite.ctx
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := suite.groupKeeper.CreateGroup(
+		ctx,
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -706,7 +717,8 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 
 	// setup a group
 	ctx := suite.ctx
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := suite.groupKeeper.CreateGroup(
+		ctx,
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -762,7 +774,8 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 
 	// setup a group
 	ctx := suite.ctx
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := suite.groupKeeper.CreateGroup(
+		ctx,
 		&group.MsgCreateGroup{
 			Admin: admin.Address.String(),
 			Members: []group.MemberRequest{

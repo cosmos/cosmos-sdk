@@ -155,7 +155,8 @@ func TestUnarmorInfoBytesErrors(t *testing.T) {
 		"version": "0.0.1",
 	}
 	unarmoredBytes, err = crypto.UnarmorInfoBytes(crypto.EncodeArmor(
-		"TENDERMINT KEY INFO", header, []byte("plain-text")))
+		"TENDERMINT KEY INFO", header, []byte("plain-text"),
+	))
 	require.Error(t, err)
 	require.Equal(t, "unrecognized version: 0.0.1", err.Error())
 	require.Nil(t, unarmoredBytes)

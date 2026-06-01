@@ -56,7 +56,8 @@ func SDKAppFixtureWithQueryGasLimit(gasLimit uint64) network.TestFixtureFactory 
 					flags.FlagChainID: val.GetCtx().Viper.GetString(flags.FlagChainID),
 				}
 
-				appCfg := app.DefaultSDKAppConfig("app", appOpts,
+				appCfg := app.DefaultSDKAppConfig(
+					"app", appOpts,
 					baseapp.SetMinGasPrices(minGasPrices),
 					baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(pruning)),
 					baseapp.SetQueryGasLimit(gasLimit),

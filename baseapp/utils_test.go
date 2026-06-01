@@ -85,7 +85,8 @@ func GenesisStateWithValidatorAndFeeAccount(t *testing.T, cdc codec.Codec, app *
 
 	feeAcc := authtypes.NewBaseAccount(feeAccPubKey.Address().Bytes(), feeAccPubKey, 0, 0)
 	genesisState := app.DefaultGenesis()
-	genesisState, err = simtestutil.GenesisStateWithValSet(cdc, genesisState, valSet,
+	genesisState, err = simtestutil.GenesisStateWithValSet(
+		cdc, genesisState, valSet,
 		[]authtypes.GenesisAccount{feeAcc},
 		banktypes.Balance{Address: feeAcc.GetAddress().String(), Coins: feeCoins},
 	)

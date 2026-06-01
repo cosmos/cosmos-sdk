@@ -169,7 +169,8 @@ func TestMsgService(t *testing.T) {
 	}
 	sigV2, err = tx.SignWithPrivKey(
 		context.TODO(), defaultSignMode, signerData,
-		txBuilder, priv, txConfig, 0)
+		txBuilder, priv, txConfig, 0,
+	)
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sigV2)
 	require.NoError(t, err)

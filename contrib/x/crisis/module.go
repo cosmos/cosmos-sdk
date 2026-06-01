@@ -153,4 +153,3 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 	EndBlocker(ctx, *am.keeper)
 	return nil
 }
-

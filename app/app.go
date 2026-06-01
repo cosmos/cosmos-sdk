@@ -443,7 +443,8 @@ func (app *SDKApp) loadModules() {
 			govtypes.ModuleName: gov.NewAppModuleBasic(
 				[]govclient.ProposalHandler{},
 			),
-		})
+		},
+	)
 	app.basicModuleManager.RegisterLegacyAminoCodec(app.encodingConfig.LegacyAmino)
 	app.basicModuleManager.RegisterInterfaces(app.encodingConfig.InterfaceRegistry)
 

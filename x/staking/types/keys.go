@@ -60,6 +60,40 @@ var (
 
 	// NOTE: keys in range 0x81–0x87 were previously used in liquid staking forks of the staking module.
 	// Module developers MUST NOT use these keys and MUST consider them "reserved".
+
+	// ConsKeyRotationQueueKey allows us to iterate over key rotations
+	// happening by time, so that the end blocker can quickly determine which
+	// key rotations we can stop keeping track of since they have fallen out of
+	// the current unbonding period.
+	ConsKeyRotationQueueKey = []byte{0x91} // prefix for the consensus key rotation maturity queue, keyed by (time, valAddr)
+
+	// ValidatorConsKeyRotationKey allows us lookup key rotations happening by
+	// validator address, so we can quickly determine in the msg server how
+	// many key rotations this validator has done in the unbonding period to
+	// enforce the max key rotation limit. This is pruned when the key rotation
+	// falls out of the current unbonding period in the end blocker (determined
+	// by the ConsKeyRotationQueueKey).
+	ValidatorConsKeyRotationKey = []byte{0x92} // prefix for a validator's pending consensus key rotation, keyed by valAddr
+
+	// RotationLockedConsAddrIndexKey marks a consensus address as locked by
+	// a key rotation, either because some validator previously rotated away
+	// from it (and is still inside its unbonding window) or because some
+	// validator has enqueued a pending rotation targeting it. In both cases
+	// the address must not be the target of a new rotation. The old key
+	// lookup also lets slashing/evidence handling associate an infraction
+	// on an old consensus key with the new consensus key. The old key entry
+	// is pruned when its rotation falls out of the unbonding window
+	// (determined by the ConsKeyRotationQueueKey); the new key entry is
+	// removed when the rotation is applied in the end blocker.
+	RotationLockedConsAddrIndexKey = []byte{0x93} // prefix for the rotation-locked consensus address lookup
+
+	// UnappliedConsKeyRotationKey is the drain queue of rotations that the
+	// msg server has accepted but the end blocker has not yet performed.
+	// Each entry holds the new pubkey to apply. The end blocker iterates
+	// this prefix once per block, applies each rotation, and deletes the
+	// entry. The other three rotation stores remain so the rotation can be
+	// tracked through the rest of the unbonding period.
+	UnappliedConsKeyRotationKey = []byte{0x94} // prefix for unapplied consensus key rotations, keyed by valAddr
 )
 
 // UnbondingType defines the type of unbonding operation
@@ -425,4 +459,62 @@ func GetHistoricalInfoKey(height int64) []byte {
 	heightBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(heightBytes, uint64(height))
 	return append(HistoricalInfoKey, heightBytes...)
+}
+
+// GetConsKeyRotationQueueKey returns the queue key for a pending rotation
+// maturing at the given time.
+func GetConsKeyRotationQueueKey(maturity time.Time, valAddr sdk.ValAddress) []byte {
+	timeBz := sdk.FormatTimeBytes(maturity)
+	valBz := address.MustLengthPrefix(valAddr)
+
+	key := make([]byte, len(ConsKeyRotationQueueKey)+len(timeBz)+len(valBz))
+	copy(key, ConsKeyRotationQueueKey)
+	copy(key[len(ConsKeyRotationQueueKey):], timeBz)
+	copy(key[len(ConsKeyRotationQueueKey)+len(timeBz):], valBz)
+	return key
+}
+
+// GetConsKeyRotationQueueTimePrefix returns the queue iteration prefix up to
+// the given time.
+func GetConsKeyRotationQueueTimePrefix(maturity time.Time) []byte {
+	return append(ConsKeyRotationQueueKey, sdk.FormatTimeBytes(maturity)...)
+}
+
+// ParseConsKeyRotationQueueKey extracts the maturity time and validator
+// address from a queue key.
+func ParseConsKeyRotationQueueKey(bz []byte) (time.Time, sdk.ValAddress, error) {
+	prefixLen := len(ConsKeyRotationQueueKey)
+	if prefix := bz[:prefixLen]; !bytes.Equal(prefix, ConsKeyRotationQueueKey) {
+		return time.Time{}, nil, fmt.Errorf("invalid prefix; expected: %X, got: %X", ConsKeyRotationQueueKey, prefix)
+	}
+
+	timeLen := len(sdk.SortableTimeFormat)
+	kv.AssertKeyAtLeastLength(bz, prefixLen+timeLen+1)
+
+	ts, err := sdk.ParseTimeBytes(bz[prefixLen : prefixLen+timeLen])
+	if err != nil {
+		return time.Time{}, nil, err
+	}
+
+	valAddrLen := int(bz[prefixLen+timeLen])
+	kv.AssertKeyAtLeastLength(bz, prefixLen+timeLen+1+valAddrLen)
+
+	return ts, sdk.ValAddress(bz[prefixLen+timeLen+1 : prefixLen+timeLen+1+valAddrLen]), nil
+}
+
+// GetValidatorConsKeyRotationKey returns the key for a validator's pending rotation record.
+func GetValidatorConsKeyRotationKey(valAddr sdk.ValAddress) []byte {
+	return append(ValidatorConsKeyRotationKey, address.MustLengthPrefix(valAddr)...)
+}
+
+// GetRotationLockedConsAddrIndexKey returns the lookup key for a consensus
+// address that is locked by a pending or recently completed rotation.
+func GetRotationLockedConsAddrIndexKey(consAddr sdk.ConsAddress) []byte {
+	return append(RotationLockedConsAddrIndexKey, address.MustLengthPrefix(consAddr)...)
+}
+
+// GetUnappliedConsKeyRotationKey returns the key for a rotation that the
+// msg server has queued and the end blocker has not yet applied.
+func GetUnappliedConsKeyRotationKey(valAddr sdk.ValAddress) []byte {
+	return append(UnappliedConsKeyRotationKey, address.MustLengthPrefix(valAddr)...)
 }

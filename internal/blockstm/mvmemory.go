@@ -85,7 +85,7 @@ func (mv *MVMemory) ValidateReadSet(ctx context.Context, txn TxnIndex) bool {
 	// Invariant: at least one `Record` call has been made for `txn`
 	rs := *mv.lastReadSet[txn].Load()
 	for store, readSet := range rs {
-		if !mv.data[store].ValidateReadSet(ctx, txn, readSet) {
+		if !mv.data[store].ValidateReadSet(ctx, txn, readSet, mv.storage[store]) {
 			return false
 		}
 	}

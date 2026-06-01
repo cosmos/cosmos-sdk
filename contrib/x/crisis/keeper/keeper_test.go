@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/keeper"
 	crisistestutil "github.com/cosmos/cosmos-sdk/contrib/x/crisis/testutil"
 	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +22,7 @@ func TestLogger(t *testing.T) {
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+	storeService := sdk.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
 	keeper := keeper.NewKeeper(encCfg.Codec, storeService, 5, supplyKeeper, "", "", addresscodec.NewBech32Codec("cosmos"))
@@ -38,7 +37,7 @@ func TestInvariants(t *testing.T) {
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+	storeService := sdk.NewKVStoreService(key)
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
 	keeper := keeper.NewKeeper(encCfg.Codec, storeService, 5, supplyKeeper, "", "", addresscodec.NewBech32Codec("cosmos"))
 	require.Equal(t, keeper.InvCheckPeriod(), uint(5))
@@ -54,7 +53,7 @@ func TestAssertInvariants(t *testing.T) {
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+	storeService := sdk.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
 	keeper := keeper.NewKeeper(encCfg.Codec, storeService, 5, supplyKeeper, "", "", addresscodec.NewBech32Codec("cosmos"))

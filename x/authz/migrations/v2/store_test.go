@@ -8,7 +8,6 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -100,7 +99,7 @@ func TestMigration(t *testing.T) {
 		},
 	}
 
-	storeService := runtime.NewKVStoreService(authzKey)
+	storeService := sdk.NewKVStoreService(authzKey)
 	store := storeService.OpenKVStore(ctx)
 
 	for _, g := range grants {

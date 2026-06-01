@@ -33,7 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/keeper"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -91,7 +90,7 @@ func initFixture(tb testing.TB) *fixture {
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		sdk.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		address.NewBech32Codec(sdk.Bech32MainPrefix),
@@ -105,7 +104,7 @@ func initFixture(tb testing.TB) *fixture {
 
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
+		sdk.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		map[string]bool{},
 		authority.String(),
@@ -114,8 +113,8 @@ func initFixture(tb testing.TB) *fixture {
 
 	poaKeeper := keeper.NewKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[poatypes.StoreKey]),
-		runtime.NewTransientStoreService(tkeys[poatypes.TransientStoreKey]),
+		sdk.NewKVStoreService(keys[poatypes.StoreKey]),
+		sdk.NewTransientStoreService(tkeys[poatypes.TransientStoreKey]),
 		accountKeeper,
 		bankKeeper,
 	)

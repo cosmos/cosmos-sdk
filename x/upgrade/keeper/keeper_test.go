@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -42,7 +41,7 @@ type KeeperTestSuite struct {
 func (s *KeeperTestSuite) SetupTest() {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+	storeService := sdk.NewKVStoreService(key)
 	s.key = key
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 
@@ -236,7 +235,7 @@ func (s *KeeperTestSuite) TestIsSkipHeight() {
 	ok := s.upgradeKeeper.IsSkipHeight(11)
 	s.Require().False(ok)
 	skip := map[int64]bool{skipOne: true}
-	storeService := runtime.NewKVStoreService(s.key)
+	storeService := sdk.NewKVStoreService(s.key)
 	upgradeKeeper := keeper.NewKeeper(skip, storeService, s.encCfg.Codec, s.T().TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	upgradeKeeper.SetVersionSetter(s.baseApp)
 	s.Require().True(upgradeKeeper.IsSkipHeight(9))

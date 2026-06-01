@@ -3,9 +3,9 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
@@ -20,7 +20,7 @@ func newTestAccountKeeper(t *testing.T, perms map[string][]string) keeper.Accoun
 	testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	return keeper.NewAccountKeeper(
 		encCfg.Codec,
-		runtime.NewKVStoreService(key),
+		sdk.NewKVStoreService(key),
 		types.ProtoBaseAccount,
 		perms,
 		authcodec.NewBech32Codec("cosmos"),

@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft/module"
 	nfttestutil "github.com/cosmos/cosmos-sdk/contrib/x/nft/testutil"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -53,7 +52,7 @@ func (s *TestSuite) SetupTest() {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
 	key := storetypes.NewKVStoreKey(nft.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+	storeService := sdk.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 

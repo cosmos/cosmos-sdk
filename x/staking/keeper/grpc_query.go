@@ -7,7 +7,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +36,7 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 		return nil, status.Errorf(codes.InvalidArgument, "invalid validator status %s", req.Status)
 	}
 
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := sdk.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	valStore := prefix.NewStore(store, types.ValidatorsKey)
 
 	validators, pageRes, err := query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, val *types.Validator) (*types.Validator, error) {
@@ -99,7 +98,7 @@ func (k Querier) ValidatorDelegations(ctx context.Context, req *types.QueryValid
 		return nil, err
 	}
 
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := sdk.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	delStore := prefix.NewStore(store, types.GetDelegationsByValPrefixKey(valAddr))
 
 	var (
@@ -143,7 +142,7 @@ func (k Querier) ValidatorDelegations(ctx context.Context, req *types.QueryValid
 }
 
 func (k Querier) getValidatorDelegationsLegacy(ctx context.Context, req *types.QueryValidatorDelegationsRequest) ([]*types.Delegation, *query.PageResponse, error) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := sdk.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 
 	valStore := prefix.NewStore(store, types.DelegationKey)
 	return query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, delegation *types.Delegation) (*types.Delegation, error) {
@@ -178,7 +177,7 @@ func (k Querier) ValidatorUnbondingDelegations(ctx context.Context, req *types.Q
 		return nil, err
 	}
 
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := sdk.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	srcValPrefix := types.GetUBDsByValIndexKey(valAddr)
 	ubdStore := prefix.NewStore(store, srcValPrefix)
 	pageRes, err := query.Paginate(ubdStore, req.Pagination, func(key, value []byte) error {
@@ -291,7 +290,7 @@ func (k Querier) DelegatorDelegations(ctx context.Context, req *types.QueryDeleg
 		return nil, err
 	}
 
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := sdk.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	delStore := prefix.NewStore(store, types.GetDelegationsKey(delAddr))
 	pageRes, err := query.Paginate(delStore, req.Pagination, func(key, value []byte) error {
 		delegation, err := types.UnmarshalDelegation(k.cdc, value)
@@ -360,7 +359,7 @@ func (k Querier) DelegatorUnbondingDelegations(ctx context.Context, req *types.Q
 		return nil, err
 	}
 
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := sdk.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	unbStore := prefix.NewStore(store, types.GetUBDsKey(delAddr))
 	pageRes, err := query.Paginate(unbStore, req.Pagination, func(key, value []byte) error {
 		unbond, err := types.UnmarshalUBD(k.cdc, value)
@@ -407,7 +406,7 @@ func (k Querier) Redelegations(ctx context.Context, req *types.QueryRedelegation
 	var pageRes *query.PageResponse
 	var err error
 
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := sdk.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	switch {
 	case req.DelegatorAddr != "" && req.SrcValidatorAddr != "" && req.DstValidatorAddr != "":
 		redels, err = queryRedelegation(ctx, k, req)
@@ -438,7 +437,7 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 	}
 	var validators types.Validators
 
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := sdk.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
 	if err != nil {
 		return nil, err

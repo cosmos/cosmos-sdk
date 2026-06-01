@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/keeper"
 	crisistestutil "github.com/cosmos/cosmos-sdk/contrib/x/crisis/testutil"
 	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,7 +34,7 @@ func TestGenesisTestSuite(t *testing.T) {
 
 func (s *GenesisTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types2.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+	storeService := sdk.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
 

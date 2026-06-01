@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,7 +71,7 @@ func initFixture(tb testing.TB) *fixture {
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		sdk.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
@@ -85,20 +84,20 @@ func initFixture(tb testing.TB) *fixture {
 	}
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
+		sdk.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, sdk.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
 	// set default staking params
 	assert.NilError(tb, stakingKeeper.SetParams(newCtx, stakingtypes.DefaultParams()))
 
 	distrKeeper := distrkeeper.NewKeeper(
-		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
+		cdc, sdk.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
 	)
 
 	// Create MsgServiceRouter, but don't populate it before creating the gov
@@ -110,7 +109,7 @@ func initFixture(tb testing.TB) *fixture {
 
 	govKeeper := keeper.NewKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[types.StoreKey]),
+		sdk.NewKVStoreService(keys[types.StoreKey]),
 		accountKeeper,
 		bankKeeper,
 		distrKeeper,

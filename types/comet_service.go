@@ -1,12 +1,10 @@
-package runtime
+package types
 
 import (
 	"context"
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ProvideCometInfoService returns a comet.BlockInfoService backed by the SDK context.
@@ -19,7 +17,7 @@ var _ comet.BlockInfoService = cometInfoService{}
 type cometInfoService struct{}
 
 func (cometInfoService) GetCometBlockInfo(ctx context.Context) comet.BlockInfo {
-	return sdk.UnwrapSDKContext(ctx).CometInfo()
+	return UnwrapSDKContext(ctx).CometInfo()
 }
 
 var _ header.Service = headerInfoService{}
@@ -27,5 +25,5 @@ var _ header.Service = headerInfoService{}
 type headerInfoService struct{}
 
 func (headerInfoService) GetHeaderInfo(ctx context.Context) header.Info {
-	return sdk.UnwrapSDKContext(ctx).HeaderInfo()
+	return UnwrapSDKContext(ctx).HeaderInfo()
 }

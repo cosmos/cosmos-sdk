@@ -6,8 +6,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -65,7 +65,7 @@ func (k Keeper) SigningInfos(ctx context.Context, req *types.QuerySigningInfosRe
 	store := k.storeService.OpenKVStore(ctx)
 	var signInfos []types.ValidatorSigningInfo
 
-	sigInfoStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.ValidatorSigningInfoKeyPrefix)
+	sigInfoStore := prefix.NewStore(sdk.KVStoreAdapter(store), types.ValidatorSigningInfoKeyPrefix)
 	pageRes, err := query.Paginate(sigInfoStore, req.Pagination, func(key, value []byte) error {
 		var info types.ValidatorSigningInfo
 		err := k.cdc.Unmarshal(value, &info)

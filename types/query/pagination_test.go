@@ -5,20 +5,16 @@ import (
 	"fmt"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	sdkapp "github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/testutil/testapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -53,19 +49,8 @@ func TestPaginationTestSuite(t *testing.T) {
 }
 
 func (s *paginationTestSuite) SetupTest() {
-	opts := simtestutil.AppOptionsMap{
-		flags.FlagHome:    s.T().TempDir(),
-		flags.FlagChainID: "test-chain",
-	}
-	cfg := sdkapp.DefaultSDKAppConfig("app", opts)
-	app := sdkapp.NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, cfg)
-	app.LoadModules()
-	err := app.LoadLatestVersion()
-	s.NoError(err)
-
-	ctx := app.NewContextLegacy(false, cmtproto.Header{Height: 1})
-
-	s.ctx = ctx
+	app := testapp.Setup(s.T())
+	s.ctx = app.NewContext(false)
 	s.bankKeeper = app.BankKeeper
 	s.accountKeeper = app.AccountKeeper
 	s.cdc = app.AppCodec()

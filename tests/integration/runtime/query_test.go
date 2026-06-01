@@ -23,10 +23,10 @@ type fixture struct {
 	reflectionClient  reflectionv1.ReflectionServiceClient
 }
 
-func initFixture(t testing.TB) *fixture {
+func initFixture(tb testing.TB) *fixture {
 	f := &fixture{}
 
-	app := testapp.Setup(t)
+	app := testapp.Setup(tb)
 	f.ctx = app.NewContext(false)
 	queryHelper := &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: app.GRPCQueryRouter(),

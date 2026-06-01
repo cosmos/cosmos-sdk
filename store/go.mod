@@ -6,7 +6,6 @@ require (
 	cosmossdk.io/errors v1.1.0
 	cosmossdk.io/log/v2 v2.1.0
 	cosmossdk.io/math v1.5.3
-	cosmossdk.io/store v1.1.2
 	github.com/cometbft/cometbft v0.39.3
 	github.com/cosmos/btree v1.0.0
 	github.com/cosmos/cosmos-db v1.1.3
@@ -24,11 +23,7 @@ require (
 	gotest.tools/v3 v3.5.2
 )
 
-require (
-	github.com/hashicorp/go-immutable-radix v1.0.0 // indirect
-	github.com/hashicorp/go-metrics v0.5.4 // indirect
-	github.com/nxadm/tail v1.4.11 // indirect
-)
+require github.com/nxadm/tail v1.4.11 // indirect
 
 require (
 	github.com/DataDog/zstd v1.5.7 // indirect

@@ -24,6 +24,7 @@ type fixture struct {
 }
 
 func initFixture(tb testing.TB) *fixture {
+	tb.Helper()
 	f := &fixture{}
 
 	app := testapp.Setup(tb)

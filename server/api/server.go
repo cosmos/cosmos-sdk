@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
+	"golang.org/x/net/netutil"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/log/v2"
@@ -104,6 +105,14 @@ func customGRPCResponseHeaders(ctx context.Context, w http.ResponseWriter, _ pro
 	return nil
 }
 
+// SetListener sets a pre-bound listener so that Start skips its own
+// net.Listen call and uses it directly. Must be called before Start.
+func (s *Server) SetListener(lis net.Listener) {
+	s.mtx.Lock()
+	s.listener = lis
+	s.mtx.Unlock()
+}
+
 // Start starts the API server. Internally, the API server leverages CometBFT's
 // JSON RPC server. Configuration options are provided via config.APIConfig
 // and are delegated to the CometBFT JSON RPC server.
@@ -120,13 +129,16 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 	cmtCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
 	cmtCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
 
-	listener, err := cmtrpcserver.Listen(cfg.API.Address, cmtCfg.MaxOpenConnections)
-	if err != nil {
-		s.mtx.Unlock()
-		return err
+	if s.listener == nil {
+		var err error
+		s.listener, err = cmtrpcserver.Listen(cfg.API.Address, cmtCfg.MaxOpenConnections)
+		if err != nil {
+			s.mtx.Unlock()
+			return err
+		}
+	} else if cmtCfg.MaxOpenConnections > 0 {
+		s.listener = netutil.LimitListener(s.listener, cmtCfg.MaxOpenConnections)
 	}
-
-	s.listener = listener
 	s.mtx.Unlock()
 
 	// configure grpc-web server
@@ -161,7 +173,7 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 	// an error upon failure, which we'll send on the error channel that will be
 	// consumed by the for block below.
 	go func(enableUnsafeCORS bool) {
-		s.logger.Info("starting API server...", "address", cfg.API.Address)
+		s.logger.Info("starting API server...", "address", s.listener.Addr())
 
 		if enableUnsafeCORS {
 			allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))

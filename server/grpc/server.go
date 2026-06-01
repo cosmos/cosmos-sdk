@@ -144,14 +144,26 @@ func StartGRPCServer(ctx context.Context, logger log.Logger, cfg config.GRPCConf
 	if err != nil {
 		return fmt.Errorf("failed to listen on address %s: %w", cfg.Address, err)
 	}
+	return startGRPCServer(ctx, logger, grpcSrv, listener)
+}
 
-	errCh := make(chan error)
+// StartGRPCServerWithListener starts the provided gRPC server using an
+// already-bound listener.
+func StartGRPCServerWithListener(ctx context.Context, logger log.Logger, grpcSrv *grpc.Server, listener net.Listener) error {
+	if listener == nil {
+		return fmt.Errorf("StartGRPCServerWithListener: listener must not be nil")
+	}
+	return startGRPCServer(ctx, logger, grpcSrv, listener)
+}
+
+func startGRPCServer(ctx context.Context, logger log.Logger, grpcSrv *grpc.Server, listener net.Listener) error {
+	errCh := make(chan error, 1)
 
 	// Start the gRPC server in an external goroutine as Serve is blocking and will return
 	// an error upon failure, which we'll send on the error channel that will be
 	// consumed by the for block below.
 	go func() {
-		logger.Info("starting gRPC server...", "address", cfg.Address)
+		logger.Info("starting gRPC server...", "address", listener.Addr())
 		errCh <- grpcSrv.Serve(listener)
 	}()
 
@@ -161,7 +173,7 @@ func StartGRPCServer(ctx context.Context, logger log.Logger, cfg config.GRPCConf
 	case <-ctx.Done():
 		// The calling process canceled or closed the provided context, so we must
 		// gracefully stop the gRPC server.
-		logger.Info("stopping gRPC server...", "address", cfg.Address)
+		logger.Info("stopping gRPC server...", "address", listener.Addr())
 		grpcSrv.GracefulStop()
 
 		return nil

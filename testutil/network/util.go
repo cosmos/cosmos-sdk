@@ -57,6 +57,17 @@ func startInProcess(cfg Config, val *Validator) error {
 		return appGenesis.ToGenesisDoc()
 	}
 
+	// CometBFT does not accept pre-bound listeners, so we release these ports
+	// immediately before node.NewNode and let CometBFT re-bind them.
+	for _, lis := range []net.Listener{val.rpcListener, val.p2pListener, val.proxyListener} {
+		if lis != nil {
+			lis.Close()
+		}
+	}
+	val.rpcListener = nil
+	val.p2pListener = nil
+	val.proxyListener = nil
+
 	cmtApp := server.NewCometABCIWrapper(app)
 	tmNode, err := node.NewNode( //resleak:notresource
 		cmtCfg,
@@ -105,9 +116,12 @@ func startInProcess(cfg Config, val *Validator) error {
 			return err
 		}
 
-		// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
-		// that the server is gracefully shut down.
+		lis := val.grpcListener
+		val.grpcListener = nil
 		val.errGroup.Go(func() error {
+			if lis != nil {
+				return servergrpc.StartGRPCServerWithListener(ctx, grpcLogger, grpcSrv, lis)
+			}
 			return servergrpc.StartGRPCServer(ctx, grpcLogger, grpcCfg, grpcSrv)
 		})
 
@@ -117,6 +131,10 @@ func startInProcess(cfg Config, val *Validator) error {
 	if val.APIAddress != "" {
 		apiSrv := api.New(val.ClientCtx, logger.With(log.ModuleKey, "api-server"), val.grpc)
 		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
+		if val.apiListener != nil {
+			apiSrv.SetListener(val.apiListener)
+			val.apiListener = nil
+		}
 
 		val.errGroup.Go(func() error {
 			return apiSrv.Start(ctx, *val.AppConfig)
@@ -238,22 +256,4 @@ func writeFile(name, dir string, contents []byte) error {
 	}
 
 	return nil
-}
-
-// FreeTCPAddr gets a free address for a test CometBFT server
-// protocol is either tcp, http, etc
-func FreeTCPAddr() (addr, port string, closeFn func() error, err error) {
-	l, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		return "", "", nil, err
-	}
-
-	closeFn = func() error {
-		return l.Close()
-	}
-
-	portI := l.Addr().(*net.TCPAddr).Port
-	port = fmt.Sprintf("%d", portI)
-	addr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
-	return addr, port, closeFn, err
 }

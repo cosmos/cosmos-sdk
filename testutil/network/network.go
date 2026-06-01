@@ -418,7 +418,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 				if err != nil {
 					return nil, fmt.Errorf("failed to bind API listener: %w", err)
 				}
-				apiListenAddr = fmt.Sprintf("tcp://0.0.0.0:%d", listen.Addr().(*net.TCPAddr).Port)
+				apiListenAddr = fmt.Sprintf("tcp://127.0.0.1:%d", listen.Addr().(*net.TCPAddr).Port)
 				apiListener = listen
 			}
 
@@ -436,7 +436,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 				if err != nil {
 					return nil, fmt.Errorf("failed to bind RPC listener: %w", err)
 				}
-				cmtCfg.RPC.ListenAddress = fmt.Sprintf("tcp://0.0.0.0:%d", listen.Addr().(*net.TCPAddr).Port)
+				cmtCfg.RPC.ListenAddress = fmt.Sprintf("tcp://127.0.0.1:%d", listen.Addr().(*net.TCPAddr).Port)
 				rpcListener = listen
 			}
 
@@ -447,7 +447,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 				if err != nil {
 					return nil, fmt.Errorf("failed to bind gRPC listener: %w", err)
 				}
-				appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%d", listen.Addr().(*net.TCPAddr).Port)
+				appCfg.GRPC.Address = fmt.Sprintf("127.0.0.1:%d", listen.Addr().(*net.TCPAddr).Port)
 				grpcListener = listen
 			}
 			appCfg.GRPC.Enable = true
@@ -484,13 +484,13 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to bind proxy listener: %w", err)
 		}
-		cmtCfg.ProxyApp = fmt.Sprintf("tcp://0.0.0.0:%d", proxyListener.Addr().(*net.TCPAddr).Port)
+		cmtCfg.ProxyApp = fmt.Sprintf("tcp://127.0.0.1:%d", proxyListener.Addr().(*net.TCPAddr).Port)
 
 		p2pListener, err = net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
 			return nil, fmt.Errorf("failed to bind P2P listener: %w", err)
 		}
-		cmtCfg.P2P.ListenAddress = fmt.Sprintf("tcp://0.0.0.0:%d", p2pListener.Addr().(*net.TCPAddr).Port)
+		cmtCfg.P2P.ListenAddress = fmt.Sprintf("tcp://127.0.0.1:%d", p2pListener.Addr().(*net.TCPAddr).Port)
 		cmtCfg.P2P.AddrBookStrict = false
 		cmtCfg.P2P.AllowDuplicateIP = true
 

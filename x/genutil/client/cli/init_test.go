@@ -214,7 +214,9 @@ func TestStartStandAlone(t *testing.T) {
 
 	listen, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
-	svrAddr := fmt.Sprintf("tcp://0.0.0.0:%d", listen.Addr().(*net.TCPAddr).Port)
+	svrAddr := fmt.Sprintf("tcp://127.0.0.1:%d", listen.Addr().(*net.TCPAddr).Port)
+	// The ABCI socket server does not accept a pre-bound listener, so we must
+	// close and re-bind. The TOCTOU window here is acceptable in tests.
 	require.NoError(t, listen.Close())
 
 	cmtApp := server.NewCometABCIWrapper(app)

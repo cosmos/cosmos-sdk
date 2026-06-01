@@ -6,12 +6,14 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	sdkapp "github.com/cosmos/cosmos-sdk/app"
@@ -27,8 +29,6 @@ import (
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"cosmossdk.io/log/v2"
 )
 
 type IntegrationTestSuite struct {
@@ -131,13 +131,15 @@ func TestIntegrationTestSuite(t *testing.T) {
 }
 
 func (s *IntegrationTestSuite) TestGetGRPCConnWithContext() {
-	defaultConn, err := grpc.NewClient("localhost:9090",
+	defaultConn, err := grpc.NewClient(
+		"localhost:9090",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	s.Require().NoError(err)
 	defer defaultConn.Close()
 
-	historicalConn, err := grpc.NewClient("localhost:9091",
+	historicalConn, err := grpc.NewClient(
+		"localhost:9091",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	s.Require().NoError(err)

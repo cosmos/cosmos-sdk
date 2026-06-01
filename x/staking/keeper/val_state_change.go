@@ -113,6 +113,12 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 		)
 	}
 
+	// prune consensus key rotations that have fallen out of the current
+	// unbonding period.
+	if err := k.PruneMaturedConsKeyRotations(ctx); err != nil {
+		return nil, err
+	}
+
 	return validatorUpdates, nil
 }
 
@@ -237,6 +243,17 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
 	}
+
+	// apply pending consensus key rotations. each rotation emits a zero
+	// power update for the old key followed by a current power update for
+	// the new key. an old key that already received a power change earlier
+	// in this updates list is correctly retired because cometbft applies
+	// updates in order.
+	rotationUpdates, err := k.ApplyPendingConsKeyRotations(ctx, powerReduction)
+	if err != nil {
+		return nil, err
+	}
+	updates = append(updates, rotationUpdates...)
 
 	// Update the pools based on the recent updates in the validator set:
 	// - The tokens from the non-bonded candidates that enter the new validator set need to be transferred

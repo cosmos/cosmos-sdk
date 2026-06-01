@@ -48,4 +48,8 @@ var (
 	ErrInvalidSigner                   = errors.Register(ModuleName, 43, "expected authority account as only signer for proposal message")
 	ErrBadRedelegationSrc              = errors.Register(ModuleName, 44, "redelegation source validator not found")
 	ErrNoUnbondingType                 = errors.Register(ModuleName, 45, "unbonding type not found")
+
+	ErrConsensusPubKeyAlreadyUsedForValidator = errors.Register(ModuleName, 46, "consensus pubkey is already in use by another validator")
+	ErrConsensusPubKeyInRotationHistory       = errors.Register(ModuleName, 47, "consensus pubkey was previously rotated away from and is still within the unbonding window")
+	ErrExceedingMaxConsPubKeyRotations        = errors.Register(ModuleName, 48, "validator has reached the max consensus pubkey rotations within the unbonding period")
 )

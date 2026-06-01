@@ -94,6 +94,7 @@ func TestImportExportQueues(t *testing.T) {
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: simtestutil.DefaultConsensusParams,
 		AppStateBytes:   stateBytes,
+		ChainId:         "test-chain",
 	})
 	assert.NilError(t, err)
 

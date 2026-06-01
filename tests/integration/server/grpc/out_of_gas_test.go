@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testapp"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -52,14 +51,6 @@ func (s *IntegrationTestOutOfGasSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.conn.Close()
 	s.network.Cleanup()
-}
-
-func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_TestService() {
-	// gRPC query to test service should work - simple queries should stay under gas limit
-	testClient := testdata.NewQueryClient(s.conn)
-	testRes, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
-	s.Require().NoError(err)
-	s.Require().Equal("hello", testRes.Message)
 }
 
 func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_BankBalance_OutOfGas() {

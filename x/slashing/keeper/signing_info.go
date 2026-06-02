@@ -59,7 +59,7 @@ func (k Keeper) DeleteValidatorSigningInfo(ctx context.Context, address sdk.Cons
 
 // MoveValidatorSigningInfo moves signing info from one consensus address to
 // another.
-func (k Keeper) MoveValidatorSigningInfo(ctx context.Context, oldAddr sdk.ConsAddress, newAddr sdk.ConsAddress) error {
+func (k Keeper) MoveValidatorSigningInfo(ctx context.Context, oldAddr, newAddr sdk.ConsAddress) error {
 	info, err := k.GetValidatorSigningInfo(ctx, oldAddr)
 	if err != nil {
 		if errors.IsOf(err, types.ErrNoSigningInfoFound) {
@@ -244,7 +244,7 @@ func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddres
 
 // MoveMissedBlockBitmap moves missed block bitmap chunks from one consensus
 // address to another.
-func (k Keeper) MoveMissedBlockBitmap(ctx context.Context, oldAddr sdk.ConsAddress, newAddr sdk.ConsAddress) (err error) {
+func (k Keeper) MoveMissedBlockBitmap(ctx context.Context, oldAddr, newAddr sdk.ConsAddress) (err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	oldPrefix := types.ValidatorMissedBlockBitmapPrefixKey(oldAddr)
 	newPrefix := types.ValidatorMissedBlockBitmapPrefixKey(newAddr)

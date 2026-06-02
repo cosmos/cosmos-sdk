@@ -50,7 +50,7 @@ func (h Hooks) AfterValidatorRemoved(ctx context.Context, consAddr sdk.ConsAddre
 }
 
 // AfterValidatorConsKeyUpdated moves signing state to the new consensus key.
-func (h Hooks) AfterValidatorConsKeyUpdated(ctx context.Context, oldConsAddr sdk.ConsAddress, newConsAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
+func (h Hooks) AfterValidatorConsKeyUpdated(ctx context.Context, oldConsAddr, newConsAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
 	validator, err := h.k.sk.Validator(ctx, valAddr)
 	if err != nil {
 		return err

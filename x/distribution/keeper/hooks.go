@@ -117,7 +117,7 @@ func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, val
 }
 
 // AfterValidatorConsKeyUpdated is a no-op for distribution.
-func (h Hooks) AfterValidatorConsKeyUpdated(_ context.Context, _ sdk.ConsAddress, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+func (h Hooks) AfterValidatorConsKeyUpdated(_ context.Context, _, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }
 

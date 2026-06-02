@@ -30,23 +30,19 @@ func (s *KeeperTestSuite) execExpectCalls() {
 }
 
 func (s *KeeperTestSuite) TestMsgCreateValidator() {
-	ctx, msgServer := s.ctx, s.msgServer
-	require := s.Require()
-	s.execExpectCalls()
-
 	pk1 := ed25519.GenPrivKey().PubKey()
-	require.NotNil(pk1)
+	s.Require().NotNil(pk1)
 	pubkey1, err := codectypes.NewAnyWithValue(pk1)
-	require.NoError(err)
+	s.Require().NoError(err)
 
 	pk2 := ed25519.GenPrivKey().PubKey()
-	require.NotNil(pk1)
+	s.Require().NotNil(pk2)
 	pubkey2, err := codectypes.NewAnyWithValue(pk2)
-	require.NoError(err)
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name               string
-		setupExistingState func()
+		setupExistingState func() error
 		input              *stakingtypes.MsgCreateValidator
 		expErr             bool
 		expErrMsg          string
@@ -211,9 +207,9 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 		},
 		{
 			name: "consensus key is target of pending rotation",
-			setupExistingState: func() {
+			setupExistingState: func() error {
 				valAddr := sdk.ValAddress(ed25519.GenPrivKey().PubKey().Address())
-				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, ed25519.GenPrivKey().PubKey(), pk2))
+				return s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, ed25519.GenPrivKey().PubKey(), pk2)
 			},
 			input: &stakingtypes.MsgCreateValidator{
 				Description: stakingtypes.Description{
@@ -235,9 +231,9 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 		},
 		{
 			name: "consensus key is source of pending rotation without live validator index",
-			setupExistingState: func() {
+			setupExistingState: func() error {
 				valAddr := sdk.ValAddress(ed25519.GenPrivKey().PubKey().Address())
-				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, pk2, ed25519.GenPrivKey().PubKey()))
+				return s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, pk2, ed25519.GenPrivKey().PubKey())
 			},
 			input: &stakingtypes.MsgCreateValidator{
 				Description: stakingtypes.Description{
@@ -259,10 +255,10 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 		},
 		{
 			name: "consensus key was rotated away from",
-			setupExistingState: func() {
+			setupExistingState: func() error {
 				valAddr := sdk.ValAddress(ed25519.GenPrivKey().PubKey().Address())
 				consAddr := sdk.ConsAddress(pk2.Address())
-				require.NoError(s.stakingKeeper.SetRotationLockedConsAddr(s.ctx, consAddr, valAddr, stakingtypes.ConsAddrLockRotatedFrom))
+				return s.stakingKeeper.SetRotationLockedConsAddr(s.ctx, consAddr, valAddr, stakingtypes.ConsAddrLockRotatedFrom)
 			},
 			input: &stakingtypes.MsgCreateValidator{
 				Description: stakingtypes.Description{
@@ -308,16 +304,19 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 	}
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
+			s.SetupTest()
+			s.execExpectCalls()
+
 			if tc.setupExistingState != nil {
-				tc.setupExistingState()
+				s.Require().NoError(tc.setupExistingState())
 			}
 
-			_, err := msgServer.CreateValidator(ctx, tc.input)
+			_, err := s.msgServer.CreateValidator(s.ctx, tc.input)
 			if tc.expErr {
-				require.Error(err)
-				require.Contains(err.Error(), tc.expErrMsg)
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
-				require.NoError(err)
+				s.Require().NoError(err)
 			}
 		})
 	}

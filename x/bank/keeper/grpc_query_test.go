@@ -165,7 +165,75 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	suite.Require().NoError(err)
 	suite.Equal(res.Balances.Len(), 1)
 	suite.Equal(res.Balances[0].Denom, ibcPath+"/"+ibcBaseDenom)
+	suite.Equal(ibcCoins.Amount, res.Balances[0].Amount)
 	suite.Nil(res.Pagination.NextKey)
+}
+
+func (suite *KeeperTestSuite) TestQueryAllBalancesResolveDenomScalesAmount() {
+	ctx, queryClient := suite.ctx, suite.queryClient
+	_, _, addr := testdata.KeyTestPubAddr()
+
+	suite.mockFundAccount(addr)
+	suite.Require().NoError(testutil.FundAccount(ctx, suite.bankKeeper, addr, sdk.NewCoins(
+		sdk.NewInt64Coin("uakt", 100_000_000_000),
+	)))
+
+	suite.bankKeeper.SetDenomMetaData(ctx, types.Metadata{
+		Description: "Akash token",
+		DenomUnits: []*types.DenomUnit{
+			{
+				Denom:    "uakt",
+				Exponent: 0,
+			},
+			{
+				Denom:    "akt",
+				Exponent: 6,
+			},
+		},
+		Base:    "uakt",
+		Display: "akt",
+		Name:    "Akash",
+		Symbol:  "AKT",
+	})
+
+	req := types.NewQueryAllBalancesRequest(addr, nil, true)
+	res, err := queryClient.AllBalances(gocontext.Background(), req)
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Balances, 1)
+	suite.Equal(sdk.NewInt64Coin("akt", 100_000), res.Balances[0])
+}
+
+func (suite *KeeperTestSuite) TestQueryAllBalancesResolveDenomKeepsBaseDenomWhenAmountIsNotDivisible() {
+	ctx, queryClient := suite.ctx, suite.queryClient
+	_, _, addr := testdata.KeyTestPubAddr()
+
+	baseCoin := sdk.NewInt64Coin("uakt", 6_994_315)
+	suite.mockFundAccount(addr)
+	suite.Require().NoError(testutil.FundAccount(ctx, suite.bankKeeper, addr, sdk.NewCoins(baseCoin)))
+
+	suite.bankKeeper.SetDenomMetaData(ctx, types.Metadata{
+		Description: "Akash token",
+		DenomUnits: []*types.DenomUnit{
+			{
+				Denom:    "uakt",
+				Exponent: 0,
+			},
+			{
+				Denom:    "akt",
+				Exponent: 6,
+			},
+		},
+		Base:    "uakt",
+		Display: "akt",
+		Name:    "Akash",
+		Symbol:  "AKT",
+	})
+
+	req := types.NewQueryAllBalancesRequest(addr, nil, true)
+	res, err := queryClient.AllBalances(gocontext.Background(), req)
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Balances, 1)
+	suite.Equal(baseCoin, res.Balances[0])
 }
 
 func (suite *KeeperTestSuite) TestSpendableBalances() {

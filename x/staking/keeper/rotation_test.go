@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -242,6 +243,12 @@ func (s *KeeperTestSuite) TestProcessConsKeyRotations() {
 		hasOld, err := s.stakingKeeper.IsConsAddrLockedByRotation(s.ctx, sdk.ConsAddress(oldPk.Address()))
 		require.NoError(err)
 		require.True(hasOld)
+
+		kind, gotValAddr, found, err := s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, sdk.ConsAddress(oldPk.Address()))
+		require.NoError(err)
+		require.True(found)
+		require.Equal(stakingtypes.ConsAddrLockRotatedFrom, kind)
+		require.Equal(valAddr, gotValAddr)
 	})
 
 	s.T().Run("emit skips removed validator", func(t *testing.T) {
@@ -294,6 +301,126 @@ func (s *KeeperTestSuite) TestProcessConsKeyRotations() {
 		hasNew, err := s.stakingKeeper.IsConsAddrLockedByRotation(s.ctx, sdk.ConsAddress(newPk.Address()))
 		require.NoError(err)
 		require.False(hasNew)
+
+		kind, gotValAddr, found, err := s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, sdk.ConsAddress(oldPk.Address()))
+		require.NoError(err)
+		require.True(found)
+		require.Equal(stakingtypes.ConsAddrLockPendingFrom, kind)
+		require.Equal(valAddr, gotValAddr)
+
+		s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(stakingtypes.DefaultUnbondingTime + time.Second))
+		require.NoError(s.stakingKeeper.PruneMaturedConsKeyRotations(s.ctx))
+
+		hasOld, err := s.stakingKeeper.IsConsAddrLockedByRotation(s.ctx, sdk.ConsAddress(oldPk.Address()))
+		require.NoError(err)
+		require.False(hasOld)
+	})
+}
+
+func (s *KeeperTestSuite) TestRotationLockedConsAddrIndex() {
+	require := s.Require()
+	s.SetupTest()
+
+	oldPk := ed25519.GenPrivKey().PubKey()
+	newPk := ed25519.GenPrivKey().PubKey()
+	_, valAddr := s.bondedValidator(oldPk)
+	oldConsAddr := sdk.ConsAddress(oldPk.Address())
+	newConsAddr := sdk.ConsAddress(newPk.Address())
+
+	require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+
+	kind, gotValAddr, found, err := s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, oldConsAddr)
+	require.NoError(err)
+	require.True(found)
+	require.Equal(stakingtypes.ConsAddrLockPendingFrom, kind)
+	require.Equal(valAddr, gotValAddr)
+
+	kind, gotValAddr, found, err = s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, newConsAddr)
+	require.NoError(err)
+	require.True(found)
+	require.Equal(stakingtypes.ConsAddrLockPendingTo, kind)
+	require.Equal(valAddr, gotValAddr)
+
+	require.NoError(s.stakingKeeper.ApplyConsKeyRotations(s.ctx.WithBlockHeight(s.ctx.BlockHeight() + stakingtypes.ConsensusUpdateDelay)))
+
+	kind, gotValAddr, found, err = s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, oldConsAddr)
+	require.NoError(err)
+	require.True(found)
+	require.Equal(stakingtypes.ConsAddrLockRotatedFrom, kind)
+	require.Equal(valAddr, gotValAddr)
+
+	_, _, found, err = s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, newConsAddr)
+	require.NoError(err)
+	require.False(found)
+}
+
+func (s *KeeperTestSuite) TestValidatorByHistoricalConsAddr() {
+	require := s.Require()
+
+	s.T().Run("resolves rotated-from key after rotation applies", func(t *testing.T) {
+		s.SetupTest()
+
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+		_, valAddr := s.bondedValidator(oldPk)
+		oldConsAddr := sdk.ConsAddress(oldPk.Address())
+		newConsAddr := sdk.ConsAddress(newPk.Address())
+
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+		require.NoError(s.stakingKeeper.ApplyConsKeyRotation(s.ctx, valAddr, newPk))
+
+		validator, err := s.stakingKeeper.ValidatorByHistoricalConsAddr(s.ctx, oldConsAddr)
+		require.NoError(err)
+		require.Equal(valAddr.String(), validator.OperatorAddress)
+		currentConsAddr, err := validator.GetConsAddr()
+		require.NoError(err)
+		require.Equal(newConsAddr.Bytes(), currentConsAddr)
+	})
+
+	s.T().Run("rejects pending-to key", func(t *testing.T) {
+		s.SetupTest()
+
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+		_, valAddr := s.bondedValidator(oldPk)
+		newConsAddr := sdk.ConsAddress(newPk.Address())
+
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+
+		_, err := s.stakingKeeper.ValidatorByHistoricalConsAddr(s.ctx, newConsAddr)
+		require.True(errors.Is(err, stakingtypes.ErrNoValidatorFound))
+	})
+
+	s.T().Run("rejects pending-from key", func(t *testing.T) {
+		s.SetupTest()
+
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+		_, valAddr := s.bondedValidator(oldPk)
+		oldConsAddr := sdk.ConsAddress(oldPk.Address())
+
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+
+		_, err := s.stakingKeeper.ValidatorByHistoricalConsAddr(s.ctx, oldConsAddr)
+		require.True(errors.Is(err, stakingtypes.ErrNoValidatorFound))
+	})
+
+	s.T().Run("stops resolving after maturity pruning", func(t *testing.T) {
+		s.SetupTest()
+
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+		_, valAddr := s.bondedValidator(oldPk)
+		oldConsAddr := sdk.ConsAddress(oldPk.Address())
+
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+		require.NoError(s.stakingKeeper.ApplyConsKeyRotation(s.ctx, valAddr, newPk))
+
+		s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(stakingtypes.DefaultUnbondingTime + time.Second))
+		require.NoError(s.stakingKeeper.PruneMaturedConsKeyRotations(s.ctx))
+
+		_, err := s.stakingKeeper.ValidatorByHistoricalConsAddr(s.ctx, oldConsAddr)
+		require.True(errors.Is(err, stakingtypes.ErrNoValidatorFound))
 	})
 }
 

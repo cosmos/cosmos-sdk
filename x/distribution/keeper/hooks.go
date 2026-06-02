@@ -116,6 +116,11 @@ func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, val
 	return nil
 }
 
+// AfterValidatorConsKeyUpdated is a no-op for distribution.
+func (h Hooks) AfterValidatorConsKeyUpdated(_ context.Context, _ sdk.ConsAddress, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+	return nil
+}
+
 // BeforeDelegationCreated increments period
 func (h Hooks) BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	val, err := h.k.stakingKeeper.Validator(ctx, valAddr)

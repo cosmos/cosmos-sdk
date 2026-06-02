@@ -97,9 +97,10 @@ type DelegationSet interface {
 
 // StakingHooks event hooks for staking validator object (noalias)
 type StakingHooks interface {
-	AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress) error                           // Must be called when a validator is created
-	BeforeValidatorModified(ctx context.Context, valAddr sdk.ValAddress) error                         // Must be called when a validator's state changes
-	AfterValidatorRemoved(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error // Must be called when a validator is deleted
+	AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress) error                                                                  // Must be called when a validator is created
+	BeforeValidatorModified(ctx context.Context, valAddr sdk.ValAddress) error                                                                // Must be called when a validator's state changes
+	AfterValidatorRemoved(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error                                        // Must be called when a validator is deleted
+	AfterValidatorConsKeyUpdated(ctx context.Context, oldConsAddr sdk.ConsAddress, newConsAddr sdk.ConsAddress, valAddr sdk.ValAddress) error // Must be called when a validator's consensus changes in sdk state
 
 	AfterValidatorBonded(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error         // Must be called when a validator is bonded
 	AfterValidatorBeginUnbonding(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error // Must be called when a validator begins unbonding

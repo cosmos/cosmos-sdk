@@ -27,7 +27,7 @@ func (m *mockParamsKeeper) SetParams(_ context.Context, params types.Params) err
 func TestMigrate(t *testing.T) {
 	ctx := context.Background()
 
-	t.Run("sets default fee amount with existing bond denom", func(t *testing.T) {
+	t.Run("sets missing key rotation fee with existing bond denom", func(t *testing.T) {
 		params := types.DefaultParams()
 		params.BondDenom = "uatom"
 		params.KeyRotationFee = sdk.Coin{}
@@ -35,6 +35,17 @@ func TestMigrate(t *testing.T) {
 
 		require.NoError(t, Migrate(ctx, k))
 		require.Equal(t, sdk.NewCoin("uatom", types.DefaultKeyRotationFee.Amount), k.params.KeyRotationFee)
+		require.NoError(t, k.params.Validate())
+	})
+
+	t.Run("preserves pre-existing key rotation fee", func(t *testing.T) {
+		params := types.DefaultParams()
+		params.BondDenom = "uatom"
+		params.KeyRotationFee = sdk.NewInt64Coin("oldfee", 42)
+		k := &mockParamsKeeper{params: params}
+
+		require.NoError(t, Migrate(ctx, k))
+		require.Equal(t, sdk.NewInt64Coin("oldfee", 42), k.params.KeyRotationFee)
 		require.NoError(t, k.params.Validate())
 	})
 

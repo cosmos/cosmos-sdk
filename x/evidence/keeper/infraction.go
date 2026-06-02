@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,8 +28,15 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	logger := k.Logger(ctx)
 	consAddr := evidence.GetConsensusAddress(k.stakingKeeper.ConsensusAddressCodec())
+	currentConsAddr := consAddr
 
 	validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, consAddr)
+	if errors.Is(err, stakingtypes.ErrNoValidatorFound) {
+		validator, err = k.stakingKeeper.ValidatorByHistoricalConsAddr(ctx, consAddr)
+		if err == nil {
+			currentConsAddr, err = validator.GetConsAddr()
+		}
+	}
 	if err != nil {
 		return err
 	}
@@ -36,22 +44,6 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 		// Defensive: Simulation doesn't take unbonding periods into account, and
 		// CometBFT might break this assumption at some point.
 		return nil
-	}
-
-	if len(validator.GetOperator()) != 0 {
-		if _, err := k.slashingKeeper.GetPubkey(ctx, consAddr.Bytes()); err != nil {
-			// Ignore evidence that cannot be handled.
-			//
-			// NOTE: We used to panic with:
-			// `panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))`,
-			// but this couples the expectations of the app to both CometBFT and
-			// the simulator.  Both are expected to provide the full range of
-			// allowable but none of the disallowed evidence types.  Instead of
-			// getting this coordination right, it is easier to relax the
-			// constraints and ignore evidence that cannot be handled.
-			logger.Error(fmt.Sprintf("ignore evidence; expected public key for validator %s not found", consAddr))
-			return nil
-		}
 	}
 
 	// calculate the age of the evidence
@@ -78,15 +70,16 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 		}
 	}
 
-	if ok := k.slashingKeeper.HasValidatorSigningInfo(ctx, consAddr); !ok {
-		panic(fmt.Sprintf("expected signing info for validator %s but not found", consAddr))
+	if ok := k.slashingKeeper.HasValidatorSigningInfo(ctx, currentConsAddr); !ok {
+		panic(fmt.Sprintf("expected signing info for validator %s but not found", currentConsAddr))
 	}
 
 	// ignore if the validator is already tombstoned
-	if k.slashingKeeper.IsTombstoned(ctx, consAddr) {
+	if k.slashingKeeper.IsTombstoned(ctx, currentConsAddr) {
 		logger.Info(
 			"ignored equivocation; validator already tombstoned",
-			"validator", consAddr,
+			"validator", currentConsAddr,
+			"evidence_validator", consAddr,
 			"infraction_height", infractionHeight,
 			"infraction_time", infractionTime,
 		)
@@ -95,7 +88,8 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 
 	logger.Info(
 		"confirmed equivocation",
-		"validator", consAddr,
+		"validator", currentConsAddr,
+		"evidence_validator", consAddr,
 		"infraction_height", infractionHeight,
 		"infraction_time", infractionTime,
 	)
@@ -119,7 +113,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 
 	err = k.slashingKeeper.SlashWithInfractionReason(
 		ctx,
-		consAddr,
+		currentConsAddr,
 		slashFractionDoubleSign,
 		evidence.GetValidatorPower(), distributionHeight,
 		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
@@ -131,18 +125,18 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	// Jail the validator if not already jailed. This will begin unbonding the
 	// validator if not already unbonding (tombstoned).
 	if !validator.IsJailed() {
-		err = k.slashingKeeper.Jail(ctx, consAddr)
+		err = k.slashingKeeper.Jail(ctx, currentConsAddr)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = k.slashingKeeper.JailUntil(ctx, consAddr, types.DoubleSignJailEndTime)
+	err = k.slashingKeeper.JailUntil(ctx, currentConsAddr, types.DoubleSignJailEndTime)
 	if err != nil {
 		return err
 	}
 
-	err = k.slashingKeeper.Tombstone(ctx, consAddr)
+	err = k.slashingKeeper.Tombstone(ctx, currentConsAddr)
 	if err != nil {
 		return err
 	}

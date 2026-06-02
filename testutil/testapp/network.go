@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
@@ -60,7 +60,8 @@ func SDKAppFixture() network.TestFixture {
 				flags.FlagChainID: val.GetCtx().Viper.GetString(flags.FlagChainID),
 			}
 
-			appCfg := app.DefaultSDKAppConfig("app", appOpts,
+			appCfg := app.DefaultSDKAppConfig(
+				"app", appOpts,
 				baseapp.SetMinGasPrices(minGasPrices),
 				baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(pruning)),
 			)

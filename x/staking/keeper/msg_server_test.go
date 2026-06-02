@@ -1030,6 +1030,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					MaxEntries:        stakingtypes.DefaultMaxEntries,
 					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
 					BondDenom:         stakingtypes.BondStatusBonded,
+					KeyRotationFee:    stakingtypes.DefaultKeyRotationFee,
 				},
 			},
 			expErr:    true,
@@ -1046,6 +1047,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					MaxEntries:        stakingtypes.DefaultMaxEntries,
 					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
 					BondDenom:         stakingtypes.BondStatusBonded,
+					KeyRotationFee:    stakingtypes.DefaultKeyRotationFee,
 				},
 			},
 			expErr:    true,
@@ -1062,6 +1064,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					MaxEntries:        stakingtypes.DefaultMaxEntries,
 					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
 					BondDenom:         "",
+					KeyRotationFee:    stakingtypes.DefaultKeyRotationFee,
 				},
 			},
 			expErr:    true,
@@ -1078,6 +1081,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					MaxEntries:        stakingtypes.DefaultMaxEntries,
 					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
 					BondDenom:         "ghosttoken",
+					KeyRotationFee:    stakingtypes.DefaultKeyRotationFee,
 				},
 			},
 			expErr:    true,
@@ -1097,6 +1101,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					MaxEntries:        stakingtypes.DefaultMaxEntries,
 					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
 					BondDenom:         stakingtypes.BondStatusBonded,
+					KeyRotationFee:    stakingtypes.DefaultKeyRotationFee,
 				},
 			},
 			expErr:    true,
@@ -1113,6 +1118,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					MaxEntries:        0,
 					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
 					BondDenom:         stakingtypes.BondStatusBonded,
+					KeyRotationFee:    stakingtypes.DefaultKeyRotationFee,
 				},
 			},
 			expErr:    true,
@@ -1129,6 +1135,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
 					MinCommissionRate: stakingtypes.DefaultMinCommissionRate,
 					BondDenom:         "denom",
+					KeyRotationFee:    stakingtypes.DefaultKeyRotationFee,
 				},
 			},
 			expErr:    true,
@@ -1259,11 +1266,16 @@ func (s *KeeperTestSuite) TestMsgRotateConsPubKey() {
 			name: "valid msg",
 			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
 				valAddr, _ := createValidator(stakingtypes.Bonded)
+				params, err := s.stakingKeeper.GetParams(s.ctx)
+				require.NoError(err)
+				params.KeyRotationFee = sdk.NewInt64Coin(params.BondDenom, 1234)
+				require.NoError(s.stakingKeeper.SetParams(s.ctx, params))
+				feeCoins := sdk.NewCoins(params.KeyRotationFee)
 				s.bankKeeper.EXPECT().
-					SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(valAddr), stakingtypes.KeyRotationFeePoolName, gomock.Any()).
+					SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(valAddr), stakingtypes.KeyRotationFeePoolName, feeCoins).
 					Return(nil)
 				s.bankKeeper.EXPECT().
-					BurnCoins(gomock.Any(), stakingtypes.KeyRotationFeePoolName, gomock.Any()).
+					BurnCoins(gomock.Any(), stakingtypes.KeyRotationFeePoolName, feeCoins).
 					Return(nil)
 				return &stakingtypes.MsgRotateConsPubKey{
 					ValidatorAddress: valAddr.String(),
@@ -1277,11 +1289,12 @@ func (s *KeeperTestSuite) TestMsgRotateConsPubKey() {
 			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
 				// submit a valid rotation for valAddr
 				valAddr, _ := createValidator(stakingtypes.Bonded)
+				feeCoins := sdk.NewCoins(stakingtypes.DefaultKeyRotationFee)
 				s.bankKeeper.EXPECT().
-					SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(valAddr), stakingtypes.KeyRotationFeePoolName, gomock.Any()).
+					SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(valAddr), stakingtypes.KeyRotationFeePoolName, feeCoins).
 					Return(nil)
 				s.bankKeeper.EXPECT().
-					BurnCoins(gomock.Any(), stakingtypes.KeyRotationFeePoolName, gomock.Any()).
+					BurnCoins(gomock.Any(), stakingtypes.KeyRotationFeePoolName, feeCoins).
 					Return(nil)
 				valid := &stakingtypes.MsgRotateConsPubKey{
 					ValidatorAddress: valAddr.String(),

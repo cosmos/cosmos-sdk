@@ -676,7 +676,11 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	// module account before burning. The pool is a burner module account so
 	// the fee is fully removed from supply and never mingles with bonded or
 	// unbonded staking balances.
-	feeCoins := sdk.NewCoins(types.DefaultKeyRotationFee)
+	keyRotationFee, err := k.KeyRotationFee(ctx)
+	if err != nil {
+		return nil, err
+	}
+	feeCoins := sdk.NewCoins(keyRotationFee)
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), types.KeyRotationFeePoolName, feeCoins); err != nil {
 		return nil, err
 	}

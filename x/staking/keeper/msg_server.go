@@ -63,8 +63,21 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", pk)
 	}
 
-	if _, err := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); err == nil {
+	consAddr := sdk.GetConsAddress(pk)
+	locked, err := k.IsConsAddrLockedByRotation(ctx, consAddr)
+	if err != nil {
+		return nil, err
+	}
+	if locked {
+		return nil, types.ErrConsensusPubKeyInRotationHistory
+	}
+
+	_, err = k.GetValidatorByConsAddr(ctx, consAddr)
+	if err == nil {
 		return nil, types.ErrValidatorPubKeyExists
+	}
+	if !errors.Is(err, types.ErrNoValidatorFound) {
+		return nil, err
 	}
 
 	bondDenom, err := k.BondDenom(ctx)

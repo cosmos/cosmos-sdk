@@ -11,12 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -25,8 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/xsalsa20symmetric"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -78,18 +71,7 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 
 func TestArmorUnarmorPubKey(t *testing.T) {
 	// Select the encryption and storage for your cryptostore
-	var cdc codec.Codec
-
-	err := depinject.Inject(depinject.Configs(
-		configurator.NewAppConfig(),
-		depinject.Supply(log.NewNopLogger(),
-			func() address.Codec { return addresscodec.NewBech32Codec("cosmos") },
-			func() runtime.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") },
-			func() runtime.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") },
-		),
-	), &cdc)
-	require.NoError(t, err)
-
+	cdc := testapp.Setup(t).AppCodec()
 	cstore := keyring.NewInMemory(cdc)
 
 	// Add keys and see they return in alphabetical order
@@ -173,7 +155,8 @@ func TestUnarmorInfoBytesErrors(t *testing.T) {
 		"version": "0.0.1",
 	}
 	unarmoredBytes, err = crypto.UnarmorInfoBytes(crypto.EncodeArmor(
-		"TENDERMINT KEY INFO", header, []byte("plain-text")))
+		"TENDERMINT KEY INFO", header, []byte("plain-text"),
+	))
 	require.Error(t, err)
 	require.Equal(t, "unrecognized version: 0.0.1", err.Error())
 	require.Nil(t, unarmoredBytes)

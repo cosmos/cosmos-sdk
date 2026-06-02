@@ -9,14 +9,11 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/errors"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	modulev1 "github.com/cosmos/cosmos-sdk/contrib/api/cosmos/nft/module/v1"
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft"
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
 	simulation2 "github.com/cosmos/cosmos-sdk/contrib/x/nft/simulation"
@@ -112,6 +109,11 @@ func (am AppModule) IsOnePerModuleType() {}
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
+// ModuleAccountPermissions returns the module account permissions for the nft module.
+func (AppModule) ModuleAccountPermissions() map[string][]string {
+	return map[string][]string{nft.ModuleName: nil}
+}
+
 // InitGenesis performs genesis initialization for the nft module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
@@ -157,39 +159,4 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 // WeightedOperationsX registers weighted nft module operations for simulation.
 func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
 	reg.Add(weights.Get("msg_send", 100), simulation2.MsgSendFactory(am.keeper))
-}
-
-//
-// App Wiring Setup
-//
-
-func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-	)
-}
-
-type NftInputs struct {
-	depinject.In
-
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
-	Registry     cdctypes.InterfaceRegistry
-
-	AccountKeeper nft.AccountKeeper
-	BankKeeper    nft.BankKeeper
-}
-
-type NftOutputs struct {
-	depinject.Out
-
-	NFTKeeper keeper.Keeper
-	Module    appmodule.AppModule
-}
-
-func ProvideModule(in NftInputs) NftOutputs {
-	k := keeper.NewKeeper(in.StoreService, in.Cdc, in.AccountKeeper, in.BankKeeper)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-
-	return NftOutputs{NFTKeeper: k, Module: m}
 }

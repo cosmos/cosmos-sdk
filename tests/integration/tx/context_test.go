@@ -3,71 +3,60 @@ package tx
 import (
 	"testing"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
-
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/pulsar/testpb"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
-func ProvideCustomGetSigners() signing.CustomGetSigner {
-	return signing.CustomGetSigner{
-		MsgType: proto.MessageName(&testpb.TestRepeatedFields{}),
-		Fn: func(msg proto.Message) ([][]byte, error) {
-			testMsg := msg.(*testpb.TestRepeatedFields)
-			// arbitrary logic
-			signer := testMsg.NullableDontOmitempty[1].Value
-			return [][]byte{[]byte(signer)}, nil
-		},
-	}
-}
-
 func TestDefineCustomGetSigners(t *testing.T) {
-	var interfaceRegistry codectypes.InterfaceRegistry
-	_, err := simtestutil.SetupAtGenesis(
-		depinject.Configs(
-			configurator.NewAppConfig(
-				configurator.AuthModule(),
-				configurator.StakingModule(),
-				configurator.BankModule(),
-				configurator.ConsensusModule(),
-			),
-			depinject.Supply(log.NewNopLogger()),
-			depinject.Provide(ProvideCustomGetSigners),
-		),
-		&interfaceRegistry,
-	)
-	require.NoError(t, err)
-	require.NotNil(t, interfaceRegistry)
-
 	msg := &testpb.TestRepeatedFields{
 		NullableDontOmitempty: []*testpb.Streng{
 			{Value: "foo"},
 			{Value: "bar"},
 		},
 	}
-	signers, err := interfaceRegistry.SigningContext().GetSigners(msg)
+
+	// With a custom GetSigners for TestRepeatedFields, the signer should be "bar".
+	signingOpts := txsigning.Options{
+		AddressCodec:          address.Bech32Codec{Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix()},
+		ValidatorAddressCodec: address.Bech32Codec{Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix()},
+	}
+	signingOpts.DefineCustomGetSigners(
+		proto.MessageName(&testpb.TestRepeatedFields{}),
+		func(msg proto.Message) ([][]byte, error) {
+			testMsg := msg.(*testpb.TestRepeatedFields)
+			signer := testMsg.NullableDontOmitempty[1].Value
+			return [][]byte{[]byte(signer)}, nil
+		},
+	)
+
+	ir, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
+		ProtoFiles:     gogoproto.HybridResolver,
+		SigningOptions: signingOpts,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, ir)
+
+	signers, err := ir.SigningContext().GetSigners(msg)
 	require.NoError(t, err)
 	require.Equal(t, [][]byte{[]byte("bar")}, signers)
 
-	// Reset and provider no CustomGetSigners. Consequently, validation will fail and depinject will return an error
-	_, err = simtestutil.SetupAtGenesis(
-		depinject.Configs(
-			configurator.NewAppConfig(
-				configurator.AuthModule(),
-				configurator.StakingModule(),
-				configurator.BankModule(),
-				configurator.ConsensusModule(),
-			),
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&interfaceRegistry,
-	)
+	// Without the custom signer registered, GetSigners should fail.
+	irDefault, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
+		ProtoFiles: gogoproto.HybridResolver,
+		SigningOptions: txsigning.Options{
+			AddressCodec:          address.Bech32Codec{Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix()},
+			ValidatorAddressCodec: address.Bech32Codec{Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix()},
+		},
+	})
+	require.NoError(t, err)
+
+	_, err = irDefault.SigningContext().GetSigners(msg)
 	require.ErrorContains(t, err, "use DefineCustomGetSigners")
 }

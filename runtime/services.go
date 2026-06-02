@@ -3,32 +3,15 @@ package runtime
 import (
 	"context"
 
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
 
-	"github.com/cosmos/cosmos-sdk/runtime/services"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-func (a *App) registerRuntimeServices(cfg module.Configurator) error {
-	// no app config service if user is using app.yaml / app.json
-	// it is as in v0.52, this whole query service does not exist at all.
-	if a.appConfig != nil {
-		appv1alpha1.RegisterQueryServer(cfg.QueryServer(), services.NewAppQueryService(a.appConfig))
-	}
-	autocliv1.RegisterQueryServer(cfg.QueryServer(), services.NewAutoCLIQueryService(a.ModuleManager.Modules))
-
-	reflectionSvc, err := services.NewReflectionService()
-	if err != nil {
-		return err
-	}
-	reflectionv1.RegisterReflectionServiceServer(cfg.QueryServer(), reflectionSvc)
-
-	return nil
+// ProvideCometInfoService returns a comet.BlockInfoService backed by the SDK context.
+func ProvideCometInfoService() comet.BlockInfoService {
+	return cometInfoService{}
 }
 
 var _ comet.BlockInfoService = cometInfoService{}

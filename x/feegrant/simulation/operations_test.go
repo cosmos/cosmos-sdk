@@ -6,42 +6,29 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
-
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdkapp "github.com/cosmos/cosmos-sdk/app"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	_ "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
-	_ "github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/mint"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 type SimTestSuite struct {
 	suite.Suite
 
-	app               *runtime.App
+	app               *sdkapp.SDKApp
 	ctx               sdk.Context
 	feegrantKeeper    keeper.Keeper
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -53,31 +40,16 @@ type SimTestSuite struct {
 }
 
 func (suite *SimTestSuite) SetupTest() {
-	var err error
-	suite.app, err = simtestutil.Setup(
-		depinject.Configs(
-			configurator.NewAppConfig(
-				configurator.AuthModule(),
-				configurator.BankModule(),
-				configurator.StakingModule(),
-				configurator.TxModule(),
-				configurator.ConsensusModule(),
-				configurator.GenutilModule(),
-				configurator.FeegrantModule(),
-			),
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&suite.feegrantKeeper,
-		&suite.bankKeeper,
-		&suite.accountKeeper,
-		&suite.interfaceRegistry,
-		&suite.txConfig,
-		&suite.cdc,
-		&suite.legacyAmino,
-	)
-	suite.Require().NoError(err)
-
-	suite.ctx = suite.app.NewContextLegacy(false, cmtproto.Header{Time: time.Now()})
+	ta := testapp.Setup(suite.T())
+	suite.app = ta
+	suite.accountKeeper = ta.AccountKeeper
+	suite.bankKeeper = ta.BankKeeper
+	suite.cdc = ta.AppCodec()
+	suite.legacyAmino = ta.LegacyAmino()
+	suite.txConfig = ta.TxConfig()
+	suite.interfaceRegistry = ta.InterfaceRegistry()
+	suite.feegrantKeeper = *ta.FeeGrantKeeper
+	suite.ctx = testapp.NewContext(ta).WithBlockTime(time.Now().UTC())
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
@@ -87,6 +59,8 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 
 	// add coins to the accounts
 	for _, account := range accounts {
+		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
+		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		err := banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins)
 		suite.Require().NoError(err)
 	}
@@ -155,7 +129,7 @@ func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 
 	// execute operation
 	op := simulation.SimulateMsgGrantAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper)
-	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, ctx.ChainID())
 	require.NoError(err)
 
 	var msg feegrant.MsgGrantAllowance
@@ -198,7 +172,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 
 	// execute operation
 	op := simulation.SimulateMsgRevokeAllowance(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.feegrantKeeper, codecaddress.NewBech32Codec("cosmos"))
-	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, ctx.ChainID())
 	require.NoError(err)
 
 	var msg feegrant.MsgRevokeAllowance

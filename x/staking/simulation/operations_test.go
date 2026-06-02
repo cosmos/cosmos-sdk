@@ -9,29 +9,26 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/depinject"
-	sdklog "cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdkapp "github.com/cosmos/cosmos-sdk/app"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
@@ -46,13 +43,12 @@ type SimTestSuite struct {
 	txConfig      client.TxConfig
 	accounts      []simtypes.Account
 	ctx           sdk.Context
-	app           *runtime.App
+	app           *sdkapp.SDKApp
+	cdc           codec.Codec
 	bankKeeper    bankkeeper.Keeper
 	accountKeeper authkeeper.AccountKeeper
 	distrKeeper   distrkeeper.Keeper
 	stakingKeeper *stakingkeeper.Keeper
-
-	encCfg moduletestutil.TestEncodingConfig
 }
 
 func (s *SimTestSuite) SetupTest() {
@@ -61,63 +57,48 @@ func (s *SimTestSuite) SetupTest() {
 	s.r = rand.New(rand.NewSource(1))
 	accounts := simtypes.RandomAccounts(s.r, 4)
 
-	// create genesis accounts
-	senderPrivKey := secp256k1.GenPrivKey()
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
-	accs := []simtestutil.GenesisAccount{
-		{GenesisAccount: acc, Coins: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000)))},
-	}
-
-	// create validator set with single validator
-	account := accounts[0]
-	cmtPk, err := cryptocodec.ToCmtPubKeyInterface(account.PubKey)
-	require.NoError(s.T(), err)
+	// Use accounts[0] as the genesis validator, matching the pre-migration behavior
+	// where accounts[0].PubKey was passed as the validator consensus key.
+	account0 := accounts[0]
+	cmtPk, err := cryptocodec.ToCmtPubKeyInterface(account0.PubKey)
+	s.Require().NoError(err)
 	validator := cmttypes.NewValidator(cmtPk, 1)
+	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
-	startupCfg := simtestutil.DefaultStartUpConfig()
-	startupCfg.GenesisAccounts = accs
-	startupCfg.ValidatorSet = func() (*cmttypes.ValidatorSet, error) {
-		return cmttypes.NewValidatorSet([]*cmttypes.Validator{validator}), nil
+	// Create a genesis account for the delegation bookkeeping in SetupWithGenesisValSet.
+	senderPrivKey := secp256k1.GenPrivKey()
+	genAcc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	balance := banktypes.Balance{
+		Address: genAcc.GetAddress().String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000))),
 	}
 
-	var (
-		accountKeeper authkeeper.AccountKeeper
-		mintKeeper    mintkeeper.Keeper
-		bankKeeper    bankkeeper.Keeper
-		distrKeeper   distrkeeper.Keeper
-		stakingKeeper *stakingkeeper.Keeper
-	)
+	ta := testapp.SetupWithGenesisValSet(s.T(), valSet, []authtypes.GenesisAccount{genAcc}, balance)
 
-	cfg := depinject.Configs(
-		testutil.AppConfig,
-		depinject.Supply(sdklog.NewNopLogger()),
-	)
+	s.app = ta
+	s.txConfig = ta.TxConfig()
+	s.cdc = ta.AppCodec()
+	s.accountKeeper = ta.AccountKeeper
+	s.bankKeeper = ta.BankKeeper
+	s.distrKeeper = ta.DistrKeeper
+	s.stakingKeeper = ta.StakingKeeper
 
-	app, err := simtestutil.SetupWithConfiguration(cfg, startupCfg, &s.txConfig, &bankKeeper, &accountKeeper, &mintKeeper, &distrKeeper, &stakingKeeper)
-	require.NoError(s.T(), err)
+	ctx := testapp.NewContext(ta)
+	s.Require().NoError(ta.MintKeeper.Params.Set(ctx, minttypes.DefaultParams()))
+	s.Require().NoError(ta.MintKeeper.Minter.Set(ctx, minttypes.DefaultInitialMinter()))
 
-	ctx := app.NewContext(false)
-	s.Require().NoError(mintKeeper.Params.Set(ctx, minttypes.DefaultParams()))
-	s.Require().NoError(mintKeeper.Minter.Set(ctx, minttypes.DefaultInitialMinter()))
-
-	initAmt := stakingKeeper.TokensFromConsensusPower(ctx, 200)
+	initAmt := s.stakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	s.accounts = accounts
-	// remove genesis validator account
-	// add coins to the accounts
+	// add coins to the accounts (accounts[0] used as validator in tests, 1-3 as delegators)
 	for _, account := range accounts[1:] {
-		acc := accountKeeper.NewAccountWithAddress(ctx, account.Address)
-		accountKeeper.SetAccount(ctx, acc)
-		s.Require().NoError(banktestutil.FundAccount(ctx, bankKeeper, account.Address, initCoins))
+		acc := s.accountKeeper.NewAccountWithAddress(ctx, account.Address)
+		s.accountKeeper.SetAccount(ctx, acc)
+		s.Require().NoError(banktestutil.FundAccount(ctx, s.bankKeeper, account.Address, initCoins))
 	}
 
-	s.accountKeeper = accountKeeper
-	s.bankKeeper = bankKeeper
-	s.distrKeeper = distrKeeper
-	s.stakingKeeper = stakingKeeper
 	s.ctx = ctx
-	s.app = app
 }
 
 // TestWeightedOperations tests the weights of the operations.
@@ -126,10 +107,9 @@ func (s *SimTestSuite) TestWeightedOperations() {
 
 	s.ctx.WithChainID("test-chain")
 
-	cdc := s.encCfg.Codec
 	appParams := make(simtypes.AppParams)
 
-	weightedOps := simulation.WeightedOperations(appParams, cdc, s.txConfig, s.accountKeeper,
+	weightedOps := simulation.WeightedOperations(appParams, s.cdc, s.txConfig, s.accountKeeper,
 		s.bankKeeper, s.stakingKeeper,
 	)
 
@@ -168,7 +148,7 @@ func (s *SimTestSuite) TestSimulateMsgCreateValidator() {
 
 	// execute operation
 	op := simulation.SimulateMsgCreateValidator(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
-	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, s.ctx, s.accounts[1:], "")
+	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, s.ctx, s.accounts[1:], s.ctx.ChainID())
 	require.NoError(err)
 
 	var msg types.MsgCreateValidator
@@ -216,7 +196,7 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	// execute operation
 	op := simulation.SimulateMsgCancelUnbondingDelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
 	accounts := []simtypes.Account{delegator}
-	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, accounts, "")
+	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, accounts, ctx.ChainID())
 	require.NoError(err)
 
 	var msg types.MsgCancelUnbondingDelegation
@@ -244,7 +224,7 @@ func (s *SimTestSuite) TestSimulateMsgEditValidator() {
 
 	// execute operation
 	op := simulation.SimulateMsgEditValidator(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
-	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts, "")
+	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts, ctx.ChainID())
 	require.NoError(err)
 
 	var msg types.MsgEditValidator
@@ -265,7 +245,7 @@ func (s *SimTestSuite) TestSimulateMsgDelegate() {
 
 	// execute operation
 	op := simulation.SimulateMsgDelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
-	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts[1:], "")
+	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts[1:], ctx.ChainID())
 	require.NoError(err)
 
 	var msg types.MsgDelegate
@@ -306,7 +286,7 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 
 	// execute operation
 	op := simulation.SimulateMsgUndelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
-	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts, "")
+	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts, ctx.ChainID())
 	require.NoError(err)
 
 	var msg types.MsgUndelegate
@@ -353,7 +333,7 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 
 	// execute operation
 	op := simulation.SimulateMsgBeginRedelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
-	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts, "")
+	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, s.accounts, ctx.ChainID())
 	s.T().Logf("operation message: %v", operationMsg)
 	require.NoError(err)
 

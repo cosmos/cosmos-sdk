@@ -7,10 +7,7 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	"cosmossdk.io/core/appmodule"
-	store "cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,12 +16,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // ConsensusVersion defines the current x/slashing module consensus version.
@@ -185,51 +179,3 @@ func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Re
 	reg.Add(weights.Get("msg_unjail", 20), simulation.MsgUnjailFactory(am.keeper, am.stakingKeeper))
 }
 
-//
-// App Wiring Setup
-//
-
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	Config       *modulev1.Module
-	StoreService store.KVStoreService
-	Cdc          codec.Codec
-	LegacyAmino  *codec.LegacyAmino
-	Registry     cdctypes.InterfaceRegistry
-
-	AccountKeeper types.AccountKeeper
-	BankKeeper    types.BankKeeper
-	StakingKeeper types.StakingKeeper
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	Keeper keeper.Keeper
-	Module appmodule.AppModule
-	Hooks  staking.StakingHooksWrapper
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.StoreService, in.StakingKeeper, authority.String())
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.Registry)
-	return ModuleOutputs{
-		Keeper: k,
-		Module: m,
-		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
-	}
-}

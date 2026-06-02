@@ -8,10 +8,8 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	modulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -113,32 +111,3 @@ func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMe
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
-
-//
-// App Wiring Setup
-//
-
-func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	AccountKeeper keeper.AccountKeeper
-	BankKeeper    types.BankKeeper
-}
-
-type ModuleOutputs struct {
-	depinject.Out
-
-	Module appmodule.AppModule
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	m := NewAppModule(in.AccountKeeper, in.BankKeeper)
-
-	return ModuleOutputs{Module: m}
-}

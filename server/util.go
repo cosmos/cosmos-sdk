@@ -536,16 +536,6 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		}
 	}
 
-	snapshotStore, err := GetSnapshotStore(appOpts)
-	if err != nil {
-		panic(err)
-	}
-
-	snapshotOptions := snapshottypes.NewSnapshotOptions(
-		cast.ToUint64(appOpts.Get(FlagStateSyncSnapshotInterval)),
-		cast.ToUint32(appOpts.Get(FlagStateSyncSnapshotKeepRecent)),
-	)
-
 	defaultMempool := baseapp.SetMempool(mempool.NoOpMempool{})
 	if maxTxs := cast.ToInt(appOpts.Get(FlagMempoolMaxTxs)); maxTxs >= 0 {
 		defaultMempool = baseapp.SetMempool(
@@ -564,7 +554,20 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetInterBlockCache(cache),
 		baseapp.SetTrace(cast.ToBool(appOpts.Get(FlagTrace))),
 		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(FlagIndexEvents))),
-		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
+		func(app *baseapp.BaseApp) {
+			// GetSnapshotStore opens the snapshot DB — defer until the BaseApp
+			// option is applied so callers can construct config objects before
+			// the home directory is fully initialized.
+			snapshotStore, err := GetSnapshotStore(appOpts)
+			if err != nil {
+				panic(err)
+			}
+			snapshotOptions := snapshottypes.NewSnapshotOptions(
+				cast.ToUint64(appOpts.Get(FlagStateSyncSnapshotInterval)),
+				cast.ToUint32(appOpts.Get(FlagStateSyncSnapshotKeepRecent)),
+			)
+			baseapp.SetSnapshot(snapshotStore, snapshotOptions)(app)
+		},
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(FlagDisableIAVLFastNode))),
 		baseapp.SetIAVLSyncPruning(cast.ToBool(appOpts.Get(FlagIAVLSyncPruning))),

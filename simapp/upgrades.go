@@ -9,12 +9,12 @@ import (
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade
-// from v053 to v054.
+// from v054 to v055.
 //
 // NOTE: This upgrade defines a reference implementation of what an upgrade
 // could look like when an application is migrating from Cosmos SDK version
-// v0.53.x to v0.54.x.
-const UpgradeName = "v053-to-v054"
+// v0.54.x to v0.55.x.
+const UpgradeName = "v054-to-v055"
 
 var MyUpgrade = app.Upgrade[*SimApp]{
 	Name: UpgradeName,

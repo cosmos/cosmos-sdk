@@ -69,11 +69,16 @@ func NewIntegrationApp(
 		return &cmtabcitypes.ResponseInitChain{}, nil
 	})
 
-	bApp.SetBeginBlocker(func(_ sdk.Context) (sdk.BeginBlock, error) {
-		return moduleManager.BeginBlock(sdkCtx)
+	// the integration helper keeps module state on the externally provided
+	// sdkCtx (cms), but FinalizeBlock passes a ctx whose header reflects the
+	// current block. forward only the block time so begin and end blockers
+	// can act on time-dependent state (e.g. matured queues) while still
+	// operating on the shared store and the captured initial block height.
+	bApp.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
+		return moduleManager.BeginBlock(sdkCtx.WithBlockTime(ctx.BlockTime()))
 	})
-	bApp.SetEndBlocker(func(_ sdk.Context) (sdk.EndBlock, error) {
-		return moduleManager.EndBlock(sdkCtx)
+	bApp.SetEndBlocker(func(ctx sdk.Context) (sdk.EndBlock, error) {
+		return moduleManager.EndBlock(sdkCtx.WithBlockTime(ctx.BlockTime()))
 	})
 
 	router := baseapp.NewMsgServiceRouter()

@@ -588,7 +588,7 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorDelegations, 4238, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorDelegations, 4292, false)
 }
 
 func TestGRPCDelegatorValidator(t *testing.T) {

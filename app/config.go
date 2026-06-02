@@ -2,6 +2,8 @@ package app
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"slices"
 
 	"github.com/spf13/cast"
@@ -22,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -121,10 +124,33 @@ func DefaultSDKAppConfig(
 		panic("app options must include --home")
 	}
 
+	// Resolve chain-id with priority: explicit flag > genesis file > app name.
+	// Injecting the resolved value into wrappedOpts means DefaultBaseappOptions
+	// always receives a concrete chain-id without needing to open the genesis
+	// file itself, preserving correct chain-id for both running nodes (which
+	// have a genesis) and pre-genesis unit-test construction (which do not).
+	chainID := cast.ToString(opts.Get(flags.FlagChainID))
+	if chainID == "" {
+		homeDir := cast.ToString(opts.Get(flags.FlagHome))
+		genesisPathCfg, _ := opts.Get("genesis_file").(string)
+		if genesisPathCfg == "" {
+			genesisPathCfg = filepath.Join("config", "genesis.json")
+		}
+		if reader, err := os.Open(filepath.Join(homeDir, genesisPathCfg)); err == nil {
+			if id, err := genutiltypes.ParseChainIDFromGenesis(reader); err == nil && id != "" {
+				chainID = id
+			}
+			reader.Close()
+		}
+	}
+	if chainID == "" {
+		chainID = name
+	}
+
 	wrappedOpts := appOptionsWithDefaults{
 		base: opts,
 		defaults: map[string]any{
-			flags.FlagChainID: name,
+			flags.FlagChainID: chainID,
 		},
 	}
 

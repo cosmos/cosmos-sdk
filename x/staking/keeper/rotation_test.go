@@ -27,7 +27,7 @@ func (s *KeeperTestSuite) bondedValidator(pk cryptotypes.PubKey) (stakingtypes.V
 	return v, valAddr
 }
 
-func (s *KeeperTestSuite) TestConsKeyRotationUpdates() {
+func (s *KeeperTestSuite) TestConsKeyRotationUpdate() {
 	require := s.Require()
 
 	s.T().Run("emits old at zero power and new at full power without mutating state", func(t *testing.T) {
@@ -108,36 +108,10 @@ func (s *KeeperTestSuite) TestApplyConsKeyRotationState() {
 	})
 }
 
-func (s *KeeperTestSuite) TestPendingConsKeyRotations() {
+func (s *KeeperTestSuite) TestApplyConsKeyRotations() {
 	require := s.Require()
 
-	s.T().Run("empty queue returns empty map", func(t *testing.T) {
-		s.SetupTest()
-
-		got, err := s.stakingKeeper.PendingConsKeyRotations(s.ctx)
-		require.NoError(err)
-		require.Empty(got)
-	})
-
-	s.T().Run("entry in flight is returned keyed by valAddr", func(t *testing.T) {
-		s.SetupTest()
-
-		oldPk := ed25519.GenPrivKey().PubKey()
-		newPk := ed25519.GenPrivKey().PubKey()
-		_, valAddr := s.bondedValidator(oldPk)
-
-		s.ctx = s.ctx.WithBlockHeight(100)
-		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
-
-		got, err := s.stakingKeeper.PendingConsKeyRotations(s.ctx)
-		require.NoError(err)
-		require.Len(got, 1)
-		pk, ok := got[string(valAddr)]
-		require.True(ok)
-		require.True(pk.Equals(newPk))
-	})
-
-	s.T().Run("drained entry is no longer returned", func(t *testing.T) {
+	s.T().Run("at apply height swaps state", func(t *testing.T) {
 		s.SetupTest()
 
 		oldPk := ed25519.GenPrivKey().PubKey()
@@ -148,78 +122,7 @@ func (s *KeeperTestSuite) TestPendingConsKeyRotations() {
 		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
 
 		s.ctx = s.ctx.WithBlockHeight(100 + stakingtypes.ConsensusUpdateDelay)
-		_, err := s.stakingKeeper.ProcessConsKeyRotations(s.ctx, sdk.DefaultPowerReduction)
-		require.NoError(err)
-
-		got, err := s.stakingKeeper.PendingConsKeyRotations(s.ctx)
-		require.NoError(err)
-		require.Empty(got)
-	})
-}
-
-func (s *KeeperTestSuite) TestProcessConsKeyRotations() {
-	require := s.Require()
-
-	s.T().Run("at write height emits rotation pair, drain is no-op", func(t *testing.T) {
-		s.SetupTest()
-
-		oldPk := ed25519.GenPrivKey().PubKey()
-		newPk := ed25519.GenPrivKey().PubKey()
-		_, valAddr := s.bondedValidator(oldPk)
-
-		s.ctx = s.ctx.WithBlockHeight(100)
-		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
-
-		updates, err := s.stakingKeeper.ProcessConsKeyRotations(s.ctx, sdk.DefaultPowerReduction)
-		require.NoError(err)
-		require.Len(updates, 2)
-		require.Equal(int64(0), updates[0].Power)
-		require.Equal(int64(10), updates[1].Power)
-
-		// state is still unchanged: drain has not yet matured
-		stored, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
-		require.NoError(err)
-		gotConsAddr, err := stored.GetConsAddr()
-		require.NoError(err)
-		require.Equal(sdk.ConsAddress(oldPk.Address()).Bytes(), gotConsAddr)
-	})
-
-	s.T().Run("between write and apply heights both passes are no-ops", func(t *testing.T) {
-		s.SetupTest()
-
-		oldPk := ed25519.GenPrivKey().PubKey()
-		newPk := ed25519.GenPrivKey().PubKey()
-		_, valAddr := s.bondedValidator(oldPk)
-
-		s.ctx = s.ctx.WithBlockHeight(100)
-		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
-
-		s.ctx = s.ctx.WithBlockHeight(100 + stakingtypes.ConsensusUpdateDelay - 1)
-		updates, err := s.stakingKeeper.ProcessConsKeyRotations(s.ctx, sdk.DefaultPowerReduction)
-		require.NoError(err)
-		require.Empty(updates)
-
-		stored, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
-		require.NoError(err)
-		gotConsAddr, err := stored.GetConsAddr()
-		require.NoError(err)
-		require.Equal(sdk.ConsAddress(oldPk.Address()).Bytes(), gotConsAddr)
-	})
-
-	s.T().Run("at apply height drain swaps state and emit is no-op", func(t *testing.T) {
-		s.SetupTest()
-
-		oldPk := ed25519.GenPrivKey().PubKey()
-		newPk := ed25519.GenPrivKey().PubKey()
-		_, valAddr := s.bondedValidator(oldPk)
-
-		s.ctx = s.ctx.WithBlockHeight(100)
-		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
-
-		s.ctx = s.ctx.WithBlockHeight(100 + stakingtypes.ConsensusUpdateDelay)
-		updates, err := s.stakingKeeper.ProcessConsKeyRotations(s.ctx, sdk.DefaultPowerReduction)
-		require.NoError(err)
-		require.Empty(updates)
+		require.NoError(s.stakingKeeper.ApplyConsKeyRotations(s.ctx))
 
 		// swap is now visible in state
 		stored, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
@@ -244,30 +147,6 @@ func (s *KeeperTestSuite) TestProcessConsKeyRotations() {
 		require.True(hasOld)
 	})
 
-	s.T().Run("emit skips removed validator", func(t *testing.T) {
-		s.SetupTest()
-
-		oldPk := ed25519.GenPrivKey().PubKey()
-		newPk := ed25519.GenPrivKey().PubKey()
-		v, valAddr := s.bondedValidator(oldPk)
-
-		s.ctx = s.ctx.WithBlockHeight(100)
-		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
-
-		// drop the validator in the same block, after the rotation is queued
-		// but before emit runs. RemoveValidator only works on unbonded records.
-		v.Status = stakingtypes.Unbonded
-		v.Tokens = math.ZeroInt()
-		v.DelegatorShares = math.LegacyZeroDec()
-		require.NoError(s.stakingKeeper.SetValidator(s.ctx, v))
-		require.NoError(s.stakingKeeper.RemoveValidator(s.ctx, valAddr))
-
-		// still at the write height, so emit runs against the queued entry
-		updates, err := s.stakingKeeper.ProcessConsKeyRotations(s.ctx, sdk.DefaultPowerReduction)
-		require.NoError(err)
-		require.Empty(updates)
-	})
-
 	s.T().Run("drain skips removed validator and still clears queue and lock", func(t *testing.T) {
 		s.SetupTest()
 
@@ -287,9 +166,7 @@ func (s *KeeperTestSuite) TestProcessConsKeyRotations() {
 		require.NoError(s.stakingKeeper.RemoveValidator(s.ctx, valAddr))
 
 		s.ctx = s.ctx.WithBlockHeight(100 + stakingtypes.ConsensusUpdateDelay)
-		updates, err := s.stakingKeeper.ProcessConsKeyRotations(s.ctx, sdk.DefaultPowerReduction)
-		require.NoError(err)
-		require.Empty(updates)
+		require.NoError(s.stakingKeeper.ApplyConsKeyRotations(s.ctx))
 
 		hasNew, err := s.stakingKeeper.IsConsAddrLockedByRotation(s.ctx, sdk.ConsAddress(newPk.Address()))
 		require.NoError(err)

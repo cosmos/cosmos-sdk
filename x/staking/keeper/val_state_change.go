@@ -255,7 +255,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
 	}
 
-	updates, err = k.rewriteValidatorUpdatesForConsKeyRotations(ctx, pendingRotations, updates)
+	updates, err = k.ProcessValidatorUpdatesForConsKeyRotations(ctx, pendingRotations, updates)
 	if err != nil {
 		return nil, err
 	}

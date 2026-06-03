@@ -4,11 +4,14 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -172,6 +175,398 @@ func (s *KeeperTestSuite) TestApplyConsKeyRotations() {
 		require.NoError(err)
 		require.False(hasNew)
 	})
+}
+
+func (s *KeeperTestSuite) TestPendingConsKeyRotationUpdates() {
+	require := s.Require()
+
+	const H = int64(100)
+
+	oldPk := ed25519.GenPrivKey().PubKey()
+	newPk := ed25519.GenPrivKey().PubKey()
+	valAddr := sdk.ValAddress(oldPk.Address())
+
+	testCases := []struct {
+		name           string                                       // subtest name
+		setup          func(t *testing.T)                           // state setup before scanning
+		lastValidators map[string]int64                             // last validator powers keyed by operator address
+		wantRotations  []stakingkeeper.PendingConsKeyRotationUpdate // expected pending rotations
+	}{
+		{
+			name: "future rotation is skipped before validator lookup",
+			setup: func(t *testing.T) {
+				t.Helper()
+
+				// Queue a rotation for a missing validator, then scan before the
+				// Comet-visible emit height so Pending... exits before lookup.
+				s.ctx = s.ctx.WithBlockHeight(H)
+				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+				s.ctx = s.ctx.WithBlockHeight(H - 1)
+			},
+			lastValidators: map[string]int64{string(valAddr): 10},
+			wantRotations:  nil,
+		},
+		{
+			name: "emit height rotation carries last validator power",
+			setup: func(t *testing.T) {
+				t.Helper()
+
+				// Queue a rotation for an existing bonded validator and scan at
+				// the emit height, before SDK state applies the new key.
+				_, valAddr = s.bondedValidator(oldPk)
+				s.ctx = s.ctx.WithBlockHeight(H)
+				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+			},
+			lastValidators: map[string]int64{string(valAddr): 10},
+			wantRotations: []stakingkeeper.PendingConsKeyRotationUpdate{{
+				OldPubKey:  oldPk,
+				NewPubKey:  newPk,
+				EmitHeight: H,
+				LastPower:  10,
+			}},
+		},
+		{
+			name: "in-flight rotation remains visible after emit height",
+			setup: func(t *testing.T) {
+				t.Helper()
+
+				// Queue a rotation for an existing validator, then scan after
+				// the emit height but before the apply height drains the queue.
+				_, valAddr = s.bondedValidator(oldPk)
+				s.ctx = s.ctx.WithBlockHeight(H)
+				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+				s.ctx = s.ctx.WithBlockHeight(H + 1)
+			},
+			lastValidators: map[string]int64{string(valAddr): 10},
+			wantRotations: []stakingkeeper.PendingConsKeyRotationUpdate{{
+				OldPubKey:  oldPk,
+				NewPubKey:  newPk,
+				EmitHeight: H,
+				LastPower:  10,
+			}},
+		},
+		{
+			name: "production drain at apply height removes pending rotation",
+			setup: func(t *testing.T) {
+				t.Helper()
+
+				// Queue a rotation, advance to the SDK apply height, and drain
+				// mature rotations before scanning, matching EndBlock order.
+				_, valAddr = s.bondedValidator(oldPk)
+				s.ctx = s.ctx.WithBlockHeight(H)
+				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+				s.ctx = s.ctx.WithBlockHeight(H + stakingtypes.ConsensusUpdateDelay)
+				require.NoError(s.stakingKeeper.ApplyConsKeyRotations(s.ctx))
+			},
+			lastValidators: map[string]int64{string(valAddr): 10},
+		},
+		{
+			name: "missing validator is skipped",
+			setup: func(t *testing.T) {
+				t.Helper()
+
+				// Queue a rotation for an operator address with no validator
+				// record and scan at the emit height.
+				s.ctx = s.ctx.WithBlockHeight(H)
+				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+			},
+			lastValidators: map[string]int64{string(valAddr): 10},
+		},
+		{
+			name: "validator outside last set is returned with zero last power",
+			setup: func(t *testing.T) {
+				t.Helper()
+
+				// Queue a rotation for an existing validator but pass no last
+				// validator power entry, modeling an inactive validator.
+				_, valAddr = s.bondedValidator(oldPk)
+				s.ctx = s.ctx.WithBlockHeight(H)
+				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+			},
+			wantRotations: []stakingkeeper.PendingConsKeyRotationUpdate{{
+				OldPubKey:  oldPk,
+				NewPubKey:  newPk,
+				EmitHeight: H,
+				LastPower:  0,
+			}},
+		},
+		{
+			name: "last power comes from last validator set not current tokens",
+			setup: func(t *testing.T) {
+				t.Helper()
+
+				// Queue a rotation for a validator whose current tokens imply
+				// power 20; Pending... should still report lastValidators power.
+				validator, addr := s.bondedValidator(oldPk)
+				valAddr = addr
+				validator.Tokens = sdk.TokensFromConsensusPower(20, sdk.DefaultPowerReduction)
+				validator.DelegatorShares = math.LegacyNewDecFromInt(validator.Tokens)
+				require.NoError(s.stakingKeeper.SetValidator(s.ctx, validator))
+				s.ctx = s.ctx.WithBlockHeight(H)
+				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+			},
+			lastValidators: map[string]int64{string(valAddr): 10},
+			wantRotations: []stakingkeeper.PendingConsKeyRotationUpdate{{
+				OldPubKey:  oldPk,
+				NewPubKey:  newPk,
+				EmitHeight: H,
+				LastPower:  10,
+			}},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			s.SetupTest()
+			tc.setup(t)
+
+			rotations, err := s.stakingKeeper.PendingConsKeyRotationUpdates(s.ctx, tc.lastValidators)
+			require.NoError(err)
+			require.Equal(tc.wantRotations, rotations)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestProcessValidatorUpdatesForConsKeyRotations() {
+	require := s.Require()
+
+	const H = int64(100)
+	power0 := int64(0)
+	power10 := int64(10)
+	power25 := int64(25)
+
+	oldPk := ed25519.GenPrivKey().PubKey()
+	oldCmtPk := cmtPk(s.T(), oldPk)
+
+	newPk := ed25519.GenPrivKey().PubKey()
+	newCmtPk := cmtPk(s.T(), newPk)
+
+	oldPk2 := ed25519.GenPrivKey().PubKey()
+	oldCmtPk2 := cmtPk(s.T(), oldPk2)
+
+	newPk2 := ed25519.GenPrivKey().PubKey()
+	newCmtPk2 := cmtPk(s.T(), newPk2)
+
+	otherPk := ed25519.GenPrivKey().PubKey()
+	otherCmtPk := cmtPk(s.T(), otherPk)
+
+	trailingPk := ed25519.GenPrivKey().PubKey()
+	trailingCmtPk := cmtPk(s.T(), trailingPk)
+
+	testCases := []struct {
+		name             string
+		height           int64
+		pendingRotations []stakingkeeper.PendingConsKeyRotationUpdate
+		previousUpdates  []abci.ValidatorUpdate
+		wantErr          bool
+		wantUpdates      []abci.ValidatorUpdate
+	}{
+		{
+			name:            "no rotations returns normal updates unchanged",
+			height:          H,
+			previousUpdates: []abci.ValidatorUpdate{{PubKey: otherCmtPk, Power: 7}},
+			wantUpdates:     []abci.ValidatorUpdate{{PubKey: otherCmtPk, Power: 7}},
+		},
+		{
+			name:   "baseline rotation emits old zero and new last power",
+			height: H,
+			pendingRotations: []stakingkeeper.PendingConsKeyRotationUpdate{{
+				OldPubKey:  oldPk,
+				NewPubKey:  newPk,
+				EmitHeight: H,
+				LastPower:  10,
+			}},
+			wantUpdates: []abci.ValidatorUpdate{
+				{PubKey: oldCmtPk, Power: 0},
+				{PubKey: newCmtPk, Power: 10},
+			},
+		},
+		{
+			name:   "same-height positive update becomes rotation pair at updated power",
+			height: H,
+			pendingRotations: []stakingkeeper.PendingConsKeyRotationUpdate{{
+				OldPubKey:  oldPk,
+				NewPubKey:  newPk,
+				EmitHeight: H,
+				LastPower:  10,
+			}},
+			previousUpdates: []abci.ValidatorUpdate{{PubKey: oldCmtPk, Power: power25}},
+			wantUpdates: []abci.ValidatorUpdate{
+				{PubKey: oldCmtPk, Power: 0},
+				{PubKey: newCmtPk, Power: 25},
+			},
+		},
+		{
+			name:   "same-height zero update keeps old zero and does not add new zero",
+			height: H,
+			pendingRotations: []stakingkeeper.PendingConsKeyRotationUpdate{{
+				OldPubKey:  oldPk,
+				NewPubKey:  newPk,
+				EmitHeight: H,
+				LastPower:  10,
+			}},
+			previousUpdates: []abci.ValidatorUpdate{{PubKey: oldCmtPk, Power: power0}},
+			wantUpdates:     []abci.ValidatorUpdate{{PubKey: oldCmtPk, Power: 0}},
+		},
+		{
+			name:   "post-emit positive update is translated to new key",
+			height: H + 1,
+			pendingRotations: []stakingkeeper.PendingConsKeyRotationUpdate{{
+				OldPubKey:  oldPk,
+				NewPubKey:  newPk,
+				EmitHeight: H,
+				LastPower:  10,
+			}},
+			previousUpdates: []abci.ValidatorUpdate{{PubKey: oldCmtPk, Power: power25}},
+			wantUpdates:     []abci.ValidatorUpdate{{PubKey: newCmtPk, Power: 25}},
+		},
+		{
+			name:   "post-emit zero update is translated to new zero",
+			height: H + 1,
+			pendingRotations: []stakingkeeper.PendingConsKeyRotationUpdate{{
+				OldPubKey:  oldPk,
+				NewPubKey:  newPk,
+				EmitHeight: H,
+				LastPower:  10,
+			}},
+			previousUpdates: []abci.ValidatorUpdate{{PubKey: oldCmtPk, Power: power0}},
+			wantUpdates:     []abci.ValidatorUpdate{{PubKey: newCmtPk, Power: 0}},
+		},
+		{
+			name:   "post-emit rotation without matching update leaves unrelated updates unchanged",
+			height: H + 1,
+			pendingRotations: []stakingkeeper.PendingConsKeyRotationUpdate{{
+				OldPubKey:  oldPk,
+				NewPubKey:  newPk,
+				EmitHeight: H,
+				LastPower:  10,
+			}},
+			previousUpdates: []abci.ValidatorUpdate{{PubKey: otherCmtPk, Power: 7}},
+			wantUpdates:     []abci.ValidatorUpdate{{PubKey: otherCmtPk, Power: 7}},
+		},
+		{
+			name:   "validator outside last set entering active set is translated to new key",
+			height: H,
+			pendingRotations: []stakingkeeper.PendingConsKeyRotationUpdate{{
+				OldPubKey:  oldPk,
+				NewPubKey:  newPk,
+				EmitHeight: H,
+				LastPower:  0,
+			}},
+			previousUpdates: []abci.ValidatorUpdate{{PubKey: oldCmtPk, Power: power25}},
+			wantUpdates:     []abci.ValidatorUpdate{{PubKey: newCmtPk, Power: 25}},
+		},
+		{
+			name:   "baseline rotation is appended after non-rotating updates",
+			height: H,
+			pendingRotations: []stakingkeeper.PendingConsKeyRotationUpdate{{
+				OldPubKey:  oldPk,
+				NewPubKey:  newPk,
+				EmitHeight: H,
+				LastPower:  10,
+			}},
+			previousUpdates: []abci.ValidatorUpdate{
+				{PubKey: otherCmtPk, Power: 7},
+			},
+			wantUpdates: []abci.ValidatorUpdate{
+				{PubKey: otherCmtPk, Power: 7},
+				{PubKey: oldCmtPk, Power: 0},
+				{PubKey: newCmtPk, Power: 10},
+			},
+		},
+		{
+			name:   "rewritten updates preserve the replaced update position",
+			height: H,
+			pendingRotations: []stakingkeeper.PendingConsKeyRotationUpdate{{
+				OldPubKey:  oldPk,
+				NewPubKey:  newPk,
+				EmitHeight: H,
+				LastPower:  10,
+			}},
+			previousUpdates: []abci.ValidatorUpdate{
+				{PubKey: otherCmtPk, Power: 7},
+				{PubKey: oldCmtPk, Power: power25},
+				{PubKey: trailingCmtPk, Power: 9},
+			},
+			wantUpdates: []abci.ValidatorUpdate{
+				{PubKey: otherCmtPk, Power: 7},
+				{PubKey: oldCmtPk, Power: 0},
+				{PubKey: newCmtPk, Power: 25},
+				{PubKey: trailingCmtPk, Power: 9},
+			},
+		},
+		{
+			name:   "multiple baseline rotations are appended in rotation order",
+			height: H,
+			pendingRotations: []stakingkeeper.PendingConsKeyRotationUpdate{
+				{
+					OldPubKey:  oldPk,
+					NewPubKey:  newPk,
+					EmitHeight: H,
+					LastPower:  10,
+				},
+				{
+					OldPubKey:  oldPk2,
+					NewPubKey:  newPk2,
+					EmitHeight: H,
+					LastPower:  6,
+				},
+			},
+			wantUpdates: []abci.ValidatorUpdate{
+				{PubKey: oldCmtPk, Power: 0},
+				{PubKey: newCmtPk, Power: 10},
+				{PubKey: oldCmtPk2, Power: 0},
+				{PubKey: newCmtPk2, Power: 6},
+			},
+		},
+		{
+			name:   "duplicate normal updates return an error",
+			height: H,
+			pendingRotations: []stakingkeeper.PendingConsKeyRotationUpdate{{
+				OldPubKey:  oldPk,
+				NewPubKey:  newPk,
+				EmitHeight: H,
+				LastPower:  10,
+			}},
+			previousUpdates: []abci.ValidatorUpdate{
+				{PubKey: oldCmtPk, Power: power10},
+				{PubKey: oldCmtPk, Power: power10},
+			},
+			wantErr: true,
+		},
+		{
+			name:   "invalid normal update pubkey returns an error",
+			height: H,
+			pendingRotations: []stakingkeeper.PendingConsKeyRotationUpdate{{
+				OldPubKey:  oldPk,
+				NewPubKey:  newPk,
+				EmitHeight: H,
+				LastPower:  10,
+			}},
+			previousUpdates: []abci.ValidatorUpdate{{Power: 1}},
+			wantErr:         true,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			s.SetupTest()
+
+			s.ctx = s.ctx.WithBlockHeight(tc.height)
+			processed, err := s.stakingKeeper.ProcessValidatorUpdatesForConsKeyRotations(s.ctx, tc.pendingRotations, tc.previousUpdates)
+			if tc.wantErr {
+				require.Error(err)
+				return
+			}
+			require.NoError(err)
+
+			require.Len(processed, len(tc.wantUpdates))
+			for i, want := range tc.wantUpdates {
+				require.Equal(want.PubKey, processed[i].PubKey)
+				require.Equal(want.Power, processed[i].Power)
+			}
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestPruneMaturedConsKeyRotations() {

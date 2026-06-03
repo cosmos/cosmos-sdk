@@ -192,31 +192,38 @@ func (k Keeper) ApplyConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress
 // PendingConsKeyRotationUpdate stores the rotation metadata needed to align
 // staking-side validator updates with CometBFT's delayed key-rotation view.
 type PendingConsKeyRotationUpdate struct {
-	oldPubKey  cryptotypes.PubKey
-	newPubKey  cryptotypes.PubKey
-	emitHeight int64
-	lastPower  int64
+	// OldPubKey is the consensus key currently stored in SDK validator state.
+	OldPubKey cryptotypes.PubKey
+
+	// NewPubKey is the pending consensus key CometBFT should track for the
+	// validator once the rotation update is emitted.
+	NewPubKey cryptotypes.PubKey
+
+	// EmitHeight is the EndBlock height that should emit the old@0,new@power
+	// rotation pair.
+	EmitHeight int64
+
+	// LastPower is the validator power from the last Comet-visible validator
+	// set, keyed by operator address.
+	LastPower int64
 }
 
 // oldAddr returns the Comet validator address for the pre-rotation key.
 func (r PendingConsKeyRotationUpdate) oldAddr() string {
-	return string(r.oldPubKey.Address())
+	return string(r.OldPubKey.Address())
 }
 
 // shouldEmitPowerUpdates returns whether the rotation should emit
 // old@0,new@power at height.
 func (r PendingConsKeyRotationUpdate) shouldEmitPowerUpdates(height int64) bool {
-	return r.emitHeight == height && r.lastPower > 0
+	return r.EmitHeight == height && r.LastPower > 0
 }
 
 // PendingConsKeyRotationUpdates returns rotation metadata for in-flight
 // rotations whose CometBFT update has been or should be emitted by the current
 // EndBlock. It must be called after ApplyConsKeyRotations so matured entries
 // have already been drained.
-func (k Keeper) PendingConsKeyRotationUpdates(
-	ctx context.Context,
-	last map[string]int64,
-) (updates []PendingConsKeyRotationUpdate, err error) {
+func (k Keeper) PendingConsKeyRotationUpdates(ctx context.Context, last map[string]int64) (updates []PendingConsKeyRotationUpdate, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	currentHeight := sdk.UnwrapSDKContext(ctx).BlockHeight()
 
@@ -262,19 +269,19 @@ func (k Keeper) PendingConsKeyRotationUpdates(
 
 		lastPower := last[string(valAddr)]
 		updates = append(updates, PendingConsKeyRotationUpdate{
-			oldPubKey:  oldPubKey,
-			newPubKey:  newPubKey,
-			emitHeight: emitHeight,
-			lastPower:  lastPower,
+			OldPubKey:  oldPubKey,
+			NewPubKey:  newPubKey,
+			EmitHeight: emitHeight,
+			LastPower:  lastPower,
 		})
 	}
 	return updates, nil
 }
 
-// rewriteValidatorUpdatesForConsKeyRotations rewrites validator updates that
+// ProcessValidatorUpdatesForConsKeyRotations rewrites validator updates that
 // reference old consensus keys so the returned batch matches CometBFT's
 // key-rotation timeline.
-func (k Keeper) rewriteValidatorUpdatesForConsKeyRotations(
+func (k Keeper) ProcessValidatorUpdatesForConsKeyRotations(
 	ctx context.Context,
 	rotations []PendingConsKeyRotationUpdate,
 	updates []abci.ValidatorUpdate,
@@ -319,14 +326,14 @@ func (k Keeper) rewriteValidatorUpdatesForConsKeyRotations(
 		// we should emit power updates for this validator at this height
 
 		// set the key they are rotating away from to 0
-		oldUpdate, err := validatorUpdateForPubKey(rotation.oldPubKey, 0)
+		oldUpdate, err := validatorUpdateForPubKey(rotation.OldPubKey, 0)
 		if err != nil {
 			return nil, err
 		}
 
 		// and set the new key they are rotating to to the validators last seen
 		// power
-		newUpdate, err := validatorUpdateForPubKey(rotation.newPubKey, rotation.lastPower)
+		newUpdate, err := validatorUpdateForPubKey(rotation.NewPubKey, rotation.LastPower)
 		if err != nil {
 			return nil, err
 		}
@@ -352,7 +359,7 @@ func rotatedValidatorUpdates(
 	case update.Power == 0:
 		// The rotation was already emitted in an earlier EndBlock, so Comet now
 		// tracks the new key even though SDK state still stores the old key.
-		newUpdate, err := validatorUpdateForPubKey(rotation.newPubKey, 0)
+		newUpdate, err := validatorUpdateForPubKey(rotation.NewPubKey, 0)
 		if err != nil {
 			return nil, err
 		}
@@ -360,7 +367,7 @@ func rotatedValidatorUpdates(
 	case rotation.shouldEmitPowerUpdates(currentHeight):
 		// Normal staking emitted old@power at the same height the rotation pair
 		// is due. Convert it into the Comet key swap old@0, new@power.
-		newUpdate, err := validatorUpdateForPubKey(rotation.newPubKey, update.Power)
+		newUpdate, err := validatorUpdateForPubKey(rotation.NewPubKey, update.Power)
 		if err != nil {
 			return nil, err
 		}
@@ -371,7 +378,7 @@ func rotatedValidatorUpdates(
 	default:
 		// The key swap was already emitted to Comet, but the SDK-side key swap
 		// has not reached applyHeight. Translate old@power to new@power.
-		newUpdate, err := validatorUpdateForPubKey(rotation.newPubKey, update.Power)
+		newUpdate, err := validatorUpdateForPubKey(rotation.NewPubKey, update.Power)
 		if err != nil {
 			return nil, err
 		}

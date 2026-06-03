@@ -277,4 +277,6 @@ require (
 
 replace github.com/cosmos/cosmos-sdk => ../..
 
+replace cosmossdk.io/client/v2 => ../../client/v2
+
 replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.39.0-rc1.0.20260527154549-606b4197148f

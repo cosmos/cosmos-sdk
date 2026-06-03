@@ -26,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft/simulation"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -90,7 +89,7 @@ func setupWithNFT(t *testing.T) (*sdkapp.SDKApp, nftkeeper.Keeper) {
 	ta.AccountKeeper.AddModuleAccountPerm(nft.ModuleName, nil)
 
 	nftStoreKey := storetypes.NewKVStoreKey(nft.StoreKey)
-	nftSvc := runtime.NewKVStoreService(nftStoreKey)
+	nftSvc := sdk.NewKVStoreService(nftStoreKey)
 	k := nftkeeper.NewKeeper(nftSvc, ta.AppCodec(), ta.AccountKeeper, ta.BankKeeper)
 	nftMod := nftAppModule{
 		AppModule: nftmodule.NewAppModule(ta.AppCodec(), k, ta.AccountKeeper, ta.BankKeeper, ta.InterfaceRegistry()),

@@ -14,7 +14,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
 // AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
@@ -39,8 +38,8 @@ type AppOptions struct {
 
 	// AddressCodec is the address codec to use for the app.
 	AddressCodec          address.Codec
-	ValidatorAddressCodec runtime.ValidatorAddressCodec
-	ConsensusAddressCodec runtime.ConsensusAddressCodec
+	ValidatorAddressCodec address.Codec
+	ConsensusAddressCodec address.Codec
 
 	// ClientCtx contains the necessary information needed to execute the commands.
 	ClientCtx client.Context

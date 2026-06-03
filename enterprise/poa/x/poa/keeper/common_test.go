@@ -31,7 +31,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -101,7 +100,7 @@ func setupTest(t *testing.T) *testFixture {
 	cdc := encCfg.Codec
 
 	// Setup auth keeper
-	authStoreService := runtime.NewKVStoreService(authStoreKey)
+	authStoreService := sdk.NewKVStoreService(authStoreKey)
 	maccPerms := map[string][]string{
 		govtypes.ModuleName:        {},
 		authtypes.FeeCollectorName: {authtypes.Minter},
@@ -117,19 +116,19 @@ func setupTest(t *testing.T) *testFixture {
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	bankStoreService := runtime.NewKVStoreService(bankStoreKey)
+	bankStoreService := sdk.NewKVStoreService(bankStoreKey)
 	bankKeeper := bankkeeper.NewBaseKeeper(cdc, bankStoreService, authKeeper, BlockedAddresses(maccPerms), authtypes.NewModuleAddress(govtypes.ModuleName).String(), log.NewTestLogger(t))
 
 	// Setup POA keeper
-	poaStoreService := runtime.NewKVStoreService(storeKey)
-	poaTransientStoreService := runtime.NewTransientStoreService(tkey)
+	poaStoreService := sdk.NewKVStoreService(storeKey)
+	poaTransientStoreService := sdk.NewTransientStoreService(tkey)
 	poaKeeper := NewKeeper(cdc, poaStoreService, poaTransientStoreService, authKeeper, bankKeeper)
 
 	// Create the POA tally function
 	tallyFn := NewPOACalculateVoteResultsAndVotingPowerFn(*poaKeeper)
 
 	// Setup gov keeper with the POA tally function
-	govStoreService := runtime.NewKVStoreService(govStoreKey)
+	govStoreService := sdk.NewKVStoreService(govStoreKey)
 	msgRouter := baseapp.NewMsgServiceRouter()
 	govKeeper := govkeeper.NewKeeper(
 		cdc,

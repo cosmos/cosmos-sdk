@@ -5,18 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 
-	coreheader "cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -70,31 +67,6 @@ func CreateRandomValidatorSet() (*cmttypes.ValidatorSet, error) {
 type GenesisAccount struct {
 	authtypes.GenesisAccount
 	Coins sdk.Coins
-}
-
-// NextBlock starts a new block.
-func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.Context, error) {
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: ctx.BlockHeight(), Time: ctx.BlockTime()})
-	if err != nil {
-		return sdk.Context{}, err
-	}
-	_, err = app.Commit()
-	if err != nil {
-		return sdk.Context{}, err
-	}
-
-	newBlockTime := ctx.BlockTime().Add(jumpTime)
-
-	header := ctx.BlockHeader()
-	header.Time = newBlockTime
-	header.Height++
-
-	newCtx := app.BaseApp.NewNextBlockContext(header).WithHeaderInfo(coreheader.Info{
-		Height: header.Height,
-		Time:   header.Time,
-	})
-
-	return newCtx, nil
 }
 
 // GenesisStateWithValSet returns a new genesis state with the validator set

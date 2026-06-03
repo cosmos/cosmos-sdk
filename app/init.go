@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cast"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -100,9 +99,9 @@ func (app *SDKApp) initConsensusModule(cfg SDKAppConfig) {
 	// set the BaseApp's parameter store
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 		app.encodingConfig.Codec,
-		runtime.NewKVStoreService(app.mustGetStoreKey(consensusparamtypes.StoreKey)),
+		sdk.NewKVStoreService(app.mustGetStoreKey(consensusparamtypes.StoreKey)),
 		cfg.ModuleAuthority,
-		runtime.EventService{},
+		sdk.EventService{},
 	)
 	app.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
@@ -121,7 +120,7 @@ func (app *SDKApp) initAccountModule(cfg SDKAppConfig) {
 
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		app.encodingConfig.Codec,
-		runtime.NewKVStoreService(app.mustGetStoreKey(authtypes.StoreKey)),
+		sdk.NewKVStoreService(app.mustGetStoreKey(authtypes.StoreKey)),
 		authtypes.ProtoBaseAccount,
 		app.moduleAccountPerms,
 		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
@@ -147,7 +146,7 @@ func (app *SDKApp) initBankModule(cfg SDKAppConfig) {
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		app.encodingConfig.Codec,
-		runtime.NewKVStoreService(app.mustGetStoreKey(banktypes.StoreKey)),
+		sdk.NewKVStoreService(app.mustGetStoreKey(banktypes.StoreKey)),
 		app.AccountKeeper,
 		app.BlockedAddresses(),
 		cfg.ModuleAuthority,
@@ -172,7 +171,7 @@ func (app *SDKApp) initStakingModule(cfg SDKAppConfig) {
 
 	app.StakingKeeper = stakingkeeper.NewKeeper(
 		app.encodingConfig.Codec,
-		runtime.NewKVStoreService(app.mustGetStoreKey(stakingtypes.StoreKey)),
+		sdk.NewKVStoreService(app.mustGetStoreKey(stakingtypes.StoreKey)),
 		app.AccountKeeper,
 		app.BankKeeper,
 		cfg.ModuleAuthority,
@@ -201,7 +200,7 @@ func (app *SDKApp) initMintModule(cfg SDKAppConfig) {
 
 		mintKeeper := mintkeeper.NewKeeper(
 			app.encodingConfig.Codec,
-			runtime.NewKVStoreService(app.mustGetStoreKey(minttypes.StoreKey)),
+			sdk.NewKVStoreService(app.mustGetStoreKey(minttypes.StoreKey)),
 			app.StakingKeeper,
 			app.AccountKeeper,
 			app.BankKeeper,
@@ -229,7 +228,7 @@ func (app *SDKApp) initDistrModules(cfg SDKAppConfig) {
 
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		app.encodingConfig.Codec,
-		runtime.NewKVStoreService(app.mustGetStoreKey(distrtypes.StoreKey)),
+		sdk.NewKVStoreService(app.mustGetStoreKey(distrtypes.StoreKey)),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
@@ -257,7 +256,7 @@ func (app *SDKApp) initSlashingModule(cfg SDKAppConfig) {
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
 		app.encodingConfig.Codec,
 		app.encodingConfig.LegacyAmino,
-		runtime.NewKVStoreService(app.mustGetStoreKey(slashingtypes.StoreKey)),
+		sdk.NewKVStoreService(app.mustGetStoreKey(slashingtypes.StoreKey)),
 		app.StakingKeeper,
 		cfg.ModuleAuthority,
 	)
@@ -284,7 +283,7 @@ func (app *SDKApp) initFeeGrantModule(cfg SDKAppConfig) {
 
 		feeGrantKeeper := feegrantkeeper.NewKeeper(
 			app.encodingConfig.Codec,
-			runtime.NewKVStoreService(app.mustGetStoreKey(feegrant.StoreKey)),
+			sdk.NewKVStoreService(app.mustGetStoreKey(feegrant.StoreKey)),
 			app.AccountKeeper,
 		)
 		app.FeeGrantKeeper = &feeGrantKeeper
@@ -317,7 +316,7 @@ func (app *SDKApp) initAuthzModule(cfg SDKAppConfig) {
 		app.Logger().Info("initializing authz keeper")
 
 		authzKeeper := authzkeeper.NewKeeper(
-			runtime.NewKVStoreService(app.mustGetStoreKey(authzkeeper.StoreKey)),
+			sdk.NewKVStoreService(app.mustGetStoreKey(authzkeeper.StoreKey)),
 			app.encodingConfig.Codec,
 			app.MsgServiceRouter(),
 			app.AccountKeeper,
@@ -348,7 +347,7 @@ func (app *SDKApp) initUpgradeModule(cfg SDKAppConfig) {
 	// set the governance module account as the authority for conducting upgrades
 	app.upgradeKeeper = upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
-		runtime.NewKVStoreService(app.mustGetStoreKey(upgradetypes.StoreKey)),
+		sdk.NewKVStoreService(app.mustGetStoreKey(upgradetypes.StoreKey)),
 		app.encodingConfig.Codec,
 		homePath,
 		app.BaseApp,
@@ -392,7 +391,7 @@ func (app *SDKApp) initGovModule(cfg SDKAppConfig) {
 	*/
 	govKeeper := govkeeper.NewKeeper(
 		app.encodingConfig.Codec,
-		runtime.NewKVStoreService(app.mustGetStoreKey(govtypes.StoreKey)),
+		sdk.NewKVStoreService(app.mustGetStoreKey(govtypes.StoreKey)),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.DistrKeeper,
@@ -432,11 +431,11 @@ func (app *SDKApp) initEvidenceModule(cfg SDKAppConfig) {
 	// create evidence keeper with router
 	app.EvidenceKeeper = evidencekeeper.NewKeeper(
 		app.encodingConfig.Codec,
-		runtime.NewKVStoreService(app.mustGetStoreKey(evidencetypes.StoreKey)),
+		sdk.NewKVStoreService(app.mustGetStoreKey(evidencetypes.StoreKey)),
 		app.StakingKeeper,
 		app.SlashingKeeper,
 		app.AccountKeeper.AddressCodec(),
-		runtime.ProvideCometInfoService(),
+		sdk.ProvideCometInfoService(),
 	)
 
 	module := evidence.NewAppModule(*app.EvidenceKeeper)
@@ -449,7 +448,7 @@ func (app *SDKApp) initEpochsModule(cfg SDKAppConfig) {
 		app.Logger().Info("initializing epochs module")
 
 		epochsKeeper := epochskeeper.NewKeeper(
-			runtime.NewKVStoreService(app.mustGetStoreKey(epochstypes.StoreKey)),
+			sdk.NewKVStoreService(app.mustGetStoreKey(epochstypes.StoreKey)),
 			app.encodingConfig.Codec,
 		)
 		app.EpochsKeeper = &epochsKeeper

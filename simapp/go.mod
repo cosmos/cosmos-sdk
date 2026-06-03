@@ -13,7 +13,7 @@ require (
 	github.com/cometbft/cometbft v0.39.3
 	github.com/cosmos/cosmos-db v1.1.3
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.54.0
+	github.com/cosmos/cosmos-sdk v0.54.1
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/cobra v1.10.2
@@ -336,6 +336,8 @@ require (
 
 // long-lived replaces
 replace (
+	// use local client/v2 which no longer depends on runtime
+	cosmossdk.io/client/v2 => ../client/v2
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 

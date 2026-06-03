@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/tools/confix v0.1.2
 	github.com/cometbft/cometbft v0.39.3
 	github.com/cosmos/cosmos-db v1.1.3
-	github.com/cosmos/cosmos-sdk v0.54.0
+	github.com/cosmos/cosmos-sdk v0.54.1
 	github.com/cosmos/cosmos-sdk/enterprise/poa v0.0.1
 	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0
 	github.com/spf13/cobra v1.10.2
@@ -335,6 +335,8 @@ replace github.com/cosmos/cosmos-sdk/enterprise/poa => ..
 
 // Below are the long-lived replace of the SimApp
 replace (
+	// use local client/v2 which no longer depends on runtime
+	cosmossdk.io/client/v2 => ../../../client/v2
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

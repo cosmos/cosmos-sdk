@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -46,7 +45,7 @@ func TestFeegrantPruning(t *testing.T) {
 
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
-	feeGrantKeeper := keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), accountKeeper)
+	feeGrantKeeper := keeper.NewKeeper(encCfg.Codec, sdk.NewKVStoreService(key), accountKeeper)
 
 	require.NoError(t, feeGrantKeeper.GrantAllowance(
 		testCtx.Ctx,

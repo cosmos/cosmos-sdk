@@ -30,9 +30,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa"
 	poakeeper "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/keeper"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -115,8 +115,8 @@ func newPoAAppWithSDKConfig(
 
 	poaKeeper = poakeeper.NewKeeper(
 		poaApp.AppCodec(),
-		runtime.NewKVStoreService(poaStoreKey),
-		runtime.NewTransientStoreService(poaApp.GetTransientStoreKey(poatypes.TransientStoreKey)),
+		sdk.NewKVStoreService(poaStoreKey),
+		sdk.NewTransientStoreService(poaApp.GetTransientStoreKey(poatypes.TransientStoreKey)),
 		poaApp.AccountKeeper,
 		poaApp.BankKeeper,
 	)

@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,8 +34,8 @@ func (s *KeeperTestSuite) SetupTest() {
 	header := cmtproto.Header{Height: 5}
 	ctx := testCtx.Ctx.WithBlockHeader(header).WithConsensusParams(consensusParams.ToProto())
 	encCfg := moduletestutil.MakeTestEncodingConfig()
-	storeService := runtime.NewKVStoreService(key)
-	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, storeService, govAddr, runtime.EventService{})
+	storeService := sdk.NewKVStoreService(key)
+	keeper := consensusparamkeeper.NewKeeper(encCfg.Codec, storeService, govAddr, sdk.EventService{})
 
 	s.ctx = ctx
 	s.consensusParamsKeeper = &keeper

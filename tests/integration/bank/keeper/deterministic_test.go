@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/math"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -81,7 +80,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		sdk.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
@@ -94,7 +93,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	}
 	bankKeeper := keeper.NewBaseKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
+		sdk.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),

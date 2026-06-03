@@ -28,7 +28,7 @@ import (
 
 // ConsensusVersion defines the current x/auth module consensus version.
 const (
-	ConsensusVersion = 6
+	ConsensusVersion = 7
 	GovModuleName    = "gov"
 )
 
@@ -131,6 +131,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	m := keeper.NewMigrator(am.accountKeeper, cfg.QueryServer())
 	if err := cfg.RegisterMigration(types.ModuleName, 5, m.Migrate5to6); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 5 to 6: %v", types.ModuleName, err))
+	}
+	if err := cfg.RegisterMigration(types.ModuleName, 6, m.Migrate6to7); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 6 to 7: %v", types.ModuleName, err))
 	}
 }
 

@@ -7,6 +7,8 @@ replace github.com/cosmos/cosmos-sdk => ../..
 
 replace github.com/cosmos/cosmos-sdk/tools/systemtests => ../../tools/systemtests
 
+replace cosmossdk.io/client/v2 => ../../client/v2
+
 require (
 	github.com/cosmos/cosmos-sdk v0.54.0
 	github.com/cosmos/cosmos-sdk/tools/systemtests v0.0.0-00010101000000-000000000000

@@ -3,7 +3,7 @@ module cosmossdk.io/simapp
 go 1.26.4
 
 require (
-	cosmossdk.io/api v1.0.0
+	cosmossdk.io/api v1.0.0 // indirect
 	cosmossdk.io/client/v2 v2.11.0
 	cosmossdk.io/core v1.1.0
 	cosmossdk.io/depinject v1.2.1
@@ -15,7 +15,7 @@ require (
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.54.0
 	github.com/cosmos/gogoproto v1.7.2
-	github.com/spf13/cast v1.10.0
+	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0

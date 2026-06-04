@@ -59,6 +59,7 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = DefaultNodeHome
+	appOptions[flags.FlagChainID] = appName
 
 	app := NewSimApp(log.NewNopLogger(), db, true, appOptions)
 	if withGenesis {
@@ -105,6 +106,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *cmttypes.ValidatorSet, genAccs
 	require.NoError(t, err)
 
 	_, err = app.InitChain(&abci.RequestInitChain{
+		ChainId:         app.Name(),
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: simtestutil.DefaultConsensusParams,
 		AppStateBytes:   stateBytes,

@@ -81,6 +81,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 
 		// Initialize the chain
 		_, err = app.InitChain(&abci.RequestInitChain{
+			ChainId:         app.Name(),
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: simtestutil.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
@@ -132,6 +133,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *cmttypes.ValidatorSet, genAccs
 
 	// init chain will set the validator set and initialize the genesis accounts
 	_, err = app.InitChain(&abci.RequestInitChain{
+		ChainId:         app.Name(),
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: simtestutil.DefaultConsensusParams,
 		AppStateBytes:   stateBytes,

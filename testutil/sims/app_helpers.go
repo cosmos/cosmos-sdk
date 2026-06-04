@@ -313,3 +313,10 @@ func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {
 		flags.FlagHome: homePath,
 	}
 }
+
+func NewAppOptionsWithFlagHomeAndChainID(homePath, chainID string) servertypes.AppOptions {
+	return AppOptionsMap{
+		flags.FlagHome:    homePath,
+		flags.FlagChainID: chainID,
+	}
+}

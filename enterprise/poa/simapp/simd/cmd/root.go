@@ -24,9 +24,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/simapp"
-	"github.com/cosmos/cosmos-sdk/enterprise/poa/simapp/params"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -38,20 +38,24 @@ import (
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
 func NewRootCmd() *cobra.Command {
-	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
-	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), true, simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
-	encodingConfig := params.EncodingConfig{
-		InterfaceRegistry: tempApp.InterfaceRegistry(),
-		Codec:             tempApp.AppCodec(),
-		TxConfig:          tempApp.TxConfig(),
-		Amino:             tempApp.LegacyAmino(),
+	tempHome, err := os.MkdirTemp("", "poa-simapp-rootcmd-*")
+	if err != nil {
+		panic(err)
 	}
+	defer os.RemoveAll(tempHome)
+
+	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
+	tempApp := simapp.NewPoAApp(log.NewNopLogger(), dbm.NewMemDB(), true, simtestutil.AppOptionsMap{
+		flags.FlagHome:    tempHome,
+		flags.FlagChainID: "poa-simapp-rootcmd",
+	})
+	encodingConfig := tempApp.EncodingConfig()
 
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
-		WithLegacyAmino(encodingConfig.Amino).
+		WithLegacyAmino(encodingConfig.LegacyAmino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithHomeDir(simapp.DefaultNodeHome).
@@ -108,7 +112,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, encodingConfig.TxConfig, tempApp.BasicModuleManager)
+	initRootCmd(rootCmd, encodingConfig.TxConfig, tempApp.BasicModuleManager())
 
 	// add keyring to autocli opts
 	autoCliOpts := tempApp.AutoCliOpts()

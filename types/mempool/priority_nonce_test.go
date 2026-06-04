@@ -445,9 +445,7 @@ func (s *MempoolTestSuite) TestIteratorConcurrency() {
 			// iterate through txs
 			stdCtx, cancel := context.WithCancel(context.Background())
 			var wg sync.WaitGroup
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 
 				id := len(tt.txs)
 				for {
@@ -462,7 +460,7 @@ func (s *MempoolTestSuite) TestIteratorConcurrency() {
 						require.NoError(t, err)
 					}
 				}
-			}()
+			})
 
 			var i int
 			pool.SelectBy(ctx, nil, func(memTx sdk.Tx) bool {
@@ -853,9 +851,7 @@ func TestNextSenderTx_ConcurrentAccess(t *testing.T) {
 		stopCh   = make(chan struct{})
 	)
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		for i := 0; i < iterations; i++ {
 			tx := testTx{
 				id:       i,
@@ -868,11 +864,9 @@ func TestNextSenderTx_ConcurrentAccess(t *testing.T) {
 			}
 		}
 		close(stopCh)
-	}()
+	})
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		for {
 			select {
 			case <-stopCh:
@@ -888,7 +882,7 @@ func TestNextSenderTx_ConcurrentAccess(t *testing.T) {
 				}()
 			}
 		}
-	}()
+	})
 
 	wg.Wait()
 

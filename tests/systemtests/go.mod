@@ -285,5 +285,5 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-replace cosmossdk.io/core => ../core
+replace cosmossdk.io/core => ../../core
 replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.39.0-rc1.0.20260527154549-606b4197148f

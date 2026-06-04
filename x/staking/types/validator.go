@@ -271,10 +271,38 @@ func (v Validator) ABCIValidatorUpdate(r math.Int) abci.ValidatorUpdate {
 	}
 }
 
+// ABCIValidatorUpdateWithPubKey returns an abci.ValidatorUpdate from a validator with a
+// custom pub key and the full validator power
+func (v Validator) ABCIValidatorUpdateWithPubKey(r math.Int, pk cryptotypes.PubKey) abci.ValidatorUpdate {
+	tmProtoPk, err := cryptocodec.ToCmtProtoPublicKey(pk)
+	if err != nil {
+		panic(err)
+	}
+
+	return abci.ValidatorUpdate{
+		PubKey: tmProtoPk,
+		Power:  v.ConsensusPower(r),
+	}
+}
+
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	tmProtoPk, err := v.TmConsPublicKey()
+	if err != nil {
+		panic(err)
+	}
+
+	return abci.ValidatorUpdate{
+		PubKey: tmProtoPk,
+		Power:  0,
+	}
+}
+
+// ABCIValidatorUpdateZeroWithPubKey returns an abci.ValidatorUpdate from a validator with a
+// custom pub key and zero validator power.
+func (v Validator) ABCIValidatorUpdateZeroWithPubKey(pk cryptotypes.PubKey) abci.ValidatorUpdate {
+	tmProtoPk, err := cryptocodec.ToCmtProtoPublicKey(pk)
 	if err != nil {
 		panic(err)
 	}

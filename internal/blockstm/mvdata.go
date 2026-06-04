@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"sync/atomic"
-	"time"
 
 	"go.opentelemetry.io/otel/metric"
 
@@ -77,7 +76,7 @@ func (d *GMVData[V]) getIndexOrDefault(ctx context.Context, key Key) *BitmapInde
 
 // Consolidate returns wroteNewLocation
 func (d *GMVData[V]) Consolidate(ctx context.Context, version TxnVersion, writeSet *GMemDB[V]) bool {
-	start := time.Now()
+	start := instNow()
 	defer measureSince(ctx, func() metric.Int64Histogram { return inst.MVDataConsolidate }, start)
 
 	if writeSet == nil || writeSet.Len() == 0 {
@@ -201,7 +200,7 @@ func (d *GMVData[V]) deleteIndex(ctx context.Context, key Key, txn TxnIndex) {
 // If the key is found but value is an estimate, returns `(value, version, true)`.
 // If the key is found, returns `(value, version, false)`, `value` can be zero value which means deleted.
 func (d *GMVData[V]) Read(ctx context.Context, key Key, txn TxnIndex) (V, TxnVersion, bool) {
-	start := time.Now()
+	start := instNow()
 	defer measureSince(ctx, func() metric.Int64Histogram { return inst.MVDataRead }, start)
 	var zero V
 	if txn == 0 {
@@ -261,7 +260,7 @@ func (d *GMVData[V]) Iterator(
 
 // ValidateReadSet validates the read descriptors,
 // returns true if valid.
-func (d *GMVData[V]) ValidateReadSet(ctx context.Context, txn TxnIndex, rs *ReadSet) bool {
+func (d *GMVData[V]) ValidateReadSet(ctx context.Context, txn TxnIndex, rs *ReadSet, storage Storage) bool {
 	for _, desc := range rs.Reads {
 		_, version, estimate := d.Read(ctx, desc.Key, txn)
 		if estimate {
@@ -272,6 +271,30 @@ func (d *GMVData[V]) ValidateReadSet(ctx context.Context, txn TxnIndex, rs *Read
 			// previously read entry from data, now NOT_FOUND,
 			// or read some entry, but not the same version as before
 			return false
+		}
+	}
+
+	if len(rs.HasReads) > 0 {
+		gs, _ := storage.(GStorage[V])
+		for _, desc := range rs.HasReads {
+			value, version, estimate := d.Read(ctx, desc.Key, txn)
+			if estimate {
+				return false
+			}
+			if version.Valid() {
+				if (!d.isZero(value)) != desc.Exists {
+					return false
+				}
+				continue
+			}
+			// No MVData entry. Storage is immutable, so FromStorage reads are still valid.
+			// Otherwise the original MVData writer was aborted and we must re-check storage.
+			if desc.FromStorage {
+				continue
+			}
+			if gs == nil || gs.Has(desc.Key) != desc.Exists {
+				return false
+			}
 		}
 	}
 

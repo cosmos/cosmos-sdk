@@ -66,3 +66,30 @@ func TestCmtBridge(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, tmPub.VerifySignature(msg, sig))
 }
+
+func TestGenPrivKeyFromSeedDeterministic(t *testing.T) {
+	seed := make([]byte, cmtmldsa65.SeedSize)
+	for i := range seed {
+		seed[i] = byte(i)
+	}
+
+	a, err := mldsa65.GenPrivKeyFromSeed(seed)
+	require.NoError(t, err)
+	b, err := mldsa65.GenPrivKeyFromSeed(seed)
+	require.NoError(t, err)
+
+	// Same seed -> identical key bytes.
+	require.Equal(t, a.Bytes(), b.Bytes())
+	require.True(t, a.PubKey().Equals(b.PubKey()))
+
+	// Different seed -> different key.
+	seed[0] ^= 0xff
+	c, err := mldsa65.GenPrivKeyFromSeed(seed)
+	require.NoError(t, err)
+	require.NotEqual(t, a.Bytes(), c.Bytes())
+}
+
+func TestGenPrivKeyFromSeedWrongSize(t *testing.T) {
+	_, err := mldsa65.GenPrivKeyFromSeed(make([]byte, cmtmldsa65.SeedSize-1))
+	require.Error(t, err)
+}

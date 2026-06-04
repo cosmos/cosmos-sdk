@@ -130,8 +130,6 @@ func (mr *MockAppModuleWithAllExtensionsMockRecorder) IsAppModule() *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAppModule", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).IsAppModule))
 }
 
-
-
 // Name mocks base method.
 func (m *MockAppModuleWithAllExtensions) Name() string {
 	m.ctrl.T.Helper()
@@ -327,8 +325,6 @@ func (mr *MockAppModuleWithAllExtensionsABCIMockRecorder) IsAppModule() *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAppModule", reflect.TypeOf((*MockAppModuleWithAllExtensionsABCI)(nil).IsAppModule))
 }
 
-
-
 // Name mocks base method.
 func (m *MockAppModuleWithAllExtensionsABCI) Name() string {
 	m.ctrl.T.Helper()
@@ -523,8 +519,6 @@ func (mr *MockCoreAppModuleMockRecorder) IsAppModule() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAppModule", reflect.TypeOf((*MockCoreAppModule)(nil).IsAppModule))
 }
 
-
-
 // Precommit mocks base method.
 func (m *MockCoreAppModule) Precommit(arg0 context.Context) error {
 	m.ctrl.T.Helper()
@@ -672,8 +666,6 @@ func (mr *MockCoreAppModuleWithPreBlockMockRecorder) IsAppModule() *gomock.Call 
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAppModule", reflect.TypeOf((*MockCoreAppModuleWithPreBlock)(nil).IsAppModule))
 }
-
-
 
 // PreBlock mocks base method.
 func (m *MockCoreAppModuleWithPreBlock) PreBlock(arg0 context.Context) (appmodule.ResponsePreBlock, error) {

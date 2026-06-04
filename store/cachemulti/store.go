@@ -43,11 +43,18 @@ func NewFromKVStore(
 	keys map[string]types.StoreKey, traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
 	cms := Store{
-		db:           cachekv.NewStore(store),
-		stores:       make(map[types.StoreKey]types.CacheWrap, len(stores)),
-		keys:         keys,
-		traceWriter:  traceWriter,
-		traceContext: traceContext,
+		db:          cachekv.NewStore(store),
+		stores:      make(map[types.StoreKey]types.CacheWrap, len(stores)),
+		keys:        keys,
+		traceWriter: traceWriter,
+		// Defensive clone so every Store owns its own trace-context map.
+		// Without this, the caller (typically rootmulti.Store or another
+		// cachemulti.Store) and every branched cms share a single map and
+		// race with each other on Clone()/Merge iteration vs. in-place
+		// maps.Copy in SetTracingContext. Same class of bug that #11117
+		// fixed for rootmulti.Store — applying the same isolation here
+		// (#25841).
+		traceContext: traceContext.Clone(),
 	}
 
 	for key, store := range stores {
@@ -93,12 +100,18 @@ func (cms Store) SetTracer(w io.Writer) types.MultiStore {
 // the given context with the existing context by key. Any existing keys will
 // be overwritten. It is implied that the caller should update the context when
 // necessary between tracing operations. It returns a modified MultiStore.
+//
+// The merged context is materialised into a fresh map rather than written into
+// cms.traceContext in place. Concurrent CacheMultiStore() callers iterate that
+// map via Clone() (see NewFromKVStore), so an in-place maps.Copy races with
+// them on shared references — exactly the failure mode #25841 captured.
+// Allocating a new map for the merged result keeps every prior reference
+// stable: existing branched cms keep pointing at the old map, the updated
+// cms returned here points at the new one.
 func (cms Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
-	if cms.traceContext != nil {
-		maps.Copy(cms.traceContext, tc)
-	} else {
-		cms.traceContext = tc
-	}
+	merged := cms.traceContext.Clone()
+	maps.Copy(merged, tc)
+	cms.traceContext = merged
 
 	return cms
 }

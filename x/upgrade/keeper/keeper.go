@@ -18,7 +18,6 @@ import (
 	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -130,7 +129,7 @@ func (k Keeper) getProtocolVersion(ctx context.Context) (uint64, error) {
 // SetModuleVersionMap saves a given version map to state
 func (k Keeper) SetModuleVersionMap(ctx context.Context, vm module.VersionMap) error {
 	if len(vm) > 0 {
-		store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+		store := sdk.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
 		// Even though the underlying store (cachekv) store is sorted, we still
 		// prefer a deterministic iteration order of the map, to avoid undesired

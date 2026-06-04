@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/errors"
 
 	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -227,19 +226,19 @@ func (k Keeper) deleteOwner(ctx context.Context, classID, nftID string, owner sd
 
 func (k Keeper) getNFTStore(ctx context.Context, classID string) prefix.Store {
 	store := k.storeService.OpenKVStore(ctx)
-	return prefix.NewStore(runtime.KVStoreAdapter(store), nftStoreKey(classID))
+	return prefix.NewStore(sdk.KVStoreAdapter(store), nftStoreKey(classID))
 }
 
 func (k Keeper) getClassStoreByOwner(ctx context.Context, owner sdk.AccAddress, classID string) prefix.Store {
 	store := k.storeService.OpenKVStore(ctx)
 	key := nftOfClassByOwnerStoreKey(owner, classID)
-	return prefix.NewStore(runtime.KVStoreAdapter(store), key)
+	return prefix.NewStore(sdk.KVStoreAdapter(store), key)
 }
 
 func (k Keeper) prefixStoreNftOfClassByOwner(ctx context.Context, owner sdk.AccAddress) prefix.Store {
 	store := k.storeService.OpenKVStore(ctx)
 	key := prefixNftOfClassByOwnerStoreKey(owner)
-	return prefix.NewStore(runtime.KVStoreAdapter(store), key)
+	return prefix.NewStore(sdk.KVStoreAdapter(store), key)
 }
 
 func (k Keeper) incrTotalSupply(ctx context.Context, classID string) {

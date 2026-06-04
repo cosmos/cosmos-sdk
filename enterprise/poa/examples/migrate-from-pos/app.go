@@ -50,8 +50,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa"
 	poakeeper "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/keeper"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
+	appservices "github.com/cosmos/cosmos-sdk/app/services"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -99,7 +98,6 @@ const appName = "SimApp"
 var (
 	DefaultNodeHome string
 
-	_ runtime.AppI            = (*SimApp)(nil)
 	_ servertypes.Application = (*SimApp)(nil)
 )
 
@@ -210,15 +208,15 @@ func NewSimApp(
 
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 		appCodec,
-		runtime.NewKVStoreService(storeKeys[consensusparamtypes.StoreKey]),
+		sdk.NewKVStoreService(storeKeys[consensusparamtypes.StoreKey]),
 		"",
-		runtime.EventService{},
+		sdk.EventService{},
 	)
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec,
-		runtime.NewKVStoreService(storeKeys[authtypes.StoreKey]),
+		sdk.NewKVStoreService(storeKeys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{
 			authtypes.FeeCollectorName:          nil,
@@ -236,7 +234,7 @@ func NewSimApp(
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
-		runtime.NewKVStoreService(storeKeys[banktypes.StoreKey]),
+		sdk.NewKVStoreService(storeKeys[banktypes.StoreKey]),
 		app.AccountKeeper,
 		map[string]bool{},
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -246,7 +244,7 @@ func NewSimApp(
 	// Migration-only keepers.
 	app.StakingKeeper = stakingkeeper.NewKeeper(
 		appCodec,
-		runtime.NewKVStoreService(storeKeys[stakingtypes.StoreKey]),
+		sdk.NewKVStoreService(storeKeys[stakingtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -255,7 +253,7 @@ func NewSimApp(
 	)
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		appCodec,
-		runtime.NewKVStoreService(storeKeys[distrtypes.StoreKey]),
+		sdk.NewKVStoreService(storeKeys[distrtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
@@ -265,7 +263,7 @@ func NewSimApp(
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec,
 		legacyAmino,
-		runtime.NewKVStoreService(storeKeys[slashingtypes.StoreKey]),
+		sdk.NewKVStoreService(storeKeys[slashingtypes.StoreKey]),
 		app.StakingKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
@@ -284,7 +282,7 @@ func NewSimApp(
 	homePath := cast.ToString(appOpts.Get(flags.FlagHome))
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
-		runtime.NewKVStoreService(storeKeys[upgradetypes.StoreKey]),
+		sdk.NewKVStoreService(storeKeys[upgradetypes.StoreKey]),
 		appCodec,
 		homePath,
 		app.BaseApp,
@@ -293,8 +291,8 @@ func NewSimApp(
 
 	app.POAKeeper = poakeeper.NewKeeper(
 		appCodec,
-		runtime.NewKVStoreService(storeKeys[poatypes.StoreKey]),
-		runtime.NewTransientStoreService(transientStoreKeys[poatypes.TransientStoreKey]),
+		sdk.NewKVStoreService(storeKeys[poatypes.StoreKey]),
+		sdk.NewTransientStoreService(transientStoreKeys[poatypes.TransientStoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
 	)
@@ -302,7 +300,7 @@ func NewSimApp(
 	govConfig := govtypes.DefaultConfig()
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec,
-		runtime.NewKVStoreService(storeKeys[govtypes.StoreKey]),
+		sdk.NewKVStoreService(storeKeys[govtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
 		nil,
@@ -400,7 +398,7 @@ func NewSimApp(
 		panic(err)
 	}
 
-	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.ModuleManager.Modules))
+	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), appservices.NewAutoCLIQueryService(app.ModuleManager.Modules))
 
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(app.encodingConfig.Codec, app.AccountKeeper, authsims.RandomGenesisAccounts),
@@ -515,7 +513,7 @@ func (app *SimApp) AutoCliOpts() autocli.AppOptions {
 
 	return autocli.AppOptions{
 		Modules:               modules,
-		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.ModuleManager.Modules),
+		ModuleOptions:         appservices.ExtractAutoCLIOptions(app.ModuleManager.Modules),
 		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),

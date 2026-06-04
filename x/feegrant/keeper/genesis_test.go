@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -51,7 +50,7 @@ func initFixture(t *testing.T) *genesisFixture {
 
 	return &genesisFixture{
 		ctx:            testCtx.Ctx,
-		feegrantKeeper: keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), accountKeeper),
+		feegrantKeeper: keeper.NewKeeper(encCfg.Codec, sdk.NewKVStoreService(key), accountKeeper),
 		accountKeeper:  accountKeeper,
 	}
 }

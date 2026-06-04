@@ -29,7 +29,6 @@ func NewNodeCommands() *nodeModule {
 
 type nodeModule struct{}
 
-func (m nodeModule) IsOnePerModuleType() {}
 func (m nodeModule) IsAppModule()        {}
 
 func (m nodeModule) Name() string {

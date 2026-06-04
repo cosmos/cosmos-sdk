@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +23,7 @@ func TestManager(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	reset := func() {
 		mockStoreKey := storetypes.NewKVStoreKey("test")
-		storeService := runtime.NewKVStoreService(mockStoreKey)
+		storeService := sdk.NewKVStoreService(mockStoreKey)
 		ctx = testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx
 		mgr = keeper.NewAccountKeeper(
 			encCfg.Codec,
@@ -302,7 +301,7 @@ func TestManager(t *testing.T) {
 
 func TestCannotAddDuplicate(t *testing.T) {
 	mockStoreKey := storetypes.NewKVStoreKey("test")
-	storeService := runtime.NewKVStoreService(mockStoreKey)
+	storeService := sdk.NewKVStoreService(mockStoreKey)
 	ctx := testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx
 	mgr := keeper.NewAccountKeeper(
 		moduletestutil.MakeTestEncodingConfig().Codec,

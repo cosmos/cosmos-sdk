@@ -5,7 +5,6 @@ import (
 
 	storetypes "cosmossdk.io/core/store"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -28,7 +27,7 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 
 func migrateDoneUpgradeKeys(ctx sdk.Context, storeService storetypes.KVStoreService) error {
 	store := storeService.OpenKVStore(ctx)
-	oldDoneStore := prefix.NewStore(runtime.KVStoreAdapter(store), []byte{types.DoneByte})
+	oldDoneStore := prefix.NewStore(sdk.KVStoreAdapter(store), []byte{types.DoneByte})
 	oldDoneStoreIter := oldDoneStore.Iterator(nil, nil)
 	defer oldDoneStoreIter.Close()
 

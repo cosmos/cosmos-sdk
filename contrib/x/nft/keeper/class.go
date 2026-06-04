@@ -6,8 +6,8 @@ import (
 	"cosmossdk.io/errors"
 
 	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // SaveClass defines a method for creating a new nft class
@@ -56,7 +56,7 @@ func (k Keeper) GetClass(ctx context.Context, classID string) (nft.Class, bool) 
 // GetClasses defines a method for returning all classes information
 func (k Keeper) GetClasses(ctx context.Context) (classes []*nft.Class) {
 	store := k.storeService.OpenKVStore(ctx)
-	iterator := storetypes.KVStorePrefixIterator(runtime.KVStoreAdapter(store), ClassKey)
+	iterator := storetypes.KVStorePrefixIterator(sdk.KVStoreAdapter(store), ClassKey)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var class nft.Class

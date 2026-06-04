@@ -24,5 +24,3 @@ type HandlerRoute struct {
 	RouteKey string
 }
 
-// IsManyPerContainerType implements the depinject.ManyPerContainerType interface.
-func (HandlerRoute) IsManyPerContainerType() {}

@@ -18,57 +18,43 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appconfig"
-	"cosmossdk.io/depinject"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
+	sdkapp "github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/runtime"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/mint"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 var ParamStoreKey = []byte("paramstore")
 
-// GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
-// that also act as delegators.
-func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *runtime.AppBuilder) map[string]json.RawMessage {
+// GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis account
+// for the given app.
+func GenesisStateWithSingleValidator(t *testing.T, cdc codec.Codec, app *sdkapp.SDKApp) map[string]json.RawMessage {
 	t.Helper()
 
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
 
-	// create validator set with single validator
 	validator := cmttypes.NewValidator(pubKey, 1)
 	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
-	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balances := []banktypes.Balance{
@@ -78,34 +64,35 @@ func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *r
 		},
 	}
 
-	genesisState := builder.DefaultGenesis()
-	// sus
-	genesisState, err = simtestutil.GenesisStateWithValSet(codec, genesisState, valSet, []authtypes.GenesisAccount{acc}, balances...)
+	genesisState := app.DefaultGenesis()
+	genesisState, err = simtestutil.GenesisStateWithValSet(cdc, genesisState, valSet, []authtypes.GenesisAccount{acc}, balances...)
 	require.NoError(t, err)
 
 	return genesisState
 }
 
-func makeMinimalConfig() depinject.Config {
-	var (
-		mempoolOpt            = baseapp.SetMempool(mempool.NewSenderNonceMempool())
-		addressCodec          = func() address.Codec { return addresscodec.NewBech32Codec("cosmos") }
-		validatorAddressCodec = func() runtime.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") }
-		consensusAddressCodec = func() runtime.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") }
-	)
+// GenesisStateWithValidatorAndFeeAccount initializes GenesisState with a single validator
+// and an additional funded fee-paying account (feeAccPubKey) for signing tests.
+func GenesisStateWithValidatorAndFeeAccount(t *testing.T, cdc codec.Codec, app *sdkapp.SDKApp, feeAccPubKey cryptotypes.PubKey, feeCoins sdk.Coins) map[string]json.RawMessage {
+	t.Helper()
 
-	return depinject.Configs(
-		depinject.Supply(mempoolOpt, addressCodec, validatorAddressCodec, consensusAddressCodec),
-		appconfig.Compose(&appv1alpha1.Config{
-			Modules: []*appv1alpha1.ModuleConfig{
-				{
-					Name: "runtime",
-					Config: appconfig.WrapAny(&runtimev1alpha1.Module{
-						AppName: "BaseAppApp",
-					}),
-				},
-			},
-		}))
+	privVal := mock.NewPV()
+	pubKey, err := privVal.GetPubKey()
+	require.NoError(t, err)
+
+	validator := cmttypes.NewValidator(pubKey, 1)
+	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
+
+	feeAcc := authtypes.NewBaseAccount(feeAccPubKey.Address().Bytes(), feeAccPubKey, 0, 0)
+	genesisState := app.DefaultGenesis()
+	genesisState, err = simtestutil.GenesisStateWithValSet(
+		cdc, genesisState, valSet,
+		[]authtypes.GenesisAccount{feeAcc},
+		banktypes.Balance{Address: feeAcc.GetAddress().String(), Coins: feeCoins},
+	)
+	require.NoError(t, err)
+
+	return genesisState
 }
 
 type MsgKeyValueImpl struct{}

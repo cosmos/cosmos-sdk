@@ -6,34 +6,49 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/log/v2"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	signtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
-func TestRegisterMsgService(t *testing.T) {
-	// Setup baseapp.
-	var (
-		appBuilder *runtime.AppBuilder
-		registry   codectypes.InterfaceRegistry
-	)
-	err := depinject.Inject(
-		depinject.Configs(
-			makeMinimalConfig(),
-			depinject.Supply(log.NewTestLogger(t)),
-		), &appBuilder, &registry)
+// newTestBaseApp creates a minimal BaseApp for router unit tests (no modules, no InitChain).
+func newTestBaseApp(t *testing.T, logger log.Logger) (*baseapp.BaseApp, codectypes.InterfaceRegistry) {
+	t.Helper()
+
+	interfaceRegistry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
+		ProtoFiles: gogoproto.HybridResolver,
+		SigningOptions: txsigning.Options{
+			AddressCodec:          address.Bech32Codec{Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix()},
+			ValidatorAddressCodec: address.Bech32Codec{Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix()},
+		},
+	})
 	require.NoError(t, err)
-	app := appBuilder.Build(dbm.NewMemDB())
+	std.RegisterInterfaces(interfaceRegistry)
+
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+	app := baseapp.NewBaseApp("test", logger, dbm.NewMemDB(), nil)
+	app.SetInterfaceRegistry(interfaceRegistry)
+	_ = cdc
+
+	return app, interfaceRegistry
+}
+
+func TestRegisterMsgService(t *testing.T) {
+	app, registry := newTestBaseApp(t, log.NewTestLogger(t))
 
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
@@ -54,19 +69,7 @@ func TestRegisterMsgService(t *testing.T) {
 }
 
 func TestRegisterMsgServiceTwice(t *testing.T) {
-	// Setup baseapp.
-	var (
-		appBuilder *runtime.AppBuilder
-		registry   codectypes.InterfaceRegistry
-	)
-	err := depinject.Inject(
-		depinject.Configs(
-			makeMinimalConfig(),
-			depinject.Supply(log.NewTestLogger(t)),
-		), &appBuilder, &registry)
-	require.NoError(t, err)
-	db := dbm.NewMemDB()
-	app := appBuilder.Build(db)
+	app, registry := newTestBaseApp(t, log.NewTestLogger(t))
 	testdata.RegisterInterfaces(registry)
 
 	// First time registering service shouldn't panic.
@@ -87,19 +90,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 }
 
 func TestHybridHandlerByMsgName(t *testing.T) {
-	// Setup baseapp and router.
-	var (
-		appBuilder *runtime.AppBuilder
-		registry   codectypes.InterfaceRegistry
-	)
-	err := depinject.Inject(
-		depinject.Configs(
-			makeMinimalConfig(),
-			depinject.Supply(log.NewTestLogger(t)),
-		), &appBuilder, &registry)
-	require.NoError(t, err)
-	db := dbm.NewMemDB()
-	app := appBuilder.Build(db)
+	app, registry := newTestBaseApp(t, log.NewTestLogger(t))
 	testdata.RegisterInterfaces(registry)
 
 	testdata.RegisterMsgServer(
@@ -113,7 +104,7 @@ func TestHybridHandlerByMsgName(t *testing.T) {
 	require.NoError(t, app.Init())
 	ctx := app.NewContext(true)
 	resp := new(testdata.MsgCreateDogResponse)
-	err = handler(ctx, &testdata.MsgCreateDog{
+	err := handler(ctx, &testdata.MsgCreateDog{
 		Dog:   &testdata.Dog{Name: "Spot"},
 		Owner: "me",
 	}, resp)
@@ -124,18 +115,8 @@ func TestHybridHandlerByMsgName(t *testing.T) {
 func TestMsgService(t *testing.T) {
 	priv, _, _ := testdata.KeyTestPubAddr()
 
-	var (
-		appBuilder        *runtime.AppBuilder
-		cdc               codec.Codec
-		interfaceRegistry codectypes.InterfaceRegistry
-	)
-	err := depinject.Inject(
-		depinject.Configs(
-			makeMinimalConfig(),
-			depinject.Supply(log.NewNopLogger()),
-		), &appBuilder, &cdc, &interfaceRegistry)
-	require.NoError(t, err)
-	app := appBuilder.Build(dbm.NewMemDB())
+	app, interfaceRegistry := newTestBaseApp(t, log.NewNopLogger())
+	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	// patch in TxConfig instead of using an output from x/auth/tx
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
@@ -167,9 +148,9 @@ func TestMsgService(t *testing.T) {
 
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
-	sigV2 := signing.SignatureV2{
+	sigV2 := signtypes.SignatureV2{
 		PubKey: priv.PubKey(),
-		Data: &signing.SingleSignatureData{
+		Data: &signtypes.SingleSignatureData{
 			SignMode:  defaultSignMode,
 			Signature: nil,
 		},
@@ -188,7 +169,8 @@ func TestMsgService(t *testing.T) {
 	}
 	sigV2, err = tx.SignWithPrivKey(
 		context.TODO(), defaultSignMode, signerData,
-		txBuilder, priv, txConfig, 0)
+		txBuilder, priv, txConfig, 0,
+	)
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sigV2)
 	require.NoError(t, err)

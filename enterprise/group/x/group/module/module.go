@@ -24,18 +24,14 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	modulev1 "github.com/cosmos/cosmos-sdk/enterprise/group/api/cosmos/group/module/v1"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/client/cli"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/keeper"
 	simulation2 "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/simulation"
-	store "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -74,8 +70,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper,
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
@@ -205,44 +199,3 @@ func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Re
 	reg.Add(weights.Get("msg_leave_group", 5), simulation2.MsgLeaveGroupFactory(am.keeper, s))
 }
 
-//
-// App Wiring Setup
-//
-
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-	)
-}
-
-type GroupInputs struct {
-	depinject.In
-
-	Config           *modulev1.Module
-	Key              *store.KVStoreKey
-	Cdc              codec.Codec
-	AccountKeeper    group.AccountKeeper
-	BankKeeper       group.BankKeeper
-	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter baseapp.MessageRouter
-}
-
-type GroupOutputs struct {
-	depinject.Out
-
-	GroupKeeper keeper.Keeper
-	Module      appmodule.AppModule
-}
-
-func ProvideModule(in GroupInputs) GroupOutputs {
-	/*
-		Example of setting group params:
-		in.Config.MaxMetadataLen = 1000
-		in.Config.MaxExecutionPeriod = "1209600s"
-	*/
-
-	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return GroupOutputs{GroupKeeper: k, Module: m}
-}

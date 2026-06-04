@@ -8,37 +8,26 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestSlashRedelegation(t *testing.T) {
 	// setting up
-	var stakingKeeper *stakingkeeper.Keeper
-	var bankKeeper bankkeeper.Keeper
-	var slashKeeper slashingkeeper.Keeper
-	var distrKeeper distributionkeeper.Keeper
+	ta := testapp.Setup(t)
 
-	app, err := simtestutil.Setup(depinject.Configs(
-		depinject.Supply(log.NewNopLogger()),
-		testutil.AppConfig,
-	), &stakingKeeper, &bankKeeper, &slashKeeper, &distrKeeper)
-	require.NoError(t, err)
+	stakingKeeper := ta.StakingKeeper
+	bankKeeper := ta.BankKeeper
+	slashKeeper := ta.SlashingKeeper
 
 	// get sdk context, staking msg server and bond denom
-	ctx := app.NewContext(false)
+	ctx := ta.NewContext(false)
 	stakingMsgServer := stakingkeeper.NewMsgServerImpl(stakingKeeper)
 	bondDenom, err := stakingKeeper.BondDenom(ctx)
 	require.NoError(t, err)
@@ -83,9 +72,9 @@ func TestSlashRedelegation(t *testing.T) {
 
 	// next block, commit height 2, move to height 3
 	// acc 1 and acc 2 delegate to evil val
-	ctx = ctx.WithBlockHeight(app.LastBlockHeight() + 1).WithHeaderInfo(header.Info{Height: app.LastBlockHeight() + 1})
+	ctx = ctx.WithBlockHeight(ta.LastBlockHeight() + 1).WithHeaderInfo(header.Info{Height: ta.LastBlockHeight() + 1})
 	fmt.Println()
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	ctx, err = testapp.NextBlock(ta, ctx, time.Duration(1))
 	require.NoError(t, err)
 
 	// Acc 2 delegate
@@ -101,7 +90,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// next block, commit height 3, move to height 4
 	// with the new delegations, evil val increases in voting power and commit byzantine behavior at height 4 consensus
 	// at the same time, acc 1 and acc 2 withdraw delegation from evil val
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	ctx, err = testapp.NextBlock(ta, ctx, time.Duration(1))
 	require.NoError(t, err)
 
 	evilVal, err := stakingKeeper.GetValidator(ctx, evilValAddr)
@@ -128,7 +117,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// Slash evil val for byzantine behavior at height 4 consensus,
 	// at which acc 1 and acc 2 still contributed to evil val voting power
 	// even tho they undelegate at block 4, the valset update is applied after committed block 4 when height 4 consensus already passes
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	ctx, err = testapp.NextBlock(ta, ctx, time.Duration(1))
 	require.NoError(t, err)
 
 	// slash evil val with slash factor = 0.9, leaving only 10% of stake after slashing
@@ -140,10 +129,10 @@ func TestSlashRedelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	// one eternity later
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1000000000000000000))
+	ctx, err = testapp.NextBlock(ta, ctx, time.Duration(1000000000000000000))
 	require.NoError(t, err)
 
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	ctx, err = testapp.NextBlock(ta, ctx, time.Duration(1))
 	require.NoError(t, err)
 
 	// confirm that account 1 and account 2 has been slashed, and the slash amount is correct

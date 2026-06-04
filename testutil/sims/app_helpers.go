@@ -5,22 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
 
-	coreheader "cosmossdk.io/core/header"
-	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -74,144 +67,6 @@ func CreateRandomValidatorSet() (*cmttypes.ValidatorSet, error) {
 type GenesisAccount struct {
 	authtypes.GenesisAccount
 	Coins sdk.Coins
-}
-
-// StartupConfig defines the startup configuration new a test application.
-//
-// ValidatorSet defines a custom validator set to be validating the app.
-// BaseAppOption defines the additional operations that must be run on baseapp before app start.
-// AtGenesis defines if the app started should already have produced block or not.
-type StartupConfig struct {
-	ValidatorSet    func() (*cmttypes.ValidatorSet, error)
-	BaseAppOption   runtime.BaseAppOption
-	AtGenesis       bool
-	GenesisAccounts []GenesisAccount
-	DB              dbm.DB
-}
-
-func DefaultStartUpConfig() StartupConfig {
-	priv := secp256k1.GenPrivKey()
-	ba := authtypes.NewBaseAccount(priv.PubKey().Address().Bytes(), priv.PubKey(), 0, 0)
-	ga := GenesisAccount{ba, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000)))}
-	return StartupConfig{
-		ValidatorSet:    CreateRandomValidatorSet,
-		AtGenesis:       false,
-		GenesisAccounts: []GenesisAccount{ga},
-		DB:              dbm.NewMemDB(),
-	}
-}
-
-// Setup initializes a new runtime.App and can inject values into extraOutputs.
-// It uses SetupWithConfiguration under the hood.
-func Setup(appConfig depinject.Config, extraOutputs ...any) (*runtime.App, error) {
-	return SetupWithConfiguration(appConfig, DefaultStartUpConfig(), extraOutputs...)
-}
-
-// SetupAtGenesis initializes a new runtime.App at genesis and can inject values into extraOutputs.
-// It uses SetupWithConfiguration under the hood.
-func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...any) (*runtime.App, error) {
-	cfg := DefaultStartUpConfig()
-	cfg.AtGenesis = true
-	return SetupWithConfiguration(appConfig, cfg, extraOutputs...)
-}
-
-// NextBlock starts a new block.
-func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.Context, error) {
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: ctx.BlockHeight(), Time: ctx.BlockTime()})
-	if err != nil {
-		return sdk.Context{}, err
-	}
-	_, err = app.Commit()
-	if err != nil {
-		return sdk.Context{}, err
-	}
-
-	newBlockTime := ctx.BlockTime().Add(jumpTime)
-
-	header := ctx.BlockHeader()
-	header.Time = newBlockTime
-	header.Height++
-
-	newCtx := app.BaseApp.NewNextBlockContext(header).WithHeaderInfo(coreheader.Info{
-		Height: header.Height,
-		Time:   header.Time,
-	})
-
-	return newCtx, nil
-}
-
-// SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
-// appConfig defines the application configuration (f.e. app_config.go).
-// extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
-func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupConfig, extraOutputs ...any) (*runtime.App, error) {
-	// create the app with depinject
-	var (
-		app        *runtime.App
-		appBuilder *runtime.AppBuilder
-		codec      codec.Codec
-	)
-
-	if err := depinject.Inject(appConfig, append(extraOutputs, &appBuilder, &codec)...); err != nil {
-		return nil, fmt.Errorf("failed to inject dependencies: %w", err)
-	}
-
-	if startupConfig.BaseAppOption != nil {
-		app = appBuilder.Build(startupConfig.DB, startupConfig.BaseAppOption)
-	} else {
-		app = appBuilder.Build(startupConfig.DB)
-	}
-	if err := app.Load(true); err != nil {
-		return nil, fmt.Errorf("failed to load app: %w", err)
-	}
-
-	// create validator set
-	valSet, err := startupConfig.ValidatorSet()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create validator set")
-	}
-
-	var (
-		balances    []banktypes.Balance
-		genAccounts []authtypes.GenesisAccount
-	)
-	for _, ga := range startupConfig.GenesisAccounts {
-		genAccounts = append(genAccounts, ga.GenesisAccount)
-		balances = append(balances, banktypes.Balance{Address: ga.GenesisAccount.GetAddress().String(), Coins: ga.Coins})
-	}
-
-	genesisState, err := GenesisStateWithValSet(codec, app.DefaultGenesis(), valSet, genAccounts, balances...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create genesis state: %w", err)
-	}
-
-	// init chain must be called to stop deliverState from being nil
-	stateBytes, err := cmtjson.MarshalIndent(genesisState, "", " ")
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal default genesis state: %w", err)
-	}
-
-	// init chain will set the validator set and initialize the genesis accounts
-	_, err = app.InitChain(&abci.RequestInitChain{
-		Validators:      []abci.ValidatorUpdate{},
-		ConsensusParams: DefaultConsensusParams,
-		AppStateBytes:   stateBytes,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to init chain: %w", err)
-	}
-
-	// commit genesis changes
-	if !startupConfig.AtGenesis {
-		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
-			Height:             app.LastBlockHeight() + 1,
-			NextValidatorsHash: valSet.Hash(),
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to finalize block: %w", err)
-		}
-	}
-
-	return app, nil
 }
 
 // GenesisStateWithValSet returns a new genesis state with the validator set
@@ -311,5 +166,12 @@ func (m AppOptionsMap) Get(key string) any {
 func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {
 	return AppOptionsMap{
 		flags.FlagHome: homePath,
+	}
+}
+
+func NewAppOptionsWithFlagHomeAndChainID(homePath, chainID string) servertypes.AppOptions {
+	return AppOptionsMap{
+		flags.FlagHome:    homePath,
+		flags.FlagChainID: chainID,
 	}
 }

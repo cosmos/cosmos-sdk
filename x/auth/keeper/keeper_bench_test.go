@@ -5,28 +5,17 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
-
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 )
 
 func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 	b.ReportAllocs()
-	var accountKeeper keeper.AccountKeeper
-	app, err := simtestutil.Setup(
-		depinject.Configs(
-			depinject.Supply(log.NewNopLogger()),
-			testutil.AppConfig,
-		),
-		&accountKeeper,
-	)
-	require.NoError(b, err)
+	ta := testapp.Setup(b)
+	require.NotNil(b, ta)
 
-	ctx := app.NewContext(false)
+	ctx := testapp.NewContext(ta)
+	accountKeeper := ta.AccountKeeper
 
 	// assumes b.N < 2**24
 	for i := 0; i < b.N; i++ {
@@ -45,15 +34,11 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 
 func BenchmarkAccountMapperSetAccount(b *testing.B) {
 	b.ReportAllocs()
-	var accountKeeper keeper.AccountKeeper
-	app, err := simtestutil.Setup(
-		depinject.Configs(
-			depinject.Supply(log.NewNopLogger()),
-			testutil.AppConfig,
-		), &accountKeeper)
-	require.NoError(b, err)
+	ta := testapp.Setup(b)
+	require.NotNil(b, ta)
 
-	ctx := app.NewContext(false)
+	ctx := testapp.NewContext(ta)
+	accountKeeper := ta.AccountKeeper
 
 	// assumes b.N < 2**24
 	for i := 0; b.Loop(); i++ {

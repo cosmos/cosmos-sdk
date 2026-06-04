@@ -5,15 +5,10 @@ import (
 	"sync"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -98,32 +93,19 @@ func TestGRPCRouterHybridHandlers(t *testing.T) {
 }
 
 func TestRegisterQueryServiceTwice(t *testing.T) {
-	// Setup baseapp.
-	var appBuilder *runtime.AppBuilder
-	err := depinject.Inject(
-		depinject.Configs(
-			makeMinimalConfig(),
-			depinject.Supply(log.NewTestLogger(t)),
-		),
-		&appBuilder)
-	require.NoError(t, err)
-	db := dbm.NewMemDB()
-	app := appBuilder.Build(db)
+	// Setup a minimal baseapp with just a query router.
+	qr := baseapp.NewGRPCQueryRouter()
+	interfaceRegistry := testdata.NewTestInterfaceRegistry()
+	qr.SetInterfaceRegistry(interfaceRegistry)
 
 	// First time registering service shouldn't panic.
 	require.NotPanics(t, func() {
-		testdata.RegisterQueryServer(
-			app.GRPCQueryRouter(),
-			testdata.QueryImpl{},
-		)
+		testdata.RegisterQueryServer(qr, testdata.QueryImpl{})
 	})
 
 	// Second time should panic.
 	require.Panics(t, func() {
-		testdata.RegisterQueryServer(
-			app.GRPCQueryRouter(),
-			testdata.QueryImpl{},
-		)
+		testdata.RegisterQueryServer(qr, testdata.QueryImpl{})
 	})
 }
 

@@ -23,12 +23,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	_ "github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // https://github.com/improbable-eng/grpc-web/blob/master/go/grpcweb/wrapper_test.go used as a reference
@@ -47,12 +43,11 @@ type GRPCWebTestSuite struct {
 func (s *GRPCWebTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg, err := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
-
-	s.NoError(err)
+	cfg := network.DefaultConfig(testapp.SDKAppFixture)
 	cfg.NumValidators = 1
 	s.cfg = cfg
 
+	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
@@ -73,7 +68,8 @@ func (s *GRPCWebTestSuite) Test_Latest_Validators() {
 		headers, trailers, responses, err := s.makeGrpcRequest(
 			"/cosmos.base.tendermint.v1beta1.Service/GetLatestValidatorSet",
 			headerWithFlag(),
-			serializeProtoMessages([]proto.Message{&cmtservice.GetLatestValidatorSetRequest{}}), false)
+			serializeProtoMessages([]proto.Message{&cmtservice.GetLatestValidatorSetRequest{}}), false,
+		)
 
 		s.Require().NoError(err)
 		s.Require().Equal(1, len(responses))
@@ -93,7 +89,8 @@ func (s *GRPCWebTestSuite) Test_Total_Supply() {
 		headers, trailers, responses, err := s.makeGrpcRequest(
 			"/cosmos.bank.v1beta1.Query/TotalSupply",
 			headerWithFlag(),
-			serializeProtoMessages([]proto.Message{&banktypes.QueryTotalSupplyRequest{}}), false)
+			serializeProtoMessages([]proto.Message{&banktypes.QueryTotalSupplyRequest{}}), false,
+		)
 
 		s.Require().NoError(err)
 		s.Require().Equal(1, len(responses))

@@ -11,9 +11,11 @@ import (
 
 	"cosmossdk.io/log/v2"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -21,6 +23,19 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
+
+// AppI implements the common methods for a Cosmos SDK-based application
+// used in simulation testing.
+type AppI interface {
+	Name() string
+	LegacyAmino() *codec.LegacyAmino
+	BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error)
+	EndBlocker(ctx sdk.Context) (sdk.EndBlock, error)
+	InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error)
+	LoadHeight(height int64) error
+	ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs, modulesToExport []string) (servertypes.ExportedApp, error)
+	SimulationManager() *module.SimulationManager
+}
 
 // SetupSimulation creates the DB (using config.DBBackend), temporary directory and logger for simulation tests.
 // If `skip` is false it returns `true` for the "skip" return value without creating any resources.
@@ -54,13 +69,13 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 // and returns all the modules weighted operations
 //
 // Deprecated: use BuildSimulationOperations with TxConfig
-func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes.Config) []simtypes.WeightedOperation {
+func SimulationOperations(app AppI, cdc codec.JSONCodec, config simtypes.Config) []simtypes.WeightedOperation {
 	return BuildSimulationOperations(app, cdc, config, moduletestutil.MakeTestTxConfig())
 }
 
 // BuildSimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
-func BuildSimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes.Config, txConfig client.TxConfig) []simtypes.WeightedOperation {
+func BuildSimulationOperations(app AppI, cdc codec.JSONCodec, config simtypes.Config, txConfig client.TxConfig) []simtypes.WeightedOperation {
 	simState := module.SimulationState{
 		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,
@@ -87,7 +102,7 @@ func BuildSimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config sim
 
 // CheckExportSimulation exports the app state and simulation parameters to JSON
 // if the export paths are defined.
-func CheckExportSimulation(app runtime.AppI, config simtypes.Config, params simtypes.Params) error {
+func CheckExportSimulation(app AppI, config simtypes.Config, params simtypes.Params) error {
 	if config.ExportStatePath != "" {
 		fmt.Println("exporting app state...")
 		exported, err := app.ExportAppStateAndValidators(false, nil, nil)

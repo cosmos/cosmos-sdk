@@ -1,0 +1,765 @@
+package app
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"sync"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	dbm "github.com/cosmos/cosmos-db"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/log/v2"
+
+	"github.com/cosmos/cosmos-sdk/app/services"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/server/api"
+	"github.com/cosmos/cosmos-sdk/server/config"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	epochskeeper "github.com/cosmos/cosmos-sdk/x/epochs/keeper"
+	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+)
+
+// AppI is the interface that all Cosmos SDK applications must satisfy.
+// It extends servertypes.Application with module management, simulation, encoding,
+// and AutoCLI surface.
+type AppI interface { //nolint:revive // keeping this name for clarity
+	servertypes.Application
+
+	ModuleManager() *module.Manager
+	BasicModuleManager() module.BasicManager
+	UpgradeKeeper() *upgradekeeper.Keeper
+	Configurator() module.Configurator
+	SetStoreLoader(loader baseapp.StoreLoader)
+
+	ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs, modulesToExport []string) (servertypes.ExportedApp, error)
+	SimulationManager() *module.SimulationManager
+	EncodingConfig() EncodingConfig
+
+	AutoCliOpts() autocli.AppOptions
+
+	DefaultGenesis() map[string]json.RawMessage
+}
+
+var _ AppI = &SDKApp{}
+
+// SDKApp is the canonical base application for Cosmos SDK chains. It wires the
+// standard keeper set, registers modules, and manages the app lifecycle.
+//
+// Construction sequence:
+//
+//  1. NewSDKApp — allocates keepers and store keys from SDKAppConfig
+//  2. AddModules (optional, repeatable) — register custom modules before loading
+//  3. LoadModules — finalizes the module manager, mounts stores, sets handlers
+//  4. LoadLatestVersion — opens the store at the last committed height
+//
+// Custom modules must be added before LoadModules. AddModules after LoadModules
+// returns an error without mutating app state.
+//
+// Module account permissions may be supplied in SDKAppConfig.ModuleAccountPerms
+// before NewSDKApp, or declared by custom modules via ModuleAccountPermissions()
+// and merged automatically during AddModules.
+type SDKApp struct {
+	loadMu sync.Mutex
+	loaded bool
+
+	cfg SDKAppConfig
+
+	*baseapp.BaseApp
+	encodingConfig EncodingConfig
+
+	// storeKeys to access the substores
+	storeKeys map[string]*storetypes.KVStoreKey
+	// transientStoreKeys to access transient substores
+	transientStoreKeys map[string]*storetypes.TransientStoreKey
+
+	// the module manager
+	moduleManager      *module.Manager
+	basicModuleManager module.BasicManager
+
+	// simulation manager
+	simulationManager *module.SimulationManager
+
+	// module Configurator
+	configurator module.Configurator
+
+	// essential keepers
+	AccountKeeper         authkeeper.AccountKeeper
+	BankKeeper            bankkeeper.BaseKeeper
+	StakingKeeper         *stakingkeeper.Keeper
+	SlashingKeeper        slashingkeeper.Keeper
+	DistrKeeper           distrkeeper.Keeper
+	GovKeeper             govkeeper.Keeper
+	upgradeKeeper         *upgradekeeper.Keeper
+	EvidenceKeeper        *evidencekeeper.Keeper
+	ConsensusParamsKeeper consensusparamkeeper.Keeper
+
+	// supplementary keepers
+	MintKeeper     *mintkeeper.Keeper
+	FeeGrantKeeper *feegrantkeeper.Keeper
+	AuthzKeeper    *authzkeeper.Keeper
+	EpochsKeeper   *epochskeeper.Keeper
+
+	moduleAccountPerms map[string][]string
+	orderPreBlockers   []string
+	orderBeginBlockers []string
+	orderEndBlockers   []string
+	orderInitGenesis   []string
+	orderExportGenesis []string
+
+	moduleLoader
+}
+
+type moduleLoader struct {
+	requiredModules []module.AppModule
+	optionalModules []module.AppModule
+	customModules   []module.AppModule
+}
+
+func newModuleLoader() moduleLoader {
+	return moduleLoader{
+		requiredModules: make([]module.AppModule, 0),
+		optionalModules: make([]module.AppModule, 0),
+		customModules:   make([]module.AppModule, 0),
+	}
+}
+
+func initBaseApp(
+	logger log.Logger,
+	db dbm.DB,
+	traceStore io.Writer,
+	encodingConfig EncodingConfig,
+	appConfig SDKAppConfig,
+) *baseapp.BaseApp {
+	baseAppOptions := []func(*baseapp.BaseApp){
+		func(app *baseapp.BaseApp) {
+			app.SetMempool(appConfig.Mempool)
+		},
+		func(app *baseapp.BaseApp) {
+			app.SetVerifyVoteExtensionHandler(appConfig.VerifyVoteExtensionHandler)
+		},
+		func(app *baseapp.BaseApp) {
+			app.SetExtendVoteHandler(appConfig.ExtendVoteHandler)
+		},
+		func(app *baseapp.BaseApp) {
+			app.SetPrepareProposal(appConfig.PrepareProposalHandler)
+		},
+		func(app *baseapp.BaseApp) {
+			app.SetProcessProposal(appConfig.ProcessProposalHandler)
+		},
+	}
+
+	baseAppOptions = append(baseAppOptions, appConfig.BaseAppOptions...)
+
+	bApp := baseapp.NewBaseApp(appConfig.AppName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
+	bApp.SetVersion(version.Version)
+	bApp.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
+	bApp.SetTxEncoder(encodingConfig.TxConfig.TxEncoder())
+
+	return bApp
+}
+
+func NewSDKApp(
+	logger log.Logger,
+	db dbm.DB,
+	traceStore io.Writer,
+	appConfig SDKAppConfig,
+) *SDKApp {
+	logger.Info("starting SDK app construction")
+
+	if err := appConfig.Validate(); err != nil {
+		panic(err)
+	}
+	appConfig.processOptionalModules()
+
+	encodingConfig := NewEncodingConfigFromOptions(appConfig.InterfaceRegistryOptions)
+	bApp := initBaseApp(logger, db, traceStore, encodingConfig, appConfig)
+
+	storeKeys := storetypes.NewKVStoreKeys(storeKeysForConfig(appConfig)...)
+	transientStoreKeys := storetypes.NewTransientStoreKeys(appConfig.TransientStoreKeys...)
+	sdkApp := &SDKApp{
+		cfg:                appConfig,
+		BaseApp:            bApp,
+		encodingConfig:     encodingConfig,
+		storeKeys:          storeKeys,
+		transientStoreKeys: transientStoreKeys,
+		orderPreBlockers:   appConfig.OrderPreBlockers,
+		orderBeginBlockers: appConfig.OrderBeginBlockers,
+		orderEndBlockers:   appConfig.OrderEndBlockers,
+		orderInitGenesis:   appConfig.OrderInitGenesis,
+		orderExportGenesis: appConfig.OrderExportGenesis,
+		moduleAccountPerms: appConfig.ModuleAccountPerms,
+		moduleLoader:       newModuleLoader(),
+	}
+
+	// add keepers
+	sdkApp.initConsensusModule(appConfig)
+	sdkApp.initAccountModule(appConfig)
+	sdkApp.initBankModule(appConfig)
+	sdkApp.initVestingModule(appConfig)
+	sdkApp.initStakingModule(appConfig)
+	sdkApp.initGenutilModule(appConfig)
+	sdkApp.initMintModule(appConfig)
+	sdkApp.initDistrModules(appConfig)
+	sdkApp.initSlashingModule(appConfig)
+	sdkApp.initFeeGrantModule(appConfig)
+	sdkApp.initAuthzModule(appConfig)
+	sdkApp.initUpgradeModule(appConfig)
+	sdkApp.initGovModule(appConfig)
+	sdkApp.initEvidenceModule(appConfig)
+	sdkApp.initEpochsModule(appConfig)
+
+	sdkApp.Logger().Info(
+		fmt.Sprintf(
+			"finished SDK app construction (required modules: %d, optional modules: %d)",
+			len(sdkApp.requiredModules),
+			len(sdkApp.optionalModules),
+		),
+	)
+
+	return sdkApp
+}
+
+func (app *SDKApp) configureExecutionMode() {
+	app.configureOptimisticExecution()
+	app.configureBlockSTM()
+}
+
+func (app *SDKApp) configureOptimisticExecution() {
+	if app.cfg.OptimisticExecutionEnabled {
+		baseapp.SetOptimisticExecution()(app.BaseApp)
+	}
+}
+
+func (app *SDKApp) configureBlockSTM() {
+	if app.cfg.BlockSTM == nil {
+		return
+	}
+
+	stores := app.GetStoreKeys()
+
+	workers := app.cfg.BlockSTM.Workers
+
+	var coinDenom func(storetypes.MultiStore) string
+	if app.cfg.BlockSTM.Estimate {
+		coinDenom = func(storetypes.MultiStore) string { return sdk.DefaultBondDenom }
+	}
+
+	app.SetBlockSTMTxRunner(
+		txnrunner.NewSTMRunner(
+			app.encodingConfig.TxConfig.TxDecoder(),
+			stores,
+			workers,
+			app.cfg.BlockSTM.Estimate,
+			coinDenom,
+		),
+	)
+}
+
+// AddModules registers one or more custom modules with the app. It must be called
+// before LoadModules; it returns an error if LoadModules has already been called.
+//
+// Each Module must implement StoreKeysProvider to declare its KV store keys.
+// Optionally implement TransientStoreKeysProvider for transient keys.
+//
+// Module account permissions declared via ModuleAccountPermissions() are merged
+// into the app's perm map immediately and blocked in BankKeeper. AccountKeeper
+// is reloaded with the complete merged set at the start of LoadModules.
+//
+// Wrapping a third-party module that doesn't implement the Module interface:
+//
+//	type myModule struct {
+//	    thirdparty.AppModule
+//	    storeKey *storetypes.KVStoreKey
+//	}
+//	func (m myModule) StoreKeys() map[string]*storetypes.KVStoreKey {
+//	    return map[string]*storetypes.KVStoreKey{m.storeKey.Name(): m.storeKey}
+//	}
+//	func (myModule) ModuleAccountPermissions() map[string][]string { return nil }
+func (app *SDKApp) AddModules(modules ...Module) error {
+	for _, mod := range modules {
+		err := app.addModule(mod)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (app *SDKApp) addModule(mod Module) error {
+	if app.moduleManager != nil {
+		return fmt.Errorf("cannot add modules after LoadModules has been called")
+	}
+
+	// check all duplicates before any mutation so the function is atomic on error
+	for name := range mod.ModuleAccountPermissions() {
+		if _, exists := app.moduleAccountPerms[name]; exists {
+			return fmt.Errorf("module account %q is already registered; cannot add via module %s", name, mod.Name())
+		}
+	}
+	for name := range mod.StoreKeys() {
+		if _, found := app.storeKeys[name]; found {
+			return fmt.Errorf("store key %q already registered, cannot add module %s", name, mod.Name())
+		}
+	}
+	if transientStoreKeyProvider, ok := mod.(TransientStoreKeysProvider); ok {
+		for name := range transientStoreKeyProvider.TransientStoreKeys() {
+			if _, found := app.transientStoreKeys[name]; found {
+				return fmt.Errorf("transient store key %q already registered, cannot add module %s", name, mod.Name())
+			}
+		}
+	}
+
+	// all checks passed — now mutate
+	for name, storeKey := range mod.StoreKeys() {
+		app.storeKeys[name] = storeKey
+	}
+	if transientStoreKeyProvider, ok := mod.(TransientStoreKeysProvider); ok {
+		for name, storeKey := range transientStoreKeyProvider.TransientStoreKeys() {
+			app.transientStoreKeys[name] = storeKey
+		}
+	}
+
+	// merge module account perms, make them available in AccountKeeper immediately,
+	// and block their addresses in BankKeeper
+	blockedAddrs := app.BankKeeper.GetBlockedAddresses()
+	for name, perms := range mod.ModuleAccountPermissions() {
+		app.moduleAccountPerms[name] = perms
+		app.AccountKeeper.AddModuleAccountPerm(name, perms)
+		if name != govtypes.ModuleName {
+			blockedAddrs[authtypes.NewModuleAddress(name).String()] = true
+		}
+	}
+
+	// append actual module to the custom module list
+	app.customModules = append(app.customModules, mod)
+
+	// append to order slices if the module is not already configured.
+	app.orderPreBlockers = appendIfMissing(app.orderPreBlockers, mod.Name())
+	app.orderBeginBlockers = appendIfMissing(app.orderBeginBlockers, mod.Name())
+	app.orderEndBlockers = appendIfMissing(app.orderEndBlockers, mod.Name())
+	app.orderInitGenesis = appendIfMissing(app.orderInitGenesis, mod.Name())
+	app.orderExportGenesis = appendIfMissing(app.orderExportGenesis, mod.Name())
+
+	return nil
+}
+
+func appendIfMissing(order []string, moduleName string) []string {
+	for _, name := range order {
+		if name == moduleName {
+			return order
+		}
+	}
+
+	return append(order, moduleName)
+}
+
+func (app *SDKApp) LoadModules() {
+	app.loadMu.Lock()
+	defer app.loadMu.Unlock()
+	if app.loaded {
+		return
+	}
+	app.loadModules() // panic propagates; loaded stays false so the state is not silently corrupted
+	app.loaded = true
+}
+
+func (app *SDKApp) loadModules() {
+	// Collect staking hooks from custom modules before finalizing hook wiring.
+	var extraStakingHooks []stakingtypes.StakingHooks
+	for _, mod := range app.customModules {
+		if h, ok := mod.(StakingHooksProvider); ok {
+			extraStakingHooks = append(extraStakingHooks, h.StakingHooks())
+		}
+	}
+	app.processHooks(extraStakingHooks)
+
+	// Reload AccountKeeper with the final merged perm set (config defaults + custom module perms).
+	app.AccountKeeper.LoadMaccPerms(app.moduleAccountPerms)
+
+	app.Logger().Info(
+		fmt.Sprintf(
+			"loading modules (required: %d, optional: %d, custom: %d)",
+			len(app.requiredModules),
+			len(app.optionalModules),
+			len(app.customModules),
+		),
+	)
+
+	// NOTE: Any module instantiated in the module manager that is later modified
+	// must be passed by reference here.
+	app.moduleManager = module.NewManager(
+		append(append(app.requiredModules, app.optionalModules...), app.customModules...)...,
+	)
+
+	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
+	// non-dependent module elements, such as codec registration and genesis verification.
+	// By default, it is composed of all the module from the module manager.
+	// Additionally, app module basics can be overwritten by passing them as argument.
+	app.basicModuleManager = module.NewBasicManagerFromManager(
+		app.moduleManager,
+		map[string]module.AppModuleBasic{
+			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+			govtypes.ModuleName: gov.NewAppModuleBasic(
+				[]govclient.ProposalHandler{},
+			),
+		},
+	)
+	app.basicModuleManager.RegisterLegacyAminoCodec(app.encodingConfig.LegacyAmino)
+	app.basicModuleManager.RegisterInterfaces(app.encodingConfig.InterfaceRegistry)
+
+	app.moduleManager.SetOrderPreBlockers(app.orderPreBlockers...)
+	app.moduleManager.SetOrderBeginBlockers(app.orderBeginBlockers...)
+	app.moduleManager.SetOrderEndBlockers(app.orderEndBlockers...)
+	app.moduleManager.SetOrderInitGenesis(app.orderInitGenesis...)
+	app.moduleManager.SetOrderExportGenesis(app.orderExportGenesis...)
+
+	app.Logger().Info("registering module services")
+	app.configurator = module.NewConfigurator(app.encodingConfig.Codec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+	err := app.moduleManager.RegisterServices(app.configurator)
+	if err != nil {
+		panic(err)
+	}
+	if len(app.cfg.Upgrades) > 0 {
+		app.Logger().Info(fmt.Sprintf("registering configured upgrades: %d", len(app.cfg.Upgrades)))
+		var appI AppI = app
+		RegisterUpgradeHandlers[AppI](appI, app.cfg.Upgrades...)
+	}
+
+	app.Logger().Info("registering AutoCLI and reflection services")
+	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), services.NewAutoCLIQueryService(app.moduleManager.Modules))
+	reflectionSvc, err := services.NewReflectionService()
+	if err != nil {
+		panic(err)
+	}
+	reflectionv1.RegisterReflectionServiceServer(app.GRPCQueryRouter(), reflectionSvc)
+
+	// create the simulation manager and define the order of the modules for deterministic simulations
+	//
+	// NOTE: this is not required apps that don't use the simulator for fuzz testing
+	// transactions
+	overrideModules := map[string]module.AppModuleSimulation{
+		authtypes.ModuleName: auth.NewAppModule(app.encodingConfig.Codec, app.AccountKeeper, authsims.RandomGenesisAccounts),
+	}
+	app.Logger().Info("initializing simulation manager")
+	app.simulationManager = module.NewSimulationManagerFromAppModules(app.moduleManager.Modules, overrideModules)
+
+	app.simulationManager.RegisterStoreDecoders()
+
+	// Configure execution mode after all modules are loaded so custom module store keys
+	// are included in the BlockSTM conflict-detection store set.
+	app.Logger().Info("configuring execution mode")
+	app.configureExecutionMode()
+
+	// initialize BaseApp
+	app.Logger().Info("wiring baseapp lifecycle handlers")
+	app.SetInitChainer(app.InitChainer)
+	app.SetPreBlocker(app.PreBlocker)
+	app.SetBeginBlocker(app.BeginBlocker)
+	app.SetEndBlocker(app.EndBlocker)
+
+	// default pre and post handlers
+	app.Logger().Info("setting default ante and post handlers")
+	app.setAnteHandler(app.TxConfig())
+	app.setPostHandler()
+
+	// initialize stores
+	app.Logger().Info("mounting KV and transient stores")
+	app.MountKVStores(app.storeKeys)
+	app.MountTransientStores(app.transientStoreKeys)
+
+	if err := app.RegisterStreamingServices(app.cfg.AppOpts, app.storeKeys); err != nil {
+		panic(err)
+	}
+
+	app.Logger().Info("module loading complete")
+}
+
+// Name returns the Name of the App
+func (app *SDKApp) Name() string { return app.BaseApp.Name() }
+
+// PreBlocker application updates every pre block
+func (app *SDKApp) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	return app.moduleManager.PreBlock(ctx)
+}
+
+// BeginBlocker application updates every begin block
+func (app *SDKApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
+	return app.moduleManager.BeginBlock(ctx)
+}
+
+// EndBlocker application updates every end block
+func (app *SDKApp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+	return app.moduleManager.EndBlock(ctx)
+}
+
+func (app *SDKApp) Configurator() module.Configurator {
+	return app.configurator
+}
+
+// InitChainer application update at chain initialization
+func (app *SDKApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+	var genesisState sdk.GenesisState
+	if len(req.AppStateBytes) > 0 {
+		if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
+			return nil, err
+		}
+	}
+	if err := app.upgradeKeeper.SetModuleVersionMap(ctx, app.moduleManager.GetVersionMap()); err != nil {
+		return nil, err
+	}
+	return app.moduleManager.InitGenesis(ctx, app.encodingConfig.Codec, genesisState)
+}
+
+// LoadHeight loads a particular height
+func (app *SDKApp) LoadHeight(height int64) error {
+	return app.LoadVersion(height)
+}
+
+// LegacyAmino returns SDKApp's amino codec.
+//
+// NOTE: This is solely to be used for testing purposes as it may be desirable
+// for modules to register their own custom testing types.
+func (app *SDKApp) LegacyAmino() *codec.LegacyAmino {
+	return app.encodingConfig.LegacyAmino
+}
+
+// AppCodec returns SDKApp's app codec.
+//
+// NOTE: This is solely to be used for testing purposes as it may be desirable
+// for modules to register their own custom testing types.
+func (app *SDKApp) AppCodec() *codec.ProtoCodec {
+	return app.encodingConfig.Codec
+}
+
+// InterfaceRegistry returns SimApp's InterfaceRegistry
+func (app *SDKApp) InterfaceRegistry() types.InterfaceRegistry {
+	return app.encodingConfig.InterfaceRegistry
+}
+
+// TxConfig returns SimApp's TxConfig
+func (app *SDKApp) TxConfig() client.TxConfig {
+	return app.encodingConfig.TxConfig
+}
+
+// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
+func (app *SDKApp) DefaultGenesis() map[string]json.RawMessage {
+	return app.BasicModuleManager().DefaultGenesis(app.encodingConfig.Codec)
+}
+
+// GetKey returns the KVStoreKey for the provided store key.
+//
+// NOTE: This is solely to be used for testing purposes.
+func (app *SDKApp) GetKey(storeKey string) *storetypes.KVStoreKey {
+	return app.mustGetStoreKey(storeKey)
+}
+
+// GetStoreKeys returns all the stored store Keys.
+func (app *SDKApp) GetStoreKeys() []storetypes.StoreKey {
+	keys := make([]storetypes.StoreKey, 0, len(app.storeKeys))
+	for _, key := range app.storeKeys {
+		keys = append(keys, key)
+	}
+
+	return keys
+}
+
+// GetTransientStoreKey returns the TransientStoreKey for the provided store key.
+//
+// NOTE: This is solely to be used for testing purposes.
+func (app *SDKApp) GetTransientStoreKey(storeKey string) *storetypes.TransientStoreKey {
+	transientStoreKey, found := app.transientStoreKeys[storeKey]
+	if !found {
+		return nil
+	}
+	return transientStoreKey
+}
+
+// SimulationManager implements the SimulationApp interface
+func (app *SDKApp) SimulationManager() *module.SimulationManager {
+	return app.simulationManager
+}
+
+// RegisterAPIRoutes registers all application module routes with the provided
+// API server.
+func (app *SDKApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
+	clientCtx := apiSvr.ClientCtx
+	// Register new tx routes from grpc-gateway.
+	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	// Register new CometBFT queries routes from grpc-gateway.
+	cmtservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	// Register node gRPC service for grpc-gateway.
+	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	// Register grpc-gateway routes for all modules.
+	app.basicModuleManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	// register swagger API from root so that other applications can override easily
+	if err := server.RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router, apiConfig.Swagger); err != nil {
+		panic(err)
+	}
+}
+
+// RegisterTxService implements the Application.RegisterTxService method.
+func (app *SDKApp) RegisterTxService(clientCtx client.Context) {
+	authtx.RegisterTxService(app.GRPCQueryRouter(), clientCtx, app.Simulate, app.encodingConfig.InterfaceRegistry)
+}
+
+// RegisterTendermintService implements the Application.RegisterTendermintService method.
+func (app *SDKApp) RegisterTendermintService(clientCtx client.Context) {
+	cmtApp := server.NewCometABCIWrapper(app)
+	cmtservice.RegisterTendermintService(
+		clientCtx,
+		app.GRPCQueryRouter(),
+		app.encodingConfig.InterfaceRegistry,
+		cmtApp.Query,
+	)
+}
+
+func (app *SDKApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg, func() int64 {
+		return app.CommitMultiStore().EarliestVersion()
+	})
+}
+
+func (app *SDKApp) setAnteHandler(txConfig client.TxConfig) {
+	handlerOpts := app.buildAnteHandlerOptions(txConfig)
+
+	anteHandler, err := ante.NewAnteHandler(
+		handlerOpts,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	// Set the AnteHandler for the app
+	app.SetAnteHandler(anteHandler)
+}
+
+func (app *SDKApp) buildAnteHandlerOptions(txConfig client.TxConfig) ante.HandlerOptions {
+	var sigVerifyOpts []ante.SigVerificationDecoratorOption
+	if app.cfg.WithUnorderedTx {
+		sigVerifyOpts = []ante.SigVerificationDecoratorOption{
+			ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
+			ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
+		}
+	}
+
+	handlerOpts := ante.HandlerOptions{
+		AccountKeeper:    app.AccountKeeper,
+		BankKeeper:       app.BankKeeper,
+		SignModeHandler:  txConfig.SignModeHandler(),
+		SigGasConsumer:   ante.DefaultSigVerificationGasConsumer,
+		SigVerifyOptions: sigVerifyOpts,
+	}
+	// Keep FeegrantKeeper nil when feegrant is disabled; assigning a typed-nil
+	// *feegrantkeeper.Keeper to the interface would bypass downstream nil checks.
+	if app.FeeGrantKeeper != nil {
+		handlerOpts.FeegrantKeeper = app.FeeGrantKeeper
+	}
+
+	return handlerOpts
+}
+
+func (app *SDKApp) setPostHandler() {
+	postHandler, err := posthandler.NewPostHandler(
+		posthandler.HandlerOptions{},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	app.SetPostHandler(postHandler)
+}
+
+// BlockedAddresses returns all the app's blocked account addresses.
+func (app *SDKApp) BlockedAddresses() map[string]bool {
+	modAccAddrs := make(map[string]bool)
+	for acc := range app.moduleAccountPerms {
+		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
+	}
+
+	// allow the following addresses to receive funds
+	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
+	return modAccAddrs
+}
+
+// AutoCliOpts returns the autocli options for the app.
+func (app *SDKApp) AutoCliOpts() autocli.AppOptions {
+	modules := make(map[string]appmodule.AppModule)
+	for _, m := range app.moduleManager.Modules {
+		if moduleWithName, ok := m.(NameProvider); ok {
+			moduleName := moduleWithName.Name()
+			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
+				modules[moduleName] = appModule
+			}
+		}
+	}
+
+	return autocli.AppOptions{
+		Modules:               modules,
+		ModuleOptions:         services.ExtractAutoCLIOptions(app.moduleManager.Modules),
+		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
+	}
+}
+
+func (app *SDKApp) ModuleManager() *module.Manager {
+	return app.moduleManager
+}
+
+func (app *SDKApp) BasicModuleManager() module.BasicManager {
+	return app.basicModuleManager
+}
+
+func (app *SDKApp) UpgradeKeeper() *upgradekeeper.Keeper {
+	return app.upgradeKeeper
+}
+
+func (app *SDKApp) EncodingConfig() EncodingConfig {
+	return app.encodingConfig
+}

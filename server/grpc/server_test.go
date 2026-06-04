@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	reflectionv2 "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
@@ -40,8 +41,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var err error
 	s.T().Log("setting up integration test suite")
 
-	s.cfg, err = network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
-	s.NoError(err)
+	s.cfg = network.DefaultConfig(testapp.SDKAppFixture)
 	s.cfg.NumValidators = 1
 
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
@@ -63,14 +63,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.conn.Close()
 	s.network.Cleanup()
-}
-
-func (s *IntegrationTestSuite) TestGRPCServer_TestService() {
-	// gRPC query to test service should work
-	testClient := testdata.NewQueryClient(s.conn)
-	testRes, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
-	s.Require().NoError(err)
-	s.Require().Equal("hello", testRes.Message)
 }
 
 func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
@@ -201,13 +193,13 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 		{"18446744073709551615", "value out of range"}, // max uint64, which is  > max(int64)
 		{"-9223372036854775809", "value out of range"}, // Out of the range for negative int64
 	}
+	val0 := s.network.Validators[0]
 	for _, tt := range invalidHeightStrs {
 		t.Run(tt.value, func(t *testing.T) {
-			testClient := testdata.NewQueryClient(s.conn)
+			bankClient := banktypes.NewQueryClient(s.conn)
 			ctx := metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, tt.value)
-			testRes, err := testClient.Echo(ctx, &testdata.EchoRequest{Message: "hello"})
+			_, err := bankClient.Balance(ctx, &banktypes.QueryBalanceRequest{Address: val0.Address.String(), Denom: s.cfg.BondDenom})
 			require.Error(t, err)
-			require.Nil(t, testRes)
 			require.Contains(t, err.Error(), tt.wantErr)
 		})
 	}

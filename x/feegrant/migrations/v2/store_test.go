@@ -9,7 +9,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -80,7 +79,7 @@ func TestMigration(t *testing.T) {
 	}
 
 	ctx = ctx.WithBlockTime(now.Add(30 * time.Hour))
-	require.NoError(t, v2.MigrateStore(ctx, runtime.NewKVStoreService(feegrantKey), cdc))
+	require.NoError(t, v2.MigrateStore(ctx, sdk.NewKVStoreService(feegrantKey), cdc))
 	store = ctx.KVStore(feegrantKey)
 
 	require.NotNil(t, store.Get(v2.FeeAllowanceKey(granter1, grantee1)))

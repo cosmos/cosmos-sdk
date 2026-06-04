@@ -8,15 +8,13 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdkapp "github.com/cosmos/cosmos-sdk/app"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -24,7 +22,6 @@ import (
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
-	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -54,12 +51,9 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 
 	for i, w := range weightedOps {
-		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, suite.ctx.ChainID())
 		suite.Require().NoError(err)
 
-		// the following checks are very much dependent from the ordering of the output given
-		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
-		// will fail
 		suite.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
 		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
 		suite.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
@@ -82,7 +76,7 @@ func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
 
 	// execute operation
 	op := simulation.SimulateMsgSetWithdrawAddress(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
 	var msg types.MsgSetWithdrawAddress
@@ -128,7 +122,7 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 
 	// execute operation
 	op := simulation.SimulateMsgWithdrawDelegatorReward(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
 	var msg types.MsgWithdrawDelegatorReward
@@ -195,7 +189,7 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 
 	// execute operation
 	op := simulation.SimulateMsgWithdrawValidatorCommission(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, suite.ctx.ChainID())
 	if !operationMsg.OK {
 		suite.Require().Equal("could not find account", operationMsg.Comment)
 	} else {
@@ -227,7 +221,7 @@ func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
 
 	// execute operation
 	op := simulation.SimulateMsgFundCommunityPool(suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
 	var msg types.MsgFundCommunityPool
@@ -244,7 +238,7 @@ type SimTestSuite struct {
 	suite.Suite
 
 	ctx         sdk.Context
-	app         *runtime.App
+	app         *sdkapp.SDKApp
 	genesisVals []stakingtypes.Validator
 
 	txConfig      client.TxConfig
@@ -256,27 +250,15 @@ type SimTestSuite struct {
 }
 
 func (suite *SimTestSuite) SetupTest() {
-	var (
-		appBuilder *runtime.AppBuilder
-		err        error
-	)
-	suite.app, err = simtestutil.Setup(
-		depinject.Configs(
-			distrtestutil.AppConfig,
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&suite.accountKeeper,
-		&suite.bankKeeper,
-		&suite.cdc,
-		&appBuilder,
-		&suite.stakingKeeper,
-		&suite.distrKeeper,
-		&suite.txConfig,
-	)
-
-	suite.NoError(err)
-
-	suite.ctx = suite.app.NewContext(false)
+	ta := testapp.Setup(suite.T())
+	suite.app = ta
+	suite.accountKeeper = ta.AccountKeeper
+	suite.bankKeeper = ta.BankKeeper
+	suite.cdc = ta.AppCodec()
+	suite.stakingKeeper = ta.StakingKeeper
+	suite.distrKeeper = ta.DistrKeeper
+	suite.txConfig = ta.TxConfig()
+	suite.ctx = testapp.NewContext(ta)
 
 	genesisVals, err := suite.stakingKeeper.GetAllValidators(suite.ctx)
 	suite.Require().NoError(err)

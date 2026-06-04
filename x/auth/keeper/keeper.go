@@ -129,15 +129,12 @@ var _ AccountKeeperI = &AccountKeeper{}
 // types.PermissionsForAddress and is used in keeper.ValidatePermissions. Permissions are plain strings,
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
+//
+// Callers using SDKApp may pass nil for maccPerms and call LoadMaccPerms after all modules have been registered.
 func NewAccountKeeper(
 	cdc codec.BinaryCodec, storeService store.KVStoreService, proto func() sdk.AccountI,
 	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string, opts ...InitOption,
 ) AccountKeeper {
-	permAddrs := make(map[string]types.PermissionsForAddress)
-	for name, perms := range maccPerms {
-		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
-	}
-
 	sb := collections.NewSchemaBuilder(storeService)
 
 	ak := AccountKeeper{
@@ -146,7 +143,7 @@ func NewAccountKeeper(
 		storeService:    storeService,
 		proto:           proto,
 		cdc:             cdc,
-		permAddrs:       permAddrs,
+		permAddrs:       make(map[string]types.PermissionsForAddress),
 		authority:       authority,
 		Params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		AccountNumber:   collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"), //nolint:staticcheck // kept in place for the migration
@@ -162,6 +159,11 @@ func NewAccountKeeper(
 	for _, opt := range opts {
 		opt(&ak)
 	}
+
+	if len(maccPerms) > 0 {
+		ak.LoadMaccPerms(maccPerms)
+	}
+
 	return ak
 }
 
@@ -213,6 +215,25 @@ func (ak AccountKeeper) NextAccountNumber(ctx context.Context, acc sdk.AccountI)
 // GetModulePermissions fetches per-module account permissions.
 func (ak AccountKeeper) GetModulePermissions() map[string]types.PermissionsForAddress {
 	return ak.permAddrs
+}
+
+// LoadMaccPerms replaces the keeper's full module-account permission set.
+// Must be called before the chain begins serving blocks.
+// Mutates the existing map in-place so all keeper copies see the update.
+func (ak AccountKeeper) LoadMaccPerms(maccPerms map[string][]string) {
+	for k := range ak.permAddrs {
+		delete(ak.permAddrs, k)
+	}
+	for name, perms := range maccPerms {
+		ak.permAddrs[name] = types.NewPermissionsForAddress(name, perms)
+	}
+}
+
+// AddModuleAccountPerm adds or replaces a single module account permission without
+// clearing the full set. Used by addModule to make perms available immediately after
+// AddModules, before LoadModules is called.
+func (ak AccountKeeper) AddModuleAccountPerm(name string, perms []string) {
+	ak.permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 }
 
 // ValidatePermissions validates that the module account has been granted
@@ -267,7 +288,7 @@ func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx context.Context, modu
 
 	// create a new module account
 	macc := types.NewEmptyModuleAccount(moduleName, perms...)
-	maccI := (ak.NewAccount(ctx, macc)).(sdk.ModuleAccountI) // set the account number
+	maccI := ak.NewAccount(ctx, macc).(sdk.ModuleAccountI) // set the account number
 	ak.SetModuleAccount(ctx, maccI)
 
 	return maccI, perms

@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/log/v2"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,7 +41,7 @@ func Example() {
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		sdk.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
@@ -55,7 +54,7 @@ func Example() {
 
 	// here bankkeeper and staking keeper is nil because we are not testing them
 	// subspace is nil because we don't test params (which is legacy anyway)
-	mintKeeper := mintkeeper.NewKeeper(encodingCfg.Codec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), nil, accountKeeper, nil, authtypes.FeeCollectorName, authority)
+	mintKeeper := mintkeeper.NewKeeper(encodingCfg.Codec, sdk.NewKVStoreService(keys[minttypes.StoreKey]), nil, accountKeeper, nil, authtypes.FeeCollectorName, authority)
 	mintModule := mint.NewAppModule(encodingCfg.Codec, mintKeeper, accountKeeper, nil)
 
 	// create the application and register all the modules from the previous step
@@ -131,7 +130,7 @@ func Example_oneModule() {
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		sdk.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),

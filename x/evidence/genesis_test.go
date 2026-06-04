@@ -9,16 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence/testutil"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
@@ -30,18 +26,9 @@ type GenesisTestSuite struct {
 }
 
 func (suite *GenesisTestSuite) SetupTest() {
-	var evidenceKeeper keeper.Keeper
-
-	app, err := simtestutil.Setup(
-		depinject.Configs(
-			depinject.Supply(log.NewNopLogger()),
-			testutil.AppConfig,
-		),
-		&evidenceKeeper)
-	require.NoError(suite.T(), err)
-
-	suite.ctx = app.NewContextLegacy(false, cmtproto.Header{Height: 1})
-	suite.keeper = evidenceKeeper
+	ta := testapp.Setup(suite.T())
+	suite.ctx = ta.NewContextLegacy(false, cmtproto.Header{Height: 1})
+	suite.keeper = *ta.EvidenceKeeper
 }
 
 func (suite *GenesisTestSuite) TestInitGenesis() {
@@ -170,3 +157,6 @@ func (suite *GenesisTestSuite) TestExportGenesis() {
 func TestGenesisTestSuite(t *testing.T) {
 	suite.Run(t, new(GenesisTestSuite))
 }
+
+// keep require import used
+var _ = require.NotNil

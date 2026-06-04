@@ -205,6 +205,5 @@ func (c coreAppModuleBasicAdaptor) RegisterServices(cfg Configurator) {
 	}
 }
 
-func (c coreAppModuleBasicAdaptor) IsOnePerModuleType() {}
 
 func (c coreAppModuleBasicAdaptor) IsAppModule() {}

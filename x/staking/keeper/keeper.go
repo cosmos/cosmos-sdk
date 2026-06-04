@@ -84,7 +84,7 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// Hooks gets the hooks for staking.
+// Hooks gets the hooks for staking keeper.
 func (k *Keeper) Hooks() types.StakingHooks {
 	if k.hooks == nil {
 		// return a no-op implementation if no hooks are set
@@ -102,6 +102,16 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) {
 	}
 
 	k.hooks = sh
+}
+
+// AddHooks is an API for extending the hooks for the staking module.
+func (k *Keeper) AddHooks(sh types.StakingHooks) {
+	existingHooks := k.Hooks()
+	hooks := types.MultiStakingHooks{
+		existingHooks, sh,
+	}
+
+	k.hooks = hooks
 }
 
 // GetLastTotalPower loads the last total validator power.

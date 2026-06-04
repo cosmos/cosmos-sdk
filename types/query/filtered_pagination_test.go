@@ -34,7 +34,7 @@ func (s *paginationTestSuite) TestFilteredPaginations() {
 	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
 	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances))
-	store := s.ctx.KVStore(s.app.UnsafeFindStoreKey(types.StoreKey))
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
 
 	// verify pagination with limit > total values
 	pageReq := &query.PageRequest{Key: nil, Limit: 5, CountTotal: true}
@@ -117,7 +117,7 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
 	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances))
-	store := s.ctx.KVStore(s.app.UnsafeFindStoreKey(types.StoreKey))
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
 
 	// verify pagination with limit > total values
 	pageReq := &query.PageRequest{Key: nil, Limit: 5, CountTotal: true, Reverse: true}
@@ -200,7 +200,7 @@ func (s *paginationTestSuite) TestFilteredPaginate() {
 	}
 
 	pageReq := &query.PageRequest{Key: nil, Limit: 1, CountTotal: true}
-	store := s.ctx.KVStore(s.app.UnsafeFindStoreKey(types.StoreKey))
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 
@@ -271,7 +271,7 @@ func (s *paginationTestSuite) TestFilteredPaginationsNextKey() {
 	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.accountKeeper.SetAccount(s.ctx, acc1)
 	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances))
-	store := s.ctx.KVStore(s.app.UnsafeFindStoreKey(types.StoreKey))
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
 
 	execFilterPaginate := func(store storetypes.KVStore, pageReq *query.PageRequest, appCodec codec.Codec) (balances sdk.Coins, res *query.PageResponse, err error) {
 		balancesStore := prefix.NewStore(store, types.BalancesPrefix)

@@ -11,12 +11,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -30,7 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authclitestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
-	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -593,7 +594,8 @@ func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().Equal(0, len(sigs))
 
 	// Test generate sendTx with --gas=$amount
-	limitedGasGeneratedTx, err := s.createBankMsg(val1, addr,
+	limitedGasGeneratedTx, err := s.createBankMsg(
+		val1, addr,
 		sdk.NewCoins(sendTokens), fmt.Sprintf("--gas=%d", 100),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	)
@@ -1227,9 +1229,8 @@ func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
 }
 
 func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
-	var txCfg client.TxConfig
-	err := depinject.Inject(authtestutil.AppConfig, &txCfg)
-	require.NoError(t, err)
+	ir := codectypes.NewInterfaceRegistry()
+	txCfg := authtx.NewTxConfig(codec.NewProtoCodec(ir), authtx.DefaultSignModes)
 	clientCtx := client.Context{}
 	clientCtx = clientCtx.WithTxConfig(txCfg)
 

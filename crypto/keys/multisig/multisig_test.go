@@ -6,12 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
-
 	"github.com/cosmos/cosmos-sdk/codec"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -19,8 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
@@ -357,17 +351,7 @@ func TestDisplay(t *testing.T) {
 	msig := kmultisig.NewLegacyAminoPubKey(2, pubKeys)
 
 	require.NotEmpty(msig.String())
-	var cdc codec.Codec
-	err := depinject.Inject(
-		depinject.Configs(
-			configurator.NewAppConfig(),
-			depinject.Supply(log.NewNopLogger(),
-				func() address.Codec { return addresscodec.NewBech32Codec("cosmos") },
-				func() runtime.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") },
-				func() runtime.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") },
-			),
-		), &cdc)
-	require.NoError(err)
+	cdc := testapp.Setup(t).AppCodec()
 	bz, err := cdc.MarshalInterfaceJSON(msig)
 	require.NoError(err)
 	expectedPrefix := `{"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":2,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey"`

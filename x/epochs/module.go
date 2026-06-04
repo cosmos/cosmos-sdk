@@ -43,6 +43,7 @@ func NewAppModule(keeper *keeper.Keeper) AppModule {
 	}
 }
 
+
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 

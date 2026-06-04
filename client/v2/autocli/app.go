@@ -10,23 +10,14 @@ import (
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
 )
 
-// AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
-// Ex:
-//
-//	var autoCliOpts autocli.AppOptions
-//	err := depinject.Inject(appConfig, &encodingConfig.InterfaceRegistry, &autoCliOpts)
-//
-// If depinject isn't used, options can be provided manually or extracted from modules and the address codec can be provided by the auth keeper.
-// One method for extracting autocli options is via the github.com/cosmos/cosmos-sdk/runtime/services.ExtractAutoCLIOptions function.
+// AppOptions are autocli options for an app. Options can be provided manually
+// or extracted from modules; the address codecs are provided by the auth keeper.
 type AppOptions struct {
-	depinject.In
-
 	// Modules are the AppModule implementations for the modules in the app.
 	Modules map[string]appmodule.AppModule
 
@@ -51,15 +42,6 @@ type AppOptions struct {
 // existing app CLI commands where autocli simply automatically adds things that
 // weren't manually provided. It does take into account custom commands
 // provided by modules with the HasCustomQueryCommand or HasCustomTxCommand extension interface.
-// Example Usage:
-//
-//	var autoCliOpts autocli.AppOptions
-//	err := depinject.Inject(appConfig, &autoCliOpts)
-//	if err != nil {
-//		panic(err)
-//	}
-//	rootCmd := initRootCmd()
-//	err = autoCliOpts.EnhanceRootCommand(rootCmd)
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	var (
 		mergedFiles flag.FileResolver

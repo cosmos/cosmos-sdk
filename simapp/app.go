@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/blockexec"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -252,6 +253,14 @@ func NewSimApp(
 		authzkeeper.StoreKey,
 		epochstypes.StoreKey,
 		protocolpooltypes.StoreKey,
+	)
+
+	stores := make([]storetypes.StoreKey, 0, len(keys))
+	for _, k := range keys {
+		stores = append(stores, k)
+	}
+	blockexec.Apply(bApp, appOpts, stores, txConfig.TxDecoder(),
+		func(storetypes.MultiStore) string { return sdk.DefaultBondDenom },
 	)
 
 	// register streaming services

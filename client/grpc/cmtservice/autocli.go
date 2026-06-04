@@ -68,7 +68,6 @@ func NewCometBFTCommands() *cometModule {
 
 type cometModule struct{}
 
-func (m cometModule) IsOnePerModuleType() {}
 func (m cometModule) IsAppModule()        {}
 
 func (m cometModule) Name() string {

@@ -339,6 +339,7 @@ replace github.com/cosmos/cosmos-sdk/enterprise/group => ../enterprise/group
 replace (
 	// use local client/v2 which no longer depends on runtime
 	cosmossdk.io/client/v2 => ../client/v2
+	cosmossdk.io/core => ../core
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
 

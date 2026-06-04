@@ -16,7 +16,6 @@ require (
 	cosmossdk.io/api v1.0.0 // indirect
 	cosmossdk.io/collections v1.4.0 // indirect
 	cosmossdk.io/core v1.1.0 // indirect
-	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.1.0 // indirect
 	cosmossdk.io/log/v2 v2.1.0 // indirect
 	cosmossdk.io/math v1.5.3 // indirect
@@ -278,5 +277,7 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../..
 
 replace cosmossdk.io/client/v2 => ../../client/v2
+
+replace cosmossdk.io/core => ../../core
 
 replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.39.0-rc1.0.20260527154549-606b4197148f

@@ -237,7 +237,6 @@ require (
 	github.com/multiformats/go-multistream v0.6.1 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/nxadm/tail v1.4.11 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20251114093237-2ab5a27a1729 // indirect
 	github.com/oklog/run v1.2.0 // indirect
 	github.com/pascaldekloe/goe v0.1.1 // indirect
@@ -346,6 +345,7 @@ require (
 replace (
 	// use local client/v2 which no longer depends on runtime
 	cosmossdk.io/client/v2 => ./client/v2
+	cosmossdk.io/core => ./core
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// replace broken goleveldb

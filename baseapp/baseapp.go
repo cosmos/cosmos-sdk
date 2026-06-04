@@ -857,12 +857,12 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		}
 	}
 
-	if app.anteHandler != nil {
-		var (
-			anteCtx sdk.Context
-			msCache storetypes.CacheMultiStore
-		)
+	// Default to the current context so CheckTx without an AnteHandler still
+	// passes a valid context to the mempool.
+	anteCtx := ctx
+	var anteMSCache storetypes.CacheMultiStore
 
+	if app.anteHandler != nil {
 		// Branch context before AnteHandler call in case it aborts.
 		// This is required for both CheckTx and DeliverTx.
 		// Ref: https://github.com/cosmos/cosmos-sdk/issues/2772
@@ -870,23 +870,26 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		// NOTE: Alternatively, we could require that AnteHandler ensures that
 		// writes do not happen if aborted/failed.  This may have some
 		// performance benefits, but it'll be more difficult to get right.
-		anteCtx, msCache = app.cacheTxContext(ctx)
+		anteCtx, anteMSCache = app.cacheTxContext(ctx)
 		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
-		anteCtx, anteSpan := anteCtx.StartSpan(tracer, "anteHandler")
-		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
+
+		var anteSpan trace.Span
+		anteCtx, anteSpan = anteCtx.StartSpan(tracer, "anteHandler")
+		anteCtx, err = app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 		anteSpan.End()
-		if !newCtx.IsZero() {
+
+		if !anteCtx.IsZero() {
 			// Restore the parent span without discarding values attached by the
 			// ante handler to the stdlib context.
-			newCtx = newCtx.WithContext(trace.ContextWithSpan(newCtx.Context(), trace.SpanFromContext(ctx.Context())))
+			anteCtx = anteCtx.WithContext(trace.ContextWithSpan(anteCtx.Context(), trace.SpanFromContext(ctx.Context())))
 
-			// At this point, newCtx.MultiStore() is a store branch, or something else
+			// At this point, anteCtx.MultiStore() is a store branch, or something else
 			// replaced by the AnteHandler. We want the original multistore.
 			//
 			// Also, in the case of the tx aborting, we need to track gas consumed via
 			// the instantiated gas meter in the AnteHandler, so we update the context
 			// prior to returning.
-			ctx = newCtx.WithMultiStore(ms)
+			ctx = anteCtx.WithMultiStore(ms)
 		}
 
 		events := ctx.EventManager().Events()
@@ -910,15 +913,25 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 			return gInfo, nil, nil, err
 		}
 
-		msCache.Write()
-		anteEvents = events.ToABCIEvents()
+		if mode == execModeCheck {
+			// In CheckTx, mempool insertion must see ante writes before they are
+			// committed to the parent multistore.
+			anteCtx = ctx.WithMultiStore(anteMSCache)
+		} else {
+			anteMSCache.Write()
+			anteEvents = events.ToABCIEvents()
+		}
 	}
 
 	switch mode {
 	case execModeCheck:
-		err = app.mempool.Insert(ctx, tx)
-		if err != nil {
+		if err := app.mempool.Insert(anteCtx, tx); err != nil {
 			return gInfo, nil, anteEvents, err
+		}
+
+		if anteMSCache != nil {
+			anteMSCache.Write()
+			anteEvents = anteCtx.EventManager().ABCIEvents()
 		}
 	case execModeFinalize:
 		reason := mempool.RemoveReason{Caller: mempool.CallerRunTxFinalize}

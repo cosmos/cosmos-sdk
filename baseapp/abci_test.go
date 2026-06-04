@@ -56,6 +56,36 @@ func (m *mockABCIListener) ListenCommit(ctx context.Context, commit abci.Respons
 	return m.ListenCommitFn(ctx, commit, pairs)
 }
 
+type anteCacheCheckingMempool struct {
+	storeKey storetypes.StoreKey
+	key      []byte
+	value    []byte
+	inserts  int
+}
+
+func (m *anteCacheCheckingMempool) Insert(ctx context.Context, _ sdk.Tx) error {
+	m.inserts++
+
+	store := sdk.UnwrapSDKContext(ctx).KVStore(m.storeKey)
+	if got := store.Get(m.key); !bytes.Equal(got, m.value) {
+		return fmt.Errorf("expected ante cache value %X, got %X", m.value, got)
+	}
+
+	return nil
+}
+
+func (m *anteCacheCheckingMempool) Select(context.Context, [][]byte) mempool.Iterator {
+	return nil
+}
+
+func (m *anteCacheCheckingMempool) CountTx() int {
+	return m.inserts
+}
+
+func (m *anteCacheCheckingMempool) Remove(sdk.Tx) error {
+	return nil
+}
+
 func TestABCI_Info(t *testing.T) {
 	suite := NewBaseAppSuite(t)
 
@@ -694,6 +724,83 @@ func TestABCI_CheckTx(t *testing.T) {
 	checkStateStore = getCheckStateCtx(suite.baseApp).KVStore(capKey1)
 	storedBytes := checkStateStore.Get(counterKey)
 	require.Nil(t, storedBytes)
+}
+
+func TestABCI_CheckTx_DoesNotCorruptStateOnMempoolFailure(t *testing.T) {
+	counterKey := []byte("counter-key")
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, counterKey))
+	}
+
+	cfg := mempool.DefaultPriorityNonceMempoolConfig()
+	cfg.MaxTx = 1
+	pool := mempool.NewPriorityMempool(cfg)
+
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, counterKey})
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	res, err := suite.baseApp.CheckTx(&abci.RequestCheckTx{Tx: txBytes})
+	require.NoError(t, err)
+	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	failTx := newTxCounter(t, suite.txConfig, 1, 0)
+	failTxBytes, err := suite.txConfig.TxEncoder()(failTx)
+	require.NoError(t, err)
+
+	failRes, err := suite.baseApp.CheckTx(&abci.RequestCheckTx{Tx: failTxBytes})
+	require.NoError(t, err)
+	require.False(t, failRes.IsOK())
+	require.Contains(t, failRes.Log, mempool.ErrMempoolTxMaxCapacity.Error())
+
+	checkStateStore := getCheckStateCtx(suite.baseApp).KVStore(capKey1)
+	require.Equal(t, int64(1), getIntFromStore(t, checkStateStore, counterKey))
+	require.Equal(t, 1, pool.CountTx())
+}
+
+func TestABCI_CheckTxMempoolInsertSeesAnteCache(t *testing.T) {
+	anteKey := []byte("ante-key")
+	anteValue := []byte("ante-value")
+	pool := &anteCacheCheckingMempool{
+		storeKey: capKey1,
+		key:      anteKey,
+		value:    anteValue,
+	}
+
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) {
+			ctx.KVStore(capKey1).Set(anteKey, anteValue)
+			return ctx, nil
+		})
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, []byte("deliver-key")})
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	res, err := suite.baseApp.CheckTx(&abci.RequestCheckTx{Tx: txBytes})
+	require.NoError(t, err)
+	require.True(t, res.IsOK(), res.Log)
+	require.Equal(t, 1, pool.inserts)
+
+	checkStateStore := getCheckStateCtx(suite.baseApp).KVStore(capKey1)
+	require.Equal(t, anteValue, checkStateStore.Get(anteKey))
 }
 
 func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {

@@ -280,7 +280,6 @@ replace (
 	cosmossdk.io/client/v2 => ../../client/v2
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core => ../../core
-	cosmossdk.io/depinject => ../../depinject
 	cosmossdk.io/errors => ../../errors
 	cosmossdk.io/math => ../../math
 	github.com/cosmos/cosmos-sdk => ../..

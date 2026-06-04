@@ -88,6 +88,16 @@ func (s *paginationTestSuite) TestFilteredPaginations() {
 	s.Require().NoError(err)
 	s.Require().NotNil(res)
 	s.Require().LessOrEqual(len(balances), 2)
+
+	s.T().Log("verify offset+limit overflow returns the page instead of nothing")
+	// A limit large enough that offset+limit wraps a uint64 used to make
+	// FilteredPaginate skip everything because end wrapped to a small
+	// number. It should walk the remaining rows after the offset.
+	pageReq = &query.PageRequest{Offset: 1, Limit: 0xFFFFFFFFFFFFFFFF}
+	balances, res, err = execFilterPaginate(store, pageReq, s.cdc)
+	s.Require().NoError(err)
+	s.Require().NotNil(res)
+	s.Require().Equal(3, len(balances))
 }
 
 func (s *paginationTestSuite) TestReverseFilteredPaginations() {

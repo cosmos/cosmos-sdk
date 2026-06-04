@@ -42,16 +42,23 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (mempool) [#25338](https://github.com/cosmos/cosmos-sdk/pull/25338) Respect gas wanted returned by the ante handler for block selection. Adds `InsertWithOption` to the `Mempool` interface (carries the ante-reported `GasWanted`) and changes the `SelectBy` callback to receive a `mempool.Tx` wrapper that exposes the stored value.
 * (modules) [#26421](https://github.com/cosmos/cosmos-sdk/pull/26421) Remove the `x/protocolpool` module and its API/proto surface from the SDK. Applications upgrading from v0.54 should include `protocolpool` in deleted store upgrades.
+* (genutils) [#26468](https://github.com/cosmos/cosmos-sdk/pull/26468) Consolidate ExportGenesisFileWithTime arguments to preserve consensus params.
 
 ### Features
 
 * (abci) [#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) Add support for new application side mempool ABCI methods. 
 * (abci) [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) Add support for new ABCI methods, `InsertTx` and `ReapTxs`.
+* (blockstm) [#25909](https://github.com/cosmos/cosmos-sdk/pull/25909) Cache pre-state to optimize value-based validation.
 * (deps) [#26388](https://github.com/cosmos/cosmos-sdk/pull/26388) Bump CometBFT version to v0.39.3.
+* (staking) [#26440](https://github.com/cosmos/cosmos-sdk/pull/26440) Add basic key rotation for validator consensus keys.
+* (crypto) [#26436](https://github.com/cosmos/cosmos-sdk/pull/26436) Add ML-DSA-65 (FIPS 204) post-quantum validator consensus key type, with SDK key wrappers, Amino + interface-registry registration, multisig support, and a `hd.MlDsa65Type` constant.
+* (blockstm) [#26467](https://github.com/cosmos/cosmos-sdk/pull/26467) Track existence for `Has()` reads to reduce false conflicts.
+* (crypto) [#26472](https://github.com/cosmos/cosmos-sdk/pull/26472) Add ML-DSA-65 (FIPS 204) support for user account keys: mnemonic-based keyring creation/recovery (`--algo ml_dsa_65`), transaction signing/verification, and an ante-handler signature-verification gas cost (`Params.SigVerifyCostMlDsa65`).
 
 ### Improvements
 
 * (docs) [#25918](https://github.com/cosmos/cosmos-sdk/issues/25918) Regenerate Swagger API spec to reflect current proto state, including `authority` field on consensus params and removal of stale module-config definitions.
+* (baseapp) [#22368](https://github.com/cosmos/cosmos-sdk/issues/22368) Add `-race`-mode regression test (`TestABCI_Race_GRPC_Query_During_Commit`) covering concurrent `BaseApp.Query` and `FinalizeBlock`/`Commit`. Pins down the state-management mutex work added in #24655 and follow-ups so the data race reported against v0.50.x cannot regress silently.
 
 ### Bug Fixes
 
@@ -59,6 +66,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#26353](https://github.com/cosmos/cosmos-sdk/pull/26353) Fix leading comma in `proposal_messages` event attribute emitted by `SubmitProposal`.
 * (telemetry) [#26390](https://github.com/cosmos/cosmos-sdk/pull/26390) Fix env var for otel telemetry initialization.
 * (x/staking) [#26408](https://github.com/cosmos/cosmos-sdk/pull/26408) Fix `MsgBeginRedelegate` failure when redelegating all shares from an unbonded source validator that is removed after unbonding.
+* (x/auth/tx) [#26422](https://github.com/cosmos/cosmos-sdk/pull/26422) Reuse the signing context from the codec's `InterfaceRegistry` when `ConfigOptions.SigningOptions` is unset so that `CustomGetSigners` registered via `NewInterfaceRegistryWithOptions` are honored by `NewTxConfig` / `NewTxConfigWithOptions`.
 
 ### Deprecated
 
@@ -170,6 +178,7 @@ This patch release contains only minor dependency bumps.
 * (x/group) [#25920](https://github.com/cosmos/cosmos-sdk/pull/25920) Expand voting period check to verify period is positive instead of nonzero.
 * (types/address) [#25944] (https://github.com/cosmos/cosmos-sdk/pull/25944) correct sort comparator in Compose to satisfy strict weak ordering.
 * (baseapp) [#26063](https://github.com/cosmos/cosmos-sdk/pull/26063) Fixes an issue where values embedded in context during ante handling were wiped after the handlers returned.
+* (collections/indexes) [#25942](https://github.com/cosmos/cosmos-sdk/pull/25942) handle iterator close errors in index helpers.
 
 ### Deprecated
 

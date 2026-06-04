@@ -46,7 +46,9 @@ func (s *KeeperTestSuite) TestValidator() {
 	updates := s.applyValidatorSetUpdates(ctx, keeper, 1)
 	validator, err := keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
-	require.Equal(validator.ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
+	pk, err := validator.ConsPubKey()
+	require.NoError(err)
+	require.Equal(validator.ABCIValidatorUpdateWithPubKey(keeper.PowerReduction(ctx), pk), updates[0])
 
 	// after the save the validator should be bonded
 	require.Equal(stakingtypes.Bonded, validator.Status)
@@ -274,8 +276,12 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdatesPowerDecrease() {
 
 	// CometBFT updates should reflect power change
 	updates := s.applyValidatorSetUpdates(ctx, keeper, 2)
-	require.Equal(validators[0].ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
-	require.Equal(validators[1].ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[1])
+	pk0, err := validators[0].ConsPubKey()
+	require.NoError(err)
+	require.Equal(validators[0].ABCIValidatorUpdateWithPubKey(keeper.PowerReduction(ctx), pk0), updates[0])
+	pk1, err := validators[1].ConsPubKey()
+	require.NoError(err)
+	require.Equal(validators[1].ABCIValidatorUpdateWithPubKey(keeper.PowerReduction(ctx), pk1), updates[1])
 }
 
 func (s *KeeperTestSuite) TestUpdateValidatorCommission() {

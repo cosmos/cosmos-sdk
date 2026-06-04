@@ -335,6 +335,7 @@ require (
 replace github.com/cosmos/cosmos-sdk/enterprise/group => ..
 
 replace (
+	cosmossdk.io/core => ../../core
 	// use local client/v2 which no longer depends on runtime
 	cosmossdk.io/client/v2 => ../../../client/v2
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

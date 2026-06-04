@@ -335,6 +335,7 @@ replace github.com/cosmos/cosmos-sdk/enterprise/poa => ..
 
 // Below are the long-lived replace of the SimApp
 replace (
+	cosmossdk.io/core => ../../core
 	// use local client/v2 which no longer depends on runtime
 	cosmossdk.io/client/v2 => ../../../client/v2
 	// use cosmos fork of keyring

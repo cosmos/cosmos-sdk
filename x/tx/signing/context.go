@@ -128,7 +128,6 @@ type CustomGetSigner struct {
 	Fn      GetSignersFunc
 }
 
-func (c CustomGetSigner) IsManyPerContainerType() {}
 
 func getSignersFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, error) {
 	signersFields := proto.GetExtension(descriptor.Options(), msgv1.E_Signer).([]string)

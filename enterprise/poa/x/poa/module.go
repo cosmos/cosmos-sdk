@@ -172,8 +172,6 @@ func NewAppModule(cdc codec.BinaryCodec, poaKeeper *keeper.Keeper, opts ...Modul
 // IsAppModule implements the appmodule.AppModule interface.
 func (AppModule) IsAppModule() {}
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (AppModule) IsOnePerModuleType() {}
 
 // RegisterServices registers module services with the configurator.
 func (m AppModule) RegisterServices(cfg module.Configurator) {

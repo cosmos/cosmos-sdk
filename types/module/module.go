@@ -266,8 +266,6 @@ func NewGenesisOnlyAppModule(amg AppModuleGenesis) GenesisOnlyAppModule {
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (GenesisOnlyAppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (GenesisOnlyAppModule) IsAppModule() {}

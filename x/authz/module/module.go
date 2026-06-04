@@ -117,8 +117,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak authz.AccountKeeper,
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}

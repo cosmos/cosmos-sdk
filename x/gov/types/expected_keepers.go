@@ -76,5 +76,3 @@ type GovHooks interface {
 
 type GovHooksWrapper struct{ GovHooks }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (GovHooksWrapper) IsOnePerModuleType() {}

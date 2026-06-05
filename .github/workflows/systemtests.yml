@@ -48,6 +48,13 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: "go.mod"
+          cache: true
+          cache-dependency-path: ./go.sum
       - name: Run system tests
         run: |
           make test-system
@@ -58,6 +65,13 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: "go.mod"
+          cache: true
+          cache-dependency-path: ./go.sum
       - name: Run legacy system tests
         run: |
           COSMOS_BUILD_OPTIONS=legacy make test-system

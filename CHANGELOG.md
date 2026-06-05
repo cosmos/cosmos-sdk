@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+* (mempool) [#25338](https://github.com/cosmos/cosmos-sdk/pull/25338) Respect gas wanted returned by the ante handler for block selection. Adds `InsertWithOption` to the `Mempool` interface (carries the ante-reported `GasWanted`) and changes the `SelectBy` callback to receive a `mempool.Tx` wrapper that exposes the stored value.
 * (modules) [#26421](https://github.com/cosmos/cosmos-sdk/pull/26421) Remove the `x/protocolpool` module and its API/proto surface from the SDK. Applications upgrading from v0.54 should include `protocolpool` in deleted store upgrades.
 * (genutils) [#26468](https://github.com/cosmos/cosmos-sdk/pull/26468) Consolidate ExportGenesisFileWithTime arguments to preserve consensus params.
 

@@ -42,6 +42,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (blockstm) [#26208](https://github.com/cosmos/cosmos-sdk/pull/26208) Add Block-STM configuration support: `block-executor`, `block-stm-workers` and `block-stm-pre-estimate`.
+
 ### Improvements
 
 ### Bug Fixes

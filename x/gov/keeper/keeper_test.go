@@ -134,7 +134,7 @@ func TestProposalQueues(t *testing.T) {
 }
 
 func TestSetHooks(t *testing.T) {
-	govKeeper, _, _, _, _, _, _, _ := setupGovKeeper(t)
+	govKeeper, _, _, _, _, _, _, _ := setupGovKeeper(t) //nolint:dogsled
 	require.Empty(t, govKeeper.Hooks())
 
 	govHooksReceiver := MockGovHooksReceiver{}

@@ -353,3 +353,17 @@ func TestStore_Save_ChunksWrittenToDisk(t *testing.T) {
 		assert.Equalf(t, want, got, "chunk %d file content should match", i)
 	}
 }
+
+// TestStore_Save_syncDirError verifies that a syncDir failure propagates back through saveChunk.
+func TestStore_Save_syncDirError(t *testing.T) {
+	tempdir := GetTempDir(t)
+	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
+	require.NoError(t, err)
+
+	injected := errors.New("injected syncDir error")
+	original := snapshots.SetSyncDirFn(func(string) error { return injected })
+	defer snapshots.SetSyncDirFn(original)
+
+	_, err = store.Save(1, 1, makeChunks([][]byte{{0x01, 0x02}}))
+	require.ErrorContains(t, err, injected.Error())
+}

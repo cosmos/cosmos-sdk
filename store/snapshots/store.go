@@ -287,7 +287,7 @@ func (s *Store) Save(
 		if !dirCreated {
 			dir := s.pathSnapshot(height, format)
 			if err := mkdirAllSync(dir, s.dir, 0o755); err != nil {
-				return nil, err
+				return nil, errors.Wrapf(err, "failed to create snapshot directory %q", dir)
 			}
 			dirCreated = true
 		}
@@ -362,7 +362,7 @@ func syncAndClose(f *os.File) error {
 	if err := f.Close(); err != nil {
 		return errors.Wrapf(err, "failed to close %q", f.Name())
 	}
-	return syncDir(filepath.Dir(f.Name()))
+	return syncDirFn(filepath.Dir(f.Name()))
 }
 
 func mkdirAllSync(dir, stableBase string, perm os.FileMode) error {
@@ -376,7 +376,7 @@ func mkdirAllSync(dir, stableBase string, perm os.FileMode) error {
 		return err
 	}
 	for d := filepath.Dir(dir); ; d = filepath.Dir(d) {
-		if err := syncDir(d); err != nil {
+		if err := syncDirFn(d); err != nil {
 			return err
 		}
 		if d == stableBase {
@@ -385,6 +385,9 @@ func mkdirAllSync(dir, stableBase string, perm os.FileMode) error {
 	}
 	return nil
 }
+
+// syncDirFn is the function used to fsync a directory. Overridable in tests.
+var syncDirFn = syncDir
 
 // syncDir fsyncs dirPath so the directory entry for a newly created file is durable.
 func syncDir(dirPath string) error {

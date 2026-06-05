@@ -333,11 +333,6 @@ func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err e
 		// Must convert store.Tree to iavl.MutableTree with given version to use in CreateProof
 		iTree, err := tree.GetImmutable(res.Height)
 		if err != nil {
-			if errors.Is(err, iavl.ErrVersionDoesNotExist) {
-				res.Log = iavl.ErrVersionDoesNotExist.Error()
-				res.Value = nil
-				break
-			}
 			panic(fmt.Sprintf("could not retrieve versioned tree for /key proof at height %d: %s", res.Height, err.Error()))
 		}
 		mtree := &iavl.MutableTree{
@@ -354,11 +349,6 @@ func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err e
 
 		subspace := req.Data
 		res.Key = subspace
-
-		if !st.VersionExists(res.Height) {
-			res.Log = iavl.ErrVersionDoesNotExist.Error()
-			break
-		}
 
 		immutableStore, err := st.GetImmutable(res.Height)
 		if err != nil {

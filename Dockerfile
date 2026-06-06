@@ -12,7 +12,7 @@
 #
 # This image is pushed to the GHCR as https://ghcr.io/cosmos/simapp
 
-FROM golang:1.26.3-alpine AS build-env
+FROM golang:1.26.4-alpine AS build-env
 
 # Install minimum necessary dependencies
 ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev

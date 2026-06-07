@@ -22,9 +22,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 

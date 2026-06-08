@@ -22,7 +22,7 @@ A full setup of the evidence module may look something as follows:
 
 	// First, create the keeper
 	evidenceKeeper := evidence.NewKeeper(
-	  appCodec, runtime.NewKVStoreService(keys[evidencetypes.StoreKey]),
+	  appCodec, sdk.NewKVStoreService(keys[evidencetypes.StoreKey]),
 	  &app.StakingKeeper, app.SlashingKeeper,
 	)
 

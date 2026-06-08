@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -59,7 +58,7 @@ type SimStateFactory struct {
 
 // SimulationApp abstract app that is used by sims
 type SimulationApp interface {
-	runtime.AppI
+	simtestutil.AppI
 	SetNotSigverifyTx()
 	GetBaseApp() *baseapp.BaseApp
 	TxConfig() client.TxConfig
@@ -373,6 +372,7 @@ func NewSimulationAppInstance[T SimulationApp](
 	})
 	appOptions := make(simtestutil.AppOptionsMap)
 	appOptions[flags.FlagHome] = workDir
+	appOptions[flags.FlagChainID] = tCfg.ChainID
 	opts := []func(*baseapp.BaseApp){baseapp.SetChainID(tCfg.ChainID)}
 	if tCfg.FauxMerkle {
 		opts = append(opts, FauxMerkleModeOpt)

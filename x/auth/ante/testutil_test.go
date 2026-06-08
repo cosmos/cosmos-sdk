@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -80,7 +79,7 @@ func setupSuite(t *testing.T, isCheckTx, enableUnorderedTxs bool) *AnteTestSuite
 	}
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
-		suite.encCfg.Codec, runtime.NewKVStoreService(key), types.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec("cosmos"),
+		suite.encCfg.Codec, sdk.NewKVStoreService(key), types.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec("cosmos"),
 		sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(), keeper.WithUnorderedTransactions(enableUnorderedTxs),
 	)
 	suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)

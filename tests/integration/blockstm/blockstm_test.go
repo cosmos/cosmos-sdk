@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -136,7 +135,7 @@ func newBlockSTMTestApp(t *testing.T, db dbm.DB, logger log.Logger, enableBlockS
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		sdk.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
@@ -146,7 +145,7 @@ func newBlockSTMTestApp(t *testing.T, db dbm.DB, logger log.Logger, enableBlockS
 
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
+		sdk.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		map[string]bool{accountKeeper.GetAuthority(): false},
 		authority.String(),

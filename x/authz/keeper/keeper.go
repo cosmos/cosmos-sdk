@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -267,7 +266,7 @@ func (k Keeper) DeleteGrant(ctx context.Context, grantee, granter sdk.AccAddress
 
 // GetAuthorizations Returns list of `Authorizations` granted to the grantee by the granter.
 func (k Keeper) GetAuthorizations(ctx context.Context, grantee, granter sdk.AccAddress) ([]authz.Authorization, error) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := sdk.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	key := grantStoreKey(grantee, granter, "")
 	iter := storetypes.KVStorePrefixIterator(store, key)
 	defer iter.Close()
@@ -317,7 +316,7 @@ func (k Keeper) GetAuthorization(ctx context.Context, grantee, granter sdk.AccAd
 func (k Keeper) IterateGrants(ctx context.Context,
 	handler func(granterAddr, granteeAddr sdk.AccAddress, grant authz.Grant) bool,
 ) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := sdk.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	iter := storetypes.KVStorePrefixIterator(store, GrantKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {

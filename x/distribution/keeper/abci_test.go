@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,7 +40,7 @@ func setupTest(t *testing.T) testSetup {
 
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+	storeService := sdk.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 

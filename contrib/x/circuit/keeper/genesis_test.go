@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/contrib/x/circuit"
 	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/keeper"
 	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,7 +46,7 @@ func (s *GenesisTestSuite) SetupTest() {
 	s.Require().NoError(err)
 	s.addrBytes = bz
 
-	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewKVStoreService(key), authority.String(), ac)
+	s.keeper = keeper.NewKeeper(s.cdc, sdk.NewKVStoreService(key), authority.String(), ac)
 }
 
 func (s *GenesisTestSuite) TestInitExportGenesis() {

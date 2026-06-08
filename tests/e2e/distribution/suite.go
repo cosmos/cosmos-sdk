@@ -8,13 +8,10 @@ import (
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/math"
+	simapp "cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -23,14 +20,8 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -47,29 +38,8 @@ func NewE2ETestSuite() *E2ETestSuite {
 
 func initNetworkConfig(t *testing.T) network.Config {
 	t.Helper()
-
-	moduleConfig := moduleConfig
-
 	t.Log("setting up the e2e test suite")
-
-	// application configuration (used by depinject)
-	AppConfig := depinject.Configs(appconfig.Compose(&appv1alpha1.Config{
-		Modules: moduleConfig,
-	}),
-		depinject.Supply(
-			// supply custom module basics
-			map[string]module.AppModuleBasic{
-				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-				govtypes.ModuleName: gov.NewAppModuleBasic(
-					[]govclient.ProposalHandler{},
-				),
-			},
-		),
-	)
-
-	cfg, err := network.DefaultConfigWithAppConfig(AppConfig)
-	require.NoError(t, err)
-	return cfg
+	return network.DefaultConfig(simapp.NewTestNetworkFixture)
 }
 
 // SetupSuite creates a new network for _each_ e2e test. We create a new

@@ -7,6 +7,8 @@ replace github.com/cosmos/cosmos-sdk => ../..
 
 replace github.com/cosmos/cosmos-sdk/tools/systemtests => ../../tools/systemtests
 
+replace cosmossdk.io/client/v2 => ../../client/v2
+
 require (
 	github.com/cosmos/cosmos-sdk v0.54.0
 	github.com/cosmos/cosmos-sdk/tools/systemtests v0.0.0-00010101000000-000000000000
@@ -21,7 +23,6 @@ require (
 	cosmossdk.io/api v1.0.0 // indirect
 	cosmossdk.io/collections v1.4.0 // indirect
 	cosmossdk.io/core v1.1.0 // indirect
-	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.1.0 // indirect
 	cosmossdk.io/log/v2 v2.1.0 // indirect
 	cosmossdk.io/math v1.5.3 // indirect
@@ -282,5 +283,7 @@ require (
 	pgregory.net/rapid v1.3.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
+
+replace cosmossdk.io/core => ../../core
 
 replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.39.0-rc1.0.20260527154549-606b4197148f

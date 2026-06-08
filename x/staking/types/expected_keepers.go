@@ -114,6 +114,3 @@ type StakingHooks interface {
 
 // StakingHooksWrapper is a wrapper for modules to inject StakingHooks using depinject.
 type StakingHooksWrapper struct{ StakingHooks }
-
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (StakingHooksWrapper) IsOnePerModuleType() {}

@@ -8,29 +8,21 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
-	sdklog "cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
+	sdkapp "github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -110,7 +102,7 @@ type suite struct {
 	GovKeeper          *keeper.Keeper
 	StakingKeeper      *stakingkeeper.Keeper
 	DistributionKeeper distrkeeper.Keeper
-	App                *runtime.App
+	App                *sdkapp.SDKApp
 }
 
 func createTestSuite(t *testing.T) suite {
@@ -118,27 +110,13 @@ func createTestSuite(t *testing.T) suite {
 
 	res := suite{}
 
-	app, err := simtestutil.SetupWithConfiguration(
-		depinject.Configs(
-			configurator.NewAppConfig(
-				configurator.AuthModule(),
-				configurator.StakingModule(),
-				configurator.BankModule(),
-				configurator.GovModule(),
-				configurator.ConsensusModule(),
-				configurator.DistributionModule(),
-			),
-			depinject.Supply(sdklog.NewNopLogger()),
-		),
-		simtestutil.DefaultStartUpConfig(),
-		&res.AccountKeeper,
-		&res.BankKeeper,
-		&res.GovKeeper,
-		&res.DistributionKeeper,
-		&res.StakingKeeper,
-	)
-	require.NoError(t, err)
+	ta := testapp.Setup(t)
+	res.AccountKeeper = ta.AccountKeeper
+	res.BankKeeper = ta.BankKeeper
+	res.GovKeeper = &ta.GovKeeper
+	res.StakingKeeper = ta.StakingKeeper
+	res.DistributionKeeper = ta.DistrKeeper
+	res.App = ta
 
-	res.App = app
 	return res
 }

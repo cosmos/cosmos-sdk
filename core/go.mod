@@ -4,7 +4,6 @@ go 1.26.4
 
 require (
 	cosmossdk.io/api v1.0.0
-	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/math v1.5.3
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/stretchr/testify v1.11.1
@@ -45,9 +44,7 @@ require (
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
-	github.com/tendermint/go-amino v0.16.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
-	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a // indirect
 	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/sys v0.45.0 // indirect

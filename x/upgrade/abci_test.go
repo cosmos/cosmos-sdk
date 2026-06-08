@@ -15,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -111,7 +110,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	s := TestSuite{}
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+	storeService := sdk.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 
 	s.baseApp = baseapp.NewBaseApp(
@@ -451,7 +450,7 @@ func TestMissingUpgradeHandler(t *testing.T) {
 	// Setup test environment similar to TestDowngradeVerification
 	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+	storeService := sdk.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: 10})
 
@@ -499,7 +498,7 @@ func TestDowngradeVerification(t *testing.T) {
 	// for the two keepers.
 	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	storeService := runtime.NewKVStoreService(key)
+	storeService := sdk.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: 10})
 

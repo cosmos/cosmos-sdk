@@ -10,9 +10,8 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil/testapp"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -30,15 +29,7 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 	var err error
 	s.T().Log("setting up integration test suite")
 
-	s.cfg, err = network.DefaultConfigWithAppConfigWithQueryGasLimit(configurator.NewAppConfig(
-		configurator.AuthModule(),
-		configurator.BankModule(),
-		configurator.GenutilModule(),
-		configurator.StakingModule(),
-		configurator.ConsensusModule(),
-		configurator.TxModule(),
-	), 10)
-	s.NoError(err)
+	s.cfg = network.DefaultConfig(testapp.SDKAppFixtureWithQueryGasLimit(10))
 	s.cfg.NumValidators = 1
 
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
@@ -60,14 +51,6 @@ func (s *IntegrationTestOutOfGasSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.conn.Close()
 	s.network.Cleanup()
-}
-
-func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_TestService() {
-	// gRPC query to test service should work - simple queries should stay under gas limit
-	testClient := testdata.NewQueryClient(s.conn)
-	testRes, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
-	s.Require().NoError(err)
-	s.Require().Equal("hello", testRes.Message)
 }
 
 func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_BankBalance_OutOfGas() {

@@ -9,13 +9,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 )
 
 func TestStatusCommand(t *testing.T) {
 	t.Skip() // flaky test
 
-	cfg, err := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
-	require.NoError(t, err)
+	cfg := network.DefaultConfig(testapp.SDKAppFixture)
 
 	network, err := network.New(t, t.TempDir(), cfg)
 	require.NoError(t, err)

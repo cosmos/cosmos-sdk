@@ -160,9 +160,6 @@ func NewSchemaFromAccessor(accessor func(context.Context) core.KVStore) Schema {
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (s Schema) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (s Schema) IsAppModule() {}
 

@@ -4,29 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"maps"
-	"slices"
-	"sort"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
@@ -120,9 +111,6 @@ func NewAppModule(
 	}
 }
 
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -162,93 +150,6 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 // updates.
 func (am AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
 	return am.keeper.EndBlocker(ctx)
-}
-
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-		appmodule.Invoke(InvokeSetStakingHooks),
-	)
-}
-
-type ModuleInputs struct {
-	depinject.In
-
-	Config                *modulev1.Module
-	ValidatorAddressCodec runtime.ValidatorAddressCodec
-	ConsensusAddressCodec runtime.ConsensusAddressCodec
-	AccountKeeper         types.AccountKeeper
-	BankKeeper            types.BankKeeper
-	Cdc                   codec.Codec
-	StoreService          store.KVStoreService
-}
-
-// ModuleOutputs contains Dependency Injection Outputs
-type ModuleOutputs struct {
-	depinject.Out
-
-	StakingKeeper *keeper.Keeper
-	Module        appmodule.AppModule
-}
-
-func ProvideModule(in ModuleInputs) ModuleOutputs {
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	k := keeper.NewKeeper(
-		in.Cdc,
-		in.StoreService,
-		in.AccountKeeper,
-		in.BankKeeper,
-		authority.String(),
-		in.ValidatorAddressCodec,
-		in.ConsensusAddressCodec,
-	)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
-	return ModuleOutputs{StakingKeeper: k, Module: m}
-}
-
-func InvokeSetStakingHooks(
-	config *modulev1.Module,
-	keeper *keeper.Keeper,
-	stakingHooks map[string]types.StakingHooksWrapper,
-) error {
-	// all arguments to invokers are optional
-	if keeper == nil || config == nil {
-		return nil
-	}
-
-	modNames := slices.Collect(maps.Keys(stakingHooks))
-	order := config.HooksOrder
-	if len(order) == 0 {
-		order = modNames
-		sort.Strings(order)
-	}
-
-	if len(order) != len(modNames) {
-		return fmt.Errorf("len(hooks_order: %v) != len(hooks modules: %v)", order, modNames)
-	}
-
-	if len(modNames) == 0 {
-		return nil
-	}
-
-	var multiHooks types.MultiStakingHooks
-	for _, modName := range order {
-		hook, ok := stakingHooks[modName]
-		if !ok {
-			return fmt.Errorf("can't find staking hooks for module %s", modName)
-		}
-
-		multiHooks = append(multiHooks, hook)
-	}
-
-	keeper.SetHooks(multiHooks)
-	return nil
 }
 
 // AppModuleSimulation functions

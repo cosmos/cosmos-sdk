@@ -7,20 +7,16 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
+	sdkapp "github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -28,11 +24,9 @@ import (
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
-	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -45,7 +39,7 @@ type SimTestSuite struct {
 	r        *rand.Rand
 	accounts []simtypes.Account
 
-	app               *runtime.App
+	app               *sdkapp.SDKApp
 	legacyAmino       *codec.LegacyAmino
 	codec             codec.Codec
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -55,7 +49,6 @@ type SimTestSuite struct {
 	stakingKeeper     *stakingkeeper.Keeper
 	slashingKeeper    slashingkeeper.Keeper
 	distrKeeper       distributionkeeper.Keeper
-	mintKeeper        mintkeeper.Keeper
 }
 
 func (suite *SimTestSuite) SetupTest() {
@@ -63,45 +56,20 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.r = rand.New(s)
 	accounts := simtypes.RandomAccounts(suite.r, 4)
 
-	// create validator (non random as using a seed)
-	createValidator := func() (*cmttypes.ValidatorSet, error) {
-		account := accounts[0]
-		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(account.PubKey)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create pubkey: %w", err)
-		}
+	ta := testapp.Setup(suite.T())
+	suite.app = ta
+	suite.legacyAmino = ta.LegacyAmino()
+	suite.codec = ta.AppCodec()
+	suite.interfaceRegistry = ta.InterfaceRegistry()
+	suite.txConfig = ta.TxConfig()
+	suite.accountKeeper = ta.AccountKeeper
+	suite.bankKeeper = ta.BankKeeper
+	suite.stakingKeeper = ta.StakingKeeper
+	suite.slashingKeeper = ta.SlashingKeeper
+	suite.distrKeeper = ta.DistrKeeper
+	suite.ctx = testapp.NewContext(ta)
 
-		validator := cmttypes.NewValidator(cmtPk, 1)
-
-		return cmttypes.NewValidatorSet([]*cmttypes.Validator{validator}), nil
-	}
-
-	startupCfg := simtestutil.DefaultStartUpConfig()
-	startupCfg.ValidatorSet = createValidator
-
-	app, err := simtestutil.SetupWithConfiguration(
-		depinject.Configs(
-			testutil.AppConfig,
-			depinject.Supply(log.NewNopLogger()),
-		),
-		startupCfg,
-		&suite.legacyAmino,
-		&suite.codec,
-		&suite.interfaceRegistry,
-		&suite.txConfig,
-		&suite.accountKeeper,
-		&suite.bankKeeper,
-		&suite.stakingKeeper,
-		&suite.mintKeeper,
-		&suite.slashingKeeper,
-		&suite.distrKeeper,
-	)
-
-	suite.Require().NoError(err)
-	suite.app = app
-	suite.ctx = app.NewContext(false)
-
-	// remove genesis validator account
+	// accounts[0] used as validator in tests, rest as delegators
 	suite.accounts = accounts[1:]
 
 	initAmt := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, 200)
@@ -114,8 +82,8 @@ func (suite *SimTestSuite) SetupTest() {
 		suite.Require().NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, account.Address, initCoins))
 	}
 
-	suite.Require().NoError(suite.mintKeeper.Params.Set(suite.ctx, minttypes.DefaultParams()))
-	suite.Require().NoError(suite.mintKeeper.Minter.Set(suite.ctx, minttypes.DefaultInitialMinter()))
+	suite.Require().NoError(ta.MintKeeper.Params.Set(suite.ctx, minttypes.DefaultParams()))
+	suite.Require().NoError(ta.MintKeeper.Minter.Set(suite.ctx, minttypes.DefaultInitialMinter()))
 }
 
 func TestSimTestSuite(t *testing.T) {
@@ -186,7 +154,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 
 	// execute operation
 	op := simulation.SimulateMsgUnjail(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
-	operationMsg, futureOperations, err := op(suite.r, suite.app.BaseApp, ctx, suite.accounts, "")
+	operationMsg, futureOperations, err := op(suite.r, suite.app.BaseApp, ctx, suite.accounts, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
 	var msg types.MsgUnjail

@@ -7,6 +7,3 @@ type CounterHooks interface {
 }
 
 type CounterHooksWrapper struct{ CounterHooks }
-
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (CounterHooksWrapper) IsOnePerModuleType() {}

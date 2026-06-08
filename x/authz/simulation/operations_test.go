@@ -10,21 +10,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
-
+	sdkapp "github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
-	"github.com/cosmos/cosmos-sdk/x/authz/testutil"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -35,7 +31,7 @@ type SimTestSuite struct {
 
 	ctx sdk.Context
 
-	app               *runtime.App
+	app               *sdkapp.SDKApp
 	legacyAmino       *codec.LegacyAmino
 	codec             codec.Codec
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -46,22 +42,16 @@ type SimTestSuite struct {
 }
 
 func (suite *SimTestSuite) SetupTest() {
-	app, err := simtestutil.Setup(
-		depinject.Configs(
-			testutil.AppConfig,
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&suite.legacyAmino,
-		&suite.codec,
-		&suite.interfaceRegistry,
-		&suite.txConfig,
-		&suite.accountKeeper,
-		&suite.bankKeeper,
-		&suite.authzKeeper,
-	)
-	suite.Require().NoError(err)
-	suite.app = app
-	suite.ctx = app.NewContext(false)
+	ta := testapp.Setup(suite.T())
+	suite.app = ta
+	suite.legacyAmino = ta.LegacyAmino()
+	suite.codec = ta.AppCodec()
+	suite.interfaceRegistry = ta.InterfaceRegistry()
+	suite.txConfig = ta.TxConfig()
+	suite.accountKeeper = ta.AccountKeeper
+	suite.bankKeeper = ta.BankKeeper
+	suite.authzKeeper = *ta.AuthzKeeper
+	suite.ctx = testapp.NewContext(ta)
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {
@@ -88,7 +78,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 
 	require := suite.Require()
 	for i, w := range weightedOps {
-		op, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		op, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, suite.ctx.ChainID())
 		require.NoError(err)
 
 		// the following checks are very much dependent from the ordering of the output given
@@ -134,7 +124,7 @@ func (suite *SimTestSuite) TestSimulateGrant() {
 
 	// execute operation
 	op := simulation.SimulateMsgGrant(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.authzKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, ctx, accounts, ctx.ChainID())
 	suite.Require().NoError(err)
 
 	var msg authz.MsgGrant
@@ -171,7 +161,7 @@ func (suite *SimTestSuite) TestSimulateRevoke() {
 
 	// execute operation
 	op := simulation.SimulateMsgRevoke(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.authzKeeper)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
 	var msg authz.MsgRevoke
@@ -206,7 +196,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 
 	// execute operation
 	op := simulation.SimulateMsgExec(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.authzKeeper, suite.codec)
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
 	var msg authz.MsgExec

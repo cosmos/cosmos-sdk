@@ -5,27 +5,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
-
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/mint/testutil"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
-	var accountKeeper authkeeper.AccountKeeper
-
-	app, err := simtestutil.SetupAtGenesis(
-		depinject.Configs(
-			testutil.AppConfig,
-			depinject.Supply(log.NewNopLogger()),
-		), &accountKeeper)
-	require.NoError(t, err)
-
-	ctx := app.NewContext(false)
-	acc := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
+	ta := testapp.Setup(t)
+	ctx := ta.NewContext(false)
+	acc := ta.AccountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
 	require.NotNil(t, acc)
 }

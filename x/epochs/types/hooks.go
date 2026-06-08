@@ -41,6 +41,3 @@ func (h MultiEpochHooks) BeforeEpochStart(ctx context.Context, epochIdentifier s
 
 // EpochHooksWrapper is a wrapper for modules to inject EpochHooks using depinject.
 type EpochHooksWrapper struct{ EpochHooks }
-
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (EpochHooksWrapper) IsOnePerModuleType() {}

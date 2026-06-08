@@ -9,7 +9,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -54,7 +53,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.bankKeeper = feegranttestutil.NewMockBankKeeper(ctrl)
 	suite.bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
 
-	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), suite.accountKeeper).SetBankKeeper(suite.bankKeeper)
+	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, sdk.NewKVStoreService(key), suite.accountKeeper).SetBankKeeper(suite.bankKeeper)
 	suite.ctx = testCtx.Ctx
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.feegrantKeeper)
 	suite.atom = sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(555)))

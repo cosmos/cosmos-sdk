@@ -19,7 +19,6 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -101,7 +100,7 @@ func initFixture(tb testing.TB) *fixture {
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		sdk.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
@@ -114,18 +113,18 @@ func initFixture(tb testing.TB) *fixture {
 	}
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
+		sdk.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
 		log.NewNopLogger(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, sdk.NewKVStoreService(keys[stakingtypes.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
-	slashingKeeper := slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), stakingKeeper, authority.String())
+	slashingKeeper := slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), sdk.NewKVStoreService(keys[slashingtypes.StoreKey]), stakingKeeper, authority.String())
 
-	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), stakingKeeper, slashingKeeper, addresscodec.NewBech32Codec("cosmos"), runtime.ProvideCometInfoService())
+	evidenceKeeper := keeper.NewKeeper(cdc, sdk.NewKVStoreService(keys[evidencetypes.StoreKey]), stakingKeeper, slashingKeeper, addresscodec.NewBech32Codec("cosmos"), sdk.ProvideCometInfoService())
 	router := evidencetypes.NewRouter()
 	router = router.AddRoute(evidencetypes.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)

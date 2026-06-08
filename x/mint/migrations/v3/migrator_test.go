@@ -8,9 +8,9 @@ import (
 	"cosmossdk.io/collections"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	v3 "github.com/cosmos/cosmos-sdk/x/mint/migrations/v3"
@@ -32,7 +32,7 @@ func TestMigrate(t *testing.T) {
 	storeKey := storetypes.NewKVStoreKey(types.ModuleName)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
-	kvStoreService := runtime.NewKVStoreService(storeKey)
+	kvStoreService := sdk.NewKVStoreService(storeKey)
 	store := kvStoreService.OpenKVStore(ctx)
 
 	sb := collections.NewSchemaBuilder(kvStoreService)

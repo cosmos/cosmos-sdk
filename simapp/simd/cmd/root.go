@@ -8,8 +8,8 @@ import (
 
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/simapp"
-	"cosmossdk.io/simapp/params"
 
+	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
@@ -24,20 +24,24 @@ import (
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
 func NewRootCmd() *cobra.Command {
-	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
-	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), true, simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
-	encodingConfig := params.EncodingConfig{
-		InterfaceRegistry: tempApp.InterfaceRegistry(),
-		Codec:             tempApp.AppCodec(),
-		TxConfig:          tempApp.TxConfig(),
-		Amino:             tempApp.LegacyAmino(),
+	tempHome, err := os.MkdirTemp("", "simapp-rootcmd-*")
+	if err != nil {
+		panic(err)
 	}
 
+	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
+	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), true, simtestutil.NewAppOptionsWithFlagHome(tempHome))
+
+	// TODO: can we pass a generic constructor in here?
+	return RootCmdFactory(tempApp)
+}
+
+func RootCmdFactory(app app.AppI) *cobra.Command {
 	initClientCtx := client.Context{}.
-		WithCodec(encodingConfig.Codec).
-		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
-		WithTxConfig(encodingConfig.TxConfig).
-		WithLegacyAmino(encodingConfig.Amino).
+		WithCodec(app.EncodingConfig().Codec).
+		WithInterfaceRegistry(app.EncodingConfig().InterfaceRegistry).
+		WithTxConfig(app.EncodingConfig().TxConfig).
+		WithLegacyAmino(app.EncodingConfig().LegacyAmino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithHomeDir(simapp.DefaultNodeHome).
@@ -94,11 +98,16 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, encodingConfig.TxConfig, tempApp.BasicModuleManager)
+	initRootCmd(rootCmd, app.EncodingConfig().TxConfig, app.BasicModuleManager())
+	EnhanceRootCmd(rootCmd, initClientCtx, app)
 
+	return rootCmd
+}
+
+func EnhanceRootCmd(rootCmd *cobra.Command, clientCtx client.Context, app app.AppI) *cobra.Command {
 	// add keyring to autocli opts
-	autoCliOpts := tempApp.AutoCliOpts()
-	autoCliOpts.ClientCtx = initClientCtx
+	autoCliOpts := app.AutoCliOpts()
+	autoCliOpts.ClientCtx = clientCtx
 
 	nodeCmds := nodeservice.NewNodeCommands()
 	autoCliOpts.ModuleOptions[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()

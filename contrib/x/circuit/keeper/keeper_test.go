@@ -14,9 +14,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/contrib/x/circuit"
 	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/keeper"
 	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -44,7 +44,7 @@ func initFixture(t *testing.T) *fixture {
 	encCfg := moduletestutil.MakeTestEncodingConfig(circuit.AppModuleBasic{})
 	ac := addresscodec.NewBech32Codec("cosmos")
 	mockStoreKey := storetypes.NewKVStoreKey("test")
-	storeService := runtime.NewKVStoreService(mockStoreKey)
+	storeService := sdk.NewKVStoreService(mockStoreKey)
 	k := keeper.NewKeeper(encCfg.Codec, storeService, authtypes.NewModuleAddress("gov").String(), ac)
 
 	bz, err := ac.StringToBytes(authtypes.NewModuleAddress("gov").String())

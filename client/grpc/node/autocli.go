@@ -29,7 +29,7 @@ func NewNodeCommands() *nodeModule {
 
 type nodeModule struct{}
 
-func (m nodeModule) IsAppModule()        {}
+func (m nodeModule) IsAppModule() {}
 
 func (m nodeModule) Name() string {
 	return "node"

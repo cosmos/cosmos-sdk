@@ -4,17 +4,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/types/known/anypb"
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/types/known/timestamppb"
-
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
@@ -27,8 +25,8 @@ type AuxTxBuilder struct {
 	// - b.msgs is used for constructing the AMINO sign bz,
 	// - b.body is used for constructing the DIRECT_AUX sign bz.
 	msgs          []sdk.Msg
-	body          *txv1beta1.TxBody
-	auxSignerData *tx.AuxSignerData
+	body          *txtypes.TxBody
+	auxSignerData *txtypes.AuxSignerData
 }
 
 // NewAuxTxBuilder creates a new client-side builder for constructing an
@@ -40,14 +38,12 @@ func NewAuxTxBuilder() AuxTxBuilder {
 // SetAddress sets the aux signer's bech32 address.
 func (b *AuxTxBuilder) SetAddress(addr string) {
 	b.checkEmptyFields()
-
 	b.auxSignerData.Address = addr
 }
 
 // SetMemo sets a memo in the tx.
 func (b *AuxTxBuilder) SetMemo(memo string) {
 	b.checkEmptyFields()
-
 	b.body.Memo = memo
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
@@ -55,7 +51,6 @@ func (b *AuxTxBuilder) SetMemo(memo string) {
 // SetTimeoutHeight sets a timeout height in the tx.
 func (b *AuxTxBuilder) SetTimeoutHeight(height uint64) {
 	b.checkEmptyFields()
-
 	b.body.TimeoutHeight = height
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
@@ -63,56 +58,51 @@ func (b *AuxTxBuilder) SetTimeoutHeight(height uint64) {
 // SetTimeoutTimestamp sets a timeout timestamp in the tx.
 func (b *AuxTxBuilder) SetTimeoutTimestamp(timestamp time.Time) {
 	// Only set TimeoutTimestamp if we have a non-zero time.Time.
-	// Setting timestamppb.New() with a zero/default value time.Time results in a non-zero timestamppb.Timestamp,
-	// which causes the value to show up in the signature - breaking <v0.53.x compatibility.
+	// Setting a zero/default value results in a non-zero Timestamp which
+	// would appear in the signature, breaking <v0.53.x compatibility.
 	if !timestamp.IsZero() && timestamp.Unix() > 0 {
 		b.checkEmptyFields()
-		b.body.TimeoutTimestamp = timestamppb.New(timestamp)
+		b.body.TimeoutTimestamp = &timestamp
 		b.auxSignerData.SignDoc.BodyBytes = nil
 	}
 }
 
 // SetMsgs sets an array of Msgs in the tx.
 func (b *AuxTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
-	anys := make([]*anypb.Any, len(msgs))
+	anys := make([]*gogotypes.Any, len(msgs))
 	for i, msg := range msgs {
 		legacyAny, err := codectypes.NewAnyWithValue(msg)
 		if err != nil {
 			return err
 		}
-		anys[i] = &anypb.Any{
+		anys[i] = &gogotypes.Any{
 			TypeUrl: legacyAny.TypeUrl,
 			Value:   legacyAny.Value,
 		}
 	}
 
 	b.checkEmptyFields()
-
 	b.msgs = msgs
 	b.body.Messages = anys
 	b.auxSignerData.SignDoc.BodyBytes = nil
-
 	return nil
 }
 
 // SetAccountNumber sets the aux signer's account number in the AuxSignerData.
 func (b *AuxTxBuilder) SetAccountNumber(accNum uint64) {
 	b.checkEmptyFields()
-
 	b.auxSignerData.SignDoc.AccountNumber = accNum
 }
 
 // SetChainID sets the chain id in the AuxSignerData.
 func (b *AuxTxBuilder) SetChainID(chainID string) {
 	b.checkEmptyFields()
-
 	b.auxSignerData.SignDoc.ChainId = chainID
 }
 
 // SetSequence sets the aux signer's sequence in the AuxSignerData.
 func (b *AuxTxBuilder) SetSequence(accSeq uint64) {
 	b.checkEmptyFields()
-
 	b.auxSignerData.SignDoc.Sequence = accSeq
 }
 
@@ -125,7 +115,6 @@ func (b *AuxTxBuilder) SetPubKey(pk cryptotypes.PubKey) error {
 
 	b.checkEmptyFields()
 	b.auxSignerData.SignDoc.PublicKey = anyPk
-
 	return nil
 }
 
@@ -146,7 +135,6 @@ func (b *AuxTxBuilder) SetSignMode(mode signing.SignMode) error {
 // SetSignature sets the aux signer's signature in the AuxSignerData.
 func (b *AuxTxBuilder) SetSignature(sig []byte) {
 	b.checkEmptyFields()
-
 	b.auxSignerData.Sig = sig
 }
 
@@ -154,27 +142,21 @@ func (b *AuxTxBuilder) SetSignature(sig []byte) {
 func (b *AuxTxBuilder) SetExtensionOptions(extOpts ...*codectypes.Any) {
 	b.checkEmptyFields()
 
-	anyExtOpts := make([]*anypb.Any, len(extOpts))
+	anyExtOpts := make([]*gogotypes.Any, len(extOpts))
 	for i, extOpt := range extOpts {
-		anyExtOpts[i] = &anypb.Any{
-			TypeUrl: extOpt.TypeUrl,
-			Value:   extOpt.Value,
-		}
+		anyExtOpts[i] = &gogotypes.Any{TypeUrl: extOpt.TypeUrl, Value: extOpt.Value}
 	}
 	b.body.ExtensionOptions = anyExtOpts
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
-// SetNonCriticalExtensionOptions sets the aux signer's signature.
+// SetNonCriticalExtensionOptions sets the aux signer's non-critical extension options.
 func (b *AuxTxBuilder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	b.checkEmptyFields()
 
-	anyNonCritExtOpts := make([]*anypb.Any, len(extOpts))
+	anyNonCritExtOpts := make([]*gogotypes.Any, len(extOpts))
 	for i, extOpt := range extOpts {
-		anyNonCritExtOpts[i] = &anypb.Any{
-			TypeUrl: extOpt.TypeUrl,
-			Value:   extOpt.Value,
-		}
+		anyNonCritExtOpts[i] = &gogotypes.Any{TypeUrl: extOpt.TypeUrl, Value: extOpt.Value}
 	}
 	b.body.NonCriticalExtensionOptions = anyNonCritExtOpts
 	b.auxSignerData.SignDoc.BodyBytes = nil
@@ -197,7 +179,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 		return nil, sdkerrors.ErrLogic.Wrap("sign doc is nil, call setters on AuxTxBuilder first")
 	}
 
-	bodyBz, err := proto.Marshal(body)
+	bodyBz, err := gogoproto.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
@@ -210,56 +192,55 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 	var signBz []byte
 	switch b.auxSignerData.Mode {
 	case signing.SignMode_SIGN_MODE_DIRECT_AUX:
-		{
-			signBz, err = proto.Marshal(b.auxSignerData.SignDoc)
-			if err != nil {
-				return nil, err
-			}
+		signBz, err = gogoproto.Marshal(b.auxSignerData.SignDoc)
+		if err != nil {
+			return nil, err
 		}
+
 	case signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
-		{
-			handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
-				FileResolver: proto.HybridResolver,
-			})
+		handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
+			FileResolver: gogoproto.HybridResolver,
+		})
 
-			// Convert pulsar TxBody to Go-native TxBodyData for the signing handler.
-			auxMsgs := make([]txsigning.RawMsg, len(body.Messages))
-			for i, m := range body.Messages {
-				auxMsgs[i] = txsigning.RawMsg{TypeUrl: m.TypeUrl, Value: m.Value}
-			}
-			auxBodyData := &txsigning.TxBodyData{
-				Messages:         auxMsgs,
-				Memo:             body.Memo,
-				TimeoutHeight:    body.TimeoutHeight,
-				TimeoutTimestamp: body.TimeoutTimestamp,
-				Unordered:        body.Unordered,
-				// AuxTxBuilder has no concern with extension options, so we set them to nil.
-				// This preserves pre-PR#16025 behavior where extension options were ignored, this code path:
-				// https://github.com/cosmos/cosmos-sdk/blob/ac3c209326a26b46f65a6cc6f5b5ebf6beb79b38/client/tx/aux_builder.go#L193
-				// https://github.com/cosmos/cosmos-sdk/blob/ac3c209326a26b46f65a6cc6f5b5ebf6beb79b38/x/auth/migrations/legacytx/stdsign.go#L49
-			}
-
-			signBz, err = handler.GetSignBytes(
-				context.Background(),
-				txsigning.SignerData{
-					Address:       b.auxSignerData.Address,
-					ChainID:       b.auxSignerData.SignDoc.ChainId,
-					AccountNumber: b.auxSignerData.SignDoc.AccountNumber,
-					Sequence:      b.auxSignerData.SignDoc.Sequence,
-					PubKey:        nil,
-				},
-				txsigning.TxData{
-					Body: auxBodyData,
-					// Aux signer never signs over fee.
-					// For LEGACY_AMINO_JSON, we use the convention to sign over empty fees.
-					// ref: https://github.com/cosmos/cosmos-sdk/pull/10348
-					AuthInfo: &txsigning.TxAuthInfoData{
-						Fee: txsigning.TxFeeData{},
-					},
-				},
-			)
-			return signBz, err
+		// Convert gogoproto TxBody to Go-native TxBodyData for the signing handler.
+		auxMsgs := make([]txsigning.RawMsg, len(body.Messages))
+		for i, m := range body.Messages {
+			auxMsgs[i] = txsigning.RawMsg{TypeUrl: m.TypeUrl, Value: m.Value}
 		}
+
+		var ts *timestamppb.Timestamp
+		if body.TimeoutTimestamp != nil {
+			ts = timestamppb.New(*body.TimeoutTimestamp)
+		}
+
+		auxBodyData := &txsigning.TxBodyData{
+			Messages:         auxMsgs,
+			Memo:             body.Memo,
+			TimeoutHeight:    body.TimeoutHeight,
+			TimeoutTimestamp: ts,
+			Unordered:        body.Unordered,
+			// AuxTxBuilder has no concern with extension options per legacy behavior.
+			// ref: https://github.com/cosmos/cosmos-sdk/blob/ac3c209326a26b46f65a6cc6f5b5ebf6beb79b38/client/tx/aux_builder.go#L193
+		}
+
+		signBz, err = handler.GetSignBytes(
+			context.Background(),
+			txsigning.SignerData{
+				Address:       b.auxSignerData.Address,
+				ChainID:       b.auxSignerData.SignDoc.ChainId,
+				AccountNumber: b.auxSignerData.SignDoc.AccountNumber,
+				Sequence:      b.auxSignerData.SignDoc.Sequence,
+				PubKey:        nil,
+			},
+			txsigning.TxData{
+				Body: auxBodyData,
+				// Aux signer never signs over fee; use empty fees per convention.
+				// ref: https://github.com/cosmos/cosmos-sdk/pull/10348
+				AuthInfo: &txsigning.TxAuthInfoData{Fee: txsigning.TxFeeData{}},
+			},
+		)
+		return signBz, err
+
 	default:
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("got unknown sign mode %s", b.auxSignerData.Mode)
 	}
@@ -268,9 +249,9 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 }
 
 // GetAuxSignerData returns the builder's AuxSignerData.
-func (b *AuxTxBuilder) GetAuxSignerData() (tx.AuxSignerData, error) {
+func (b *AuxTxBuilder) GetAuxSignerData() (txtypes.AuxSignerData, error) {
 	if err := b.auxSignerData.ValidateBasic(); err != nil {
-		return tx.AuxSignerData{}, err
+		return txtypes.AuxSignerData{}, err
 	}
 
 	return *b.auxSignerData, nil
@@ -278,13 +259,13 @@ func (b *AuxTxBuilder) GetAuxSignerData() (tx.AuxSignerData, error) {
 
 func (b *AuxTxBuilder) checkEmptyFields() {
 	if b.body == nil {
-		b.body = &txv1beta1.TxBody{}
+		b.body = &txtypes.TxBody{}
 	}
 
 	if b.auxSignerData == nil {
-		b.auxSignerData = &tx.AuxSignerData{}
+		b.auxSignerData = &txtypes.AuxSignerData{}
 		if b.auxSignerData.SignDoc == nil {
-			b.auxSignerData.SignDoc = &tx.SignDocDirectAux{}
+			b.auxSignerData.SignDoc = &txtypes.SignDocDirectAux{}
 		}
 	}
 }

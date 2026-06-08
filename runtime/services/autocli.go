@@ -13,6 +13,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/autocli"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -21,7 +22,7 @@ import (
 type AutoCLIQueryService struct {
 	autocliv1.UnimplementedQueryServer
 
-	moduleOptions map[string]*autocliv1.ModuleOptions
+	moduleOptions map[string]*autocli.ModuleOptions
 }
 
 // NewAutoCLIQueryService returns a AutoCLIQueryService for the provided modules.
@@ -36,11 +37,11 @@ func NewAutoCLIQueryService(appModules map[string]any) *AutoCLIQueryService {
 // Example Usage:
 //
 //	ExtractAutoCLIOptions(ModuleManager.Modules)
-func ExtractAutoCLIOptions(appModules map[string]any) map[string]*autocliv1.ModuleOptions {
-	moduleOptions := map[string]*autocliv1.ModuleOptions{}
+func ExtractAutoCLIOptions(appModules map[string]any) map[string]*autocli.ModuleOptions {
+	moduleOptions := map[string]*autocli.ModuleOptions{}
 	for modName, mod := range appModules {
 		if autoCliMod, ok := mod.(interface {
-			AutoCLIOptions() *autocliv1.ModuleOptions
+			AutoCLIOptions() *autocli.ModuleOptions
 		}); ok {
 			moduleOptions[modName] = autoCliMod.AutoCLIOptions()
 			continue
@@ -67,17 +68,17 @@ func ExtractAutoCLIOptions(appModules map[string]any) map[string]*autocliv1.Modu
 		}
 
 		haveServices := false
-		modOptions := &autocliv1.ModuleOptions{}
+		modOptions := &autocli.ModuleOptions{}
 		if cfg.msgServer.serviceName != "" {
 			haveServices = true
-			modOptions.Tx = &autocliv1.ServiceCommandDescriptor{
+			modOptions.Tx = &autocli.ServiceCommandDescriptor{
 				Service: cfg.msgServer.serviceName,
 			}
 		}
 
 		if cfg.queryServer.serviceName != "" {
 			haveServices = true
-			modOptions.Query = &autocliv1.ServiceCommandDescriptor{
+			modOptions.Query = &autocli.ServiceCommandDescriptor{
 				Service: cfg.queryServer.serviceName,
 			}
 		}
@@ -91,8 +92,90 @@ func ExtractAutoCLIOptions(appModules map[string]any) map[string]*autocliv1.Modu
 
 func (a AutoCLIQueryService) AppOptions(context.Context, *autocliv1.AppOptionsRequest) (*autocliv1.AppOptionsResponse, error) {
 	return &autocliv1.AppOptionsResponse{
-		ModuleOptions: a.moduleOptions,
+		ModuleOptions: toProtoModuleOptions(a.moduleOptions),
 	}, nil
+}
+
+// toProtoModuleOptions converts Go-native autocli options to the pulsar proto
+// types required by the gRPC AppOptions endpoint. This is the only place in
+// the codebase where that conversion is needed.
+func toProtoModuleOptions(opts map[string]*autocli.ModuleOptions) map[string]*autocliv1.ModuleOptions {
+	result := make(map[string]*autocliv1.ModuleOptions, len(opts))
+	for name, opt := range opts {
+		if opt == nil {
+			continue
+		}
+		result[name] = &autocliv1.ModuleOptions{
+			Tx:    toProtoServiceDesc(opt.Tx),
+			Query: toProtoServiceDesc(opt.Query),
+		}
+	}
+	return result
+}
+
+func toProtoServiceDesc(d *autocli.ServiceCommandDescriptor) *autocliv1.ServiceCommandDescriptor {
+	if d == nil {
+		return nil
+	}
+	proto := &autocliv1.ServiceCommandDescriptor{
+		Service:              d.Service,
+		EnhanceCustomCommand: d.EnhanceCustomCommand,
+		Short:                d.Short,
+	}
+	for _, opt := range d.RpcCommandOptions {
+		proto.RpcCommandOptions = append(proto.RpcCommandOptions, toProtoRpcOpts(opt))
+	}
+	if len(d.SubCommands) > 0 {
+		proto.SubCommands = make(map[string]*autocliv1.ServiceCommandDescriptor, len(d.SubCommands))
+		for k, v := range d.SubCommands {
+			proto.SubCommands[k] = toProtoServiceDesc(v)
+		}
+	}
+	return proto
+}
+
+func toProtoRpcOpts(o *autocli.RpcCommandOptions) *autocliv1.RpcCommandOptions {
+	if o == nil {
+		return nil
+	}
+	proto := &autocliv1.RpcCommandOptions{
+		RpcMethod:   o.RpcMethod,
+		Use:         o.Use,
+		Long:        o.Long,
+		Short:       o.Short,
+		Example:     o.Example,
+		Alias:       o.Alias,
+		SuggestFor:  o.SuggestFor,
+		Deprecated:  o.Deprecated,
+		Version:     o.Version,
+		Skip:        o.Skip,
+		GovProposal: o.GovProposal,
+	}
+	for _, p := range o.PositionalArgs {
+		proto.PositionalArgs = append(proto.PositionalArgs, &autocliv1.PositionalArgDescriptor{
+			ProtoField: p.ProtoField,
+			Varargs:    p.Varargs,
+			Optional:   p.Optional,
+		})
+	}
+	if len(o.FlagOptions) > 0 {
+		proto.FlagOptions = make(map[string]*autocliv1.FlagOptions, len(o.FlagOptions))
+		for k, f := range o.FlagOptions {
+			if f == nil {
+				continue
+			}
+			proto.FlagOptions[k] = &autocliv1.FlagOptions{
+				Name:                f.Name,
+				Shorthand:           f.Shorthand,
+				Usage:               f.Usage,
+				DefaultValue:        f.DefaultValue,
+				Deprecated:          f.Deprecated,
+				ShorthandDeprecated: f.ShorthandDeprecated,
+				Hidden:              f.Hidden,
+			}
+		}
+	}
+	return proto
 }
 
 // autocliConfigurator allows us to call RegisterServices and introspect the services

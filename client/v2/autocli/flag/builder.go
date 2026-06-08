@@ -1,6 +1,7 @@
 package flag
 
 import (
+	autoclicore "cosmossdk.io/core/autocli"
 	"context"
 	"errors"
 	"fmt"
@@ -15,7 +16,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
@@ -120,12 +120,12 @@ func (b *Builder) DefineScalarFlagType(scalarName string, flagType Type) {
 }
 
 // AddMessageFlags adds flags for each field in the message to the flag set.
-func (b *Builder) AddMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, messageType protoreflect.MessageType, commandOptions *autocliv1.RpcCommandOptions) (*MessageBinder, error) {
+func (b *Builder) AddMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, messageType protoreflect.MessageType, commandOptions *autoclicore.RpcCommandOptions) (*MessageBinder, error) {
 	return b.addMessageFlags(ctx, flagSet, messageType, commandOptions, namingOptions{})
 }
 
 // addMessageFlags adds flags for each field in the message to the flag set.
-func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, messageType protoreflect.MessageType, commandOptions *autocliv1.RpcCommandOptions, options namingOptions) (*MessageBinder, error) {
+func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, messageType protoreflect.MessageType, commandOptions *autoclicore.RpcCommandOptions, options namingOptions) (*MessageBinder, error) {
 	messageBinder := &MessageBinder{
 		messageType: messageType,
 		// positional args are also parsed using a FlagSet so that we can reuse all the same parsers
@@ -217,10 +217,10 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 	// add it as `--from` flag (instead of --field-name flags)
 	if signerFieldName != "" && messageBinder.SignerInfo == (SignerInfo{}) {
 		if commandOptions.FlagOptions == nil {
-			commandOptions.FlagOptions = make(map[string]*autocliv1.FlagOptions)
+			commandOptions.FlagOptions = make(map[string]*autoclicore.FlagOptions)
 		}
 
-		commandOptions.FlagOptions[signerFieldName] = &autocliv1.FlagOptions{
+		commandOptions.FlagOptions[signerFieldName] = &autoclicore.FlagOptions{
 			Name:      flags.FlagFrom,
 			Usage:     "Name or address with which to sign the message",
 			Shorthand: "f",
@@ -234,7 +234,7 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 	}
 
 	// define all other fields as flags
-	flagOptsByFlagName := map[string]*autocliv1.FlagOptions{}
+	flagOptsByFlagName := map[string]*autoclicore.autoclicore.FlagOptions{}
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
 		fieldName := string(field.Name())
@@ -311,7 +311,7 @@ func (b *Builder) addFieldBindingToArgs(ctx *context.Context, messageBinder *Mes
 		ctx,
 		messageBinder.positionalFlagSet,
 		field,
-		&autocliv1.FlagOptions{Name: fmt.Sprintf("%d", len(messageBinder.positionalArgs))},
+		&autoclicore.FlagOptions{Name: fmt.Sprintf("%d", len(messageBinder.positionalArgs))},
 		namingOptions{},
 	)
 	if err != nil {
@@ -330,7 +330,7 @@ func (b *Builder) bindPageRequest(ctx *context.Context, flagSet *pflag.FlagSet, 
 		ctx,
 		flagSet,
 		util.ResolveMessageType(b.TypeResolver, field.Message()),
-		&autocliv1.RpcCommandOptions{},
+		&autoclicore.RpcCommandOptions{},
 		namingOptions{Prefix: "page-"},
 	)
 }
@@ -342,9 +342,9 @@ type namingOptions struct {
 }
 
 // addFieldFlag adds a flag for the provided field to the flag set.
-func (b *Builder) addFieldFlag(ctx *context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, opts *autocliv1.FlagOptions, options namingOptions) (name string, hasValue HasValue, err error) {
+func (b *Builder) addFieldFlag(ctx *context.Context, flagSet *pflag.FlagSet, field protoreflect.FieldDescriptor, opts *autoclicore.FlagOptions, options namingOptions) (name string, hasValue HasValue, err error) {
 	if opts == nil {
-		opts = &autocliv1.FlagOptions{}
+		opts = &autoclicore.FlagOptions{}
 	}
 
 	if field.Kind() == protoreflect.MessageKind && field.Message().FullName() == "cosmos.base.query.v1beta1.PageRequest" {

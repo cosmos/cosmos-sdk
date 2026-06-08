@@ -1,12 +1,12 @@
 package autocli
 
 import (
+	autoclicore "cosmossdk.io/core/autocli"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -35,7 +35,7 @@ type AppOptions struct {
 	// is specified on the module's AppModule implementation. This allows an
 	// app to override module options if they are either not provided by a
 	// module or need to be improved.
-	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
+	ModuleOptions map[string]*autoclicore.ModuleOptions `optional:"true"`
 
 	// AddressCodec is the address codec to use for the app.
 	AddressCodec          address.Codec

@@ -1,6 +1,7 @@
 package autocli
 
 import (
+	autoclicore "cosmossdk.io/core/autocli"
 	"context"
 	"fmt"
 
@@ -10,7 +11,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
@@ -39,7 +39,7 @@ func (b *Builder) BuildMsgCommand(ctx context.Context, appOptions AppOptions, cu
 // AddMsgServiceCommands adds a sub-command to the provided command for each
 // method in the specified service and returns the command. This can be used in
 // order to add auto-generated commands to an existing command.
-func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autocliv1.ServiceCommandDescriptor) error {
+func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoclicore.ServiceCommandDescriptor) error {
 	for cmdName, subCmdDescriptor := range cmdDescriptor.SubCommands {
 		subCmd := findSubCommand(cmd, cmdName)
 		if subCmd == nil {
@@ -72,7 +72,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 	service := descriptor.(protoreflect.ServiceDescriptor)
 	methods := service.Methods()
 
-	rpcOptMap := map[protoreflect.Name]*autocliv1.RpcCommandOptions{}
+	rpcOptMap := map[protoreflect.Name]*autoclicore.autoclicore.RpcCommandOptions{}
 	for _, option := range cmdDescriptor.RpcCommandOptions {
 		methodName := protoreflect.Name(option.RpcMethod)
 		// validate that methods exist
@@ -87,7 +87,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 		methodDescriptor := methods.Get(i)
 		methodOpts, ok := rpcOptMap[methodDescriptor.Name()]
 		if !ok {
-			methodOpts = &autocliv1.RpcCommandOptions{}
+			methodOpts = &autoclicore.RpcCommandOptions{}
 		}
 
 		if methodOpts.Skip {
@@ -116,7 +116,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 }
 
 // BuildMsgMethodCommand returns a command that outputs the JSON representation of the message.
-func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
+func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor, options *autoclicore.RpcCommandOptions) (*cobra.Command, error) {
 	execFunc := func(cmd *cobra.Command, input protoreflect.Message) error {
 		clientCtx, err := client.GetClientTxContext(cmd)
 		if err != nil {

@@ -1,9 +1,9 @@
 package autocli
 
 import (
+	autoclicore "cosmossdk.io/core/autocli"
 	"github.com/spf13/cobra"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/core/appmodule"
 )
 
@@ -12,7 +12,7 @@ type HasAutoCLIConfig interface {
 	appmodule.AppModule
 
 	// AutoCLIOptions are the autocli module options for this module.
-	AutoCLIOptions() *autocliv1.ModuleOptions
+	AutoCLIOptions() *autoclicore.ModuleOptions
 }
 
 // HasCustomQueryCommand is an AppModule extension interface for declaring a custom query command.

@@ -15,22 +15,22 @@
 package module
 
 import (
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	autocli "cosmossdk.io/core/autocli"
 
 	groupv1 "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
-func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
-	return &autocliv1.ModuleOptions{
-		Query: &autocliv1.ServiceCommandDescriptor{
+func (am AppModule) AutoCLIOptions() *autocli.ModuleOptions {
+	return &autocli.ModuleOptions{
+		Query: &autocli.ServiceCommandDescriptor{
 			Service: groupv1.Query_serviceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			RpcCommandOptions: []*autocli.RpcCommandOptions{
 				{
 					RpcMethod: "GroupInfo",
 					Use:       "group-info [group-id]",
 					Short:     "Query for group info by group id",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "group_id"},
 					},
 				},
@@ -38,7 +38,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "GroupPolicyInfo",
 					Use:       "group-policy-info [group-policy-account]",
 					Short:     "Query for group policy info by account address of group policy",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "address"},
 					},
 				},
@@ -46,7 +46,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "GroupMembers",
 					Use:       "group-members [group-id]",
 					Short:     "Query for group members by group id",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "group_id"},
 					},
 				},
@@ -54,7 +54,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "GroupsByAdmin",
 					Use:       "groups-by-admin [admin]",
 					Short:     "Query for groups by admin account address",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "admin"},
 					},
 				},
@@ -62,7 +62,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "GroupPoliciesByGroup",
 					Use:       "group-policies-by-group [group-id]",
 					Short:     "Query for group policies by group id",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "group_id"},
 					},
 				},
@@ -70,7 +70,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "GroupPoliciesByAdmin",
 					Use:       "group-policies-by-admin [admin]",
 					Short:     "Query for group policies by admin account address",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "admin"},
 					},
 				},
@@ -78,7 +78,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "Proposal",
 					Use:       "proposal [proposal-id]",
 					Short:     "Query for proposal by id",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "proposal_id"},
 					},
 				},
@@ -86,7 +86,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "ProposalsByGroupPolicy",
 					Use:       "proposals-by-group-policy [group-policy-account]",
 					Short:     "Query for proposals by account address of group policy",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "address"},
 					},
 				},
@@ -94,7 +94,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "VoteByProposalVoter",
 					Use:       "vote [proposal-id] [voter]",
 					Short:     "Query for vote by proposal id and voter account address",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "proposal_id"},
 						{ProtoField: "voter"},
 					},
@@ -103,7 +103,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "VotesByProposal",
 					Use:       "votes-by-proposal [proposal-id]",
 					Short:     "Query for votes by proposal id",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "proposal_id"},
 					},
 				},
@@ -111,7 +111,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "VotesByVoter",
 					Use:       "votes-by-voter [voter]",
 					Short:     "Query for votes by voter account address",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "voter"},
 					},
 				},
@@ -119,7 +119,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "GroupsByMember",
 					Use:       "groups-by-member [address]",
 					Short:     "Query for groups by member address",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "address"},
 					},
 				},
@@ -127,7 +127,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "TallyResult",
 					Use:       "tally-result [proposal-id]",
 					Short:     "Query tally result of proposal",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "proposal_id"},
 					},
 				},
@@ -138,15 +138,15 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 			},
 		},
-		Tx: &autocliv1.ServiceCommandDescriptor{
+		Tx: &autocli.ServiceCommandDescriptor{
 			Service:              groupv1.Msg_serviceDesc.ServiceName,
 			EnhanceCustomCommand: false, // use custom commands only until v0.51
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			RpcCommandOptions: []*autocli.RpcCommandOptions{
 				{
 					RpcMethod: "UpdateGroupAdmin",
 					Use:       "update-group-admin [admin] [group-id] [new-admin]",
 					Short:     "Update a group's admin",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "admin"}, {ProtoField: "group_id"}, {ProtoField: "new_admin"},
 					},
 				},
@@ -154,7 +154,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "UpdateGroupMetadata",
 					Use:       "update-group-metadata [admin] [group-id] [metadata]",
 					Short:     "Update a group's metadata",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "admin"}, {ProtoField: "group_id"}, {ProtoField: "metadata"},
 					},
 				},
@@ -162,7 +162,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "UpdateGroupPolicyAdmin",
 					Use:       "update-group-policy-admin [admin] [group-policy-account] [new-admin]",
 					Short:     "Update a group policy admin",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "admin"}, {ProtoField: "group_policy_address"}, {ProtoField: "new_admin"},
 					},
 				},
@@ -170,7 +170,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "UpdateGroupPolicyMetadata",
 					Use:       "update-group-policy-metadata [admin] [group-policy-account] [new-metadata]",
 					Short:     "Update a group policy metadata",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "admin"}, {ProtoField: "group_policy_address"}, {ProtoField: "metadata"},
 					},
 				},
@@ -178,7 +178,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "WithdrawProposal",
 					Use:       "withdraw-proposal [proposal-id] [group-policy-admin-or-proposer]",
 					Short:     "Withdraw a submitted proposal",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "proposal_id"}, {ProtoField: "address"},
 					},
 				},
@@ -197,10 +197,10 @@ Parameters:
 		VOTE_OPTION_NO_WITH_VETO: no-with-veto
 	Metadata: metadata for the vote
 `,
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "proposal_id"}, {ProtoField: "voter"}, {ProtoField: "option"}, {ProtoField: "metadata"},
 					},
-					FlagOptions: map[string]*autocliv1.FlagOptions{
+					FlagOptions: map[string]*autocli.FlagOptions{
 						"exec": {Name: "exec", DefaultValue: "", Usage: "Set to 'try' for trying to execute proposal immediately after voting"},
 					},
 				},
@@ -208,7 +208,7 @@ Parameters:
 					RpcMethod: "Exec",
 					Use:       "exec [proposal-id]",
 					Short:     "Execute a proposal",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "proposal_id"},
 					},
 				},
@@ -216,7 +216,7 @@ Parameters:
 					RpcMethod: "LeaveGroup",
 					Use:       "leave-group [member-address] [group-id]",
 					Short:     "Remove member from the group",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "address"}, {ProtoField: "group_id"},
 					},
 				},

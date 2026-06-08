@@ -3,7 +3,7 @@ package module
 import (
 	"fmt"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	autocli "cosmossdk.io/core/autocli"
 
 	nftv1beta1 "github.com/cosmos/cosmos-sdk/contrib/api/cosmos/nft/v1beta1"
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft"
@@ -11,17 +11,17 @@ import (
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
-func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
-	return &autocliv1.ModuleOptions{
-		Query: &autocliv1.ServiceCommandDescriptor{
+func (am AppModule) AutoCLIOptions() *autocli.ModuleOptions {
+	return &autocli.ModuleOptions{
+		Query: &autocli.ServiceCommandDescriptor{
 			Service: nftv1beta1.Query_ServiceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			RpcCommandOptions: []*autocli.RpcCommandOptions{
 				{
 					RpcMethod: "Balance",
 					Use:       "balance [owner] [class-id]",
 					Short:     "Query the number of NFTs of a given class owned by the owner.",
 					Example:   fmt.Sprintf(`%s query %s balance <owner> <class-id>`, version.AppName, nft.ModuleName),
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "owner"},
 						{ProtoField: "class_id"},
 					},
@@ -31,7 +31,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "owner [class-id] [nft-id]",
 					Short:     "Query the owner of the NFT based on its class and id.",
 					Example:   fmt.Sprintf(`%s query %s owner <class-id> <nft-id>`, version.AppName, nft.ModuleName),
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "class_id"},
 						{ProtoField: "id"},
 					},
@@ -41,7 +41,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "supply [class-id]",
 					Short:     "Query the number of nft based on the class.",
 					Example:   fmt.Sprintf(`%s query %s supply <class-id>`, version.AppName, nft.ModuleName),
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "class_id"},
 					},
 				},
@@ -50,7 +50,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "nfts [class-id]",
 					Short:     "Query all NFTs of a given class or owner address.",
 					Example:   fmt.Sprintf(`%s query %s nfts <class-id> --owner=<owner>`, version.AppName, nft.ModuleName),
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "class_id"},
 					},
 				},
@@ -59,7 +59,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "nft [class-id] [nft-id]",
 					Short:     "Query an NFT based on its class and id.",
 					Example:   fmt.Sprintf(`%s query %s nft <class-id> <nft-id>`, version.AppName, nft.ModuleName),
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "class_id"},
 						{ProtoField: "id"},
 					},
@@ -69,7 +69,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "class [class-id]",
 					Short:     "Query an NFT class based on its id",
 					Example:   fmt.Sprintf(`%s query %s class <class-id>`, version.AppName, nft.ModuleName),
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "class_id"},
 					},
 				},
@@ -81,14 +81,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 			},
 		},
-		Tx: &autocliv1.ServiceCommandDescriptor{
+		Tx: &autocli.ServiceCommandDescriptor{
 			Service: nftv1beta1.Msg_ServiceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			RpcCommandOptions: []*autocli.RpcCommandOptions{
 				{
 					RpcMethod: "Send",
 					Use:       "send [class-id] [nft-id] [receiver] --from [sender]",
 					Short:     "Transfer ownership of NFT",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "class_id"},
 						{ProtoField: "id"},
 						{ProtoField: "receiver"},

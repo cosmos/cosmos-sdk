@@ -1,22 +1,22 @@
 package crisis
 
 import (
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	autocli "cosmossdk.io/core/autocli"
 
 	crisisv1beta1 "github.com/cosmos/cosmos-sdk/contrib/api/cosmos/crisis/v1beta1"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
-func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
-	return &autocliv1.ModuleOptions{
-		Tx: &autocliv1.ServiceCommandDescriptor{
+func (am AppModule) AutoCLIOptions() *autocli.ModuleOptions {
+	return &autocli.ModuleOptions{
+		Tx: &autocli.ServiceCommandDescriptor{
 			Service: crisisv1beta1.Msg_ServiceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			RpcCommandOptions: []*autocli.RpcCommandOptions{
 				{
 					RpcMethod: "VerifyInvariant",
 					Use:       "invariant-broken [module-name] [invariant-route] --from mykey",
 					Short:     "Submit proof that an invariant is broken",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "invariant_module_name"},
 						{ProtoField: "invariant_route"},
 					},

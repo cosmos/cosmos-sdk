@@ -55,7 +55,7 @@ func TestRegisterUpgradeHandlersCallbackInvoked(t *testing.T) {
 	}
 
 	// Exercise the UpgradeCallBack != nil branch without needing an
-	// initialised store — call the callback directly with a zero-value context.
+	// initialized store — call the callback directly with a zero-value context.
 	err := cb.UpgradeCallBack(sdk.Context{}, upgradetypes.Plan{Name: "v2-cb"}, a)
 	if err != nil {
 		t.Fatalf("callback returned unexpected error: %v", err)

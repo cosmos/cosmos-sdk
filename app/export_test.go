@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	"github.com/cosmos/cosmos-sdk/testutil/testapp"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestExportAppStateAndValidators(t *testing.T) {

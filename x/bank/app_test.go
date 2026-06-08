@@ -21,7 +21,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -56,40 +55,40 @@ var (
 	coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	halfCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}
 
-	sendMsg1 = types.NewMsgSend(addr1, addr2, coins)
+	sendMsg1 = banktypes.NewMsgSend(addr1, addr2, coins)
 
-	multiSendMsg1 = &types.MsgMultiSend{
-		Inputs:  []types.Input{types.NewInput(addr1, coins)},
-		Outputs: []types.Output{types.NewOutput(addr2, coins)},
+	multiSendMsg1 = &banktypes.MsgMultiSend{
+		Inputs:  []banktypes.Input{banktypes.NewInput(addr1, coins)},
+		Outputs: []banktypes.Output{banktypes.NewOutput(addr2, coins)},
 	}
-	multiSendMsg2 = &types.MsgMultiSend{
-		Inputs: []types.Input{types.NewInput(addr1, coins)},
-		Outputs: []types.Output{
-			types.NewOutput(addr2, halfCoins),
-			types.NewOutput(addr3, halfCoins),
+	multiSendMsg2 = &banktypes.MsgMultiSend{
+		Inputs: []banktypes.Input{banktypes.NewInput(addr1, coins)},
+		Outputs: []banktypes.Output{
+			banktypes.NewOutput(addr2, halfCoins),
+			banktypes.NewOutput(addr3, halfCoins),
 		},
 	}
-	multiSendMsg3 = &types.MsgMultiSend{
-		Inputs: []types.Input{types.NewInput(addr2, coins)},
-		Outputs: []types.Output{
-			types.NewOutput(addr1, coins),
+	multiSendMsg3 = &banktypes.MsgMultiSend{
+		Inputs: []banktypes.Input{banktypes.NewInput(addr2, coins)},
+		Outputs: []banktypes.Output{
+			banktypes.NewOutput(addr1, coins),
 		},
 	}
-	multiSendMsg4 = &types.MsgMultiSend{
-		Inputs: []types.Input{types.NewInput(addr1, coins)},
-		Outputs: []types.Output{
-			types.NewOutput(moduleAccAddr, coins),
+	multiSendMsg4 = &banktypes.MsgMultiSend{
+		Inputs: []banktypes.Input{banktypes.NewInput(addr1, coins)},
+		Outputs: []banktypes.Output{
+			banktypes.NewOutput(moduleAccAddr, coins),
 		},
 	}
-	invalidMultiSendMsg = &types.MsgMultiSend{
-		Inputs:  []types.Input{types.NewInput(addr1, coins), types.NewInput(addr2, coins)},
-		Outputs: []types.Output{},
+	invalidMultiSendMsg = &banktypes.MsgMultiSend{
+		Inputs:  []banktypes.Input{banktypes.NewInput(addr1, coins), banktypes.NewInput(addr2, coins)},
+		Outputs: []banktypes.Output{},
 	}
 )
 
 type suite struct {
 	BankKeeper         bankkeeper.Keeper
-	AccountKeeper      types.AccountKeeper
+	AccountKeeper      banktypes.AccountKeeper
 	DistributionKeeper distrkeeper.Keeper
 	App                *sdkapp.SDKApp
 }
@@ -151,7 +150,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	origAccNum := res1.GetAccountNumber()
 	origSeq := res1.GetSequence()
 
-	sendMsg := types.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
+	sendMsg := banktypes.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
 	header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
 	txConfig := moduletestutil.MakeTestTxConfig()
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "test-chain", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
@@ -363,7 +362,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 	govAddr := s.BankKeeper.GetAuthority()
 	goodGovProp, err := govv1.NewMsgSubmitProposal(
 		[]sdk.Msg{
-			types.NewMsgSetSendEnabled(govAddr, nil, nil),
+			banktypes.NewMsgSetSendEnabled(govAddr, nil, nil),
 		},
 		sdk.Coins{{Denom: "stake", Amount: sdkmath.NewInt(100000)}},
 		addr1Str,
@@ -380,7 +379,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			expSimPass: false,
 			expPass:    false,
 			msgs: []sdk.Msg{
-				types.NewMsgSetSendEnabled(addr1Str, nil, nil),
+				banktypes.NewMsgSetSendEnabled(addr1Str, nil, nil),
 			},
 			accSeqs: []uint64{0},
 			expInError: []string{
@@ -394,7 +393,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			expSimPass: false,
 			expPass:    false,
 			msgs: []sdk.Msg{
-				types.NewMsgSetSendEnabled(govAddr, nil, nil),
+				banktypes.NewMsgSetSendEnabled(govAddr, nil, nil),
 			},
 			accSeqs: []uint64{1}, // wrong signer, so this sequence doesn't actually get used.
 			expInError: []string{

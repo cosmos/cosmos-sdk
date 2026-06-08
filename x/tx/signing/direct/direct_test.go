@@ -75,9 +75,10 @@ func TestDirectModeHandler(t *testing.T) {
 	authInfoBz, err := proto.Marshal(authInfo)
 	require.NoError(t, err)
 
+	// SIGN_MODE_DIRECT only uses BodyBytes and AuthInfoBytes; Body/AuthInfo are not accessed.
 	txData := signing.TxData{
-		Body:                       txBody,
-		AuthInfo:                   authInfo,
+		Body:                       &signing.TxBodyData{},
+		AuthInfo:                   &signing.TxAuthInfoData{},
 		BodyBytes:                  bodyBz,
 		AuthInfoBytes:              authInfoBz,
 		BodyHasUnknownNonCriticals: false,

@@ -222,8 +222,13 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 				FileResolver: proto.HybridResolver,
 			})
 
-			auxBody := &txv1beta1.TxBody{
-				Messages:         body.Messages,
+			// Convert pulsar TxBody to Go-native TxBodyData for the signing handler.
+			auxMsgs := make([]txsigning.RawMsg, len(body.Messages))
+			for i, m := range body.Messages {
+				auxMsgs[i] = txsigning.RawMsg{TypeUrl: m.TypeUrl, Value: m.Value}
+			}
+			auxBodyData := &txsigning.TxBodyData{
+				Messages:         auxMsgs,
 				Memo:             body.Memo,
 				TimeoutHeight:    body.TimeoutHeight,
 				TimeoutTimestamp: body.TimeoutTimestamp,
@@ -232,8 +237,6 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 				// This preserves pre-PR#16025 behavior where extension options were ignored, this code path:
 				// https://github.com/cosmos/cosmos-sdk/blob/ac3c209326a26b46f65a6cc6f5b5ebf6beb79b38/client/tx/aux_builder.go#L193
 				// https://github.com/cosmos/cosmos-sdk/blob/ac3c209326a26b46f65a6cc6f5b5ebf6beb79b38/x/auth/migrations/legacytx/stdsign.go#L49
-				ExtensionOptions:            nil,
-				NonCriticalExtensionOptions: nil,
 			}
 
 			signBz, err = handler.GetSignBytes(
@@ -246,14 +249,12 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 					PubKey:        nil,
 				},
 				txsigning.TxData{
-					Body: auxBody,
-					AuthInfo: &txv1beta1.AuthInfo{
-						SignerInfos: nil,
-						// Aux signer never signs over fee.
-						// For LEGACY_AMINO_JSON, we use the convention to sign
-						// over empty fees.
-						// ref: https://github.com/cosmos/cosmos-sdk/pull/10348
-						Fee: &txv1beta1.Fee{},
+					Body: auxBodyData,
+					// Aux signer never signs over fee.
+					// For LEGACY_AMINO_JSON, we use the convention to sign over empty fees.
+					// ref: https://github.com/cosmos/cosmos-sdk/pull/10348
+					AuthInfo: &txsigning.TxAuthInfoData{
+						Fee: txsigning.TxFeeData{},
 					},
 				},
 			)

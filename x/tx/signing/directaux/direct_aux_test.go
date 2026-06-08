@@ -14,7 +14,6 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/address"
 
@@ -28,7 +27,7 @@ func TestDirectAuxHandler(t *testing.T) {
 	memo := "sometestmemo"
 	msg, err := anyutil.New(&bankv1beta1.MsgSend{})
 	require.NoError(t, err)
-	accNum, accSeq := uint64(1), uint64(2) // Arbitrary account number/sequence
+	accNum, accSeq := uint64(1), uint64(2)
 
 	pk := &secp256k1.PubKey{
 		Key: make([]byte, 256),
@@ -36,34 +35,31 @@ func TestDirectAuxHandler(t *testing.T) {
 	anyPk, err := anyutil.New(pk)
 	require.NoError(t, err)
 
-	signerInfo := []*txv1beta1.SignerInfo{
-		{
-			PublicKey: anyPk,
-			ModeInfo: &txv1beta1.ModeInfo{
-				Sum: &txv1beta1.ModeInfo_Single_{
-					Single: &txv1beta1.ModeInfo_Single{
-						Mode: signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX,
-					},
-				},
-			},
-			Sequence: accSeq,
-		},
-	}
-
-	fee := &txv1beta1.Fee{
-		Amount:   []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
-		GasLimit: 20000,
-		Payer:    feePayerAddr,
-	}
-
-	txBody := &txv1beta1.TxBody{
-		Messages: []*anypb.Any{msg},
+	// Build Go-native TxBodyData for signing.TxData.
+	txBodyData := &signing.TxBodyData{
+		Messages: []signing.RawMsg{{TypeUrl: msg.TypeUrl, Value: msg.Value}},
 		Memo:     memo,
 	}
 
-	authInfo := &txv1beta1.AuthInfo{
-		Fee:         fee,
-		SignerInfos: signerInfo,
+	authInfoData := &signing.TxAuthInfoData{
+		Fee: signing.TxFeeData{
+			Amount:   []signing.TxCoinData{{Denom: "uatom", Amount: "1000"}},
+			GasLimit: 20000,
+			Payer:    feePayerAddr,
+		},
+	}
+
+	// Build pulsar types for proto.Marshal (bytes only, not stored in TxData).
+	txBodyProto := &txv1beta1.TxBody{
+		Messages: []*anypb.Any{msg},
+		Memo:     memo,
+	}
+	authInfoProto := &txv1beta1.AuthInfo{
+		Fee: &txv1beta1.Fee{
+			Amount:   []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+			GasLimit: 20000,
+			Payer:    feePayerAddr,
+		},
 	}
 
 	signingData := signing.SignerData{
@@ -74,16 +70,18 @@ func TestDirectAuxHandler(t *testing.T) {
 		PubKey:        anyPk,
 	}
 
-	bodyBz, err := proto.Marshal(txBody)
+	bodyBz, err := proto.Marshal(txBodyProto)
 	require.NoError(t, err)
-	authInfoBz, err := proto.Marshal(authInfo)
+	authInfoBz, err := proto.Marshal(authInfoProto)
 	require.NoError(t, err)
+
 	txData := signing.TxData{
-		Body:          txBody,
-		AuthInfo:      authInfo,
+		Body:          txBodyData,
+		AuthInfo:      authInfoData,
 		AuthInfoBytes: authInfoBz,
 		BodyBytes:     bodyBz,
 	}
+
 	signersCtx, err := signing.NewContext(signing.Options{
 		AddressCodec:          dummyAddressCodec{},
 		ValidatorAddressCodec: dummyAddressCodec{},
@@ -103,34 +101,39 @@ func TestDirectAuxHandler(t *testing.T) {
 	}
 	_, err = modeHandler.GetSignBytes(context.Background(), feePayerSigningData, txData)
 	require.EqualError(t, err, fmt.Sprintf("fee payer %s cannot sign with %s: unauthorized",
-		feePayerAddr, signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX))
+		feePayerAddr, signing.SignMode_SIGN_MODE_DIRECT_AUX))
 
 	t.Log("verifying fee payer fallback to GetSigners cannot use SIGN_MODE_DIRECT_AUX")
-	feeWithNoPayer := &txv1beta1.Fee{
-		Amount:   []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
-		GasLimit: 20000,
+	authInfoDataWithNoFeePayer := &signing.TxAuthInfoData{
+		Fee: signing.TxFeeData{
+			Amount:   []signing.TxCoinData{{Denom: "uatom", Amount: "1000"}},
+			GasLimit: 20000,
+		},
 	}
-	authInfoWithNoFeePayer := &txv1beta1.AuthInfo{
-		Fee:         feeWithNoPayer,
-		SignerInfos: signerInfo,
+	authInfoWithNoFeePayerProto := &txv1beta1.AuthInfo{
+		Fee: &txv1beta1.Fee{
+			Amount:   []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+			GasLimit: 20000,
+		},
 	}
-	authInfoWithNoFeePayerBz, err := proto.Marshal(authInfoWithNoFeePayer)
+	authInfoWithNoFeePayerBz, err := proto.Marshal(authInfoWithNoFeePayerProto)
 	require.NoError(t, err)
 	txDataWithNoFeePayer := signing.TxData{
-		Body:          txBody,
+		Body:          txBodyData,
 		BodyBytes:     bodyBz,
-		AuthInfo:      authInfoWithNoFeePayer,
+		AuthInfo:      authInfoDataWithNoFeePayer,
 		AuthInfoBytes: authInfoWithNoFeePayerBz,
 	}
 	_, err = modeHandler.GetSignBytes(context.Background(), signingData, txDataWithNoFeePayer)
 	require.EqualError(t, err, fmt.Sprintf("fee payer %s cannot sign with %s: unauthorized", "",
-		signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX))
+		signing.SignMode_SIGN_MODE_DIRECT_AUX))
 
 	t.Log("verify GetSignBytes with generating sign bytes by marshaling signDocDirectAux")
 	signBytes, err := modeHandler.GetSignBytes(context.Background(), signingData, txData)
 	require.NoError(t, err)
 	require.NotNil(t, signBytes)
 
+	// Build expected bytes using the pulsar SignDocDirectAux for comparison.
 	signDocDirectAux := &txv1beta1.SignDocDirectAux{
 		BodyBytes:     bodyBz,
 		PublicKey:     anyPk,

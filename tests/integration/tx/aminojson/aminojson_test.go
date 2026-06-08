@@ -30,7 +30,7 @@ import (
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	slashingapi "cosmossdk.io/api/cosmos/slashing/v1beta1"
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
 	"cosmossdk.io/math"
 
@@ -149,8 +149,8 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 					AccNum:        1,
 					AccSeq:        2,
 					SignerAddress: "signerAddress",
-					Fee: &txv1beta1.Fee{
-						Amount: []*v1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+					Fee: &txsigning.TxFeeData{
+						Amount: []txsigning.TxCoinData{{Denom: "uatom", Amount: "1000"}},
 					},
 				}
 
@@ -469,8 +469,8 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 				AccNum:        1,
 				AccSeq:        2,
 				SignerAddress: "signerAddress",
-				Fee: &txv1beta1.Fee{
-					Amount: []*v1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+				Fee: &txsigning.TxFeeData{
+					Amount: []txsigning.TxCoinData{{Denom: "uatom", Amount: "1000"}},
 				},
 			}
 

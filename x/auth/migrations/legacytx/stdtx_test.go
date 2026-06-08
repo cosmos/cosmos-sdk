@@ -109,14 +109,31 @@ func TestStdSignBytes(t *testing.T) {
 					Sequence:      tc.args.sequence,
 				},
 				txsigning.TxData{
-					Body: &txv1beta1.TxBody{
-						Memo:          tc.args.memo,
-						Messages:      anyMsgs,
-						TimeoutHeight: tc.args.timeoutHeight,
-					},
-					AuthInfo: &txv1beta1.AuthInfo{
-						Fee: tc.args.fee,
-					},
+					Body: func() *txsigning.TxBodyData {
+						rawMsgs := make([]txsigning.RawMsg, len(anyMsgs))
+						for k, m := range anyMsgs {
+							rawMsgs[k] = txsigning.RawMsg{TypeUrl: m.TypeUrl, Value: m.Value}
+						}
+						return &txsigning.TxBodyData{
+							Messages:      rawMsgs,
+							Memo:          tc.args.memo,
+							TimeoutHeight: tc.args.timeoutHeight,
+						}
+					}(),
+					AuthInfo: func() *txsigning.TxAuthInfoData {
+						var coins []txsigning.TxCoinData
+						var payer, granter string
+						var gas uint64
+						if f := tc.args.fee; f != nil {
+							for _, c := range f.Amount {
+								coins = append(coins, txsigning.TxCoinData{Denom: c.Denom, Amount: c.Amount})
+							}
+							payer, granter, gas = f.Payer, f.Granter, f.GasLimit
+						}
+						return &txsigning.TxAuthInfoData{
+							Fee: txsigning.TxFeeData{Amount: coins, Payer: payer, Granter: granter, GasLimit: gas},
+						}
+					}(),
 				},
 			)
 			require.NoError(t, err)

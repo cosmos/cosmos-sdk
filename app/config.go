@@ -260,8 +260,12 @@ type appOptionsWithDefaults struct {
 
 func (a appOptionsWithDefaults) Get(key string) any {
 	v := a.base.Get(key)
-	if v == nil {
-		return a.defaults[key]
+	// Treat nil and empty-string the same: viper returns "" (not nil) for
+	// pflags that are registered but not explicitly set by the caller.
+	if v == nil || v == "" {
+		if def, ok := a.defaults[key]; ok {
+			return def
+		}
 	}
 	return v
 }

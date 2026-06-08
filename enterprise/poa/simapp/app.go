@@ -33,7 +33,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -131,17 +130,8 @@ func newPoAAppWithSDKConfig(
 	}
 	poaApp.LoadModules()
 	poaApp.GovKeeper.SetHooks(govtypes.NewMultiGovHooks(poaKeeper.NewGovHooks()))
-	anteHandler, err := NewAnteHandler(ante.HandlerOptions{
-		AccountKeeper:   poaApp.AccountKeeper,
-		BankKeeper:      poaApp.BankKeeper,
-		FeegrantKeeper:  poaApp.FeeGrantKeeper,
-		SignModeHandler: poaApp.TxConfig().SignModeHandler(),
-		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-	})
-	if err != nil {
-		panic(err)
-	}
-	poaApp.SetAnteHandler(anteHandler)
+	// SDKApp.LoadModules already installs a correctly-configured ante handler
+	// (including SigVerifyOptions for unordered-tx). Do not override it here.
 
 	simApp := &SimApp{
 		SDKApp:    poaApp,

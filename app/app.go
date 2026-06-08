@@ -327,7 +327,9 @@ func (app *SDKApp) AddModules(modules ...Module) error {
 }
 
 func (app *SDKApp) addModule(mod Module) error {
-	if app.moduleManager != nil {
+	app.loadMu.Lock()
+	defer app.loadMu.Unlock()
+	if app.loaded {
 		return fmt.Errorf("cannot add modules after LoadModules has been called")
 	}
 
@@ -400,7 +402,10 @@ func (app *SDKApp) LoadModules() {
 	if app.loaded {
 		return
 	}
-	app.loadModules() // panic propagates; loaded stays false so the state is not silently corrupted
+	// NOTE: if loadModules panics, loaded stays false — but partial state may
+	// have been written (gRPC routes, store mounts). Do NOT recover() and retry;
+	// treat any panic from LoadModules as unrecoverable.
+	app.loadModules()
 	app.loaded = true
 }
 

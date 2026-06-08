@@ -29,7 +29,6 @@ import (
 	groupmodule "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/module"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -170,16 +169,8 @@ func NewSimApp(
 	}
 
 	sdkApp.LoadModules()
-	anteHandler, err := NewAnteHandler(ante.HandlerOptions{
-		AccountKeeper:   sdkApp.AccountKeeper,
-		BankKeeper:      sdkApp.BankKeeper,
-		SignModeHandler: sdkApp.TxConfig().SignModeHandler(),
-		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-	})
-	if err != nil {
-		panic(err)
-	}
-	sdkApp.SetAnteHandler(anteHandler)
+	// SDKApp.LoadModules already installs a correctly-configured ante handler
+	// (including SigVerifyOptions for unordered-tx). Do not override it here.
 
 	simApp := &SimApp{
 		SDKApp:      sdkApp,

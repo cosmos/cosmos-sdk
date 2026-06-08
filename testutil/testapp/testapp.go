@@ -143,6 +143,9 @@ func genesisStateWithValSet(
 			MinSelfDelegation: sdkmath.ZeroInt(),
 		}
 		validators = append(validators, validator)
+		if len(genAccs) == 0 {
+			panic("genesisStateWithValSet requires at least one genesis account to assign delegations")
+		}
 		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), sdk.ValAddress(val.Address).String(), sdkmath.LegacyOneDec()))
 	}
 

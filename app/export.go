@@ -18,7 +18,7 @@ import (
 // file.
 func (app *SDKApp) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs, modulesToExport []string) (servertypes.ExportedApp, error) {
 	// as if they could withdraw from the start of the next block
-	ctx := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
+	ctx := app.NewContextLegacy(false, cmtproto.Header{Height: app.LastBlockHeight()})
 
 	// We export at last height + 1, because that's the height at which
 	// CometBFT will start InitChain.
@@ -74,7 +74,9 @@ func (app *SDKApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 		if err != nil {
 			panic(err)
 		}
-		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, valBz)
+		if _, err := app.DistrKeeper.WithdrawValidatorCommission(ctx, valBz); err != nil {
+			ctx.Logger().Error("failed to withdraw validator commission during zero-height export", "validator", val.GetOperator(), "error", err)
+		}
 		return false
 	})
 	if err != nil {
@@ -95,7 +97,9 @@ func (app *SDKApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 
 		delAddr := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
 
-		_, _ = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
+		if _, err := app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr); err != nil {
+			ctx.Logger().Error("failed to withdraw delegation rewards during zero-height export", "delegator", delegation.DelegatorAddress, "validator", delegation.ValidatorAddress, "error", err)
+		}
 	}
 
 	// clear validator slash events
@@ -195,6 +199,7 @@ func (app *SDKApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	// update bond intra-tx counters.
 	store := ctx.KVStore(app.GetKey(stakingtypes.StoreKey))
 	iter := storetypes.KVStoreReversePrefixIterator(store, stakingtypes.ValidatorsKey)
+	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
 		addr := sdk.ValAddress(stakingtypes.AddressFromValidatorsKey(iter.Key()))
@@ -212,10 +217,6 @@ func (app *SDKApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 		if err != nil {
 			panic(fmt.Errorf("unable to set validator: %w", err))
 		}
-	}
-
-	if err := iter.Close(); err != nil {
-		panic(fmt.Errorf("error closing validator iterator: %w", err))
 	}
 
 	_, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)

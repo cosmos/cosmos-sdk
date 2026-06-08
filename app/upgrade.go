@@ -45,15 +45,20 @@ func RegisterUpgradeHandlers[T AppI](app T, upgrades ...Upgrade[T]) {
 
 				return app.ModuleManager().RunMigrations(ctx, app.Configurator(), fromVM)
 			})
+	}
 
-		upgradeInfo, err := app.UpgradeKeeper().ReadUpgradeInfoFromDisk()
-		if err != nil {
-			panic(err)
-		}
+	// Read upgrade info once outside the loop — it is the same file for all
+	// upgrades and reading it N times introduces a TOCTOU window.
+	upgradeInfo, err := app.UpgradeKeeper().ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(err)
+	}
 
+	for _, upgrade := range upgrades {
 		if upgradeInfo.Name == upgrade.Name && !app.UpgradeKeeper().IsSkipHeight(upgradeInfo.Height) {
 			// configure store loader that checks if version == upgradeHeight and applies store upgrades
 			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &upgrade.StoreUpgrades))
+			break
 		}
 	}
 }

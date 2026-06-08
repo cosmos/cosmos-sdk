@@ -6,15 +6,17 @@ import (
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/dynamicpb"
 
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/client/v2/internal/coins"
+	coinscore "cosmossdk.io/core/coins"
 )
 
 type coinType struct{}
 
 type coinValue struct {
-	value *basev1beta1.Coin
+	value *coinscore.Coin
 }
 
 func (c coinType) NewValue(*context.Context, *Builder) Value {
@@ -29,22 +31,29 @@ func (c *coinValue) Get(protoreflect.Value) (protoreflect.Value, error) {
 	if c.value == nil {
 		return protoreflect.Value{}, nil
 	}
-	return protoreflect.ValueOfMessage(c.value.ProtoReflect()), nil
+	// Build a dynamic proto message for cosmos.base.v1beta1.Coin using the
+	// global type registry (populated by gogoproto's init()).
+	mt, err := protoregistry.GlobalTypes.FindMessageByName("cosmos.base.v1beta1.Coin")
+	if err != nil {
+		return protoreflect.Value{}, err
+	}
+	dynCoin := dynamicpb.NewMessage(mt.Descriptor())
+	dynCoin.Set(mt.Descriptor().Fields().ByName("denom"), protoreflect.ValueOfString(c.value.Denom))
+	dynCoin.Set(mt.Descriptor().Fields().ByName("amount"), protoreflect.ValueOfString(c.value.Amount))
+	return protoreflect.ValueOfMessage(dynCoin), nil
 }
 
 func (c *coinValue) String() string {
 	if c.value == nil {
 		return ""
 	}
-
-	return c.value.String()
+	return c.value.Amount + c.value.Denom
 }
 
 func (c *coinValue) Set(stringValue string) error {
 	if strings.Contains(stringValue, ",") {
 		return errors.New("coin flag must be a single coin, specific multiple coins with multiple flags or spaces")
 	}
-
 	coin, err := coins.ParseCoin(stringValue)
 	if err != nil {
 		return err

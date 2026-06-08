@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	autocli "cosmossdk.io/core/autocli"
 
 	"github.com/cosmos/cosmos-sdk/version"
@@ -14,7 +13,7 @@ import (
 func (am AppModule) AutoCLIOptions() *autocli.ModuleOptions {
 	return &autocli.ModuleOptions{
 		Query: &autocli.ServiceCommandDescriptor{
-			Service: bankv1beta1.Query_ServiceDesc.ServiceName,
+			Service: "cosmos.bank.v1beta1.Query",
 			RpcCommandOptions: []*autocli.RpcCommandOptions{
 				{
 					RpcMethod:      "Balance",
@@ -90,7 +89,7 @@ To look up all denoms, do not provide any arguments.`,
 			},
 		},
 		Tx: &autocli.ServiceCommandDescriptor{
-			Service:              bankv1beta1.Msg_ServiceDesc.ServiceName,
+			Service:              "cosmos.bank.v1beta1.Msg",
 			EnhanceCustomCommand: true,
 			RpcCommandOptions: []*autocli.RpcCommandOptions{
 				{

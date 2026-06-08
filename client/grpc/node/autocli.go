@@ -1,12 +1,11 @@
 package node
 
 import (
-	nodev1beta1 "cosmossdk.io/api/cosmos/base/node/v1beta1"
 	autocli "cosmossdk.io/core/autocli"
 )
 
 var ServiceAutoCLIDescriptor = &autocli.ServiceCommandDescriptor{
-	Service: nodev1beta1.Service_ServiceDesc.ServiceName,
+	Service: "cosmos.base.node.v1beta1.Service",
 	RpcCommandOptions: []*autocli.RpcCommandOptions{
 		{
 			RpcMethod: "Config",

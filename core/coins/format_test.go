@@ -7,25 +7,23 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/core/coins"
 )
 
 // coinJSONTest is the type of test cases in the coin.json file.
 type coinJSONTest struct {
-	Proto    *basev1beta1.Coin
-	Metadata *bankv1beta1.Metadata
-	Text     string
-	Error    bool
+	Proto    *coins.Coin     `json:"proto"`
+	Metadata *coins.Metadata `json:"metadata"`
+	Text     string          `json:"text"`
+	Error    bool            `json:"error"`
 }
 
 // coinsJSONTest is the type of test cases in the coins.json file.
 type coinsJSONTest struct {
-	Proto    []*basev1beta1.Coin
-	Metadata map[string]*bankv1beta1.Metadata
-	Text     string
-	Error    bool
+	Proto    []*coins.Coin              `json:"proto"`
+	Metadata map[string]*coins.Metadata `json:"metadata"`
+	Text     string                     `json:"text"`
+	Error    bool                       `json:"error"`
 }
 
 func TestFormatCoin(t *testing.T) {
@@ -38,7 +36,7 @@ func TestFormatCoin(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.Text, func(t *testing.T) {
 			if tc.Proto != nil {
-				out, err := coins.FormatCoins([]*basev1beta1.Coin{tc.Proto}, []*bankv1beta1.Metadata{tc.Metadata})
+				out, err := coins.FormatCoins([]*coins.Coin{tc.Proto}, []*coins.Metadata{tc.Metadata})
 
 				if tc.Error {
 					require.Error(t, err)
@@ -62,7 +60,7 @@ func TestFormatCoins(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.Text, func(t *testing.T) {
 			if tc.Proto != nil {
-				metadata := make([]*bankv1beta1.Metadata, len(tc.Proto))
+				metadata := make([]*coins.Metadata, len(tc.Proto))
 				for i, coin := range tc.Proto {
 					metadata[i] = tc.Metadata[coin.Denom]
 				}

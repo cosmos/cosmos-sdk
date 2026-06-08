@@ -8,8 +8,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-
 	"github.com/cosmos/cosmos-sdk/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson/internal/aminojsonpb"
 )
@@ -83,17 +81,13 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 
 	f := txData.AuthInfo.Fee
 
-	// Convert []TxCoinData → []*basev1beta1.Coin for the amino sign fee.
-	feeCoins := make([]*basev1beta1.Coin, len(f.Amount))
+	// Convert []TxCoinData to FeeAmount for the amino sign fee.
+	// basev1beta1.Coin construction is hidden inside aminojsonpb.NewAminoSignFee.
+	feeAmounts := make([]aminojsonpb.FeeAmount, len(f.Amount))
 	for i, c := range f.Amount {
-		feeCoins[i] = &basev1beta1.Coin{Denom: c.Denom, Amount: c.Amount}
+		feeAmounts[i] = aminojsonpb.FeeAmount{Denom: c.Denom, Amount: c.Amount}
 	}
-	fee := &aminojsonpb.AminoSignFee{
-		Amount:  feeCoins,
-		Gas:     f.GasLimit,
-		Payer:   f.Payer,
-		Granter: f.Granter,
-	}
+	fee := aminojsonpb.NewAminoSignFee(feeAmounts, f.GasLimit, f.Payer, f.Granter)
 
 	// Convert []RawMsg → []*anypb.Any for the amino sign doc Msgs field.
 	msgs := make([]*anypb.Any, len(body.Messages))

@@ -1,12 +1,11 @@
 package cmtservice
 
 import (
-	cmtv1beta1 "cosmossdk.io/api/cosmos/base/tendermint/v1beta1"
 	autocli "cosmossdk.io/core/autocli"
 )
 
 var CometBFTAutoCLIDescriptor = &autocli.ServiceCommandDescriptor{
-	Service: cmtv1beta1.Service_ServiceDesc.ServiceName,
+	Service: "cosmos.base.tendermint.v1beta1.Service",
 	RpcCommandOptions: []*autocli.RpcCommandOptions{
 		{
 			RpcMethod: "GetNodeInfo",

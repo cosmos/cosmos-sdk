@@ -160,7 +160,6 @@ func NewSchemaFromAccessor(accessor func(context.Context) core.KVStore) Schema {
 	}
 }
 
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (s Schema) IsAppModule() {}
 

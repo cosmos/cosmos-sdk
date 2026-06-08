@@ -87,7 +87,6 @@ func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper) AppModule {
 	}
 }
 
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 

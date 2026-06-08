@@ -7,4 +7,3 @@ type CounterHooks interface {
 }
 
 type CounterHooksWrapper struct{ CounterHooks }
-

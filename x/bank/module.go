@@ -92,7 +92,6 @@ type AppModule struct {
 	accountKeeper types.AccountKeeper
 }
 
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -173,4 +172,3 @@ func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Re
 func (am AppModule) EndBlock(ctx context.Context) error {
 	return am.keeper.CreditVirtualAccounts(ctx)
 }
-

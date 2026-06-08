@@ -110,7 +110,6 @@ func NewAppModule(
 	}
 }
 
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -184,4 +183,3 @@ func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Re
 	reg.Add(weights.Get("msg_withdraw_delegation_reward", 50), simulation.MsgWithdrawDelegatorRewardFactory(am.keeper, am.stakingKeeper))
 	reg.Add(weights.Get("msg_withdraw_validator_commission", 50), simulation.MsgWithdrawValidatorCommissionFactory(am.keeper, am.stakingKeeper))
 }
-

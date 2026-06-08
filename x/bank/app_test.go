@@ -10,10 +10,10 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
+	sdkapp "github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdkapp "github.com/cosmos/cosmos-sdk/app"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	testapp "github.com/cosmos/cosmos-sdk/testutil/testapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"

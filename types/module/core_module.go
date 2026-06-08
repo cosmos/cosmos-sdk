@@ -205,5 +205,4 @@ func (c coreAppModuleBasicAdaptor) RegisterServices(cfg Configurator) {
 	}
 }
 
-
 func (c coreAppModuleBasicAdaptor) IsAppModule() {}

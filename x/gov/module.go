@@ -133,7 +133,6 @@ func NewAppModule(
 	}
 }
 
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 

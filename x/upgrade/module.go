@@ -93,7 +93,6 @@ func NewAppModule(keeper *keeper.Keeper, ac address.Codec) AppModule {
 	}
 }
 
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -148,4 +147,3 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, error) {
 	return PreBlocker(ctx, am.keeper)
 }
-

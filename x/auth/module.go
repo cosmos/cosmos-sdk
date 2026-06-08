@@ -104,7 +104,6 @@ func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, e
 	return &sdk.ResponsePreBlock{ConsensusParamsChanged: false}, nil
 }
 
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 

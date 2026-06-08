@@ -38,6 +38,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log/v2"
 
+	appservices "github.com/cosmos/cosmos-sdk/app/services"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -50,7 +51,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa"
 	poakeeper "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/keeper"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
-	appservices "github.com/cosmos/cosmos-sdk/app/services"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"

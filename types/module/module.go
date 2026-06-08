@@ -266,7 +266,6 @@ func NewGenesisOnlyAppModule(amg AppModuleGenesis) GenesisOnlyAppModule {
 	}
 }
 
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (GenesisOnlyAppModule) IsAppModule() {}
 

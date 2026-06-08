@@ -70,7 +70,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper,
 	}
 }
 
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -198,4 +197,3 @@ func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Re
 	reg.Add(weights.Get("msg_exec", 90), simulation2.MsgExecFactory(am.keeper, s))
 	reg.Add(weights.Get("msg_leave_group", 5), simulation2.MsgLeaveGroupFactory(am.keeper, s))
 }
-

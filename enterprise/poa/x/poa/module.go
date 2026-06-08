@@ -172,7 +172,6 @@ func NewAppModule(cdc codec.BinaryCodec, poaKeeper *keeper.Keeper, opts ...Modul
 // IsAppModule implements the appmodule.AppModule interface.
 func (AppModule) IsAppModule() {}
 
-
 // RegisterServices registers module services with the configurator.
 func (m AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(m.keeper))

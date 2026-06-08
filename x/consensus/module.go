@@ -58,7 +58,6 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
-
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
@@ -79,4 +78,3 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
-

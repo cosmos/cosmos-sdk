@@ -585,7 +585,7 @@ func (MockCoreAppModule) RegisterServices(reg grpc.ServiceRegistrar) error {
 }
 
 func (MockCoreAppModule) IsOnePerModuleType() {}
-func (MockCoreAppModule) IsAppModule()        {}
+func (MockCoreAppModule) IsAppModule() {}
 func (MockCoreAppModule) DefaultGenesis(target appmodule.GenesisTarget) error {
 	someFieldWriter, err := target("someField")
 	if err != nil {

@@ -172,7 +172,9 @@ func newTestCustomModule(name, storeKey string) testCustomModule {
 
 func TestAddModulesFailsAfterLoadModules(t *testing.T) {
 	app := &SDKApp{
-		moduleManager: &module.Manager{},
+		// Use loaded=true to simulate the post-LoadModules state; addModule now
+		// guards on app.loaded rather than app.moduleManager.
+		loaded: true,
 	}
 
 	err := app.AddModules(testCustomModule{name: "custom"})

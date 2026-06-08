@@ -1,7 +1,6 @@
 package flag
 
 import (
-	autoclicore "cosmossdk.io/core/autocli"
 	"context"
 	"errors"
 	"fmt"
@@ -16,12 +15,13 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
 	"cosmossdk.io/core/address"
+	autoclicore "cosmossdk.io/core/autocli"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
+	msgv1 "github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 const (
@@ -234,7 +234,7 @@ func (b *Builder) addMessageFlags(ctx *context.Context, flagSet *pflag.FlagSet, 
 	}
 
 	// define all other fields as flags
-	flagOptsByFlagName := map[string]*autoclicore.autoclicore.FlagOptions{}
+	flagOptsByFlagName := map[string]*autoclicore.FlagOptions{}
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
 		fieldName := string(field.Name())
@@ -508,7 +508,7 @@ func GetScalarType(field protoreflect.FieldDescriptor) (string, bool) {
 // GetSignerFieldName gets signer field name of a message.
 // AutoCLI supports only one signer field per message.
 func GetSignerFieldName(descriptor protoreflect.MessageDescriptor) string {
-	signersFields := proto.GetExtension(descriptor.Options(), msgv1.E_Signer).([]string)
+	signersFields := proto.GetExtension(descriptor.Options(), msgv1.E_SignerV2).([]string)
 	if len(signersFields) == 0 {
 		return ""
 	}

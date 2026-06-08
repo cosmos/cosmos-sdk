@@ -13,11 +13,11 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"gotest.tools/v3/assert"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/client/v2/internal/testpbgogo"
 	testpb "cosmossdk.io/client/v2/internal/testpbpulsar"
+	autoclicore "cosmossdk.io/core/autocli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -160,7 +160,7 @@ func TestEnhanceCommand(t *testing.T) {
 		cmdTp := cmdType(i)
 
 		appOptions := AppOptions{
-			ModuleOptions: map[string]*autocliv1.ModuleOptions{
+			ModuleOptions: map[string]*autoclicore.ModuleOptions{
 				"test": {},
 			},
 		}
@@ -171,7 +171,7 @@ func TestEnhanceCommand(t *testing.T) {
 		cmd = &cobra.Command{Use: "test"}
 
 		appOptions = AppOptions{
-			ModuleOptions: map[string]*autocliv1.ModuleOptions{},
+			ModuleOptions: map[string]*autoclicore.ModuleOptions{},
 		}
 		customCommands := map[string]*cobra.Command{
 			"test2": {Use: "test"},
@@ -181,7 +181,7 @@ func TestEnhanceCommand(t *testing.T) {
 
 		cmd = &cobra.Command{Use: "test"}
 		appOptions = AppOptions{
-			ModuleOptions: map[string]*autocliv1.ModuleOptions{
+			ModuleOptions: map[string]*autoclicore.ModuleOptions{
 				"test": {Tx: nil},
 			},
 		}
@@ -196,12 +196,12 @@ func TestErrorBuildCommand(t *testing.T) {
 	b.AddQueryConnFlags = nil
 	b.AddTxConnFlags = nil
 
-	commandDescriptor := &autocliv1.ServiceCommandDescriptor{
+	commandDescriptor := &autoclicore.ServiceCommandDescriptor{
 		Service: testpb.Msg_ServiceDesc.ServiceName,
-		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 			{
 				RpcMethod: "Send",
-				PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+				PositionalArgs: []*autoclicore.PositionalArgDescriptor{
 					{
 						ProtoField: "un-existent-proto-field",
 					},
@@ -211,7 +211,7 @@ func TestErrorBuildCommand(t *testing.T) {
 	}
 
 	appOptions := AppOptions{
-		ModuleOptions: map[string]*autocliv1.ModuleOptions{
+		ModuleOptions: map[string]*autoclicore.ModuleOptions{
 			"test": {
 				Query: commandDescriptor,
 				Tx:    commandDescriptor,
@@ -222,8 +222,8 @@ func TestErrorBuildCommand(t *testing.T) {
 	_, err := b.BuildMsgCommand(context.Background(), appOptions, nil)
 	assert.ErrorContains(t, err, "can't find field un-existent-proto-field")
 
-	appOptions.ModuleOptions["test"].Tx = &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"}
-	appOptions.ModuleOptions["test"].Query = &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"}
+	appOptions.ModuleOptions["test"].Tx = &autoclicore.ServiceCommandDescriptor{Service: "un-existent-service"}
+	appOptions.ModuleOptions["test"].Query = &autoclicore.ServiceCommandDescriptor{Service: "un-existent-service"}
 	_, err = b.BuildMsgCommand(context.Background(), appOptions, nil)
 	assert.ErrorContains(t, err, "can't find service un-existent-service")
 }

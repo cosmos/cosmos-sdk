@@ -3,9 +3,8 @@ package keyring
 import (
 	"context"
 
-	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
-
 	"github.com/cosmos/cosmos-sdk/crypto/types"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 // KeyringContextKey is the key used to store the keyring in the context.

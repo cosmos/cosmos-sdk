@@ -1,7 +1,6 @@
 package autocli
 
 import (
-	autoclicore "cosmossdk.io/core/autocli"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -10,6 +9,7 @@ import (
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	autoclicore "cosmossdk.io/core/autocli"
 	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"

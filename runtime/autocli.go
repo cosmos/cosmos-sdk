@@ -2,8 +2,9 @@ package runtime
 
 import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/core/autocli"
+
+	reflectionpkg "github.com/cosmos/cosmos-sdk/runtime/services/reflection"
 )
 
 func (m appModule) AutoCLIOptions() *autocli.ModuleOptions {
@@ -18,7 +19,6 @@ func (m appModule) AutoCLIOptions() *autocli.ModuleOptions {
 			},
 			SubCommands: map[string]*autocli.ServiceCommandDescriptor{
 				"autocli": {
-					// cosmos.autocli.v1.Query
 					Service: "cosmos.autocli.v1.Query",
 					RpcCommandOptions: []*autocli.RpcCommandOptions{
 						{
@@ -28,7 +28,7 @@ func (m appModule) AutoCLIOptions() *autocli.ModuleOptions {
 					},
 				},
 				"reflection": {
-					Service: reflectionv1.ReflectionService_ServiceDesc.ServiceName,
+					Service: reflectionpkg.ServiceName,
 					RpcCommandOptions: []*autocli.RpcCommandOptions{
 						{
 							RpcMethod: "FileDescriptors",

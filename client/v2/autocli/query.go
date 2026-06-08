@@ -1,7 +1,6 @@
 package autocli
 
 import (
-	autoclicore "cosmossdk.io/core/autocli"
 	"context"
 	"fmt"
 	"io"
@@ -14,6 +13,7 @@ import (
 
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
+	autoclicore "cosmossdk.io/core/autocli"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -70,7 +70,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 	service := descriptor.(protoreflect.ServiceDescriptor)
 	methods := service.Methods()
 
-	rpcOptMap := map[protoreflect.Name]*autoclicore.autoclicore.RpcCommandOptions{}
+	rpcOptMap := map[protoreflect.Name]*autoclicore.RpcCommandOptions{}
 	for _, option := range cmdDescriptor.RpcCommandOptions {
 		name := protoreflect.Name(option.RpcMethod)
 		rpcOptMap[name] = option

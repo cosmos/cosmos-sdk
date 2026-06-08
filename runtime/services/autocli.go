@@ -11,11 +11,11 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/autocli"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
+	cosmosmsg "github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 // AutoCLIQueryService implements the cosmos.autocli.v1.Query service.
@@ -207,7 +207,7 @@ func (a *autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss any) {
 		return
 	}
 
-	if protobuf.HasExtension(desc.Options(), cosmosmsg.E_Service) {
+	if protobuf.HasExtension(desc.Options(), cosmosmsg.E_ServiceV2) {
 		a.msgServer.RegisterService(sd, ss)
 	} else {
 		a.queryServer.RegisterService(sd, ss)

@@ -3,9 +3,8 @@ package keyring
 import (
 	"errors"
 
-	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 var _ Keyring = NoKeyring{}

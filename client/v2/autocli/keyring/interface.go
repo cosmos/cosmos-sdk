@@ -1,9 +1,8 @@
 package keyring
 
 import (
-	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 // Keyring is an interface used for signing transactions.

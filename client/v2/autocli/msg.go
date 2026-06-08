@@ -1,7 +1,6 @@
 package autocli
 
 import (
-	autoclicore "cosmossdk.io/core/autocli"
 	"context"
 	"fmt"
 
@@ -15,6 +14,7 @@ import (
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
 	addresscodec "cosmossdk.io/core/address"
+	autoclicore "cosmossdk.io/core/autocli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -72,7 +72,7 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 	service := descriptor.(protoreflect.ServiceDescriptor)
 	methods := service.Methods()
 
-	rpcOptMap := map[protoreflect.Name]*autoclicore.autoclicore.RpcCommandOptions{}
+	rpcOptMap := map[protoreflect.Name]*autoclicore.RpcCommandOptions{}
 	for _, option := range cmdDescriptor.RpcCommandOptions {
 		methodName := protoreflect.Name(option.RpcMethod)
 		// validate that methods exist

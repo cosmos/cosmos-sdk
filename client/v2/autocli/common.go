@@ -1,7 +1,6 @@
 package autocli
 
 import (
-	autoclicore "cosmossdk.io/core/autocli"
 	"fmt"
 	"strings"
 
@@ -11,6 +10,7 @@ import (
 
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
+	autoclicore "cosmossdk.io/core/autocli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 )

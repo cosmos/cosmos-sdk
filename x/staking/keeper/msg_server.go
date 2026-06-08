@@ -622,6 +622,22 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", msg.NewPubkey.GetCachedValue())
 	}
+
+	// reject a key whose type is not in the chain's allowed consensus pubkey
+	// types, mirroring the validation enforced in CreateValidator so a
+	// validator cannot rotate to a disallowed key type.
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	cp := sdkCtx.ConsensusParams()
+	if cp.Validator != nil {
+		pkType := newPk.Type()
+		if !slices.Contains(cp.Validator.PubKeyTypes, pkType) {
+			return nil, errorsmod.Wrapf(
+				types.ErrValidatorPubKeyTypeNotSupported,
+				"got: %s, expected: %s", pkType, cp.Validator.PubKeyTypes,
+			)
+		}
+	}
+
 	newConsAddr := sdk.ConsAddress(newPk.Address())
 
 	// reject a key locked by a rotation, either because some validator

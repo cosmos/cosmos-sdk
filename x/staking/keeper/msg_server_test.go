@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1254,6 +1255,24 @@ func (s *KeeperTestSuite) TestMsgRotateConsPubKey() {
 				}
 			},
 			expErr: stakingtypes.ErrConsensusPubKeyInRotationHistory.Error(),
+		},
+		{
+			name: "new pubkey type not in allowed consensus pubkey types",
+			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
+				valAddr, _ := createValidator(stakingtypes.Bonded)
+				// restrict allowed consensus key types to ed25519 only, then
+				// attempt to rotate to a secp256k1 key.
+				s.ctx = s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+					Validator: &cmtproto.ValidatorParams{
+						PubKeyTypes: []string{ed25519.KeyType},
+					},
+				})
+				return &stakingtypes.MsgRotateConsPubKey{
+					ValidatorAddress: valAddr.String(),
+					NewPubkey:        newAny(secp256k1.GenPrivKey().PubKey()),
+				}
+			},
+			expErr: stakingtypes.ErrValidatorPubKeyTypeNotSupported.Error(),
 		},
 		{
 			name: "valid msg",

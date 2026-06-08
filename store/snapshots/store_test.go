@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -354,14 +355,24 @@ func TestStore_Save_ChunksWrittenToDisk(t *testing.T) {
 	}
 }
 
-// TestStore_Save_syncDirError verifies that a syncDir failure propagates back through saveChunk.
+// TestStore_Save_syncDirError verifies that a syncDir failure inside saveChunk propagates
+// back through Save. The injector succeeds for ancestor-directory syncs (mkdirAllSync) and
+// only fails when syncDir is called on the chunk-containing directory (syncAndClose path).
 func TestStore_Save_syncDirError(t *testing.T) {
 	tempdir := GetTempDir(t)
 	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 	require.NoError(t, err)
 
+	// filepath.Dir of the chunk path is the snapshot directory that syncAndClose syncs
+	// after writing the chunk file — distinct from the ancestor directories synced by mkdirAllSync.
+	chunkDir := filepath.Dir(store.PathChunk(1, 1, 0))
 	injected := errors.New("injected syncDir error")
-	original := snapshots.SetSyncDirFn(func(string) error { return injected })
+	original := snapshots.SetSyncDirFn(func(path string) error {
+		if path == chunkDir {
+			return injected
+		}
+		return nil
+	})
 	defer snapshots.SetSyncDirFn(original)
 
 	_, err = store.Save(1, 1, makeChunks([][]byte{{0x01, 0x02}}))

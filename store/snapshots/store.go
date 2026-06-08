@@ -368,18 +368,21 @@ func syncAndClose(f *os.File) error {
 func mkdirAllSync(dir, stableBase string, perm os.FileMode) error {
 	dir = filepath.Clean(dir)
 	stableBase = filepath.Clean(stableBase)
+
 	rel, err := filepath.Rel(stableBase, dir)
-	if err != nil || rel == "." || rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+	if err != nil || strings.HasPrefix(rel, "..") {
 		return errors.Wrapf(storetypes.ErrLogic, "stableBase %q is not an ancestor of %q", stableBase, dir)
 	}
+
 	if err := os.MkdirAll(dir, perm); err != nil {
 		return err
 	}
+
 	for d := filepath.Dir(dir); ; d = filepath.Dir(d) {
 		if err := syncDirFn(d); err != nil {
 			return err
 		}
-		if d == stableBase {
+		if d == stableBase || filepath.Dir(d) == d {
 			break
 		}
 	}

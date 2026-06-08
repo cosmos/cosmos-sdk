@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: lint-fix
+        name: make lint-fix
+        entry: make lint-fix
+        language: system
+        pass_filenames: false
+        always_run: true

@@ -120,7 +120,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrderWithAdapter() {
 			for i, ts := range tt.txs {
 				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
 				c := ctx.WithPriority(tx.priority)
-				err := pool.Insert(c, tx)
+				err := pool.Insert(c, tx, mempool.InsertOption{})
 				require.NoError(t, err)
 			}
 
@@ -320,7 +320,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 			for i, ts := range tt.txs {
 				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
 				c := ctx.WithPriority(tx.priority)
-				err := pool.Insert(c, tx)
+				err := pool.Insert(c, tx, mempool.InsertOption{})
 				require.NoError(t, err)
 			}
 
@@ -382,14 +382,14 @@ func (s *MempoolTestSuite) TestIterator() {
 			for i, ts := range tt.txs {
 				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
 				c := ctx.WithPriority(tx.priority)
-				err := pool.Insert(c, tx)
+				err := pool.Insert(c, tx, mempool.InsertOption{})
 				require.NoError(t, err)
 			}
 
 			// iterate through txs
 			iterator := pool.Select(ctx, nil)
 			for iterator != nil {
-				tx := iterator.Tx().(testTx)
+				tx := iterator.Tx().Tx.(testTx)
 				require.Equal(t, tt.txs[tx.id].p, int(tx.priority))
 				require.Equal(t, tt.txs[tx.id].n, int(tx.nonce))
 				require.Equal(t, tt.txs[tx.id].a, tx.address)
@@ -438,7 +438,7 @@ func (s *MempoolTestSuite) TestIteratorConcurrency() {
 			for i, ts := range tt.txs {
 				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
 				c := ctx.WithPriority(tx.priority)
-				err := pool.Insert(c, tx)
+				err := pool.Insert(c, tx, mempool.InsertOption{})
 				require.NoError(t, err)
 			}
 
@@ -458,15 +458,15 @@ func (s *MempoolTestSuite) TestIteratorConcurrency() {
 						id++
 						tx := testTx{id: id, priority: int64(rand.Intn(100)), nonce: uint64(id), address: sa}
 						c := ctx.WithPriority(tx.priority)
-						err := pool.Insert(c, tx)
+						err := pool.Insert(c, tx, mempool.InsertOption{})
 						require.NoError(t, err)
 					}
 				}
 			}()
 
 			var i int
-			pool.SelectBy(ctx, nil, func(memTx sdk.Tx) bool {
-				tx := memTx.(testTx)
+			pool.SelectBy(ctx, nil, func(memTx mempool.PooledTx) bool {
+				tx := memTx.Tx.(testTx)
 				if tx.id < len(tt.txs) {
 					require.Equal(t, tt.txs[tx.id].p, int(tx.priority))
 					require.Equal(t, tt.txs[tx.id].n, int(tx.nonce))
@@ -514,7 +514,7 @@ func (s *MempoolTestSuite) TestPriorityTies() {
 		for id, ts := range shuffled {
 			tx := testTx{priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a, id: id}
 			c := ctx.WithPriority(tx.priority)
-			err := s.mempool.Insert(c, tx)
+			err := s.mempool.Insert(c, tx, mempool.InsertOption{})
 			s.NoError(err)
 		}
 		selected := fetchTxs(s.mempool.Select(ctx, nil), 1000)
@@ -613,7 +613,7 @@ func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	for _, otx := range generated {
 		tx := testTx{id: otx.id, priority: otx.priority, nonce: otx.nonce, address: otx.address}
 		c := ctx.WithPriority(tx.priority)
-		err := mp.Insert(c, tx)
+		err := mp.Insert(c, tx, mempool.InsertOption{})
 		require.NoError(t, err)
 	}
 
@@ -654,7 +654,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	for _, otx := range shuffled {
 		tx := testTx{id: otx.id, priority: otx.priority, nonce: otx.nonce, address: otx.address}
 		c := ctx.WithPriority(tx.priority)
-		err := mp.Insert(c, tx)
+		err := mp.Insert(c, tx, mempool.InsertOption{})
 		require.NoError(t, err)
 	}
 
@@ -828,7 +828,7 @@ func TestPriorityNonceMempool_NextSenderTx(t *testing.T) {
 
 	for i, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
-		require.NoError(t, mp.Insert(c, tx))
+		require.NoError(t, mp.Insert(c, tx, mempool.InsertOption{}))
 		require.Equal(t, i+1, mp.CountTx())
 	}
 
@@ -899,7 +899,7 @@ func TestNextSenderTx_ConcurrentAccess(t *testing.T) {
 				nonce:    uint64(i + 1),
 				address:  account,
 			}
-			if err := mp.Insert(ctx.WithPriority(tx.priority), tx); err != nil {
+			if err := mp.Insert(ctx.WithPriority(tx.priority), tx, mempool.InsertOption{}); err != nil {
 				panic(err)
 			}
 		}
@@ -962,14 +962,14 @@ func TestNextSenderTx_TxLimit(t *testing.T) {
 	)
 	for i, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
-		require.NoError(t, mp.Insert(c, tx))
+		require.NoError(t, mp.Insert(c, tx, mempool.InsertOption{}))
 		require.Equal(t, i+1, mp.CountTx())
 	}
 
 	mp = mempool.DefaultPriorityMempool()
 	for i, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
-		require.NoError(t, mp.Insert(c, tx))
+		require.NoError(t, mp.Insert(c, tx, mempool.InsertOption{}))
 		require.Equal(t, i+1, mp.CountTx())
 	}
 
@@ -983,7 +983,7 @@ func TestNextSenderTx_TxLimit(t *testing.T) {
 	)
 	for i, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
-		err := mp.Insert(c, tx)
+		err := mp.Insert(c, tx, mempool.InsertOption{})
 		if i < 3 {
 			require.NoError(t, err)
 			require.Equal(t, i+1, mp.CountTx())
@@ -1003,7 +1003,7 @@ func TestNextSenderTx_TxLimit(t *testing.T) {
 	)
 	for _, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
-		err := mp.Insert(c, tx)
+		err := mp.Insert(c, tx, mempool.InsertOption{})
 		require.NoError(t, err)
 		require.Equal(t, 0, mp.CountTx())
 	}
@@ -1028,13 +1028,13 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 	mp := mempool.DefaultPriorityMempool()
 	for i, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
-		require.NoError(t, mp.Insert(c, tx))
+		require.NoError(t, mp.Insert(c, tx, mempool.InsertOption{}))
 		if i > 3 {
 			require.Equal(t, 2, mp.CountTx())
 		} else {
 			require.Equal(t, 1, mp.CountTx())
 			iter := mp.Select(ctx, nil)
-			require.Equal(t, tx, iter.Tx())
+			require.Equal(t, tx, iter.Tx().Tx)
 		}
 	}
 
@@ -1059,44 +1059,44 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 	}
 
 	c := ctx.WithPriority(txs[0].priority)
-	require.NoError(t, mp.Insert(c, txs[0]))
+	require.NoError(t, mp.Insert(c, txs[0], mempool.InsertOption{}))
 	require.Equal(t, 1, mp.CountTx())
 	checkNextSenderTx(sa.String(), txs[0])
 
 	c = ctx.WithPriority(txs[1].priority)
-	require.Error(t, mp.Insert(c, txs[1]))
+	require.Error(t, mp.Insert(c, txs[1], mempool.InsertOption{}))
 	require.Equal(t, 1, mp.CountTx())
 	checkNextSenderTx(sa.String(), txs[0])
 
 	c = ctx.WithPriority(txs[2].priority)
-	require.Error(t, mp.Insert(c, txs[2]))
+	require.Error(t, mp.Insert(c, txs[2], mempool.InsertOption{}))
 	require.Equal(t, 1, mp.CountTx())
 	checkNextSenderTx(sa.String(), txs[0])
 
 	c = ctx.WithPriority(txs[3].priority)
-	require.NoError(t, mp.Insert(c, txs[3]))
+	require.NoError(t, mp.Insert(c, txs[3], mempool.InsertOption{}))
 	require.Equal(t, 1, mp.CountTx())
 	checkNextSenderTx(sa.String(), txs[3])
 
 	c = ctx.WithPriority(txs[4].priority)
-	require.NoError(t, mp.Insert(c, txs[4]))
+	require.NoError(t, mp.Insert(c, txs[4], mempool.InsertOption{}))
 	require.Equal(t, 2, mp.CountTx())
 	checkNextSenderTx(sb.String(), txs[4])
 
 	c = ctx.WithPriority(txs[5].priority)
-	require.NoError(t, mp.Insert(c, txs[5]))
+	require.NoError(t, mp.Insert(c, txs[5], mempool.InsertOption{}))
 	require.Equal(t, 2, mp.CountTx())
 	checkNextSenderTx(sb.String(), txs[5])
 
 	iter := mp.Select(ctx, nil)
-	require.Equal(t, txs[5], iter.Tx())
+	require.Equal(t, txs[5], iter.Tx().Tx)
 }
 
 func TestPriorityNonceMempool_UnorderedTx_FailsForSequence(t *testing.T) {
 	mp := mempool.DefaultPriorityMempool()
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
 	tx := testTx{id: 1, priority: 0, address: accounts[0].Address, nonce: 1, unordered: true}
-	err := mp.Insert(sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger()), tx)
+	err := mp.Insert(sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger()), tx, mempool.InsertOption{})
 	require.ErrorContains(t, err, "unordered txs must not have sequence set")
 }
 
@@ -1123,7 +1123,7 @@ func TestPriorityNonceMempool_UnorderedTx(t *testing.T) {
 
 	for _, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
-		require.NoError(t, mp.Insert(c, tx))
+		require.NoError(t, mp.Insert(c, tx, mempool.InsertOption{}))
 	}
 
 	require.Equal(t, 4, mp.CountTx())

@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 // ClientContextKey defines the context key used to retrieve a client.Context from

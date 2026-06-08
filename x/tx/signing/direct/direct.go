@@ -3,17 +3,13 @@ package direct
 import (
 	"context"
 
-	"google.golang.org/protobuf/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
-var (
-	_                  signing.SignModeHandler = SignModeHandler{}
-	protov2MarshalOpts                         = proto.MarshalOptions{Deterministic: true}
-)
+var _ signing.SignModeHandler = SignModeHandler{}
 
 // SignModeHandler is the SIGN_MODE_DIRECT implementation of signing.SignModeHandler.
 type SignModeHandler struct{}
@@ -24,8 +20,10 @@ func (h SignModeHandler) Mode() signing.SignMode {
 }
 
 // GetSignBytes implements signing.SignModeHandler.GetSignBytes.
+// SignDoc has only scalar fields (no maps), so gogoproto.Marshal produces
+// the same deterministic bytes as proto.MarshalOptions{Deterministic:true}.
 func (SignModeHandler) GetSignBytes(_ context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
-	return protov2MarshalOpts.Marshal(&txv1beta1.SignDoc{
+	return gogoproto.Marshal(&txtypes.SignDoc{
 		BodyBytes:     txData.BodyBytes,
 		AuthInfoBytes: txData.AuthInfoBytes,
 		ChainId:       signerData.ChainID,

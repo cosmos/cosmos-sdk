@@ -8,8 +8,6 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-
 	"github.com/cosmos/cosmos-sdk/x/tx/decode"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson/internal/aminojsonpb"
@@ -55,8 +53,8 @@ func NewSignModeHandler(options SignModeHandlerOptions) *SignModeHandler {
 }
 
 // Mode implements the Mode method of the SignModeHandler interface.
-func (h SignModeHandler) Mode() signingv1beta1.SignMode {
-	return signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+func (h SignModeHandler) Mode() signing.SignMode {
+	return signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 }
 
 // GetSignBytes implements the GetSignBytes method of the SignModeHandler interface.

@@ -1,10 +1,9 @@
 package keyring
 
 import (
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 // autoCLIKeyring represents the keyring interface used by the AutoCLI.
@@ -20,7 +19,7 @@ type autoCLIKeyring interface {
 	GetPubKey(name string) (cryptotypes.PubKey, error)
 
 	// Sign signs the given bytes with the key with the given name.
-	Sign(name string, msg []byte, signMode signingv1beta1.SignMode) ([]byte, error)
+	Sign(name string, msg []byte, signMode txsigning.SignMode) ([]byte, error)
 }
 
 // NewAutoCLIKeyring wraps the SDK keyring and make it compatible with the AutoCLI keyring interfaces.
@@ -70,7 +69,7 @@ func (a *autoCLIKeyringAdapter) GetPubKey(name string) (cryptotypes.PubKey, erro
 	return record.GetPubKey()
 }
 
-func (a *autoCLIKeyringAdapter) Sign(name string, msg []byte, signMode signingv1beta1.SignMode) ([]byte, error) {
+func (a *autoCLIKeyringAdapter) Sign(name string, msg []byte, signMode txsigning.SignMode) ([]byte, error) {
 	record, err := a.Key(name)
 	if err != nil {
 		return nil, err

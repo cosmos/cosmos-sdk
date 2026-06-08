@@ -3,7 +3,7 @@ package keyring
 import (
 	"context"
 
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
@@ -44,6 +44,6 @@ func (k *KeyringImpl) LookupAddressByKeyName(name string) ([]byte, error) {
 }
 
 // Sign implements Keyring.
-func (k *KeyringImpl) Sign(name string, msg []byte, signMode signingv1beta1.SignMode) ([]byte, error) {
+func (k *KeyringImpl) Sign(name string, msg []byte, signMode txsigning.SignMode) ([]byte, error) {
 	return k.k.Sign(name, msg, signMode)
 }

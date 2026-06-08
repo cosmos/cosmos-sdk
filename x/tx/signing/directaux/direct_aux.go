@@ -9,7 +9,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/x/tx/signing"
@@ -54,8 +53,8 @@ func NewSignModeHandler(options SignModeHandlerOptions) (SignModeHandler, error)
 var _ signing.SignModeHandler = SignModeHandler{}
 
 // Mode implements signing.SignModeHandler.Mode.
-func (h SignModeHandler) Mode() signingv1beta1.SignMode {
-	return signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX
+func (h SignModeHandler) Mode() signing.SignMode {
+	return signing.SignMode_SIGN_MODE_DIRECT_AUX
 }
 
 // getFirstSigner returns the first signer from the first message in the tx. It replicates behavior in
@@ -93,7 +92,7 @@ func (h SignModeHandler) GetSignBytes(
 	}
 	if feePayer == signerData.Address {
 		return nil, fmt.Errorf("fee payer %s cannot sign with %s: unauthorized",
-			feePayer, signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX)
+			feePayer, signing.SignMode_SIGN_MODE_DIRECT_AUX)
 	}
 
 	signDocDirectAux := &txv1beta1.SignDocDirectAux{

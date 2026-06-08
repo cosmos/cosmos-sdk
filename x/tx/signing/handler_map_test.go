@@ -6,8 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-
 	"github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
@@ -18,8 +16,8 @@ var (
 
 type directHandler struct{}
 
-func (s directHandler) Mode() signingv1beta1.SignMode {
-	return signingv1beta1.SignMode_SIGN_MODE_DIRECT
+func (s directHandler) Mode() signing.SignMode {
+	return signing.SignMode_SIGN_MODE_DIRECT
 }
 
 func (s directHandler) GetSignBytes(_ context.Context, _ signing.SignerData, _ signing.TxData) ([]byte, error) {
@@ -28,8 +26,8 @@ func (s directHandler) GetSignBytes(_ context.Context, _ signing.SignerData, _ s
 
 type aminoJSONHandler struct{}
 
-func (s aminoJSONHandler) Mode() signingv1beta1.SignMode {
-	return signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+func (s aminoJSONHandler) Mode() signing.SignMode {
+	return signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 }
 
 func (s aminoJSONHandler) GetSignBytes(_ context.Context, _ signing.SignerData, _ signing.TxData) ([]byte, error) {

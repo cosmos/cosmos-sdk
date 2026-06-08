@@ -5,7 +5,6 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/x/tx/signing"
@@ -20,8 +19,8 @@ var (
 type SignModeHandler struct{}
 
 // Mode implements signing.SignModeHandler.Mode.
-func (h SignModeHandler) Mode() signingv1beta1.SignMode {
-	return signingv1beta1.SignMode_SIGN_MODE_DIRECT
+func (h SignModeHandler) Mode() signing.SignMode {
+	return signing.SignMode_SIGN_MODE_DIRECT
 }
 
 // GetSignBytes implements signing.SignModeHandler.GetSignBytes.

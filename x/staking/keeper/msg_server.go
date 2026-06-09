@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"slices"
 	"strconv"
 	"time"
 
@@ -98,13 +97,8 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	cp := sdkCtx.ConsensusParams()
 	if cp.Validator != nil {
-		pkType := pk.Type()
-		hasKeyType := slices.Contains(cp.Validator.PubKeyTypes, pkType)
-		if !hasKeyType {
-			return nil, errorsmod.Wrapf(
-				types.ErrValidatorPubKeyTypeNotSupported,
-				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,
-			)
+		if err := types.ValidateConsensusPubKeyType(pk, cp.Validator.PubKeyTypes); err != nil {
+			return nil, err
 		}
 	}
 
@@ -631,11 +625,19 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 // RotateConsPubKey defines a method for changing a validators consensus key to
 // a new key.
 func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateConsPubKey) (*types.MsgRotateConsPubKeyResponse, error) {
-	newPk, ok := msg.NewPubkey.GetCachedValue().(cryptotypes.PubKey)
-	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", msg.NewPubkey.GetCachedValue())
+	if err := msg.Validate(k.validatorAddressCodec); err != nil {
+		return nil, err
 	}
+
+	newPk := msg.NewPubkey.GetCachedValue().(cryptotypes.PubKey)
 	newConsAddr := sdk.ConsAddress(newPk.Address())
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if cp := sdkCtx.ConsensusParams(); cp.Validator != nil {
+		if err := types.ValidateConsensusPubKeyType(newPk, cp.Validator.PubKeyTypes); err != nil {
+			return nil, err
+		}
+	}
 
 	// reject a key locked by a rotation, either because some validator
 	// rotated away from it inside the unbonding window or because some

@@ -112,6 +112,108 @@ func (s *KeeperTestSuite) TestApplyConsKeyRotationState() {
 	})
 }
 
+func (s *KeeperTestSuite) TestPendingConsKeyRotations() {
+	require := s.Require()
+
+	s.T().Run("empty queue returns empty map", func(t *testing.T) {
+		s.SetupTest()
+
+		got, err := s.stakingKeeper.PendingConsKeyRotations(s.ctx)
+		require.NoError(err)
+		require.Empty(got)
+	})
+
+	s.T().Run("entry in flight is returned keyed by valAddr", func(t *testing.T) {
+		s.SetupTest()
+
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+		_, valAddr := s.bondedValidator(oldPk)
+
+		s.ctx = s.ctx.WithBlockHeight(100)
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+
+		got, err := s.stakingKeeper.PendingConsKeyRotations(s.ctx)
+		require.NoError(err)
+		require.Len(got, 1)
+		rotation, ok := got[string(valAddr)]
+		require.True(ok)
+		require.True(rotation.NewPubKey.Equals(newPk))
+		require.Equal(100+stakingtypes.ConsensusUpdateDelay, rotation.ApplyHeight)
+	})
+
+	s.T().Run("drained entry is no longer returned", func(t *testing.T) {
+		s.SetupTest()
+
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+		_, valAddr := s.bondedValidator(oldPk)
+
+		s.ctx = s.ctx.WithBlockHeight(100)
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+
+		s.ctx = s.ctx.WithBlockHeight(100 + stakingtypes.ConsensusUpdateDelay)
+		require.NoError(s.stakingKeeper.ApplyConsKeyRotations(s.ctx))
+
+		got, err := s.stakingKeeper.PendingConsKeyRotations(s.ctx)
+		require.NoError(err)
+		require.Empty(got)
+	})
+}
+
+func (s *KeeperTestSuite) TestPrepareConsKeyRotationsForZeroHeightExport() {
+	require := s.Require()
+	s.SetupTest()
+
+	oldPk := ed25519.GenPrivKey().PubKey()
+	newPk := ed25519.GenPrivKey().PubKey()
+	_, valAddr := s.bondedValidator(oldPk)
+
+	s.ctx = s.ctx.WithBlockHeight(100)
+	maturity := s.ctx.BlockTime().Add(stakingtypes.DefaultUnbondingTime)
+	originalApplyHeight := s.ctx.BlockHeight() + stakingtypes.ConsensusUpdateDelay
+	zeroHeightApplyHeight := int64(1) + stakingtypes.ConsensusUpdateDelay
+	require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+
+	hasOriginalQueue, err := s.stakingKeeper.HasConsKeyRotationApplyQueueEntry(s.ctx, originalApplyHeight, valAddr)
+	require.NoError(err)
+	require.True(hasOriginalQueue)
+
+	require.NoError(s.stakingKeeper.PrepareConsKeyRotationsForZeroHeightExport(s.ctx))
+
+	hasOriginalQueue, err = s.stakingKeeper.HasConsKeyRotationApplyQueueEntry(s.ctx, originalApplyHeight, valAddr)
+	require.NoError(err)
+	require.False(hasOriginalQueue)
+	hasRebasedQueue, err := s.stakingKeeper.HasConsKeyRotationApplyQueueEntry(s.ctx, zeroHeightApplyHeight, valAddr)
+	require.NoError(err)
+	require.True(hasRebasedQueue)
+
+	pending, err := s.stakingKeeper.PendingConsKeyRotations(s.ctx)
+	require.NoError(err)
+	require.Len(pending, 1)
+	require.Equal(zeroHeightApplyHeight, pending[string(valAddr)].ApplyHeight)
+	require.True(pending[string(valAddr)].NewPubKey.Equals(newPk))
+
+	stored, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
+	require.NoError(err)
+	storedConsAddr, err := stored.GetConsAddr()
+	require.NoError(err)
+	require.Equal(sdk.ConsAddress(oldPk.Address()).Bytes(), storedConsAddr)
+
+	hasHistory, err := s.stakingKeeper.HasConsKeyRotationInUnbondingWindow(s.ctx, valAddr)
+	require.NoError(err)
+	require.True(hasHistory)
+	hasMaturityQueue, err := s.stakingKeeper.HasConsKeyRotationQueueEntry(s.ctx, maturity, valAddr)
+	require.NoError(err)
+	require.True(hasMaturityQueue)
+	hasOldLock, err := s.stakingKeeper.IsConsAddrLockedByRotation(s.ctx, sdk.ConsAddress(oldPk.Address()))
+	require.NoError(err)
+	require.True(hasOldLock)
+	hasNewLock, err := s.stakingKeeper.IsConsAddrLockedByRotation(s.ctx, sdk.ConsAddress(newPk.Address()))
+	require.NoError(err)
+	require.True(hasNewLock)
+}
+
 func (s *KeeperTestSuite) TestApplyConsKeyRotations() {
 	require := s.Require()
 

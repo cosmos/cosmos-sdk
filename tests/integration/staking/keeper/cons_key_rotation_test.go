@@ -43,8 +43,9 @@ func TestRotateConsPubKey_MsgServerQueuesAndEndBlockerApplies(t *testing.T) {
 	powerBefore := valBefore.ConsensusPower(powerReduction)
 	assert.Assert(t, powerBefore > 0)
 
-	writeHeight := f.sdkCtx.BlockHeight()
-	_, err = msgServer.RotateConsPubKey(f.sdkCtx, &types.MsgRotateConsPubKey{
+	writeCtx := f.sdkCtx.WithBlockHeight(f.app.LastBlockHeight() + 1)
+	writeHeight := writeCtx.BlockHeight()
+	_, err = msgServer.RotateConsPubKey(writeCtx, &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, newPk),
 	})
@@ -192,8 +193,9 @@ func TestRotateConsPubKey_SecondRotationAfterPruningSucceeds(t *testing.T) {
 	valAddr, _ := bondConsKeyRotationValidator(t, f, pkA)
 
 	// first rotation A -> B
-	writeHeight := f.sdkCtx.BlockHeight()
-	_, err := msgServer.RotateConsPubKey(f.sdkCtx, &types.MsgRotateConsPubKey{
+	writeCtx := f.sdkCtx.WithBlockHeight(f.app.LastBlockHeight() + 1)
+	writeHeight := writeCtx.BlockHeight()
+	_, err := msgServer.RotateConsPubKey(writeCtx, &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, pkB),
 	})
@@ -221,8 +223,9 @@ func TestRotateConsPubKey_SecondRotationAfterPruningSucceeds(t *testing.T) {
 
 	// second rotation back to pkA (the original key) succeeds: the rotation
 	// history was cleared by pruning
-	writeHeight = f.sdkCtx.BlockHeight()
-	_, err = msgServer.RotateConsPubKey(f.sdkCtx, &types.MsgRotateConsPubKey{
+	writeCtx = f.sdkCtx.WithBlockHeight(f.app.LastBlockHeight() + 1)
+	writeHeight = writeCtx.BlockHeight()
+	_, err = msgServer.RotateConsPubKey(writeCtx, &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, pkA),
 	})
@@ -316,13 +319,14 @@ func newPubKeyAny(t *testing.T, pk cryptotypes.PubKey) *codectypes.Any {
 // advanceBlock advances the chain by one block at blockTime, driving the
 // staking end blocker through the real ABCI flow so that any matured rotation
 // entries are pruned.
-func advanceBlock(t *testing.T, f *fixture, blockTime time.Time) {
+func advanceBlock(t *testing.T, f *fixture, blockTime time.Time) *cmtabcitypes.ResponseFinalizeBlock {
 	t.Helper()
-	_, err := f.app.FinalizeBlock(&cmtabcitypes.RequestFinalizeBlock{
+	res, err := f.app.FinalizeBlock(&cmtabcitypes.RequestFinalizeBlock{
 		Height: f.app.LastBlockHeight() + 1,
 		Time:   blockTime,
 	})
 	assert.NilError(t, err)
 	_, err = f.app.Commit()
 	assert.NilError(t, err)
+	return res
 }

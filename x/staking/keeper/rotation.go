@@ -19,6 +19,196 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// ImportConsKeyRotations restores consensus key rotation indexes and queues
+// from genesis.
+func (k Keeper) ImportConsKeyRotations(ctx context.Context, histories []types.ConsensusKeyRotationHistory, pending []types.PendingConsensusKeyRotation) error {
+	store := k.storeService.OpenKVStore(ctx)
+
+	for _, history := range histories {
+		valAddr, err := k.validatorAddressCodec.StringToBytes(history.ValidatorAddress)
+		if err != nil {
+			return err
+		}
+		oldConsAddr, err := k.consensusAddressCodec.StringToBytes(history.OldConsensusAddress)
+		if err != nil {
+			return err
+		}
+
+		if err := store.Set(types.GetConsKeyRotationQueueKey(history.MaturityTime, valAddr), oldConsAddr); err != nil {
+			return err
+		}
+		if err := store.Set(types.GetValidatorConsKeyRotationKey(valAddr), []byte{}); err != nil {
+			return err
+		}
+		if err := store.Set(types.GetRotationLockedConsAddrIndexKey(oldConsAddr), valAddr); err != nil {
+			return err
+		}
+	}
+
+	for _, rotation := range pending {
+		valAddr, err := k.validatorAddressCodec.StringToBytes(rotation.ValidatorAddress)
+		if err != nil {
+			return err
+		}
+
+		var newPubKey cryptotypes.PubKey
+		if err := k.cdc.UnpackAny(rotation.NewPubkey, &newPubKey); err != nil {
+			return err
+		}
+		newPubKeyBz, err := k.cdc.MarshalInterface(newPubKey)
+		if err != nil {
+			return err
+		}
+
+		if err := store.Set(types.GetRotationLockedConsAddrIndexKey(sdk.ConsAddress(newPubKey.Address())), valAddr); err != nil {
+			return err
+		}
+		if err := store.Set(types.GetConsKeyRotationApplyQueueKey(rotation.ApplyHeight, valAddr), newPubKeyBz); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ExportConsKeyRotationHistory returns consensus key rotation history records
+// that are still inside the unbonding window.
+func (k Keeper) ExportConsKeyRotationHistory(ctx context.Context) (histories []types.ConsensusKeyRotationHistory, err error) {
+	store := k.storeService.OpenKVStore(ctx)
+	iterator, err := store.Iterator(types.ConsKeyRotationQueueKey, storetypes.PrefixEndBytes(types.ConsKeyRotationQueueKey))
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = errors.Join(err, iterator.Close())
+	}()
+
+	for ; iterator.Valid(); iterator.Next() {
+		maturity, valAddr, err := types.ParseConsKeyRotationQueueKey(iterator.Key())
+		if err != nil {
+			return nil, err
+		}
+		valAddrStr, err := k.validatorAddressCodec.BytesToString(valAddr)
+		if err != nil {
+			return nil, err
+		}
+		oldConsAddrStr, err := k.consensusAddressCodec.BytesToString(iterator.Value())
+		if err != nil {
+			return nil, err
+		}
+
+		histories = append(histories, types.ConsensusKeyRotationHistory{
+			ValidatorAddress:    valAddrStr,
+			OldConsensusAddress: oldConsAddrStr,
+			MaturityTime:        maturity,
+		})
+	}
+
+	return histories, nil
+}
+
+// ExportPendingConsKeyRotations returns consensus key rotations whose deferred
+// SDK side state update has not been applied yet. Rotations that are not
+// active at exportedInitialHeight are pushed forward so an imported chain can
+// reemit their validator update before applying the SDK side key swap.
+func (k Keeper) ExportPendingConsKeyRotations(ctx context.Context, exportedInitialHeight int64) (rotations []types.PendingConsensusKeyRotation, err error) {
+	store := k.storeService.OpenKVStore(ctx)
+	iterator, err := store.Iterator(types.ConsKeyRotationApplyQueueKey, storetypes.PrefixEndBytes(types.ConsKeyRotationApplyQueueKey))
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = errors.Join(err, iterator.Close())
+	}()
+
+	for ; iterator.Valid(); iterator.Next() {
+		applyHeight, valAddr, err := types.ParseConsKeyRotationApplyQueueKey(iterator.Key())
+		if err != nil {
+			return nil, err
+		}
+		valAddrStr, err := k.validatorAddressCodec.BytesToString(valAddr)
+		if err != nil {
+			return nil, err
+		}
+		var newPubKey cryptotypes.PubKey
+		if err := k.cdc.UnmarshalInterface(iterator.Value(), &newPubKey); err != nil {
+			return nil, err
+		}
+		newPubKeyAny, err := codectypes.NewAnyWithValue(newPubKey)
+		if err != nil {
+			return nil, err
+		}
+
+		if applyHeight > exportedInitialHeight {
+			// the old chain has already emitted the abci validator update, but
+			// that pending comet side transition is not part of app genesis.
+			// if we import the genesis without modifying the apply height,
+			// comet will not know about this key rotation and we will update
+			// sdk state without updating comet. thus, we push the apply
+			// height forward so that the abci updates can be reemitted and
+			// comet properly updated
+			applyHeight = exportedInitialHeight + types.ConsensusUpdateDelay
+		}
+
+		rotations = append(rotations, types.PendingConsensusKeyRotation{
+			ValidatorAddress: valAddrStr,
+			NewPubkey:        newPubKeyAny,
+			ApplyHeight:      applyHeight,
+		})
+	}
+
+	return rotations, nil
+}
+
+// PrepareConsKeyRotationsForZeroHeightExport rewrites pending rotation apply
+// queue entries so a zero-height restarted chain can emit the Comet validator
+// update from its first block before the SDK-side key swap is applied.
+func (k Keeper) PrepareConsKeyRotationsForZeroHeightExport(ctx context.Context) error {
+	store := k.storeService.OpenKVStore(ctx)
+	iterator, err := store.Iterator(types.ConsKeyRotationApplyQueueKey, storetypes.PrefixEndBytes(types.ConsKeyRotationApplyQueueKey))
+	if err != nil {
+		return err
+	}
+
+	type pendingRotation struct {
+		oldKey  []byte
+		valAddr sdk.ValAddress
+		value   []byte
+	}
+	var rotations []pendingRotation
+
+	// collect apply queue entries first since we need to rewrite them, this
+	// requires a delete
+	for ; iterator.Valid(); iterator.Next() {
+		key := append([]byte(nil), iterator.Key()...)
+		_, valAddr, err := types.ParseConsKeyRotationApplyQueueKey(key)
+		if err != nil {
+			return errors.Join(err, iterator.Close())
+		}
+		rotations = append(rotations, pendingRotation{
+			oldKey:  key,
+			valAddr: append(sdk.ValAddress(nil), valAddr...),
+			value:   append([]byte(nil), iterator.Value()...),
+		})
+	}
+	if err := iterator.Close(); err != nil {
+		return err
+	}
+
+	// rewrite apply height to in initial height + update delay
+	applyHeight := int64(1) + types.ConsensusUpdateDelay
+	for _, rotation := range rotations {
+		if err := store.Delete(rotation.oldKey); err != nil {
+			return err
+		}
+		if err := store.Set(types.GetConsKeyRotationApplyQueueKey(applyHeight, rotation.valAddr), rotation.value); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // HasConsKeyRotationInUnbondingWindow returns whether the validator has
 // performed a consensus key rotation inside current the unbonding window.
 func (k Keeper) HasConsKeyRotationInUnbondingWindow(ctx context.Context, valAddr sdk.ValAddress) (bool, error) {
@@ -37,6 +227,12 @@ func (k Keeper) IsConsAddrLockedByRotation(ctx context.Context, consAddr sdk.Con
 // entry at the given maturity for the given validator.
 func (k Keeper) HasConsKeyRotationQueueEntry(ctx context.Context, maturity time.Time, valAddr sdk.ValAddress) (bool, error) {
 	return k.storeService.OpenKVStore(ctx).Has(types.GetConsKeyRotationQueueKey(maturity, valAddr))
+}
+
+// HasConsKeyRotationApplyQueueEntry returns whether the apply queue holds an
+// entry at the given apply height for the given validator.
+func (k Keeper) HasConsKeyRotationApplyQueueEntry(ctx context.Context, applyHeight int64, valAddr sdk.ValAddress) (bool, error) {
+	return k.storeService.OpenKVStore(ctx).Has(types.GetConsKeyRotationApplyQueueKey(applyHeight, valAddr))
 }
 
 // SetConsKeyRotation writes the indexes that track a pending consensus key
@@ -494,6 +690,85 @@ func (k Keeper) ConsKeyRotationUpdate(validator types.Validator, newPubKey crypt
 			Power:  validator.ConsensusPower(powerReduction),
 		},
 	}, nil
+}
+
+type PendingRotation struct {
+	NewPubKey   cryptotypes.PubKey
+	ApplyHeight int64
+}
+
+type PendingRotations map[string]PendingRotation
+
+// EffectiveKeyForABCIUpdate returns the consensus pub key that should be used
+// for a validator when emitting an ABCI update, given the current set of
+// pending rotations.
+func (pr PendingRotations) EffectiveKeyForABCIUpdate(valAddr sdk.ValAddress, validator types.Validator) (cryptotypes.PubKey, error) {
+	// if this validator has a pending rotation, use the pk that they are
+	// rotating to
+	if rotation, ok := pr[string(valAddr)]; ok {
+		return rotation.NewPubKey, nil
+	}
+
+	// the validator is not in the pending rotation set, use their current
+	// consensus key
+	return validator.ConsPubKey()
+}
+
+// EffectiveKeyForGenesis returns the consensus pub key that should be written
+// into genesis validator output for an exported initial height. Use this for
+// genesis export and InitGenesis validator updates, where a pending rotation
+// is only effective if its apply height is at or before the imported chain's
+// initial height. Use EffectiveKeyForABCIUpdate instead during end blocker
+// validator update emission, where a currently pending rotation should be
+// announced with its new key even before the SDK side state swap is applied.
+func (pr PendingRotations) EffectiveKeyForGenesis(valAddr sdk.ValAddress, validator types.ValidatorI, exportedInitialHeight int64) (cryptotypes.PubKey, error) {
+	// if we have a pending rotation for this validator
+	if rotation, ok := pr[string(valAddr)]; ok {
+		// if the rotation is going to be applied at a height before the height
+		// we restart at, use the pending key as the effective key
+		if rotation.ApplyHeight <= exportedInitialHeight {
+			return rotation.NewPubKey, nil
+		}
+	}
+
+	// all other cases use the key currently in state for this val
+	return validator.ConsPubKey()
+}
+
+// PendingConsKeyRotations scans the apply queue once and returns every
+// rotation still in flight, keyed by string(valAddr). It is intended to be
+// called once per EndBlock after ProcessConsKeyRotations so the bonded loop
+// can substitute the new cons key on per-validator emits via an O(1) map
+// lookup instead of repeated store reads.
+func (k Keeper) PendingConsKeyRotations(ctx context.Context) (rotations PendingRotations, err error) {
+	store := k.storeService.OpenKVStore(ctx)
+	iterator, err := store.Iterator(
+		types.ConsKeyRotationApplyQueueKey,
+		storetypes.PrefixEndBytes(types.ConsKeyRotationApplyQueueKey),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = errors.Join(err, iterator.Close())
+	}()
+
+	rotations = make(PendingRotations)
+	for ; iterator.Valid(); iterator.Next() {
+		applyHeight, valAddr, err := types.ParseConsKeyRotationApplyQueueKey(iterator.Key())
+		if err != nil {
+			return nil, err
+		}
+		var newPubKey cryptotypes.PubKey
+		if err := k.cdc.UnmarshalInterface(iterator.Value(), &newPubKey); err != nil {
+			return nil, err
+		}
+		rotations[string(valAddr)] = PendingRotation{
+			NewPubKey:   newPubKey,
+			ApplyHeight: applyHeight,
+		}
+	}
+	return rotations, nil
 }
 
 // PruneMaturedConsKeyRotations removes every rotation whose unbonding window

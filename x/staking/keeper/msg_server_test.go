@@ -31,21 +31,22 @@ func (s *KeeperTestSuite) execExpectCalls() {
 }
 
 func (s *KeeperTestSuite) TestMsgCreateValidator() {
-	ctx, msgServer := s.ctx, s.msgServer
-	require := s.Require()
-	s.execExpectCalls()
-
 	pk1 := ed25519.GenPrivKey().PubKey()
-	require.NotNil(pk1)
+	s.Require().NotNil(pk1)
+	pubkey1, err := codectypes.NewAnyWithValue(pk1)
+	s.Require().NoError(err)
 
-	pubkey, err := codectypes.NewAnyWithValue(pk1)
-	require.NoError(err)
+	pk2 := ed25519.GenPrivKey().PubKey()
+	s.Require().NotNil(pk2)
+	pubkey2, err := codectypes.NewAnyWithValue(pk2)
+	s.Require().NoError(err)
 
 	testCases := []struct {
-		name      string
-		input     *stakingtypes.MsgCreateValidator
-		expErr    bool
-		expErrMsg string
+		name               string
+		setupExistingState func() error
+		input              *stakingtypes.MsgCreateValidator
+		expErr             bool
+		expErrMsg          string
 	}{
 		{
 			name: "empty description",
@@ -59,7 +60,7 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				MinSelfDelegation: math.NewInt(1),
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  ValAddr.String(),
-				Pubkey:            pubkey,
+				Pubkey:            pubkey1,
 				Value:             sdk.NewInt64Coin("stake", 10000),
 			},
 			expErr:    true,
@@ -79,7 +80,7 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				MinSelfDelegation: math.NewInt(1),
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  sdk.AccAddress([]byte("invalid")).String(),
-				Pubkey:            pubkey,
+				Pubkey:            pubkey1,
 				Value:             sdk.NewInt64Coin("stake", 10000),
 			},
 			expErr:    true,
@@ -119,7 +120,7 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				MinSelfDelegation: math.NewInt(1),
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  ValAddr.String(),
-				Pubkey:            pubkey,
+				Pubkey:            pubkey1,
 				Value:             sdk.NewInt64Coin("stake", 0),
 			},
 			expErr:    true,
@@ -139,7 +140,7 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				MinSelfDelegation: math.NewInt(1),
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  ValAddr.String(),
-				Pubkey:            pubkey,
+				Pubkey:            pubkey1,
 				Value:             sdk.Coin{},
 			},
 			expErr:    true,
@@ -159,7 +160,7 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				MinSelfDelegation: math.NewInt(0),
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  ValAddr.String(),
-				Pubkey:            pubkey,
+				Pubkey:            pubkey1,
 				Value:             sdk.NewInt64Coin("stake", 10000),
 			},
 			expErr:    true,
@@ -179,7 +180,7 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				MinSelfDelegation: math.NewInt(-1),
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  ValAddr.String(),
-				Pubkey:            pubkey,
+				Pubkey:            pubkey1,
 				Value:             sdk.NewInt64Coin("stake", 10000),
 			},
 			expErr:    true,
@@ -199,11 +200,84 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				MinSelfDelegation: math.NewInt(100),
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  ValAddr.String(),
-				Pubkey:            pubkey,
+				Pubkey:            pubkey1,
 				Value:             sdk.NewInt64Coin("stake", 10),
 			},
 			expErr:    true,
 			expErrMsg: "validator's self delegation must be greater than their minimum self delegation",
+		},
+		{
+			name: "consensus key is target of pending rotation",
+			setupExistingState: func() error {
+				valAddr := sdk.ValAddress(ed25519.GenPrivKey().PubKey().Address())
+				return s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, ed25519.GenPrivKey().PubKey(), pk2)
+			},
+			input: &stakingtypes.MsgCreateValidator{
+				Description: stakingtypes.Description{
+					Moniker: "NewValidator",
+				},
+				Commission: stakingtypes.CommissionRates{
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+					MaxChangeRate: math.LegacyNewDec(0),
+				},
+				MinSelfDelegation: math.NewInt(1),
+				DelegatorAddress:  Addr.String(),
+				ValidatorAddress:  sdk.ValAddress(ed25519.GenPrivKey().PubKey().Address()).String(),
+				Pubkey:            pubkey2,
+				Value:             sdk.NewInt64Coin("stake", 10000),
+			},
+			expErr:    true,
+			expErrMsg: stakingtypes.ErrConsensusPubKeyInRotationHistory.Error(),
+		},
+		{
+			name: "consensus key is source of pending rotation without live validator index",
+			setupExistingState: func() error {
+				valAddr := sdk.ValAddress(ed25519.GenPrivKey().PubKey().Address())
+				return s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, pk2, ed25519.GenPrivKey().PubKey())
+			},
+			input: &stakingtypes.MsgCreateValidator{
+				Description: stakingtypes.Description{
+					Moniker: "NewValidator",
+				},
+				Commission: stakingtypes.CommissionRates{
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+					MaxChangeRate: math.LegacyNewDec(0),
+				},
+				MinSelfDelegation: math.NewInt(1),
+				DelegatorAddress:  Addr.String(),
+				ValidatorAddress:  sdk.ValAddress(ed25519.GenPrivKey().PubKey().Address()).String(),
+				Pubkey:            pubkey2,
+				Value:             sdk.NewInt64Coin("stake", 10000),
+			},
+			expErr:    true,
+			expErrMsg: stakingtypes.ErrConsensusPubKeyInRotationHistory.Error(),
+		},
+		{
+			name: "consensus key was rotated away from",
+			setupExistingState: func() error {
+				valAddr := sdk.ValAddress(ed25519.GenPrivKey().PubKey().Address())
+				consAddr := sdk.ConsAddress(pk2.Address())
+				return s.stakingKeeper.SetRotationLockedConsAddr(s.ctx, consAddr, valAddr, stakingtypes.ConsAddrLockRotatedFrom)
+			},
+			input: &stakingtypes.MsgCreateValidator{
+				Description: stakingtypes.Description{
+					Moniker: "NewValidator",
+				},
+				Commission: stakingtypes.CommissionRates{
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+					MaxChangeRate: math.LegacyNewDec(0),
+				},
+				MinSelfDelegation: math.NewInt(1),
+				DelegatorAddress:  Addr.String(),
+				ValidatorAddress:  sdk.ValAddress(ed25519.GenPrivKey().PubKey().Address()).String(),
+				Pubkey:            pubkey2,
+				Value:             sdk.NewInt64Coin("stake", 10000),
+			},
+			expErr:    true,
+			expErrMsg: stakingtypes.ErrConsensusPubKeyInRotationHistory.Error(),
 		},
 		{
 			name: "valid msg",
@@ -223,7 +297,7 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 				MinSelfDelegation: math.NewInt(1),
 				DelegatorAddress:  Addr.String(),
 				ValidatorAddress:  ValAddr.String(),
-				Pubkey:            pubkey,
+				Pubkey:            pubkey1,
 				Value:             sdk.NewInt64Coin("stake", 10000),
 			},
 			expErr: false,
@@ -231,12 +305,19 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 	}
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			_, err := msgServer.CreateValidator(ctx, tc.input)
+			s.SetupTest()
+			s.execExpectCalls()
+
+			if tc.setupExistingState != nil {
+				s.Require().NoError(tc.setupExistingState())
+			}
+
+			_, err := s.msgServer.CreateValidator(s.ctx, tc.input)
 			if tc.expErr {
-				require.Error(err)
-				require.Contains(err.Error(), tc.expErrMsg)
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
-				require.NoError(err)
+				s.Require().NoError(err)
 			}
 		})
 	}

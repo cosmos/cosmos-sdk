@@ -272,6 +272,35 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdates() {
 		require.Equal(sdk.ConsAddress(newPk.Address()).Bytes(), got)
 	})
 
+	s.T().Run("validator rotates at H and changes power at H+1", func(t *testing.T) {
+		s.SetupTest()
+		const H = int64(10)
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+
+		s.ctx = s.ctx.WithBlockHeight(H)
+		valAddr := s.bondedValidatorAtPower(oldPk, 10)
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+
+		updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+		valSet := requireCometAppliesValidatorUpdates(t, updates, cometValidator{pk: oldPk, power: 10})
+		require.False(valSet.HasAddress(oldPk.Address()))
+		_, newCmtVal := valSet.GetByAddress(newPk.Address())
+		require.NotNil(newCmtVal)
+		require.Equal(int64(10), newCmtVal.VotingPower)
+
+		s.ctx = s.ctx.WithBlockHeight(H + 1)
+		s.setValidatorPower(valAddr, 25)
+		updates, err = s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+		valSet = requireCometAppliesValidatorUpdates(t, updates, cometValidator{pk: newPk, power: 10})
+		require.False(valSet.HasAddress(oldPk.Address()))
+		_, newCmtVal = valSet.GetByAddress(newPk.Address())
+		require.NotNil(newCmtVal)
+		require.Equal(int64(25), newCmtVal.VotingPower)
+	})
+
 	s.T().Run("validator rotates and changes power while another validator enters at H", func(t *testing.T) {
 		s.SetupTest()
 		const H = int64(10)
@@ -325,10 +354,159 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdates() {
 		require.NoError(err)
 		require.Equal(sdk.ConsAddress(newPk.Address()).Bytes(), got)
 	})
+
+	s.T().Run("validator rotates and is pushed out of the active set at H", func(t *testing.T) {
+		s.SetupTest()
+		s.setMaxValidators(1)
+		s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		const H = int64(10)
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+		otherPk := ed25519.GenPrivKey().PubKey()
+		s.ctx = s.ctx.WithBlockHeight(H)
+
+		valAddr := s.bondedValidatorAtPower(oldPk, 10)
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+		s.unbondedValidatorAtPower(otherPk, 20)
+
+		updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+
+		valSet := requireCometAppliesValidatorUpdates(t, updates, cometValidator{pk: oldPk, power: 10})
+		require.False(valSet.HasAddress(oldPk.Address()))
+		require.False(valSet.HasAddress(newPk.Address()))
+		_, otherCmtVal := valSet.GetByAddress(otherPk.Address())
+		require.NotNil(otherCmtVal)
+		require.Equal(int64(20), otherCmtVal.VotingPower)
+	})
+
+	s.T().Run("validator rotates and drops to zero power at H", func(t *testing.T) {
+		s.SetupTest()
+		const H = int64(10)
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+		s.ctx = s.ctx.WithBlockHeight(H)
+
+		valAddr := s.bondedValidatorAtPower(oldPk, 10)
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+		s.setValidatorPower(valAddr, 0)
+
+		bystander := randomCometValidator()
+		updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+
+		valSet := requireCometAppliesValidatorUpdates(t, updates,
+			cometValidator{pk: oldPk, power: 10},
+			bystander,
+		)
+		require.False(valSet.HasAddress(oldPk.Address()))
+		require.False(valSet.HasAddress(newPk.Address()))
+	})
+
+	s.T().Run("inactive validator rotates and enters the active set at H", func(t *testing.T) {
+		s.SetupTest()
+		s.setMaxValidators(1)
+		s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		const H = int64(10)
+		activePk := ed25519.GenPrivKey().PubKey()
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+		s.ctx = s.ctx.WithBlockHeight(H)
+
+		s.bondedValidatorAtPower(activePk, 10)
+		valAddr := s.unbondedValidatorAtPower(oldPk, 20)
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+
+		updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+
+		valSet := requireCometAppliesValidatorUpdates(t, updates, cometValidator{pk: activePk, power: 10})
+		require.False(valSet.HasAddress(activePk.Address()))
+		require.False(valSet.HasAddress(oldPk.Address()))
+		_, newCmtVal := valSet.GetByAddress(newPk.Address())
+		require.NotNil(newCmtVal)
+		require.Equal(int64(20), newCmtVal.VotingPower)
+	})
+
+	s.T().Run("inactive validator rotates and stays outside the active set at H", func(t *testing.T) {
+		s.SetupTest()
+		s.setMaxValidators(1)
+		const H = int64(10)
+		activePk := ed25519.GenPrivKey().PubKey()
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+		s.ctx = s.ctx.WithBlockHeight(H)
+
+		s.bondedValidatorAtPower(activePk, 20)
+		valAddr := s.unbondedValidatorAtPower(oldPk, 10)
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+
+		updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+
+		valSet := requireCometAppliesValidatorUpdates(t, updates, cometValidator{pk: activePk, power: 20})
+		require.True(valSet.HasAddress(activePk.Address()))
+		require.False(valSet.HasAddress(oldPk.Address()))
+		require.False(valSet.HasAddress(newPk.Address()))
+	})
+
+	s.T().Run("two validators rotate while one changes power at H", func(t *testing.T) {
+		s.SetupTest()
+		const H = int64(10)
+		oldPk1 := ed25519.GenPrivKey().PubKey()
+		newPk1 := ed25519.GenPrivKey().PubKey()
+		oldPk2 := ed25519.GenPrivKey().PubKey()
+		newPk2 := ed25519.GenPrivKey().PubKey()
+		s.ctx = s.ctx.WithBlockHeight(H)
+
+		valAddr1 := s.bondedValidatorAtPower(oldPk1, 10)
+		valAddr2 := s.bondedValidatorAtPower(oldPk2, 11)
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr1, oldPk1, newPk1))
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr2, oldPk2, newPk2))
+		s.setValidatorPower(valAddr1, 25)
+
+		updates, err := s.stakingKeeper.ApplyAndReturnValidatorSetUpdates(s.ctx)
+		require.NoError(err)
+
+		valSet := requireCometAppliesValidatorUpdates(t, updates,
+			cometValidator{pk: oldPk1, power: 10},
+			cometValidator{pk: oldPk2, power: 11},
+		)
+		require.False(valSet.HasAddress(oldPk1.Address()))
+		require.False(valSet.HasAddress(oldPk2.Address()))
+		_, newCmtVal1 := valSet.GetByAddress(newPk1.Address())
+		require.NotNil(newCmtVal1)
+		require.Equal(int64(25), newCmtVal1.VotingPower)
+		_, newCmtVal2 := valSet.GetByAddress(newPk2.Address())
+		require.NotNil(newCmtVal2)
+		require.Equal(int64(11), newCmtVal2.VotingPower)
+	})
 }
 
 func (s *KeeperTestSuite) bondedValidatorAtPower(pk cryptotypes.PubKey, power int64) sdk.ValAddress {
 	return s.bondedValidatorAtPowerWithOperator(sdk.ValAddress(pk.Address()), pk, power, true)
+}
+
+func (s *KeeperTestSuite) setMaxValidators(maxValidators uint32) {
+	require := s.Require()
+	params, err := s.stakingKeeper.GetParams(s.ctx)
+	require.NoError(err)
+	params.MaxValidators = maxValidators
+	require.NoError(s.stakingKeeper.SetParams(s.ctx, params))
+}
+
+func (s *KeeperTestSuite) unbondedValidatorAtPower(pk cryptotypes.PubKey, power int64) sdk.ValAddress {
+	require := s.Require()
+	valAddr := sdk.ValAddress(pk.Address())
+	v, err := stakingtypes.NewValidator(valAddr.String(), pk, stakingtypes.Description{Moniker: "v"})
+	require.NoError(err)
+	v.Status = stakingtypes.Unbonded
+	v.Tokens = sdk.TokensFromConsensusPower(power, sdk.DefaultPowerReduction)
+	v.DelegatorShares = math.LegacyNewDecFromInt(v.Tokens)
+	require.NoError(s.stakingKeeper.SetValidator(s.ctx, v))
+	require.NoError(s.stakingKeeper.SetValidatorByConsAddr(s.ctx, v))
+	require.NoError(s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, v))
+	return valAddr
 }
 
 func (s *KeeperTestSuite) bondedValidatorAtPowerWithoutLastPower(

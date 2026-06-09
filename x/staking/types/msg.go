@@ -113,7 +113,7 @@ func NewMsgRotateConsPubKey(valAddr string, pubKey cryptotypes.PubKey) (*MsgRota
 }
 
 // Validate validates the MsgRotateConsPubKey sdk msg.
-func (msg MsgRotateConsPubKey) Validate(ac address.Codec) error {
+func (msg *MsgRotateConsPubKey) Validate(ac address.Codec) error {
 	if _, err := ac.StringToBytes(msg.ValidatorAddress); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
@@ -130,7 +130,7 @@ func (msg MsgRotateConsPubKey) Validate(ac address.Codec) error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces.
-func (msg MsgRotateConsPubKey) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (msg *MsgRotateConsPubKey) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var pubKey cryptotypes.PubKey
 	return unpacker.UnpackAny(msg.NewPubkey, &pubKey)
 }

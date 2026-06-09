@@ -1,5 +1,7 @@
 # ADR 050: SIGN_MODE_TEXTUAL
 
+## Status: ARCHIVED
+
 ## Changelog
 
 * Dec 06, 2021: Initial Draft.

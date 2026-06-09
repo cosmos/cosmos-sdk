@@ -40,6 +40,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+* (mempool) [#25338](https://github.com/cosmos/cosmos-sdk/pull/25338) Respect gas wanted returned by the ante handler for block selection. Adds `InsertWithOption` to the `Mempool` interface (carries the ante-reported `GasWanted`) and changes the `SelectBy` callback to receive a `mempool.Tx` wrapper that exposes the stored value.
+* (tx) [#26456](https://github.com/cosmos/cosmos-sdk/pull/26456) Remove `SIGN_MODE_TEXTUAL` and all associated implementation (`x/tx/signing/textual`, `x/auth/tx/textual.go`, `TextualCoinMetadataQueryFn`). The proto enum value is reserved to prevent future reuse. ADR-050 is marked archived.
 * (modules) [#26421](https://github.com/cosmos/cosmos-sdk/pull/26421) Remove the `x/protocolpool` module and its API/proto surface from the SDK. Applications upgrading from v0.54 should include `protocolpool` in deleted store upgrades.
 * (genutils) [#26468](https://github.com/cosmos/cosmos-sdk/pull/26468) Consolidate ExportGenesisFileWithTime arguments to preserve consensus params.
 
@@ -47,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (abci) [#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) Add support for new application side mempool ABCI methods. 
 * (abci) [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) Add support for new ABCI methods, `InsertTx` and `ReapTxs`.
+* (blockstm) [#26208](https://github.com/cosmos/cosmos-sdk/pull/26208) Add Block-STM configuration support: `block-executor`, `block-stm-workers` and `block-stm-pre-estimate`.
 * (blockstm) [#25909](https://github.com/cosmos/cosmos-sdk/pull/25909) Cache pre-state to optimize value-based validation.
 * (deps) [#26388](https://github.com/cosmos/cosmos-sdk/pull/26388) Bump CometBFT version to v0.39.3.
 * (staking) [#26440](https://github.com/cosmos/cosmos-sdk/pull/26440) Add basic key rotation for validator consensus keys.
@@ -67,6 +70,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#26408](https://github.com/cosmos/cosmos-sdk/pull/26408) Fix `MsgBeginRedelegate` failure when redelegating all shares from an unbonded source validator that is removed after unbonding.
 * (x/auth/tx) [#26422](https://github.com/cosmos/cosmos-sdk/pull/26422) Reuse the signing context from the codec's `InterfaceRegistry` when `ConfigOptions.SigningOptions` is unset so that `CustomGetSigners` registered via `NewInterfaceRegistryWithOptions` are honored by `NewTxConfig` / `NewTxConfigWithOptions`.
 * (x/staking) [#26460](https://github.com/cosmos/cosmos-sdk/pull/26460) Coalesce key rotation power updates to not emit duplicates.
+* (blockstm) [#25893](https://github.com/cosmos/cosmos-sdk/pull/25893) Fix CancelAll cancellation by clearing blocker ESTIMATE marks before waking suspended executors.
 
 ### Deprecated
 

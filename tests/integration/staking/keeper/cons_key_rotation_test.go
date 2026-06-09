@@ -105,8 +105,7 @@ func TestRotateConsPubKey_MsgServerQueuesAndEndBlockerApplies(t *testing.T) {
 	// integration fixture's EndBlocker runs with the captured initial block
 	// height and does not advance with FinalizeBlock.
 	applyCtx := f.sdkCtx.WithBlockHeight(writeHeight + types.ConsensusUpdateDelay)
-	_, err = f.stakingKeeper.ProcessConsKeyRotations(applyCtx, powerReduction)
-	assert.NilError(t, err)
+	assert.NilError(t, f.stakingKeeper.ApplyConsKeyRotations(applyCtx))
 
 	// old by-cons-addr index is gone
 	_, err = f.stakingKeeper.GetValidatorByConsAddr(f.sdkCtx, oldConsAddr)
@@ -187,7 +186,6 @@ func TestRotateConsPubKey_SecondRotationAfterPruningSucceeds(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
-	powerReduction := f.stakingKeeper.PowerReduction(f.sdkCtx)
 
 	pkA := ed25519.GenPrivKey().PubKey()
 	pkB := ed25519.GenPrivKey().PubKey()
@@ -216,8 +214,7 @@ func TestRotateConsPubKey_SecondRotationAfterPruningSucceeds(t *testing.T) {
 	// index moves accordingly. The integration fixture's EndBlocker keeps the
 	// captured block height, so the drain pass is invoked here directly.
 	applyCtx := f.sdkCtx.WithBlockHeight(writeHeight + types.ConsensusUpdateDelay)
-	_, err = f.stakingKeeper.ProcessConsKeyRotations(applyCtx, powerReduction)
-	assert.NilError(t, err)
+	assert.NilError(t, f.stakingKeeper.ApplyConsKeyRotations(applyCtx))
 
 	// advance past maturity and let the end blocker prune
 	unbondingTime, err := f.stakingKeeper.UnbondingTime(f.sdkCtx)
@@ -237,8 +234,7 @@ func TestRotateConsPubKey_SecondRotationAfterPruningSucceeds(t *testing.T) {
 
 	// drive the drain again for this second rotation
 	applyCtx = f.sdkCtx.WithBlockHeight(writeHeight + types.ConsensusUpdateDelay)
-	_, err = f.stakingKeeper.ProcessConsKeyRotations(applyCtx, powerReduction)
-	assert.NilError(t, err)
+	assert.NilError(t, f.stakingKeeper.ApplyConsKeyRotations(applyCtx))
 
 	stored, err := f.stakingKeeper.GetValidator(f.sdkCtx, valAddr)
 	assert.NilError(t, err)

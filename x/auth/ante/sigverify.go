@@ -13,6 +13,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa65"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
@@ -581,6 +582,10 @@ func DefaultSigVerificationGasConsumer(
 
 	case *secp256r1.PubKey:
 		meter.ConsumeGas(params.SigVerifyCostSecp256r1(), "ante verify: secp256r1")
+		return nil
+
+	case *mldsa65.PubKey:
+		meter.ConsumeGas(params.SigVerifyCostMlDsa65, "ante verify: ml_dsa_65")
 		return nil
 
 	case multisig.PubKey:

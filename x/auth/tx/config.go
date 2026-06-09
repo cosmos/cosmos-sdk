@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing/direct"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing/directaux"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual"
 )
 
 type config struct {
@@ -40,9 +39,6 @@ type ConfigOptions struct {
 	// SigningOptions are the options that will be used when constructing a txsigning.Context and sign mode handlers.
 	// If nil defaults will be used.
 	SigningOptions *txsigning.Options
-	// TextualCoinMetadataQueryFn is the function that will be used to query coin metadata when constructing
-	// textual sign mode handler. This is required if SIGN_MODE_TEXTUAL is enabled.
-	TextualCoinMetadataQueryFn textual.CoinMetadataQueryFn
 	// CustomSignModes are the custom sign modes that will be added to the txsigning.HandlerMap.
 	CustomSignModes []txsigning.SignModeHandler
 	// ProtoDecoder is the decoder that will be used to decode protobuf transactions.
@@ -60,14 +56,13 @@ var DefaultSignModes = []signingtypes.SignMode{
 	signingtypes.SignMode_SIGN_MODE_DIRECT,
 	signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
 	signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-	// signingtypes.SignMode_SIGN_MODE_TEXTUAL is not enabled by default, as it requires a x/bank keeper or gRPC connection.
 }
 
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
 // first enabled sign mode will become the default sign mode.
 //
 // NOTE: Use NewTxConfigWithOptions to provide a custom signing handler in case the sign mode
-// is not supported by default (eg: SignMode_SIGN_MODE_EIP_191), or to enable SIGN_MODE_TEXTUAL.
+// is not supported by default (eg: SignMode_SIGN_MODE_EIP_191).
 //
 // We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage. Within the SDK,
 // this constructor is primarily used in tests, but also sees usage in app chains like:
@@ -139,18 +134,6 @@ func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, erro
 				FileResolver: signingOpts.FileResolver,
 				TypeResolver: signingOpts.TypeResolver,
 			})
-		case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
-			handlers[i], err = textual.NewSignModeHandler(textual.SignModeOptions{
-				CoinMetadataQuerier: configOpts.TextualCoinMetadataQueryFn,
-				FileResolver:        signingOpts.FileResolver,
-				TypeResolver:        signingOpts.TypeResolver,
-			})
-			if configOpts.TextualCoinMetadataQueryFn == nil {
-				return nil, fmt.Errorf("cannot enable SIGN_MODE_TEXTUAL without a TextualCoinMetadataQueryFn")
-			}
-			if err != nil {
-				return nil, err
-			}
 		}
 	}
 	for i, m := range configOpts.CustomSignModes {

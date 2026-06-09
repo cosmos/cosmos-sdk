@@ -7,6 +7,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 
 	"cosmossdk.io/math"
 
@@ -286,27 +287,6 @@ func (k Keeper) SetConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress, 
 	return store.Set(types.GetConsKeyRotationApplyQueueKey(applyHeight, valAddr), newPubKeyBz)
 }
 
-// ProcessConsKeyRotations performs the two passes over the height-keyed apply
-// queue called once per EndBlock from ApplyAndReturnValidatorSetUpdates:
-//
-//   - Drain (mature): for every entry with applyHeight <= currentHeight, apply
-//     the SDK-side state swap (validator.ConsensusPubkey and byConsAddr index),
-//     delete the queue entry, and release the new-addr rotation lock. The
-//     old-addr lock persists until unbonding-window pruning.
-//   - Emit (new this block): for every entry with applyHeight ==
-//     currentHeight + ConsensusUpdateDelay, build and append the
-//     (old@0, new@power) ValidatorUpdate pair. The entry is not deleted here;
-//     it remains until its applyHeight matures.
-//
-// The drain pass runs first so that subsequent transition emits in the same
-// EndBlock read the post-swap ConsensusPubkey.
-func (k Keeper) ProcessConsKeyRotations(ctx context.Context, powerReduction math.Int) ([]abci.ValidatorUpdate, error) {
-	if err := k.ApplyConsKeyRotations(ctx); err != nil {
-		return nil, err
-	}
-	return k.ConsKeyRotationUpdates(ctx, powerReduction)
-}
-
 // ApplyConsKeyRotations iterates every apply queue entry whose applyHeight has
 // been reached, performs the state swap, and clears the queue entry plus the
 // new addr rotation lock.
@@ -405,15 +385,48 @@ func (k Keeper) ApplyConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress
 	return k.SetValidatorByConsAddr(ctx, validator)
 }
 
-// ConsKeyRotationUpdates returns power updates for each validator
-// rotating their consensus keys.
-func (k Keeper) ConsKeyRotationUpdates(ctx context.Context, powerReduction math.Int) (updates []abci.ValidatorUpdate, err error) {
-	store := k.storeService.OpenKVStore(ctx)
+// PendingConsKeyRotationUpdate stores the rotation metadata needed to align
+// staking-side validator updates with CometBFT's delayed key-rotation view.
+type PendingConsKeyRotationUpdate struct {
+	// OldPubKey is the consensus key currently stored in SDK validator state.
+	OldPubKey cryptotypes.PubKey
 
-	// iterate all entries in the apply queue that are equal to applyHeight
-	applyHeight := rotationApplyHeight(ctx)
-	prefix := types.GetConsKeyRotationApplyQueueHeightPrefix(applyHeight)
-	iterator, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
+	// NewPubKey is the pending consensus key CometBFT should track for the
+	// validator once the rotation update is emitted.
+	NewPubKey cryptotypes.PubKey
+
+	// EmitHeight is the EndBlock height that should emit the old@0,new@power
+	// rotation pair.
+	EmitHeight int64
+
+	// LastPower is the validator power from the last Comet-visible validator
+	// set, keyed by operator address.
+	LastPower int64
+}
+
+// oldAddr returns the Comet validator address for the pre-rotation key.
+func (r PendingConsKeyRotationUpdate) oldAddr() string {
+	return string(r.OldPubKey.Address())
+}
+
+// shouldEmitPowerUpdates returns whether the rotation should emit
+// old@0,new@power at height.
+func (r PendingConsKeyRotationUpdate) shouldEmitPowerUpdates(height int64) bool {
+	return r.EmitHeight == height && r.LastPower > 0
+}
+
+// PendingConsKeyRotationUpdates returns rotation metadata for in-flight
+// rotations whose CometBFT update has been or should be emitted by the current
+// EndBlock. It must be called after ApplyConsKeyRotations so matured entries
+// have already been drained.
+func (k Keeper) PendingConsKeyRotationUpdates(ctx context.Context, last map[string]int64) (updates []PendingConsKeyRotationUpdate, err error) {
+	store := k.storeService.OpenKVStore(ctx)
+	currentHeight := sdk.UnwrapSDKContext(ctx).BlockHeight()
+
+	iterator, err := store.Iterator(
+		types.ConsKeyRotationApplyQueueKey,
+		storetypes.PrefixEndBytes(types.ConsKeyRotationApplyQueueKey),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -422,31 +435,236 @@ func (k Keeper) ConsKeyRotationUpdates(ctx context.Context, powerReduction math.
 	}()
 
 	for ; iterator.Valid(); iterator.Next() {
-		_, valAddr, err := types.ParseConsKeyRotationApplyQueueKey(iterator.Key())
+		applyHeight, valAddr, err := types.ParseConsKeyRotationApplyQueueKey(iterator.Key())
 		if err != nil {
 			return nil, err
 		}
+		emitHeight := applyHeight - types.ConsensusUpdateDelay
+		// Future rotations are not visible to Comet yet. Older entries still
+		// matter until applyHeight because normal staking updates must be
+		// translated from the stored old key to the Comet-visible new key.
+		if emitHeight > currentHeight {
+			continue
+		}
+
 		validator, err := k.GetValidator(ctx, valAddr)
 		if err != nil {
-			// the validator may have been removed earlier in the same block
-			// (e.g., evidence-driven tombstoning). ApplyConsKeyRotation also
-			// no-ops in this case, so skip emitting an update for it.
 			if errors.Is(err, types.ErrNoValidatorFound) {
 				continue
 			}
+			return nil, err
+		}
+		oldPubKey, err := validator.ConsPubKey()
+		if err != nil {
 			return nil, err
 		}
 		var newPubKey cryptotypes.PubKey
 		if err := k.cdc.UnmarshalInterface(iterator.Value(), &newPubKey); err != nil {
 			return nil, err
 		}
-		pair, err := k.ConsKeyRotationUpdate(validator, newPubKey, powerReduction)
+
+		lastPower := last[string(valAddr)]
+		updates = append(updates, PendingConsKeyRotationUpdate{
+			OldPubKey:  oldPubKey,
+			NewPubKey:  newPubKey,
+			EmitHeight: emitHeight,
+			LastPower:  lastPower,
+		})
+	}
+	return updates, nil
+}
+
+// ProcessValidatorUpdatesForConsKeyRotations rewrites validator updates that
+// reference old consensus keys so the returned batch matches CometBFT's
+// key-rotation timeline.
+func (k Keeper) ProcessValidatorUpdatesForConsKeyRotations(
+	ctx context.Context,
+	rotations []PendingConsKeyRotationUpdate,
+	updates []abci.ValidatorUpdate,
+) ([]abci.ValidatorUpdate, error) {
+	if len(rotations) == 0 {
+		return updates, nil
+	}
+
+	currentHeight := sdk.UnwrapSDKContext(ctx).BlockHeight()
+	updateSet, err := newValidatorUpdateSet(updates)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, rotation := range rotations {
+		// check if this rotating validator has emitted power updates on its
+		// old consensus address. if it has, then we may need to rewrite those
+		// to be associated with the cons addr we are rotating to.
+		oldAddr := rotation.oldAddr()
+		if update, ok := updateSet.Get(oldAddr); ok {
+			// depending on what the validator power update on the old cons
+			// addr looks like, modify taking into account the pending key
+			// rotation.
+			rewritten, err := rotatedValidatorUpdates(update, rotation, currentHeight)
+			if err != nil {
+				return nil, err
+			}
+			updateSet.Replace(oldAddr, rewritten...)
+			continue
+		}
+
+		// the rotating validator does not have any power updates being emitted
+		// at this height
+
+		// determine if the rotating validator should emit power updates based
+		// on its current power and the designated emit height to signal to
+		// comet that the validator is changing
+		if !rotation.shouldEmitPowerUpdates(currentHeight) {
+			continue
+		}
+
+		// we should emit power updates for this validator at this height
+
+		// set the key they are rotating away from to 0
+		oldUpdate, err := validatorUpdateForPubKey(rotation.OldPubKey, 0)
 		if err != nil {
 			return nil, err
 		}
-		updates = append(updates, pair...)
+
+		// and set the new key they are rotating to to the validators last seen
+		// power
+		newUpdate, err := validatorUpdateForPubKey(rotation.NewPubKey, rotation.LastPower)
+		if err != nil {
+			return nil, err
+		}
+		updateSet.Append([]abci.ValidatorUpdate{oldUpdate, newUpdate}...)
 	}
+
+	return updateSet.Updates()
+}
+
+// rotatedValidatorUpdates rewrites a normal staking update for a validator
+// whose consensus key rotation is still in flight.
+func rotatedValidatorUpdates(
+	update abci.ValidatorUpdate,
+	rotation PendingConsKeyRotationUpdate,
+	currentHeight int64,
+) ([]abci.ValidatorUpdate, error) {
+	switch {
+	case update.Power == 0 && rotation.shouldEmitPowerUpdates(currentHeight):
+		// A same-block status/power transition removed the validator before the
+		// new key should be added. Keep oldkey@0 and avoid emitting newkey@0 for a key
+		// Comet has never seen.
+		return []abci.ValidatorUpdate{update}, nil
+	case update.Power == 0:
+		// The rotation was already emitted in an earlier EndBlock, so Comet now
+		// tracks the new key even though SDK state still stores the old key.
+		newUpdate, err := validatorUpdateForPubKey(rotation.NewPubKey, 0)
+		if err != nil {
+			return nil, err
+		}
+		return []abci.ValidatorUpdate{newUpdate}, nil
+	case rotation.shouldEmitPowerUpdates(currentHeight):
+		// Normal staking emitted old@power at the same height the rotation pair
+		// is due. Convert it into the Comet key swap old@0, new@power.
+		newUpdate, err := validatorUpdateForPubKey(rotation.NewPubKey, update.Power)
+		if err != nil {
+			return nil, err
+		}
+		return []abci.ValidatorUpdate{
+			{PubKey: update.PubKey, Power: 0},
+			newUpdate,
+		}, nil
+	default:
+		// The key swap was already emitted to Comet, but the SDK-side key swap
+		// has not reached applyHeight. Translate old@power to new@power.
+		newUpdate, err := validatorUpdateForPubKey(rotation.NewPubKey, update.Power)
+		if err != nil {
+			return nil, err
+		}
+		return []abci.ValidatorUpdate{newUpdate}, nil
+	}
+}
+
+// validatorUpdateForPubKey builds an ABCI validator update for a pubkey.
+func validatorUpdateForPubKey(pk cryptotypes.PubKey, power int64) (abci.ValidatorUpdate, error) {
+	cmtPubKey, err := cryptocodec.ToCmtProtoPublicKey(pk)
+	if err != nil {
+		return abci.ValidatorUpdate{}, err
+	}
+	return abci.ValidatorUpdate{PubKey: cmtPubKey, Power: power}, nil
+}
+
+// validatorUpdateSet stores normal validator updates by consensus address while
+// preserving their original order and allowing rotation rewrites to replace
+// one normal update with zero, one, or multiple updates.
+type validatorUpdateSet struct {
+	// order preserves the Comet consensus address order of the original
+	// validator-state updates.
+	order []string
+
+	// replacements stores the update or replacement updates for each original
+	// consensus address.
+	replacements map[string][]abci.ValidatorUpdate
+
+	// extra stores updates introduced by rotations that had no original
+	// validator-state update in this EndBlock.
+	extra []abci.ValidatorUpdate
+}
+
+// newValidatorUpdateSet creates a new validator update set in order to index
+// validator updates by cons addr.
+func newValidatorUpdateSet(updates []abci.ValidatorUpdate) (*validatorUpdateSet, error) {
+	updateSet := &validatorUpdateSet{
+		order:        make([]string, 0, len(updates)),
+		replacements: make(map[string][]abci.ValidatorUpdate, len(updates)),
+	}
+	for _, update := range updates {
+		addr, err := validatorUpdateAddress(update)
+		if err != nil {
+			return nil, err
+		}
+		if _, ok := updateSet.replacements[addr]; ok {
+			return nil, fmt.Errorf("duplicate validator update for consensus address %X", []byte(addr))
+		}
+		updateSet.order = append(updateSet.order, addr)
+		updateSet.replacements[addr] = []abci.ValidatorUpdate{update}
+	}
+	return updateSet, nil
+}
+
+// Get returns the first update currently associated with addr.
+func (s *validatorUpdateSet) Get(addr string) (abci.ValidatorUpdate, bool) {
+	updates, ok := s.replacements[addr]
+	if !ok || len(updates) == 0 {
+		return abci.ValidatorUpdate{}, false
+	}
+	return updates[0], true
+}
+
+// Replace replaces the updates associated with addr.
+func (s *validatorUpdateSet) Replace(addr string, updates ...abci.ValidatorUpdate) {
+	s.replacements[addr] = updates
+}
+
+// Append adds updates after all originally ordered updates.
+func (s *validatorUpdateSet) Append(updates ...abci.ValidatorUpdate) {
+	s.extra = append(s.extra, updates...)
+}
+
+// Updates returns the ordered validator updates and rejects duplicate addresses.
+func (s *validatorUpdateSet) Updates() ([]abci.ValidatorUpdate, error) {
+	updates := make([]abci.ValidatorUpdate, 0, len(s.order)+len(s.extra))
+	for _, addr := range s.order {
+		updates = append(updates, s.replacements[addr]...)
+	}
+	updates = append(updates, s.extra...)
 	return updates, nil
+}
+
+// validatorUpdateAddress returns the cons addr for a validator update.
+func validatorUpdateAddress(update abci.ValidatorUpdate) (string, error) {
+	pk, err := cryptoenc.PubKeyFromProto(update.PubKey)
+	if err != nil {
+		return "", err
+	}
+	return string(pk.Address()), nil
 }
 
 // ConsKeyRotationUpdate builds the (old@0, new@power) ABCI ValidatorUpdate

@@ -46,6 +46,17 @@ func GenPrivKey() (PrivKey, error) {
 	return PrivKey{Key: sk.Bytes()}, nil
 }
 
+// GenPrivKeyFromSeed deterministically derives an ML-DSA-65 private key from a
+// 32-byte seed (mldsa.SeedSize). The same seed always yields the same key,
+// which is what makes mnemonic-based account recovery possible.
+func GenPrivKeyFromSeed(seed []byte) (PrivKey, error) {
+	sk, err := mldsa.GenPrivKeyFromSeed(seed)
+	if err != nil {
+		return PrivKey{}, err
+	}
+	return PrivKey{Key: sk.Bytes()}, nil
+}
+
 // Bytes returns the serialized private key bytes.
 func (privKey PrivKey) Bytes() []byte {
 	return privKey.Key
@@ -117,10 +128,10 @@ var (
 	_ codec.AminoMarshaler = &PubKey{}
 )
 
-// Address returns the validator address: SHA256(pubkey) truncated to 20 bytes,
-// matching the convention used by other CometBFT validator key types. ML-DSA-65
-// is not intended for account-level use; SDK accounts should not derive
-// addresses from this key.
+// Address returns the account/validator address: SHA256(pubkey) truncated to 20
+// bytes, matching the convention used by ed25519 keys. This scheme is valid for
+// both CometBFT validator addresses and SDK account addresses; it MUST NOT change
+// once accounts exist, as that would be a breaking change to derived addresses.
 func (pubKey PubKey) Address() crypto.Address {
 	pk, err := mldsa.NewPubKeyFromBytes(pubKey.Key)
 	if err != nil {

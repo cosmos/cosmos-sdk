@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1188,6 +1189,20 @@ func (s *KeeperTestSuite) TestMsgRotateConsPubKey() {
 				}
 			},
 			expErr: "invalid validator address",
+		},
+		{
+			name: "new pubkey has unsupported type",
+			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
+				s.ctx = s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+					Validator: &cmtproto.ValidatorParams{PubKeyTypes: []string{ed25519.KeyType}},
+				})
+				valAddr, _ := createValidator(stakingtypes.Bonded)
+				return &stakingtypes.MsgRotateConsPubKey{
+					ValidatorAddress: valAddr.String(),
+					NewPubkey:        newAny(secp256k1.GenPrivKey().PubKey()),
+				}
+			},
+			expErr: stakingtypes.ErrValidatorPubKeyTypeNotSupported.Error(),
 		},
 		{
 			name: "validator not found",

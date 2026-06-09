@@ -144,22 +144,9 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	totalPower := math.ZeroInt()
 	amtFromBondedToNotBonded, amtFromNotBondedToBonded := math.ZeroInt(), math.ZeroInt()
 
-	// process cons key rotations first so:
-	// 1. the (old_key@0, new_key@power) pair is emitted before any other
-	//    update for this validator in this block. comet applies in slice order,
-	//    so a later main loop emit's power wins.
-	// 2. drain's swap of validator.ConsensusPubkey is visible to subsequent
-	//    reads in this EndBlock.
-	rotationUpdates, err := k.ProcessConsKeyRotations(ctx, powerReduction)
-	if err != nil {
-		return nil, err
-	}
-	updates = append(updates, rotationUpdates...)
-
-	// load the set of in-flight rotations once so the bonded loop emits below
-	// can substitute the new cons key.
-	pendingRotations, err := k.PendingConsKeyRotations(ctx)
-	if err != nil {
+	// drain's swap of validator.ConsensusPubkey must be visible to subsequent
+	// reads in this EndBlock.
+	if err := k.ApplyConsKeyRotations(ctx); err != nil {
 		return nil, err
 	}
 
@@ -169,6 +156,11 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	last, err := k.getLastValidatorsByAddr(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get last validator set: %w", err)
+	}
+
+	pendingRotations, err := k.PendingConsKeyRotationUpdates(ctx, last)
+	if err != nil {
+		return nil, err
 	}
 
 	// Iterate over validators, highest power to lowest.
@@ -224,11 +216,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 
 		// update the validator set if power has changed
 		if !found || oldPower != newPower {
-			pk, err := pendingRotations.EffectiveKeyForABCIUpdate(valAddr, validator)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get effective key for validator %X: %w", valAddr, err)
-			}
-			updates = append(updates, validator.ABCIValidatorUpdateWithPubKey(powerReduction, pk))
+			updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
 
 			if err = k.SetLastValidatorPower(ctx, valAddr, newPower); err != nil {
 				return nil, err
@@ -264,11 +252,12 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 			return nil, err
 		}
 
-		pk, err := pendingRotations.EffectiveKeyForABCIUpdate(sdk.ValAddress(valAddrBytes), validator)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get effective key for validator %X: %w", sdk.ValAddress(valAddrBytes), err)
-		}
-		updates = append(updates, validator.ABCIValidatorUpdateZeroWithPubKey(pk))
+		updates = append(updates, validator.ABCIValidatorUpdateZero())
+	}
+
+	updates, err = k.ProcessValidatorUpdatesForConsKeyRotations(ctx, pendingRotations, updates)
+	if err != nil {
+		return nil, err
 	}
 
 	// Update the pools based on the recent updates in the validator set:

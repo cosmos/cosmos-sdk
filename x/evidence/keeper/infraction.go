@@ -32,10 +32,21 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 
 	validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, consAddr)
 	if errors.Is(err, stakingtypes.ErrNoValidatorFound) {
+		// The consensus address may belong to a key the validator rotated away
+		// from within the unbonding period. Fall back to the historical lookup
+		// and canonicalize to the validator's current consensus address.
 		validator, err = k.stakingKeeper.ValidatorByHistoricalConsAddr(ctx, consAddr)
 		if err == nil {
 			currentConsAddr, err = validator.GetConsAddr()
 		}
+	}
+	if errors.Is(err, stakingtypes.ErrNoValidatorFound) {
+		// No live or historical validator can be attributed to this consensus
+		// address: it is unknown, or it was rotated away from and the validator
+		// has since been removed from the store. Ignore the evidence rather than
+		// returning a consensus-level error from BeginBlocker, consistent with
+		// the unbonded-validator path below.
+		return nil
 	}
 	if err != nil {
 		return err

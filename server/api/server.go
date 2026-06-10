@@ -72,7 +72,7 @@ func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Ser
 		AnyResolver:  clientCtx.InterfaceRegistry,
 	}
 
-	s := &Server{
+	return &Server{
 		logger:    logger,
 		Router:    mux.NewRouter(),
 		ClientCtx: clientCtx,
@@ -93,7 +93,6 @@ func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Ser
 		),
 		GRPCSrv: grpcSrv,
 	}
-	return s
 }
 
 func customGRPCResponseHeaders(ctx context.Context, w http.ResponseWriter, _ proto.Message) error {

@@ -12,6 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -1149,6 +1151,182 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			} else {
 				require.NoError(err)
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestMsgRotateConsPubKey() {
+	require := s.Require()
+
+	newAny := func(pk cryptotypes.PubKey) *codectypes.Any {
+		a, err := codectypes.NewAnyWithValue(pk)
+		require.NoError(err)
+		return a
+	}
+
+	createValidator := func(status stakingtypes.BondStatus) (sdk.ValAddress, cryptotypes.PubKey) {
+		pk := ed25519.GenPrivKey().PubKey()
+		valAddr := sdk.ValAddress(pk.Address())
+		v, err := stakingtypes.NewValidator(valAddr.String(), pk, stakingtypes.Description{Moniker: "v"})
+		require.NoError(err)
+		v.Status = status
+		require.NoError(s.stakingKeeper.SetValidator(s.ctx, v))
+		require.NoError(s.stakingKeeper.SetValidatorByConsAddr(s.ctx, v))
+		return valAddr, pk
+	}
+
+	testCases := []struct {
+		name                   string
+		newRotateConsPubKeyMsg func() *stakingtypes.MsgRotateConsPubKey
+		expErr                 string
+	}{
+		{
+			name: "invalid validator address",
+			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
+				return &stakingtypes.MsgRotateConsPubKey{
+					ValidatorAddress: "invalid",
+					NewPubkey:        newAny(ed25519.GenPrivKey().PubKey()),
+				}
+			},
+			expErr: "invalid validator address",
+		},
+		{
+			name: "new pubkey has unsupported type",
+			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
+				s.ctx = s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+					Validator: &cmtproto.ValidatorParams{PubKeyTypes: []string{ed25519.KeyType}},
+				})
+				valAddr, _ := createValidator(stakingtypes.Bonded)
+				return &stakingtypes.MsgRotateConsPubKey{
+					ValidatorAddress: valAddr.String(),
+					NewPubkey:        newAny(secp256k1.GenPrivKey().PubKey()),
+				}
+			},
+			expErr: stakingtypes.ErrValidatorPubKeyTypeNotSupported.Error(),
+		},
+		{
+			name: "validator not found",
+			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
+				missing := sdk.ValAddress(ed25519.GenPrivKey().PubKey().Address())
+				return &stakingtypes.MsgRotateConsPubKey{
+					ValidatorAddress: missing.String(),
+					NewPubkey:        newAny(ed25519.GenPrivKey().PubKey()),
+				}
+			},
+			expErr: stakingtypes.ErrNoValidatorFound.Error(),
+		},
+		{
+			name: "validator jailed",
+			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
+				valAddr, _ := createValidator(stakingtypes.Bonded)
+				v, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
+				require.NoError(err)
+				v.Jailed = true
+				require.NoError(s.stakingKeeper.SetValidator(s.ctx, v))
+				return &stakingtypes.MsgRotateConsPubKey{
+					ValidatorAddress: valAddr.String(),
+					NewPubkey:        newAny(ed25519.GenPrivKey().PubKey()),
+				}
+			},
+			expErr: "validator is jailed",
+		},
+		{
+			name: "new pubkey already used by another validator",
+			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
+				valAddr, _ := createValidator(stakingtypes.Bonded)
+				_, occupiedPk := createValidator(stakingtypes.Bonded)
+				return &stakingtypes.MsgRotateConsPubKey{
+					ValidatorAddress: valAddr.String(),
+					NewPubkey:        newAny(occupiedPk),
+				}
+			},
+			expErr: stakingtypes.ErrConsensusPubKeyAlreadyUsedForValidator.Error(),
+		},
+		{
+			name: "new pubkey in rotation history",
+			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
+				valAddr, _ := createValidator(stakingtypes.Bonded)
+				oldPubKey := ed25519.GenPrivKey().PubKey()
+				dummy := sdk.ValAddress(ed25519.GenPrivKey().PubKey().Address())
+				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, dummy, oldPubKey, ed25519.GenPrivKey().PubKey()))
+				return &stakingtypes.MsgRotateConsPubKey{
+					ValidatorAddress: valAddr.String(),
+					NewPubkey:        newAny(oldPubKey),
+				}
+			},
+			expErr: stakingtypes.ErrConsensusPubKeyInRotationHistory.Error(),
+		},
+		{
+			name: "new pubkey is the target of another pending rotation",
+			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
+				valAddr, _ := createValidator(stakingtypes.Bonded)
+				targetPubKey := ed25519.GenPrivKey().PubKey()
+				dummy := sdk.ValAddress(ed25519.GenPrivKey().PubKey().Address())
+				require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, dummy, ed25519.GenPrivKey().PubKey(), targetPubKey))
+				return &stakingtypes.MsgRotateConsPubKey{
+					ValidatorAddress: valAddr.String(),
+					NewPubkey:        newAny(targetPubKey),
+				}
+			},
+			expErr: stakingtypes.ErrConsensusPubKeyInRotationHistory.Error(),
+		},
+		{
+			name: "valid msg",
+			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
+				valAddr, _ := createValidator(stakingtypes.Bonded)
+				s.bankKeeper.EXPECT().
+					SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(valAddr), stakingtypes.KeyRotationFeePoolName, gomock.Any()).
+					Return(nil)
+				s.bankKeeper.EXPECT().
+					BurnCoins(gomock.Any(), stakingtypes.KeyRotationFeePoolName, gomock.Any()).
+					Return(nil)
+				return &stakingtypes.MsgRotateConsPubKey{
+					ValidatorAddress: valAddr.String(),
+					NewPubkey:        newAny(ed25519.GenPrivKey().PubKey()),
+				}
+			},
+			expErr: "",
+		},
+		{
+			name: "exceeds max rotations (1)",
+			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
+				// submit a valid rotation for valAddr
+				valAddr, _ := createValidator(stakingtypes.Bonded)
+				s.bankKeeper.EXPECT().
+					SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(valAddr), stakingtypes.KeyRotationFeePoolName, gomock.Any()).
+					Return(nil)
+				s.bankKeeper.EXPECT().
+					BurnCoins(gomock.Any(), stakingtypes.KeyRotationFeePoolName, gomock.Any()).
+					Return(nil)
+				valid := &stakingtypes.MsgRotateConsPubKey{
+					ValidatorAddress: valAddr.String(),
+					NewPubkey:        newAny(ed25519.GenPrivKey().PubKey()),
+				}
+				_, err := s.msgServer.RotateConsPubKey(s.ctx, valid)
+				require.NoError(err)
+
+				// try and rotate again
+				return &stakingtypes.MsgRotateConsPubKey{
+					ValidatorAddress: valAddr.String(),
+					NewPubkey:        newAny(ed25519.GenPrivKey().PubKey()),
+				}
+			},
+			expErr: stakingtypes.ErrExceedingMaxConsPubKeyRotations.Error(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			s.SetupTest()
+
+			msg := tc.newRotateConsPubKeyMsg()
+			_, err := s.msgServer.RotateConsPubKey(s.ctx, msg)
+			if tc.expErr != "" {
+				require.Error(err)
+				require.Contains(err.Error(), tc.expErr)
+				return
+			}
+			require.NoError(err)
 		})
 	}
 }

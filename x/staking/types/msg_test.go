@@ -8,9 +8,11 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -48,4 +50,30 @@ func TestMsgDecode(t *testing.T) {
 	require.True(t, ok)
 	require.True(t, msg.Value.Equal(msg2.Value))
 	require.True(t, msg.Pubkey.Equal(msg2.Pubkey))
+
+	rotateMsg, err := types.NewMsgRotateConsPubKey(valAddr1.String(), pk2)
+	require.NoError(t, err)
+	rotateMsgSerialized, err := cdc.MarshalInterface(rotateMsg)
+	require.NoError(t, err)
+
+	err = cdc.UnmarshalInterface(rotateMsgSerialized, &msgUnmarshaled)
+	require.NoError(t, err)
+	rotateMsg2, ok := msgUnmarshaled.(*types.MsgRotateConsPubKey)
+	require.True(t, ok)
+	require.Equal(t, rotateMsg.ValidatorAddress, rotateMsg2.ValidatorAddress)
+	require.True(t, rotateMsg.NewPubkey.Equal(rotateMsg2.NewPubkey))
+}
+
+func TestMsgRotateConsPubKeyValidate(t *testing.T) {
+	valid, err := types.NewMsgRotateConsPubKey(valAddr1.String(), pk2)
+	require.NoError(t, err)
+	require.NoError(t, valid.Validate(addresscodec.NewBech32Codec("cosmosvaloper")))
+}
+
+func TestValidateConsensusPubKeyType(t *testing.T) {
+	require.NoError(t, types.ValidateConsensusPubKeyType(pk1, []string{ed25519.KeyType}))
+
+	unsupported := secp256k1.GenPrivKey().PubKey()
+	err := types.ValidateConsensusPubKeyType(unsupported, []string{ed25519.KeyType})
+	require.ErrorIs(t, err, types.ErrValidatorPubKeyTypeNotSupported)
 }

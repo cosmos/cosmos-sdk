@@ -60,7 +60,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	sigtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -69,7 +68,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -221,12 +219,13 @@ func NewSimApp(
 		runtime.NewKVStoreService(storeKeys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		map[string][]string{
-			authtypes.FeeCollectorName:     nil,
-			govtypes.ModuleName:            {authtypes.Burner, authtypes.Staking},
-			poatypes.ModuleName:            nil,
-			distrtypes.ModuleName:          nil,
-			stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-			stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+			authtypes.FeeCollectorName:          nil,
+			govtypes.ModuleName:                 {authtypes.Burner, authtypes.Staking},
+			poatypes.ModuleName:                 nil,
+			distrtypes.ModuleName:               nil,
+			stakingtypes.BondedPoolName:         {authtypes.Burner, authtypes.Staking},
+			stakingtypes.NotBondedPoolName:      {authtypes.Burner, authtypes.Staking},
+			stakingtypes.KeyRotationFeePoolName: {authtypes.Burner},
 		},
 		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
@@ -317,14 +316,9 @@ func NewSimApp(
 		),
 	)
 
-	enabledSignModes := append(authtx.DefaultSignModes[:len(authtx.DefaultSignModes):len(authtx.DefaultSignModes)], sigtypes.SignMode_SIGN_MODE_TEXTUAL)
-	txConfigOpts := authtx.ConfigOptions{
-		EnabledSignModes:           enabledSignModes,
-		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
-	}
 	txConfig, err := authtx.NewTxConfigWithOptions(
 		appCodec,
-		txConfigOpts,
+		authtx.ConfigOptions{},
 	)
 	if err != nil {
 		panic(err)

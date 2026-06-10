@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/store/v2
 
-go 1.26.3
+go 1.26.4
 
 require (
 	cosmossdk.io/errors v1.1.0

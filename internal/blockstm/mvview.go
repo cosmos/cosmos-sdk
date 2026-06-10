@@ -2,7 +2,6 @@ package blockstm
 
 import (
 	"context"
-	"time"
 
 	"go.opentelemetry.io/otel/metric"
 
@@ -81,8 +80,10 @@ func (s *GMVMemoryView[V]) WriteCount() int {
 	return s.writeSet.Len()
 }
 
+// Get reads key from MVData or storage. Callers must not mutate key after the
+// call: Get and Has store it by reference in the read set.
 func (s *GMVMemoryView[V]) Get(key []byte) V {
-	start := time.Now()
+	start := instNow()
 	if s.writeSet != nil {
 		if value, found := s.writeSet.OverlayGet(key); found {
 			// value written by this txn
@@ -95,7 +96,7 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 	for {
 		value, version, estimate := s.mvData.Read(s.ctx, key, s.txn)
 		if estimate {
-			estimateStart := time.Now()
+			estimateStart := instNow()
 			// read ESTIMATE mark, wait for the blocking txn to finish
 			s.waitFor(version.Index)
 			measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewEstimateWait }, estimateStart)
@@ -115,12 +116,47 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 	}
 }
 
+// Has reports whether key exists. See Get for the key-aliasing contract.
 func (s *GMVMemoryView[V]) Has(key []byte) bool {
-	return !s.mvData.isZero(s.Get(key))
+	start := instNow()
+	if s.writeSet != nil {
+		if value, found := s.writeSet.OverlayGet(key); found {
+			measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewReadWriteSet }, start)
+			return !s.mvData.isZero(value)
+		}
+	}
+
+	for {
+		value, version, estimate := s.mvData.Read(s.ctx, key, s.txn)
+		if estimate {
+			estimateStart := instNow()
+			s.waitFor(version.Index)
+			measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewEstimateWait }, estimateStart)
+			continue
+		}
+
+		var (
+			exists      bool
+			fromStorage bool
+		)
+		if version.Valid() {
+			exists = !s.mvData.isZero(value)
+			measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewReadMVData }, start)
+		} else {
+			// Existence probe; on miss GCachedStorage.Has loads via Get to
+			// warm the cache for subsequent Has/Get on the same key.
+			exists = s.storage.Has(key)
+			fromStorage = true
+			measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewReadStorage }, start)
+		}
+
+		s.readSet.HasReads = append(s.readSet.HasReads, HasDescriptor{Key: key, Exists: exists, FromStorage: fromStorage})
+		return exists
+	}
 }
 
 func (s *GMVMemoryView[V]) Set(key []byte, value V) {
-	start := time.Now()
+	start := instNow()
 	defer measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewWrite }, start)
 	if s.mvData.isZero(value) {
 		panic("nil value is not allowed")
@@ -130,7 +166,7 @@ func (s *GMVMemoryView[V]) Set(key []byte, value V) {
 }
 
 func (s *GMVMemoryView[V]) Delete(key []byte) {
-	start := time.Now()
+	start := instNow()
 	defer measureSince(s.ctx, func() metric.Int64Histogram { return inst.MVViewDelete }, start)
 	var empty V
 	s.init()
@@ -146,7 +182,7 @@ func (s *GMVMemoryView[V]) ReverseIterator(start, end []byte) storetypes.GIterat
 }
 
 func (s *GMVMemoryView[V]) iterator(opts IteratorOptions) storetypes.GIterator[V] {
-	iterStart := time.Now()
+	iterStart := instNow()
 	mvIter := s.mvData.Iterator(opts, s.txn, s.waitFor)
 
 	var parentIter, wsIter storetypes.GIterator[V]

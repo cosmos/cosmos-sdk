@@ -212,12 +212,12 @@ func TestStartStandAlone(t *testing.T) {
 	app, err := mock.NewApp(home, logger)
 	require.NoError(t, err)
 
-	listen, err := net.Listen("tcp", "127.0.0.1:0")
+	svrLis, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
-	svrAddr := fmt.Sprintf("tcp://127.0.0.1:%d", listen.Addr().(*net.TCPAddr).Port)
-	// The ABCI socket server does not accept a pre-bound listener, so we must
-	// close and re-bind. The TOCTOU window here is acceptable in tests.
-	require.NoError(t, listen.Close())
+	svrAddr := fmt.Sprintf("tcp://127.0.0.1:%d", svrLis.Addr().(*net.TCPAddr).Port)
+	// The ABCI socket server does not accept a pre-bound listener; release and
+	// let it re-bind. The TOCTOU window is acceptable for this test helper.
+	require.NoError(t, svrLis.Close())
 
 	cmtApp := server.NewCometABCIWrapper(app)
 	svr, err := abci_server.NewServer(svrAddr, "socket", cmtApp)

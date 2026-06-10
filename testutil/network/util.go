@@ -29,9 +29,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
+	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
-	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -64,17 +64,6 @@ func startInProcess(cfg Config, val *Validator) error {
 		return appGenesis.ToGenesisDoc()
 	}
 
-	// RPC and P2P listeners are held open to eliminate port-reuse races.
-	// CometBFT's node binds these itself during Start, so we release them
-	// immediately before NewNode and accept the narrow TOCTOU window.
-	for _, lis := range []net.Listener{val.rpcListener, val.p2pListener} {
-		if lis != nil {
-			lis.Close()
-		}
-	}
-	val.rpcListener = nil
-	val.p2pListener = nil
-
 	cmtApp := server.NewCometABCIWrapper(app)
 	tmNode, err := node.NewNode( //resleak:notresource
 		cmtCfg,
@@ -94,6 +83,11 @@ func startInProcess(cfg Config, val *Validator) error {
 		return err
 	}
 	val.tmNode = tmNode
+
+	// Update P2PAddress with the actual port CometBFT bound to.
+	if ni, ok := tmNode.NodeInfo().(p2p.DefaultNodeInfo); ok && ni.ListenAddr != "" {
+		val.P2PAddress = "tcp://" + ni.ListenAddr
+	}
 
 	if val.RPCAddress != "" {
 		val.RPCClient = local.New(tmNode)
@@ -117,17 +111,30 @@ func startInProcess(cfg Config, val *Validator) error {
 
 	if grpcCfg.Enable {
 		grpcLogger := logger.With(log.ModuleKey, "grpc-server")
+
+		// Bind an ephemeral port; update the address fields; serve on the same fd.
+		var grpcLis net.Listener
+		if val.AppConfig.GRPC.Address == "" {
+			grpcLis, err = net.Listen("tcp", "127.0.0.1:0")
+			if err != nil {
+				return fmt.Errorf("failed to bind gRPC listener: %w", err)
+			}
+			val.AppConfig.GRPC.Address = grpcLis.Addr().String()
+			grpcCfg.Address = grpcLis.Addr().String()
+		}
+
 		var grpcSrv *grpc.Server
 		grpcSrv, val.ClientCtx, err = servergrpc.NewGRPCServerAndContext(val.ClientCtx, app, grpcCfg, grpcLogger)
 		if err != nil {
+			if grpcLis != nil {
+				grpcLis.Close()
+			}
 			return err
 		}
 
-		lis := val.grpcListener
-		val.grpcListener = nil
 		val.errGroup.Go(func() error {
-			if lis != nil {
-				return serveGRPCWithListener(ctx, grpcLogger, grpcSrv, lis)
+			if grpcLis != nil {
+				return serveGRPC(ctx, grpcLogger, grpcSrv, grpcLis)
 			}
 			return servergrpc.StartGRPCServer(ctx, grpcLogger, grpcCfg, grpcSrv)
 		})
@@ -135,15 +142,25 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.grpc = grpcSrv
 	}
 
-	if val.APIAddress != "" {
-		apiSrv := api.New(val.ClientCtx, logger.With(log.ModuleKey, "api-server"), val.grpc)
+	if val.AppConfig.API.Enable {
+		apiLogger := logger.With(log.ModuleKey, "api-server")
+
+		var apiLis net.Listener
+		if val.AppConfig.API.Address == "" {
+			apiLis, err = net.Listen("tcp", "127.0.0.1:0")
+			if err != nil {
+				return fmt.Errorf("failed to bind API listener: %w", err)
+			}
+			val.AppConfig.API.Address = "tcp://" + apiLis.Addr().String()
+			val.APIAddress = "http://" + apiLis.Addr().String()
+		}
+
+		apiSrv := api.New(val.ClientCtx, apiLogger, val.grpc)
 		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
 
-		lis := val.apiListener
-		val.apiListener = nil
 		val.errGroup.Go(func() error {
-			if lis != nil {
-				return startAPIWithListener(ctx, apiSrv, logger.With(log.ModuleKey, "api-server"), *val.AppConfig, lis)
+			if apiLis != nil {
+				return serveAPI(ctx, apiSrv, apiLogger, *val.AppConfig, apiLis)
 			}
 			return apiSrv.Start(ctx, *val.AppConfig)
 		})
@@ -266,16 +283,13 @@ func writeFile(name, dir string, contents []byte) error {
 	return nil
 }
 
-// serveGRPCWithListener serves grpcSrv on the pre-bound listener lis.
-// It mirrors the shutdown logic in server/grpc.startGRPCServer without
-// requiring any changes to that package's exported API.
-func serveGRPCWithListener(ctx context.Context, logger log.Logger, grpcSrv *grpc.Server, lis net.Listener) error {
+// serveGRPC serves grpcSrv on lis with context-driven shutdown.
+func serveGRPC(ctx context.Context, logger log.Logger, grpcSrv *grpc.Server, lis net.Listener) error {
 	errCh := make(chan error, 1)
 	go func() {
 		logger.Info("starting gRPC server...", "address", lis.Addr())
 		errCh <- grpcSrv.Serve(lis)
 	}()
-
 	select {
 	case <-ctx.Done():
 		logger.Info("stopping gRPC server...", "address", lis.Addr())
@@ -286,10 +300,8 @@ func serveGRPCWithListener(ctx context.Context, logger log.Logger, grpcSrv *grpc
 	}
 }
 
-// startAPIWithListener serves an already-configured api.Server on lis,
-// replicating the gRPC-web and gateway setup that api.Server.Start would
-// perform. All listener lifecycle is managed here; api.Server is not mutated.
-func startAPIWithListener(ctx context.Context, srv *api.Server, logger log.Logger, cfg srvconfig.Config, lis net.Listener) error {
+// serveAPI serves an already-configured api.Server on lis.
+func serveAPI(ctx context.Context, srv *api.Server, logger log.Logger, cfg srvconfig.Config, lis net.Listener) error {
 	cmtCfg := cmtrpcserver.DefaultConfig()
 	cmtCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
 	cmtCfg.ReadTimeout = time.Duration(cfg.API.RPCReadTimeout) * time.Second
@@ -326,7 +338,6 @@ func startAPIWithListener(ctx context.Context, srv *api.Server, logger log.Logge
 			errCh <- cmtrpcserver.Serve(lis, srv.Router, servercmtlog.CometLoggerWrapper{Logger: logger}, cmtCfg)
 		}
 	}()
-
 	select {
 	case <-ctx.Done():
 		logger.Info("stopping API server...", "address", lis.Addr())

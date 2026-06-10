@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -283,11 +282,6 @@ type (
 		grpcWeb  *http.Server
 		errGroup *errgroup.Group
 		cancelFn context.CancelFunc
-
-		grpcListener net.Listener
-		apiListener  net.Listener
-		rpcListener  net.Listener
-		p2pListener  net.Listener
 	}
 
 	// ValidatorI expose a validator's context and configuration
@@ -351,13 +345,6 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		Config:     cfg,
 	}
 
-	var networkOK bool
-	defer func() {
-		if !networkOK {
-			network.Cleanup()
-		}
-	}()
-
 	l.Logf("preparing test network with chain-id \"%s\"\n", cfg.ChainID)
 
 	monikers := make([]string, cfg.NumValidators)
@@ -386,68 +373,32 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		cmtCfg := ctx.Config
 		cmtCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
 
-		// Declare all listeners upfront so the cleanup defer can reference them.
-		var (
-			grpcListener, apiListener, rpcListener, p2pListener net.Listener
-			listenersOK                                         bool
-		)
-		defer func() {
-			if !listenersOK {
-				for _, l := range []net.Listener{grpcListener, apiListener, rpcListener, p2pListener} {
-					if l != nil {
-						l.Close()
-					}
-				}
-			}
-		}()
-
 		// Only allow the first validator to expose an RPC, API and gRPC
 		// server/client due to CometBFT in-process constraints.
 		apiAddr := ""
 		cmtCfg.RPC.ListenAddress = ""
 		appCfg.GRPC.Enable = false
 		appCfg.GRPCWeb.Enable = false
-		apiListenAddr := ""
 		if i == 0 {
 			if cfg.APIAddress != "" {
-				apiListenAddr = cfg.APIAddress
-			} else {
-				listen, err := net.Listen("tcp", "127.0.0.1:0")
+				appCfg.API.Address = cfg.APIAddress
+				apiURL, err := url.Parse(cfg.APIAddress)
 				if err != nil {
-					return nil, fmt.Errorf("failed to bind API listener: %w", err)
+					return nil, err
 				}
-				apiListenAddr = fmt.Sprintf("tcp://127.0.0.1:%d", listen.Addr().(*net.TCPAddr).Port)
-				apiListener = listen
+				apiAddr = fmt.Sprintf("http://%s:%s", apiURL.Hostname(), apiURL.Port())
 			}
-
-			appCfg.API.Address = apiListenAddr
-			apiURL, err := url.Parse(apiListenAddr)
-			if err != nil {
-				return nil, err
-			}
-			apiAddr = fmt.Sprintf("http://%s:%s", apiURL.Hostname(), apiURL.Port())
 
 			if cfg.RPCAddress != "" {
 				cmtCfg.RPC.ListenAddress = cfg.RPCAddress
 			} else {
-				listen, err := net.Listen("tcp", "127.0.0.1:0")
-				if err != nil {
-					return nil, fmt.Errorf("failed to bind RPC listener: %w", err)
-				}
-				cmtCfg.RPC.ListenAddress = fmt.Sprintf("tcp://127.0.0.1:%d", listen.Addr().(*net.TCPAddr).Port)
-				rpcListener = listen
+				cmtCfg.RPC.ListenAddress = "tcp://127.0.0.1:0"
 			}
 
 			if cfg.GRPCAddress != "" {
 				appCfg.GRPC.Address = cfg.GRPCAddress
-			} else {
-				listen, err := net.Listen("tcp", "127.0.0.1:0")
-				if err != nil {
-					return nil, fmt.Errorf("failed to bind gRPC listener: %w", err)
-				}
-				appCfg.GRPC.Address = fmt.Sprintf("127.0.0.1:%d", listen.Addr().(*net.TCPAddr).Port)
-				grpcListener = listen
 			}
+
 			appCfg.GRPC.Enable = true
 			appCfg.GRPCWeb.Enable = true
 		}
@@ -478,11 +429,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		cmtCfg.Moniker = nodeDirName
 		monikers[i] = nodeDirName
 
-		p2pListener, err = net.Listen("tcp", "127.0.0.1:0")
-		if err != nil {
-			return nil, fmt.Errorf("failed to bind P2P listener: %w", err)
-		}
-		cmtCfg.P2P.ListenAddress = fmt.Sprintf("tcp://127.0.0.1:%d", p2pListener.Addr().(*net.TCPAddr).Port)
+		// P2P: peers are wired after all nodes start via Switch.DialPeersAsync.
+		cmtCfg.P2P.ListenAddress = "tcp://127.0.0.1:0"
 		cmtCfg.P2P.AddrBookStrict = false
 		cmtCfg.P2P.AllowDuplicateIP = true
 
@@ -623,24 +571,19 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		ctx.Viper.Set(flags.FlagChainID, cfg.ChainID)
 
 		network.Validators[i] = &Validator{
-			AppConfig:     appCfg,
-			ClientCtx:     clientCtx,
-			Ctx:           ctx,
-			Dir:           filepath.Join(network.BaseDir, nodeDirName),
-			NodeID:        nodeID,
-			PubKey:        pubKey,
-			Moniker:       nodeDirName,
-			RPCAddress:    cmtCfg.RPC.ListenAddress,
-			P2PAddress:    cmtCfg.P2P.ListenAddress,
-			APIAddress:    apiAddr,
-			Address:       addr,
-			ValAddress:    sdk.ValAddress(addr),
-			grpcListener: grpcListener,
-			apiListener:  apiListener,
-			rpcListener:  rpcListener,
-			p2pListener:  p2pListener,
+			AppConfig:  appCfg,
+			ClientCtx:  clientCtx,
+			Ctx:        ctx,
+			Dir:        filepath.Join(network.BaseDir, nodeDirName),
+			NodeID:     nodeID,
+			PubKey:     pubKey,
+			Moniker:    nodeDirName,
+			RPCAddress: cmtCfg.RPC.ListenAddress,
+			P2PAddress: cmtCfg.P2P.ListenAddress,
+			APIAddress: apiAddr,
+			Address:    addr,
+			ValAddress: sdk.ValAddress(addr),
 		}
-		listenersOK = true
 	}
 
 	err := initGenFiles(cfg, genAccounts, genBalances, genFiles)
@@ -660,6 +603,24 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		l.Log("started validator", idx)
 	}
 
+	// Connect validators using actual P2P addresses read back in startInProcess.
+	if cfg.NumValidators > 1 {
+		for i, v := range network.Validators {
+			var peers []string
+			for j, other := range network.Validators {
+				if i == j || other.tmNode == nil {
+					continue
+				}
+				listenAddr := strings.TrimPrefix(other.P2PAddress, "tcp://")
+				peers = append(peers, fmt.Sprintf("%s@%s", other.NodeID, listenAddr))
+			}
+			if len(peers) > 0 {
+				_ = v.tmNode.Switch().AddPersistentPeers(peers)
+				_ = v.tmNode.Switch().DialPeersAsync(peers)
+			}
+		}
+	}
+
 	height, err := network.LatestHeight()
 	if err != nil {
 		return nil, err
@@ -671,7 +632,6 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 	// defer in a test would not be called.
 	trapSignal(network.Cleanup)
 
-	networkOK = true
 	return network, nil
 }
 
@@ -832,7 +792,6 @@ func (n *Network) Cleanup() {
 		if v == nil {
 			continue
 		}
-
 		if v.cancelFn != nil {
 			// cancel the validator's context which will signal to the gRPC and API
 			// goroutines that they should gracefully exit.
@@ -842,12 +801,6 @@ func (n *Network) Cleanup() {
 		if v.errGroup != nil {
 			if err := v.errGroup.Wait(); err != nil {
 				n.Logger.Log("unexpected error waiting for validator gRPC and API processes to exit", "err", err)
-			}
-		}
-
-		for _, lis := range []net.Listener{v.grpcListener, v.apiListener, v.rpcListener, v.p2pListener} {
-			if lis != nil {
-				lis.Close()
 			}
 		}
 

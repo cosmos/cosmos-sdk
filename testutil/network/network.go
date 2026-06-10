@@ -387,6 +387,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 					return nil, err
 				}
 				apiAddr = fmt.Sprintf("http://%s:%s", apiURL.Hostname(), apiURL.Port())
+			} else {
+				appCfg.API.Address = ""
 			}
 
 			if cfg.RPCAddress != "" {
@@ -397,6 +399,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 			if cfg.GRPCAddress != "" {
 				appCfg.GRPC.Address = cfg.GRPCAddress
+			} else {
+				appCfg.GRPC.Address = ""
 			}
 
 			appCfg.GRPC.Enable = true

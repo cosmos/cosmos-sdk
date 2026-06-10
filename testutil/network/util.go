@@ -112,7 +112,6 @@ func startInProcess(cfg Config, val *Validator) error {
 	if grpcCfg.Enable {
 		grpcLogger := logger.With(log.ModuleKey, "grpc-server")
 
-		// Bind an ephemeral port; update the address fields; serve on the same fd.
 		var grpcLis net.Listener
 		if val.AppConfig.GRPC.Address == "" {
 			grpcLis, err = net.Listen("tcp", "127.0.0.1:0")

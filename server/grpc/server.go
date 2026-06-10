@@ -147,15 +147,6 @@ func StartGRPCServer(ctx context.Context, logger log.Logger, cfg config.GRPCConf
 	return startGRPCServer(ctx, logger, grpcSrv, listener)
 }
 
-// StartGRPCServerWithListener starts the provided gRPC server using an
-// already-bound listener.
-func StartGRPCServerWithListener(ctx context.Context, logger log.Logger, grpcSrv *grpc.Server, listener net.Listener) error {
-	if listener == nil {
-		return fmt.Errorf("StartGRPCServerWithListener: listener must not be nil")
-	}
-	return startGRPCServer(ctx, logger, grpcSrv, listener)
-}
-
 func startGRPCServer(ctx context.Context, logger log.Logger, grpcSrv *grpc.Server, listener net.Listener) error {
 	errCh := make(chan error, 1)
 

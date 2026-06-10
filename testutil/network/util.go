@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/node"
@@ -14,8 +16,12 @@ import (
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/cometbft/cometbft/rpc/client/local"
+	cmtrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	cmttypes "github.com/cometbft/cometbft/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
+	"github.com/gorilla/handlers"
+	"github.com/improbable-eng/grpc-web/go/grpcweb"
+	"golang.org/x/net/netutil"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
@@ -25,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
+	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -57,16 +64,16 @@ func startInProcess(cfg Config, val *Validator) error {
 		return appGenesis.ToGenesisDoc()
 	}
 
-	// CometBFT does not accept pre-bound listeners, so we release these ports
-	// immediately before node.NewNode and let CometBFT re-bind them.
-	for _, lis := range []net.Listener{val.rpcListener, val.p2pListener, val.proxyListener} {
+	// RPC and P2P listeners are held open to eliminate port-reuse races.
+	// CometBFT's node binds these itself during Start, so we release them
+	// immediately before NewNode and accept the narrow TOCTOU window.
+	for _, lis := range []net.Listener{val.rpcListener, val.p2pListener} {
 		if lis != nil {
 			lis.Close()
 		}
 	}
 	val.rpcListener = nil
 	val.p2pListener = nil
-	val.proxyListener = nil
 
 	cmtApp := server.NewCometABCIWrapper(app)
 	tmNode, err := node.NewNode( //resleak:notresource
@@ -120,7 +127,7 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.grpcListener = nil
 		val.errGroup.Go(func() error {
 			if lis != nil {
-				return servergrpc.StartGRPCServerWithListener(ctx, grpcLogger, grpcSrv, lis)
+				return serveGRPCWithListener(ctx, grpcLogger, grpcSrv, lis)
 			}
 			return servergrpc.StartGRPCServer(ctx, grpcLogger, grpcCfg, grpcSrv)
 		})
@@ -131,12 +138,13 @@ func startInProcess(cfg Config, val *Validator) error {
 	if val.APIAddress != "" {
 		apiSrv := api.New(val.ClientCtx, logger.With(log.ModuleKey, "api-server"), val.grpc)
 		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
-		if val.apiListener != nil {
-			apiSrv.SetListener(val.apiListener)
-			val.apiListener = nil
-		}
 
+		lis := val.apiListener
+		val.apiListener = nil
 		val.errGroup.Go(func() error {
+			if lis != nil {
+				return startAPIWithListener(ctx, apiSrv, logger.With(log.ModuleKey, "api-server"), *val.AppConfig, lis)
+			}
 			return apiSrv.Start(ctx, *val.AppConfig)
 		})
 
@@ -256,4 +264,74 @@ func writeFile(name, dir string, contents []byte) error {
 	}
 
 	return nil
+}
+
+// serveGRPCWithListener serves grpcSrv on the pre-bound listener lis.
+// It mirrors the shutdown logic in server/grpc.startGRPCServer without
+// requiring any changes to that package's exported API.
+func serveGRPCWithListener(ctx context.Context, logger log.Logger, grpcSrv *grpc.Server, lis net.Listener) error {
+	errCh := make(chan error, 1)
+	go func() {
+		logger.Info("starting gRPC server...", "address", lis.Addr())
+		errCh <- grpcSrv.Serve(lis)
+	}()
+
+	select {
+	case <-ctx.Done():
+		logger.Info("stopping gRPC server...", "address", lis.Addr())
+		grpcSrv.GracefulStop()
+		return nil
+	case err := <-errCh:
+		return err
+	}
+}
+
+// startAPIWithListener serves an already-configured api.Server on lis,
+// replicating the gRPC-web and gateway setup that api.Server.Start would
+// perform. All listener lifecycle is managed here; api.Server is not mutated.
+func startAPIWithListener(ctx context.Context, srv *api.Server, logger log.Logger, cfg srvconfig.Config, lis net.Listener) error {
+	cmtCfg := cmtrpcserver.DefaultConfig()
+	cmtCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
+	cmtCfg.ReadTimeout = time.Duration(cfg.API.RPCReadTimeout) * time.Second
+	cmtCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
+	cmtCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
+
+	if cmtCfg.MaxOpenConnections > 0 {
+		lis = netutil.LimitListener(lis, cmtCfg.MaxOpenConnections)
+	}
+
+	if cfg.GRPC.Enable && cfg.GRPCWeb.Enable {
+		var options []grpcweb.Option
+		if cfg.API.EnableUnsafeCORS {
+			options = append(options, grpcweb.WithOriginFunc(func(string) bool { return true }))
+		}
+		wrappedGrpc := grpcweb.WrapServer(srv.GRPCSrv, options...)
+		srv.Router.PathPrefix("/").Handler(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			if wrappedGrpc.IsGrpcWebRequest(req) {
+				wrappedGrpc.ServeHTTP(w, req)
+				return
+			}
+			srv.GRPCGatewayRouter.ServeHTTP(w, req)
+		}))
+	}
+	srv.Router.PathPrefix("/").Handler(srv.GRPCGatewayRouter)
+
+	errCh := make(chan error, 1)
+	go func() {
+		logger.Info("starting API server...", "address", lis.Addr())
+		if cfg.API.EnableUnsafeCORS {
+			allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
+			errCh <- cmtrpcserver.Serve(lis, allowAllCORS(srv.Router), servercmtlog.CometLoggerWrapper{Logger: logger}, cmtCfg)
+		} else {
+			errCh <- cmtrpcserver.Serve(lis, srv.Router, servercmtlog.CometLoggerWrapper{Logger: logger}, cmtCfg)
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		logger.Info("stopping API server...", "address", lis.Addr())
+		return lis.Close()
+	case err := <-errCh:
+		return err
+	}
 }

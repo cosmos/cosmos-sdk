@@ -284,11 +284,10 @@ type (
 		errGroup *errgroup.Group
 		cancelFn context.CancelFunc
 
-		grpcListener  net.Listener
-		apiListener   net.Listener
-		rpcListener   net.Listener
-		p2pListener   net.Listener
-		proxyListener net.Listener
+		grpcListener net.Listener
+		apiListener  net.Listener
+		rpcListener  net.Listener
+		p2pListener  net.Listener
 	}
 
 	// ValidatorI expose a validator's context and configuration
@@ -389,13 +388,12 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 		// Declare all listeners upfront so the cleanup defer can reference them.
 		var (
-			grpcListener, apiListener, rpcListener net.Listener
-			proxyListener, p2pListener             net.Listener
-			listenersOK                            bool
+			grpcListener, apiListener, rpcListener, p2pListener net.Listener
+			listenersOK                                         bool
 		)
 		defer func() {
 			if !listenersOK {
-				for _, l := range []net.Listener{grpcListener, apiListener, rpcListener, proxyListener, p2pListener} {
+				for _, l := range []net.Listener{grpcListener, apiListener, rpcListener, p2pListener} {
 					if l != nil {
 						l.Close()
 					}
@@ -479,12 +477,6 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		cmtCfg.SetRoot(nodeDir)
 		cmtCfg.Moniker = nodeDirName
 		monikers[i] = nodeDirName
-
-		proxyListener, err = net.Listen("tcp", "127.0.0.1:0")
-		if err != nil {
-			return nil, fmt.Errorf("failed to bind proxy listener: %w", err)
-		}
-		cmtCfg.ProxyApp = fmt.Sprintf("tcp://127.0.0.1:%d", proxyListener.Addr().(*net.TCPAddr).Port)
 
 		p2pListener, err = net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
@@ -643,11 +635,10 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			APIAddress:    apiAddr,
 			Address:       addr,
 			ValAddress:    sdk.ValAddress(addr),
-			grpcListener:  grpcListener,
-			apiListener:   apiListener,
-			rpcListener:   rpcListener,
-			p2pListener:   p2pListener,
-			proxyListener: proxyListener,
+			grpcListener: grpcListener,
+			apiListener:  apiListener,
+			rpcListener:  rpcListener,
+			p2pListener:  p2pListener,
 		}
 		listenersOK = true
 	}
@@ -854,7 +845,7 @@ func (n *Network) Cleanup() {
 			}
 		}
 
-		for _, lis := range []net.Listener{v.grpcListener, v.apiListener, v.rpcListener, v.p2pListener, v.proxyListener} {
+		for _, lis := range []net.Listener{v.grpcListener, v.apiListener, v.rpcListener, v.p2pListener} {
 			if lis != nil {
 				lis.Close()
 			}

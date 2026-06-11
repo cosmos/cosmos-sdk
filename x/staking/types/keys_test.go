@@ -346,3 +346,61 @@ func TestGetHistoricalInfoKey(t *testing.T) {
 		})
 	}
 }
+
+func TestRotationLockedConsAddrIndexValueRoundTrip(t *testing.T) {
+	valAddr := sdk.ValAddress(keysAddr1)
+	kinds := []types.ConsAddrLockType{
+		types.ConsAddrLockRotatedFrom,
+		types.ConsAddrLockPendingTo,
+		types.ConsAddrLockPendingFrom,
+	}
+	for _, kind := range kinds {
+		t.Run(strconv.Itoa(int(kind)), func(t *testing.T) {
+			bz := types.RotationLockedConsAddrIndexValue(kind, valAddr)
+
+			gotKind, gotValAddr, err := types.ParseRotationLockedConsAddrIndexValue(bz)
+			require.NoError(t, err)
+			require.Equal(t, kind, gotKind)
+			require.Equal(t, valAddr, gotValAddr)
+		})
+	}
+}
+
+func TestParseRotationLockedConsAddrIndexValue_Errors(t *testing.T) {
+	valAddr := sdk.ValAddress(keysAddr1)
+	tests := []struct {
+		name           string
+		buildValue     func() []byte
+		expErrContains string
+	}{
+		{
+			name:           "too short",
+			buildValue:     func() []byte { return []byte{byte(types.ConsAddrLockRotatedFrom)} },
+			expErrContains: "invalid rotation-locked consensus address value length",
+		},
+		{
+			name: "unknown kind",
+			buildValue: func() []byte {
+				bz := types.RotationLockedConsAddrIndexValue(types.ConsAddrLockRotatedFrom, valAddr)
+				bz[0] = 0xff
+				return bz
+			},
+			expErrContains: "invalid rotation-locked consensus address kind",
+		},
+		{
+			name: "length mismatch",
+			buildValue: func() []byte {
+				bz := types.RotationLockedConsAddrIndexValue(types.ConsAddrLockRotatedFrom, valAddr)
+				return bz[:len(bz)-1]
+			},
+			expErrContains: "invalid rotation-locked consensus address value length: expected",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, _, err := types.ParseRotationLockedConsAddrIndexValue(tt.buildValue())
+			require.Error(t, err)
+			require.Contains(t, err.Error(), tt.expErrContains)
+		})
+	}
+}

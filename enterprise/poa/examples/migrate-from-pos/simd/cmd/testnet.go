@@ -36,7 +36,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/enterprise/poa/examples/migrate-from-pos"
+	simapp "github.com/cosmos/cosmos-sdk/enterprise/poa/examples/migrate-from-pos"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"

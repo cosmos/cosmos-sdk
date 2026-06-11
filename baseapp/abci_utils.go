@@ -267,9 +267,10 @@ func (h *DefaultProposalHandler) SetSignerExtractionAdapter(signerExtAdapter mem
 // is used in both steps, and applications must ensure that this is the case in
 // non-default handlers.
 //
-// - If no mempool is set or if the mempool is a no-op mempool, the transactions
-// requested from CometBFT will simply be returned, which, by default, are in
-// FIFO order.
+// - If no mempool is set or if the mempool is a no-op mempool, and MaxGas is
+// not enforced, transactions requested from CometBFT are returned as-is (FIFO
+// by default). If MaxGas is enforced, transactions are decoded and selected to
+// enforce gas/size limits.
 func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 		var maxBlockGas uint64
@@ -279,12 +280,16 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 
 		defer h.txSelector.Clear()
 
-		// If the mempool is nil or NoOp we simply return the transactions
-		// requested from CometBFT, which, by default, should be in FIFO order.
-		//
-		// Note, we still need to ensure the transactions returned respect req.MaxTxBytes.
+		// If the mempool is nil or NoOp we return the transactions requested
+		// from CometBFT (FIFO by default). CometBFT already enforces
+		// req.MaxTxBytes upstream; we only walk the tx list when MaxGas is
+		// enforced, since gas accounting is application-level.
 		_, isNoOp := h.mempool.(mempool.NoOpMempool)
 		if h.mempool == nil || isNoOp {
+			if maxBlockGas == 0 {
+				return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
+			}
+
 			for _, txBz := range req.Txs {
 				tx, err := h.txVerifier.TxDecode(txBz)
 				if err != nil {
@@ -526,7 +531,7 @@ func (ts *defaultTxSelector) SelectedTxs(_ context.Context) [][]byte {
 func (ts *defaultTxSelector) Clear() {
 	ts.totalTxBytes = 0
 	ts.totalTxGas = 0
-	ts.selectedTxs = nil
+	ts.selectedTxs = ts.selectedTxs[:0] // keep the allocated memory
 }
 
 func (ts *defaultTxSelector) SelectTxForProposal(_ context.Context, maxTxBytes, maxBlockGas uint64, memTx sdk.Tx, txBz []byte, gasWanted uint64) bool {

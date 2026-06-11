@@ -73,6 +73,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth/tx) [#26422](https://github.com/cosmos/cosmos-sdk/pull/26422) Reuse the signing context from the codec's `InterfaceRegistry` when `ConfigOptions.SigningOptions` is unset so that `CustomGetSigners` registered via `NewInterfaceRegistryWithOptions` are honored by `NewTxConfig` / `NewTxConfigWithOptions`.
 * (x/staking) [#26460](https://github.com/cosmos/cosmos-sdk/pull/26460) Coalesce key rotation power updates to not emit duplicates.
 * (blockstm) [#25893](https://github.com/cosmos/cosmos-sdk/pull/25893) Fix CancelAll cancellation by clearing blocker ESTIMATE marks before waking suspended executors.
+* (baseapp) [#26521](https://github.com/cosmos/cosmos-sdk/issues/26521) Insert into the mempool before committing the AnteHandler state in `CheckTx`, so a failed `mempool.Insert` (e.g. pool at capacity) no longer advances the sender's nonce in `checkState` for a tx that never entered the pool.
 
 ### Deprecated
 

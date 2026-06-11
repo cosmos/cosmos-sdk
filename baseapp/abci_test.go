@@ -1599,6 +1599,47 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 }
 
+// Verifies a tx that passes the AnteHandler but fails mempool Insert (pool full)
+// does not commit the nonce bump to checkState, which would block resubmission
+// until the next Commit. Ref #26521.
+func TestABCI_CheckTx_MempoolInsertFailure_NoNonceAdvance(t *testing.T) {
+	anteKey := []byte("ante-key")
+	// capacity of 1: the second CheckTx's Insert fails with ErrMempoolTxMaxCapacity.
+	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(1))
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{ConsensusParams: &cmtproto.ConsensusParams{}})
+	require.NoError(t, err)
+
+	check := func(counter int64) *abci.ResponseCheckTx {
+		tx := newTxCounter(t, suite.txConfig, counter, counter)
+		txBytes, encErr := suite.txConfig.TxEncoder()(tx)
+		require.NoError(t, encErr)
+		resp, checkErr := suite.baseApp.CheckTx(&abci.RequestCheckTx{Tx: txBytes, Type: abci.CheckTxType_New})
+		require.NoError(t, checkErr)
+		return resp
+	}
+
+	// First tx passes and fills the pool; checkState counter advances to 1.
+	require.True(t, check(0).IsOK())
+	ctx := getCheckStateCtx(suite.baseApp)
+	require.Equal(t, int64(1), getIntFromStore(t, ctx.KVStore(capKey1), anteKey))
+
+	// Second tx passes the ante but Insert fails; counter must stay at 1.
+	resp := check(1)
+	require.False(t, resp.IsOK())
+	require.Contains(t, resp.Log, mempool.ErrMempoolTxMaxCapacity.Error())
+
+	ctx = getCheckStateCtx(suite.baseApp)
+	require.Equal(t, int64(1), getIntFromStore(t, ctx.KVStore(capKey1), anteKey),
+		"failed mempool insert must not advance the sender nonce in checkState")
+}
+
 func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 	someKey := []byte("some-key")
 

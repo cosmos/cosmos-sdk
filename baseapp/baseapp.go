@@ -857,11 +857,13 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		}
 	}
 
+	// AnteHandler state branch. For CheckTx it is committed only after a successful
+	// mempool insert, so a failed insert can't leave the sender's nonce advanced in
+	// checkState for a tx that never entered the pool. Ref #26521.
+	var msCache storetypes.CacheMultiStore
+
 	if app.anteHandler != nil {
-		var (
-			anteCtx sdk.Context
-			msCache storetypes.CacheMultiStore
-		)
+		var anteCtx sdk.Context
 
 		// Branch context before AnteHandler call in case it aborts.
 		// This is required for both CheckTx and DeliverTx.
@@ -910,15 +912,25 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 			return gInfo, nil, nil, err
 		}
 
-		msCache.Write()
 		anteEvents = events.ToABCIEvents()
+
+		// CheckTx commits the ante state only after a successful insert.
+		if mode != execModeCheck {
+			msCache.Write()
+		}
 	}
 
 	switch mode {
 	case execModeCheck:
+		// Insert before committing ante state: a failed insert (e.g. mempool full)
+		// must not leave the sender's nonce advanced in checkState. Safe because the
+		// mempool derives the nonce from the tx signature, not the written state.
 		err = app.mempool.Insert(ctx, tx, mempool.InsertOption{GasWanted: gasWanted})
 		if err != nil {
 			return gInfo, nil, anteEvents, err
+		}
+		if msCache != nil {
+			msCache.Write()
 		}
 	case execModeFinalize:
 		reason := mempool.RemoveReason{Caller: mempool.CallerRunTxFinalize}

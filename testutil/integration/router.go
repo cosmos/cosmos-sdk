@@ -36,6 +36,8 @@ type App struct {
 	logger        log.Logger
 	moduleManager module.Manager
 	queryHelper   *baseapp.QueryServiceTestHelper
+
+	forwardFinalizeBlockHeader bool
 }
 
 // NewIntegrationApp creates an application for testing purposes. This application
@@ -69,16 +71,25 @@ func NewIntegrationApp(
 		return &cmtabcitypes.ResponseInitChain{}, nil
 	})
 
+	integrationApp := &App{}
+
 	// the integration helper keeps module state on the externally provided
 	// sdkCtx (cms), but FinalizeBlock passes a ctx whose header reflects the
-	// current block. forward only the block time so begin and end blockers
-	// can act on time-dependent state (e.g. matured queues) while still
-	// operating on the shared store and the captured initial block height.
+	// current block. by default, forward only block time to preserve existing
+	// integration test behavior; tests that need height aware blockers can opt
+	// into full header forwarding on the returned app
+	blockerCtx := func(ctx sdk.Context) sdk.Context {
+		if integrationApp.forwardFinalizeBlockHeader {
+			return sdkCtx.WithBlockHeader(ctx.BlockHeader())
+		}
+
+		return sdkCtx.WithBlockTime(ctx.BlockTime())
+	}
 	bApp.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
-		return moduleManager.BeginBlock(sdkCtx.WithBlockTime(ctx.BlockTime()))
+		return moduleManager.BeginBlock(blockerCtx(ctx))
 	})
 	bApp.SetEndBlocker(func(ctx sdk.Context) (sdk.EndBlock, error) {
-		return moduleManager.EndBlock(sdkCtx.WithBlockTime(ctx.BlockTime()))
+		return moduleManager.EndBlock(blockerCtx(ctx))
 	})
 
 	router := baseapp.NewMsgServiceRouter()
@@ -114,13 +125,19 @@ func NewIntegrationApp(
 
 	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
 
-	return &App{
-		BaseApp:       bApp,
-		logger:        logger,
-		ctx:           ctx,
-		moduleManager: *moduleManager,
-		queryHelper:   baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry),
-	}
+	integrationApp.BaseApp = bApp
+	integrationApp.logger = logger
+	integrationApp.ctx = ctx
+	integrationApp.moduleManager = *moduleManager
+	integrationApp.queryHelper = baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
+
+	return integrationApp
+}
+
+// SetFinalizeBlockHeaderForwarding makes begin and end blockers receive the
+// full header from FinalizeBlock instead of only the block time
+func (app *App) SetFinalizeBlockHeaderForwarding(enabled bool) {
+	app.forwardFinalizeBlockHeader = enabled
 }
 
 // RunMsg provides the ability to run a message and return the response.

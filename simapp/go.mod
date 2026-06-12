@@ -336,6 +336,7 @@ require (
 
 // long-lived replaces
 replace (
+	cosmossdk.io/api => ../api
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 

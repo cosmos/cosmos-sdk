@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/math"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -19,13 +18,13 @@ type (
 	StakingKeeper interface {
 		ConsensusAddressCodec() address.Codec
 		ValidatorByConsAddr(context.Context, sdk.ConsAddress) (stakingtypes.ValidatorI, error)
+		ValidatorByHistoricalConsAddr(context.Context, sdk.ConsAddress) (stakingtypes.Validator, error)
 		GetParams(ctx context.Context) (params stakingtypes.Params, err error)
 	}
 
 	// SlashingKeeper defines the slashing module interface contract needed by the
 	// evidence module.
 	SlashingKeeper interface {
-		GetPubkey(context.Context, cryptotypes.Address) (cryptotypes.PubKey, error)
 		IsTombstoned(context.Context, sdk.ConsAddress) bool
 		HasValidatorSigningInfo(context.Context, sdk.ConsAddress) bool
 		Tombstone(context.Context, sdk.ConsAddress) error

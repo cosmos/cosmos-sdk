@@ -62,8 +62,21 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", pk)
 	}
 
-	if _, err := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); err == nil {
+	consAddr := sdk.GetConsAddress(pk)
+	locked, err := k.IsConsAddrLockedByRotation(ctx, consAddr)
+	if err != nil {
+		return nil, err
+	}
+	if locked {
+		return nil, types.ErrConsensusPubKeyInRotationHistory
+	}
+
+	_, err = k.GetValidatorByConsAddr(ctx, consAddr)
+	if err == nil {
 		return nil, types.ErrValidatorPubKeyExists
+	}
+	if !errors.Is(err, types.ErrNoValidatorFound) {
+		return nil, err
 	}
 
 	bondDenom, err := k.BondDenom(ctx)
@@ -678,7 +691,11 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	// module account before burning. The pool is a burner module account so
 	// the fee is fully removed from supply and never mingles with bonded or
 	// unbonded staking balances.
-	feeCoins := sdk.NewCoins(types.DefaultKeyRotationFee)
+	keyRotationFee, err := k.KeyRotationFee(ctx)
+	if err != nil {
+		return nil, err
+	}
+	feeCoins := sdk.NewCoins(keyRotationFee)
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), types.KeyRotationFeePoolName, feeCoins); err != nil {
 		return nil, err
 	}

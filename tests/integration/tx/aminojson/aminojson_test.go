@@ -573,6 +573,10 @@ func TestDecimalMutation(t *testing.T) {
 }
 
 func postFixPulsarMessage(msg proto.Message) {
+	if m, ok := msg.(*stakingapi.MsgUpdateParams); ok && m.Params != nil && m.Params.KeyRotationFee == nil {
+		m.Params.KeyRotationFee = &v1beta1.Coin{}
+	}
+
 	if m, ok := msg.(*authapi.ModuleAccount); ok {
 		if m.BaseAccount == nil {
 			m.BaseAccount = &authapi.BaseAccount{}

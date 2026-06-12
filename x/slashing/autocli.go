@@ -3,17 +3,17 @@ package slashing
 import (
 	"fmt"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	slashingv1beta "cosmossdk.io/api/cosmos/slashing/v1beta1"
+	autocli "cosmossdk.io/core/autocli"
 
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
-	return &autocliv1.ModuleOptions{
-		Query: &autocliv1.ServiceCommandDescriptor{
+func (am AppModule) AutoCLIOptions() *autocli.ModuleOptions {
+	return &autocli.ModuleOptions{
+		Query: &autocli.ServiceCommandDescriptor{
 			Service: slashingv1beta.Query_ServiceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			RpcCommandOptions: []*autocli.RpcCommandOptions{
 				{
 					RpcMethod: "Params",
 					Use:       "params",
@@ -25,7 +25,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:     "Query a validator's signing information",
 					Long:      "Query a validator's signing information, with a pubkey ('<appd> comet show-validator') or a validator consensus address",
 					Example:   fmt.Sprintf(`%s query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"OauFcTKbN5Lx3fJL689cikXBqe+hcp6Y+x0rYUdR9Jk="}'`, version.AppName),
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "cons_address"},
 					},
 				},
@@ -36,9 +36,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 			},
 		},
-		Tx: &autocliv1.ServiceCommandDescriptor{
+		Tx: &autocli.ServiceCommandDescriptor{
 			Service: slashingv1beta.Msg_ServiceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			RpcCommandOptions: []*autocli.RpcCommandOptions{
 				{
 					RpcMethod: "Unjail",
 					Use:       "unjail",
@@ -51,7 +51,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Submit a proposal to update slashing module params. Note: the entire params must be provided.",
 					Long:           fmt.Sprintf("Submit a proposal to update slashing module params. Note: the entire params must be provided.\n See the fields to fill in by running `%s query slashing params --output json`", version.AppName),
 					Example:        fmt.Sprintf(`%s tx slashing update-params-proposal '{ "signed_blocks_window": "100", ... }'`, version.AppName),
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
+					PositionalArgs: []*autocli.PositionalArgDescriptor{{ProtoField: "params"}},
 					GovProposal:    true,
 				},
 			},

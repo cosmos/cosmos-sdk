@@ -2,24 +2,25 @@ package runtime
 
 import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"cosmossdk.io/core/autocli"
+
+	reflectionpkg "github.com/cosmos/cosmos-sdk/runtime/services/reflection"
 )
 
-func (m appModule) AutoCLIOptions() *autocliv1.ModuleOptions {
-	return &autocliv1.ModuleOptions{
-		Query: &autocliv1.ServiceCommandDescriptor{
+func (m appModule) AutoCLIOptions() *autocli.ModuleOptions {
+	return &autocli.ModuleOptions{
+		Query: &autocli.ServiceCommandDescriptor{
 			Service: appv1alpha1.Query_ServiceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			RpcCommandOptions: []*autocli.RpcCommandOptions{
 				{
 					RpcMethod: "Config",
 					Short:     "Query the current app config",
 				},
 			},
-			SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
+			SubCommands: map[string]*autocli.ServiceCommandDescriptor{
 				"autocli": {
-					Service: autocliv1.Query_ServiceDesc.ServiceName,
-					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+					Service: "cosmos.autocli.v1.Query",
+					RpcCommandOptions: []*autocli.RpcCommandOptions{
 						{
 							RpcMethod: "AppOptions",
 							Short:     "Query the custom autocli options",
@@ -27,8 +28,8 @@ func (m appModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 				},
 				"reflection": {
-					Service: reflectionv1.ReflectionService_ServiceDesc.ServiceName,
-					RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+					Service: reflectionpkg.ServiceName,
+					RpcCommandOptions: []*autocli.RpcCommandOptions{
 						{
 							RpcMethod: "FileDescriptors",
 							Short:     "Query the app's protobuf file descriptors",

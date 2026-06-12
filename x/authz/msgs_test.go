@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -129,13 +128,13 @@ func TestAminoJSON(t *testing.T) {
 					Sequence:      1,
 				},
 				txsigning.TxData{
-					Body: &txv1beta1.TxBody{
+					Body: &txsigning.TxBodyData{
+						Messages:      []txsigning.RawMsg{{TypeUrl: anyMsg.TypeUrl, Value: anyMsg.Value}},
 						Memo:          "memo",
-						Messages:      []*anypb.Any{anyMsg},
 						TimeoutHeight: 1,
 					},
-					AuthInfo: &txv1beta1.AuthInfo{
-						Fee: &txv1beta1.Fee{},
+					AuthInfo: &txsigning.TxAuthInfoData{
+						Fee: txsigning.TxFeeData{},
 					},
 				},
 			)

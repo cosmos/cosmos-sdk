@@ -8,12 +8,12 @@ import (
 	protobuf "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	cosmosmsg "github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 // Configurator provides the hooks to allow modules to configure and register
@@ -66,7 +66,7 @@ func (c *configurator) RegisterService(sd *googlegrpc.ServiceDesc, ss any) {
 		return
 	}
 
-	if protobuf.HasExtension(desc.Options(), cosmosmsg.E_Service) {
+	if protobuf.HasExtension(desc.Options(), cosmosmsg.E_ServiceV2) {
 		c.msgServer.RegisterService(sd, ss)
 	} else {
 		c.queryServer.RegisterService(sd, ss)

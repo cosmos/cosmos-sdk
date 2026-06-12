@@ -13,10 +13,10 @@ import (
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/client/v2/internal/testpbgogo"
 	testpb "cosmossdk.io/client/v2/internal/testpbpulsar"
+	autoclicore "cosmossdk.io/core/autocli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 )
@@ -28,7 +28,7 @@ var buildModuleMsgCommand = func(moduleName string, f *fixture) (*cobra.Command,
 	return cmd, err
 }
 
-func buildCustomModuleMsgCommand(cmdDescriptor *autocliv1.ServiceCommandDescriptor) func(moduleName string, f *fixture) (*cobra.Command, error) {
+func buildCustomModuleMsgCommand(cmdDescriptor *autoclicore.ServiceCommandDescriptor) func(moduleName string, f *fixture) (*cobra.Command, error) {
 	return func(moduleName string, f *fixture) (*cobra.Command, error) {
 		ctx := context.WithValue(context.Background(), client.ClientContextKey, &f.clientCtx)
 		cmd := topLevelCmd(ctx, moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
@@ -37,14 +37,14 @@ func buildCustomModuleMsgCommand(cmdDescriptor *autocliv1.ServiceCommandDescript
 	}
 }
 
-var bankAutoCLI = &autocliv1.ServiceCommandDescriptor{
+var bankAutoCLI = &autoclicore.ServiceCommandDescriptor{
 	Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
-	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+	RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 		{
 			RpcMethod:      "Send",
 			Use:            "send [from_key_or_address] [to_address] [amount] [flags]",
 			Short:          "Send coins from one account to another",
-			PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "to_address"}, {ProtoField: "amount"}},
+			PositionalArgs: []*autoclicore.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "to_address"}, {ProtoField: "amount"}},
 		},
 	},
 	EnhanceCustomCommand: true,
@@ -61,14 +61,14 @@ func TestMsg(t *testing.T) {
 	assert.NilError(t, err)
 	golden.Assert(t, out.String(), "msg-output.golden")
 
-	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
+	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autoclicore.ServiceCommandDescriptor{
 		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
-		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 			{
 				RpcMethod:      "Send",
 				Use:            "send [from_key_or_address] [to_address] [amount] [flags]",
 				Short:          "Send coins from one account to another",
-				PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "to_address"}, {ProtoField: "amount"}},
+				PositionalArgs: []*autoclicore.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "to_address"}, {ProtoField: "amount"}},
 			},
 		},
 		EnhanceCustomCommand: true,
@@ -80,14 +80,14 @@ func TestMsg(t *testing.T) {
 	assert.NilError(t, err)
 	golden.Assert(t, out.String(), "msg-output.golden")
 
-	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
+	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autoclicore.ServiceCommandDescriptor{
 		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
-		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 			{
 				RpcMethod:      "Send",
 				Use:            "send [from_key_or_address] [to_address] [amount] [flags]",
 				Short:          "Send coins from one account to another",
-				PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "to_address"}, {ProtoField: "amount"}},
+				PositionalArgs: []*autoclicore.PositionalArgDescriptor{{ProtoField: "to_address"}, {ProtoField: "amount"}},
 				// from_address should be automatically added
 			},
 		},
@@ -101,15 +101,15 @@ func TestMsg(t *testing.T) {
 	assert.NilError(t, err)
 	golden.Assert(t, out.String(), "msg-output.golden")
 
-	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
+	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autoclicore.ServiceCommandDescriptor{
 		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
-		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 			{
 				RpcMethod:      "Send",
 				Use:            "send [from_key_or_address] [to_address] [amount] [flags]",
 				Short:          "Send coins from one account to another",
-				PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "to_address"}, {ProtoField: "amount"}},
-				FlagOptions: map[string]*autocliv1.FlagOptions{
+				PositionalArgs: []*autoclicore.PositionalArgDescriptor{{ProtoField: "to_address"}, {ProtoField: "amount"}},
+				FlagOptions: map[string]*autoclicore.FlagOptions{
 					"from_address": {Name: "sender"}, // use a custom flag for signer
 				},
 			},
@@ -129,14 +129,14 @@ func TestMsg(t *testing.T) {
 // There are no protov2 files registered in the global registry for those types.
 func TestMsgGogo(t *testing.T) {
 	fixture := initFixture(t)
-	out, err := runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
+	out, err := runCmd(fixture, buildCustomModuleMsgCommand(&autoclicore.ServiceCommandDescriptor{
 		Service: testpbgogo.MsgGogoOnly_serviceDesc.ServiceName, // using gogoproto only test msg
-		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 			{
 				RpcMethod:      "Send",
 				Use:            "send [a_coin] [str] [flags]",
 				Short:          "Send coins from one account to another",
-				PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "a_coin"}, {ProtoField: "str"}},
+				PositionalArgs: []*autoclicore.PositionalArgDescriptor{{ProtoField: "a_coin"}, {ProtoField: "str"}},
 				// an_address should be automatically added
 			},
 		},
@@ -153,12 +153,12 @@ func TestMsgGogo(t *testing.T) {
 func TestMsgWithFlattenFields(t *testing.T) {
 	fixture := initFixture(t)
 
-	out, err := runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
+	out, err := runCmd(fixture, buildCustomModuleMsgCommand(&autoclicore.ServiceCommandDescriptor{
 		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
-		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 			{
 				RpcMethod: "UpdateParams",
-				PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+				PositionalArgs: []*autoclicore.PositionalArgDescriptor{
 					{ProtoField: "authority"},
 					{ProtoField: "params.send_enabled.denom"},
 					{ProtoField: "params.send_enabled.enabled"},
@@ -233,11 +233,11 @@ func TestBuildCustomMsgCommand(t *testing.T) {
 	b := &Builder{}
 	customCommandCalled := false
 	appOptions := AppOptions{
-		ModuleOptions: map[string]*autocliv1.ModuleOptions{
+		ModuleOptions: map[string]*autoclicore.ModuleOptions{
 			"test": {
-				Tx: &autocliv1.ServiceCommandDescriptor{
+				Tx: &autoclicore.ServiceCommandDescriptor{
 					Service:           testpb.Msg_ServiceDesc.ServiceName,
-					RpcCommandOptions: []*autocliv1.RpcCommandOptions{},
+					RpcCommandOptions: []*autoclicore.RpcCommandOptions{},
 				},
 			},
 		},
@@ -260,7 +260,7 @@ func TestNotFoundErrorsMsg(t *testing.T) {
 	b.AddQueryConnFlags = nil
 	b.AddTxConnFlags = nil
 
-	buildModuleMsgCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
+	buildModuleMsgCommand := func(moduleName string, cmdDescriptor *autoclicore.ServiceCommandDescriptor) (*cobra.Command, error) {
 		cmd := topLevelCmd(context.Background(), moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
 
 		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
@@ -268,21 +268,21 @@ func TestNotFoundErrorsMsg(t *testing.T) {
 	}
 
 	// Query non existent service
-	_, err := buildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{Service: "un-existent-service"})
+	_, err := buildModuleMsgCommand("test", &autoclicore.ServiceCommandDescriptor{Service: "un-existent-service"})
 	assert.ErrorContains(t, err, "can't find service un-existent-service")
 
-	_, err = buildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = buildModuleMsgCommand("test", &autoclicore.ServiceCommandDescriptor{
 		Service:           testpb.Query_ServiceDesc.ServiceName,
-		RpcCommandOptions: []*autocliv1.RpcCommandOptions{{RpcMethod: "un-existent-method"}},
+		RpcCommandOptions: []*autoclicore.RpcCommandOptions{{RpcMethod: "un-existent-method"}},
 	})
 	assert.ErrorContains(t, err, "rpc method \"un-existent-method\" not found")
 
-	_, err = buildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = buildModuleMsgCommand("test", &autoclicore.ServiceCommandDescriptor{
 		Service: testpb.Msg_ServiceDesc.ServiceName,
-		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 			{
 				RpcMethod: "Send",
-				PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+				PositionalArgs: []*autoclicore.PositionalArgDescriptor{
 					{
 						ProtoField: "un-existent-proto-field",
 					},
@@ -292,12 +292,12 @@ func TestNotFoundErrorsMsg(t *testing.T) {
 	})
 	assert.ErrorContains(t, err, "can't find field un-existent-proto-field")
 
-	_, err = buildModuleMsgCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = buildModuleMsgCommand("test", &autoclicore.ServiceCommandDescriptor{
 		Service: testpb.Msg_ServiceDesc.ServiceName,
-		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 			{
 				RpcMethod: "Send",
-				FlagOptions: map[string]*autocliv1.FlagOptions{
+				FlagOptions: map[string]*autoclicore.FlagOptions{
 					"un-existent-flag": {},
 				},
 			},

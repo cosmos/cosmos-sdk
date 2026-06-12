@@ -8,8 +8,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	msg "cosmossdk.io/api/cosmos/msg/v1"
-
 	"github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
@@ -48,7 +46,7 @@ func ValidateProtoAnnotations(protoFiles signing.ProtoFileResolver) error {
 // validateMsgServiceAnnotations validates that the service has the
 // `(cosmos.msg.v1.service) = true` proto annotation.
 func validateMsgServiceAnnotations(sd protoreflect.ServiceDescriptor) error {
-	ext := proto.GetExtension(sd.Options(), msg.E_Service)
+	ext := proto.GetExtension(sd.Options(), E_ServiceV2)
 	isService, ok := ext.(bool)
 	if !ok {
 		return fmt.Errorf("expected bool, got %T", ext)

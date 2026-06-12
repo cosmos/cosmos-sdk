@@ -15,10 +15,10 @@ import (
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	queryv1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	testpb "cosmossdk.io/client/v2/internal/testpbpulsar"
+	autoclicore "cosmossdk.io/core/autocli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 )
@@ -47,9 +47,9 @@ var buildModuleVargasOptional = func(moduleName string, f *fixture) (*cobra.Comm
 	return cmd, err
 }
 
-var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
+var testCmdDesc = &autoclicore.ServiceCommandDescriptor{
 	Service: testpb.Query_ServiceDesc.ServiceName,
-	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+	RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 		{
 			RpcMethod:  "Echo",
 			Use:        "echo [pos1] [pos2] [pos3...]",
@@ -59,7 +59,7 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 			Example:    "echo 1 abc {}",
 			Short:      "echo echos the value provided by the user",
 			Long:       "echo echos the value provided by the user as a proto JSON object with populated with the provided fields and positional arguments",
-			PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+			PositionalArgs: []*autoclicore.PositionalArgDescriptor{
 				{
 					ProtoField: "positional1",
 				},
@@ -71,7 +71,7 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 					Varargs:    true,
 				},
 			},
-			FlagOptions: map[string]*autocliv1.FlagOptions{
+			FlagOptions: map[string]*autoclicore.FlagOptions{
 				"u32": {
 					Name:      "uint32",
 					Shorthand: "u",
@@ -116,11 +116,11 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 			},
 		},
 	},
-	SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{
+	SubCommands: map[string]*autoclicore.ServiceCommandDescriptor{
 		// we test the sub-command functionality using the same service with different options
 		"deprecatedecho": {
 			Service: testpb.Query_ServiceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 				{
 					RpcMethod:  "Echo",
 					Deprecated: "don't use this",
@@ -129,7 +129,7 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 		},
 		"skipecho": {
 			Service: testpb.Query_ServiceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 				{
 					RpcMethod: "Echo",
 					Skip:      true,
@@ -139,9 +139,9 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 	},
 }
 
-var testCmdDescOptional = &autocliv1.ServiceCommandDescriptor{
+var testCmdDescOptional = &autoclicore.ServiceCommandDescriptor{
 	Service: testpb.Query_ServiceDesc.ServiceName,
-	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+	RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 		{
 			RpcMethod:  "Echo",
 			Use:        "echo [pos1] [pos2] [pos3...]",
@@ -151,7 +151,7 @@ var testCmdDescOptional = &autocliv1.ServiceCommandDescriptor{
 			Example:    "echo 1 abc {}",
 			Short:      "echo echos the value provided by the user",
 			Long:       "echo echos the value provided by the user as a proto JSON object with populated with the provided fields and positional arguments",
-			PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+			PositionalArgs: []*autoclicore.PositionalArgDescriptor{
 				{
 					ProtoField: "positional1",
 				},
@@ -164,9 +164,9 @@ var testCmdDescOptional = &autocliv1.ServiceCommandDescriptor{
 	},
 }
 
-var testCmdDescInvalidOptAndVargas = &autocliv1.ServiceCommandDescriptor{
+var testCmdDescInvalidOptAndVargas = &autoclicore.ServiceCommandDescriptor{
 	Service: testpb.Query_ServiceDesc.ServiceName,
-	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+	RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 		{
 			RpcMethod:  "Echo",
 			Use:        "echo [pos1] [pos2] [pos3...]",
@@ -176,7 +176,7 @@ var testCmdDescInvalidOptAndVargas = &autocliv1.ServiceCommandDescriptor{
 			Example:    "echo 1 abc {}",
 			Short:      "echo echos the value provided by the user",
 			Long:       "echo echos the value provided by the user as a proto JSON object with populated with the provided fields and positional arguments",
-			PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+			PositionalArgs: []*autoclicore.PositionalArgDescriptor{
 				{
 					ProtoField: "positional1",
 				},
@@ -660,7 +660,7 @@ func TestBuildCustomQueryCommand(t *testing.T) {
 	customCommandCalled := false
 
 	appOptions := AppOptions{
-		ModuleOptions: map[string]*autocliv1.ModuleOptions{
+		ModuleOptions: map[string]*autoclicore.ModuleOptions{
 			"test": {
 				Query: testCmdDesc,
 			},
@@ -684,30 +684,30 @@ func TestNotFoundErrorsQuery(t *testing.T) {
 	b.AddQueryConnFlags = nil
 	b.AddTxConnFlags = nil
 
-	buildModuleQueryCommand := func(_ string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
+	buildModuleQueryCommand := func(_ string, cmdDescriptor *autoclicore.ServiceCommandDescriptor) (*cobra.Command, error) {
 		cmd := topLevelCmd(context.Background(), "query", "Querying subcommands")
 		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
 		return cmd, err
 	}
 
 	// bad service
-	_, err := buildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{Service: "foo"})
+	_, err := buildModuleQueryCommand("test", &autoclicore.ServiceCommandDescriptor{Service: "foo"})
 	assert.ErrorContains(t, err, "can't find service foo")
 
 	// bad method
-	_, err = buildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = buildModuleQueryCommand("test", &autoclicore.ServiceCommandDescriptor{
 		Service:           testpb.Query_ServiceDesc.ServiceName,
-		RpcCommandOptions: []*autocliv1.RpcCommandOptions{{RpcMethod: "bar"}},
+		RpcCommandOptions: []*autoclicore.RpcCommandOptions{{RpcMethod: "bar"}},
 	})
 	assert.ErrorContains(t, err, "rpc method \"bar\" not found")
 
 	// bad positional field
-	_, err = buildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = buildModuleQueryCommand("test", &autoclicore.ServiceCommandDescriptor{
 		Service: testpb.Query_ServiceDesc.ServiceName,
-		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 			{
 				RpcMethod: "Echo",
-				PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+				PositionalArgs: []*autoclicore.PositionalArgDescriptor{
 					{
 						ProtoField: "foo",
 					},
@@ -718,12 +718,12 @@ func TestNotFoundErrorsQuery(t *testing.T) {
 	assert.ErrorContains(t, err, "can't find field foo")
 
 	// bad flag field
-	_, err = buildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{
+	_, err = buildModuleQueryCommand("test", &autoclicore.ServiceCommandDescriptor{
 		Service: testpb.Query_ServiceDesc.ServiceName,
-		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+		RpcCommandOptions: []*autoclicore.RpcCommandOptions{
 			{
 				RpcMethod: "Echo",
-				FlagOptions: map[string]*autocliv1.FlagOptions{
+				FlagOptions: map[string]*autoclicore.FlagOptions{
 					"baz": {},
 				},
 			},

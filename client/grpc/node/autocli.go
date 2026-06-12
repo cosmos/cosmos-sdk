@@ -1,13 +1,12 @@
 package node
 
 import (
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	nodev1beta1 "cosmossdk.io/api/cosmos/base/node/v1beta1"
+	autocli "cosmossdk.io/core/autocli"
 )
 
-var ServiceAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
-	Service: nodev1beta1.Service_ServiceDesc.ServiceName,
-	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+var ServiceAutoCLIDescriptor = &autocli.ServiceCommandDescriptor{
+	Service: "cosmos.base.node.v1beta1.Service",
+	RpcCommandOptions: []*autocli.RpcCommandOptions{
 		{
 			RpcMethod: "Config",
 			Use:       "config",
@@ -36,8 +35,8 @@ func (m nodeModule) Name() string {
 	return "node"
 }
 
-func (m nodeModule) AutoCLIOptions() *autocliv1.ModuleOptions {
-	return &autocliv1.ModuleOptions{
+func (m nodeModule) AutoCLIOptions() *autocli.ModuleOptions {
+	return &autocli.ModuleOptions{
 		Query: ServiceAutoCLIDescriptor,
 	}
 }

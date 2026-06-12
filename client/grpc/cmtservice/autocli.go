@@ -1,13 +1,12 @@
 package cmtservice
 
 import (
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	cmtv1beta1 "cosmossdk.io/api/cosmos/base/tendermint/v1beta1"
+	autocli "cosmossdk.io/core/autocli"
 )
 
-var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
-	Service: cmtv1beta1.Service_ServiceDesc.ServiceName,
-	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+var CometBFTAutoCLIDescriptor = &autocli.ServiceCommandDescriptor{
+	Service: "cosmos.base.tendermint.v1beta1.Service",
+	RpcCommandOptions: []*autocli.RpcCommandOptions{
 		{
 			RpcMethod: "GetNodeInfo",
 			Use:       "node-info",
@@ -28,7 +27,7 @@ var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 			Use:            "block-by-height [height]",
 			Short:          "Query for a committed block by height",
 			Long:           "Query for a specific committed block using the CometBFT RPC `block_by_height` method",
-			PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "height"}},
+			PositionalArgs: []*autocli.PositionalArgDescriptor{{ProtoField: "height"}},
 		},
 		{
 			RpcMethod: "GetLatestValidatorSet",
@@ -40,7 +39,7 @@ var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 			RpcMethod:      "GetValidatorSetByHeight",
 			Use:            "validator-set-by-height [height]",
 			Short:          "Query for a validator set by height",
-			PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "height"}},
+			PositionalArgs: []*autocli.PositionalArgDescriptor{{ProtoField: "height"}},
 		},
 		{
 			RpcMethod: "ABCIQuery",
@@ -55,7 +54,7 @@ var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 			RpcMethod:      "GetBlockResults",
 			Use:            "block-results [height]",
 			Short:          "Query for block results by height",
-			PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "height"}},
+			PositionalArgs: []*autocli.PositionalArgDescriptor{{ProtoField: "height"}},
 		},
 	},
 }
@@ -75,8 +74,8 @@ func (m cometModule) Name() string {
 	return "comet"
 }
 
-func (m cometModule) AutoCLIOptions() *autocliv1.ModuleOptions {
-	return &autocliv1.ModuleOptions{
+func (m cometModule) AutoCLIOptions() *autocli.ModuleOptions {
+	return &autocli.ModuleOptions{
 		Query: CometBFTAutoCLIDescriptor,
 	}
 }

@@ -282,3 +282,5 @@ replace (
 )
 
 replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.39.0-rc1.0.20260527154549-606b4197148f
+
+replace cosmossdk.io/core => ../../core

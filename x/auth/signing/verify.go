@@ -4,53 +4,30 @@ import (
 	"context"
 	"fmt"
 
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
-// APISignModesToInternal converts a protobuf SignMode array to a signing.SignMode array.
-func APISignModesToInternal(modes []signingv1beta1.SignMode) ([]signing.SignMode, error) {
+// APISignModesToInternal converts a txsigning.SignMode slice to a signing.SignMode slice.
+// Both types have identical underlying integer values; conversion is a plain cast.
+func APISignModesToInternal(modes []txsigning.SignMode) ([]signing.SignMode, error) {
 	internalModes := make([]signing.SignMode, len(modes))
 	for i, mode := range modes {
-		internalMode, err := APISignModeToInternal(mode)
-		if err != nil {
-			return nil, err
-		}
-		internalModes[i] = internalMode
+		internalModes[i] = signing.SignMode(mode)
 	}
 	return internalModes, nil
 }
 
-// APISignModeToInternal converts a protobuf SignMode to a signing.SignMode.
-func APISignModeToInternal(mode signingv1beta1.SignMode) (signing.SignMode, error) {
-	switch mode {
-	case signingv1beta1.SignMode_SIGN_MODE_DIRECT:
-		return signing.SignMode_SIGN_MODE_DIRECT, nil
-	case signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
-		return signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, nil
-	case signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX:
-		return signing.SignMode_SIGN_MODE_DIRECT_AUX, nil
-	default:
-		return signing.SignMode_SIGN_MODE_UNSPECIFIED, fmt.Errorf("unsupported sign mode %s", mode)
-	}
+// APISignModeToInternal converts a txsigning.SignMode to a signing.SignMode.
+func APISignModeToInternal(mode txsigning.SignMode) (signing.SignMode, error) {
+	return signing.SignMode(mode), nil
 }
 
-// internalSignModeToAPI converts a signing.SignMode to a protobuf SignMode.
-func internalSignModeToAPI(mode signing.SignMode) (signingv1beta1.SignMode, error) {
-	switch mode {
-	case signing.SignMode_SIGN_MODE_DIRECT:
-		return signingv1beta1.SignMode_SIGN_MODE_DIRECT, nil
-	case signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
-		return signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, nil
-	case signing.SignMode_SIGN_MODE_DIRECT_AUX:
-		return signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX, nil
-	default:
-		return signingv1beta1.SignMode_SIGN_MODE_UNSPECIFIED, fmt.Errorf("unsupported sign mode %s", mode)
-	}
+// internalSignModeToAPI converts a signing.SignMode to a txsigning.SignMode.
+func internalSignModeToAPI(mode signing.SignMode) (txsigning.SignMode, error) {
+	return txsigning.SignMode(mode), nil
 }
 
 // VerifySignature verifies a transaction signature contained in SignatureData abstracting over different signing

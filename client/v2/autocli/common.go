@@ -8,9 +8,9 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"sigs.k8s.io/yaml"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
+	autoclicore "cosmossdk.io/core/autocli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 )
@@ -22,10 +22,10 @@ const (
 	msgCmdType
 )
 
-func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions, exec func(cmd *cobra.Command, input protoreflect.Message) error) (*cobra.Command, error) {
+func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescriptor, options *autoclicore.RpcCommandOptions, exec func(cmd *cobra.Command, input protoreflect.Message) error) (*cobra.Command, error) {
 	if options == nil {
 		// use the defaults
-		options = &autocliv1.RpcCommandOptions{}
+		options = &autoclicore.RpcCommandOptions{}
 	}
 
 	short := options.Short
@@ -112,7 +112,7 @@ func (b *Builder) enhanceCommandCommon(
 ) error {
 	moduleOptions := appOptions.ModuleOptions
 	if len(moduleOptions) == 0 {
-		moduleOptions = make(map[string]*autocliv1.ModuleOptions)
+		moduleOptions = make(map[string]*autoclicore.ModuleOptions)
 	}
 	for name, module := range appOptions.Modules {
 		if _, ok := moduleOptions[name]; !ok {
@@ -180,7 +180,7 @@ func (b *Builder) enhanceCommandCommon(
 }
 
 // enhanceQuery enhances the provided query command with the autocli commands for a module.
-func enhanceQuery(builder *Builder, moduleName string, cmd *cobra.Command, modOpts *autocliv1.ModuleOptions) error {
+func enhanceQuery(builder *Builder, moduleName string, cmd *cobra.Command, modOpts *autoclicore.ModuleOptions) error {
 	if queryCmdDesc := modOpts.Query; queryCmdDesc != nil {
 		short := queryCmdDesc.Short
 		if short == "" {
@@ -198,7 +198,7 @@ func enhanceQuery(builder *Builder, moduleName string, cmd *cobra.Command, modOp
 }
 
 // enhanceMsg enhances the provided msg command with the autocli commands for a module.
-func enhanceMsg(builder *Builder, moduleName string, cmd *cobra.Command, modOpts *autocliv1.ModuleOptions) error {
+func enhanceMsg(builder *Builder, moduleName string, cmd *cobra.Command, modOpts *autoclicore.ModuleOptions) error {
 	if txCmdDesc := modOpts.Tx; txCmdDesc != nil {
 		short := txCmdDesc.Short
 		if short == "" {
@@ -216,7 +216,7 @@ func enhanceMsg(builder *Builder, moduleName string, cmd *cobra.Command, modOpts
 }
 
 // enhanceCustomCmd enhances the provided custom query or msg command autocli commands for a module.
-func enhanceCustomCmd(builder *Builder, cmd *cobra.Command, cmdType cmdType, modOpts *autocliv1.ModuleOptions) error {
+func enhanceCustomCmd(builder *Builder, cmd *cobra.Command, cmdType cmdType, modOpts *autoclicore.ModuleOptions) error {
 	switch cmdType {
 	case queryCmdType:
 		if modOpts.Query != nil && modOpts.Query.EnhanceCustomCommand {

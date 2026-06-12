@@ -15,17 +15,17 @@
 package poa
 
 import (
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	autocli "cosmossdk.io/core/autocli"
 
 	poav1 "github.com/cosmos/cosmos-sdk/enterprise/poa/api/cosmos/poa/v1"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
-func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
-	return &autocliv1.ModuleOptions{
-		Query: &autocliv1.ServiceCommandDescriptor{
+func (am AppModule) AutoCLIOptions() *autocli.ModuleOptions {
+	return &autocli.ModuleOptions{
+		Query: &autocli.ServiceCommandDescriptor{
 			Service: poav1.Query_ServiceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			RpcCommandOptions: []*autocli.RpcCommandOptions{
 				{
 					RpcMethod: "Params",
 					Use:       "params",
@@ -35,7 +35,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "Validator",
 					Use:       "validator [address]",
 					Short:     "Query a validator by consensus or operator address",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "address"},
 					},
 				},
@@ -48,7 +48,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "WithdrawableFees",
 					Use:       "withdrawable-fees [operator-address]",
 					Short:     "Query withdrawable fees for a validator operator",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					PositionalArgs: []*autocli.PositionalArgDescriptor{
 						{ProtoField: "operator_address"},
 					},
 				},
@@ -59,7 +59,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 			},
 		},
-		Tx: &autocliv1.ServiceCommandDescriptor{
+		Tx: &autocli.ServiceCommandDescriptor{
 			Service:              poav1.Msg_ServiceDesc.ServiceName,
 			EnhanceCustomCommand: true, // Preserve custom tx commands (CreateValidator has complex pubkey handling)
 		},

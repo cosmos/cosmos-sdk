@@ -5,8 +5,10 @@ import (
 	"fmt"
 
 	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/dynamicpb"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	errorsmod "cosmossdk.io/errors"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -103,7 +105,17 @@ func (msg *KVStoreTx) GetMsgs() []sdk.Msg {
 }
 
 func (msg *KVStoreTx) GetMsgsV2() ([]protov2.Message, error) {
-	return []protov2.Message{&bankv1beta1.MsgSend{FromAddress: msg.address.String()}}, nil // this is a hack for tests
+	// Build a dynamic cosmos.bank.v1beta1.MsgSend without importing the pulsar type.
+	mt, err := protoregistry.GlobalTypes.FindMessageByName("cosmos.bank.v1beta1.MsgSend")
+	if err != nil {
+		return nil, err
+	}
+	dynMsg := dynamicpb.NewMessage(mt.Descriptor())
+	if f := mt.Descriptor().Fields().ByName("from_address"); f != nil {
+		dynMsg.Set(f, dynMsg.NewField(f))
+		dynMsg.Set(f, protoreflect.ValueOfString(msg.address.String()))
+	}
+	return []protov2.Message{dynMsg}, nil
 }
 
 func (msg *KVStoreTx) GetSignBytes() []byte {

@@ -9,8 +9,8 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing/testutil"
 )
 
@@ -20,8 +20,8 @@ func FuzzSignModeGetSignBytes(f *testing.F) {
 	}
 
 	// 1. Create seeds.
-	fee := &txv1beta1.Fee{
-		Amount: []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+	fee := &txsigning.TxFeeData{
+		Amount: []txsigning.TxCoinData{{Denom: "uatom", Amount: "1000"}},
 	}
 	seed := &testutil.HandlerArgumentOptions{
 		ChainID: "test-chain",

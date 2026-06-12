@@ -6,12 +6,13 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-proto/anyutil"
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/known/anypb"
 
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
@@ -24,48 +25,41 @@ type SignModeHandler struct {
 
 // SignModeHandlerOptions are the options for the SignModeHandler.
 type SignModeHandlerOptions struct {
-	// TypeResolver is the protoregistry.MessageTypeResolver to use for resolving protobuf types when unpacking any messages.
-	TypeResolver protoregistry.MessageTypeResolver
-
-	// SignersContext is the signing.Context to use for getting signers.
+	TypeResolver   protoregistry.MessageTypeResolver
 	SignersContext *signing.Context
 }
 
 // NewSignModeHandler returns a new SignModeHandler.
 func NewSignModeHandler(options SignModeHandlerOptions) (SignModeHandler, error) {
 	h := SignModeHandler{}
-
 	if options.SignersContext == nil {
 		return h, errors.New("signers context is required")
 	}
 	h.signersContext = options.SignersContext
-
 	h.fileResolver = h.signersContext.FileResolver()
-
 	if options.TypeResolver == nil {
 		h.typeResolver = protoregistry.GlobalTypes
 	} else {
 		h.typeResolver = options.TypeResolver
 	}
-
 	return h, nil
 }
 
 var _ signing.SignModeHandler = SignModeHandler{}
 
 // Mode implements signing.SignModeHandler.Mode.
-func (h SignModeHandler) Mode() signingv1beta1.SignMode {
-	return signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX
+func (h SignModeHandler) Mode() signing.SignMode {
+	return signing.SignMode_SIGN_MODE_DIRECT_AUX
 }
 
-// getFirstSigner returns the first signer from the first message in the tx. It replicates behavior in
-// https://github.com/cosmos/cosmos-sdk/blob/4a6a1e3cb8de459891cb0495052589673d14ef51/x/auth/tx/builder.go#L142
 func (h SignModeHandler) getFirstSigner(txData signing.TxData) ([]byte, error) {
 	if len(txData.Body.Messages) == 0 {
 		return nil, errors.New("no signer found")
 	}
-
-	msg, err := anyutil.Unpack(txData.Body.Messages[0], h.fileResolver, h.typeResolver)
+	// Convert RawMsg to *anypb.Any for anyutil.Unpack.
+	rawMsg := txData.Body.Messages[0]
+	anyMsg := &anypb.Any{TypeUrl: rawMsg.TypeUrl, Value: rawMsg.Value}
+	msg, err := anyutil.Unpack(anyMsg, h.fileResolver, h.typeResolver)
 	if err != nil {
 		return nil, err
 	}
@@ -86,24 +80,35 @@ func (h SignModeHandler) GetSignBytes(
 		if err != nil {
 			return nil, err
 		}
-		feePayer, err = h.signersContext.AddressCodec().BytesToString(fp)
-		if err != nil {
-			return nil, err
+		var addrErr error
+		feePayer, addrErr = h.signersContext.AddressCodec().BytesToString(fp)
+		if addrErr != nil {
+			return nil, addrErr
 		}
 	}
 	if feePayer == signerData.Address {
 		return nil, fmt.Errorf("fee payer %s cannot sign with %s: unauthorized",
-			feePayer, signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX)
+			feePayer, signing.SignMode_SIGN_MODE_DIRECT_AUX)
 	}
 
-	signDocDirectAux := &txv1beta1.SignDocDirectAux{
+	signDocDirectAux := &txtypes.SignDocDirectAux{
 		BodyBytes:     txData.BodyBytes,
-		PublicKey:     signerData.PubKey,
 		ChainId:       signerData.ChainID,
 		AccountNumber: signerData.AccountNumber,
 		Sequence:      signerData.Sequence,
 	}
 
-	protov2MarshalOpts := proto.MarshalOptions{Deterministic: true}
-	return protov2MarshalOpts.Marshal(signDocDirectAux)
+	// Convert signerData.PubKey (*anypb.Any, protov2) to gogoproto Any for SignDocDirectAux.PublicKey.
+	if signerData.PubKey != nil {
+		signDocDirectAux.PublicKey = &gogotypes.Any{
+			TypeUrl: signerData.PubKey.TypeUrl,
+			Value:   signerData.PubKey.Value,
+		}
+	}
+
+	return gogoproto.Marshal(signDocDirectAux)
 }
+
+// toProtov2Any converts a protov2 Any to a raw byte form for the sign doc.
+// Kept as a reference; actual conversion happens inline above.
+var _ = proto.Marshal // suppress unused import

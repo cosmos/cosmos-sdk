@@ -12,15 +12,16 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson/internal/aminojsonpb"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing/testutil"
 )
 
 func TestAminoJsonSignMode(t *testing.T) {
-	fee := &txv1beta1.Fee{
-		Amount: []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+	fee := &txsigning.TxFeeData{
+		Amount: []txsigning.TxCoinData{{Denom: "uatom", Amount: "1000"}},
 	}
 	handlerOptions := testutil.HandlerArgumentOptions{
 		ChainID: "test-chain",
@@ -84,8 +85,8 @@ func TestAminoJsonSignMode(t *testing.T) {
 }
 
 func TestUnorderedTimeoutCompat(t *testing.T) {
-	fee := &txv1beta1.Fee{
-		Amount: []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+	fee := &txsigning.TxFeeData{
+		Amount: []txsigning.TxCoinData{{Denom: "uatom", Amount: "1000"}},
 	}
 
 	now := time.Now()
@@ -156,8 +157,8 @@ func TestUnorderedTimeoutCompat(t *testing.T) {
 }
 
 func TestUnorderedEmpty(t *testing.T) {
-	fee := &txv1beta1.Fee{
-		Amount: []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+	fee := &txsigning.TxFeeData{
+		Amount: []txsigning.TxCoinData{{Denom: "uatom", Amount: "1000"}},
 	}
 
 	opts := testutil.HandlerArgumentOptions{
@@ -187,8 +188,8 @@ func TestUnorderedEmpty(t *testing.T) {
 }
 
 func TestUnorderedBusiness(t *testing.T) {
-	fee := &txv1beta1.Fee{
-		Amount: []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
+	fee := &txsigning.TxFeeData{
+		Amount: []txsigning.TxCoinData{{Denom: "uatom", Amount: "1000"}},
 	}
 
 	timeout := time.Now().Add(3 * time.Hour)
@@ -270,7 +271,7 @@ func TestNullSliceAsEmptyEncoder(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			fee := &txv1beta1.Fee{
+			fee := &aminojsonpb.AminoSignFee{
 				Amount: tc.amount,
 			}
 
@@ -304,8 +305,8 @@ func TestNullSliceAsEmptyEncoderDirect(t *testing.T) {
 	require.NotNil(t, customEncoder)
 
 	// Create a Fee message with an empty list (Fee uses legacy_coins which uses NullSliceAsEmptyEncoder)
-	fee := &txv1beta1.Fee{
-		Amount: []*basev1beta1.Coin{}, // empty slice
+	fee := &aminojsonpb.AminoSignFee{
+		Amount: []*basev1beta1.Coin{},
 	}
 
 	// Marshal using the encoder

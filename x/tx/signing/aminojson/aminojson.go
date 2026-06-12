@@ -2,15 +2,12 @@ package aminojson
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/known/anypb"
 
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-
-	"github.com/cosmos/cosmos-sdk/x/tx/decode"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson/internal/aminojsonpb"
 )
@@ -46,7 +43,7 @@ func NewSignModeHandler(options SignModeHandlerOptions) *SignModeHandler {
 		h.encoder = NewEncoder(EncoderOptions{
 			FileResolver: options.FileResolver,
 			TypeResolver: options.TypeResolver,
-			EnumAsString: false, // ensure enum as string is disabled
+			EnumAsString: false,
 		})
 	} else {
 		h.encoder = *options.Encoder
@@ -55,20 +52,26 @@ func NewSignModeHandler(options SignModeHandlerOptions) *SignModeHandler {
 }
 
 // Mode implements the Mode method of the SignModeHandler interface.
-func (h SignModeHandler) Mode() signingv1beta1.SignMode {
-	return signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+func (h SignModeHandler) Mode() signing.SignMode {
+	return signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 }
 
 // GetSignBytes implements the GetSignBytes method of the SignModeHandler interface.
 func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
 	body := txData.Body
-	_, err := decode.RejectUnknownFields(
-		txData.BodyBytes, body.ProtoReflect().Descriptor(), false, h.fileResolver)
+
+	// Get TxBody descriptor from the global registry to run unknown field checks.
+	// gogoproto's init() registers all SDK proto types into protoregistry.GlobalTypes.
+	txBodyMT, err := protoregistry.GlobalTypes.FindMessageByName("cosmos.tx.v1beta1.TxBody")
+	if err != nil {
+		return nil, fmt.Errorf("txbody descriptor not in global registry: %w", err)
+	}
+	_, err = signing.RejectUnknownFields(txData.BodyBytes, txBodyMT.Descriptor(), false, h.fileResolver)
 	if err != nil {
 		return nil, err
 	}
 
-	if (len(body.ExtensionOptions) > 0) || (len(body.NonCriticalExtensionOptions) > 0) {
+	if len(body.ExtensionOptions) > 0 || len(body.NonCriticalExtensionOptions) > 0 {
 		return nil, fmt.Errorf("%s does not support protobuf extension options: invalid request", h.Mode())
 	}
 
@@ -76,19 +79,20 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		return nil, fmt.Errorf("got empty address in %s handler: invalid request", h.Mode())
 	}
 
-	// We set a convention that if the tipper signs with LEGACY_AMINO_JSON, then
-	// they sign over empty fees and 0 gas.
-	var fee *aminojsonpb.AminoSignFee
-
 	f := txData.AuthInfo.Fee
-	if f == nil {
-		return nil, errors.New("fee cannot be nil when tipper is not signer")
+
+	// Convert []TxCoinData to FeeAmount for the amino sign fee.
+	// basev1beta1.Coin construction is hidden inside aminojsonpb.NewAminoSignFee.
+	feeAmounts := make([]aminojsonpb.FeeAmount, len(f.Amount))
+	for i, c := range f.Amount {
+		feeAmounts[i] = aminojsonpb.FeeAmount{Denom: c.Denom, Amount: c.Amount}
 	}
-	fee = &aminojsonpb.AminoSignFee{
-		Amount:  f.Amount,
-		Gas:     f.GasLimit,
-		Payer:   f.Payer,
-		Granter: f.Granter,
+	fee := aminojsonpb.NewAminoSignFee(feeAmounts, f.GasLimit, f.Payer, f.Granter)
+
+	// Convert []RawMsg → []*anypb.Any for the amino sign doc Msgs field.
+	msgs := make([]*anypb.Any, len(body.Messages))
+	for i, m := range body.Messages {
+		msgs[i] = &anypb.Any{TypeUrl: m.TypeUrl, Value: m.Value}
 	}
 
 	signDoc := &aminojsonpb.AminoSignDoc{
@@ -97,9 +101,9 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 		ChainId:          signerData.ChainID,
 		Sequence:         signerData.Sequence,
 		Memo:             body.Memo,
-		Msgs:             txData.Body.Messages,
-		Unordered:        txData.Body.Unordered,
-		TimeoutTimestamp: txData.Body.TimeoutTimestamp,
+		Msgs:             msgs,
+		Unordered:        body.Unordered,
+		TimeoutTimestamp: body.TimeoutTimestamp,
 		Fee:              fee,
 	}
 

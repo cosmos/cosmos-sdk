@@ -12,7 +12,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/address"
 )
 
@@ -131,7 +130,7 @@ type CustomGetSigner struct {
 func (c CustomGetSigner) IsManyPerContainerType() {}
 
 func getSignersFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, error) {
-	signersFields := proto.GetExtension(descriptor.Options(), msgv1.E_Signer).([]string)
+	signersFields := proto.GetExtension(descriptor.Options(), E_Signer).([]string)
 	if len(signersFields) == 0 {
 		return nil, fmt.Errorf("no cosmos.msg.v1.signer option found for message %s; use DefineCustomGetSigners to specify a custom getter", descriptor.FullName())
 	}
@@ -151,7 +150,7 @@ func (c *Context) Validate() error {
 			sd := fd.Services().Get(i)
 
 			// Skip services that are not annotated with the "cosmos.msg.v1.service" option.
-			if ext := proto.GetExtension(sd.Options(), msgv1.E_Service); ext == nil || !ext.(bool) {
+			if ext := proto.GetExtension(sd.Options(), E_Service); ext == nil || !ext.(bool) {
 				continue
 			}
 

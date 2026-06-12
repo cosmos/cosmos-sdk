@@ -6,8 +6,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -16,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 // TxConfigTestSuite provides a test suite that can be used to test that a TxConfig implementation is correct.
@@ -101,7 +100,7 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().Error(txBuilder.GetTx().ValidateBasic())
 
 	signModeHandler := s.TxConfig.SignModeHandler()
-	s.Require().Contains(signModeHandler.SupportedModes(), signingv1beta1.SignMode_SIGN_MODE_DIRECT)
+	s.Require().Contains(signModeHandler.SupportedModes(), txsigning.SignMode_SIGN_MODE_DIRECT)
 	defaultSignMode, err := signing.APISignModeToInternal(s.TxConfig.SignModeHandler().DefaultMode())
 	s.Require().NoError(err)
 

@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
+	autoclicore "cosmossdk.io/core/autocli"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +37,7 @@ func (b *Builder) BuildQueryCommand(ctx context.Context, appOptions AppOptions, 
 // AddQueryServiceCommands adds a sub-command to the provided command for each
 // method in the specified service and returns the command. This can be used in
 // order to add auto-generated commands to an existing command.
-func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *autocliv1.ServiceCommandDescriptor) error {
+func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *autoclicore.ServiceCommandDescriptor) error {
 	for cmdName, subCmdDesc := range cmdDescriptor.SubCommands {
 		subCmd := findSubCommand(cmd, cmdName)
 		if subCmd == nil {
@@ -70,7 +70,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 	service := descriptor.(protoreflect.ServiceDescriptor)
 	methods := service.Methods()
 
-	rpcOptMap := map[protoreflect.Name]*autocliv1.RpcCommandOptions{}
+	rpcOptMap := map[protoreflect.Name]*autoclicore.RpcCommandOptions{}
 	for _, option := range cmdDescriptor.RpcCommandOptions {
 		name := protoreflect.Name(option.RpcMethod)
 		rpcOptMap[name] = option
@@ -84,7 +84,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 		methodDescriptor := methods.Get(i)
 		methodOpts, ok := rpcOptMap[methodDescriptor.Name()]
 		if !ok {
-			methodOpts = &autocliv1.RpcCommandOptions{}
+			methodOpts = &autoclicore.RpcCommandOptions{}
 		}
 
 		if methodOpts.Skip {
@@ -114,7 +114,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 
 // BuildQueryMethodCommand creates a gRPC query command for the given service method. This can be used to auto-generate
 // just a single command for a single service rpc method.
-func (b *Builder) BuildQueryMethodCommand(ctx context.Context, descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
+func (b *Builder) BuildQueryMethodCommand(ctx context.Context, descriptor protoreflect.MethodDescriptor, options *autoclicore.RpcCommandOptions) (*cobra.Command, error) {
 	getClientConn := b.GetClientConn
 	serviceDescriptor := descriptor.Parent().(protoreflect.ServiceDescriptor)
 	methodName := fmt.Sprintf("/%s/%s", serviceDescriptor.FullName(), descriptor.Name())

@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (staking) [#26440](https://github.com/cosmos/cosmos-sdk/pull/26440) Add basic key rotation for validator consensus keys.
 * (crypto) [#26436](https://github.com/cosmos/cosmos-sdk/pull/26436) Add ML-DSA-65 (FIPS 204) post-quantum validator consensus key type, with SDK key wrappers, Amino + interface-registry registration, multisig support, and a `hd.MlDsa65Type` constant.
 * (blockstm) [#26467](https://github.com/cosmos/cosmos-sdk/pull/26467) Track existence for `Has()` reads to reduce false conflicts.
+* (staking) [#26485](https://github.com/cosmos/cosmos-sdk/pull/26485) Add `key_rotation_fee` to `x/staking` params and register associated 5->6 migration.
 * (staking) [#26461](https://github.com/cosmos/cosmos-sdk/pull/26461) Wire `MsgRotateConsPubKey` into cli and add a happy path system test.
 * (staking) [#26471](https://github.com/cosmos/cosmos-sdk/pull/26471) Add genesis import/export support for validator consensus key rotation.
 * (crypto) [#26472](https://github.com/cosmos/cosmos-sdk/pull/26472) Add ML-DSA-65 (FIPS 204) support for user account keys: mnemonic-based keyring creation/recovery (`--algo ml_dsa_65`), transaction signing/verification, and an ante-handler signature-verification gas cost (`Params.SigVerifyCostMlDsa65`).

@@ -62,30 +62,7 @@ import (
 )
 
 // package-wide network lock to only allow one test network at a time
-var (
-	lock     = new(sync.Mutex)
-	portPool = make(chan string, 200)
-)
-
-func init() {
-	closeFns := []func() error{}
-	for range 200 {
-		_, port, closeFn, err := FreeTCPAddr()
-		if err != nil {
-			panic(err)
-		}
-
-		portPool <- port
-		closeFns = append(closeFns, closeFn)
-	}
-
-	for _, closeFn := range closeFns {
-		err := closeFn()
-		if err != nil {
-			panic(err)
-		}
-	}
-}
+var lock = new(sync.Mutex)
 
 type (
 	// AppConstructor defines a function which accepts a network configuration and
@@ -402,44 +379,30 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		cmtCfg.RPC.ListenAddress = ""
 		appCfg.GRPC.Enable = false
 		appCfg.GRPCWeb.Enable = false
-		apiListenAddr := ""
 		if i == 0 {
 			if cfg.APIAddress != "" {
-				apiListenAddr = cfg.APIAddress
-			} else {
-				if len(portPool) == 0 {
-					return nil, fmt.Errorf("failed to get port for API server")
+				appCfg.API.Address = cfg.APIAddress
+				apiURL, err := url.Parse(cfg.APIAddress)
+				if err != nil {
+					return nil, err
 				}
-				port := <-portPool
-				apiListenAddr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
+				apiAddr = fmt.Sprintf("http://%s:%s", apiURL.Hostname(), apiURL.Port())
+			} else {
+				appCfg.API.Address = ""
 			}
-
-			appCfg.API.Address = apiListenAddr
-			apiURL, err := url.Parse(apiListenAddr)
-			if err != nil {
-				return nil, err
-			}
-			apiAddr = fmt.Sprintf("http://%s:%s", apiURL.Hostname(), apiURL.Port())
 
 			if cfg.RPCAddress != "" {
 				cmtCfg.RPC.ListenAddress = cfg.RPCAddress
 			} else {
-				if len(portPool) == 0 {
-					return nil, fmt.Errorf("failed to get port for RPC server")
-				}
-				port := <-portPool
-				cmtCfg.RPC.ListenAddress = fmt.Sprintf("tcp://0.0.0.0:%s", port)
+				cmtCfg.RPC.ListenAddress = "tcp://127.0.0.1:0"
 			}
 
 			if cfg.GRPCAddress != "" {
 				appCfg.GRPC.Address = cfg.GRPCAddress
 			} else {
-				if len(portPool) == 0 {
-					return nil, fmt.Errorf("failed to get port for GRPC server")
-				}
-				port := <-portPool
-				appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", port)
+				appCfg.GRPC.Address = ""
 			}
+
 			appCfg.GRPC.Enable = true
 			appCfg.GRPCWeb.Enable = true
 		}
@@ -470,19 +433,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		cmtCfg.Moniker = nodeDirName
 		monikers[i] = nodeDirName
 
-		if len(portPool) == 0 {
-			return nil, fmt.Errorf("failed to get port for Proxy server")
-		}
-		port := <-portPool
-		proxyAddr := fmt.Sprintf("tcp://0.0.0.0:%s", port)
-		cmtCfg.ProxyApp = proxyAddr
-
-		if len(portPool) == 0 {
-			return nil, fmt.Errorf("failed to get port for Proxy server")
-		}
-		port = <-portPool
-		p2pAddr := fmt.Sprintf("tcp://0.0.0.0:%s", port)
-		cmtCfg.P2P.ListenAddress = p2pAddr
+		// P2P: peers are wired after all nodes start via Switch.DialPeersAsync.
+		cmtCfg.P2P.ListenAddress = "tcp://127.0.0.1:0"
 		cmtCfg.P2P.AddrBookStrict = false
 		cmtCfg.P2P.AllowDuplicateIP = true
 
@@ -569,7 +521,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			return nil, err
 		}
 
-		p2pURL, err := url.Parse(p2pAddr)
+		p2pURL, err := url.Parse(cmtCfg.P2P.ListenAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -653,6 +605,24 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			return nil, err
 		}
 		l.Log("started validator", idx)
+	}
+
+	// Connect validators using actual P2P addresses read back in startInProcess.
+	if cfg.NumValidators > 1 {
+		for i, v := range network.Validators {
+			var peers []string
+			for j, other := range network.Validators {
+				if i == j || other.tmNode == nil {
+					continue
+				}
+				listenAddr := strings.TrimPrefix(other.P2PAddress, "tcp://")
+				peers = append(peers, fmt.Sprintf("%s@%s", other.NodeID, listenAddr))
+			}
+			if len(peers) > 0 {
+				_ = v.tmNode.Switch().AddPersistentPeers(peers)
+				_ = v.tmNode.Switch().DialPeersAsync(peers)
+			}
+		}
 	}
 
 	height, err := network.LatestHeight()
@@ -823,12 +793,19 @@ func (n *Network) Cleanup() {
 	n.Logger.Log("cleaning up test network...")
 
 	for _, v := range n.Validators {
-		// cancel the validator's context which will signal to the gRPC and API
-		// goroutines that they should gracefully exit.
-		v.cancelFn()
+		if v == nil {
+			continue
+		}
+		if v.cancelFn != nil {
+			// cancel the validator's context which will signal to the gRPC and API
+			// goroutines that they should gracefully exit.
+			v.cancelFn()
+		}
 
-		if err := v.errGroup.Wait(); err != nil {
-			n.Logger.Log("unexpected error waiting for validator gRPC and API processes to exit", "err", err)
+		if v.errGroup != nil {
+			if err := v.errGroup.Wait(); err != nil {
+				n.Logger.Log("unexpected error waiting for validator gRPC and API processes to exit", "err", err)
+			}
 		}
 
 		if v.tmNode != nil && v.tmNode.IsRunning() {

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"testing"
 	"time"
@@ -24,7 +25,6 @@ import (
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -212,9 +212,12 @@ func TestStartStandAlone(t *testing.T) {
 	app, err := mock.NewApp(home, logger)
 	require.NoError(t, err)
 
-	svrAddr, _, closeFn, err := network.FreeTCPAddr()
+	svrLis, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
-	require.NoError(t, closeFn())
+	svrAddr := fmt.Sprintf("tcp://127.0.0.1:%d", svrLis.Addr().(*net.TCPAddr).Port)
+	// The ABCI socket server does not accept a pre-bound listener; release and
+	// let it re-bind. The TOCTOU window is acceptable for this test helper.
+	require.NoError(t, svrLis.Close())
 
 	cmtApp := server.NewCometABCIWrapper(app)
 	svr, err := abci_server.NewServer(svrAddr, "socket", cmtApp)

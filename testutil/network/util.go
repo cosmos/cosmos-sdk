@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/node"
@@ -14,8 +16,12 @@ import (
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/cometbft/cometbft/rpc/client/local"
+	cmtrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	cmttypes "github.com/cometbft/cometbft/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
+	"github.com/gorilla/handlers"
+	"github.com/improbable-eng/grpc-web/go/grpcweb"
+	"golang.org/x/net/netutil"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
@@ -23,6 +29,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
+	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -77,6 +84,11 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 	val.tmNode = tmNode
 
+	// Update P2PAddress with the actual port CometBFT bound to.
+	if ni, ok := tmNode.NodeInfo().(p2p.DefaultNodeInfo); ok && ni.ListenAddr != "" {
+		val.P2PAddress = "tcp://" + ni.ListenAddr
+	}
+
 	if val.RPCAddress != "" {
 		val.RPCClient = local.New(tmNode)
 	}
@@ -99,26 +111,56 @@ func startInProcess(cfg Config, val *Validator) error {
 
 	if grpcCfg.Enable {
 		grpcLogger := logger.With(log.ModuleKey, "grpc-server")
+
+		var grpcLis net.Listener
+		if val.AppConfig.GRPC.Address == "" {
+			grpcLis, err = net.Listen("tcp", "127.0.0.1:0")
+			if err != nil {
+				return fmt.Errorf("failed to bind gRPC listener: %w", err)
+			}
+			val.AppConfig.GRPC.Address = grpcLis.Addr().String()
+			grpcCfg.Address = grpcLis.Addr().String()
+		}
+
 		var grpcSrv *grpc.Server
 		grpcSrv, val.ClientCtx, err = servergrpc.NewGRPCServerAndContext(val.ClientCtx, app, grpcCfg, grpcLogger)
 		if err != nil {
+			if grpcLis != nil {
+				grpcLis.Close()
+			}
 			return err
 		}
 
-		// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
-		// that the server is gracefully shut down.
 		val.errGroup.Go(func() error {
+			if grpcLis != nil {
+				return serveGRPC(ctx, grpcLogger, grpcSrv, grpcLis)
+			}
 			return servergrpc.StartGRPCServer(ctx, grpcLogger, grpcCfg, grpcSrv)
 		})
 
 		val.grpc = grpcSrv
 	}
 
-	if val.APIAddress != "" {
-		apiSrv := api.New(val.ClientCtx, logger.With(log.ModuleKey, "api-server"), val.grpc)
+	if val.AppConfig.API.Enable {
+		apiLogger := logger.With(log.ModuleKey, "api-server")
+
+		var apiLis net.Listener
+		if val.AppConfig.API.Address == "" {
+			apiLis, err = net.Listen("tcp", "127.0.0.1:0")
+			if err != nil {
+				return fmt.Errorf("failed to bind API listener: %w", err)
+			}
+			val.AppConfig.API.Address = "tcp://" + apiLis.Addr().String()
+			val.APIAddress = "http://" + apiLis.Addr().String()
+		}
+
+		apiSrv := api.New(val.ClientCtx, apiLogger, val.grpc)
 		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
 
 		val.errGroup.Go(func() error {
+			if apiLis != nil {
+				return serveAPI(ctx, apiSrv, apiLogger, *val.AppConfig, apiLis)
+			}
 			return apiSrv.Start(ctx, *val.AppConfig)
 		})
 
@@ -240,20 +282,66 @@ func writeFile(name, dir string, contents []byte) error {
 	return nil
 }
 
-// FreeTCPAddr gets a free address for a test CometBFT server
-// protocol is either tcp, http, etc
-func FreeTCPAddr() (addr, port string, closeFn func() error, err error) {
-	l, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		return "", "", nil, err
+// serveGRPC serves grpcSrv on lis with context-driven shutdown.
+func serveGRPC(ctx context.Context, logger log.Logger, grpcSrv *grpc.Server, lis net.Listener) error {
+	errCh := make(chan error, 1)
+	go func() {
+		logger.Info("starting gRPC server...", "address", lis.Addr())
+		errCh <- grpcSrv.Serve(lis)
+	}()
+	select {
+	case <-ctx.Done():
+		logger.Info("stopping gRPC server...", "address", lis.Addr())
+		grpcSrv.GracefulStop()
+		return nil
+	case err := <-errCh:
+		return err
+	}
+}
+
+// serveAPI serves an already-configured api.Server on lis.
+func serveAPI(ctx context.Context, srv *api.Server, logger log.Logger, cfg srvconfig.Config, lis net.Listener) error {
+	cmtCfg := cmtrpcserver.DefaultConfig()
+	cmtCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
+	cmtCfg.ReadTimeout = time.Duration(cfg.API.RPCReadTimeout) * time.Second
+	cmtCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
+	cmtCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
+
+	if cmtCfg.MaxOpenConnections > 0 {
+		lis = netutil.LimitListener(lis, cmtCfg.MaxOpenConnections)
 	}
 
-	closeFn = func() error {
-		return l.Close()
+	if cfg.GRPC.Enable && cfg.GRPCWeb.Enable {
+		var options []grpcweb.Option
+		if cfg.API.EnableUnsafeCORS {
+			options = append(options, grpcweb.WithOriginFunc(func(string) bool { return true }))
+		}
+		wrappedGrpc := grpcweb.WrapServer(srv.GRPCSrv, options...)
+		srv.Router.PathPrefix("/").Handler(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			if wrappedGrpc.IsGrpcWebRequest(req) {
+				wrappedGrpc.ServeHTTP(w, req)
+				return
+			}
+			srv.GRPCGatewayRouter.ServeHTTP(w, req)
+		}))
 	}
+	srv.Router.PathPrefix("/").Handler(srv.GRPCGatewayRouter)
 
-	portI := l.Addr().(*net.TCPAddr).Port
-	port = fmt.Sprintf("%d", portI)
-	addr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
-	return addr, port, closeFn, err
+	errCh := make(chan error, 1)
+	go func() {
+		logger.Info("starting API server...", "address", lis.Addr())
+		if cfg.API.EnableUnsafeCORS {
+			allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
+			errCh <- cmtrpcserver.Serve(lis, allowAllCORS(srv.Router), servercmtlog.CometLoggerWrapper{Logger: logger}, cmtCfg)
+		} else {
+			errCh <- cmtrpcserver.Serve(lis, srv.Router, servercmtlog.CometLoggerWrapper{Logger: logger}, cmtCfg)
+		}
+	}()
+	select {
+	case <-ctx.Done():
+		logger.Info("stopping API server...", "address", lis.Addr())
+		return lis.Close()
+	case err := <-errCh:
+		return err
+	}
 }

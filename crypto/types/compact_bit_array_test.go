@@ -245,6 +245,23 @@ func TestCompactBitArrayGetSetIndex(t *testing.T) {
 	}
 }
 
+func TestGetSetIndexNeverCrashesOnInconsistentExtraBits(t *testing.T) {
+	// A CompactBitArray decoded from untrusted proto can have ExtraBitsStored
+	// inconsistent with len(Elems). Count() trusts ExtraBitsStored, so an index
+	// can pass the Count() guard yet fall outside Elems.
+	bA := &CompactBitArray{ExtraBitsStored: 9, Elems: []byte{0xff}}
+	require.Equal(t, 9, bA.Count())
+	for i := 0; i < bA.Count(); i++ {
+		require.NotPanics(t, func() { bA.GetIndex(i) })
+		require.NotPanics(t, func() { bA.SetIndex(i, true) })
+	}
+	// Indices backed by a real byte still resolve normally.
+	require.True(t, bA.GetIndex(0))
+	// Indices past the backing slice are rejected instead of panicking.
+	require.False(t, bA.GetIndex(8))
+	require.False(t, bA.SetIndex(8, true))
+}
+
 func BenchmarkNumTrueBitsBefore(b *testing.B) {
 	ba, _ := randCompactBitArray(100)
 

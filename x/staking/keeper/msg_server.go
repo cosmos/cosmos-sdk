@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"slices"
 	"strconv"
 	"time"
 
@@ -63,8 +62,21 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", pk)
 	}
 
-	if _, err := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); err == nil {
+	consAddr := sdk.GetConsAddress(pk)
+	locked, err := k.IsConsAddrLockedByRotation(ctx, consAddr)
+	if err != nil {
+		return nil, err
+	}
+	if locked {
+		return nil, types.ErrConsensusPubKeyInRotationHistory
+	}
+
+	_, err = k.GetValidatorByConsAddr(ctx, consAddr)
+	if err == nil {
 		return nil, types.ErrValidatorPubKeyExists
+	}
+	if !errors.Is(err, types.ErrNoValidatorFound) {
+		return nil, err
 	}
 
 	bondDenom, err := k.BondDenom(ctx)
@@ -85,13 +97,8 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	cp := sdkCtx.ConsensusParams()
 	if cp.Validator != nil {
-		pkType := pk.Type()
-		hasKeyType := slices.Contains(cp.Validator.PubKeyTypes, pkType)
-		if !hasKeyType {
-			return nil, errorsmod.Wrapf(
-				types.ErrValidatorPubKeyTypeNotSupported,
-				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,
-			)
+		if err := types.ValidateConsensusPubKeyType(pk, cp.Validator.PubKeyTypes); err != nil {
+			return nil, err
 		}
 	}
 
@@ -618,11 +625,19 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 // RotateConsPubKey defines a method for changing a validators consensus key to
 // a new key.
 func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateConsPubKey) (*types.MsgRotateConsPubKeyResponse, error) {
-	newPk, ok := msg.NewPubkey.GetCachedValue().(cryptotypes.PubKey)
-	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", msg.NewPubkey.GetCachedValue())
+	if err := msg.Validate(k.validatorAddressCodec); err != nil {
+		return nil, err
 	}
+
+	newPk := msg.NewPubkey.GetCachedValue().(cryptotypes.PubKey)
 	newConsAddr := sdk.ConsAddress(newPk.Address())
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if cp := sdkCtx.ConsensusParams(); cp.Validator != nil {
+		if err := types.ValidateConsensusPubKeyType(newPk, cp.Validator.PubKeyTypes); err != nil {
+			return nil, err
+		}
+	}
 
 	// reject a key locked by a rotation, either because some validator
 	// rotated away from it inside the unbonding window or because some
@@ -676,7 +691,11 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	// module account before burning. The pool is a burner module account so
 	// the fee is fully removed from supply and never mingles with bonded or
 	// unbonded staking balances.
-	feeCoins := sdk.NewCoins(types.DefaultKeyRotationFee)
+	keyRotationFee, err := k.KeyRotationFee(ctx)
+	if err != nil {
+		return nil, err
+	}
+	feeCoins := sdk.NewCoins(keyRotationFee)
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), types.KeyRotationFeePoolName, feeCoins); err != nil {
 		return nil, err
 	}

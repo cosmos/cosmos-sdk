@@ -83,6 +83,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (crypto) [#26529](https://github.com/cosmos/cosmos-sdk/pull/26529) Validate the SEC1 tag byte (`0x02`/`0x03`) when unmarshaling a `secp256k1.PubKey`, rejecting malformed compressed keys that previously passed the length-only check.
 * (x/auth/tx) [#26527](https://github.com/cosmos/cosmos-sdk/pull/26527) Fix nil pointer panic in `GetSigningTxData` when a `SignerInfo` has a nil `PublicKey`.
 * (x/auth/tx) [#26517](https://github.com/cosmos/cosmos-sdk/pull/26517) Return a decode error instead of panicking when a transaction's `SignerInfos` and `Signatures` counts disagree in `GetSignaturesV2`, or a multisig's `ModeInfos` and sub-signature counts disagree in `ModeInfoAndSigToSignatureData`.
+* (x/bank) [#26484](https://github.com/cosmos/cosmos-sdk/issues/26484) Fix `AllBalances` with `ResolveDenom` returning the display denom while keeping the base-unit amount; the amount is now scaled by the display unit's exponent when the result is integral, otherwise the base denom and amount are kept.
 
 ### Deprecated
 

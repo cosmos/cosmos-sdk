@@ -59,7 +59,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/tendermint/go-amino v0.16.0
 	github.com/test-go/testify v1.1.4
-	go.opentelemetry.io/contrib/bridges/otelslog v0.18.0
+	go.opentelemetry.io/contrib/bridges/otelslog v0.19.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.69.0
 	go.opentelemetry.io/contrib/instrumentation/host v0.69.0
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.69.0

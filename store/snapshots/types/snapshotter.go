@@ -4,6 +4,12 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 )
 
+// SnapshotAnnouncer defines an interface for announcing snapshot initiation at a specified height.
+type SnapshotAnnouncer interface {
+	// AnnounceSnapshotHeight informs the underlying system of a snapshot being initiated at a given height.
+	AnnounceSnapshotHeight(height int64)
+}
+
 // Snapshotter is something that can create and restore snapshots, consisting of streamed binary
 // chunks - all of which must be read from the channel and closed. If an unsupported format is
 // given, it must return ErrUnknownFormat (possibly wrapped with fmt.Errorf).

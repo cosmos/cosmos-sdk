@@ -6,6 +6,7 @@ import (
 	"compress/zlib"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"testing"
@@ -108,8 +109,13 @@ func snapshotItems(items [][]byte, ext snapshottypes.ExtensionSnapshotter) [][]b
 
 type mockSnapshotter struct {
 	items            [][]byte
+	announcedHeights map[int64]struct{}
 	prunedHeights    map[int64]struct{}
 	snapshotInterval uint64
+}
+
+func (m *mockSnapshotter) AnnounceSnapshotHeight(height int64) {
+	m.announcedHeights[height] = struct{}{}
 }
 
 func (m *mockSnapshotter) Restore(
@@ -160,6 +166,9 @@ func (m *mockSnapshotter) SupportedFormats() []uint32 {
 }
 
 func (m *mockSnapshotter) PruneSnapshotHeight(height int64) {
+	if _, ok := m.announcedHeights[height]; !ok {
+		panic(fmt.Sprintf("snap height %d was not announced", height))
+	}
 	m.prunedHeights[height] = struct{}{}
 }
 
@@ -171,9 +180,12 @@ func (m *mockSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 	m.snapshotInterval = snapshotInterval
 }
 
+var _ snapshottypes.Snapshotter = (*mockErrorSnapshotter)(nil)
+
 type mockErrorSnapshotter struct{}
 
-var _ snapshottypes.Snapshotter = (*mockErrorSnapshotter)(nil)
+func (m *mockErrorSnapshotter) AnnounceSnapshotHeight(height int64) {
+}
 
 func (m *mockErrorSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	return errors.New("mock snapshot error")
@@ -239,15 +251,17 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 
 // hungSnapshotter can be used to test operations in progress. Call close to end the snapshot.
 type hungSnapshotter struct {
-	ch               chan struct{}
-	prunedHeights    map[int64]struct{}
-	snapshotInterval uint64
+	ch                   chan struct{}
+	announcedSnapHeights map[int64]struct{}
+	prunedHeights        map[int64]struct{}
+	snapshotInterval     uint64
 }
 
 func newHungSnapshotter() *hungSnapshotter {
 	return &hungSnapshotter{
-		ch:            make(chan struct{}),
-		prunedHeights: make(map[int64]struct{}),
+		ch:                   make(chan struct{}),
+		announcedSnapHeights: make(map[int64]struct{}),
+		prunedHeights:        make(map[int64]struct{}),
 	}
 }
 
@@ -260,7 +274,14 @@ func (m *hungSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) er
 	return nil
 }
 
+func (m *hungSnapshotter) AnnounceSnapshotHeight(height int64) {
+	m.announcedSnapHeights[height] = struct{}{}
+}
+
 func (m *hungSnapshotter) PruneSnapshotHeight(height int64) {
+	if _, ok := m.announcedSnapHeights[height]; !ok {
+		panic(fmt.Sprintf("snap height %d was not announced", height))
+	}
 	m.prunedHeights[height] = struct{}{}
 }
 

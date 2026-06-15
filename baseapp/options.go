@@ -164,6 +164,8 @@ func (app *BaseApp) SetName(name string) {
 		panic("SetName() on sealed BaseApp")
 	}
 
+	app.mu.Lock()
+	defer app.mu.Unlock()
 	app.name = name
 }
 
@@ -181,11 +183,15 @@ func (app *BaseApp) SetVersion(v string) {
 	if app.sealed {
 		panic("SetVersion() on sealed BaseApp")
 	}
+	app.mu.Lock()
+	defer app.mu.Unlock()
 	app.version = v
 }
 
 // SetProtocolVersion sets the application's protocol version
 func (app *BaseApp) SetProtocolVersion(v uint64) {
+	app.mu.Lock()
+	defer app.mu.Unlock()
 	app.appVersion = v
 }
 

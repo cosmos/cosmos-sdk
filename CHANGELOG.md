@@ -68,6 +68,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (store, x/bank) [#26447](https://github.com/cosmos/cosmos-sdk/pull/26447) Fix `cachekv.Has` to perform a true existence check without loading the value. Remove redundant `Has` calls in `bank.getSendEnabled` and `upgrade.getProtocolVersion`, saving `HasCost` (1000 gas at default `KVGasConfig`) per `IsSendEnabled` check on the `SendCoins` hot path.
 * (x/distribution) [#26406](https://github.com/cosmos/cosmos-sdk/pull/26406) Add fallback paths (delegator/validator owner, then community pool) when withdrawing delegator rewards or validator commission to a blocked address during `Begin/EndBlockers`. user msg initiated paths still return `ErrUnauthorized` when withdrawing to blocked addresses.
 * (x/gov) [#26353](https://github.com/cosmos/cosmos-sdk/pull/26353) Fix leading comma in `proposal_messages` event attribute emitted by `SubmitProposal`.
 * (telemetry) [#26390](https://github.com/cosmos/cosmos-sdk/pull/26390) Fix env var for otel telemetry initialization.

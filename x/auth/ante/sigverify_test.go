@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -162,12 +161,9 @@ func TestSigVerification(t *testing.T) {
 	suite := SetupTestSuite(t, true)
 	suite.txBankKeeper.EXPECT().DenomMetadata(gomock.Any(), gomock.Any()).Return(&banktypes.QueryDenomMetadataResponse{}, nil).AnyTimes()
 
-	enabledSignModes := []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_TEXTUAL, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
-	// Since TEXTUAL is not enabled by default, we create a custom TxConfig
-	// here which includes it.
+	enabledSignModes := []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 	txConfigOpts := authtx.ConfigOptions{
-		TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(suite.clientCtx),
-		EnabledSignModes:           enabledSignModes,
+		EnabledSignModes: enabledSignModes,
 	}
 	var err error
 	suite.clientCtx.TxConfig, err = authtx.NewTxConfigWithOptions(
@@ -203,8 +199,7 @@ func TestSigVerification(t *testing.T) {
 
 	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
 	txConfigOpts = authtx.ConfigOptions{
-		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(suite.txBankKeeper),
-		EnabledSignModes:           enabledSignModes,
+		EnabledSignModes: enabledSignModes,
 	}
 	anteTxConfig, err := authtx.NewTxConfigWithOptions(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),

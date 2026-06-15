@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -11,9 +12,12 @@ import (
 	"cosmossdk.io/math"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -152,10 +156,11 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 	}
 
 	params := types.Params{
-		UnbondingTime: 10000,
-		MaxValidators: 1,
-		MaxEntries:    10,
-		BondDenom:     "stake",
+		UnbondingTime:  10000,
+		MaxValidators:  1,
+		MaxEntries:     10,
+		BondDenom:      "stake",
+		KeyRotationFee: sdk.NewInt64Coin("stake", 1000000),
 	}
 
 	require.Panics(t, func() {
@@ -239,4 +244,408 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	// remove genesis validator
 	vals = vals[:100]
 	assert.DeepEqual(t, abcivals, vals)
+}
+
+func TestExportImportGenesisWithPendingConsensusKeyRotation(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
+
+	oldPk := ed25519.GenPrivKey().PubKey()
+	newPk := ed25519.GenPrivKey().PubKey()
+	valAddr, _ := bondConsKeyRotationValidator(t, f, oldPk)
+
+	// enqueue a rotation at the current height, exporting here means the
+	// imported chain starts before comet activates the new key
+	writeHeight := f.app.LastBlockHeight()
+	writeCtx := f.sdkCtx.WithBlockHeight(writeHeight)
+	_, err := msgServer.RotateConsPubKey(writeCtx, &types.MsgRotateConsPubKey{
+		ValidatorAddress: valAddr.String(),
+		NewPubkey:        newPubKeyAny(t, newPk),
+	})
+	assert.NilError(t, err)
+
+	// export should keep the unbonding window history and pending apply queue
+	// since the rotation is not active yet, the apply height gets pushed
+	// forward
+	exported := f.stakingKeeper.ExportGenesis(writeCtx)
+	require.Len(t, exported.ConsensusKeyRotationHistory, 1)
+	require.Len(t, exported.PendingConsensusKeyRotations, 1)
+	importedInitialHeight := writeHeight + 1
+	assert.Equal(t, importedInitialHeight+types.ConsensusUpdateDelay, exported.PendingConsensusKeyRotations[0].ApplyHeight)
+
+	// the top level Comet genesis validator set should still use the old key
+	// because the rotation is not active at the exported initial height
+	topLevelVals, err := staking.WriteValidators(writeCtx, f.stakingKeeper)
+	assert.NilError(t, err)
+	require.Len(t, topLevelVals, 1)
+	assert.Assert(t, bytes.Equal(oldPk.Address().Bytes(), topLevelVals[0].PubKey.Address()))
+
+	// create a new fixture to import the genesis onto
+	imported := initFixture(t)
+
+	// typically bank genesis import would fund these pools, however we are not
+	// exporting bank here so we manually fund the bonded pools and not bonded
+	// pools to match the validators in the staking genesis
+	fundStakingPoolsForGenesis(t, imported, exported)
+
+	importCtx := imported.sdkCtx.WithBlockHeight(importedInitialHeight)
+	initUpdates := imported.stakingKeeper.InitGenesis(importCtx, exported)
+	require.Len(t, initUpdates, 1)
+
+	// ensure the validator updates returned from the init are still using the
+	// old pubkey
+	initUpdatePk, err := cryptocodec.FromCmtProtoPublicKey(initUpdates[0].PubKey)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, oldPk.Address().Bytes(), initUpdatePk.Address().Bytes())
+
+	// before the pushed apply height, staking state should still have the old key
+	// the rotation should also still be tracked in the unbonding window indexes
+	stored, err := imported.stakingKeeper.GetValidator(imported.sdkCtx, valAddr)
+	assert.NilError(t, err)
+	storedConsAddr, err := stored.GetConsAddr()
+	assert.NilError(t, err)
+	assert.DeepEqual(t, oldPk.Address().Bytes(), storedConsAddr)
+
+	// ensure we have a pending key rotation in the staking keeper
+	hasPending, err := imported.stakingKeeper.HasConsKeyRotationInUnbondingWindow(imported.sdkCtx, valAddr)
+	assert.NilError(t, err)
+	assert.Assert(t, hasPending)
+
+	// on the imported chain's first block, staking should re-emit the update
+	// this recreates the Comet update that was not persisted in app genesis
+	finalizeRes := advanceBlock(t, imported, imported.sdkCtx.BlockHeader().Time)
+	updates := finalizeRes.ValidatorUpdates
+	require.Len(t, updates, 2)
+	reemittedPk, err := cryptocodec.FromCmtProtoPublicKey(updates[1].PubKey)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, newPk.Address().Bytes(), reemittedPk.Address().Bytes())
+
+	// at the pushed apply height, staking should apply the key swap
+	// the pending apply queue should be empty after that
+	for imported.app.LastBlockHeight() < exported.PendingConsensusKeyRotations[0].ApplyHeight {
+		advanceBlock(t, imported, imported.sdkCtx.BlockHeader().Time)
+	}
+
+	// ensure the key rotated for this validator
+	stored, err = imported.stakingKeeper.GetValidator(imported.sdkCtx, valAddr)
+	assert.NilError(t, err)
+	storedConsAddr, err = stored.GetConsAddr()
+	assert.NilError(t, err)
+	assert.DeepEqual(t, newPk.Address().Bytes(), storedConsAddr)
+
+	// ensure there are no more pending rotations
+	pending, err := imported.stakingKeeper.PendingConsKeyRotations(imported.sdkCtx)
+	assert.NilError(t, err)
+	assert.Assert(t, len(pending) == 0)
+
+	// the validator marker and old key lock should remain until maturity
+	hasRotationHistory, err := imported.stakingKeeper.HasConsKeyRotationInUnbondingWindow(imported.sdkCtx, valAddr)
+	assert.NilError(t, err)
+	assert.Assert(t, hasRotationHistory)
+	hasOldLock, err := imported.stakingKeeper.IsConsAddrLockedByRotation(imported.sdkCtx, sdk.ConsAddress(oldPk.Address()))
+	assert.NilError(t, err)
+	assert.Assert(t, hasOldLock)
+
+	// the new key is live now, so the temporary new key lock should be released
+	hasNewLock, err := imported.stakingKeeper.IsConsAddrLockedByRotation(imported.sdkCtx, sdk.ConsAddress(newPk.Address()))
+	assert.NilError(t, err)
+	assert.Assert(t, !hasNewLock)
+}
+
+func TestExportImportZeroHeightGenesisWithPendingConsensusKeyRotation(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
+
+	oldPk := ed25519.GenPrivKey().PubKey()
+	newPk := ed25519.GenPrivKey().PubKey()
+	valAddr, _ := bondConsKeyRotationValidator(t, f, oldPk)
+
+	// queue a rotation before the zero height prep runs
+	writeHeight := int64(100)
+	writeCtx := f.sdkCtx.WithBlockHeight(writeHeight)
+	_, err := msgServer.RotateConsPubKey(writeCtx, &types.MsgRotateConsPubKey{
+		ValidatorAddress: valAddr.String(),
+		NewPubkey:        newPubKeyAny(t, newPk),
+	})
+	assert.NilError(t, err)
+
+	// mimic simapp zero height prep by rebasing the pending queue in state
+	originalApplyHeight := writeHeight + types.ConsensusUpdateDelay
+	zeroHeightApplyHeight := int64(1) + types.ConsensusUpdateDelay
+	assert.NilError(t, f.stakingKeeper.PrepareConsKeyRotationsForZeroHeightExport(writeCtx))
+
+	hasOriginalQueue, err := f.stakingKeeper.HasConsKeyRotationApplyQueueEntry(writeCtx, originalApplyHeight, valAddr)
+	assert.NilError(t, err)
+	assert.Assert(t, !hasOriginalQueue)
+	hasZeroHeightQueue, err := f.stakingKeeper.HasConsKeyRotationApplyQueueEntry(writeCtx, zeroHeightApplyHeight, valAddr)
+	assert.NilError(t, err)
+	assert.Assert(t, hasZeroHeightQueue)
+
+	// match simapp zero height export by using a zero height context after prep
+	zeroHeightCtx := writeCtx.WithBlockHeight(0)
+	exported := f.stakingKeeper.ExportGenesis(zeroHeightCtx)
+	require.Len(t, exported.ConsensusKeyRotationHistory, 1)
+	require.Len(t, exported.PendingConsensusKeyRotations, 1)
+	assert.Equal(t, zeroHeightApplyHeight, exported.PendingConsensusKeyRotations[0].ApplyHeight)
+
+	// the exported comet validator set should still use the old key
+	topLevelVals, err := staking.WriteValidators(zeroHeightCtx, f.stakingKeeper)
+	assert.NilError(t, err)
+	require.Len(t, topLevelVals, 1)
+	assert.Assert(t, bytes.Equal(oldPk.Address().Bytes(), topLevelVals[0].PubKey.Address()))
+
+	// import onto a fresh chain at height zero
+	imported := initFixture(t)
+	fundStakingPoolsForGenesis(t, imported, exported)
+	initUpdates := imported.stakingKeeper.InitGenesis(imported.sdkCtx.WithBlockHeight(0), exported)
+	require.Len(t, initUpdates, 1)
+
+	// init should also report the old key to match the top level validator set
+	initUpdatePk, err := cryptocodec.FromCmtProtoPublicKey(initUpdates[0].PubKey)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, oldPk.Address().Bytes(), initUpdatePk.Address().Bytes())
+
+	// before the apply height, the imported staking state should still use the old key
+	stored, err := imported.stakingKeeper.GetValidator(imported.sdkCtx, valAddr)
+	assert.NilError(t, err)
+	storedConsAddr, err := stored.GetConsAddr()
+	assert.NilError(t, err)
+	assert.DeepEqual(t, oldPk.Address().Bytes(), storedConsAddr)
+
+	// advance through the normal abci flow until the rebased apply height
+	for imported.app.LastBlockHeight() < zeroHeightApplyHeight {
+		advanceBlock(t, imported, imported.sdkCtx.BlockHeader().Time)
+	}
+
+	// after the apply height, staking should have moved to the new key
+	stored, err = imported.stakingKeeper.GetValidator(imported.sdkCtx, valAddr)
+	assert.NilError(t, err)
+	storedConsAddr, err = stored.GetConsAddr()
+	assert.NilError(t, err)
+	assert.DeepEqual(t, newPk.Address().Bytes(), storedConsAddr)
+
+	// the apply queue drains while history and the old key lock remain
+	pending, err := imported.stakingKeeper.PendingConsKeyRotations(imported.sdkCtx)
+	assert.NilError(t, err)
+	assert.Assert(t, len(pending) == 0)
+	hasRotationHistory, err := imported.stakingKeeper.HasConsKeyRotationInUnbondingWindow(imported.sdkCtx, valAddr)
+	assert.NilError(t, err)
+	assert.Assert(t, hasRotationHistory)
+	hasOldLock, err := imported.stakingKeeper.IsConsAddrLockedByRotation(imported.sdkCtx, sdk.ConsAddress(oldPk.Address()))
+	assert.NilError(t, err)
+	assert.Assert(t, hasOldLock)
+	hasNewLock, err := imported.stakingKeeper.IsConsAddrLockedByRotation(imported.sdkCtx, sdk.ConsAddress(newPk.Address()))
+	assert.NilError(t, err)
+	assert.Assert(t, !hasNewLock)
+}
+
+func TestExportGenesisWithPendingConsensusKeyRotationAtActivationHeight(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
+
+	oldPk := ed25519.GenPrivKey().PubKey()
+	newPk := ed25519.GenPrivKey().PubKey()
+	valAddr, _ := bondConsKeyRotationValidator(t, f, oldPk)
+
+	// enqueue a rotation, then export from the height right before sdk apply
+	// the imported initial height is the activation height
+	writeHeight := f.app.LastBlockHeight()
+	writeCtx := f.sdkCtx.WithBlockHeight(writeHeight)
+	_, err := msgServer.RotateConsPubKey(writeCtx, &types.MsgRotateConsPubKey{
+		ValidatorAddress: valAddr.String(),
+		NewPubkey:        newPubKeyAny(t, newPk),
+	})
+	assert.NilError(t, err)
+
+	// because the rotation is active at the exported initial height
+	// export should keep the original apply height
+	activationExportCtx := f.sdkCtx.WithBlockHeight(writeHeight + types.ConsensusUpdateDelay - 1)
+	exported := f.stakingKeeper.ExportGenesis(activationExportCtx)
+	require.Len(t, exported.PendingConsensusKeyRotations, 1)
+	assert.Equal(t, writeHeight+types.ConsensusUpdateDelay, exported.PendingConsensusKeyRotations[0].ApplyHeight)
+
+	// the top level Comet genesis validator set should use the new key
+	// this is the key Comet would have active at this height
+	topLevelVals, err := staking.WriteValidators(activationExportCtx, f.stakingKeeper)
+	assert.NilError(t, err)
+	require.Len(t, topLevelVals, 1)
+	assert.Assert(t, bytes.Equal(newPk.Address().Bytes(), topLevelVals[0].PubKey.Address()))
+
+	// create a new fixture to import the genesis onto
+	imported := initFixture(t)
+
+	// typically bank genesis import would fund these pools, however we are not
+	// exporting bank here so we manually fund the bonded pools and not bonded
+	// pools to match the validators in the staking genesis
+	fundStakingPoolsForGenesis(t, imported, exported)
+
+	importCtx := imported.sdkCtx.WithBlockHeight(writeHeight + types.ConsensusUpdateDelay)
+	initUpdates := imported.stakingKeeper.InitGenesis(importCtx, exported)
+	require.Len(t, initUpdates, 1)
+
+	// ensure update is emitted with the new key (one we rotated to)
+	initUpdatePk, err := cryptocodec.FromCmtProtoPublicKey(initUpdates[0].PubKey)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, newPk.Address().Bytes(), initUpdatePk.Address().Bytes())
+
+	// advancing to the activation height should drain the pending rotation
+	// staking state should end up on the new key
+	for imported.app.LastBlockHeight() < importCtx.BlockHeight() {
+		advanceBlock(t, imported, imported.sdkCtx.BlockHeader().Time)
+	}
+
+	// ensure the key did rotate for this validator
+	stored, err := imported.stakingKeeper.GetValidator(imported.sdkCtx, valAddr)
+	assert.NilError(t, err)
+	storedConsAddr, err := stored.GetConsAddr()
+	assert.NilError(t, err)
+	assert.DeepEqual(t, newPk.Address().Bytes(), storedConsAddr)
+
+	// the pending apply queue should be drained after the key swap
+	pending, err := imported.stakingKeeper.PendingConsKeyRotations(imported.sdkCtx)
+	assert.NilError(t, err)
+	assert.Assert(t, len(pending) == 0)
+
+	// the validator marker and old key lock should remain until maturity
+	hasRotationHistory, err := imported.stakingKeeper.HasConsKeyRotationInUnbondingWindow(imported.sdkCtx, valAddr)
+	assert.NilError(t, err)
+	assert.Assert(t, hasRotationHistory)
+	hasOldLock, err := imported.stakingKeeper.IsConsAddrLockedByRotation(imported.sdkCtx, sdk.ConsAddress(oldPk.Address()))
+	assert.NilError(t, err)
+	assert.Assert(t, hasOldLock)
+
+	// the new key is live now, so the temporary new key lock should be released
+	hasNewLock, err := imported.stakingKeeper.IsConsAddrLockedByRotation(imported.sdkCtx, sdk.ConsAddress(newPk.Address()))
+	assert.NilError(t, err)
+	assert.Assert(t, !hasNewLock)
+}
+
+func TestExportImportGenesisWithAppliedConsensusKeyRotationHistory(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
+
+	oldPk := ed25519.GenPrivKey().PubKey()
+	newPk := ed25519.GenPrivKey().PubKey()
+	nextPk := ed25519.GenPrivKey().PubKey()
+	valAddr, _ := bondConsKeyRotationValidator(t, f, oldPk)
+
+	// apply a rotation before export so only the unbonding window history remains
+	// there should be no pending apply queue entry
+	writeHeight := f.app.LastBlockHeight()
+	writeCtx := f.sdkCtx.WithBlockHeight(writeHeight)
+	_, err := msgServer.RotateConsPubKey(writeCtx, &types.MsgRotateConsPubKey{
+		ValidatorAddress: valAddr.String(),
+		NewPubkey:        newPubKeyAny(t, newPk),
+	})
+	assert.NilError(t, err)
+
+	// advance to the apply height so the end blocker swaps staking state
+	for f.app.LastBlockHeight() < writeHeight+types.ConsensusUpdateDelay {
+		advanceBlock(t, f, f.sdkCtx.BlockHeader().Time)
+	}
+
+	// after apply, staking state should be on the new key
+	stored, err := f.stakingKeeper.GetValidator(f.sdkCtx, valAddr)
+	assert.NilError(t, err)
+	storedConsAddr, err := stored.GetConsAddr()
+	assert.NilError(t, err)
+	assert.DeepEqual(t, newPk.Address().Bytes(), storedConsAddr)
+
+	// the apply queue should be empty while history remains until maturity
+	pending, err := f.stakingKeeper.PendingConsKeyRotations(f.sdkCtx)
+	assert.NilError(t, err)
+	assert.Assert(t, len(pending) == 0)
+	hasRotationHistory, err := f.stakingKeeper.HasConsKeyRotationInUnbondingWindow(f.sdkCtx, valAddr)
+	assert.NilError(t, err)
+	assert.Assert(t, hasRotationHistory)
+
+	// old key stays locked until maturity, new key lock should be released
+	hasOldLock, err := f.stakingKeeper.IsConsAddrLockedByRotation(f.sdkCtx, sdk.ConsAddress(oldPk.Address()))
+	assert.NilError(t, err)
+	assert.Assert(t, hasOldLock)
+	hasNewLock, err := f.stakingKeeper.IsConsAddrLockedByRotation(f.sdkCtx, sdk.ConsAddress(newPk.Address()))
+	assert.NilError(t, err)
+	assert.Assert(t, !hasNewLock)
+
+	// export and import should preserve the old consensus address history
+	// it should not recreate a pending rotation
+	exportCtx := f.sdkCtx.WithBlockHeight(f.app.LastBlockHeight())
+	exported := f.stakingKeeper.ExportGenesis(exportCtx)
+	require.Len(t, exported.ConsensusKeyRotationHistory, 1)
+	require.Empty(t, exported.PendingConsensusKeyRotations)
+
+	// create a new fixture to import the genesis onto
+	imported := initFixture(t)
+
+	// typically bank genesis import would fund these pools, however we are not
+	// exporting bank here so we manually fund the bonded pools and not bonded
+	// pools to match the validators in the staking genesis
+	fundStakingPoolsForGenesis(t, imported, exported)
+	imported.stakingKeeper.InitGenesis(imported.sdkCtx, exported)
+
+	hasOldLock, err = imported.stakingKeeper.IsConsAddrLockedByRotation(imported.sdkCtx, sdk.ConsAddress(oldPk.Address()))
+	assert.NilError(t, err)
+	assert.Assert(t, hasOldLock)
+
+	// the restored history should still block another rotation
+	// this should hold until the unbonding window has passed
+	_, err = keeper.NewMsgServerImpl(imported.stakingKeeper).RotateConsPubKey(imported.sdkCtx, &types.MsgRotateConsPubKey{
+		ValidatorAddress: valAddr.String(),
+		NewPubkey:        newPubKeyAny(t, nextPk),
+	})
+	assert.ErrorContains(t, err, types.ErrExceedingMaxConsPubKeyRotations.Error())
+
+	// once the restored history matures, the end blocker clears the marker
+	// it should also clear the old consensus address lock
+	advanceBlock(t, imported, exported.ConsensusKeyRotationHistory[0].MaturityTime.AddDate(0, 0, 1))
+
+	// the rotation has matured, so the validator marker and old key lock
+	// should be gone
+	hasPending, err := imported.stakingKeeper.HasConsKeyRotationInUnbondingWindow(imported.sdkCtx, valAddr)
+	assert.NilError(t, err)
+	assert.Assert(t, !hasPending)
+	hasOldLock, err = imported.stakingKeeper.IsConsAddrLockedByRotation(imported.sdkCtx, sdk.ConsAddress(oldPk.Address()))
+	assert.NilError(t, err)
+	assert.Assert(t, !hasOldLock)
+}
+
+func fundStakingPoolsForGenesis(t *testing.T, f *fixture, genesis *types.GenesisState) {
+	t.Helper()
+
+	bondedTokens := math.ZeroInt()
+	notBondedTokens := math.ZeroInt()
+	for _, validator := range genesis.Validators {
+		switch validator.GetStatus() {
+		case types.Bonded:
+			bondedTokens = bondedTokens.Add(validator.GetTokens())
+		case types.Unbonded, types.Unbonding:
+			notBondedTokens = notBondedTokens.Add(validator.GetTokens())
+		}
+	}
+	for _, ubd := range genesis.UnbondingDelegations {
+		for _, entry := range ubd.Entries {
+			notBondedTokens = notBondedTokens.Add(entry.Balance)
+		}
+	}
+
+	if !bondedTokens.IsZero() {
+		assert.NilError(t, banktestutil.FundModuleAccount(
+			f.sdkCtx,
+			f.bankKeeper,
+			types.BondedPoolName,
+			sdk.NewCoins(sdk.NewCoin(genesis.Params.BondDenom, bondedTokens)),
+		))
+	}
+	if !notBondedTokens.IsZero() {
+		assert.NilError(t, banktestutil.FundModuleAccount(
+			f.sdkCtx,
+			f.bankKeeper,
+			types.NotBondedPoolName,
+			sdk.NewCoins(sdk.NewCoin(genesis.Params.BondDenom, notBondedTokens)),
+		))
+	}
 }

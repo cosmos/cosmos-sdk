@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -166,6 +168,59 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	suite.Equal(res.Balances.Len(), 1)
 	suite.Equal(res.Balances[0].Denom, ibcPath+"/"+ibcBaseDenom)
 	suite.Nil(res.Pagination.NextKey)
+}
+
+func (suite *KeeperTestSuite) TestQueryAllBalancesResolveDenomScaling() {
+	ctx, queryClient := suite.ctx, suite.queryClient
+	_, _, addr := testdata.KeyTestPubAddr()
+
+	// "uscale" (exp 0) -> "scale" (exp 6); "umil" (exp 0) -> "mil" (exp 3).
+	suite.bankKeeper.SetDenomMetaData(ctx, types.Metadata{
+		Description: "scaling - integral",
+		DenomUnits: []*types.DenomUnit{
+			{Denom: "uscale", Exponent: 0},
+			{Denom: "scale", Exponent: 6},
+		},
+		Base:    "uscale",
+		Display: "scale",
+	})
+	suite.bankKeeper.SetDenomMetaData(ctx, types.Metadata{
+		Description: "scaling - fractional",
+		DenomUnits: []*types.DenomUnit{
+			{Denom: "umil", Exponent: 0},
+			{Denom: "mil", Exponent: 3},
+		},
+		Base:    "umil",
+		Display: "mil",
+	})
+
+	// 100_000_000 uscale == 100 scale exactly; 1_500 umil == 1.5 mil (fractional).
+	origCoins := sdk.NewCoins(
+		sdk.NewInt64Coin("uscale", 100000000),
+		sdk.NewInt64Coin("umil", 1500),
+	)
+	suite.mockFundAccount(addr)
+	suite.Require().NoError(testutil.FundAccount(ctx, suite.bankKeeper, addr, origCoins))
+
+	req := types.NewQueryAllBalancesRequest(addr, &query.PageRequest{Limit: 10}, true)
+	res, err := queryClient.AllBalances(gocontext.Background(), req)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+
+	got := make(map[string]math.Int, res.Balances.Len())
+	for _, c := range res.Balances {
+		got[c.Denom] = c.Amount
+	}
+
+	// Integral conversion resolves to the display denom with the scaled amount.
+	amt, ok := got["scale"]
+	suite.Require().True(ok, "expected resolved display denom 'scale', got %v", res.Balances)
+	suite.Require().Equal(math.NewInt(100), amt)
+
+	// Fractional conversion keeps the base denom and base amount untouched.
+	amt, ok = got["umil"]
+	suite.Require().True(ok, "expected base denom 'umil' kept for fractional amount, got %v", res.Balances)
+	suite.Require().Equal(math.NewInt(1500), amt)
 }
 
 func (suite *KeeperTestSuite) TestSpendableBalances() {

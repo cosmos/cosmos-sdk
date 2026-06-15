@@ -66,7 +66,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 		func(key collections.Pair[sdk.AccAddress, string], value math.Int) (sdk.Coin, error) {
 			if req.ResolveDenom {
 				if metadata, ok := k.GetDenomMetaData(sdkCtx, key.K2()); ok {
-					return sdk.NewCoin(metadata.Display, value), nil
+					return resolveDisplayCoin(key.K2(), value, metadata), nil
 				}
 			}
 			return sdk.NewCoin(key.K2(), value), nil
@@ -78,6 +78,52 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	}
 
 	return &types.QueryAllBalancesResponse{Balances: balances, Pagination: pageRes}, nil
+}
+
+// resolveDisplayCoin converts a base-unit amount to the metadata display unit for
+// the AllBalances ResolveDenom option. It scales the amount by the difference
+// between the stored unit's exponent and the display unit's exponent. The display
+// denom is only used when the conversion yields an integer amount; otherwise the
+// base denom and amount are returned unchanged so no precision is silently lost.
+//
+// If the display unit is absent from the metadata's denom units (so no exponent is
+// available), the legacy behavior of swapping in the display denom is preserved.
+func resolveDisplayCoin(baseDenom string, amount math.Int, metadata types.Metadata) sdk.Coin {
+	var srcExp, dstExp uint32
+	foundSrc, foundDst := false, false
+	for _, unit := range metadata.DenomUnits {
+		switch unit.Denom {
+		case baseDenom:
+			srcExp, foundSrc = unit.Exponent, true
+		case metadata.Display:
+			dstExp, foundDst = unit.Exponent, true
+		}
+	}
+
+	if !foundDst {
+		return sdk.NewCoin(metadata.Display, amount)
+	}
+	if !foundSrc {
+		srcExp = 0
+	}
+
+	switch {
+	case dstExp == srcExp:
+		return sdk.NewCoin(metadata.Display, amount)
+	case srcExp > dstExp:
+		// The display unit is smaller than the stored unit, so scaling up always
+		// produces an integer amount.
+		factor := math.NewIntWithDecimal(1, int(srcExp-dstExp))
+		return sdk.NewCoin(metadata.Display, amount.Mul(factor))
+	default:
+		// The display unit is larger than the stored unit: only use it when the
+		// amount divides evenly, otherwise keep the base denom to avoid truncation.
+		factor := math.NewIntWithDecimal(1, int(dstExp-srcExp))
+		if amount.Mod(factor).IsZero() {
+			return sdk.NewCoin(metadata.Display, amount.Quo(factor))
+		}
+		return sdk.NewCoin(baseDenom, amount)
+	}
 }
 
 // SpendableBalances implements a gRPC query handler for retrieving an account's

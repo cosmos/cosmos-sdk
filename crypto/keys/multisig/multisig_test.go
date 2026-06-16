@@ -318,6 +318,34 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []cryptotypes.PubK
 	return pubKeys, signatures
 }
 
+func TestVerifyMultisignatureMoreBitsThanSigs(t *testing.T) {
+	msg := []byte{1, 2, 3, 4}
+
+	// 2-of-3 multisig where the first two signatures are valid.
+	privKeys := []*secp256k1.PrivKey{secp256k1.GenPrivKey(), secp256k1.GenPrivKey(), secp256k1.GenPrivKey()}
+	pubKeys := make([]cryptotypes.PubKey, len(privKeys))
+	sigs := make([]signing.SignatureData, 0, len(privKeys))
+	for i, pk := range privKeys {
+		pubKeys[i] = pk.PubKey()
+		if i < 2 {
+			sig, err := pk.Sign(msg)
+			require.NoError(t, err)
+			sigs = append(sigs, &signing.SingleSignatureData{Signature: sig})
+		}
+	}
+
+	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubKeys)
+	bitArray := cryptotypes.NewCompactBitArray(3)
+	bitArray.SetIndex(0, true)
+	bitArray.SetIndex(1, true)
+	bitArray.SetIndex(2, true) // claims a third signer but only two signatures are supplied
+
+	sig := &signing.MultiSignatureData{BitArray: bitArray, Signatures: sigs}
+	getSignBytes := func(signing.SignMode) ([]byte, error) { return msg, nil }
+
+	require.Error(t, multisigKey.VerifyMultisignature(getSignBytes, sig))
+}
+
 func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.MultiSignatureData) {
 	pubKeys := make([]cryptotypes.PubKey, n)
 	signatures := make([]signing.SignatureData, n)

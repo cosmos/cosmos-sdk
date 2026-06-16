@@ -113,6 +113,7 @@ func TestBlockSTMDistributionWithdrawRewardNoRecoveredPanic(t *testing.T) {
 }
 
 func runDistributionWithdrawRewardNoRecoveredPanic(t *testing.T, enableBlockSTM bool, blockSTMExecutors int) {
+	t.Helper()
 	accountCount := 32
 	validatorCount := 2
 	accounts := generateAccounts(accountCount)
@@ -261,6 +262,7 @@ func newTestApplication(
 	enableBlockSTM bool,
 	blockSTMExecutors int,
 ) testApplication {
+	tb.Helper()
 	return newTestApplicationWithLogger(tb, db, genesisState, valSet, enableBlockSTM, blockSTMExecutors, log.NewNopLogger())
 }
 

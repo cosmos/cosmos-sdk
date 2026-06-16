@@ -155,7 +155,10 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 	// register grpc-gateway routes (after grpc-web server as the first match is used)
 	s.Router.PathPrefix("/").Handler(s.GRPCGatewayRouter)
 
-	errCh := make(chan error)
+	// Buffered so the serving goroutine can always deliver Serve's result and
+	// exit: on the ctx.Done() shutdown path below the select returns without
+	// receiving from errCh, and an unbuffered channel would leak that goroutine.
+	errCh := make(chan error, 1)
 
 	// Start the API in an external goroutine as Serve is blocking and will return
 	// an error upon failure, which we'll send on the error channel that will be

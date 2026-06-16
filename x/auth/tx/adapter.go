@@ -60,12 +60,18 @@ func (w *wrapper) GetSigningTxData() txsigning.TxData {
 		modeInfo := &txv1beta1.ModeInfo{}
 		adaptModeInfo(signerInfo.ModeInfo, modeInfo)
 		txSignerInfo := &txv1beta1.SignerInfo{
-			PublicKey: &anypb.Any{
-				TypeUrl: signerInfo.PublicKey.TypeUrl,
-				Value:   signerInfo.PublicKey.Value,
-			},
 			Sequence: signerInfo.Sequence,
 			ModeInfo: modeInfo,
+		}
+		// PublicKey may legitimately be nil in a SignerInfo (the key can be
+		// omitted when it is already known, e.g. for some multisig sub-signers),
+		// as GetPubKeys already tolerates. Only convert it when present to avoid
+		// a nil pointer dereference.
+		if signerInfo.PublicKey != nil {
+			txSignerInfo.PublicKey = &anypb.Any{
+				TypeUrl: signerInfo.PublicKey.TypeUrl,
+				Value:   signerInfo.PublicKey.Value,
+			}
 		}
 		txSignerInfos[i] = txSignerInfo
 	}

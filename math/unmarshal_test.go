@@ -35,3 +35,38 @@ func TestUnmarshalEmptyIsZeroNotNil(t *testing.T) {
 		require.True(t, u.IsZero()) // panicked before the fix
 	})
 }
+
+// TestUnmarshalZeroRoundTrip ensures a zero value survives a Marshal/Unmarshal
+// round trip as a usable (non-nil) zero, complementing the explicit empty-input
+// coverage in TestUnmarshalEmptyIsZeroNotNil.
+func TestUnmarshalZeroRoundTrip(t *testing.T) {
+	t.Run("LegacyDec", func(t *testing.T) {
+		bz, err := math.LegacyZeroDec().Marshal()
+		require.NoError(t, err)
+
+		var d math.LegacyDec
+		require.NoError(t, d.Unmarshal(bz))
+		require.False(t, d.IsNil())
+		require.True(t, d.IsZero())
+	})
+
+	t.Run("Int", func(t *testing.T) {
+		bz, err := math.ZeroInt().Marshal()
+		require.NoError(t, err)
+
+		var i math.Int
+		require.NoError(t, i.Unmarshal(bz))
+		require.False(t, i.IsNil())
+		require.True(t, i.IsZero())
+	})
+
+	t.Run("Uint", func(t *testing.T) {
+		bz, err := math.ZeroUint().Marshal()
+		require.NoError(t, err)
+
+		var u math.Uint
+		require.NoError(t, u.Unmarshal(bz))
+		require.False(t, u.IsNil())
+		require.True(t, u.IsZero())
+	})
+}

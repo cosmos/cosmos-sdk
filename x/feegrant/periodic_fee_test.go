@@ -80,6 +80,15 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			},
 			valid: false,
 		},
+		"zero period": {
+			// A zero period would make tryResetPeriod refill the spend limit on
+			// every Accept, bypassing the per-period cap, so it must be rejected.
+			allow: feegrant.PeriodicAllowance{
+				Period:           time.Duration(0),
+				PeriodSpendLimit: smallAtom,
+			},
+			valid: false,
+		},
 		"same period": {
 			allow: feegrant.PeriodicAllowance{
 				Basic: feegrant.BasicAllowance{

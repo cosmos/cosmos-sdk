@@ -103,10 +103,6 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 }
 
 func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
-	if k.HasExternalCommunityPool() {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "external community pool is enabled - use the FundCommunityPool method exposed by the external community pool")
-	}
-
 	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
@@ -146,10 +142,6 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 }
 
 func (k msgServer) CommunityPoolSpend(goCtx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
-	if k.HasExternalCommunityPool() {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "external community pool is enabled - use the DistributeFromCommunityPool method exposed by the external community pool")
-	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := sdk.ValidateAuthority(ctx, k.authority, msg.Authority); err != nil {
 		return nil, err
@@ -217,7 +209,7 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 			return nil, err
 		}
 		current := rewards.Rewards
-		historical, err := k.GetValidatorHistoricalRewards(ctx, valAddr, rewards.Period-1)
+		historical, err := k.getValidatorHistoricalRewards(ctx, valAddr, rewards.Period-1, true)
 		if err != nil {
 			return nil, err
 		}

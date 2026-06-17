@@ -22,12 +22,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
+	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
@@ -452,6 +453,70 @@ func TestOptionFunction(t *testing.T) {
 	db := dbm.NewMemDB()
 	bap := baseapp.NewBaseApp("starting name", log.NewTestLogger(t), db, nil, testChangeNameHelper("new name"))
 	require.Equal(t, bap.Name(), "new name", "BaseApp should have had name changed via option function")
+}
+
+// unwrappableRunner wraps a TxRunner and exposes it via Unwrap, mirroring how
+// applications (e.g. EVM chains) wrap the STMRunner.
+type unwrappableRunner struct {
+	inner sdk.TxRunner
+}
+
+func (r unwrappableRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]byte, deliverTx sdk.DeliverTxFunc) ([]*abci.ExecTxResult, error) {
+	return r.inner.Run(ctx, ms, txs, deliverTx)
+}
+
+func (r unwrappableRunner) Unwrap() sdk.TxRunner { return r.inner }
+
+func TestBlockGasMeterParallelRunnerPanic(t *testing.T) {
+	db := dbm.NewMemDB()
+
+	testCases := []struct {
+		name     string
+		testFunc func(*testing.T, *baseapp.BaseApp)
+	}{
+		{
+			"panic on bstm + gas meter",
+			func(t *testing.T, bap *baseapp.BaseApp) {
+				t.Helper()
+				bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil))
+				require.Panics(t, func() { bap.SetDisableBlockGasMeter(false) })
+				require.Panics(t, func() { baseapp.EnableBlockGasMeter()(bap) })
+			},
+		},
+		{
+			"panic on gas meter + bstm",
+			func(t *testing.T, bap *baseapp.BaseApp) {
+				t.Helper()
+				bap.SetDisableBlockGasMeter(false)
+				require.Panics(t, func() { bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil)) })
+			},
+		},
+		{
+			"successful bstm parallelism",
+			func(t *testing.T, bap *baseapp.BaseApp) {
+				t.Helper()
+				require.NotPanics(t, func() { bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil)) })
+			},
+		},
+		{
+			// A wrapped STMRunner must still be detected through Unwrap, so the
+			// indeterminism guard fires even when the concrete type is hidden.
+			"panic on wrapped bstm + gas meter",
+			func(t *testing.T, bap *baseapp.BaseApp) {
+				t.Helper()
+				wrapped := unwrappableRunner{txnrunner.NewSTMRunner(nil, nil, 0, true, nil)}
+				bap.SetBlockSTMTxRunner(wrapped)
+				require.Panics(t, func() { bap.SetDisableBlockGasMeter(false) })
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			bap := baseapp.NewBaseApp("foo", log.NewTestLogger(t), db, nil)
+			tc.testFunc(t, bap)
+		})
+	}
 }
 
 func TestBaseAppOptionSeal(t *testing.T) {

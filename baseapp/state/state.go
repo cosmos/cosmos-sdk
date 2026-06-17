@@ -10,7 +10,7 @@ import (
 )
 
 type State struct {
-	MultiStore storetypes.CommitBranch
+	MultiStore storetypes.CacheMultiStore
 
 	mtx sync.RWMutex
 	ctx sdk.Context
@@ -18,7 +18,7 @@ type State struct {
 	span trace.Span
 }
 
-func NewState(ctx sdk.Context, ms storetypes.CommitBranch) *State {
+func NewState(ctx sdk.Context, ms storetypes.CacheMultiStore) *State {
 	return &State{
 		MultiStore: ms,
 		ctx:        ctx,
@@ -27,7 +27,7 @@ func NewState(ctx sdk.Context, ms storetypes.CommitBranch) *State {
 
 // CacheMultiStore calls and returns a CacheMultiStore on the state's underlying
 // CacheMultiStore.
-func (st *State) CacheMultiStore() storetypes.MultiStore {
+func (st *State) CacheMultiStore() storetypes.CacheMultiStore {
 	return st.MultiStore.CacheMultiStore()
 }
 

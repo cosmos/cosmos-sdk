@@ -106,15 +106,16 @@ func initFixture(tb testing.TB) *fixture {
 	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
 
-	newCtx := sdk.NewContext(cms.RootCacheMultiStore(), cmtprototypes.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms, cmtprototypes.Header{}, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 
 	maccPerms := map[string][]string{
-		minttypes.ModuleName:    {authtypes.Minter},
-		types.ModuleName:        {authtypes.Minter},
-		types.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		types.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		minttypes.ModuleName:         {authtypes.Minter},
+		types.ModuleName:             {authtypes.Minter},
+		types.BondedPoolName:         {authtypes.Burner, authtypes.Staking},
+		types.NotBondedPoolName:      {authtypes.Burner, authtypes.Staking},
+		types.KeyRotationFeePoolName: {authtypes.Burner},
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -141,15 +142,16 @@ func initFixture(tb testing.TB) *fixture {
 
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[types.StoreKey]), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
+	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
 		authtypes.ModuleName: authModule,
 		banktypes.ModuleName: bankModule,
 		types.ModuleName:     stakingModule,
 	})
+	integrationApp.SetFinalizeBlockHeaderForwarding(true)
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

@@ -6,7 +6,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -50,32 +49,29 @@ func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, val
 		// subtract from outstanding
 		outstanding = outstanding.Sub(commission)
 
-		// split into integral & remainder
-		coins, remainder := commission.TruncateDecimal()
-
-		// remainder to community pool
-		feePool, err := h.k.FeePool.Get(ctx)
+		// cant lookup validator from state since it has been removed
+		valOperator, err := h.k.stakingKeeper.ValidatorAddressCodec().BytesToString(valAddr)
 		if err != nil {
 			return err
 		}
 
-		feePool.CommunityPool = feePool.CommunityPool.Add(remainder...)
-		err = h.k.FeePool.Set(ctx, feePool)
+		// check if staking module is telling us we should use a strict
+		// withdraw or not
+		strict := stakingtypes.IsStrictWithdraw(ctx)
+
+		// determine where commission for this validator should go based on
+		// strict flag
+		dest, err := h.k.resolveWithdrawDestination(ctx, sdk.AccAddress(valAddr), strict)
 		if err != nil {
 			return err
 		}
+		if _, err := h.k.sendCoinsToDestination(ctx, commission, dest); err != nil {
+			return err
+		}
 
-		// add to validator account
-		if !coins.IsZero() {
-			accAddr := sdk.AccAddress(valAddr)
-			withdrawAddr, err := h.k.GetDelegatorWithdrawAddr(ctx, accAddr)
-			if err != nil {
-				return err
-			}
-
-			if err := h.k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, coins); err != nil {
-				return err
-			}
+		// if we have modified the withdraw destination, emit an event saying so
+		if dest.IsRedirected() {
+			emitWithdrawDestinationRedirectedEvent(ctx, dest, valOperator, "")
 		}
 	}
 
@@ -120,6 +116,11 @@ func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, val
 	return nil
 }
 
+// AfterValidatorConsKeyUpdated is a no-op for distribution.
+func (h Hooks) AfterValidatorConsKeyUpdated(_ context.Context, _, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+	return nil
+}
+
 // BeforeDelegationCreated increments period
 func (h Hooks) BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	val, err := h.k.stakingKeeper.Validator(ctx, valAddr)
@@ -143,8 +144,24 @@ func (h Hooks) BeforeDelegationSharesModified(ctx context.Context, delAddr sdk.A
 		return err
 	}
 
-	if _, err := h.k.withdrawDelegationRewards(ctx, val, del); err != nil {
+	// check if staking module is telling us we should use a strict
+	// withdraw or not
+	strict := stakingtypes.IsStrictWithdraw(ctx)
+
+	// determine where rewards for this delegator should go based on
+	// strict flag
+	dest, err := h.k.resolveWithdrawDestination(ctx, delAddr, strict)
+	if err != nil {
 		return err
+	}
+
+	if _, err := h.k.withdrawDelegationRewards(ctx, val, del, dest); err != nil {
+		return err
+	}
+
+	// if we have modified the withdraw destination, emit an event saying so
+	if dest.IsRedirected() {
+		emitWithdrawDestinationRedirectedEvent(ctx, dest, val.GetOperator(), del.GetDelegatorAddr())
 	}
 
 	return nil

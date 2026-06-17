@@ -14,9 +14,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	protov2 "google.golang.org/protobuf/proto"
 
@@ -30,7 +28,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/v2"
-	"github.com/cosmos/cosmos-sdk/store/v2/legacy/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -62,42 +59,18 @@ const (
 
 var _ servertypes.ABCI = (*BaseApp)(nil)
 
-var (
-	tracer       = otel.Tracer("cosmos-sdk/baseapp")
-	meter        = otel.Meter("cosmos-sdk/baseapp")
-	blockCounter metric.Int64Counter
-	txCounter    metric.Int64Counter
-)
-
-func init() {
-	var err error
-	blockCounter, err = meter.Int64Counter("block.count")
-	if err != nil {
-		panic(err)
-	}
-	txCounter, err = meter.Int64Counter("tx.count")
-	if err != nil {
-		panic(err)
-	}
-}
-
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
-	mu     sync.Mutex // mu protects the fields below.
-	logger log.Logger
-	name   string                      // application name from abci.BlockInfo
-	db     dbm.DB                      // common DB backend
-	cms    storetypes.CommitMultiStore // Main (uncached) state
-	// committer is the in-progress CommitFinalizer for the current block, created by StartCommit
-	// during internalFinalizeBlock. It must be set to nil after Finalize() or Rollback() to
-	// release the reference. The CommitFinalizer's state machine guards against misuse
-	// (double-finalize, post-rollback finalize), but callers should still nil the field promptly.
-	committer         storetypes.CommitFinalizer
-	qms               storetypes.RootMultiStore // Optional alternative multistore for querying only.
-	storeLoader       StoreLoader               // function to handle store loading, may be overridden with SetStoreLoader()
-	grpcQueryRouter   *GRPCQueryRouter          // router for redirecting gRPC query calls
-	msgServiceRouter  *MsgServiceRouter         // router for redirecting Msg service messages
+	mu                sync.RWMutex // mu protects concurrent access to name, version, appVersion.
+	logger            log.Logger
+	name              string                      // application name from abci.BlockInfo
+	db                dbm.DB                      // common DB backend
+	cms               storetypes.CommitMultiStore // Main (uncached) state
+	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
+	storeLoader       StoreLoader                 // function to handle store loading, may be overridden with SetStoreLoader()
+	grpcQueryRouter   *GRPCQueryRouter            // router for redirecting gRPC query calls
+	msgServiceRouter  *MsgServiceRouter           // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
@@ -187,6 +160,7 @@ type BaseApp struct {
 	// when disabled, the block gas meter in context is a noop one.
 	//
 	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
+	// Defaults to true (block gas meter disabled by default).
 	disableBlockGasMeter bool
 
 	// Optional alternative tx runner, used for block-stm parallel transaction execution. If nil, default txRunner is used.
@@ -200,17 +174,18 @@ func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
-		logger:           logger.With(log.ModuleKey, "baseapp"),
-		name:             name,
-		db:               db,
-		cms:              store.NewCommitMultiStore(db, logger),
-		storeLoader:      DefaultStoreLoader,
-		grpcQueryRouter:  NewGRPCQueryRouter(),
-		msgServiceRouter: NewMsgServiceRouter(),
-		txDecoder:        txDecoder,
-		fauxMerkleMode:   false,
-		sigverifyTx:      true,
-		gasConfig:        config.GasConfig{QueryGasLimit: math.MaxUint64},
+		logger:               logger.With(log.ModuleKey, "baseapp"),
+		name:                 name,
+		db:                   db,
+		cms:                  store.NewCommitMultiStore(db, logger),
+		storeLoader:          DefaultStoreLoader,
+		grpcQueryRouter:      NewGRPCQueryRouter(),
+		msgServiceRouter:     NewMsgServiceRouter(),
+		txDecoder:            txDecoder,
+		fauxMerkleMode:       false,
+		sigverifyTx:          true,
+		gasConfig:            config.GasConfig{QueryGasLimit: math.MaxUint64},
+		disableBlockGasMeter: true,
 	}
 
 	for _, option := range options {
@@ -236,11 +211,7 @@ func NewBaseApp(
 		app.SetVerifyVoteExtensionHandler(NoOpVerifyVoteExtensionHandler())
 	}
 	if app.interBlockCache != nil {
-		if rms, ok := app.cms.(*rootmulti.Store); ok {
-			rms.SetInterBlockCache(app.interBlockCache)
-		} else {
-			logger.Warn("SetInterBlockCache: CommitMultiStore is not rootmulti.Store, option ignored")
-		}
+		app.cms.SetInterBlockCache(app.interBlockCache)
 	}
 
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
@@ -268,16 +239,22 @@ func NewBaseApp(
 
 // Name returns the name of the BaseApp.
 func (app *BaseApp) Name() string {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
 	return app.name
 }
 
 // AppVersion returns the application's protocol version.
 func (app *BaseApp) AppVersion() uint64 {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
 	return app.appVersion
 }
 
 // Version returns the application's version string.
 func (app *BaseApp) Version() string {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
 	return app.version
 }
 
@@ -926,10 +903,16 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		if err != nil {
 			if mode == execModeReCheck {
 				// if the ante handler fails on recheck, we want to remove the tx from the mempool
-				if mempoolErr := app.mempool.Remove(tx); mempoolErr != nil {
-					return gInfo, nil, anteEvents, errors.Join(err, mempoolErr)
+				errMempool := mempool.RemoveWithReason(ctx, app.mempool, tx, mempool.RemoveReason{
+					Caller: mempool.CallerRunTxRecheck,
+					Error:  err,
+				})
+
+				if errMempool != nil {
+					return gInfo, nil, anteEvents, errors.Join(err, errMempool)
 				}
 			}
+
 			return gInfo, nil, nil, err
 		}
 
@@ -939,12 +922,13 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 
 	switch mode {
 	case execModeCheck:
-		err = app.mempool.Insert(ctx, tx)
+		err = app.mempool.Insert(ctx, tx, mempool.InsertOption{GasWanted: gasWanted})
 		if err != nil {
 			return gInfo, nil, anteEvents, err
 		}
 	case execModeFinalize:
-		err = app.mempool.Remove(tx)
+		reason := mempool.RemoveReason{Caller: mempool.CallerRunTxFinalize}
+		err = mempool.RemoveWithReason(ctx, app.mempool, tx, reason)
 		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 			return gInfo, nil, anteEvents, fmt.Errorf("failed to remove tx from mempool: %w", err)
 		}
@@ -996,7 +980,9 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 
 			msCache.Write()
 
-			txCounter.Add(ctx, 1)
+			if inst != nil {
+				inst.TxCount.Add(ctx, 1)
+			}
 		}
 
 		if len(anteEvents) > 0 && (mode == execModeFinalize || mode == execModeSimulate) {
@@ -1145,18 +1131,18 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 // ProcessProposal state internally will be discarded. <nil, err> will be
 // returned if the transaction cannot be decoded. <Tx, nil> will be returned if
 // the transaction is valid, otherwise <Tx, err> will be returned.
-func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
+func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (msg sdk.Tx, gasWanted uint64, err error) {
 	tx, err := app.txDecoder(txBz)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	_, _, _, err = app.RunTx(execModeProcessProposal, txBz, tx, -1, nil, nil)
+	gInfo, _, _, err := app.RunTx(execModeProcessProposal, txBz, tx, -1, nil, nil)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return tx, nil
+	return tx, gInfo.GasWanted, nil
 }
 
 func (app *BaseApp) TxDecode(txBytes []byte) (sdk.Tx, error) {

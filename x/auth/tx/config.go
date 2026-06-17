@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing/direct"
 	"github.com/cosmos/cosmos-sdk/x/tx/signing/directaux"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual"
 )
 
 type config struct {
@@ -40,11 +39,14 @@ type ConfigOptions struct {
 	// SigningOptions are the options that will be used when constructing a txsigning.Context and sign mode handlers.
 	// If nil defaults will be used.
 	SigningOptions *txsigning.Options
-	// TextualCoinMetadataQueryFn is the function that will be used to query coin metadata when constructing
-	// textual sign mode handler. This is required if SIGN_MODE_TEXTUAL is enabled.
-	TextualCoinMetadataQueryFn textual.CoinMetadataQueryFn
 	// CustomSignModes are the custom sign modes that will be added to the txsigning.HandlerMap.
 	CustomSignModes []txsigning.SignModeHandler
+	// AminoJSONEncoder is the encoder used by the SIGN_MODE_LEGACY_AMINO_JSON handler.
+	// This allows configuring custom field, message, scalar and type encodings (e.g. via
+	// aminojson.Encoder.DefineFieldEncoding) without replicating the SDK's HandlerMap construction.
+	// If nil, a default aminojson.Encoder is created using the FileResolver and TypeResolver
+	// derived from SigningOptions. See https://github.com/cosmos/cosmos-sdk/issues/25221.
+	AminoJSONEncoder *aminojson.Encoder
 	// ProtoDecoder is the decoder that will be used to decode protobuf transactions.
 	ProtoDecoder sdk.TxDecoder
 	// ProtoEncoder is the encoder that will be used to encode protobuf transactions.
@@ -60,14 +62,13 @@ var DefaultSignModes = []signingtypes.SignMode{
 	signingtypes.SignMode_SIGN_MODE_DIRECT,
 	signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
 	signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-	// signingtypes.SignMode_SIGN_MODE_TEXTUAL is not enabled by default, as it requires a x/bank keeper or gRPC connection.
 }
 
 // NewTxConfig returns a new protobuf TxConfig using the provided ProtoCodec and sign modes. The
 // first enabled sign mode will become the default sign mode.
 //
 // NOTE: Use NewTxConfigWithOptions to provide a custom signing handler in case the sign mode
-// is not supported by default (eg: SignMode_SIGN_MODE_EIP_191), or to enable SIGN_MODE_TEXTUAL.
+// is not supported by default (eg: SignMode_SIGN_MODE_EIP_191).
 //
 // We prefer to use depinject to provide client.TxConfig, but we permit this constructor usage. Within the SDK,
 // this constructor is primarily used in tests, but also sees usage in app chains like:
@@ -138,19 +139,8 @@ func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, erro
 			handlers[i] = aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
 				FileResolver: signingOpts.FileResolver,
 				TypeResolver: signingOpts.TypeResolver,
+				Encoder:      configOpts.AminoJSONEncoder,
 			})
-		case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
-			handlers[i], err = textual.NewSignModeHandler(textual.SignModeOptions{
-				CoinMetadataQuerier: configOpts.TextualCoinMetadataQueryFn,
-				FileResolver:        signingOpts.FileResolver,
-				TypeResolver:        signingOpts.TypeResolver,
-			})
-			if configOpts.TextualCoinMetadataQueryFn == nil {
-				return nil, fmt.Errorf("cannot enable SIGN_MODE_TEXTUAL without a TextualCoinMetadataQueryFn")
-			}
-			if err != nil {
-				return nil, err
-			}
 		}
 	}
 	for i, m := range configOpts.CustomSignModes {
@@ -187,17 +177,31 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 	var err error
 	if configOptions.SigningContext == nil {
 		if configOptions.SigningOptions == nil {
-			configOptions.SigningOptions, err = NewDefaultSigningOptions()
+			// Reuse the SigningContext from the codec's interface registry.
+			// This propagates SigningOptions (including CustomGetSigners) that
+			// were applied via NewInterfaceRegistryWithOptions; building a
+			// fresh context from NewDefaultSigningOptions would drop them. See
+			// https://github.com/cosmos/cosmos-sdk/issues/22200.
+			if ir := protoCodec.InterfaceRegistry(); ir != nil {
+				configOptions.SigningContext = ir.SigningContext()
+			} else {
+				configOptions.SigningOptions, err = NewDefaultSigningOptions()
+				if err != nil {
+					return nil, err
+				}
+				configOptions.SigningContext, err = txsigning.NewContext(*configOptions.SigningOptions)
+				if err != nil {
+					return nil, err
+				}
+			}
+		} else {
+			if configOptions.SigningOptions.FileResolver == nil {
+				configOptions.SigningOptions.FileResolver = protoCodec.InterfaceRegistry()
+			}
+			configOptions.SigningContext, err = txsigning.NewContext(*configOptions.SigningOptions)
 			if err != nil {
 				return nil, err
 			}
-		}
-		if configOptions.SigningOptions.FileResolver == nil {
-			configOptions.SigningOptions.FileResolver = protoCodec.InterfaceRegistry()
-		}
-		configOptions.SigningContext, err = txsigning.NewContext(*configOptions.SigningOptions)
-		if err != nil {
-			return nil, err
 		}
 	}
 	txConfig.signingContext = configOptions.SigningContext

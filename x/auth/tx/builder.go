@@ -252,6 +252,10 @@ func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 		return nil, err
 	}
 	n := len(signerInfos)
+	if len(sigs) != n {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrTxDecode,
+			"expected %d signatures, got %d", n, len(sigs))
+	}
 	res := make([]signing.SignatureV2, n)
 
 	for i, si := range signerInfos {

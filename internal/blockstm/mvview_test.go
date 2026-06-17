@@ -1,8 +1,10 @@
 package blockstm
 
 import (
+	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/test-go/testify/require"
 
@@ -10,35 +12,164 @@ import (
 )
 
 func TestMVMemoryViewDelete(t *testing.T) {
+	ctx := context.Background()
 	stores := map[storetypes.StoreKey]int{
 		StoreKeyAuth: 0,
 	}
 	storage := NewMultiMemDB(stores)
-	mv := NewMVMemory(16, stores, storage, nil)
+	mv := NewMVMemory(16, stores, MultiStoreToCachedStorage(storage, stores), nil)
 
-	mview := mv.View(0)
+	mview := mv.View(ctx, 0)
 	view := mview.GetKVStore(StoreKeyAuth)
 	view.Set(Key("a"), []byte("1"))
 	view.Set(Key("b"), []byte("1"))
 	view.Set(Key("c"), []byte("1"))
 	require.True(t, mv.Record(TxnVersion{0, 0}, mview))
 
-	mview = mv.View(1)
+	mview = mv.View(ctx, 1)
 	view = mview.GetKVStore(StoreKeyAuth)
 	view.Delete(Key("a"))
 	view.Set(Key("b"), []byte("2"))
 	require.True(t, mv.Record(TxnVersion{1, 0}, mview))
 
-	mview = mv.View(2)
+	mview = mv.View(ctx, 2)
 	view = mview.GetKVStore(StoreKeyAuth)
 	require.Nil(t, view.Get(Key("a")))
 	require.False(t, view.Has(Key("a")))
 }
 
-func TestMVMemoryViewIteration(t *testing.T) {
+func TestMVMemoryViewHasStoragePath(t *testing.T) {
+	ctx := context.Background()
+	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
+
+	parent := NewMultiMemDB(stores)
+	parent.GetKVStore(StoreKeyAuth).Set([]byte("present"), []byte("v"))
+
+	counted := &countingStorage[[]byte]{GStorage: parent.GetKVStore(StoreKeyAuth)}
+	storages := []Storage{NewGCachedStorage[[]byte](counted, storetypes.BytesIsZero)}
+	mv := NewMVMemory(4, stores, storages, NewScheduler(4))
+
+	mview := mv.View(ctx, 0)
+	view := mview.GetKVStore(StoreKeyAuth)
+	require.True(t, view.Has([]byte("present")))
+	require.False(t, view.Has([]byte("missing")))
+
+	require.EqualValues(t, 2, counted.gets.Load()+counted.hasOps.Load(),
+		"Has() should consult underlying storage once per distinct key")
+
+	rs := (*mview.ReadSet())[0]
+	require.Empty(t, rs.Reads, "Has() must not emit value-versioned descriptors")
+	require.Equal(t, []HasDescriptor{
+		{Key: []byte("present"), Exists: true, FromStorage: true},
+		{Key: []byte("missing"), Exists: false, FromStorage: true},
+	}, rs.HasReads)
+}
+
+func TestMVMemoryViewHasConflictReduction(t *testing.T) {
+	key := []byte("k")
+	cases := []struct {
+		name      string
+		mutate    func(storetypes.KVStore)
+		wantValid bool
+	}{
+		{"same_existence_revalidates", func(s storetypes.KVStore) { s.Set(key, []byte("v0-new")) }, true},
+		{"existence_flip_invalidates", func(s storetypes.KVStore) { s.Delete(key) }, false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
+			storage := NewMultiMemDB(stores)
+			storage.GetKVStore(StoreKeyAuth).Set(key, []byte("v0"))
+
+			mv := NewMVMemory(4, stores, MultiStoreToCachedStorage(storage, stores), NewScheduler(4))
+
+			// Txn 2 observes Has(key)==true via storage.
+			view2 := mv.View(ctx, 2)
+			require.True(t, view2.GetKVStore(StoreKeyAuth).Has(key))
+			mv.Record(TxnVersion{2, 0}, view2)
+
+			// Txn 0 mutates the same key; existence may or may not flip.
+			view0 := mv.View(ctx, 0)
+			tc.mutate(view0.GetKVStore(StoreKeyAuth))
+			mv.Record(TxnVersion{0, 0}, view0)
+
+			require.Equal(t, tc.wantValid, mv.ValidateReadSet(ctx, 2))
+		})
+	}
+}
+
+func TestReadSetKeyAliasing(t *testing.T) {
+	ctx := context.Background()
 	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
 	storage := NewMultiMemDB(stores)
-	mv := NewMVMemory(16, stores, storage, nil)
+	mv := NewMVMemory(4, stores, MultiStoreToCachedStorage(storage, stores), NewScheduler(4))
+
+	mview := mv.View(ctx, 0)
+	view := mview.GetKVStore(StoreKeyAuth)
+
+	getKey := []byte("get-key")
+	hasKey := []byte("has-key")
+	_ = view.Get(getKey)
+	_ = view.Has(hasKey)
+
+	rs := (*mview.ReadSet())[0]
+	require.True(t, &rs.Reads[0].Key[0] == &getKey[0],
+		"Get should store the caller's key slice without copying")
+	require.True(t, &rs.HasReads[0].Key[0] == &hasKey[0],
+		"Has should store the caller's key slice without copying")
+}
+
+func TestMVMemoryViewHasWaitsOnEstimate(t *testing.T) {
+	ctx := context.Background()
+	key := []byte("k")
+	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
+	storage := NewMultiMemDB(stores)
+	scheduler := NewScheduler(4)
+	mv := NewMVMemory(4, stores, MultiStoreToCachedStorage(storage, stores), scheduler)
+
+	// Txn 0 wrote key then was re-marked ESTIMATE (mimics block-stm aborting a writer).
+	view0 := mv.View(ctx, 0)
+	view0.GetKVStore(StoreKeyAuth).Set(key, []byte("v"))
+	mv.Record(TxnVersion{0, 0}, view0)
+	mv.ConvertWritesToEstimates(0)
+
+	existsCh := make(chan bool, 1)
+	go func() {
+		scheduler.TryIncarnate(2)
+		view2 := mv.View(ctx, 2)
+		exists := view2.GetKVStore(StoreKeyAuth).Has(key)
+		mv.Record(TxnVersion{2, 0}, view2)
+		existsCh <- exists
+	}()
+
+	select {
+	case <-existsCh:
+		t.Fatal("Has() should block on Txn 0's ESTIMATE")
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	// Txn 0 re-executes with a delete; existence flips to false.
+	view0 = mv.View(ctx, 0)
+	view0.GetKVStore(StoreKeyAuth).Delete(key)
+	mv.Record(TxnVersion{0, 1}, view0)
+	scheduler.TryIncarnate(0)
+	scheduler.FinishExecution(TxnVersion{0, 1}, false)
+
+	select {
+	case exists := <-existsCh:
+		require.False(t, exists, "Has() should observe Txn 0's delete after wake-up")
+	case <-time.After(time.Second):
+		t.Fatal("Has() did not wake up after Txn 0 finished")
+	}
+	require.True(t, mv.ValidateReadSet(ctx, 2))
+}
+
+func TestMVMemoryViewIteration(t *testing.T) {
+	ctx := context.Background()
+	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
+	storage := NewMultiMemDB(stores)
+	mv := NewMVMemory(16, stores, MultiStoreToCachedStorage(storage, stores), nil)
 	{
 		parentState := []KVPair{
 			{Key("a"), []byte("1")},
@@ -68,7 +199,7 @@ func TestMVMemoryViewIteration(t *testing.T) {
 	}
 
 	for i, pairs := range sets {
-		mview := mv.View(TxnIndex(i))
+		mview := mv.View(ctx, TxnIndex(i))
 		view := mview.GetKVStore(StoreKeyAuth)
 		for _, kv := range pairs {
 			view.Set(kv.Key, kv.Value)
@@ -158,7 +289,7 @@ func TestMVMemoryViewIteration(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("version-%d", tc.index), func(t *testing.T) {
-			view := mv.View(tc.index).GetKVStore(StoreKeyAuth)
+			view := mv.View(ctx, tc.index).GetKVStore(StoreKeyAuth)
 			var iter storetypes.Iterator
 			if tc.ascending {
 				iter = view.Iterator(tc.start, tc.end)

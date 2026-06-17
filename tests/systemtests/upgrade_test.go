@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	systest "github.com/cosmos/cosmos-sdk/testutil/systemtests"
+	systest "github.com/cosmos/cosmos-sdk/tools/systemtests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -19,7 +19,7 @@ import (
 const (
 	testSeed            = "scene learn remember glide apple expand quality spawn property shoe lamp carry upset blossom draft reject aim file trash miss script joy only measure"
 	upgradeHeight int64 = 22
-	upgradeName         = "v053-to-v054" // must match UpgradeName in simapp/upgrades.go
+	upgradeName         = "v054-to-v055" // must match UpgradeName in simapp/upgrades.go
 )
 
 func TestChainUpgrade(t *testing.T) {
@@ -32,11 +32,11 @@ func TestChainUpgrade(t *testing.T) {
 	currentBranchBinary := systest.Sut.ExecBinary()
 	currentInitializer := systest.Sut.TestnetInitializer()
 
-	legacyBinary := systest.WorkDir + "/binaries/v0.53/simd"
+	legacyBinary := systest.WorkDir + "/binaries/v0.54/simd"
 	systest.Sut.SetExecBinary(legacyBinary)
 	systest.Sut.SetTestnetInitializer(systest.InitializerWithBinary(legacyBinary, systest.Sut))
 	systest.Sut.SetupChain()
-	require.False(t, gjson.Get(systest.Sut.ReadGenesisJSON(t), "app_state.mint.params.max_supply").Exists())
+	require.True(t, gjson.Get(systest.Sut.ReadGenesisJSON(t), "app_state.mint.params.max_supply").Exists())
 
 	votingPeriod := 5 * time.Second // enough time to vote
 	systest.Sut.ModifyGenesisJSON(t, systest.SetGovVotingPeriod(t, votingPeriod))
@@ -74,6 +74,12 @@ func TestChainUpgrade(t *testing.T) {
 	proposalStatus := gjson.Get(raw, "proposal.status").String()
 	require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw)
 
+	legacyStakingParamsRaw := cli.CustomQuery("q", "staking", "params")
+	require.False(t,
+		gjson.Get(legacyStakingParamsRaw, "params.key_rotation_fee").Exists(),
+		legacyStakingParamsRaw,
+	)
+
 	t.Log("waiting for upgrade info")
 	systest.Sut.AwaitUpgradeInfo(t)
 	systest.Sut.StopChain()
@@ -91,12 +97,21 @@ func TestChainUpgrade(t *testing.T) {
 		mintParamsRaw,
 	)
 
+	stakingParamsRaw := cli.CustomQuery("q", "staking", "params")
+	bondDenom := gjson.Get(stakingParamsRaw, "params.bond_denom")
+	require.True(t, bondDenom.Exists(), stakingParamsRaw)
+
+	keyRotationFee := gjson.Get(stakingParamsRaw, "params.key_rotation_fee")
+	require.True(t, keyRotationFee.Exists(), stakingParamsRaw)
+	require.Equal(t, "1000000", keyRotationFee.Get("amount").String(), stakingParamsRaw)
+	require.Equal(t, bondDenom.String(), keyRotationFee.Get("denom").String(), stakingParamsRaw)
+
 	regex, err := regexp.Compile("DBG this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
 	require.NoError(t, err)
 	require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
 
 	// smoke test that new version runs
 	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
-	got := cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
+	got := cli.Run("tx", "distribution", "fund-community-pool", "100stake", "--from=node0")
 	systest.RequireTxSuccess(t, got)
 }

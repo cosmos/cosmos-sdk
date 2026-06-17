@@ -39,8 +39,6 @@
   - x/gov/**/*
 "C:x/mint":
   - x/mint/**/*
-"C:x/protocolpool":
-  - x/protocolpool/**/*
 "C:x/slashing":
   - x/slashing/**/*
 "C:x/staking":

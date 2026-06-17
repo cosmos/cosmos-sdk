@@ -733,6 +733,21 @@ func (s *E2ETestSuite) TestGetBlockWithTxs_GRPC() {
 	}
 }
 
+func (s *E2ETestSuite) TestGetBlockWithTxs_LimitCappedToBlockTxCount() {
+	// When the requested limit exceeds the number of txs in the block,
+	// the response should contain exactly the block's tx count, not be
+	// capped at query.DefaultLimit.
+	grpcRes, err := s.queryClient.GetBlockWithTxs(context.Background(), &tx.GetBlockWithTxsRequest{
+		Height:     s.txHeight,
+		Pagination: &query.PageRequest{Offset: 0, Limit: 50_000_000},
+	})
+	s.Require().NoError(err)
+	// The block has 2 txs; the limit should be capped to the block's tx count
+	// rather than query.DefaultLimit.
+	s.Require().Len(grpcRes.Txs, 2)
+	s.Require().Equal(uint64(2), grpcRes.Pagination.Total)
+}
+
 func (s *E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
 	val := s.network.Validators[0]
 	testCases := []struct {

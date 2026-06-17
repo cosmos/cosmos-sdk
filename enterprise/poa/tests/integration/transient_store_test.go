@@ -80,12 +80,13 @@ func initFixture(tb testing.TB) *fixture {
 	// Load the stores
 	require.NoError(tb, cms.LoadLatestVersion())
 
-	newCtx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 
 	maccPerms := map[string][]string{
 		authtypes.FeeCollectorName: nil,
+		poatypes.ModuleName:        nil,
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -98,9 +99,9 @@ func initFixture(tb testing.TB) *fixture {
 		authority.String(),
 	)
 
-	// Create fee collector module account
-	feeCollectorAcc := authtypes.NewEmptyModuleAccount(authtypes.FeeCollectorName)
-	accountKeeper.SetModuleAccount(newCtx, feeCollectorAcc)
+	// Create module accounts (GetModuleAccount auto-creates with proper account numbering)
+	accountKeeper.GetModuleAccount(newCtx, authtypes.FeeCollectorName)
+	accountKeeper.GetModuleAccount(newCtx, poatypes.ModuleName)
 
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,
@@ -119,8 +120,8 @@ func initFixture(tb testing.TB) *fixture {
 		bankKeeper,
 	)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
+	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	poaModule := poa.NewAppModule(cdc, poaKeeper)
 
 	adminAddr := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
@@ -208,7 +209,7 @@ func TestTransientStoreQueuesValidatorUpdates(t *testing.T) {
 	// Get the BaseApp's multistore and create a new context for the next block
 	// This simulates what happens in production when a new block begins
 	cms := f.app.CommitMultiStore()
-	newBlockCtx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{Height: ctx.BlockHeight() + 1}, false, ctx.Logger())
+	newBlockCtx := sdk.NewContext(cms, cmtproto.Header{Height: ctx.BlockHeight() + 1}, false, ctx.Logger())
 
 	// Query the transient store in the new block context - should be empty
 	// because transient stores are cleared on commit

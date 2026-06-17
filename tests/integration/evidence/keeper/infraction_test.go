@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log/v2"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -88,14 +89,15 @@ func initFixture(tb testing.TB) *fixture {
 	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
 
-	newCtx := sdk.NewContext(cms.RootCacheMultiStore(), cmtproto.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 
 	maccPerms := map[string][]string{
-		minttypes.ModuleName:           {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		minttypes.ModuleName:                {authtypes.Minter},
+		stakingtypes.BondedPoolName:         {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:      {authtypes.Burner, authtypes.Staking},
+		stakingtypes.KeyRotationFeePoolName: {authtypes.Burner},
 	}
 
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -124,15 +126,19 @@ func initFixture(tb testing.TB) *fixture {
 
 	slashingKeeper := slashingkeeper.NewKeeper(cdc, codec.NewLegacyAmino(), runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), stakingKeeper, authority.String())
 
+	// wire slashing hooks into staking so consensus key rotations migrate
+	// signing info / missed-block state to the new key.
+	stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(slashingKeeper.Hooks()))
+
 	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), stakingKeeper, slashingKeeper, addresscodec.NewBech32Codec("cosmos"), runtime.ProvideCometInfoService())
 	router := evidencetypes.NewRouter()
 	router = router.AddRoute(evidencetypes.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
-	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, nil, cdc.InterfaceRegistry())
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
+	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
+	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, cdc.InterfaceRegistry())
 	evidenceModule := evidence.NewAppModule(*evidenceKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
@@ -307,6 +313,151 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Assert(t, val.IsJailed() == false)
 	assert.Assert(t, f.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(valpubkey.Address())) == false)
+}
+
+// TestHandleDoubleSign_RotatedConsKey exercises the full historical-evidence
+// path end to end: a bonded validator rotates its consensus key, and
+// equivocation evidence that references the OLD (rotated-away) key is then
+// submitted. The validator must still be slashed, jailed, and tombstoned under
+// its CURRENT key.
+func TestHandleDoubleSign_RotatedConsKey(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1)
+	populateValidators(t, f)
+
+	power := int64(100)
+	operatorAddr, oldPubKey := valAddresses[0], pubkeys[0]
+	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper)
+
+	tstaking.CreateValidatorWithValPower(operatorAddr, oldPubKey, power, true)
+
+	// bond the validator
+	_, err := f.stakingKeeper.EndBlocker(f.sdkCtx)
+	assert.NilError(t, err)
+
+	oldConsAddr := sdk.ConsAddress(oldPubKey.Address())
+
+	// establish signing info / signature for the original key
+	assert.NilError(t, f.slashingKeeper.AddPubkey(f.sdkCtx, oldPubKey))
+	info := slashingtypes.NewValidatorSigningInfo(oldConsAddr, f.sdkCtx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
+	assert.NilError(t, f.slashingKeeper.SetValidatorSigningInfo(f.sdkCtx, oldConsAddr, info))
+	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(ctx, oldPubKey.Address(), power, comet.BlockIDFlagCommit))
+
+	// rotate the consensus key oldPubKey -> newPubKey and apply it
+	newPubKey := ed25519.GenPrivKey().PubKey()
+	newConsAddr := sdk.ConsAddress(newPubKey.Address())
+	assert.NilError(t, f.stakingKeeper.SetConsKeyRotation(f.sdkCtx, operatorAddr, oldPubKey, newPubKey))
+	assert.NilError(t, f.stakingKeeper.ApplyConsKeyRotation(f.sdkCtx, operatorAddr, newPubKey))
+
+	// signing info migrated to the new key via the slashing hook
+	assert.Assert(t, !f.slashingKeeper.HasValidatorSigningInfo(f.sdkCtx, oldConsAddr))
+	assert.Assert(t, f.slashingKeeper.HasValidatorSigningInfo(f.sdkCtx, newConsAddr))
+
+	// the old key resolves to the validator via the historical lookup, and
+	// canonicalizes to the current consensus address
+	histVal, err := f.stakingKeeper.ValidatorByHistoricalConsAddr(f.sdkCtx, oldConsAddr)
+	assert.NilError(t, err)
+	histConsAddr, err := histVal.GetConsAddr()
+	assert.NilError(t, err)
+	assert.DeepEqual(t, newConsAddr.Bytes(), histConsAddr)
+
+	val, err := f.stakingKeeper.Validator(ctx, operatorAddr)
+	assert.NilError(t, err)
+	oldTokens := val.GetTokens()
+
+	// submit equivocation evidence that references the OLD (rotated-away) key
+	nci := NewCometInfo(abci.RequestFinalizeBlock{
+		Misbehavior: []abci.Misbehavior{{
+			Validator: abci.Validator{Address: oldPubKey.Address(), Power: power},
+			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
+			Time:      time.Now().UTC(),
+			Height:    1,
+		}},
+	})
+	ctx = ctx.WithCometInfo(nci)
+	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx))
+
+	// the validator is jailed and tombstoned under its CURRENT key
+	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
+	assert.NilError(t, err)
+	assert.Assert(t, val.IsJailed())
+	assert.Assert(t, f.slashingKeeper.IsTombstoned(ctx, newConsAddr))
+	// the old key was never given its own signing info, so it is not tombstoned
+	assert.Assert(t, !f.slashingKeeper.IsTombstoned(ctx, oldConsAddr))
+
+	// tokens were slashed
+	assert.Assert(t, val.GetTokens().LT(oldTokens))
+
+	// the evidence was recorded
+	iter, err := f.evidenceKeeper.Evidences.Iterate(ctx, nil)
+	assert.NilError(t, err)
+	values, err := iter.Values()
+	assert.NilError(t, err)
+	assert.Assert(t, len(values) == 1)
+}
+
+// TestHandleDoubleSign_RotatedThenRemoved verifies that equivocation evidence
+// referencing a rotated-away key whose validator has since been removed from
+// the store is ignored rather than surfacing a consensus-level error from
+// BeginBlocker.
+func TestHandleDoubleSign_RotatedThenRemoved(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1)
+	populateValidators(t, f)
+
+	power := int64(100)
+	operatorAddr, oldPubKey := valAddresses[0], pubkeys[0]
+	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper)
+	tstaking.CreateValidatorWithValPower(operatorAddr, oldPubKey, power, true)
+
+	_, err := f.stakingKeeper.EndBlocker(f.sdkCtx)
+	assert.NilError(t, err)
+
+	oldConsAddr := sdk.ConsAddress(oldPubKey.Address())
+
+	// rotate the consensus key and apply it, then remove the validator record
+	// while keeping the RotatedFrom historical lock in place.
+	newPubKey := ed25519.GenPrivKey().PubKey()
+	assert.NilError(t, f.stakingKeeper.SetConsKeyRotation(f.sdkCtx, operatorAddr, oldPubKey, newPubKey))
+	assert.NilError(t, f.stakingKeeper.ApplyConsKeyRotation(f.sdkCtx, operatorAddr, newPubKey))
+
+	// drain the validator and remove its record, leaving only the RotatedFrom
+	// historical lock. ValidatorByHistoricalConsAddr(oldConsAddr) now resolves
+	// the lock but its GetValidator lookup fails with ErrNoValidatorFound.
+	rotated, err := f.stakingKeeper.GetValidator(f.sdkCtx, operatorAddr)
+	assert.NilError(t, err)
+	rotated.Status = stakingtypes.Unbonded
+	rotated.Tokens = math.ZeroInt()
+	rotated.DelegatorShares = math.LegacyZeroDec()
+	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, rotated))
+	assert.NilError(t, f.stakingKeeper.RemoveValidator(f.sdkCtx, operatorAddr))
+
+	_, err = f.stakingKeeper.ValidatorByHistoricalConsAddr(f.sdkCtx, oldConsAddr)
+	assert.ErrorContains(t, err, stakingtypes.ErrNoValidatorFound.Error())
+
+	// evidence referencing the old key must be ignored without error
+	nci := NewCometInfo(abci.RequestFinalizeBlock{
+		Misbehavior: []abci.Misbehavior{{
+			Validator: abci.Validator{Address: oldPubKey.Address(), Power: power},
+			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
+			Time:      time.Now().UTC(),
+			Height:    1,
+		}},
+	})
+	ctx = ctx.WithCometInfo(nci)
+	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx))
+
+	// no tombstone, no evidence recorded
+	assert.Assert(t, !f.slashingKeeper.IsTombstoned(ctx, oldConsAddr))
+	iter, err := f.evidenceKeeper.Evidences.Iterate(ctx, nil)
+	assert.NilError(t, err)
+	values, err := iter.Values()
+	assert.NilError(t, err)
+	assert.Assert(t, len(values) == 0)
 }
 
 func populateValidators(t assert.TestingT, f *fixture) {

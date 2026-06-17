@@ -58,19 +58,9 @@ func NewPOACalculateVoteResultsAndVotingPowerFn(keeper Keeper) govkeeper.Calcula
 		// Collect all validators and their voting power
 		validators := make(map[string]int64) // operator address -> power
 
-		// Iterate through POA validators in descending power order (highest power first)
-		// Stop when we reach power = 0
-		ranger := new(collections.Range[collections.Pair[int64, string]]).Descending()
-		err = keeper.validators.Walk(sdkCtx, ranger, func(key collections.Pair[int64, string], validator types.Validator) (stop bool, err error) {
-			power := key.K1()
-
-			// Stop iteration when we reach validators with power 0
-			if power == 0 {
-				return true, nil
-			}
-
+		// Iterate through active POA validators (IterateActiveValidators skips power=0)
+		err = keeper.IterateActiveValidators(sdkCtx, func(consAddr sdk.ConsAddress, power int64, validator types.Validator) (stop bool, err error) {
 			validators[validator.Metadata.OperatorAddress] = power
-
 			return false, nil
 		})
 		if err != nil {

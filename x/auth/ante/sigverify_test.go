@@ -157,6 +157,31 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	}
 }
 
+func TestConsumeMultisignatureVerificationGasMalformedBitArray(t *testing.T) {
+	params := types.DefaultParams()
+	pkSet, _ := generatePubKeysAndSignatures(3, []byte{1, 2, 3, 4}, false)
+	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pkSet)
+
+	// more set bits than supplied signatures.
+	tooManyBits := multisig.NewMultisig(3)
+	tooManyBits.BitArray.SetIndex(0, true)
+	tooManyBits.BitArray.SetIndex(1, true)
+	tooManyBits.BitArray.SetIndex(2, true)
+
+	// bit array larger than the key set.
+	oversizedBits := &signing.MultiSignatureData{BitArray: cryptotypes.NewCompactBitArray(4)}
+	oversizedBits.BitArray.SetIndex(3, true)
+
+	for name, sig := range map[string]*signing.MultiSignatureData{
+		"more bits than signatures": tooManyBits,
+		"bit array exceeds key set": oversizedBits,
+	} {
+		t.Run(name, func(t *testing.T) {
+			require.Error(t, ante.ConsumeMultisignatureVerificationGas(storetypes.NewInfiniteGasMeter(), sig, multisigKey, params, 0))
+		})
+	}
+}
+
 func TestSigVerification(t *testing.T) {
 	suite := SetupTestSuite(t, true)
 	suite.txBankKeeper.EXPECT().DenomMetadata(gomock.Any(), gomock.Any()).Return(&banktypes.QueryDenomMetadataResponse{}, nil).AnyTimes()

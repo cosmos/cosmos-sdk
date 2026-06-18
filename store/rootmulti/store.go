@@ -58,7 +58,7 @@ func keysFromStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
 type Store struct {
 	db                  dbm.DB
 	logger              log.Logger
-	lastCommitInfo      atomic.Pointer[types.CommitInfo]
+	lastCommit          atomic.Pointer[commitSnapshot]
 	pruningManager      *pruning.Manager
 	iavlCacheSize       int
 	iavlDisableFastNode bool
@@ -300,7 +300,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		}
 	}
 
-	rs.lastCommitInfo.Store(cInfo)
+	rs.setLastCommitInfo(cInfo)
 	rs.stores = newStores
 
 	// load any snapshot heights we missed from disk to be pruned on the next run
@@ -418,10 +418,60 @@ func (rs *Store) EarliestVersion() int64 {
 	return GetEarliestVersion(rs.db)
 }
 
+// commitSnapshot pairs a CommitInfo with its memoized CommitID. Computing the
+// CommitID rebuilds a SHA256 merkle root over every store (CommitInfo.Hash), which
+// is invariant for a given CommitInfo, so we compute it once when the snapshot is
+// stored and let LastCommitID serve it as a field read on the hot query path.
+// info is nil before the first load/commit; id is the zero CommitID then. The two
+// fields are swapped together via a single atomic store so a concurrent reader
+// never observes a CommitInfo paired with a stale CommitID.
+type commitSnapshot struct {
+	info *types.CommitInfo
+	id   types.CommitID
+}
+
+// newCommitSnapshot computes the memoized CommitID for cInfo, mirroring the
+// empty-hash fallback LastCommitID applies for a hash-less CommitID.
+func newCommitSnapshot(cInfo *types.CommitInfo) *commitSnapshot {
+	snapshot := &commitSnapshot{info: cInfo}
+	if cInfo == nil {
+		return snapshot
+	}
+
+	id := cInfo.CommitID()
+	if len(id.Hash) == 0 {
+		emptyHash := sha256.Sum256([]byte{})
+		id = types.CommitID{
+			Version: cInfo.Version,
+			Hash:    emptyHash[:], // set empty apphash to sha256([]byte{}) if hash is nil
+		}
+	}
+	snapshot.id = id
+	return snapshot
+}
+
+// setLastCommitInfo memoizes cInfo's CommitID and atomically swaps in the new
+// snapshot, returning it so callers can reuse the precomputed CommitID without
+// rebuilding the merkle root.
+func (rs *Store) setLastCommitInfo(cInfo *types.CommitInfo) *commitSnapshot {
+	snapshot := newCommitSnapshot(cInfo)
+	rs.lastCommit.Store(snapshot)
+	return snapshot
+}
+
+// lastCommitInfo returns the latest stored CommitInfo, or nil if none has been
+// loaded or committed yet.
+func (rs *Store) lastCommitInfo() *types.CommitInfo {
+	if snapshot := rs.lastCommit.Load(); snapshot != nil {
+		return snapshot.info
+	}
+	return nil
+}
+
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
-	info := rs.lastCommitInfo.Load()
-	if info == nil {
+	snapshot := rs.lastCommit.Load()
+	if snapshot == nil || snapshot.info == nil {
 		emptyHash := sha256.Sum256([]byte{})
 		appHash := emptyHash[:]
 		return types.CommitID{
@@ -429,22 +479,14 @@ func (rs *Store) LastCommitID() types.CommitID {
 			Hash:    appHash, // set empty apphash to sha256([]byte{}) if info is nil
 		}
 	}
-	if len(info.CommitID().Hash) == 0 {
-		emptyHash := sha256.Sum256([]byte{})
-		appHash := emptyHash[:]
-		return types.CommitID{
-			Version: info.Version,
-			Hash:    appHash, // set empty apphash to sha256([]byte{}) if hash is nil
-		}
-	}
 
-	return info.CommitID()
+	return snapshot.id
 }
 
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
 	var previousHeight, version int64
-	if cInfo := rs.lastCommitInfo.Load(); (cInfo == nil || cInfo.Version == 0) && rs.initialVersion > 1 {
+	if cInfo := rs.lastCommitInfo(); (cInfo == nil || cInfo.Version == 0) && rs.initialVersion > 1 {
 		// This case means that no commit has been made in the store, we
 		// start from initialVersion.
 		version = rs.initialVersion
@@ -468,7 +510,7 @@ func (rs *Store) Commit() types.CommitID {
 
 	cInfo := commitStores(version, rs.stores, rs.removalMap)
 	cInfo.Timestamp = rs.commitHeader.Time
-	rs.lastCommitInfo.Store(cInfo)
+	snapshot := rs.setLastCommitInfo(cInfo)
 
 	defer rs.flushMetadata(rs.db, version, cInfo)
 
@@ -491,10 +533,9 @@ func (rs *Store) Commit() types.CommitID {
 		)
 	}
 
-	return types.CommitID{
-		Version: version,
-		Hash:    cInfo.Hash(),
-	}
+	// snapshot.id was computed from cInfo in setLastCommitInfo above; reuse it
+	// instead of rebuilding the merkle root a second time here.
+	return snapshot.id
 }
 
 // WorkingHash returns the current hash of the store.
@@ -776,7 +817,7 @@ func (rs *Store) Query(req *types.RequestQuery) (*types.ResponseQuery, error) {
 	// Otherwise, we query for the commit info from disk.
 	var commitInfo *types.CommitInfo
 
-	cInfo := rs.lastCommitInfo.Load()
+	cInfo := rs.lastCommitInfo()
 	if res.Height == cInfo.Version {
 		commitInfo = cInfo
 	} else {

@@ -366,6 +366,18 @@ func (s *decCoinTestSuite) TestDecCoinsValidate() {
 	}
 }
 
+func (s *decCoinTestSuite) TestDecCoins_Validate_NonPositiveErrorIncludesCoin() {
+	badCoin := sdk.DecCoin{Denom: "btree", Amount: math.LegacyZeroDec()}
+	coins := sdk.DecCoins{
+		sdk.DecCoin{Denom: "atree", Amount: math.LegacyNewDec(1)},
+		badCoin,
+	}
+	err := coins.Validate()
+	s.Require().Error(err)
+	// The error should name the offending coin (amount + denom), not the denom alone.
+	s.Require().Contains(err.Error(), badCoin.String())
+}
+
 func (s *decCoinTestSuite) TestParseDecCoins() {
 	testCases := []struct {
 		input          string

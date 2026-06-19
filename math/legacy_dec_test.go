@@ -1414,6 +1414,9 @@ func TestLegacyNewDecFromStr_TooManyDecimals(t *testing.T) {
 	decStr := "1." + strings.Repeat("1", math.LegacyPrecision+1)
 	_, err := math.LegacyNewDecFromStr(decStr)
 	require.Error(t, err, "expected error when input has more than %d decimal places", math.LegacyPrecision)
+	// The reported excess must be the (positive) number of decimal places over
+	// the limit, not a negative value from subtracting in the wrong order.
+	require.Contains(t, err.Error(), "exceeds max precision by 1 decimal places")
 }
 
 func TestUnmarshalJSON_InvalidFormat(t *testing.T) {

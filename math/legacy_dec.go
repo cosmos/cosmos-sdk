@@ -183,7 +183,7 @@ func LegacyNewDecFromStr(str string) (LegacyDec, error) {
 	}
 
 	if lenDecs > LegacyPrecision {
-		return LegacyDec{}, fmt.Errorf("value '%s' exceeds max precision by %d decimal places: max precision %d", str, LegacyPrecision-lenDecs, LegacyPrecision)
+		return LegacyDec{}, fmt.Errorf("value '%s' exceeds max precision by %d decimal places: max precision %d", str, lenDecs-LegacyPrecision, LegacyPrecision)
 	}
 
 	// add some extra zero's to correct to the Precision factor

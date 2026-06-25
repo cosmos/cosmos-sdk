@@ -216,6 +216,12 @@ func (k *Keeper) RotateConsPubKey(ctx sdk.Context, operatorAddr sdk.AccAddress, 
 		return err
 	}
 
+	// Auto-migrate accrued fees from the old cons-addr to the new one so the
+	// operator's balance follows the rotation without a forced payout.
+	if err := k.migrateAllocatedFees(ctx, oldConsAddr, newConsAddr); err != nil {
+		return err
+	}
+
 	// Queue ABCI updates only when the validator is in CometBFT's active set.
 	// A power-0 validator is not in the set, and CometBFT treats a power-0 update
 	// as a deletion of an address not in the set, which aborts applying the block.

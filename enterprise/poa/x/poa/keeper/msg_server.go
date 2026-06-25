@@ -23,6 +23,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // MsgServer implements the module's gRPC message service.
@@ -201,4 +202,12 @@ func (s *MsgServer) WithdrawFees(
 	)
 
 	return &types.MsgWithdrawFeesResponse{}, nil
+}
+
+// RotateConsPubKey rotates a validator's consensus public key.
+// ponytail: stub to satisfy the MsgServer interface; handler logic lands in the keeper/msg-server ticket (FOU-242).
+func (s *MsgServer) RotateConsPubKey(
+	ctx context.Context, req *types.MsgRotateConsPubKey,
+) (*types.MsgRotateConsPubKeyResponse, error) {
+	return nil, sdkerrors.ErrNotSupported.Wrap("RotateConsPubKey not yet implemented")
 }

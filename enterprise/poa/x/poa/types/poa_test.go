@@ -1192,6 +1192,58 @@ func TestValidateAllocatedFees(t *testing.T) {
 	}
 }
 
+func TestMsgRotateConsPubKeyValidate(t *testing.T) {
+	ac := address.NewBech32Codec("cosmos")
+	addr := "cosmos1w3jhxarpv3j8yvg4ufs4x"
+	validPubKey := func() *codectypes.Any {
+		pubKeyAny, _ := codectypes.NewAnyWithValue(ed25519.GenPrivKey().PubKey())
+		return pubKeyAny
+	}
+
+	tests := []struct {
+		name    string
+		msg     *MsgRotateConsPubKey
+		wantErr bool
+	}{
+		{
+			name:    "valid message",
+			msg:     &MsgRotateConsPubKey{Sender: addr, ValidatorAddress: addr, NewPubKey: validPubKey()},
+			wantErr: false,
+		},
+		{
+			name:    "invalid sender",
+			msg:     &MsgRotateConsPubKey{Sender: "not-an-address", ValidatorAddress: addr, NewPubKey: validPubKey()},
+			wantErr: true,
+		},
+		{
+			name:    "invalid validator address",
+			msg:     &MsgRotateConsPubKey{Sender: addr, ValidatorAddress: "not-an-address", NewPubKey: validPubKey()},
+			wantErr: true,
+		},
+		{
+			name:    "nil pubkey",
+			msg:     &MsgRotateConsPubKey{Sender: addr, ValidatorAddress: addr, NewPubKey: nil},
+			wantErr: true,
+		},
+		{
+			name:    "undecodable pubkey",
+			msg:     &MsgRotateConsPubKey{Sender: addr, ValidatorAddress: addr, NewPubKey: &codectypes.Any{TypeUrl: "/cosmos.crypto.ed25519.PubKey", Value: make([]byte, MinPubKeyLength)}},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.msg.Validate(ac)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestMsgWithdrawFeesValidateBasic(t *testing.T) {
 	tests := []struct {
 		name    string

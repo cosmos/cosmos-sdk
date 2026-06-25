@@ -25,12 +25,14 @@ import (
 // RegisterLegacyAminoCodec registers the necessary x/poa types with the Amino codec.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "poa/MsgUpdateParams")
+	legacy.RegisterAminoMsg(cdc, &MsgRotateConsPubKey{}, "poa/MsgRotateConsPubKey")
 }
 
 // RegisterInterfaces registers the x/poa module's interface types with the interface registry.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgUpdateParams{},
+		&MsgRotateConsPubKey{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &Msg_serviceDesc)

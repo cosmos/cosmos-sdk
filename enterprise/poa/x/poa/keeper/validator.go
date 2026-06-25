@@ -153,6 +153,101 @@ func (k *Keeper) CreateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, v
 	return k.validators.Set(ctx, consAddress, validator)
 }
 
+// RotateConsPubKey rotates a validator's consensus pubkey in place, re-keying the
+// record from its current consensus address to the one derived from newPubKey.
+// Power and metadata are preserved, so totalPower is untouched. ABCI updates are
+// queued only when the validator has power (see the power-0 note below).
+func (k *Keeper) RotateConsPubKey(ctx sdk.Context, operatorAddr sdk.AccAddress, newPubKey cryptotypes.PubKey) error {
+	validator, err := k.GetValidatorByOperatorAddress(ctx, operatorAddr)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.ErrUnknownValidator
+		}
+		return err
+	}
+
+	if err := k.validatePubkeyType(ctx, newPubKey); err != nil {
+		return err
+	}
+
+	var oldPubKey cryptotypes.PubKey
+	if err := k.cdc.UnpackAny(validator.PubKey, &oldPubKey); err != nil {
+		return err
+	}
+	oldConsAddr := sdk.GetConsAddress(oldPubKey)
+	newConsAddr := sdk.GetConsAddress(newPubKey)
+
+	if oldConsAddr.Equals(newConsAddr) {
+		return types.ErrNoOpRotation
+	}
+
+	inUse, err := k.validators.Has(ctx, newConsAddr)
+	if err != nil {
+		return err
+	}
+	if inUse {
+		return types.ErrConsensusPubKeyInUse
+	}
+
+	newPubKeyAny, err := codectypes.NewAnyWithValue(newPubKey)
+	if err != nil {
+		return err
+	}
+
+	if err := k.ValidateOperatorAndConsensusPubKeyDifferent(validator.Metadata.OperatorAddress, newPubKeyAny); err != nil {
+		return err
+	}
+
+	// Settle pending fee accruals under the old consensus address before re-keying.
+	if err := k.checkpointAllValidators(ctx); err != nil {
+		return err
+	}
+
+	oldPubKeyAny := validator.PubKey
+	power := validator.Power
+	validator.PubKey = newPubKeyAny
+
+	// Re-key: delete under the old cons-addr, then Set under the new one.
+	// The operator and power secondary indexes update automatically.
+	if err := k.validators.Remove(ctx, oldConsAddr); err != nil {
+		return err
+	}
+	if err := k.validators.Set(ctx, newConsAddr, validator); err != nil {
+		return err
+	}
+
+	// Queue ABCI updates only when the validator is in CometBFT's active set.
+	// A power-0 validator is not in the set, and CometBFT treats a power-0 update
+	// as a deletion of an address not in the set, which aborts applying the block.
+	if power > 0 {
+		removeOld, err := k.createABCIValidatorUpdate(oldPubKeyAny, 0)
+		if err != nil {
+			return err
+		}
+		addNew, err := k.createABCIValidatorUpdate(newPubKeyAny, power)
+		if err != nil {
+			return err
+		}
+		if err := k.queuedUpdates.Push(ctx, removeOld); err != nil {
+			return err
+		}
+		if err := k.queuedUpdates.Push(ctx, addNew); err != nil {
+			return err
+		}
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeRotateConsPubKey,
+			sdk.NewAttribute(types.AttributeKeyOperatorAddress, operatorAddr.String()),
+			sdk.NewAttribute(types.AttributeKeyConsensusAddress, oldConsAddr.String()),
+			sdk.NewAttribute(types.AttributeKeyNewConsensusAddress, newConsAddr.String()),
+		),
+	)
+
+	return nil
+}
+
 // GetValidatorByOperatorAddress retrieves a validator by operator address using the secondary index.
 func (k *Keeper) GetValidatorByOperatorAddress(ctx sdk.Context, operatorAddr sdk.AccAddress) (types.Validator, error) {
 	consAddr, err := k.validators.Indexes.OperatorAddress.MatchExact(ctx, operatorAddr.String())

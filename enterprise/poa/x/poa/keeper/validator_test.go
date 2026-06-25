@@ -24,6 +24,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -1958,5 +1959,226 @@ func TestCreateABCIValidatorUpdate(t *testing.T) {
 
 		_, err := f.poaKeeper.createABCIValidatorUpdate(invalidPubKeyAny, 100)
 		require.Error(t, err)
+	})
+}
+
+// createRotatableValidator creates a validator whose operator key is distinct from
+// its consensus key, returning the operator address, cons address and cons pubkey.
+func createRotatableValidator(t *testing.T, f *testFixture, power int64) (sdk.AccAddress, sdk.ConsAddress, cryptotypes.PubKey) {
+	t.Helper()
+
+	operatorAddr := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+	consPubKey := ed25519.GenPrivKey().PubKey()
+	consPubKeyAny, err := codectypes.NewAnyWithValue(consPubKey)
+	require.NoError(t, err)
+	consAddr := sdk.GetConsAddress(consPubKey)
+
+	validator := types.Validator{
+		PubKey: consPubKeyAny,
+		Power:  power,
+		Metadata: &types.ValidatorMetadata{
+			Moniker:         "rotatable",
+			OperatorAddress: operatorAddr.String(),
+		},
+	}
+	require.NoError(t, f.poaKeeper.CreateValidator(f.ctx, consAddr, validator, true))
+
+	return operatorAddr, consAddr, consPubKey
+}
+
+func TestRotateConsPubKey(t *testing.T) {
+	t.Run("happy path re-keys record and queues two ABCI updates", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, oldConsAddr, _ := createRotatableValidator(t, f, 100)
+
+		// CreateValidator with power>0 already queued one update in the (un-wiped)
+		// transient store; count it so we can assert the rotation appends exactly two.
+		queuedBefore := len(f.poaKeeper.ReapValidatorUpdates(f.ctx))
+
+		totalBefore, err := f.poaKeeper.GetTotalPower(f.ctx)
+		require.NoError(t, err)
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		newConsAddr := sdk.GetConsAddress(newPubKey)
+
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey))
+
+		// Old cons-addr entry is gone, new one exists.
+		exists, err := f.poaKeeper.validators.Has(f.ctx, oldConsAddr)
+		require.NoError(t, err)
+		require.False(t, exists)
+		exists, err = f.poaKeeper.validators.Has(f.ctx, newConsAddr)
+		require.NoError(t, err)
+		require.True(t, exists)
+
+		// Operator index now resolves to the new cons-addr.
+		resolved, err := f.poaKeeper.validators.Indexes.OperatorAddress.MatchExact(f.ctx, operatorAddr.String())
+		require.NoError(t, err)
+		require.Equal(t, newConsAddr, resolved)
+
+		// Validator preserved power and operator under the new key.
+		v, err := f.poaKeeper.GetValidatorByOperatorAddress(f.ctx, operatorAddr)
+		require.NoError(t, err)
+		require.Equal(t, int64(100), v.Power)
+		require.Equal(t, operatorAddr.String(), v.Metadata.OperatorAddress)
+
+		// Power index updated: new cons-addr present at power 100, old absent.
+		var consAtPower []sdk.ConsAddress
+		require.NoError(t, f.poaKeeper.validators.Indexes.Power.Walk(f.ctx, nil, func(_ int64, consAddr sdk.ConsAddress) (bool, error) {
+			consAtPower = append(consAtPower, consAddr)
+			return false, nil
+		}))
+		require.Contains(t, consAtPower, newConsAddr)
+		require.NotContains(t, consAtPower, oldConsAddr)
+
+		// totalPower unchanged.
+		totalAfter, err := f.poaKeeper.GetTotalPower(f.ctx)
+		require.NoError(t, err)
+		require.Equal(t, totalBefore, totalAfter)
+
+		// Rotation appends exactly two ABCI updates: old@0 then new@power.
+		updates := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		require.Len(t, updates, queuedBefore+2)
+		require.Equal(t, int64(0), updates[queuedBefore].Power)
+		require.Equal(t, int64(100), updates[queuedBefore+1].Power)
+	})
+
+	t.Run("unknown operator", func(t *testing.T) {
+		f := setupTest(t)
+		err := f.poaKeeper.RotateConsPubKey(f.ctx, sdk.AccAddress("nobody"), ed25519.GenPrivKey().PubKey())
+		require.ErrorIs(t, err, types.ErrUnknownValidator)
+	})
+
+	t.Run("no-op rotation to the same key", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, oldPubKey := createRotatableValidator(t, f, 100)
+		err := f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, oldPubKey)
+		require.ErrorIs(t, err, types.ErrNoOpRotation)
+	})
+
+	t.Run("new key already in use by another validator", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+		_, _, otherPubKey := createRotatableValidator(t, f, 50)
+
+		err := f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, otherPubKey)
+		require.ErrorIs(t, err, types.ErrConsensusPubKeyInUse)
+	})
+
+	t.Run("operator derives from new pubkey", func(t *testing.T) {
+		f := setupTest(t)
+		// Operator address equals the address of the new pubkey -> rejected.
+		newKey := ed25519.GenPrivKey()
+		operatorAddr := sdk.AccAddress(newKey.PubKey().Address())
+
+		consPubKey := ed25519.GenPrivKey().PubKey()
+		consPubKeyAny, err := codectypes.NewAnyWithValue(consPubKey)
+		require.NoError(t, err)
+		consAddr := sdk.GetConsAddress(consPubKey)
+		validator := types.Validator{
+			PubKey: consPubKeyAny,
+			Power:  100,
+			Metadata: &types.ValidatorMetadata{
+				Moniker:         "v",
+				OperatorAddress: operatorAddr.String(),
+			},
+		}
+		require.NoError(t, f.poaKeeper.CreateValidator(f.ctx, consAddr, validator, true))
+
+		err = f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newKey.PubKey())
+		require.ErrorIs(t, err, types.ErrSameKeyForOperatorAndConsensus)
+	})
+
+	t.Run("within-block double rotation", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+
+		firstKey := ed25519.GenPrivKey().PubKey()
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, firstKey))
+
+		secondKey := ed25519.GenPrivKey().PubKey()
+		secondConsAddr := sdk.GetConsAddress(secondKey)
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, secondKey))
+
+		// Operator now resolves to the second key; first intermediate key is gone.
+		resolved, err := f.poaKeeper.validators.Indexes.OperatorAddress.MatchExact(f.ctx, operatorAddr.String())
+		require.NoError(t, err)
+		require.Equal(t, secondConsAddr, resolved)
+
+		exists, err := f.poaKeeper.validators.Has(f.ctx, sdk.GetConsAddress(firstKey))
+		require.NoError(t, err)
+		require.False(t, exists)
+	})
+
+	t.Run("power-0 rotation queues no ABCI updates", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, oldConsAddr, _ := createRotatableValidator(t, f, 0)
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		newConsAddr := sdk.GetConsAddress(newPubKey)
+
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey))
+
+		// Re-keyed internally.
+		exists, err := f.poaKeeper.validators.Has(f.ctx, oldConsAddr)
+		require.NoError(t, err)
+		require.False(t, exists)
+		exists, err = f.poaKeeper.validators.Has(f.ctx, newConsAddr)
+		require.NoError(t, err)
+		require.True(t, exists)
+
+		// No ABCI updates queued.
+		require.Empty(t, f.poaKeeper.ReapValidatorUpdates(f.ctx))
+	})
+}
+
+// TestRotateConsPubKeyEndBlock drives EndBlocker (same-block reap) to assert the
+// queued updates surface to CometBFT, and that the power-0 path emits nothing.
+func TestRotateConsPubKeyEndBlock(t *testing.T) {
+	t.Run("power>0 rotation surfaces old@0 and new@power via EndBlocker", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+		// CreateValidator queued one update; the rotation appends old@0 and new@power.
+		queuedBefore := len(f.poaKeeper.ReapValidatorUpdates(f.ctx))
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey))
+
+		updates, err := f.poaKeeper.EndBlocker(f.ctx.WithBlockHeight(2))
+		require.NoError(t, err)
+		require.Len(t, updates, queuedBefore+2)
+		require.Equal(t, int64(0), updates[queuedBefore].Power)
+		require.Equal(t, int64(100), updates[queuedBefore+1].Power)
+
+		// New validator still contributes its power.
+		v, err := f.poaKeeper.GetValidatorByOperatorAddress(f.ctx, operatorAddr)
+		require.NoError(t, err)
+		require.Equal(t, int64(100), v.Power)
+	})
+
+	t.Run("power-0 rotation EndBlocker emits nothing and does not error", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, _ := createRotatableValidator(t, f, 0)
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey))
+
+		updates, err := f.poaKeeper.EndBlocker(f.ctx.WithBlockHeight(2))
+		require.NoError(t, err)
+		require.Empty(t, updates)
+	})
+
+	t.Run("continuity: totalPower unchanged across rotation", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+
+		before, err := f.poaKeeper.GetTotalPower(f.ctx)
+		require.NoError(t, err)
+
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, ed25519.GenPrivKey().PubKey()))
+
+		after, err := f.poaKeeper.GetTotalPower(f.ctx)
+		require.NoError(t, err)
+		require.Equal(t, before, after)
 	})
 }

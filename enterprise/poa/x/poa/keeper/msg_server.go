@@ -204,10 +204,41 @@ func (s *MsgServer) WithdrawFees(
 	return &types.MsgWithdrawFeesResponse{}, nil
 }
 
-// RotateConsPubKey rotates a validator's consensus public key.
-// ponytail: stub to satisfy the MsgServer interface; handler logic lands in the keeper/msg-server ticket (FOU-242).
+// RotateConsPubKey rotates a validator's consensus public key. The validator
+// operator may rotate their own key, and the admin may rotate any validator's key.
 func (s *MsgServer) RotateConsPubKey(
 	ctx context.Context, req *types.MsgRotateConsPubKey,
 ) (*types.MsgRotateConsPubKeyResponse, error) {
-	return nil, sdkerrors.ErrNotSupported.Wrap("RotateConsPubKey not yet implemented")
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if err := req.Validate(s.keeper.authKeeper.AddressCodec()); err != nil {
+		return nil, err
+	}
+
+	var pubKey cryptotypes.PubKey
+	if err := s.keeper.cdc.UnpackAny(req.NewPubKey, &pubKey); err != nil {
+		return nil, err
+	}
+
+	admin, err := s.keeper.Admin(sdkCtx)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "failed to get admin params")
+	}
+	if req.Sender != req.ValidatorAddress && req.Sender != admin {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized,
+			"sender %s is neither the validator operator nor the admin", req.Sender)
+	}
+
+	operatorAddr, err := sdk.AccAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "invalid validator address")
+	}
+
+	// The keeper rotates the key, migrates fees, queues ABCI updates, and emits
+	// EventTypeRotateConsPubKey, so the handler does not emit a duplicate event.
+	if err := s.keeper.RotateConsPubKey(sdkCtx, operatorAddr, pubKey); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgRotateConsPubKeyResponse{}, nil
 }

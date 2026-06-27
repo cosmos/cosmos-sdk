@@ -1158,6 +1158,12 @@ func (app *BaseApp) StreamingManager() storetypes.StreamingManager {
 }
 
 // Close is called in start cmd to gracefully cleanup resources.
+//
+// Close is idempotent: server.startInProcess registers two cleanup paths that
+// both call app.Close() (startCmtNode's cleanupFn and startApp's appCleanupFn),
+// so on shutdown it is invoked twice. Each underlying resource is therefore
+// released exactly once and its handle cleared, otherwise the second call
+// re-closes an already-closed DB and panics (e.g. PebbleDB's "pebble: closed").
 func (app *BaseApp) Close() error {
 	var errs []error
 
@@ -1167,6 +1173,7 @@ func (app *BaseApp) Close() error {
 		if err := app.db.Close(); err != nil {
 			errs = append(errs, err)
 		}
+		app.db = nil
 	}
 
 	// Close app.snapshotManager
@@ -1179,6 +1186,7 @@ func (app *BaseApp) Close() error {
 		if err := app.snapshotManager.Close(); err != nil {
 			errs = append(errs, err)
 		}
+		app.snapshotManager = nil
 	}
 
 	return errors.Join(errs...)

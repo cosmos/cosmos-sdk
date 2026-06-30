@@ -66,7 +66,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 		func(key collections.Pair[sdk.AccAddress, string], value math.Int) (sdk.Coin, error) {
 			if req.ResolveDenom {
 				if metadata, ok := k.GetDenomMetaData(sdkCtx, key.K2()); ok {
-					return sdk.NewCoin(metadata.Display, value), nil
+					return resolveMetadataDenomCoin(key.K2(), value, metadata), nil
 				}
 			}
 			return sdk.NewCoin(key.K2(), value), nil
@@ -78,6 +78,33 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	}
 
 	return &types.QueryAllBalancesResponse{Balances: balances, Pagination: pageRes}, nil
+}
+
+func resolveMetadataDenomCoin(baseDenom string, amount math.Int, metadata types.Metadata) sdk.Coin {
+	for _, unit := range metadata.DenomUnits {
+		if unit.GetDenom() != metadata.Display {
+			continue
+		}
+
+		factor, ok := denomUnitFactor(unit.GetExponent())
+		if !ok || !amount.Mod(factor).IsZero() {
+			return sdk.NewCoin(baseDenom, amount)
+		}
+
+		return sdk.NewCoin(metadata.Display, amount.Quo(factor))
+	}
+
+	return sdk.NewCoin(metadata.Display, amount)
+}
+
+func denomUnitFactor(exponent uint32) (math.Int, bool) {
+	const maxSupportedExponent = 76
+
+	if exponent > maxSupportedExponent {
+		return math.Int{}, false
+	}
+
+	return math.NewIntWithDecimal(1, int(exponent)), true
 }
 
 // SpendableBalances implements a gRPC query handler for retrieving an account's

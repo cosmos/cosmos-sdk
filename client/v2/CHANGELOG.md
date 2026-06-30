@@ -34,6 +34,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [Unreleased]
+
+### Bug Fixes
+
+* [#26540](https://github.com/cosmos/cosmos-sdk/pull/26540) Fail gracefully instead of panicking when a positional signer argument is omitted from a generated command.
+
 ## [v2.0.0-beta.11](https://github.com/cosmos/cosmos-sdk/tree/client/v2.0.0-beta.11) - 2025-05-30
 
 ### Bug Fixes

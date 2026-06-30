@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   split-test-files:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
@@ -51,7 +51,7 @@ jobs:
           retention-days: 1
 
   tests:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     needs: split-test-files
     strategy:
       fail-fast: false
@@ -95,7 +95,7 @@ jobs:
           retention-days: 1
 
   test-integration:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
@@ -128,7 +128,7 @@ jobs:
           retention-days: 1
 
   test-e2e:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
@@ -161,7 +161,7 @@ jobs:
           retention-days: 1
 
   repo-analysis:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       pull-requests: write
@@ -294,7 +294,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   test-sim-nondeterminism:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
@@ -328,7 +328,7 @@ jobs:
   # They run when there is a diff in their respective directories.
 
   test-clientv2:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
@@ -358,7 +358,7 @@ jobs:
           retention-days: 1
 
   test-core:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
@@ -388,7 +388,7 @@ jobs:
           retention-days: 1
 
   test-depinject:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
@@ -418,7 +418,7 @@ jobs:
           retention-days: 1
 
   test-errors:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
@@ -448,7 +448,7 @@ jobs:
           retention-days: 1
 
   test-math:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
@@ -478,7 +478,7 @@ jobs:
           retention-days: 1
 
   test-collections:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
@@ -508,7 +508,7 @@ jobs:
           retention-days: 1
 
   test-cosmovisor:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
@@ -538,7 +538,7 @@ jobs:
           retention-days: 1
 
   test-confix:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
@@ -568,7 +568,7 @@ jobs:
           retention-days: 1
 
   test-store:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
@@ -599,7 +599,7 @@ jobs:
           retention-days: 1
 
   test-log:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
@@ -633,7 +633,7 @@ jobs:
   #############################
 
   test-poa:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:

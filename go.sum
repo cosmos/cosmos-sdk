@@ -198,8 +198,8 @@ github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2/go.mod h1:qwXFYgsP6T7X
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/cockroachdb/datadriven v1.0.3-0.20230413201302-be42291fc80f h1:otljaYPt5hWxV3MUfO5dFPFiOXg9CyG5/kCfayTqsJ4=
 github.com/cockroachdb/datadriven v1.0.3-0.20230413201302-be42291fc80f/go.mod h1:a9RdTaap04u637JoCzcUoIcDmvwSUtcUFtT/C3kJlTU=
-github.com/cockroachdb/errors v1.13.0 h1:BoCcJeiP9hpBJDETkX19qi8Tb8So37srSsp3stTaDMQ=
-github.com/cockroachdb/errors v1.13.0/go.mod h1:bjxt/4E5+OyuAnacpTIU9rn2mzPu1VlthvHP+xpROq0=
+github.com/cockroachdb/errors v1.14.0 h1:EfdVEJpN3z8rPMo43Yit59LxoiIa470fSXpZXuEs+ZI=
+github.com/cockroachdb/errors v1.14.0/go.mod h1:xRa70jZ9sNBQmISt5KmJmAD++E4dQHm89oCRiZGEdq0=
 github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 h1:pU88SPhIFid6/k0egdR5V6eALQYq2qbSmukrkgIh/0A=
 github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0/go.mod h1:9/y3cnZ5GKakj/H4y9r9GTjCvAFta7KLgSHPJJYc52M=
 github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 h1:ASDL+UJcILMqgNeV5jiqR4j+sTuvQNHdf2chuKj1M5k=

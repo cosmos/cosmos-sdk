@@ -83,6 +83,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (crypto) [#26529](https://github.com/cosmos/cosmos-sdk/pull/26529) Validate the SEC1 tag byte (`0x02`/`0x03`) when unmarshaling a `secp256k1.PubKey`, rejecting malformed compressed keys that previously passed the length-only check.
 * (x/auth/tx) [#26527](https://github.com/cosmos/cosmos-sdk/pull/26527) Fix nil pointer panic in `GetSigningTxData` when a `SignerInfo` has a nil `PublicKey`.
 * (x/auth/tx) [#26517](https://github.com/cosmos/cosmos-sdk/pull/26517) Return a decode error instead of panicking when a transaction's `SignerInfos` and `Signatures` counts disagree in `GetSignaturesV2`, or a multisig's `ModeInfos` and sub-signature counts disagree in `ModeInfoAndSigToSignatureData`.
+* (types/module) [#26525](https://github.com/cosmos/cosmos-sdk/pull/26525) Buffer the per-module result channels in `ExportGenesisForModules` so the export goroutines of not-yet-collected modules do not leak when the export aborts on the first module error.
 
 ### Deprecated
 

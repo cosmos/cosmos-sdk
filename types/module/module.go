@@ -556,12 +556,17 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 		err error
 	}
 
+	// Each per-module channel is buffered with capacity 1 so that an export
+	// goroutine can always deliver its single result and return, even if the
+	// collector loop below exits early on the first error. With an unbuffered
+	// channel the goroutines of not-yet-collected modules would block forever
+	// on send, leaking one goroutine per remaining module.
 	channels := make(map[string]chan genesisResult)
 	for _, moduleName := range modulesToExport {
 		mod := m.Modules[moduleName]
 		if module, ok := mod.(appmodule.HasGenesis); ok {
 			// core API genesis
-			channels[moduleName] = make(chan genesisResult)
+			channels[moduleName] = make(chan genesisResult, 1)
 			go func(module appmodule.HasGenesis, ch chan genesisResult) {
 				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 				target := genesis.RawJSONTarget{}
@@ -580,13 +585,13 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 				ch <- genesisResult{rawJSON, nil}
 			}(module, channels[moduleName])
 		} else if module, ok := mod.(HasGenesis); ok {
-			channels[moduleName] = make(chan genesisResult)
+			channels[moduleName] = make(chan genesisResult, 1)
 			go func(module HasGenesis, ch chan genesisResult) {
 				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 				ch <- genesisResult{module.ExportGenesis(ctx, cdc), nil}
 			}(module, channels[moduleName])
 		} else if module, ok := mod.(HasABCIGenesis); ok {
-			channels[moduleName] = make(chan genesisResult)
+			channels[moduleName] = make(chan genesisResult, 1)
 			go func(module HasABCIGenesis, ch chan genesisResult) {
 				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 				ch <- genesisResult{module.ExportGenesis(ctx, cdc), nil}

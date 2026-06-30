@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"runtime"
 	"testing"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -627,3 +630,44 @@ var (
 	_ appmodule.HasGenesis  = MockCoreAppModule{}
 	_ appmodule.HasServices = MockCoreAppModule{}
 )
+
+// failingCoreAppModule is a core appmodule whose ExportGenesis always returns an
+// error, used to exercise the early-return path of ExportGenesisForModules.
+type failingCoreAppModule struct {
+	MockCoreAppModule
+}
+
+func (failingCoreAppModule) ExportGenesis(context.Context, appmodule.GenesisTarget) error {
+	return errFoo
+}
+
+var _ appmodule.HasGenesis = failingCoreAppModule{}
+
+// TestManager_ExportGenesis_NoGoroutineLeakOnError verifies that when one module
+// fails during a concurrent export, the goroutines spawned for the remaining
+// modules do not leak. ExportGenesisForModules returns on the first error, so its
+// per-module result channels must be buffered for those goroutines to finish.
+func TestManager_ExportGenesis_NoGoroutineLeakOnError(t *testing.T) {
+	mods := map[string]appmodule.AppModule{"failing": failingCoreAppModule{}}
+	// Many healthy modules raise the odds that some are not collected before the
+	// failure aborts the loop; with unbuffered channels each of those leaks.
+	for i := 0; i < 50; i++ {
+		mods[fmt.Sprintf("ok%d", i)] = MockCoreAppModule{}
+	}
+	mm := module.NewManagerFromMap(mods)
+
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
+	cdc := codec.NewProtoCodec(types.NewInterfaceRegistry())
+
+	baseline := runtime.NumGoroutine()
+	_, err := mm.ExportGenesis(ctx, cdc)
+	require.ErrorIs(t, err, errFoo)
+
+	// Poll instead of relying on scheduling: every export goroutine must return.
+	deadline := time.Now().Add(5 * time.Second)
+	for runtime.NumGoroutine() > baseline && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+	}
+	require.LessOrEqualf(t, runtime.NumGoroutine(), baseline,
+		"export goroutines leaked after the export aborted on error")
+}

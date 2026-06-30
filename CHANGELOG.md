@@ -194,6 +194,7 @@ This patch release contains only minor dependency bumps.
 * (x/group) [#25920](https://github.com/cosmos/cosmos-sdk/pull/25920) Expand voting period check to verify period is positive instead of nonzero.
 * (types/address) [#25944] (https://github.com/cosmos/cosmos-sdk/pull/25944) correct sort comparator in Compose to satisfy strict weak ordering.
 * (baseapp) [#26063](https://github.com/cosmos/cosmos-sdk/pull/26063) Fixes an issue where values embedded in context during ante handling were wiped after the handlers returned.
+* (baseapp) [#26433](https://github.com/cosmos/cosmos-sdk/pull/26433) Emit gen-tx events on the finalize-block `EventManager` during `ExecuteGenesisTx` so indexers that rely solely on events do not miss genesis state changes.
 * (collections/indexes) [#25942](https://github.com/cosmos/cosmos-sdk/pull/25942) handle iterator close errors in index helpers.
 
 ### Deprecated

@@ -915,6 +915,18 @@ func (s *coinTestSuite) TestCoins_Validate() {
 	}
 }
 
+func (s *coinTestSuite) TestCoins_Validate_NonPositiveErrorIncludesCoin() {
+	badCoin := sdk.Coin{Denom: "btree", Amount: math.ZeroInt()}
+	coins := sdk.Coins{
+		{Denom: "atree", Amount: math.OneInt()},
+		badCoin,
+	}
+	err := coins.Validate()
+	s.Require().Error(err)
+	// The error should name the offending coin (amount + denom), not the denom alone.
+	s.Require().Contains(err.Error(), badCoin.String())
+}
+
 func (s *coinTestSuite) TestMinMax() {
 	one := math.OneInt()
 	two := math.NewInt(2)

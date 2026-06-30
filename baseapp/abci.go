@@ -181,12 +181,17 @@ func (app *BaseApp) Query(ctx context.Context, req *abci.RequestQuery) (resp *ab
 		req.Height = app.LastBlockHeight()
 	}
 
+	// req.Path is client-controlled and is used below as a telemetry key. Sanitize
+	// it to the Prometheus metric-name charset first: emitting it verbatim lets a
+	// caller register a metric name containing characters Prometheus rejects (e.g.
+	// '<', '>'), which corrupts the whole /metrics endpoint until the node restarts.
+	queryPath := sanitizeQueryMetricKey(req.Path)
 	//nolint:staticcheck // TODO: switch to OpenTelemetry
 	telemetry.IncrCounter(1, "query", "count")
 	//nolint:staticcheck // TODO: switch to OpenTelemetry
-	telemetry.IncrCounter(1, "query", req.Path)
+	telemetry.IncrCounter(1, "query", queryPath)
 	//nolint:staticcheck // TODO: switch to OpenTelemetry
-	defer telemetry.MeasureSince(telemetry.Now(), req.Path)
+	defer telemetry.MeasureSince(telemetry.Now(), queryPath)
 
 	if req.Path == QueryPathBroadcastTx {
 		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), app.trace), nil
@@ -1160,7 +1165,7 @@ func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.R
 				Value:     bz,
 			}
 
-	case "version":
+		case "version":
 			return &abci.ResponseQuery{
 				Codespace: sdkerrors.RootCodespace,
 				Height:    req.Height,
@@ -1246,6 +1251,26 @@ func SplitABCIQueryPath(requestPath string) (path []string) {
 	}
 
 	return path
+}
+
+// sanitizeQueryMetricKey replaces every character that is not valid in a
+// Prometheus metric name with '_'. The ABCI query path is client-controlled
+// and is used as a telemetry key; characters outside [a-zA-Z0-9_:] would
+// otherwise produce a metric name Prometheus rejects, breaking the entire
+// /metrics endpoint until the node restarts. Valid paths are unaffected in
+// practice, as the metrics sink already maps '.'/'/' to '_'.
+func sanitizeQueryMetricKey(key string) string {
+	return strings.Map(func(r rune) rune {
+		switch {
+		case r >= 'a' && r <= 'z',
+			r >= 'A' && r <= 'Z',
+			r >= '0' && r <= '9',
+			r == '_', r == ':':
+			return r
+		default:
+			return '_'
+		}
+	}, key)
 }
 
 // FilterPeerByAddrPort filters peers by address/port.

@@ -704,8 +704,8 @@ func flattenSignatures(data signing.SignatureData, depth, maxDepth, maxLength in
 		sigs = append(sigs, chunk...)
 	}
 
-	aggragatedSig := cryptotypes.MultiSignature{Signatures: sigs}
-	aggregatedSigBytes, err := aggragatedSig.Marshal()
+	aggregatedSig := cryptotypes.MultiSignature{Signatures: sigs}
+	aggregatedSigBytes, err := aggregatedSig.Marshal()
 	if err != nil {
 		return nil, err
 	}

@@ -157,7 +157,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	}
 }
 
-func TestConsumeMultisignatureVerificationGasMalformedBitArray(t *testing.T) {
+func TestConsumeMultiSignatureVerificationGasMalformedBitArray(t *testing.T) {
 	params := types.DefaultParams()
 	pkSet, _ := generatePubKeysAndSignatures(3, []byte{1, 2, 3, 4}, false)
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pkSet)

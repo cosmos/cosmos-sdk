@@ -177,7 +177,7 @@ func TestConsumeMultisignatureVerificationGasMalformedBitArray(t *testing.T) {
 		"bit array exceeds key set": oversizedBits,
 	} {
 		t.Run(name, func(t *testing.T) {
-			require.Error(t, ante.ConsumeMultisignatureVerificationGas(storetypes.NewInfiniteGasMeter(), sig, multisigKey, params, 0))
+			require.Error(t, ante.ConsumeMultiSignatureVerificationGas(storetypes.NewInfiniteGasMeter(), sig, multisigKey, params, 0))
 		})
 	}
 }

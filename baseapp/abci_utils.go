@@ -424,11 +424,32 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 // is used in both steps, and applications must ensure that this is the case in
 // non-default handlers.
 func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHandler {
-	// If the mempool is nil or NoOp we simply return ACCEPT,
-	// because PrepareProposal may have included txs that could fail verification.
 	_, isNoOp := h.mempool.(mempool.NoOpMempool)
 	if h.mempool == nil || isNoOp {
-		return NoOpProcessProposal()
+		// Skip ante-handler verification: PrepareProposal may include txs that fail ante checks.
+		// Still enforce MaxBlockGas — without it a byzantine proposer can bypass the no-op FinalizeBlock gas meter.
+		return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+			var maxBlockGas int64
+			if b := ctx.ConsensusParams().Block; b != nil {
+				maxBlockGas = b.MaxGas
+			}
+			if maxBlockGas <= 0 {
+				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
+			}
+
+			var totalTxGas uint64
+			for _, txBytes := range req.Txs {
+				tx, err := h.txVerifier.TxDecode(txBytes)
+				if err != nil {
+					return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+				}
+				totalTxGas += txGasForBlockAccounting(tx, 0)
+				if totalTxGas > uint64(maxBlockGas) {
+					return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+				}
+			}
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
+		}
 	}
 
 	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {

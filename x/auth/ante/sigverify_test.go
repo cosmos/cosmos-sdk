@@ -9,6 +9,8 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa65"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -98,6 +100,40 @@ func TestSetPubKey_UnorderedNoEvents(t *testing.T) {
 		// transaction uses the same sequence number as another transaction from the same sender.
 		require.NotContains(t, event.Attributes, sdk.AttributeKeyAccountSequence)
 	}
+}
+
+func TestSetPubKey_SignerInfoCountMismatch(t *testing.T) {
+	suite := SetupTestSuite(t, true)
+
+	// Build a raw tx with 2 SignerInfos but an empty body (0 message signers).
+	// This mimics an attacker injecting extra SignerInfos to trigger an
+	// index-out-of-range panic in the pubkeys loop.
+	single := &txtypes.ModeInfo{Sum: &txtypes.ModeInfo_Single_{Single: &txtypes.ModeInfo_Single{Mode: signing.SignMode_SIGN_MODE_DIRECT}}}
+	authInfo := &txtypes.AuthInfo{
+		SignerInfos: []*txtypes.SignerInfo{{ModeInfo: single}, {ModeInfo: single}},
+		Fee:         &txtypes.Fee{GasLimit: 200000},
+	}
+	authInfoBz, err := authInfo.Marshal()
+	require.NoError(t, err)
+
+	bodyBz, err := (&txtypes.TxBody{}).Marshal()
+	require.NoError(t, err)
+
+	raw := &txtypes.TxRaw{
+		BodyBytes:     bodyBz,
+		AuthInfoBytes: authInfoBz,
+		Signatures:    [][]byte{[]byte("sig1"), []byte("sig2")},
+	}
+	txBz, err := raw.Marshal()
+	require.NoError(t, err)
+
+	decodedTx, err := suite.clientCtx.TxConfig.TxDecoder()(txBz)
+	require.NoError(t, err)
+
+	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
+	noopNext := func(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) { return ctx, nil }
+	_, err = spkd.AnteHandle(suite.ctx, decodedTx, false, noopNext)
+	require.ErrorIs(t, err, sdkerrors.ErrTxDecode)
 }
 
 func TestConsumeSignatureVerificationGas(t *testing.T) {

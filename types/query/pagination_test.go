@@ -101,6 +101,26 @@ func (s *paginationTestSuite) TestParsePagination() {
 	s.Require().NoError(err)
 	s.Require().Equal(page, 1)
 	s.Require().Equal(limit, 10)
+
+	s.T().Log("verify limit one above MaxLimit is capped to MaxLimit")
+	_, limit, err = query.ParsePagination(&query.PageRequest{Limit: uint64(query.MaxLimit) + 1})
+	s.Require().NoError(err)
+	s.Require().Equal(query.MaxLimit, limit)
+
+	s.T().Log("verify large limit is capped to MaxLimit")
+	_, limit, err = query.ParsePagination(&query.PageRequest{Limit: 999_999_999})
+	s.Require().NoError(err)
+	s.Require().Equal(query.MaxLimit, limit)
+
+	s.T().Log("verify limit equal to MaxLimit is accepted unchanged")
+	_, limit, err = query.ParsePagination(&query.PageRequest{Limit: uint64(query.MaxLimit)})
+	s.Require().NoError(err)
+	s.Require().Equal(query.MaxLimit, limit)
+
+	s.T().Log("verify limit below MaxLimit is accepted unchanged")
+	_, limit, err = query.ParsePagination(&query.PageRequest{Limit: 50})
+	s.Require().NoError(err)
+	s.Require().Equal(50, limit)
 }
 
 func (s *paginationTestSuite) TestPagination() {
@@ -219,6 +239,41 @@ func (s *paginationTestSuite) TestPagination() {
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	s.Require().NoError(err)
 	s.Require().Equal(res.Balances.Len(), numBalances-12)
+}
+
+func (s *paginationTestSuite) TestPaginateMaxLimitCap() {
+	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.interfaceReg)
+	types.RegisterQueryServer(queryHelper, s.bankKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	var balances sdk.Coins
+	for i := range numBalances {
+		denom := fmt.Sprintf("bar%ddenom", i)
+		balances = append(balances, sdk.NewInt64Coin(denom, 100))
+	}
+
+	balances = balances.Sort()
+	addr2 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	acc2 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr2)
+	s.accountKeeper.SetAccount(s.ctx, acc2)
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr2, balances))
+
+	s.T().Log("verify limit above MaxLimit is capped — all items returned when total < MaxLimit")
+	pageReq := &query.PageRequest{Limit: uint64(query.MaxLimit) + 1}
+	request := types.NewQueryAllBalancesRequest(addr2, pageReq, false)
+	res, err := queryClient.AllBalances(gocontext.Background(), request)
+	s.Require().NoError(err)
+	// numBalances(235) < MaxLimit(10000): cap takes effect but all items still fit.
+	s.Require().Equal(numBalances, res.Balances.Len())
+	s.Require().Nil(res.Pagination.NextKey)
+
+	s.T().Log("verify uint64-max limit is capped — no panic, sensible result")
+	pageReq = &query.PageRequest{Limit: ^uint64(0)}
+	request = types.NewQueryAllBalancesRequest(addr2, pageReq, false)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
+	s.Require().NoError(err)
+	s.Require().Equal(numBalances, res.Balances.Len())
+	s.Require().Nil(res.Pagination.NextKey)
 }
 
 func (s *paginationTestSuite) TestReversePagination() {

@@ -134,12 +134,16 @@ func adaptModeInfo(legacy *tx.ModeInfo, res *txv1beta1.ModeInfo) {
 		for _, modeInfo := range multiModeInfos {
 			adaptModeInfo(modeInfo, &txv1beta1.ModeInfo{})
 		}
+		var bitarray *multisigv1beta1.CompactBitArray
+		if mi.Multi.Bitarray != nil {
+			bitarray = &multisigv1beta1.CompactBitArray{
+				Elems:           mi.Multi.Bitarray.Elems,
+				ExtraBitsStored: mi.Multi.Bitarray.ExtraBitsStored,
+			}
+		}
 		res.Sum = &txv1beta1.ModeInfo_Multi_{
 			Multi: &txv1beta1.ModeInfo_Multi{
-				Bitarray: &multisigv1beta1.CompactBitArray{
-					Elems:           mi.Multi.Bitarray.Elems,
-					ExtraBitsStored: mi.Multi.Bitarray.ExtraBitsStored,
-				},
+				Bitarray:  bitarray,
 				ModeInfos: modeInfos,
 			},
 		}

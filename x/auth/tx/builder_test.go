@@ -399,3 +399,32 @@ func TestGetSigningTxData_NilPublicKey(t *testing.T) {
 		require.Nil(t, td.AuthInfo.SignerInfos[1].PublicKey)
 	})
 }
+
+func TestGetSigningTxData_NilMultiBitarray(t *testing.T) {
+	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	w := newBuilder(marshaler)
+
+	_, _, addr := testdata.KeyTestPubAddr()
+	require.NoError(t, w.SetMsgs(testdata.NewTestMsg(addr)))
+
+	// Inject a SignerInfo with ModeInfo_Multi whose Bitarray is nil — valid
+	// wire state that survives decoding if the field is omitted. Before the
+	// fix, adaptModeInfo would dereference nil and panic.
+	w.tx.AuthInfo.SignerInfos = []*txtypes.SignerInfo{
+		{
+			ModeInfo: &txtypes.ModeInfo{
+				Sum: &txtypes.ModeInfo_Multi_{
+					Multi: &txtypes.ModeInfo_Multi{
+						Bitarray: nil,
+					},
+				},
+			},
+		},
+	}
+
+	require.NotPanics(t, func() {
+		td := w.GetSigningTxData()
+		require.Len(t, td.AuthInfo.SignerInfos, 1)
+		require.Nil(t, td.AuthInfo.SignerInfos[0].ModeInfo.GetMulti().Bitarray)
+	})
+}

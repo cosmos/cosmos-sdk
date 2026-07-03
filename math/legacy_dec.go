@@ -871,6 +871,12 @@ func (d *LegacyDec) Unmarshal(data []byte) error {
 		return nil
 	}
 
+	// Guard against O(n²) big.Int decimal parse on attacker-controlled input.
+	// The largest valid internal value (-(2^256*10^18-1)) is 97 bytes; 100 is the cap.
+	if len(data) > maxUnmarshalTextBytes {
+		return ErrLegacyInvalidDecimalLength
+	}
+
 	if d.i == nil {
 		d.i = new(big.Int)
 	}

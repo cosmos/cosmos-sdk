@@ -201,6 +201,12 @@ func (u *Uint) Unmarshal(data []byte) error {
 		return nil
 	}
 
+	// Guard against O(n²) big.Int decimal parse on attacker-controlled input.
+	// The largest valid value (2^256-1) is 78 bytes; 100 provides a small margin.
+	if len(data) > maxUnmarshalTextBytes {
+		return fmt.Errorf("uint string too long: got %d bytes, max %d", len(data), maxUnmarshalTextBytes)
+	}
+
 	if u.i == nil {
 		u.i = new(big.Int)
 	}

@@ -76,6 +76,11 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return sdk.Context{}, err
 	}
 
+	if len(pubkeys) != len(signers) {
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrTxDecode,
+			"expected %d signer infos, got %d", len(signers), len(pubkeys))
+	}
+
 	signerStrs := make([]string, len(signers))
 	for i, pk := range pubkeys {
 		var err error

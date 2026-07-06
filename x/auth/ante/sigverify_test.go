@@ -157,7 +157,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	}
 }
 
-func TestConsumeMultiSignatureVerificationGasMalformedBitArray(t *testing.T) {
+func TestConsumeMultisignatureVerificationGasMalformedBitArray(t *testing.T) {
 	params := types.DefaultParams()
 	pkSet, _ := generatePubKeysAndSignatures(3, []byte{1, 2, 3, 4}, false)
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pkSet)
@@ -177,7 +177,7 @@ func TestConsumeMultiSignatureVerificationGasMalformedBitArray(t *testing.T) {
 		"bit array exceeds key set": oversizedBits,
 	} {
 		t.Run(name, func(t *testing.T) {
-			require.Error(t, ante.ConsumeMultiSignatureVerificationGas(storetypes.NewInfiniteGasMeter(), sig, multisigKey, params, 0))
+			require.Error(t, ante.ConsumeMultisignatureVerificationGas(storetypes.NewInfiniteGasMeter(), sig, multisigKey, params, 0))
 		})
 	}
 }

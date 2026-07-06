@@ -137,7 +137,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			))
 		}
 
-		sigBzs, err := flattenSignatures(sig.Data, 0, 2, 32)
+		sigBzs, err := flattenSignatures(sig.Data)
 		if err != nil {
 			return ctx, errorsmod.Wrap(sdkerrors.ErrTooManySignatures, err.Error())
 		}
@@ -594,7 +594,7 @@ func DefaultSigVerificationGasConsumer(
 		if !ok {
 			return fmt.Errorf("expected %T, got, %T", &signing.MultiSignatureData{}, sig.Data)
 		}
-		err := ConsumeMultiSignatureVerificationGas(meter, multiSignature, pubkey, params, sig.Sequence)
+		err := ConsumeMultisignatureVerificationGas(meter, multiSignature, pubkey, params, sig.Sequence)
 		if err != nil {
 			return err
 		}
@@ -605,8 +605,8 @@ func DefaultSigVerificationGasConsumer(
 	}
 }
 
-// ConsumeMultiSignatureVerificationGas consumes gas from a GasMeter for verifying a multisig pubkey signature
-func ConsumeMultiSignatureVerificationGas(
+// ConsumeMultisignatureVerificationGas consumes gas from a GasMeter for verifying a multisig pubkey signature
+func ConsumeMultisignatureVerificationGas(
 	meter storetypes.GasMeter, sig *signing.MultiSignatureData, pubkey multisig.PubKey,
 	params types.Params, accSeq uint64,
 ) error {
@@ -674,7 +674,11 @@ func CountSubKeys(pub cryptotypes.PubKey) int {
 // flattenSignatures converts a SignatureData into raw bytes signature.
 // For SingleSignatureData, it returns the signature raw bytes.
 // For MultiSignatureData, it returns an array of all individual signatures + the aggregated signature.
-func flattenSignatures(data signing.SignatureData, depth, maxDepth, maxLength int) ([][]byte, error) {
+func flattenSignatures(data signing.SignatureData) ([][]byte, error) {
+	return flattenSignaturesAtDepth(data, 0, 2, 32)
+}
+
+func flattenSignaturesAtDepth(data signing.SignatureData, depth, maxDepth, maxLength int) ([][]byte, error) {
 	switch {
 	case data == nil:
 		return nil, fmt.Errorf("SignatureData is required")
@@ -687,16 +691,17 @@ func flattenSignatures(data signing.SignatureData, depth, maxDepth, maxLength in
 	}
 
 	multi, ok := data.(*signing.MultiSignatureData)
-	if !ok {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("unexpected signature data type %T", data)
-	} else if len(multi.Signatures) > maxLength {
+	switch {
+	case !ok:
+		return nil, fmt.Errorf("unexpected signature data type %T", data)
+	case len(multi.Signatures) > maxLength:
 		return nil, fmt.Errorf("max breadth of %d reached", maxLength)
 	}
 
 	sigs := make([][]byte, 0, len(multi.Signatures)+1)
 
 	for _, sig := range multi.Signatures {
-		chunk, err := flattenSignatures(sig, depth+1, maxDepth, maxLength)
+		chunk, err := flattenSignaturesAtDepth(sig, depth+1, maxDepth, maxLength)
 		if err != nil {
 			return nil, err
 		}

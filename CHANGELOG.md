@@ -46,7 +46,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-<<<<<<< HEAD
+* chore(x/auth) [#26567](https://github.com/cosmos/cosmos-sdk/pull/26567): add a human-readable error
+
 ### Bug Fixes
 
 * (x/gov) [#26353](https://github.com/cosmos/cosmos-sdk/pull/26353) Fix leading comma in `proposal_messages` event attribute emitted by `SubmitProposal`.
@@ -63,13 +64,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (abci) [#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) Add support for new application side mempool ABCI methods.
 * (deps) [#26383](https://github.com/cosmos/cosmos-sdk/pull/26383) Bump CometBFT version to v0.39.3
 * (deps) Routine dependency updates across workspace modules (e.g. `github.com/cockroachdb/errors`, `pgregory.net/rapid`, `github.com/fsnotify/fsnotify`, OpenTelemetry contrib, `golang.org/x/crypto`, `github.com/hashicorp/go-plugin`, and related bumps). See merged backport PRs since [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) for the full set.
-=======
-* (docs) [#25918](https://github.com/cosmos/cosmos-sdk/issues/25918) Regenerate Swagger API spec to reflect current proto state, including `authority` field on consensus params and removal of stale module-config definitions.
-* (baseapp) [#22368](https://github.com/cosmos/cosmos-sdk/issues/22368) Add `-race`-mode regression test (`TestABCI_Race_GRPC_Query_During_Commit`) covering concurrent `BaseApp.Query` and `FinalizeBlock`/`Commit`. Pins down the state-management mutex work added in #24655 and follow-ups so the data race reported against v0.50.x cannot regress silently.
-* (x/staking, x/slashing) [#26481](https://github.com/cosmos/cosmos-sdk/pull/26481) Resolve evidence against recently rotated consensus keys and migrate slashing signing state to the active consensus key.
-* (x/auth/tx) [#25221](https://github.com/cosmos/cosmos-sdk/issues/25221) Add `ConfigOptions.AminoJSONEncoder` so applications can configure a custom `aminojson.Encoder` (e.g. custom field encodings) for the `SIGN_MODE_LEGACY_AMINO_JSON` handler without replicating the SDK's `HandlerMap` construction.
-* chore(x/auth) [#26567](https://github.com/cosmos/cosmos-sdk/pull/26567): add a human-readable error
->>>>>>> eff9b3fe1 (chore(x/auth): human-readable error (#26567))
 
 ### Bug Fixes
 

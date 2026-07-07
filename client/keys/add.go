@@ -244,8 +244,11 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		}
 
 		var pk cryptotypes.PubKey
-		// create an empty pubkey in order to get the algo TypeUrl.
-		tempAny, err := codectypes.NewAnyWithValue(algo.Generate()([]byte{}).PubKey())
+		// Generate a throwaway key from a zero seed solely to obtain the algo's
+		// pubkey TypeUrl. A 32-byte seed is required by all supported account
+		// algos (e.g. ML-DSA-65 panics on a wrong-length seed); the key value
+		// itself is discarded.
+		tempAny, err := codectypes.NewAnyWithValue(algo.Generate()(make([]byte, 32)).PubKey())
 		if err != nil {
 			return err
 		}

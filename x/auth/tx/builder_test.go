@@ -428,3 +428,27 @@ func TestGetSigningTxData_NilMultiBitarray(t *testing.T) {
 		require.Nil(t, td.AuthInfo.SignerInfos[0].ModeInfo.GetMulti().Bitarray)
 	})
 }
+
+func TestGetSigningTxData_NilModeInfoMulti(t *testing.T) {
+	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	w := newBuilder(marshaler)
+
+	_, _, addr := testdata.KeyTestPubAddr()
+	require.NoError(t, w.SetMsgs(testdata.NewTestMsg(addr)))
+
+	w.tx.AuthInfo.SignerInfos = []*txtypes.SignerInfo{
+		{
+			ModeInfo: &txtypes.ModeInfo{
+				Sum: &txtypes.ModeInfo_Multi_{
+					Multi: nil,
+				},
+			},
+		},
+	}
+
+	require.NotPanics(t, func() {
+		td := w.GetSigningTxData()
+		require.Len(t, td.AuthInfo.SignerInfos, 1)
+		require.NotNil(t, td.AuthInfo.SignerInfos[0].ModeInfo.GetMulti())
+	})
+}

@@ -1,6 +1,6 @@
 module cosmossdk.io/tools/confix
 
-go 1.26.4
+go 1.26.5
 
 require (
 	github.com/cosmos/cosmos-sdk v0.54.0

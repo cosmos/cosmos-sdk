@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/enterprise/group/tests/systemtests
 
-go 1.26.4
+go 1.26.5
 
 require (
 	github.com/cosmos/cosmos-sdk/tools/systemtests v0.0.0-00010101000000-000000000000

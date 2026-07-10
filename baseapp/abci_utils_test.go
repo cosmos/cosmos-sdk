@@ -3,6 +3,7 @@ package baseapp_test
 import (
 	"bytes"
 	"errors"
+	"math"
 	"sort"
 	"testing"
 
@@ -804,8 +805,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolRejectsOverGa
 	}
 }
 
-// Multi-tx blocks: gas is accumulated across all txs, so a block where individual txs are within
-// MaxGas but total exceeds it must be rejected — the core byzantine proposer scenario.
+// Individually-fine txs whose gas sums past MaxGas must still be rejected — the core byzantine proposer scenario.
 func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolRejectsMultiTxOverGas() {
 	tx1, bz1 := s.buildSignedTx(60)
 	tx2, bz2 := s.buildSignedTx(50) // sum = 110 > MaxGas=100
@@ -835,6 +835,26 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolRejectsOnDeco
 
 	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app)
 	resp, err := ph.ProcessProposalHandler()(ctx, &abci.RequestProcessProposal{Txs: [][]byte{corruptBz}})
+	s.Require().NoError(err)
+	s.Require().Equal(abci.ResponseProcessProposal_REJECT, resp.Status)
+}
+
+// Crafted declared gas must not wrap totalTxGas past a uint64 overflow to slip under MaxBlockGas.
+func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolRejectsOverflowGas() {
+	const maxBlockGas = 100
+	tx1, bz1 := s.buildSignedTx(maxBlockGas)
+	tx2, bz2 := s.buildSignedTx(math.MaxUint64 - maxBlockGas + 1)
+
+	ctx := s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{MaxGas: maxBlockGas},
+	})
+
+	app := mock.NewMockProposalTxVerifier(gomock.NewController(s.T()))
+	app.EXPECT().TxDecode(bz1).Return(tx1, nil).AnyTimes()
+	app.EXPECT().TxDecode(bz2).Return(tx2, nil).AnyTimes()
+
+	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app)
+	resp, err := ph.ProcessProposalHandler()(ctx, &abci.RequestProcessProposal{Txs: [][]byte{bz1, bz2}})
 	s.Require().NoError(err)
 	s.Require().Equal(abci.ResponseProcessProposal_REJECT, resp.Status)
 }

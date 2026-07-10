@@ -426,8 +426,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHandler {
 	_, isNoOp := h.mempool.(mempool.NoOpMempool)
 	if h.mempool == nil || isNoOp {
-		// Skip ante-handler verification: PrepareProposal may include txs that fail ante checks.
-		// Still enforce MaxBlockGas — without it a byzantine proposer can bypass the no-op FinalizeBlock gas meter.
+		// Skip ante-handler verification (PrepareProposal may include txs that fail ante checks), but still enforce MaxBlockGas so a byzantine proposer can't exploit the no-op FinalizeBlock gas meter.
 		return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 			var maxBlockGas int64
 			if b := ctx.ConsensusParams().Block; b != nil {
@@ -443,10 +442,12 @@ func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHan
 				if err != nil {
 					return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 				}
-				totalTxGas += txGasForBlockAccounting(tx, 0)
-				if totalTxGas > uint64(maxBlockGas) {
+				// Check before adding — declared gas is attacker-controlled here, so add-then-check could overflow uint64 past the limit.
+				txGas := txGasForBlockAccounting(tx, 0)
+				if txGas > uint64(maxBlockGas)-totalTxGas {
 					return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 				}
+				totalTxGas += txGas
 			}
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
 		}

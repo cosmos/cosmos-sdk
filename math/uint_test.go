@@ -416,3 +416,35 @@ func TestUnmarshalUintLengthGuard(t *testing.T) {
 		t.Fatalf("unexpected value after unmarshal")
 	}
 }
+
+func TestUnmarshalJSONUintLengthGuard(t *testing.T) {
+	// The JSON decode path (used by REST/gRPC-gateway) shares unmarshalText with
+	// Unmarshal, so it must be guarded against the same O(n²) big.Int parse.
+	blob := []byte(`"` + strings.Repeat("1", 101) + `"`)
+	ui := new(sdkmath.Uint)
+	err := ui.UnmarshalJSON(blob)
+	if err == nil {
+		t.Fatal("expected error for oversized JSON input")
+	}
+	if !strings.Contains(err.Error(), "too long") {
+		t.Fatalf("expected 'too long' error, got %q", err.Error())
+	}
+
+	// Exactly 100 bytes must pass the guard (leading zeros → value 0).
+	boundary := new(sdkmath.Uint)
+	if err := boundary.UnmarshalJSON([]byte(`"` + strings.Repeat("0", 100) + `"`)); err != nil {
+		t.Fatalf("unexpected error at boundary: %v", err)
+	}
+	if !boundary.Equal(sdkmath.ZeroUint()) {
+		t.Fatalf("expected zero at boundary, got %v", boundary)
+	}
+
+	// Valid values within the limit must still round-trip correctly.
+	ui2 := new(sdkmath.Uint)
+	if err := ui2.UnmarshalJSON([]byte(`"12345"`)); err != nil {
+		t.Fatalf("unexpected error for valid JSON input: %v", err)
+	}
+	if !ui2.Equal(sdkmath.NewUint(12345)) {
+		t.Fatalf("unexpected value after JSON unmarshal")
+	}
+}

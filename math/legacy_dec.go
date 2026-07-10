@@ -168,6 +168,12 @@ func LegacyNewDecFromStr(str string) (LegacyDec, error) {
 		return LegacyDec{}, ErrLegacyEmptyDecimalStr
 	}
 
+	// Guard against O(n²) big.Int decimal parse on attacker-controlled input.
+	// Covers the JSON decode path (LegacyDec.UnmarshalJSON), which routes here.
+	if len(str) > maxUnmarshalTextBytes {
+		return LegacyDec{}, ErrLegacyInvalidDecimalLength
+	}
+
 	strs := strings.Split(str, ".")
 	lenDecs := 0
 	combinedStr := strs[0]

@@ -711,3 +711,23 @@ func TestUnmarshalIntLengthGuard(t *testing.T) {
 	require.NoError(t, i2.Unmarshal([]byte("12345")))
 	require.Equal(t, math.NewInt(12345), i2)
 }
+
+func TestUnmarshalJSONIntLengthGuard(t *testing.T) {
+	// The JSON decode path (used by REST/gRPC-gateway) shares unmarshalText with
+	// Unmarshal, so it must be guarded against the same O(n²) big.Int parse.
+	blob := []byte(`"` + strings.Repeat("1", 101) + `"`)
+	var i math.Int
+	err := i.UnmarshalJSON(blob)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "too long")
+
+	// Exactly 100 bytes must pass the guard (leading zeros → value 0).
+	var boundary math.Int
+	require.NoError(t, boundary.UnmarshalJSON([]byte(`"`+strings.Repeat("0", 100)+`"`)))
+	require.Equal(t, math.ZeroInt(), boundary)
+
+	// Valid values within the limit must still round-trip correctly.
+	var i2 math.Int
+	require.NoError(t, i2.UnmarshalJSON([]byte(`"12345"`)))
+	require.Equal(t, math.NewInt(12345), i2)
+}

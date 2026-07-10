@@ -79,6 +79,12 @@ func max(i, i2 *big.Int) *big.Int {
 }
 
 func unmarshalText(i *big.Int, text string) error {
+	// Guard against O(n²) big.Int decimal parse on attacker-controlled input.
+	// Shared by Int.UnmarshalJSON and Uint.UnmarshalJSON, so this covers the JSON decode path too.
+	if len(text) > maxUnmarshalTextBytes {
+		return fmt.Errorf("integer string too long: got %d bytes, max %d", len(text), maxUnmarshalTextBytes)
+	}
+
 	if err := i.UnmarshalText([]byte(text)); err != nil {
 		return err
 	}

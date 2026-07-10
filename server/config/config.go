@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"slices"
 
 	"github.com/spf13/viper"
@@ -40,7 +39,7 @@ const (
 
 	// DefaultGRPCMaxSendMsgSize defines the default gRPC max message size in
 	// bytes the server can send.
-	DefaultGRPCMaxSendMsgSize = math.MaxInt32
+	DefaultGRPCMaxSendMsgSize = 1024 * 1024 * 10
 )
 
 const (
@@ -181,7 +180,7 @@ type GRPCConfig struct {
 	MaxRecvMsgSize int `mapstructure:"max-recv-msg-size"`
 
 	// MaxSendMsgSize defines the max message size in bytes the server can send.
-	// The default value is math.MaxInt32.
+	// The default value is 10MB.
 	MaxSendMsgSize int `mapstructure:"max-send-msg-size"`
 
 	// SkipCheckHeader defines if the gRPC server should bypass header checking.

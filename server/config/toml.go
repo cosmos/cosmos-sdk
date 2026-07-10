@@ -192,7 +192,7 @@ address = "{{ .GRPC.Address }}"
 max-recv-msg-size = "{{ .GRPC.MaxRecvMsgSize }}"
 
 # MaxSendMsgSize defines the max message size in bytes the server can send.
-# The default value is math.MaxInt32.
+# The default value is 10MB.
 max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
 
 # Historical gRPC addresses with block ranges for historical query routing.

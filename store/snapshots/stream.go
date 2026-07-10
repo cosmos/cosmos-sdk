@@ -87,8 +87,8 @@ type StreamReader struct {
 }
 
 // chunkBoundedReader wraps a decompressing reader and bounds how many bytes may be read from it
-// since the last physical chunk boundary observed via chunkReader. This is what enforces
-// snapshotMaxDecompressedChunkSize (see the decompression-bomb guard comment on that constant).
+// since the last physical chunk boundary observed via chunkReader. Enforces
+// snapshotMaxDecompressedChunkSize (see comment there for why).
 type chunkBoundedReader struct {
 	r           io.Reader
 	chunkReader *ChunkReader
@@ -103,24 +103,24 @@ func newChunkBoundedReader(r io.Reader, chunkReader *ChunkReader, maxBytes int64
 		chunkReader: chunkReader,
 		maxBytes:    maxBytes,
 		remaining:   maxBytes,
-		seenChunks:  chunkReader.chunksOpenedCount(),
+		seenChunks:  chunkReader.chunksOpened,
 	}
 }
 
 // Read implements io.Reader.
-func (g *chunkBoundedReader) Read(p []byte) (int, error) {
-	if opened := g.chunkReader.chunksOpenedCount(); opened != g.seenChunks {
-		g.seenChunks = opened
-		g.remaining = g.maxBytes
+func (c *chunkBoundedReader) Read(p []byte) (int, error) {
+	if opened := c.chunkReader.chunksOpened; opened != c.seenChunks {
+		c.seenChunks = opened
+		c.remaining = c.maxBytes
 	}
-	if g.remaining <= 0 {
+	if c.remaining <= 0 {
 		return 0, snapshottypes.ErrDecompressedChunkTooLarge
 	}
-	if int64(len(p)) > g.remaining {
-		p = p[:g.remaining]
+	if int64(len(p)) > c.remaining {
+		p = p[:c.remaining]
 	}
-	n, err := g.r.Read(p)
-	g.remaining -= int64(n)
+	n, err := c.r.Read(p)
+	c.remaining -= int64(n)
 	return n, err
 }
 

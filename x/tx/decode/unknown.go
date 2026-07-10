@@ -14,6 +14,13 @@ import (
 
 const bit11NonCritical = 1 << 10
 
+// maxAnyNestingDepth bounds recursion into nested google.protobuf.Any values.
+// Each level costs 3 passes over the remaining bytes (reject-unknown scan,
+// Any unmarshal, and recursion into the resolved message), so an attacker
+// controlling nesting depth can otherwise force O(depth×size) CPU work from a
+// single tx. No legitimate message nests Any more than a few levels deep.
+const maxAnyNestingDepth = 64
+
 var (
 	anyDesc     = (&anypb.Any{}).ProtoReflect().Descriptor()
 	anyFullName = anyDesc.FullName()
@@ -33,8 +40,7 @@ func RejectUnknownFieldsStrict(bz []byte, msg protoreflect.MessageDescriptor, re
 // This function traverses inside of messages nested via google.protobuf.Any. It does not do any deserialization of the proto.Message.
 // An AnyResolver must be provided for traversing inside google.protobuf.Any's.
 func RejectUnknownFields(bz []byte, desc protoreflect.MessageDescriptor, allowUnknownNonCriticals bool, resolver protodesc.Resolver) (hasUnknownNonCriticals bool, err error) {
-	// recursion limit with same default as https://github.com/protocolbuffers/protobuf-go/blob/v1.35.2/encoding/protowire/wire.go#L28
-	return doRejectUnknownFields(bz, desc, allowUnknownNonCriticals, resolver, 10_000)
+	return doRejectUnknownFields(bz, desc, allowUnknownNonCriticals, resolver, maxAnyNestingDepth)
 }
 
 func doRejectUnknownFields(

@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/errors"
+
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
 )
 
 const (
@@ -17,6 +19,13 @@ const (
 	snapshotBufferSize = int(snapshotChunkSize)
 	// Do not change compression level without new snapshot format (must be uniform across nodes)
 	snapshotCompressionLevel = 7
+
+	// snapshotMaxDecompressedChunkSize bounds decompressed bytes read per physical chunk. The
+	// whole snapshot is one continuous zlib stream (only chunked for storage/transport), so
+	// without this a malicious state-sync peer could serve one small, highly-compressible
+	// chunk that decompresses into gigabytes of data, forcing large IAVL import work before the
+	// resulting app hash is ever checked against the trusted header.
+	snapshotMaxDecompressedChunkSize = 100 * snapshotChunkSize // 1 GB per chunk
 )
 
 // StreamWriter set up a stream pipeline to serialize snapshot nodes:
@@ -77,6 +86,44 @@ type StreamReader struct {
 	protoReader protoio.ReadCloser
 }
 
+// chunkBoundedReader wraps a decompressing reader and bounds how many bytes may be read from it
+// since the last physical chunk boundary observed via chunkReader. This is what enforces
+// snapshotMaxDecompressedChunkSize (see the decompression-bomb guard comment on that constant).
+type chunkBoundedReader struct {
+	r           io.Reader
+	chunkReader *ChunkReader
+	maxBytes    int64
+	remaining   int64
+	seenChunks  int
+}
+
+func newChunkBoundedReader(r io.Reader, chunkReader *ChunkReader, maxBytes int64) *chunkBoundedReader {
+	return &chunkBoundedReader{
+		r:           r,
+		chunkReader: chunkReader,
+		maxBytes:    maxBytes,
+		remaining:   maxBytes,
+		seenChunks:  chunkReader.chunksOpenedCount(),
+	}
+}
+
+// Read implements io.Reader.
+func (g *chunkBoundedReader) Read(p []byte) (int, error) {
+	if opened := g.chunkReader.chunksOpenedCount(); opened != g.seenChunks {
+		g.seenChunks = opened
+		g.remaining = g.maxBytes
+	}
+	if g.remaining <= 0 {
+		return 0, snapshottypes.ErrDecompressedChunkTooLarge
+	}
+	if int64(len(p)) > g.remaining {
+		p = p[:g.remaining]
+	}
+	n, err := g.r.Read(p)
+	g.remaining -= int64(n)
+	return n, err
+}
+
 // NewStreamReader set up a restore stream pipeline.
 func NewStreamReader(chunks <-chan io.ReadCloser) (*StreamReader, error) {
 	chunkReader := NewChunkReader(chunks)
@@ -84,7 +131,8 @@ func NewStreamReader(chunks <-chan io.ReadCloser) (*StreamReader, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "zlib failure")
 	}
-	protoReader := protoio.NewDelimitedReader(zReader, snapshotMaxItemSize)
+	boundedReader := newChunkBoundedReader(zReader, chunkReader, int64(snapshotMaxDecompressedChunkSize))
+	protoReader := protoio.NewDelimitedReader(boundedReader, snapshotMaxItemSize)
 	return &StreamReader{
 		chunkReader: chunkReader,
 		zReader:     zReader,

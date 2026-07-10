@@ -108,8 +108,9 @@ func (w *ChunkWriter) Write(data []byte) (int, error) {
 
 // ChunkReader reads chunks from a channel of io.ReadClosers and outputs them as an io.Reader
 type ChunkReader struct {
-	ch     <-chan io.ReadCloser
-	reader io.ReadCloser
+	ch           <-chan io.ReadCloser
+	reader       io.ReadCloser
+	chunksOpened int // number of physical chunks opened so far; used to detect chunk boundaries
 }
 
 // NewChunkReader creates a new ChunkReader.
@@ -124,7 +125,15 @@ func (r *ChunkReader) next() error {
 		return io.EOF
 	}
 	r.reader = reader
+	r.chunksOpened++
 	return nil
+}
+
+// chunksOpenedCount returns the number of physical chunks opened for reading so far. The whole
+// snapshot is a single continuous compressed stream split into chunks only for storage/transport,
+// so this lets a decompressor detect chunk boundaries and bound decompressed output per chunk.
+func (r *ChunkReader) chunksOpenedCount() int {
+	return r.chunksOpened
 }
 
 // Close implements io.ReadCloser.

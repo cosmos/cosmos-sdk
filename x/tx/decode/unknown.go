@@ -14,9 +14,7 @@ import (
 
 const bit11NonCritical = 1 << 10
 
-// maxAnyNestingDepth caps message-recursion depth. Each level re-scans the
-// remaining bytes, so a chain of google.protobuf.Any redirections could force
-// O(depth*size) CPU from a single tx; 64 far exceeds any legitimate nesting.
+// maxAnyNestingDepth caps recursion cost from chained Any redirections; 64 exceeds any legitimate nesting.
 const maxAnyNestingDepth = 64
 
 var (

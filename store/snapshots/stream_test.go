@@ -10,10 +10,6 @@ import (
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
 )
 
-// TestChunkBoundedReader exercises chunkBoundedReader directly (white-box) rather than through
-// NewStreamReader, since the production constants (10MB chunks, 1GB budget) are too large to
-// drive through a fast unit test. chunkReader is only consulted for its opened-chunk count, so
-// it can be advanced independently of the bytes chunkBoundedReader actually reads.
 func TestChunkBoundedReader(t *testing.T) {
 	ch := make(chan io.ReadCloser, 2)
 	ch <- io.NopCloser(bytes.NewReader([]byte{1}))
@@ -29,13 +25,13 @@ func TestChunkBoundedReader(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 4, n)
 
-	// Budget exhausted and no physical chunk boundary crossed yet: further reads must fail.
+	// budget exhausted, no boundary crossed yet
 	_, err = bounded.Read(buf)
 	require.ErrorIs(t, err, snapshottypes.ErrDecompressedChunkTooLarge)
 	_, err = bounded.Read(buf)
 	require.ErrorIs(t, err, snapshottypes.ErrDecompressedChunkTooLarge)
 
-	// Drive chunkReader across the boundary into the second physical chunk.
+	// cross into the second physical chunk
 	one := make([]byte, 1)
 	_, err = chunkReader.Read(one)
 	require.NoError(t, err)
@@ -44,7 +40,7 @@ func TestChunkBoundedReader(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 2, chunkReader.chunksOpened)
 
-	// The new chunk grants a fresh budget.
+	// new chunk grants a fresh budget
 	n, err = bounded.Read(buf)
 	require.NoError(t, err)
 	require.Equal(t, 4, n)

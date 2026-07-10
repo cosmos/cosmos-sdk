@@ -20,11 +20,8 @@ const (
 	// Do not change compression level without new snapshot format (must be uniform across nodes)
 	snapshotCompressionLevel = 7
 
-	// snapshotMaxDecompressedChunkSize bounds decompressed bytes read per physical chunk. The
-	// whole snapshot is one continuous zlib stream (only chunked for storage/transport), so
-	// without this a malicious state-sync peer could serve one small, highly-compressible
-	// chunk that decompresses into gigabytes of data, forcing large IAVL import work before the
-	// resulting app hash is ever checked against the trusted header.
+	// snapshotMaxDecompressedChunkSize bounds decompressed bytes per physical chunk, guarding
+	// against a decompression bomb since the whole snapshot is one continuous zlib stream.
 	snapshotMaxDecompressedChunkSize = 100 * snapshotChunkSize // 1 GB per chunk
 )
 
@@ -86,9 +83,8 @@ type StreamReader struct {
 	protoReader protoio.ReadCloser
 }
 
-// chunkBoundedReader wraps a decompressing reader and bounds how many bytes may be read from it
-// since the last physical chunk boundary observed via chunkReader. Enforces
-// snapshotMaxDecompressedChunkSize (see comment there for why).
+// chunkBoundedReader caps decompressed bytes read since the last physical chunk boundary,
+// enforcing snapshotMaxDecompressedChunkSize.
 type chunkBoundedReader struct {
 	r           io.Reader
 	chunkReader *ChunkReader

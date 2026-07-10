@@ -16,6 +16,8 @@ import (
 const DefaultPage = 1
 
 // DefaultLimit is the default `limit` for queries if the `limit` is not supplied.
+// Must stay <= MaxLimit: ParsePagination relies on that to skip re-checking
+// the cap once it has fallen back to DefaultLimit.
 const DefaultLimit = 100
 
 // MaxLimit is the maximum allowed `limit` for queries. Any caller-supplied
@@ -48,9 +50,9 @@ func ParsePagination(pageReq *PageRequest) (page, limit int, err error) {
 		return 1, 0, status.Error(codes.InvalidArgument, "limit must greater than 0")
 	} else if limit == 0 {
 		limit = DefaultLimit
-	} else if limit > MaxLimit {
-		limit = MaxLimit
 	}
+	// No `limit > MaxLimit` branch needed here: pageReq.Limit was already
+	// capped above, and the DefaultLimit fallback is <= MaxLimit by construction.
 
 	page = offset/limit + 1
 

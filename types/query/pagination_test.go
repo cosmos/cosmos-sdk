@@ -121,6 +121,11 @@ func (s *paginationTestSuite) TestParsePagination() {
 	_, limit, err = query.ParsePagination(&query.PageRequest{Limit: 50})
 	s.Require().NoError(err)
 	s.Require().Equal(50, limit)
+
+	s.T().Log("verify uint64-max limit is capped instead of erroring on the int cast")
+	_, limit, err = query.ParsePagination(&query.PageRequest{Limit: ^uint64(0)})
+	s.Require().NoError(err)
+	s.Require().Equal(query.MaxLimit, limit)
 }
 
 func (s *paginationTestSuite) TestPagination() {

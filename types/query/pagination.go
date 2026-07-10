@@ -30,7 +30,15 @@ func ParsePagination(pageReq *PageRequest) (page, limit int, err error) {
 
 	if pageReq != nil {
 		offset = int(pageReq.Offset)
-		limit = int(pageReq.Limit)
+
+		// Cap on the uint64 value before casting to int: pageReq.Limit values
+		// above math.MaxInt64 (e.g. ^uint64(0)) would otherwise wrap negative
+		// during the cast and be rejected below instead of capped to MaxLimit.
+		if pageReq.Limit > MaxLimit {
+			limit = MaxLimit
+		} else {
+			limit = int(pageReq.Limit)
+		}
 	}
 	if offset < 0 {
 		return 1, 0, status.Error(codes.InvalidArgument, "offset must greater than 0")

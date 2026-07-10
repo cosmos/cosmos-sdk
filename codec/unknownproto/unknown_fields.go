@@ -21,11 +21,9 @@ import (
 
 const bit11NonCritical = 1 << 10
 
-// maxAnyNestingDepth bounds recursion into nested google.protobuf.Any values.
-// Each level costs 3 passes over the remaining bytes (reject-unknown scan,
-// Any unmarshal, and recursion into the resolved message), so an attacker
-// controlling nesting depth can otherwise force O(depth×size) CPU work from a
-// single tx. No legitimate message nests Any more than a few levels deep.
+// maxAnyNestingDepth caps message-recursion depth. Each level re-scans the
+// remaining bytes, so a chain of google.protobuf.Any redirections could force
+// O(depth*size) CPU from a single tx; 64 far exceeds any legitimate nesting.
 const maxAnyNestingDepth = 64
 
 type descriptorIface interface {

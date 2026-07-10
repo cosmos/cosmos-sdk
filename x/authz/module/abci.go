@@ -7,6 +7,6 @@ import (
 
 // BeginBlocker is called at the beginning of every block
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) error {
-	// delete mature grants, capped per block; 200 is an arbitrary value, we can change it later if needed
+	// capped per block to bound pruning work; 200 is arbitrary
 	return keeper.DequeueAndDeleteExpiredGrants(ctx, 200)
 }

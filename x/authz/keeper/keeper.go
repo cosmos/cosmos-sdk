@@ -412,9 +412,8 @@ func (k Keeper) removeFromGrantQueue(ctx context.Context, grantKey []byte, grant
 	return nil
 }
 
-// DequeueAndDeleteExpiredGrants deletes expired grants from the state and grant queue,
-// stopping once limit grants have been deleted. Remaining expired grants are left for
-// the next call so a single block with many expirations can't do unbounded work.
+// DequeueAndDeleteExpiredGrants deletes expired grants, capped at limit per call; any
+// remainder is picked up by the next call, bounding per-block work.
 func (k Keeper) DequeueAndDeleteExpiredGrants(ctx context.Context, limit int32) error {
 	store := k.storeService.OpenKVStore(ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

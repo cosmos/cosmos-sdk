@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -36,4 +37,20 @@ func TestValidateParams(t *testing.T) {
 
 	params.MinCommissionRate = math.LegacyNewDec(2)
 	require.Error(t, params.Validate())
+
+	params = types.DefaultParams()
+	params.KeyRotationFee = sdk.Coin{Denom: sdk.DefaultBondDenom}
+	require.Error(t, params.Validate())
+
+	params = types.DefaultParams()
+	params.KeyRotationFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
+	require.Error(t, params.Validate())
+
+	params = types.DefaultParams()
+	params.KeyRotationFee = sdk.Coin{Denom: "bad denom", Amount: math.NewInt(1)}
+	require.Error(t, params.Validate())
+
+	params = types.DefaultParams()
+	params.KeyRotationFee = sdk.NewInt64Coin("uatom", 1)
+	require.NoError(t, params.Validate())
 }

@@ -122,12 +122,35 @@ func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp
 	}
 }
 
+// isParallelTxRunner reports whether r, or a runner it wraps via Unwrap()
+// sdk.TxRunner, is an STMRunner. Unwrapping matters because applications may
+// wrap the STMRunner (e.g. to patch tx responses), hiding the concrete type.
+func isParallelTxRunner(r sdk.TxRunner) bool {
+	for r != nil {
+		if _, ok := r.(*txnrunner.STMRunner); ok {
+			return true
+		}
+		u, ok := r.(interface{ Unwrap() sdk.TxRunner })
+		if !ok {
+			return false
+		}
+		r = u.Unwrap()
+	}
+	return false
+}
+
+// guardParallelGasMeter panics with msg if r runs in parallel while the block
+// gas meter is enabled (disabled is false) — a non-deterministic combination.
+func guardParallelGasMeter(r sdk.TxRunner, disabled bool, msg string) {
+	if isParallelTxRunner(r) && !disabled {
+		panic(msg)
+	}
+}
+
 // SetBlockSTMTxRunner sets the block stm tx runner for the BaseApp for parallel execution.
 func (app *BaseApp) SetBlockSTMTxRunner(txRunner sdk.TxRunner) {
-	if _, ok := txRunner.(*txnrunner.STMRunner); ok && !app.disableBlockGasMeter {
-		// This combination results in indeterminism
-		panic("Cannot configure parallel execution while block gas meter is enabled")
-	}
+	guardParallelGasMeter(txRunner, app.disableBlockGasMeter,
+		"Cannot configure parallel execution while block gas meter is enabled")
 	app.txRunner = txRunner
 }
 
@@ -141,6 +164,8 @@ func (app *BaseApp) SetName(name string) {
 		panic("SetName() on sealed BaseApp")
 	}
 
+	app.mu.Lock()
+	defer app.mu.Unlock()
 	app.name = name
 }
 
@@ -158,11 +183,15 @@ func (app *BaseApp) SetVersion(v string) {
 	if app.sealed {
 		panic("SetVersion() on sealed BaseApp")
 	}
+	app.mu.Lock()
+	defer app.mu.Unlock()
 	app.version = v
 }
 
 // SetProtocolVersion sets the application's protocol version
 func (app *BaseApp) SetProtocolVersion(v uint64) {
+	app.mu.Lock()
+	defer app.mu.Unlock()
 	app.appVersion = v
 }
 
@@ -401,10 +430,8 @@ func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
 
 // SetDisableBlockGasMeter sets the disableBlockGasMeter flag for the BaseApp.
 func (app *BaseApp) SetDisableBlockGasMeter(disableBlockGasMeter bool) {
-	if _, ok := app.txRunner.(*txnrunner.STMRunner); ok && !disableBlockGasMeter {
-		// This combination results in indeterminism
-		panic("Cannot enable block gas meter while parallel execution is configured")
-	}
+	guardParallelGasMeter(app.txRunner, disableBlockGasMeter,
+		"Cannot enable block gas meter while parallel execution is configured")
 	app.disableBlockGasMeter = disableBlockGasMeter
 }
 

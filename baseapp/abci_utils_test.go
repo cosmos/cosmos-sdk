@@ -741,7 +741,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 
 			for _, v := range tc.txInputs {
 				app.EXPECT().PrepareProposalVerifyTx(v.tx).Return(v.bz, nil).AnyTimes()
-				s.NoError(mp.Insert(s.ctx.WithPriority(v.priority), v.tx))
+				s.NoError(mp.Insert(s.ctx.WithPriority(v.priority), v.tx, mempool.InsertOption{}))
 				tc.req.Txs = append(tc.req.Txs, v.bz)
 			}
 
@@ -757,6 +757,75 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			}
 
 			s.Require().EqualValues(tc.expectedTxs, respTxIndexes)
+		})
+	}
+}
+
+func (s *ABCIUtilsTestSuite) buildSignedTx(declaredGas uint64) (sdk.Tx, []byte) {
+	s.T().Helper()
+	cdc := codectestutil.CodecOptions{}.NewCodec()
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+
+	secret := []byte(s.T().Name())
+	builder := txConfig.NewTxBuilder()
+	s.Require().NoError(builder.SetMsgs(&baseapptestutil.MsgKeyValue{Value: secret}))
+	builder.SetGasLimit(declaredGas)
+	privKey := secp256k1.GenPrivKeyFromSecret(secret)
+	setTxSignatureWithSecret(s.T(), builder, signingtypes.SignatureV2{
+		PubKey:   privKey.PubKey(),
+		Sequence: 1,
+		Data:     &signingtypes.SingleSignatureData{},
+	})
+	tx := builder.GetTx()
+	bz, err := txConfig.TxEncoder()(tx)
+	s.Require().NoError(err)
+	return tx, bz
+}
+
+func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_RejectsOverGasTxs() {
+	cases := []struct {
+		name        string
+		declaredGas uint64
+		recordedGas uint64 // mempool-stored for Prepare, ante-returned for Process
+		maxBlockGas int64
+	}{
+		{"ante-beats-tx-gas", 50, 200, 100}, // declared 50 < MaxGas, ante 200 > MaxGas
+		{"zero-ante-fallback", 200, 0, 100}, // ante 0, falls back to declared 200 > MaxGas
+	}
+	for _, tc := range cases {
+		s.Run(tc.name, func() {
+			tx, bz := s.buildSignedTx(tc.declaredGas)
+			ctx := s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+				Block: &cmtproto.BlockParams{MaxGas: tc.maxBlockGas},
+			})
+
+			app := mock.NewMockProposalTxVerifier(gomock.NewController(s.T()))
+			app.EXPECT().PrepareProposalVerifyTx(tx).Return(bz, nil).AnyTimes()
+			app.EXPECT().ProcessProposalVerifyTx(bz).Return(tx, tc.recordedGas, nil).AnyTimes()
+
+			// ProcessProposalHandler short-circuits to NoOp when mempool is nil/NoOp,
+			// so use a real one. The Insert is what Prepare reads; Process ignores it.
+			mp := mempool.NewPriorityMempool(mempool.DefaultPriorityNonceMempoolConfig())
+			s.Require().NoError(mp.Insert(
+				s.ctx.WithPriority(1), tx,
+				mempool.InsertOption{GasWanted: tc.recordedGas},
+			))
+
+			ph := baseapp.NewDefaultProposalHandler(mp, app)
+
+			prepResp, err := ph.PrepareProposalHandler()(ctx,
+				&abci.RequestPrepareProposal{Txs: [][]byte{bz}, MaxTxBytes: int64(len(bz)) * 2},
+			)
+			s.Require().NoError(err)
+			s.Require().Empty(prepResp.Txs, "PrepareProposal should have excluded the over-gas tx")
+
+			procResp, err := ph.ProcessProposalHandler()(ctx,
+				&abci.RequestProcessProposal{Txs: [][]byte{bz}},
+			)
+			s.Require().NoError(err)
+			s.Require().Equal(abci.ResponseProcessProposal_REJECT, procResp.Status,
+				"ProcessProposal should have rejected the over-gas block")
 		})
 	}
 }

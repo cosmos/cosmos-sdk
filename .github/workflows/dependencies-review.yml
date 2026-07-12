@@ -15,8 +15,7 @@ jobs:
       - name: "Setup Go"
         uses: actions/setup-go@v6
         with:
-          go-version: "1.26.3"
-          check-latest: true
+          go-version-file: "go.mod"
       - name: "Dependency Review"
         uses: actions/dependency-review-action@v5
         with:
@@ -39,7 +38,9 @@ jobs:
           # - GO-2025-3443: CometBFT v0.38.16, v1.0.0 (fixed in v0.38.17+, v1.0.1+)
           # - GO-2026-4479: pion/dtls/v2 AES GCM nonce reuse. No fix for v2 branch.
           #                 Pulled via libp2->pion/stun. Tracking: https://github.com/libp2p/go-libp2p/issues/3464
-          IGNORED_VULNS="GO-2025-3443 GO-2026-4479"
+          # - GO-2026-5932: golang.org/x/crypto openpgp armor. No fixed release yet,
+          #                 called from crypto/armor.go (key export/import armoring).
+          IGNORED_VULNS="GO-2025-3443 GO-2026-4479 GO-2026-5932"
 
           for vuln in $vulnerabilities; do
             if ! echo "$IGNORED_VULNS" | grep -qw "$vuln"; then

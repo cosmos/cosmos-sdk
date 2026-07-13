@@ -191,6 +191,42 @@ func TestSTMRunner_Run_WithEstimation(t *testing.T) {
 	require.Len(t, results, len(txs))
 }
 
+// TestSTMRunner_Run_ZeroWorkers tests that workers==0 means "auto" and does not panic on the estimation path.
+func TestSTMRunner_Run_ZeroWorkers(t *testing.T) {
+	decoder := mockTxDecoderWithFeeTx
+	stores := []storetypes.StoreKey{StoreKeyAuth, StoreKeyBank}
+	runner := NewSTMRunner(decoder, stores, 0, true, testCoinDenomFunc)
+
+	ctx := context.Background()
+	storeIndex := map[storetypes.StoreKey]int{
+		StoreKeyAuth: 0,
+		StoreKeyBank: 1,
+	}
+	ms := msWrapper{NewMultiMemDB(storeIndex)}
+
+	addr1 := []byte("addr1")
+	addr2 := []byte("addr2")
+	txs := [][]byte{
+		append(addr1, 0x01),
+		append(addr2, 0x02),
+	}
+
+	deliverTx := func(tx []byte, memTx sdk.Tx, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
+		require.NotNil(t, ms)
+		return &abci.ExecTxResult{Code: 0}
+	}
+
+	var (
+		results []*abci.ExecTxResult
+		err     error
+	)
+	require.NotPanics(t, func() {
+		results, err = runner.Run(ctx, ms, txs, deliverTx)
+	})
+	require.NoError(t, err)
+	require.Len(t, results, len(txs))
+}
+
 // TestSTMRunner_Run_IncarnationCache tests that incarnation cache is properly managed
 func TestSTMRunner_Run_IncarnationCache(t *testing.T) {
 	decoder := mockTxDecoder

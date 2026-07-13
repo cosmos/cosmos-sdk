@@ -305,9 +305,6 @@ func (k *Keeper) UpdateParams(ctx sdk.Context, params types.Params) error {
 // ValidateOperatorAndConsensusPubKeyDifferent validates that the operator address
 // and consensus pubkey are derived from different keys.
 //
-// This is critical when secp256k1 is enabled for consensus, as users might accidentally
-// use their account key for consensus signing, which would be a security risk.
-//
 // Returns an error if:
 // - The operator address is invalid
 // - The pubkey cannot be unpacked

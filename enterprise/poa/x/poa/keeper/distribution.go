@@ -182,8 +182,7 @@ func (k *Keeper) WithdrawValidatorFees(ctx sdk.Context, validatorAddr sdk.AccAdd
 
 // migrateAllocatedFees moves a validator's allocated fee entry from its old
 // consensus address to the new one during a key rotation. totalAllocatedFees is
-// untouched since the balance moves rather than changes. A missing old entry is a
-// clean no-op.
+// untouched since the balance moves rather than changes.
 func (k *Keeper) migrateAllocatedFees(ctx sdk.Context, oldConsAddr, newConsAddr sdk.ConsAddress) error {
 	allocated, err := k.validatorAllocatedFees.Get(ctx, oldConsAddr.String())
 	if err != nil {

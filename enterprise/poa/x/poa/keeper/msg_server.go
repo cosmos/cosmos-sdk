@@ -15,6 +15,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"strconv"
 
@@ -215,27 +216,42 @@ func (s *MsgServer) RotateConsPubKey(
 		return nil, err
 	}
 
+	// determine if the rotation is being requested by the operator
+	ac := s.keeper.authKeeper.AddressCodec()
+	senderBytes, err := ac.StringToBytes(req.Sender)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "invalid sender address")
+	}
+	operatorBytes, err := ac.StringToBytes(req.ValidatorAddress)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "invalid validator address")
+	}
+	isSelf := bytes.Equal(senderBytes, operatorBytes)
+
+	// determine if the rotation is being requested by the admin
+	admin, err := s.keeper.Admin(sdkCtx)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "failed to get admin params")
+	}
+	isAdmin := sdk.ValidateAuthority(sdkCtx, admin, req.Sender) == nil
+
+	// rotation can only be requested by the operator or the admin
+	if !isSelf && !isAdmin {
+		return nil, errorsmod.Wrapf(
+			sdkerrors.ErrUnauthorized,
+			"sender %s is neither the validator operator nor the admin", req.Sender,
+		)
+	}
+
+	operatorAddr := sdk.AccAddress(operatorBytes)
+
 	var pubKey cryptotypes.PubKey
 	if err := s.keeper.cdc.UnpackAny(req.NewPubKey, &pubKey); err != nil {
 		return nil, err
 	}
 
-	admin, err := s.keeper.Admin(sdkCtx)
-	if err != nil {
-		return nil, errorsmod.Wrap(err, "failed to get admin params")
-	}
-	if req.Sender != req.ValidatorAddress && req.Sender != admin {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized,
-			"sender %s is neither the validator operator nor the admin", req.Sender)
-	}
-
-	operatorAddr, err := sdk.AccAddressFromBech32(req.ValidatorAddress)
-	if err != nil {
-		return nil, errorsmod.Wrap(err, "invalid validator address")
-	}
-
-	// The keeper rotates the key, migrates fees, queues ABCI updates, and emits
-	// EventTypeRotateConsPubKey, so the handler does not emit a duplicate event.
+	// inform keeper to perform the rotation for this operator to the new
+	// pubkey
 	if err := s.keeper.RotateConsPubKey(sdkCtx, operatorAddr, pubKey); err != nil {
 		return nil, err
 	}

@@ -157,6 +157,7 @@ func (k *Keeper) CreateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, v
 // the record from its current consensus address to the one derived from
 // newPubKey, preserving power and metadata.
 func (k *Keeper) RotateConsPubKey(ctx sdk.Context, operatorAddr sdk.AccAddress, newPubKey cryptotypes.PubKey) error {
+	// ensure validator being rotated exists
 	validator, err := k.GetValidatorByOperatorAddress(ctx, operatorAddr)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -165,6 +166,7 @@ func (k *Keeper) RotateConsPubKey(ctx sdk.Context, operatorAddr sdk.AccAddress, 
 		return err
 	}
 
+	// ensure pubkey type is allowed
 	if err := k.validatePubkeyType(ctx, newPubKey); err != nil {
 		return err
 	}
@@ -176,10 +178,12 @@ func (k *Keeper) RotateConsPubKey(ctx sdk.Context, operatorAddr sdk.AccAddress, 
 	oldConsAddr := sdk.GetConsAddress(oldPubKey)
 	newConsAddr := sdk.GetConsAddress(newPubKey)
 
+	// disallow rotations to the same key
 	if oldConsAddr.Equals(newConsAddr) {
 		return types.ErrNoOpRotation
 	}
 
+	// disallow rotations to a key another validator is currently using
 	inUse, err := k.validators.Has(ctx, newConsAddr)
 	if err != nil {
 		return err
@@ -193,11 +197,15 @@ func (k *Keeper) RotateConsPubKey(ctx sdk.Context, operatorAddr sdk.AccAddress, 
 		return err
 	}
 
+	// disallow setting the consensus key to your key backing the operator
+	// address
 	if err := k.ValidateOperatorAndConsensusPubKeyDifferent(validator.Metadata.OperatorAddress, newPubKeyAny); err != nil {
 		return err
 	}
 
-	// Settle pending fee accruals under the old consensus address before re-keying.
+	// settle pending fee accruals under the old consensus address before
+	// rotating. otherwise the rotation moves the record before the outstanding
+	// share lands in the old cons addr's bucket and it would be stranded
 	if err := k.checkpointAllValidators(ctx); err != nil {
 		return err
 	}
@@ -206,8 +214,7 @@ func (k *Keeper) RotateConsPubKey(ctx sdk.Context, operatorAddr sdk.AccAddress, 
 	power := validator.Power
 	validator.PubKey = newPubKeyAny
 
-	// Re-key: delete under the old cons-addr, then Set under the new one.
-	// The operator and power secondary indexes update automatically.
+	// do the rotation
 	if err := k.validators.Remove(ctx, oldConsAddr); err != nil {
 		return err
 	}
@@ -215,25 +222,31 @@ func (k *Keeper) RotateConsPubKey(ctx sdk.Context, operatorAddr sdk.AccAddress, 
 		return err
 	}
 
-	// Auto-migrate accrued fees from the old cons-addr to the new one so the
-	// operator's balance follows the rotation without a forced payout.
+	// migrate accrued fees from the old cons addr to the new one so the
+	// operator's balance follows the rotation without a forced payout
 	if err := k.migrateAllocatedFees(ctx, oldConsAddr, newConsAddr); err != nil {
 		return err
 	}
 
-	// Queue ABCI updates only when the validator is in CometBFT's active set.
-	// A power-0 validator is not in the set, and CometBFT treats a power-0 update
-	// as a deletion of an address not in the set, which aborts applying the block.
+	// queue abci updates only when the validator is in CometBFT's active set.
+	//
+	// NOTE: a 0 power validator is not in the set, and comet treats a 0 power
+	// update as a deletion of an address not in the set, which aborts applying
+	// the block.
 	if power > 0 {
+		// create and push an update to set the old key to 0 power, removing it
 		removeOld, err := k.createABCIValidatorUpdate(oldPubKeyAny, 0)
 		if err != nil {
 			return err
 		}
-		addNew, err := k.createABCIValidatorUpdate(newPubKeyAny, power)
-		if err != nil {
+		if err := k.queuedUpdates.Push(ctx, removeOld); err != nil {
 			return err
 		}
-		if err := k.queuedUpdates.Push(ctx, removeOld); err != nil {
+
+		// create and push an update to set the new key to the old keys power,
+		// activating it
+		addNew, err := k.createABCIValidatorUpdate(newPubKeyAny, power)
+		if err != nil {
 			return err
 		}
 		if err := k.queuedUpdates.Push(ctx, addNew); err != nil {
@@ -262,19 +275,20 @@ func (k *Keeper) GetValidatorByOperatorAddress(ctx sdk.Context, operatorAddr sdk
 	return k.validators.Get(ctx, consAddr)
 }
 
-// createABCIValidatorUpdate creates a CometBFT validator update from a validator's public key and power.
+// createABCIValidatorUpdate creates a CometBFT validator update from a
+// validator's public key and power.
 func (k *Keeper) createABCIValidatorUpdate(pubKeyAny *codectypes.Any, power int64) (abci.ValidatorUpdate, error) {
-	var pubKeySDK cryptotypes.PubKey
-	if err := k.cdc.UnpackAny(pubKeyAny, &pubKeySDK); err != nil {
+	var pubKey cryptotypes.PubKey
+	if err := k.cdc.UnpackAny(pubKeyAny, &pubKey); err != nil {
 		return abci.ValidatorUpdate{}, err
 	}
 
-	pubKeyCMT, err := codec.ToCmtProtoPublicKey(pubKeySDK)
+	cmtPk, err := codec.ToCmtProtoPublicKey(pubKey)
 	if err != nil {
 		return abci.ValidatorUpdate{}, err
 	}
 
-	return abci.ValidatorUpdate{PubKey: pubKeyCMT, Power: power}, nil
+	return abci.ValidatorUpdate{PubKey: cmtPk, Power: power}, nil
 }
 
 // IterateActiveValidators walks the power index in descending order, skipping validators with power 0.

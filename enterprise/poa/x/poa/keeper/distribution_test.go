@@ -1288,8 +1288,6 @@ func TestAdjustTotalAllocated(t *testing.T) {
 	})
 }
 
-// TestRotateConsPubKeyFeeMigration covers the auto-migration of accrued fees from
-// the old consensus address to the new one during a rotation (FOU-389).
 func TestRotateConsPubKeyFeeMigration(t *testing.T) {
 	t.Run("non-zero allocated fees move to new cons-addr, total unchanged", func(t *testing.T) {
 		f := setupTest(t)
@@ -1359,7 +1357,7 @@ func TestRotateConsPubKeyFeeMigration(t *testing.T) {
 		require.True(t, totalAllocated.IsZero())
 	})
 
-	t.Run("e2e: WithdrawableFees identical before and after rotation, then full withdrawal", func(t *testing.T) {
+	t.Run("withdrawable fees identical before and after rotation", func(t *testing.T) {
 		f := setupTest(t)
 		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
 

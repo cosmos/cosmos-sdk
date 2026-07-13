@@ -153,10 +153,9 @@ func (k *Keeper) CreateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, v
 	return k.validators.Set(ctx, consAddress, validator)
 }
 
-// RotateConsPubKey rotates a validator's consensus pubkey in place, re-keying the
-// record from its current consensus address to the one derived from newPubKey.
-// Power and metadata are preserved, so totalPower is untouched. ABCI updates are
-// queued only when the validator has power (see the power-0 note below).
+// RotateConsPubKey rotates a validator's consensus pubkey in place, re-keying
+// the record from its current consensus address to the one derived from
+// newPubKey, preserving power and metadata.
 func (k *Keeper) RotateConsPubKey(ctx sdk.Context, operatorAddr sdk.AccAddress, newPubKey cryptotypes.PubKey) error {
 	validator, err := k.GetValidatorByOperatorAddress(ctx, operatorAddr)
 	if err != nil {

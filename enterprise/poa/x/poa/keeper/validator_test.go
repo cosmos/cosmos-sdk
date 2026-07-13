@@ -385,7 +385,8 @@ func TestUpdateValidator(t *testing.T) {
 		require.Equal(t, int64(200), v.Power)
 
 		// Verify validator update was queued
-		validatorUpdates := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		validatorUpdates, err := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		require.NoError(t, err)
 		require.Len(t, validatorUpdates, 1)
 		require.Equal(t, int64(200), validatorUpdates[0].Power)
 	})
@@ -406,13 +407,15 @@ func TestUpdateValidator(t *testing.T) {
 		require.NoError(t, err)
 
 		// Count updates queued so far (from CreateValidator)
-		updatesBefore := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		updatesBefore, err := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		require.NoError(t, err)
 
 		// Update with same power — should not queue additional updates
 		err = f.poaKeeper.UpdateValidator(f.ctx, consAddr, types.Validator{Power: 200})
 		require.NoError(t, err)
 
-		updatesAfter := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		updatesAfter, err := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		require.NoError(t, err)
 		require.Equal(t, len(updatesBefore), len(updatesAfter))
 	})
 
@@ -589,7 +592,8 @@ func TestUpdateValidators(t *testing.T) {
 		require.Equal(t, int64(200), v.Power)
 
 		// Verify validator update was queued
-		updates := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		updates, err := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		require.NoError(t, err)
 		require.Len(t, updates, 1)
 		require.Equal(t, int64(200), updates[0].Power)
 	})
@@ -610,14 +614,16 @@ func TestUpdateValidators(t *testing.T) {
 		require.NoError(t, err)
 
 		// Count updates queued so far (from CreateValidator)
-		updatesBefore := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		updatesBefore, err := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		require.NoError(t, err)
 
 		sameValidator := validatorWith200
 		err = f.poaKeeper.UpdateValidators(f.ctx, []types.Validator{sameValidator})
 		require.NoError(t, err)
 
 		// No additional updates should be queued
-		updatesAfter := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		updatesAfter, err := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		require.NoError(t, err)
 		require.Equal(t, len(updatesBefore), len(updatesAfter))
 	})
 
@@ -1989,11 +1995,11 @@ func createRotatableValidator(t *testing.T, f *testFixture, power int64) (sdk.Ac
 func TestRotateConsPubKey(t *testing.T) {
 	t.Run("happy path re-keys record and queues two ABCI updates", func(t *testing.T) {
 		f := setupTest(t)
-		operatorAddr, oldConsAddr, _ := createRotatableValidator(t, f, 100)
+		operatorAddr, oldConsAddr, oldPubKey := createRotatableValidator(t, f, 100)
 
-		// CreateValidator with power>0 already queued one update in the (un-wiped)
-		// transient store; count it so we can assert the rotation appends exactly two.
-		queuedBefore := len(f.poaKeeper.ReapValidatorUpdates(f.ctx))
+		// Commit the create so the validator is in CometBFT's set; the rotation of a
+		// pre-existing validator then surfaces exactly old@0 and new@power.
+		commitBlock(t, f)
 
 		totalBefore, err := f.poaKeeper.GetTotalPower(f.ctx)
 		require.NoError(t, err)
@@ -2036,11 +2042,13 @@ func TestRotateConsPubKey(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, totalBefore, totalAfter)
 
-		// Rotation appends exactly two ABCI updates: old@0 then new@power.
-		updates := f.poaKeeper.ReapValidatorUpdates(f.ctx)
-		require.Len(t, updates, queuedBefore+2)
-		require.Equal(t, int64(0), updates[queuedBefore].Power)
-		require.Equal(t, int64(100), updates[queuedBefore+1].Power)
+		// Rotation surfaces exactly two ABCI updates: old@0 and new@power.
+		updates, err := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		require.NoError(t, err)
+		powers := updatePowers(t, updates)
+		require.Len(t, powers, 2)
+		require.Equal(t, int64(0), powers[cmtKey(t, oldPubKey)])
+		require.Equal(t, int64(100), powers[cmtKey(t, newPubKey)])
 	})
 
 	t.Run("unknown operator", func(t *testing.T) {
@@ -2127,28 +2135,32 @@ func TestRotateConsPubKey(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, exists)
 
-		// No ABCI updates queued.
-		require.Empty(t, f.poaKeeper.ReapValidatorUpdates(f.ctx))
+		// A power-0 validator is not in CometBFT's set, so nothing surfaces.
+		updates, err := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		require.NoError(t, err)
+		require.Empty(t, updates)
 	})
 }
 
-// TestRotateConsPubKeyEndBlock drives EndBlocker (same-block reap) to assert the
-// queued updates surface to CometBFT, and that the power-0 path emits nothing.
+// TestRotateConsPubKeyEndBlock drives EndBlocker to assert the changeset surfaces
+// to CometBFT, and that the power-0 path emits nothing.
 func TestRotateConsPubKeyEndBlock(t *testing.T) {
 	t.Run("power>0 rotation surfaces old@0 and new@power via EndBlocker", func(t *testing.T) {
 		f := setupTest(t)
-		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
-		// CreateValidator queued one update; the rotation appends old@0 and new@power.
-		queuedBefore := len(f.poaKeeper.ReapValidatorUpdates(f.ctx))
+		operatorAddr, _, oldPubKey := createRotatableValidator(t, f, 100)
+		// Commit the create so the rotation of a pre-existing validator surfaces
+		// exactly old@0 and new@power.
+		commitBlock(t, f)
 
 		newPubKey := ed25519.GenPrivKey().PubKey()
 		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey))
 
 		updates, err := f.poaKeeper.EndBlocker(f.ctx.WithBlockHeight(2))
 		require.NoError(t, err)
-		require.Len(t, updates, queuedBefore+2)
-		require.Equal(t, int64(0), updates[queuedBefore].Power)
-		require.Equal(t, int64(100), updates[queuedBefore+1].Power)
+		powers := updatePowers(t, updates)
+		require.Len(t, powers, 2)
+		require.Equal(t, int64(0), powers[cmtKey(t, oldPubKey)])
+		require.Equal(t, int64(100), powers[cmtKey(t, newPubKey)])
 
 		// New validator still contributes its power.
 		v, err := f.poaKeeper.GetValidatorByOperatorAddress(f.ctx, operatorAddr)

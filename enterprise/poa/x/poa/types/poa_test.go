@@ -1199,6 +1199,11 @@ func TestMsgRotateConsPubKeyValidate(t *testing.T) {
 		pubKeyAny, _ := codectypes.NewAnyWithValue(ed25519.GenPrivKey().PubKey())
 		return pubKeyAny
 	}
+	// An Any whose cached value is a proto.Message but not a cryptotypes.PubKey.
+	wrongTypeAny := func() *codectypes.Any {
+		any, _ := codectypes.NewAnyWithValue(&MsgWithdrawFees{})
+		return any
+	}
 
 	tests := []struct {
 		name    string
@@ -1223,6 +1228,16 @@ func TestMsgRotateConsPubKeyValidate(t *testing.T) {
 		{
 			name:    "nil pubkey",
 			msg:     &MsgRotateConsPubKey{Sender: addr, ValidatorAddress: addr, NewPubKey: nil},
+			wantErr: true,
+		},
+		{
+			name:    "pubkey any with no cached value",
+			msg:     &MsgRotateConsPubKey{Sender: addr, ValidatorAddress: addr, NewPubKey: &codectypes.Any{TypeUrl: "/cosmos.crypto.ed25519.PubKey"}},
+			wantErr: true,
+		},
+		{
+			name:    "cached value is not a pubkey",
+			msg:     &MsgRotateConsPubKey{Sender: addr, ValidatorAddress: addr, NewPubKey: wrongTypeAny()},
 			wantErr: true,
 		},
 		{

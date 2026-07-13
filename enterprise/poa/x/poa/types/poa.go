@@ -320,8 +320,12 @@ func (m *MsgRotateConsPubKey) Validate(ac address.Codec) error {
 	if m.NewPubKey == nil {
 		return fmt.Errorf("new pubkey cannot be nil")
 	}
-	if _, ok := m.NewPubKey.GetCachedValue().(cryptotypes.PubKey); !ok {
-		return fmt.Errorf("expecting cryptotypes.PubKey, got %T", m.NewPubKey.GetCachedValue())
+	cached := m.NewPubKey.GetCachedValue()
+	if cached == nil {
+		return fmt.Errorf("expected cached value for pubkey, but found none")
+	}
+	if _, ok := cached.(cryptotypes.PubKey); !ok {
+		return fmt.Errorf("expecting cryptotypes.PubKey, got %T", cached)
 	}
 	return nil
 }

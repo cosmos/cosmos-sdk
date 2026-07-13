@@ -197,7 +197,7 @@ func genTxSpec(c chooser, universe, maxRW, iterMod int) txSpec {
 	return s
 }
 
-func genBlock(c chooser, maxTxs, maxUniverse, maxExecutors int) (universe, executors int, specs []txSpec) {
+func genBlock(c chooser, maxTxs, maxUniverse, maxExecutors int) (universe, executors int, specs []txSpec, seed []int) {
 	universe = 1 + c.intn(maxUniverse)
 	executors = 1 + c.intn(maxExecutors)
 	numTxs := 1 + c.intn(maxTxs)
@@ -206,7 +206,30 @@ func genBlock(c chooser, maxTxs, maxUniverse, maxExecutors int) (universe, execu
 	for i := range specs {
 		specs[i] = genTxSpec(c, universe, 4, 4)
 	}
-	return universe, executors, specs
+	return universe, executors, specs, genSeed(c, universe)
+}
+
+// genSeed picks a subset of the key universe to pre-populate as committed
+// (parent) state before the block runs, so reads hit real parent values and the
+// parent-read / read-cache / delete-existing paths get exercised.
+func genSeed(c chooser, universe int) []int {
+	n := c.intn(universe + 1)
+	seed := make([]int, 0, n)
+	for i := 0; i < n; i++ {
+		seed = append(seed, c.intn(universe))
+	}
+	return seed
+}
+
+// applySeed writes the seed keys directly into the parent store (bypassing
+// Block-STM), with a deterministic non-zero value per key.
+func applySeed(ms MultiStore, seed []int) {
+	for _, k := range seed {
+		sk, _ := fuzzStoreOf(k)
+		var bz [8]byte
+		binary.BigEndian.PutUint64(bz[:], uint64(k)+1)
+		ms.GetKVStore(sk).Set(fuzzKeyBytes(k), bz[:])
+	}
 }
 
 // makeTx compiles a txSpec into an executable Tx. The written value is derived
@@ -315,8 +338,9 @@ func buildEstimates(specs []txSpec) []MultiLocations {
 		case estEmpty:
 			keyIDs = s.wouldWrite // estimate present, but the tx writes nothing
 		case estPartial:
-			if len(footprint) > 0 {
-				keyIDs = footprint[:1+len(footprint)/2]
+			// a strict, non-empty subset requires at least 2 keys
+			if len(footprint) >= 2 {
+				keyIDs = footprint[:len(footprint)/2]
 			}
 		}
 		if len(keyIDs) == 0 {
@@ -349,9 +373,10 @@ func specsToBlock(specs []txSpec) *MockBlock {
 	return NewMockBlock(txs)
 }
 
-func runParallel(t *testing.T, specs []txSpec, executors int, estimates []MultiLocations) *MultiMemDB {
+func runParallel(t *testing.T, specs []txSpec, executors int, estimates []MultiLocations, seed []int) *MultiMemDB {
 	t.Helper()
 	storage := NewMultiMemDB(fuzzStores)
+	applySeed(storage, seed)
 	block := specsToBlock(specs)
 	err := ExecuteBlockWithEstimates(
 		context.Background(), block.Size(), fuzzStores, storage, executors, estimates,
@@ -363,14 +388,15 @@ func runParallel(t *testing.T, specs []txSpec, executors int, estimates []MultiL
 
 // checkOracle runs the block sequentially and in parallel (twice) and asserts
 // all three agree store-by-store.
-func checkOracle(t *testing.T, universe, executors int, specs []txSpec, estimates []MultiLocations) {
+func checkOracle(t *testing.T, executors int, specs []txSpec, estimates []MultiLocations, seed []int) {
 	t.Helper()
 
 	seqStore := NewMultiMemDB(fuzzStores)
+	applySeed(seqStore, seed)
 	runSequential(seqStore, specsToBlock(specs))
 
-	par1 := runParallel(t, specs, executors, estimates)
-	par2 := runParallel(t, specs, executors, estimates)
+	par1 := runParallel(t, specs, executors, estimates, seed)
+	par2 := runParallel(t, specs, executors, estimates, seed)
 
 	for store := range fuzzStores {
 		require.True(t, StoreEqual(seqStore.GetKVStore(store), par1.GetKVStore(store)),
@@ -378,19 +404,19 @@ func checkOracle(t *testing.T, universe, executors int, specs []txSpec, estimate
 		require.True(t, StoreEqual(par1.GetKVStore(store), par2.GetKVStore(store)),
 			"parallel run not deterministic for store %s", store.Name())
 	}
-	_ = universe
 }
 
 // checkInterrupt runs the block with the context cancelled mid-way (right after
 // the cancelAt-th transaction body executes). The engine must either finish
 // cleanly — in which case the state must still match sequential — or return
 // context.Canceled. Any other error, a panic, or a hang is a bug.
-func checkInterrupt(t *testing.T, specs []txSpec, executors int, estimates []MultiLocations, cancelAt int) {
+func checkInterrupt(t *testing.T, specs []txSpec, executors int, estimates []MultiLocations, cancelAt int, seed []int) {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	storage := NewMultiMemDB(fuzzStores)
+	applySeed(storage, seed)
 	block := specsToBlock(specs)
 	var once sync.Once
 	err := ExecuteBlockWithEstimates(ctx, block.Size(), fuzzStores, storage, executors, estimates,
@@ -408,6 +434,7 @@ func checkInterrupt(t *testing.T, specs []txSpec, executors int, estimates []Mul
 		// The block committed before the cancel took effect: it must still be
 		// serially equivalent.
 		seq := NewMultiMemDB(fuzzStores)
+		applySeed(seq, seed)
 		runSequential(seq, specsToBlock(specs))
 		for store := range fuzzStores {
 			require.True(t, StoreEqual(seq.GetKVStore(store), storage.GetKVStore(store)),
@@ -429,13 +456,13 @@ func FuzzBlockSTM(f *testing.F) {
 		r := &byteReader{data: data}
 		// Bounded so a single fuzz execution stays fast; the large seeded test
 		// covers big blocks.
-		universe, executors, specs := genBlock(r, 40, 24, 8)
+		_, executors, specs, seed := genBlock(r, 40, 24, 8)
 		estimates := buildEstimates(specs)
-		checkOracle(t, universe, executors, specs, estimates)
+		checkOracle(t, executors, specs, estimates, seed)
 
 		// ~1/4 of inputs also get an interrupt trial.
 		if r.u8()%4 == 0 && len(specs) > 0 {
-			checkInterrupt(t, specs, executors, estimates, r.intn(len(specs)))
+			checkInterrupt(t, specs, executors, estimates, r.intn(len(specs)), seed)
 		}
 	})
 }
@@ -463,7 +490,7 @@ func TestBlockSTMRandomizedLarge(t *testing.T) {
 				specs[i] = genTxSpec(c, universe, 6, 32)
 			}
 			estimates := buildEstimates(specs)
-			checkOracle(t, universe, executors, specs, estimates)
+			checkOracle(t, executors, specs, estimates, genSeed(c, universe))
 		})
 	}
 }

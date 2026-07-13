@@ -23,6 +23,9 @@ minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 
 # The maximum gas a query coming over rest/grpc may consume.
 # If this is set to zero, the query can consume an unbounded amount of gas.
+# WARNING: leaving this at 0 (unbounded) on a public RPC node exposes it to
+# DoS via expensive queries (e.g. full-store iteration). Set an explicit limit,
+# e.g. query-gas-limit = "50000000", for any node that serves untrusted clients.
 query-gas-limit = "{{ .BaseConfig.QueryGasLimit }}"
 
 # BlockExecutor sets block execution mode: "block-stm" or "sequential".

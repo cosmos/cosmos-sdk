@@ -68,6 +68,10 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 		memTxs    []sdk.Tx
 	)
 
+	if e.workers <= 0 {
+		e.workers = maxParallelism()
+	}
+
 	if e.estimate {
 		memTxs, estimates = preEstimates(txs, e.workers, authStore, bankStore, e.coinDenom(ms), e.txDecoder)
 	}

@@ -59,7 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (staking) [#26461](https://github.com/cosmos/cosmos-sdk/pull/26461) Wire `MsgRotateConsPubKey` into cli and add a happy path system test.
 * (staking) [#26471](https://github.com/cosmos/cosmos-sdk/pull/26471) Add genesis import/export support for validator consensus key rotation.
 * (crypto) [#26472](https://github.com/cosmos/cosmos-sdk/pull/26472) Add ML-DSA-65 (FIPS 204) support for user account keys: mnemonic-based keyring creation/recovery (`--algo ml_dsa_65`), transaction signing/verification, and an ante-handler signature-verification gas cost (`Params.SigVerifyCostMlDsa65`).
-* (enterprise/poa) [#26530](https://github.com/cosmos/cosmos-sdk/pull/26530) Add `MsgRotateConsPubKey` for POA validator consensus key rotation (operator self-service plus admin override), with same-block re-key and automatic accrued-fee migration.
+* (enterprise/poa) [#26590](https://github.com/cosmos/cosmos-sdk/pull/26590) Add `MsgRotateConsPubKey` for POA validator consensus key rotation (operator self-service plus admin override).
 
 ### Improvements
 

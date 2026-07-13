@@ -16,13 +16,11 @@ import (
 const DefaultPage = 1
 
 // DefaultLimit is the default `limit` for queries if the `limit` is not supplied.
-// Must stay <= MaxLimit: ParsePagination relies on that to skip re-checking
-// the cap once it has fallen back to DefaultLimit.
 const DefaultLimit = 100
 
 // MaxLimit is the maximum allowed `limit` for queries. Any caller-supplied
-// value exceeding this is silently capped to MaxLimit to prevent DoS via
-// unbounded store iteration.
+// value exceeding this is rejected to prevent DoS via unbounded store
+// iteration.
 const MaxLimit = 10_000
 
 // ParsePagination validates PageRequest and returns page number & limit.
@@ -33,14 +31,12 @@ func ParsePagination(pageReq *PageRequest) (page, limit int, err error) {
 	if pageReq != nil {
 		offset = int(pageReq.Offset)
 
-		// Cap on the uint64 value before casting to int: pageReq.Limit values
-		// above math.MaxInt64 (e.g. ^uint64(0)) would otherwise wrap negative
-		// during the cast and be rejected below instead of capped to MaxLimit.
+		// Check uint64 before casting: values above math.MaxInt64 (e.g.
+		// ^uint64(0)) would wrap negative as int and hit the wrong error below.
 		if pageReq.Limit > MaxLimit {
-			limit = MaxLimit
-		} else {
-			limit = int(pageReq.Limit)
+			return 1, 0, status.Errorf(codes.InvalidArgument, "limit must not exceed %d", MaxLimit)
 		}
+		limit = int(pageReq.Limit)
 	}
 	if offset < 0 {
 		return 1, 0, status.Error(codes.InvalidArgument, "offset must greater than 0")
@@ -51,8 +47,6 @@ func ParsePagination(pageReq *PageRequest) (page, limit int, err error) {
 	} else if limit == 0 {
 		limit = DefaultLimit
 	}
-	// No `limit > MaxLimit` branch needed here: pageReq.Limit was already
-	// capped above, and the DefaultLimit fallback is <= MaxLimit by construction.
 
 	page = offset/limit + 1
 

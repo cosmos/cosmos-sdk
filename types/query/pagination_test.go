@@ -102,15 +102,13 @@ func (s *paginationTestSuite) TestParsePagination() {
 	s.Require().Equal(page, 1)
 	s.Require().Equal(limit, 10)
 
-	s.T().Log("verify limit one above MaxLimit is capped to MaxLimit")
-	_, limit, err = query.ParsePagination(&query.PageRequest{Limit: uint64(query.MaxLimit) + 1})
-	s.Require().NoError(err)
-	s.Require().Equal(query.MaxLimit, limit)
+	s.T().Log("verify limit one above MaxLimit is rejected")
+	_, _, err = query.ParsePagination(&query.PageRequest{Limit: uint64(query.MaxLimit) + 1})
+	s.Require().ErrorContains(err, "limit must not exceed")
 
-	s.T().Log("verify large limit is capped to MaxLimit")
-	_, limit, err = query.ParsePagination(&query.PageRequest{Limit: 999_999_999})
-	s.Require().NoError(err)
-	s.Require().Equal(query.MaxLimit, limit)
+	s.T().Log("verify large limit is rejected")
+	_, _, err = query.ParsePagination(&query.PageRequest{Limit: 999_999_999})
+	s.Require().ErrorContains(err, "limit must not exceed")
 
 	s.T().Log("verify limit equal to MaxLimit is accepted unchanged")
 	_, limit, err = query.ParsePagination(&query.PageRequest{Limit: uint64(query.MaxLimit)})
@@ -122,10 +120,9 @@ func (s *paginationTestSuite) TestParsePagination() {
 	s.Require().NoError(err)
 	s.Require().Equal(50, limit)
 
-	s.T().Log("verify uint64-max limit is capped instead of erroring on the int cast")
-	_, limit, err = query.ParsePagination(&query.PageRequest{Limit: ^uint64(0)})
-	s.Require().NoError(err)
-	s.Require().Equal(query.MaxLimit, limit)
+	s.T().Log("verify uint64-max limit is rejected instead of erroring on the int cast")
+	_, _, err = query.ParsePagination(&query.PageRequest{Limit: ^uint64(0)})
+	s.Require().ErrorContains(err, "limit must not exceed")
 }
 
 func (s *paginationTestSuite) TestPagination() {

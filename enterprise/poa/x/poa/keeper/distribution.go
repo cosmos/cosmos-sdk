@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
@@ -183,8 +184,8 @@ func (k *Keeper) WithdrawValidatorFees(ctx sdk.Context, validatorAddr sdk.AccAdd
 // migrateAllocatedFees moves a validator's allocated fee entry from its old
 // consensus address to the new one during a key rotation. totalAllocatedFees is
 // untouched since the balance moves rather than changes.
-func (k *Keeper) migrateAllocatedFees(ctx sdk.Context, oldConsAddr, newConsAddr sdk.ConsAddress) error {
-	allocated, err := k.validatorAllocatedFees.Get(ctx, oldConsAddr.String())
+func (k *Keeper) migrateAllocatedFees(ctx sdk.Context, sourceConsAddr, destConsAddr sdk.ConsAddress) error {
+	allocated, err := k.validatorAllocatedFees.Get(ctx, sourceConsAddr.String())
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return nil
@@ -192,10 +193,23 @@ func (k *Keeper) migrateAllocatedFees(ctx sdk.Context, oldConsAddr, newConsAddr 
 		return err
 	}
 
-	if err := k.validatorAllocatedFees.Set(ctx, newConsAddr.String(), allocated); err != nil {
+	// ensure that the destination for the migration is available and empty, we
+	// do not want to override fees for an existing validator
+	occupied, err := k.validatorAllocatedFees.Has(ctx, destConsAddr.String())
+	if err != nil {
 		return err
 	}
-	return k.validatorAllocatedFees.Remove(ctx, oldConsAddr.String())
+	if occupied {
+		return sdkerrors.Wrapf(
+			types.ErrConsensusPubKeyInUse,
+			"allocated fee entry already exists at %s", destConsAddr,
+		)
+	}
+
+	if err := k.validatorAllocatedFees.Set(ctx, destConsAddr.String(), allocated); err != nil {
+		return err
+	}
+	return k.validatorAllocatedFees.Remove(ctx, sourceConsAddr.String())
 }
 
 // getTotalAllocated returns the total allocated fees across all validators

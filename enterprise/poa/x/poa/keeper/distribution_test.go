@@ -1384,4 +1384,32 @@ func TestRotateConsPubKeyFeeMigration(t *testing.T) {
 		expected, _ := before.Fees.Fees.TruncateDecimal()
 		require.Equal(t, expected, coins)
 	})
+
+	t.Run("rotation fails closed when destination cons-addr already holds fees", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+
+		// Accrue fees so the source has an entry to migrate, otherwise the migrate
+		// returns early before ever reaching the destination guard.
+		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
+		require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		newConsAddr := sdk.GetConsAddress(newPubKey)
+
+		// Seed an orphan fee entry at the destination (no validator lives there,
+		// so the validators.Has guard doesn't catch it). A blind Set would drop
+		// this and strand the fees.
+		orphan := poatypes.ValidatorFees{Fees: sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 500))}
+		require.NoError(t, f.poaKeeper.validatorAllocatedFees.Set(f.ctx, newConsAddr.String(), orphan))
+
+		err := f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey)
+		require.ErrorIs(t, err, poatypes.ErrConsensusPubKeyInUse)
+
+		// The guard fires before the Set, so the orphan entry is untouched.
+		stillThere, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, newConsAddr.String())
+		require.NoError(t, err)
+		require.Equal(t, orphan.Fees, stillThere.Fees)
+	})
 }

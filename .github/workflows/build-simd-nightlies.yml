@@ -113,20 +113,19 @@ jobs:
           set -euo pipefail
 
           mkdir -p existing
-          candidates=$(gh api --paginate --slurp \
+          candidates=$(gh api --paginate \
             "repos/$GITHUB_REPOSITORY/actions/artifacts?name=github-pages&per_page=100" \
-            --jq '[.[].artifacts[]]
+            --jq '.artifacts
               | map(select(.expired == false))
               | map(select(.workflow_run.repository_id == .workflow_run.head_repository_id))
               | map(select(.workflow_run.head_branch == "main"
                   or (.workflow_run.head_branch | test("^release/v[0-9]+\\.[0-9]+\\.x$"))))
-              | sort_by(.created_at)
-              | reverse
               | .[]
-              | "\(.workflow_run.id)\t\(.archive_download_url)"')
+              | "\(.created_at)\t\(.workflow_run.id)\t\(.archive_download_url)"' \
+            | sort -r)
 
           artifact_url=""
-          while IFS=$'\t' read -r run_id url; do
+          while IFS=$'\t' read -r created_at run_id url; do
             [ -n "$run_id" ] || continue
             run_path=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" \
               --jq '.path // ""')

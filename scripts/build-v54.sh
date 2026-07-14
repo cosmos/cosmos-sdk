@@ -9,6 +9,7 @@ OUTPUT="${BUILDDIR:-./build}/simdv54"
 
 ATTESTATION_REPO="${NIGHTLY_ATTESTATION_REPO:-cosmos/cosmos-sdk}"
 ATTESTATION_WORKFLOW="${ATTESTATION_REPO}/.github/workflows/build-simd-nightlies.yml"
+ATTESTATION_REQUIRED="${NIGHTLY_ATTESTATION_REQUIRED:-true}"
 
 verify_attestation() {
 	local file="$1"
@@ -19,13 +20,17 @@ verify_attestation() {
 		return 1
 	fi
 
-	if ! gh attestation verify "$file" \
+	local output
+	if output=$(gh attestation verify "$file" \
 		--repo "$ATTESTATION_REPO" \
-		--signer-workflow "$ATTESTATION_WORKFLOW" >/dev/null 2>&1; then
-		echo "Provenance verification failed for ${file}." >&2
-		echo "The archive was not attested by ${ATTESTATION_WORKFLOW}." >&2
-		return 1
+		--signer-workflow "$ATTESTATION_WORKFLOW" 2>&1); then
+		return 0
 	fi
+
+	echo "${output}" >&2
+	echo "Provenance verification failed for ${file}." >&2
+	echo "The archive was not attested by ${ATTESTATION_WORKFLOW}." >&2
+	return 1
 }
 
 # Map uname to Go-style GOOS/GOARCH
@@ -79,7 +84,12 @@ try_download() {
 
 	echo "Verifying build provenance for ${archive}..."
 	if ! verify_attestation "${archive_path}"; then
-		return 1
+		if [ "${ATTESTATION_REQUIRED}" = "true" ]; then
+			return 1
+		fi
+		echo "WARNING: using ${archive} without verified provenance because" >&2
+		echo "         NIGHTLY_ATTESTATION_REQUIRED=false. This is intended only for" >&2
+		echo "         the attestation rollout window; do not rely on it permanently." >&2
 	fi
 
 	tar -xzf "${archive_path}" -C "${tmp_dir}"

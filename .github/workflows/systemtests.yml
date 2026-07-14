@@ -64,9 +64,6 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Run SDK system tests
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NIGHTLY_ATTESTATION_REQUIRED: "false"
         run: make test-sdk-system
 
       - name: Upload system test logs if failed

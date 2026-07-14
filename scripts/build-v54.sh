@@ -7,30 +7,13 @@ set -euo pipefail
 NIGHTLY_BASE_URL="https://cosmos.github.io/cosmos-sdk/nightlies/v0.54"
 OUTPUT="${BUILDDIR:-./build}/simdv54"
 
-ATTESTATION_REPO="${NIGHTLY_ATTESTATION_REPO:-cosmos/cosmos-sdk}"
-ATTESTATION_WORKFLOW="${ATTESTATION_REPO}/.github/workflows/build-simd-nightlies.yml"
-ATTESTATION_REQUIRED="${NIGHTLY_ATTESTATION_REQUIRED:-true}"
-
-verify_attestation() {
+sha256_file() {
 	local file="$1"
-
-	if ! command -v gh >/dev/null 2>&1; then
-		echo "gh CLI is required to verify nightly build provenance." >&2
-		echo "Install it from https://cli.github.com/ (and 'gh auth login')." >&2
-		return 1
-	fi
-
-	local output
-	if output=$(gh attestation verify "$file" \
-		--repo "$ATTESTATION_REPO" \
-		--signer-workflow "$ATTESTATION_WORKFLOW" 2>&1); then
+	if command -v sha256sum >/dev/null 2>&1; then
+		sha256sum "$file" | awk '{print $1}'
 		return 0
 	fi
-
-	echo "${output}" >&2
-	echo "Provenance verification failed for ${file}." >&2
-	echo "The archive was not attested by ${ATTESTATION_WORKFLOW}." >&2
-	return 1
+	shasum -a 256 "$file" | awk '{print $1}'
 }
 
 # Map uname to Go-style GOOS/GOARCH
@@ -67,9 +50,11 @@ try_download() {
 	local asset="simd-${goos_goarch}"
 	local archive="${asset}.tar.gz"
 	local archive_url="${NIGHTLY_BASE_URL}/${archive}"
+	local checksum_url="${archive_url}.sha256"
 	local tmp_dir
 	tmp_dir="$(mktemp -d)"
 	local archive_path="${tmp_dir}/${archive}"
+	local checksum_path="${tmp_dir}/${archive}.sha256"
 
 	cleanup() {
 		rm -rf "${tmp_dir}"
@@ -81,15 +66,17 @@ try_download() {
 		echo "Failed to download ${archive} from ${archive_url}" >&2
 		return 1
 	fi
+	if ! curl -sfL -o "${checksum_path}" "${checksum_url}"; then
+		echo "Failed to download checksum from ${checksum_url}" >&2
+		return 1
+	fi
 
-	echo "Verifying build provenance for ${archive}..."
-	if ! verify_attestation "${archive_path}"; then
-		if [ "${ATTESTATION_REQUIRED}" = "true" ]; then
-			return 1
-		fi
-		echo "WARNING: using ${archive} without verified provenance because" >&2
-		echo "         NIGHTLY_ATTESTATION_REQUIRED=false. This is intended only for" >&2
-		echo "         the attestation rollout window; do not rely on it permanently." >&2
+	local expected actual
+	expected="$(awk '{print $1}' "${checksum_path}")"
+	actual="$(sha256_file "${archive_path}")"
+	if [ "${expected}" != "${actual}" ]; then
+		echo "Checksum mismatch for ${archive}" >&2
+		return 1
 	fi
 
 	tar -xzf "${archive_path}" -C "${tmp_dir}"

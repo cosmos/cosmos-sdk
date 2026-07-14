@@ -72,6 +72,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (baseapp) [#26559](https://github.com/cosmos/cosmos-sdk/pull/26559) Make `BaseApp.Close` idempotent by clearing the `db` and `snapshotManager` handles after closing them. `server.startInProcess` registers two deferred cleanup paths that both call `app.Close()` on shutdown, so the second call re-closed the already-closed application DB and panicked (e.g. PebbleDB's `pebble: closed`), crashing every otherwise-graceful shutdown with a non-zero exit.
 * (client) [#26524](https://github.com/cosmos/cosmos-sdk/pull/26524) Fix file handle leak in the `snapshot dump` command where chunk files were deferred-closed inside the loop, keeping every chunk's handle open until the command returned (follow-up to #25811).
 * (x/distribution) [#26518](https://github.com/cosmos/cosmos-sdk/pull/26518) Return an error from internal historical rewards reads when the record is absent, preventing recovered reference-count panics during BlockSTM speculative execution.
 * (x/auth) [#26515](https://github.com/cosmos/cosmos-sdk/pull/26515) Bound the pubkey and signature indices in `ConsumeMultisignatureVerificationGas` and `VerifyMultisignature` so a multisig signature with a bit array larger than the key set, or with more set bits than supplied signatures, returns an error instead of panicking with index out of range.

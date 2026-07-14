@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"math/big"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -66,7 +67,10 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 		func(key collections.Pair[sdk.AccAddress, string], value math.Int) (sdk.Coin, error) {
 			if req.ResolveDenom {
 				if metadata, ok := k.GetDenomMetaData(sdkCtx, key.K2()); ok {
-					return sdk.NewCoin(metadata.Display, value), nil
+					scaledValue, ok := scaleAmountToDisplay(value, metadata)
+					if ok {
+						return sdk.NewCoin(metadata.Display, scaledValue), nil
+					}
 				}
 			}
 			return sdk.NewCoin(key.K2(), value), nil
@@ -78,6 +82,55 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	}
 
 	return &types.QueryAllBalancesResponse{Balances: balances, Pagination: pageRes}, nil
+}
+
+// scaleAmountToDisplay converts a base-unit amount to the display denomination
+// using the exponent from denom metadata. If the result would require a
+// fractional coin, it returns false to indicate the caller should keep the
+// base denom and amount unchanged.
+//
+// For example, given metadata:
+//
+//	base: uatom (exponent 0)
+//	display: atom (exponent 6)
+//
+// A value of 100000000 uatom is scaled to 100 atom.
+// A value of 1000001 uatom cannot be represented as an integer atom, so it
+// returns false.
+func scaleAmountToDisplay(value math.Int, metadata types.Metadata) (math.Int, bool) {
+	var baseExponent, displayExponent uint32
+
+	for _, du := range metadata.DenomUnits {
+		if du.Denom == metadata.Base {
+			baseExponent = du.Exponent
+		}
+		if du.Denom == metadata.Display {
+			displayExponent = du.Exponent
+		}
+	}
+
+	// If display exponent is not greater than base, no scaling is needed.
+	if displayExponent <= baseExponent {
+		return value, true
+	}
+
+	expDiff := displayExponent - baseExponent
+	divisor := math.NewIntFromBigInt(new(big.Int).Exp(
+		big.NewInt(10),
+		big.NewInt(int64(expDiff)),
+		nil,
+	))
+
+	scaledValue := value.Quo(divisor)
+	remainder := value.Mod(divisor)
+
+	// If there's a remainder, the amount cannot be represented as an integer
+	// in the display denomination; keep the base denom.
+	if !remainder.IsZero() {
+		return math.Int{}, false
+	}
+
+	return scaledValue, true
 }
 
 // SpendableBalances implements a gRPC query handler for retrieving an account's

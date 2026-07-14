@@ -168,6 +168,73 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	suite.Nil(res.Pagination.NextKey)
 }
 
+func (suite *KeeperTestSuite) TestQueryAllBalancesResolveDenom() {
+	ctx, queryClient := suite.ctx, suite.queryClient
+	_, _, addr := testdata.KeyTestPubAddr()
+
+	// Setup: uatom balance of 100_000_000 (100 atom with exponent 6)
+	uatomCoins := sdk.NewCoins(sdk.NewInt64Coin("uatom", 100_000_000))
+	suite.mockFundAccount(addr)
+	suite.Require().NoError(testutil.FundAccount(ctx, suite.bankKeeper, addr, uatomCoins))
+
+	// Set metadata: uatom (base, exponent 0) -> atom (display, exponent 6)
+	metadata := types.Metadata{
+		Description: "The native staking token of the Cosmos Hub.",
+		DenomUnits: []*types.DenomUnit{
+			{Denom: "uatom", Exponent: 0, Aliases: []string{"microatom"}},
+			{Denom: "atom", Exponent: 6, Aliases: []string{"ATOM"}},
+		},
+		Base:    "uatom",
+		Display: "atom",
+	}
+	suite.bankKeeper.SetDenomMetaData(ctx, metadata)
+
+	// Without ResolveDenom: should return base denom with base amount
+	req := types.NewQueryAllBalancesRequest(addr, nil, false)
+	res, err := queryClient.AllBalances(gocontext.Background(), req)
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Balances, 1)
+	suite.Equal("uatom", res.Balances[0].Denom)
+	suite.Equal("100000000", res.Balances[0].Amount.String())
+
+	// With ResolveDenom: should return display denom with scaled amount
+	req = types.NewQueryAllBalancesRequest(addr, nil, true)
+	res, err = queryClient.AllBalances(gocontext.Background(), req)
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Balances, 1)
+	suite.Equal("atom", res.Balances[0].Denom)
+	suite.Equal("100", res.Balances[0].Amount.String())
+}
+
+func (suite *KeeperTestSuite) TestQueryAllBalancesResolveDenomFractionalAmount() {
+	ctx, queryClient := suite.ctx, suite.queryClient
+	_, _, addr := testdata.KeyTestPubAddr()
+
+	// Setup: uatom balance of 1_000_001 (cannot be represented as integer atom)
+	uatomCoins := sdk.NewCoins(sdk.NewInt64Coin("uatom", 1_000_001))
+	suite.mockFundAccount(addr)
+	suite.Require().NoError(testutil.FundAccount(ctx, suite.bankKeeper, addr, uatomCoins))
+
+	metadata := types.Metadata{
+		Description: "The native staking token of the Cosmos Hub.",
+		DenomUnits: []*types.DenomUnit{
+			{Denom: "uatom", Exponent: 0, Aliases: []string{"microatom"}},
+			{Denom: "atom", Exponent: 6, Aliases: []string{"ATOM"}},
+		},
+		Base:    "uatom",
+		Display: "atom",
+	}
+	suite.bankKeeper.SetDenomMetaData(ctx, metadata)
+
+	// With ResolveDenom: amount doesn't divide evenly, should keep base denom
+	req := types.NewQueryAllBalancesRequest(addr, nil, true)
+	res, err := queryClient.AllBalances(gocontext.Background(), req)
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Balances, 1)
+	suite.Equal("uatom", res.Balances[0].Denom)
+	suite.Equal("1000001", res.Balances[0].Amount.String())
+}
+
 func (suite *KeeperTestSuite) TestSpendableBalances() {
 	_, _, addr := testdata.KeyTestPubAddr()
 

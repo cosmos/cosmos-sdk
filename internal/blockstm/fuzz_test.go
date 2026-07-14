@@ -197,8 +197,8 @@ func genTxSpec(c chooser, universe, maxRW, iterMod int) txSpec {
 	return s
 }
 
-func genBlock(c chooser, maxTxs, maxUniverse, maxExecutors int) (universe, executors int, specs []txSpec, seed []int) {
-	universe = 1 + c.intn(maxUniverse)
+func genBlock(c chooser, maxTxs, maxUniverse, maxExecutors int) (executors int, specs []txSpec, seed []int) {
+	universe := 1 + c.intn(maxUniverse)
 	executors = 1 + c.intn(maxExecutors)
 	numTxs := 1 + c.intn(maxTxs)
 
@@ -206,7 +206,7 @@ func genBlock(c chooser, maxTxs, maxUniverse, maxExecutors int) (universe, execu
 	for i := range specs {
 		specs[i] = genTxSpec(c, universe, 4, 4)
 	}
-	return universe, executors, specs, genSeed(c, universe)
+	return executors, specs, genSeed(c, universe)
 }
 
 // genSeed picks a subset of the key universe to pre-populate as committed
@@ -406,7 +406,7 @@ func checkOracle(t *testing.T, executors int, specs []txSpec, estimates []MultiL
 	}
 }
 
-// checkInterrupt runs the block with the context cancelled mid-way (right after
+// checkInterrupt runs the block with the context canceled mid-way (right after
 // the cancelAt-th transaction body executes). The engine must either finish
 // cleanly — in which case the state must still match sequential — or return
 // context.Canceled. Any other error, a panic, or a hang is a bug.
@@ -456,7 +456,7 @@ func FuzzBlockSTM(f *testing.F) {
 		r := &byteReader{data: data}
 		// Bounded so a single fuzz execution stays fast; the large seeded test
 		// covers big blocks.
-		_, executors, specs, seed := genBlock(r, 40, 24, 8)
+		executors, specs, seed := genBlock(r, 40, 24, 8)
 		estimates := buildEstimates(specs)
 		checkOracle(t, executors, specs, estimates, seed)
 
@@ -468,7 +468,8 @@ func FuzzBlockSTM(f *testing.F) {
 }
 
 // TestBlockSTMRandomizedLarge exercises large blocks (up to a few thousand txs)
-// with fixed seeds so it runs in the normal suite. Skipped in -short mode.
+// with fixed seeds for reproducibility. Gated behind RUN_BLOCKSTM_STRESS (see the
+// file header) and skipped in -short mode.
 func TestBlockSTMRandomizedLarge(t *testing.T) {
 	skipUnlessStress(t)
 	if testing.Short() {

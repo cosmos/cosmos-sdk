@@ -1430,3 +1430,48 @@ func TestMarshalYAML(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, dec.String(), y, "YAML marshaling mismatch")
 }
+
+func TestUnmarshalLegacyDecLengthGuard(t *testing.T) {
+	// Strings longer than 100 bytes must be rejected before the O(n²) big.Int parse.
+	blob := []byte(strings.Repeat("1", 101))
+	var d math.LegacyDec
+	err := d.Unmarshal(blob)
+	require.Error(t, err)
+	require.ErrorIs(t, err, math.ErrLegacyInvalidDecimalLength)
+
+	// Exactly 100 bytes must pass the guard (leading zeros → value 0).
+	var boundary math.LegacyDec
+	require.NoError(t, boundary.Unmarshal([]byte(strings.Repeat("0", 100))))
+	require.Equal(t, math.LegacyZeroDec(), boundary)
+
+	// Valid values within the limit must still decode correctly.
+	want := math.LegacyNewDecWithPrec(12345, 4)
+	bz, err := want.Marshal()
+	require.NoError(t, err)
+	var d2 math.LegacyDec
+	require.NoError(t, d2.Unmarshal(bz))
+	require.Equal(t, want, d2)
+}
+
+func TestUnmarshalJSONLegacyDecLengthGuard(t *testing.T) {
+	// The JSON decode path routes through LegacyNewDecFromStr, so it must be
+	// guarded against the same O(n²) big.Int parse as Unmarshal.
+	blob := []byte(`"` + strings.Repeat("1", 101) + `"`)
+	var d math.LegacyDec
+	err := d.UnmarshalJSON(blob)
+	require.Error(t, err)
+	require.ErrorIs(t, err, math.ErrLegacyInvalidDecimalLength)
+
+	// Exactly 100 bytes must pass the guard (leading zeros → value 0).
+	var boundary math.LegacyDec
+	require.NoError(t, boundary.UnmarshalJSON([]byte(`"`+strings.Repeat("0", 100)+`"`)))
+	require.Equal(t, math.LegacyZeroDec(), boundary)
+
+	// Valid values within the limit must still round-trip correctly.
+	want := math.LegacyMustNewDecFromStr("123.456")
+	bz, err := want.MarshalJSON()
+	require.NoError(t, err)
+	var d2 math.LegacyDec
+	require.NoError(t, d2.UnmarshalJSON(bz))
+	require.Equal(t, want, d2)
+}

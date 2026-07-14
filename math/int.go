@@ -21,6 +21,11 @@ const MaxBitLen = 256
 // NOTE: If MaxBitLen is not a multiple of bits.UintSize, then we need to edit the used logic slightly.
 const maxWordLen = MaxBitLen / bits.UintSize
 
+// maxUnmarshalTextBytes is the input length cap for Unmarshal methods on Int, Uint, and LegacyDec.
+// Prevents O(n²) big.Int decimal parsing on attacker-controlled wire data.
+// The largest valid encoded value (-(2^256*10^18-1) for LegacyDec) is 97 bytes; 100 is the ceiling.
+const maxUnmarshalTextBytes = 100
+
 // Integer errors
 var (
 	// ErrIntOverflow is the error returned when an integer overflow occurs
@@ -74,6 +79,12 @@ func max(i, i2 *big.Int) *big.Int {
 }
 
 func unmarshalText(i *big.Int, text string) error {
+	// Guard against O(n²) big.Int decimal parse on attacker-controlled input.
+	// Shared by Int.UnmarshalJSON and Uint.UnmarshalJSON, so this covers the JSON decode path too.
+	if len(text) > maxUnmarshalTextBytes {
+		return fmt.Errorf("integer string too long: got %d bytes, max %d", len(text), maxUnmarshalTextBytes)
+	}
+
 	if err := i.UnmarshalText([]byte(text)); err != nil {
 		return err
 	}
@@ -494,6 +505,12 @@ func (i *Int) Unmarshal(data []byte) error {
 	if len(data) == 0 {
 		i = nil
 		return nil
+	}
+
+	// Guard against O(n²) big.Int decimal parse on attacker-controlled input.
+	// The largest valid value (-(2^256-1)) is 79 bytes; 100 provides a small margin.
+	if len(data) > maxUnmarshalTextBytes {
+		return fmt.Errorf("integer string too long: got %d bytes, max %d", len(data), maxUnmarshalTextBytes)
 	}
 
 	if i.i == nil {

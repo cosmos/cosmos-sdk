@@ -168,6 +168,14 @@ func LegacyNewDecFromStr(str string) (LegacyDec, error) {
 		return LegacyDec{}, ErrLegacyEmptyDecimalStr
 	}
 
+	// Guard against O(n²) big.Int decimal parse on attacker-controlled input.
+	// Covers the JSON decode path (LegacyDec.UnmarshalJSON), which routes here.
+	// Wrapped (not bare ErrLegacyInvalidDecimalLength) so this is distinguishable from the
+	// unrelated "empty integer/fraction part" use of that sentinel below.
+	if len(str) > maxUnmarshalTextBytes {
+		return LegacyDec{}, fmt.Errorf("decimal string too long: got %d bytes, max %d: %w", len(str), maxUnmarshalTextBytes, ErrLegacyInvalidDecimalLength)
+	}
+
 	strs := strings.Split(str, ".")
 	lenDecs := 0
 	combinedStr := strs[0]
@@ -869,6 +877,12 @@ func (d *LegacyDec) Unmarshal(data []byte) error {
 	if len(data) == 0 {
 		d = nil
 		return nil
+	}
+
+	// Guard against O(n²) big.Int decimal parse on attacker-controlled input.
+	// The largest valid internal value (-(2^256*10^18-1)) is 97 bytes; 100 is the cap.
+	if len(data) > maxUnmarshalTextBytes {
+		return fmt.Errorf("decimal string too long: got %d bytes, max %d: %w", len(data), maxUnmarshalTextBytes, ErrLegacyInvalidDecimalLength)
 	}
 
 	if d.i == nil {

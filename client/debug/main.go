@@ -304,23 +304,31 @@ func RawBytesCmd() *cobra.Command {
 		Example: fmt.Sprintf("%s debug raw-bytes '[72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]'", version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
-			stringBytes := args[0]
-			stringBytes = strings.Trim(stringBytes, "[")
-			stringBytes = strings.Trim(stringBytes, "]")
-			spl := strings.Split(stringBytes, " ")
-
-			byteArray := []byte{}
-			for _, s := range spl {
-				b, err := strconv.ParseInt(s, 10, 8)
-				if err != nil {
-					return err
-				}
-				byteArray = append(byteArray, byte(b))
+			byteArray, err := parseRawBytes(args[0])
+			if err != nil {
+				return err
 			}
+
 			fmt.Printf("%X\n", byteArray)
 			return nil
 		},
 	}
+}
+
+func parseRawBytes(rawBytes string) ([]byte, error) {
+	stringBytes := strings.Trim(rawBytes, "[]")
+	parts := strings.Fields(stringBytes)
+
+	byteArray := make([]byte, 0, len(parts))
+	for _, s := range parts {
+		b, err := strconv.ParseUint(s, 10, 8)
+		if err != nil {
+			return nil, err
+		}
+		byteArray = append(byteArray, byte(b))
+	}
+
+	return byteArray, nil
 }
 
 func PrefixesCmd() *cobra.Command {

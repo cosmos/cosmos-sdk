@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"time"
 
 	"go.uber.org/mock/gomock"
@@ -1240,4 +1241,57 @@ func (s *KeeperTestSuite) TestSetUnbondingDelegationEntry() {
 	// unbondingID == 1 was skipped because the entry was merged with the existing entry with unbondingID == 0
 	// unbondingID comes from a global counter -> gaps in unbondingIDs are OK as long as every unbondingID is unique
 	require.Equal(uint64(2), resUnbonding.Entries[1].UnbondingId)
+}
+
+func (s *KeeperTestSuite) TestSetUnbondingDelegationEntryHookError() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
+
+	delAddrs, valAddrs := createValAddrs(1)
+	delAddr := delAddrs[0]
+	valAddr := valAddrs[0]
+
+	hookErr := errors.New("hook failed")
+	ctrl := gomock.NewController(s.T())
+	hooks := testutil.NewMockStakingHooks(ctrl)
+	hooks.EXPECT().AfterUnbondingInitiated(gomock.Any(), gomock.Any()).Return(hookErr)
+	keeper.SetHooks(hooks)
+
+	_, err := keeper.SetUnbondingDelegationEntry(
+		ctx,
+		delAddr,
+		valAddr,
+		0,
+		time.Unix(0, 0).UTC(),
+		math.NewInt(5),
+	)
+	require.ErrorIs(err, hookErr)
+}
+
+func (s *KeeperTestSuite) TestSetRedelegationEntryHookError() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
+
+	delAddrs, valAddrs := createValAddrs(2)
+	delAddr := delAddrs[0]
+	valSrcAddr, valDstAddr := valAddrs[0], valAddrs[1]
+
+	hookErr := errors.New("hook failed")
+	ctrl := gomock.NewController(s.T())
+	hooks := testutil.NewMockStakingHooks(ctrl)
+	hooks.EXPECT().AfterUnbondingInitiated(gomock.Any(), gomock.Any()).Return(hookErr)
+	keeper.SetHooks(hooks)
+
+	_, err := keeper.SetRedelegationEntry(
+		ctx,
+		delAddr,
+		valSrcAddr,
+		valDstAddr,
+		0,
+		time.Unix(0, 0).UTC(),
+		math.NewInt(5),
+		math.LegacyNewDec(5),
+		math.LegacyNewDec(5),
+	)
+	require.ErrorIs(err, hookErr)
 }

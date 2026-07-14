@@ -5,8 +5,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 )
 
+// MaxExpiredGrantsPerBlock bounds pruning work per block; matches x/feegrant's cap
+// on RemoveExpiredAllowances.
+const MaxExpiredGrantsPerBlock = 200
+
 // BeginBlocker is called at the beginning of every block
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) error {
-	// capped per block to bound pruning work; 200 is arbitrary
-	return keeper.DequeueAndDeleteExpiredGrants(ctx, 200)
+	return keeper.DequeueAndDeleteExpiredGrants(ctx, MaxExpiredGrantsPerBlock)
 }

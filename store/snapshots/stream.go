@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/errors"
+
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
 )
 
 const (
@@ -17,6 +19,10 @@ const (
 	snapshotBufferSize = int(snapshotChunkSize)
 	// Do not change compression level without new snapshot format (must be uniform across nodes)
 	snapshotCompressionLevel = 7
+
+	// snapshotMaxDecompressedChunkSize bounds decompressed bytes per physical chunk, guarding
+	// against a decompression bomb since the whole snapshot is one continuous zlib stream.
+	snapshotMaxDecompressedChunkSize = 100 * snapshotChunkSize // 1 GB per chunk
 )
 
 // StreamWriter set up a stream pipeline to serialize snapshot nodes:
@@ -77,6 +83,43 @@ type StreamReader struct {
 	protoReader protoio.ReadCloser
 }
 
+// chunkBoundedReader caps decompressed bytes read since the last physical chunk boundary,
+// enforcing snapshotMaxDecompressedChunkSize.
+type chunkBoundedReader struct {
+	r           io.Reader
+	chunkReader *ChunkReader
+	maxBytes    int64
+	remaining   int64
+	seenChunks  int
+}
+
+func newChunkBoundedReader(r io.Reader, chunkReader *ChunkReader, maxBytes int64) *chunkBoundedReader {
+	return &chunkBoundedReader{
+		r:           r,
+		chunkReader: chunkReader,
+		maxBytes:    maxBytes,
+		remaining:   maxBytes,
+		seenChunks:  chunkReader.chunksOpened,
+	}
+}
+
+// Read implements io.Reader.
+func (c *chunkBoundedReader) Read(p []byte) (int, error) {
+	if opened := c.chunkReader.chunksOpened; opened != c.seenChunks {
+		c.seenChunks = opened
+		c.remaining = c.maxBytes
+	}
+	if c.remaining <= 0 {
+		return 0, snapshottypes.ErrDecompressedChunkTooLarge
+	}
+	if int64(len(p)) > c.remaining {
+		p = p[:c.remaining]
+	}
+	n, err := c.r.Read(p)
+	c.remaining -= int64(n)
+	return n, err
+}
+
 // NewStreamReader set up a restore stream pipeline.
 func NewStreamReader(chunks <-chan io.ReadCloser) (*StreamReader, error) {
 	chunkReader := NewChunkReader(chunks)
@@ -84,7 +127,8 @@ func NewStreamReader(chunks <-chan io.ReadCloser) (*StreamReader, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "zlib failure")
 	}
-	protoReader := protoio.NewDelimitedReader(zReader, snapshotMaxItemSize)
+	boundedReader := newChunkBoundedReader(zReader, chunkReader, int64(snapshotMaxDecompressedChunkSize))
+	protoReader := protoio.NewDelimitedReader(boundedReader, snapshotMaxItemSize)
 	return &StreamReader{
 		chunkReader: chunkReader,
 		zReader:     zReader,

@@ -108,8 +108,9 @@ func (w *ChunkWriter) Write(data []byte) (int, error) {
 
 // ChunkReader reads chunks from a channel of io.ReadClosers and outputs them as an io.Reader
 type ChunkReader struct {
-	ch     <-chan io.ReadCloser
-	reader io.ReadCloser
+	ch           <-chan io.ReadCloser
+	reader       io.ReadCloser
+	chunksOpened int // count of physical chunks opened; lets readers detect chunk boundaries
 }
 
 // NewChunkReader creates a new ChunkReader.
@@ -124,6 +125,7 @@ func (r *ChunkReader) next() error {
 		return io.EOF
 	}
 	r.reader = reader
+	r.chunksOpened++
 	return nil
 }
 

@@ -16,4 +16,8 @@ var (
 
 	// ErrInvalidSnapshotVersion is returned when the snapshot version is invalid
 	ErrInvalidSnapshotVersion = errors.New("invalid snapshot version")
+
+	// ErrDecompressedChunkTooLarge guards against a decompression bomb: a chunk decompressing
+	// into more bytes than allowed before the state root can be verified.
+	ErrDecompressedChunkTooLarge = errors.New("decompressed snapshot chunk exceeds maximum allowed size: possible decompression bomb")
 )

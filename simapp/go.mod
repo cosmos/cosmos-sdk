@@ -1,6 +1,6 @@
 module cosmossdk.io/simapp
 
-go 1.26.4
+go 1.26.5
 
 require (
 	cosmossdk.io/api v1.0.0

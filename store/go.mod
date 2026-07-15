@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/store/v2
 
-go 1.26.4
+go 1.26.5
 
 require (
 	cosmossdk.io/errors v1.1.0
@@ -78,7 +78,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	golang.org/x/arch v0.26.0 // indirect
-	golang.org/x/crypto v0.51.0 // indirect
+	golang.org/x/crypto v0.52.0 // indirect
 	golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a // indirect
 	golang.org/x/net v0.55.0 // indirect; indirectg
 	golang.org/x/sys v0.45.0 // indirect

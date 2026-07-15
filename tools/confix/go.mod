@@ -1,10 +1,10 @@
 module cosmossdk.io/tools/confix
 
-go 1.26.4
+go 1.26.5
 
 require (
 	github.com/cosmos/cosmos-sdk v0.54.0
-	github.com/creachadair/atomicfile v0.4.1
+	github.com/creachadair/atomicfile v0.4.2
 	github.com/creachadair/tomledit v0.0.29
 	github.com/pelletier/go-toml/v2 v2.4.3
 	github.com/spf13/cobra v1.10.2
@@ -60,7 +60,6 @@ require (
 	github.com/cosmos/iavl v1.2.8 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v1.0.0 // indirect
-	github.com/creachadair/mds v0.27.1 // indirect
 	github.com/danieljoos/wincred v1.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/davidlazar/go-crypto v0.0.0-20200604182044-b73af7476f6c // indirect

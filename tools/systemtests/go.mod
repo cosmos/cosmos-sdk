@@ -1,4 +1,4 @@
-go 1.26.4
+go 1.26.5
 
 module github.com/cosmos/cosmos-sdk/tools/systemtests
 
@@ -10,7 +10,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
-	google.golang.org/grpc v1.81.1
+	google.golang.org/grpc v1.82.0
 )
 
 require (

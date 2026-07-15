@@ -37,6 +37,8 @@ func SetMinGasPrices(gasPricesStr string) func(*BaseApp) {
 }
 
 // SetQueryGasLimit returns an option that sets a gas limit for queries.
+// A value of 0 means unbounded — callers should prefer an explicit limit
+// to avoid DoS on public RPC endpoints.
 func SetQueryGasLimit(queryGasLimit uint64) func(*BaseApp) {
 	if queryGasLimit == 0 {
 		queryGasLimit = math.MaxUint64
@@ -164,6 +166,8 @@ func (app *BaseApp) SetName(name string) {
 		panic("SetName() on sealed BaseApp")
 	}
 
+	app.mu.Lock()
+	defer app.mu.Unlock()
 	app.name = name
 }
 
@@ -181,11 +185,15 @@ func (app *BaseApp) SetVersion(v string) {
 	if app.sealed {
 		panic("SetVersion() on sealed BaseApp")
 	}
+	app.mu.Lock()
+	defer app.mu.Unlock()
 	app.version = v
 }
 
 // SetProtocolVersion sets the application's protocol version
 func (app *BaseApp) SetProtocolVersion(v uint64) {
+	app.mu.Lock()
+	defer app.mu.Unlock()
 	app.appVersion = v
 }
 

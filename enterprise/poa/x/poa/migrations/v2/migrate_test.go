@@ -112,9 +112,10 @@ func TestMigrate(t *testing.T) {
 		// ensure that we walk over nothing in the last committed power list
 		// since there are no active validators
 		ranger := new(collections.Range[sdk.ConsAddress]).Descending()
-		lastCommittedPower.Walk(ctx, ranger, func(key sdk.ConsAddress, value int64) (stop bool, err error) {
+		err := lastCommittedPower.Walk(ctx, ranger, func(key sdk.ConsAddress, value int64) (stop bool, err error) {
 			assert.FailNow(t, "callback should not have been called")
 			return false, nil
 		})
+		assert.NoError(t, err)
 	})
 }

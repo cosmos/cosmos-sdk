@@ -145,6 +145,9 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 }
 
 func (app *BaseApp) Info(_ *abci.RequestInfo) (*abci.ResponseInfo, error) {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+
 	lastCommitID := app.cms.LastCommitID()
 
 	return &abci.ResponseInfo{
@@ -1161,7 +1164,7 @@ func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.R
 			return &abci.ResponseQuery{
 				Codespace: sdkerrors.RootCodespace,
 				Height:    req.Height,
-				Value:     []byte(app.version),
+				Value:     []byte(app.Version()),
 			}
 
 		default:

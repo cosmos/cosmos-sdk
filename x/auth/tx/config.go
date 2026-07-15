@@ -41,6 +41,12 @@ type ConfigOptions struct {
 	SigningOptions *txsigning.Options
 	// CustomSignModes are the custom sign modes that will be added to the txsigning.HandlerMap.
 	CustomSignModes []txsigning.SignModeHandler
+	// AminoJSONEncoder is the encoder used by the SIGN_MODE_LEGACY_AMINO_JSON handler.
+	// This allows configuring custom field, message, scalar and type encodings (e.g. via
+	// aminojson.Encoder.DefineFieldEncoding) without replicating the SDK's HandlerMap construction.
+	// If nil, a default aminojson.Encoder is created using the FileResolver and TypeResolver
+	// derived from SigningOptions. See https://github.com/cosmos/cosmos-sdk/issues/25221.
+	AminoJSONEncoder *aminojson.Encoder
 	// ProtoDecoder is the decoder that will be used to decode protobuf transactions.
 	ProtoDecoder sdk.TxDecoder
 	// ProtoEncoder is the encoder that will be used to encode protobuf transactions.
@@ -133,6 +139,7 @@ func NewSigningHandlerMap(configOpts ConfigOptions) (*txsigning.HandlerMap, erro
 			handlers[i] = aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
 				FileResolver: signingOpts.FileResolver,
 				TypeResolver: signingOpts.TypeResolver,
+				Encoder:      configOpts.AminoJSONEncoder,
 			})
 		}
 	}

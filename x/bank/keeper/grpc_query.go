@@ -98,6 +98,11 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 // A value of 1000001 uatom cannot be represented as an integer atom, so it
 // returns false.
 func scaleAmountToDisplay(value math.Int, metadata types.Metadata) (math.Int, bool) {
+	// If base and display denoms are the same, no scaling is needed.
+	if metadata.Display == metadata.Base {
+		return value, true
+	}
+
 	var baseExponent, displayExponent uint32
 
 	for _, du := range metadata.DenomUnits {

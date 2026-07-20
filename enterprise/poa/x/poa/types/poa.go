@@ -20,6 +20,9 @@ import (
 
 	"cosmossdk.io/core/address"
 	sdkerrors "cosmossdk.io/errors"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // MinPubKeyLength is the minimum expected pubkey serialized length (ed25519 ~34 bytes, secp256k1 ~35 bytes with proto overhead).
@@ -298,4 +301,37 @@ func (m *MsgWithdrawFees) ValidateBasic() error {
 		return ErrMissingOperatorAddress
 	}
 	return nil
+}
+
+// Validate performs validation on MsgRotateConsPubKey.
+// It ensures that:
+//   - Sender (signer) is a valid address format
+//   - ValidatorAddress is a valid address format
+//   - NewPubKey is not nil and decodable as a cryptotypes.PubKey
+//
+// The address codec is used to validate address formats.
+func (m *MsgRotateConsPubKey) Validate(ac address.Codec) error {
+	if _, err := ac.StringToBytes(m.Sender); err != nil {
+		return sdkerrors.Wrap(ErrInvalidSigner, "invalid sender address: "+err.Error())
+	}
+	if _, err := ac.StringToBytes(m.ValidatorAddress); err != nil {
+		return sdkerrors.Wrap(ErrInvalidMetadata, "validator address is invalid")
+	}
+	if m.NewPubKey == nil {
+		return fmt.Errorf("new pubkey cannot be nil")
+	}
+	cached := m.NewPubKey.GetCachedValue()
+	if cached == nil {
+		return fmt.Errorf("expected cached value for pubkey, but found none")
+	}
+	if _, ok := cached.(cryptotypes.PubKey); !ok {
+		return fmt.Errorf("expecting cryptotypes.PubKey, got %T", cached)
+	}
+	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage so NewPubKey is decoded into a cryptotypes.PubKey.
+func (m *MsgRotateConsPubKey) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var pubKey cryptotypes.PubKey
+	return unpacker.UnpackAny(m.NewPubKey, &pubKey)
 }

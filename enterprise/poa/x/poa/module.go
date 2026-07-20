@@ -39,13 +39,17 @@ import (
 )
 
 var (
-	_ module.HasABCIEndBlock  = AppModule{}
-	_ module.AppModuleBasic   = AppModuleBasic{}
-	_ module.HasServices      = AppModule{}
-	_ appmodule.AppModule     = AppModule{}
-	_ module.HasABCIGenesis   = AppModule{}
-	_ module.HasGenesisBasics = AppModuleBasic{}
+	_ module.HasABCIEndBlock     = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.HasServices         = AppModule{}
+	_ appmodule.AppModule        = AppModule{}
+	_ module.HasABCIGenesis      = AppModule{}
+	_ module.HasGenesisBasics    = AppModuleBasic{}
+	_ module.HasConsensusVersion = AppModule{}
 )
+
+// ConsensusVersion defines the current POA module consensus version.
+const ConsensusVersion = 2
 
 // AppModuleBasic defines the basic application module for the POA module.
 type AppModuleBasic struct {
@@ -179,7 +183,15 @@ func (AppModule) IsOnePerModuleType() {}
 func (m AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(m.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), m.keeper)
+
+	migrator := keeper.NewMigrator(m.keeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	}
 }
+
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // ExportGenesis exports the module's genesis state as JSON.
 // It delegates to the keeper's ExportGenesis method to retrieve the current state.

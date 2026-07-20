@@ -360,28 +360,35 @@ func (s *KeeperTestSuite) TestImportConsKeyRotationsRoundTrip() {
 	s.ctx = s.ctx.WithBlockHeight(100 + stakingtypes.ConsensusUpdateDelay)
 	require.NoError(s.stakingKeeper.ApplyConsKeyRotations(s.ctx))
 
-	// validator B: rotate without applying, leaving a live pending entry
-	// (PendingFrom on the old addr, PendingTo on the new addr).
+	// validator B: rotate without applying, then remove the validator before
+	// apply. The live path keeps the PendingFrom lock for exactly this case, so
+	// the pending entry outlives the validator record and must still import.
 	oldPkB := ed25519.GenPrivKey().PubKey()
 	newPkB := ed25519.GenPrivKey().PubKey()
-	_, valAddrB := s.bondedValidator(oldPkB)
+	vB, valAddrB := s.bondedValidator(oldPkB)
 	oldConsAddrB := sdk.ConsAddress(oldPkB.Address())
 	newConsAddrB := sdk.ConsAddress(newPkB.Address())
 	require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddrB, oldPkB, newPkB))
+
+	vB.Status = stakingtypes.Unbonded
+	vB.Tokens = math.ZeroInt()
+	vB.DelegatorShares = math.LegacyZeroDec()
+	require.NoError(s.stakingKeeper.SetValidator(s.ctx, vB))
+	require.NoError(s.stakingKeeper.RemoveValidator(s.ctx, valAddrB))
 
 	histories, err := s.stakingKeeper.ExportConsKeyRotationHistory(s.ctx)
 	require.NoError(err)
 	pending, err := s.stakingKeeper.ExportPendingConsKeyRotations(s.ctx, s.ctx.BlockHeight())
 	require.NoError(err)
 
-	// restart from the export: validator A is live on its post-rotation key,
-	// validator B is still live on its old key.
+	// restart from the export: validator A is live on its post-rotation key.
+	// validator B is gone, so only its rotation state is imported.
 	s.SetupTest()
 	s.bondedValidatorWithConsKey(valAddrA, newPkA)
-	s.bondedValidatorWithConsKey(valAddrB, oldPkB)
 	require.NoError(s.stakingKeeper.ImportConsKeyRotations(s.ctx, histories, pending))
 
-	// ensure pending locks survive the round trip with the correct kinds.
+	// the removed validator's pending locks still round trip with the correct
+	// kinds despite the missing validator record.
 	kindB, gotValB, found, err := s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, oldConsAddrB)
 	require.NoError(err)
 	require.True(found)

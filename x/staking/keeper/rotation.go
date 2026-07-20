@@ -40,7 +40,7 @@ func (k Keeper) ImportConsKeyRotations(ctx context.Context, histories []types.Co
 		if err := store.Set(types.GetValidatorConsKeyRotationKey(valAddr), []byte{}); err != nil {
 			return err
 		}
-		if err := store.Set(types.GetRotationLockedConsAddrIndexKey(oldConsAddr), valAddr); err != nil {
+		if err := k.SetRotationLockedConsAddr(ctx, oldConsAddr, valAddr, types.ConsAddrLockRotatedFrom); err != nil {
 			return err
 		}
 	}
@@ -60,9 +60,25 @@ func (k Keeper) ImportConsKeyRotations(ctx context.Context, histories []types.Co
 			return err
 		}
 
-		if err := store.Set(types.GetRotationLockedConsAddrIndexKey(sdk.ConsAddress(newPubKey.Address())), valAddr); err != nil {
+		if err := k.SetRotationLockedConsAddr(ctx, sdk.ConsAddress(newPubKey.Address()), valAddr, types.ConsAddrLockPendingTo); err != nil {
 			return err
 		}
+
+		// The live path also locks the old addr with PendingFrom to protect it
+		// if the validator is removed before apply. The rotation is still
+		// pending, so the validator's live cons addr is the old addr.
+		validator, err := k.GetValidator(ctx, valAddr)
+		if err != nil {
+			return err
+		}
+		oldConsAddr, err := validator.GetConsAddr()
+		if err != nil {
+			return err
+		}
+		if err := k.SetRotationLockedConsAddr(ctx, sdk.ConsAddress(oldConsAddr), valAddr, types.ConsAddrLockPendingFrom); err != nil {
+			return err
+		}
+
 		if err := store.Set(types.GetConsKeyRotationApplyQueueKey(rotation.ApplyHeight, valAddr), newPubKeyBz); err != nil {
 			return err
 		}

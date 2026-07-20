@@ -6,6 +6,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
 
@@ -19,8 +20,15 @@ import (
 // bondedValidator stores and bonds a validator with the given consensus
 // pubkey, returns the validator record together with its operator address.
 func (s *KeeperTestSuite) bondedValidator(pk cryptotypes.PubKey) (stakingtypes.Validator, sdk.ValAddress) {
-	require := s.Require()
 	valAddr := sdk.ValAddress(pk.Address())
+	return s.bondedValidatorWithConsKey(valAddr, pk), valAddr
+}
+
+// bondedValidatorWithConsKey bonds a validator at an explicit operator address
+// with a consensus key that need not be derived from that address, as happens
+// after a consensus key rotation.
+func (s *KeeperTestSuite) bondedValidatorWithConsKey(valAddr sdk.ValAddress, pk cryptotypes.PubKey) stakingtypes.Validator {
+	require := s.Require()
 	v, err := stakingtypes.NewValidator(valAddr.String(), pk, stakingtypes.Description{Moniker: "v"})
 	require.NoError(err)
 	v.Status = stakingtypes.Bonded
@@ -28,7 +36,7 @@ func (s *KeeperTestSuite) bondedValidator(pk cryptotypes.PubKey) (stakingtypes.V
 	v.DelegatorShares = math.LegacyNewDecFromInt(v.Tokens)
 	require.NoError(s.stakingKeeper.SetValidator(s.ctx, v))
 	require.NoError(s.stakingKeeper.SetValidatorByConsAddr(s.ctx, v))
-	return v, valAddr
+	return v
 }
 
 func (s *KeeperTestSuite) TestConsKeyRotationUpdate() {
@@ -334,6 +342,84 @@ func (s *KeeperTestSuite) TestRotationLockedConsAddrIndex() {
 	_, _, found, err = s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, newConsAddr)
 	require.NoError(err)
 	require.False(found)
+}
+
+func (s *KeeperTestSuite) TestImportConsKeyRotationsRoundTrip() {
+	require := s.Require()
+	s.SetupTest()
+
+	// validator A: rotate and apply, leaving a RotatedFrom history entry.
+	oldPkA := ed25519.GenPrivKey().PubKey()
+	newPkA := ed25519.GenPrivKey().PubKey()
+	_, valAddrA := s.bondedValidator(oldPkA)
+	oldConsAddrA := sdk.ConsAddress(oldPkA.Address())
+	newConsAddrA := sdk.ConsAddress(newPkA.Address())
+
+	s.ctx = s.ctx.WithBlockHeight(100)
+	require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddrA, oldPkA, newPkA))
+	s.ctx = s.ctx.WithBlockHeight(100 + stakingtypes.ConsensusUpdateDelay)
+	require.NoError(s.stakingKeeper.ApplyConsKeyRotations(s.ctx))
+
+	// validator B: rotate without applying, leaving a live pending entry
+	// (PendingFrom on the old addr, PendingTo on the new addr).
+	oldPkB := ed25519.GenPrivKey().PubKey()
+	newPkB := ed25519.GenPrivKey().PubKey()
+	_, valAddrB := s.bondedValidator(oldPkB)
+	oldConsAddrB := sdk.ConsAddress(oldPkB.Address())
+	newConsAddrB := sdk.ConsAddress(newPkB.Address())
+	require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddrB, oldPkB, newPkB))
+
+	histories, err := s.stakingKeeper.ExportConsKeyRotationHistory(s.ctx)
+	require.NoError(err)
+	pending, err := s.stakingKeeper.ExportPendingConsKeyRotations(s.ctx, s.ctx.BlockHeight())
+	require.NoError(err)
+
+	// restart from the export: validator A is live on its post-rotation key,
+	// validator B is still live on its old key.
+	s.SetupTest()
+	s.bondedValidatorWithConsKey(valAddrA, newPkA)
+	s.bondedValidatorWithConsKey(valAddrB, oldPkB)
+	require.NoError(s.stakingKeeper.ImportConsKeyRotations(s.ctx, histories, pending))
+
+	// ensure pending locks survive the round trip with the correct kinds.
+	kindB, gotValB, found, err := s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, oldConsAddrB)
+	require.NoError(err)
+	require.True(found)
+	require.Equal(stakingtypes.ConsAddrLockPendingFrom, kindB)
+	require.Equal(valAddrB, gotValB)
+
+	kindBTo, _, found, err := s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, newConsAddrB)
+	require.NoError(err)
+	require.True(found)
+	require.Equal(stakingtypes.ConsAddrLockPendingTo, kindBTo)
+
+	// Now exercise the evidence handling path against validator A's rotated-away key,
+	// mirroring handleEquivocationEvidence: the old cons addr no longer resolves
+	// live, so it must resolve through the historical lookup.
+	s.ctx = s.ctx.WithBlockHeight(200)
+	_, err = s.stakingKeeper.ValidatorByConsAddr(s.ctx, oldConsAddrA)
+	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
+
+	validator, err := s.stakingKeeper.ValidatorByHistoricalConsAddr(s.ctx, oldConsAddrA)
+	require.NoError(err)
+	require.Equal(valAddrA.String(), validator.OperatorAddress)
+	currentConsAddr, err := validator.GetConsAddr()
+	require.NoError(err)
+	require.Equal(newConsAddrA.Bytes(), currentConsAddr)
+
+	before, err := s.stakingKeeper.GetValidator(s.ctx, valAddrA)
+	require.NoError(err)
+
+	// Ensure we are able to slash the rotated validator on their resolved
+	// current cons addr.
+	s.bankKeeper.EXPECT().BurnCoins(gomock.Any(), stakingtypes.BondedPoolName, gomock.Any()).Return(nil)
+	burned, err := s.stakingKeeper.Slash(s.ctx, currentConsAddr, s.ctx.BlockHeight(), 10, math.LegacyNewDecWithPrec(5, 1))
+	require.NoError(err)
+
+	require.True(burned.IsPositive())
+	after, err := s.stakingKeeper.GetValidator(s.ctx, valAddrA)
+	require.NoError(err)
+	require.True(after.Tokens.LT(before.Tokens))
 }
 
 func (s *KeeperTestSuite) TestValidatorByHistoricalConsAddr() {

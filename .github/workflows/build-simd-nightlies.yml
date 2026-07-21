@@ -18,6 +18,10 @@ jobs:
   build:
     timeout-minutes: 15
     runs-on: depot-ubuntu-22.04-4
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     strategy:
       fail-fast: false
       matrix:
@@ -55,6 +59,11 @@ jobs:
           chmod +x "dist/$bin"
           tar -C dist -czf "dist/$bin.tar.gz" "$bin"
           sha256sum "dist/$bin.tar.gz" > "dist/$bin.tar.gz.sha256"
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/*.tar.gz
 
       - uses: actions/upload-artifact@v4
         with:
@@ -99,18 +108,33 @@ jobs:
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EXPECTED_WORKFLOW: .github/workflows/build-simd-nightlies.yml
         run: |
           set -euo pipefail
 
           mkdir -p existing
-
-          artifact_url=$(gh api \
+          candidates=$(gh api --paginate \
             "repos/$GITHUB_REPOSITORY/actions/artifacts?name=github-pages&per_page=100" \
             --jq '.artifacts
               | map(select(.expired == false))
-              | sort_by(.created_at)
-              | reverse
-              | .[0].archive_download_url // ""')
+              | map(select(.workflow_run.repository_id == .workflow_run.head_repository_id))
+              | map(select(.workflow_run.head_branch == "main"
+                  or (.workflow_run.head_branch | test("^release/v[0-9]+\\.[0-9]+\\.x$"))))
+              | .[]
+              | "\(.created_at)\t\(.workflow_run.id)\t\(.archive_download_url)"' \
+            | sort -r)
+
+          artifact_url=""
+          while IFS=$'\t' read -r created_at run_id url; do
+            [ -n "$run_id" ] || continue
+            run_path=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" \
+              --jq '.path // ""')
+            if [ "$run_path" = "$EXPECTED_WORKFLOW" ]; then
+              artifact_url="$url"
+              break
+            fi
+            echo "Skipping github-pages artifact from untrusted run $run_id (workflow: ${run_path:-unknown})"
+          done <<< "$candidates"
 
           if [ -z "$artifact_url" ]; then
             echo "No existing Pages artifact found"

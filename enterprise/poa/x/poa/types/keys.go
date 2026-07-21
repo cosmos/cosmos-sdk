@@ -31,4 +31,5 @@ var (
 	TotalAllocatedKey             = collections.NewPrefix(5)
 	QueuedUpdatesKey              = collections.NewPrefix(6)
 	ValidatorAllocatedFeesKey     = collections.NewPrefix(7)
+	LastCommittedPowerKey         = collections.NewPrefix(8)
 )

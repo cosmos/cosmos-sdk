@@ -30,6 +30,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa65"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/client/cli"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/keeper"
@@ -119,6 +120,26 @@ type ModuleOption func(app *AppModule)
 func WithPubkeyFactory(f map[string]func(codec.Codec, []byte) *codectypes.Any) ModuleOption {
 	return func(app *AppModule) {
 		app.pubkeyFactory = f
+	}
+}
+
+// WithMlDsa65Support adds mldsa65 pubkey support to the PoA module.
+// This is needed when you want to create validators with mldsa65 keys.
+// IMPORTANT: You must also enable mldsa65 in the consensus params by setting
+// consensus.params.validator.pub_key_types to include "ml_dsa_65" in your genesis.
+func WithMlDsa65Support() ModuleOption {
+	return func(appModule *AppModule) {
+		appModule.pubkeyFactory[string(hd.MlDsa65Type)] = func(cdc codec.Codec, bz []byte) *codectypes.Any {
+			pubKey := &mldsa65.PubKey{
+				Key: bz,
+			}
+			anyPK, err := codectypes.NewAnyWithValue(pubKey)
+			if err != nil {
+				panic(err)
+			}
+
+			return anyPK
+		}
 	}
 }
 

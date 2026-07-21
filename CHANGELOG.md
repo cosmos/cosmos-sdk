@@ -92,6 +92,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth/tx) [#26517](https://github.com/cosmos/cosmos-sdk/pull/26517) Return a decode error instead of panicking when a transaction's `SignerInfos` and `Signatures` counts disagree in `GetSignaturesV2`, or a multisig's `ModeInfos` and sub-signature counts disagree in `ModeInfoAndSigToSignatureData`.
 * (x/auth/ante) [#26573](https://github.com/cosmos/cosmos-sdk/pull/26573) Reject tx with extra SignerInfos in SetPubKeyDecorator.
 * (blockstm) [#26591](https://github.com/cosmos/cosmos-sdk/pull/26591) normalize non-positive worker count in `STMRunner.Run`.
+* (x/staking) [#26613](https://github.com/cosmos/cosmos-sdk/pull/26613) Require `key_rotation_fee` denom to equal `bond_denom` in `Params.Validate` and derive the default fee denom from the configured bond denom.
 
 ### Deprecated
 

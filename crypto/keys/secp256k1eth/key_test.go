@@ -37,6 +37,31 @@ func TestSignAndVerify(t *testing.T) {
 	require.False(t, pub.VerifySignature(msg, sig[:64]))
 }
 
+// TestVerifySignatureMalformedKey pins the behavior for keys that bypass
+// constructor validation (proto decoding enforces no length or point check):
+// verification must return false, not panic. The cometbft implementation never
+// parses the key — it byte-compares against the signature's recovered key.
+func TestVerifySignatureMalformedKey(t *testing.T) {
+	priv := secp256k1eth.GenPrivKey()
+	msg := []byte("msg")
+	sig, err := priv.Sign(msg)
+	require.NoError(t, err)
+
+	// Correct length but not a valid curve point (invalid SEC1 prefix).
+	bad := make([]byte, cmtsecp256k1eth.PubKeySize)
+	bad[0] = 0x05
+	badPub := &secp256k1eth.PubKey{Key: bad}
+	require.NotPanics(t, func() { require.False(t, badPub.VerifySignature(msg, sig)) })
+
+	// Wrong length entirely.
+	shortPub := &secp256k1eth.PubKey{Key: []byte{0x02}}
+	require.NotPanics(t, func() { require.False(t, shortPub.VerifySignature(msg, sig)) })
+
+	// Nil key.
+	nilPub := &secp256k1eth.PubKey{}
+	require.NotPanics(t, func() { require.False(t, nilPub.VerifySignature(msg, sig)) })
+}
+
 func TestRoundTripFromBytes(t *testing.T) {
 	priv := secp256k1eth.GenPrivKey()
 

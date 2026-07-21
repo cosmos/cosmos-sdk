@@ -24,7 +24,7 @@ func Migrate(ctx context.Context, keeper paramsKeeper) error {
 	if isMissingKeyRotationFee(params.KeyRotationFee) {
 		params.KeyRotationFee = sdk.Coin{
 			Denom:  params.BondDenom,
-			Amount: types.DefaultKeyRotationFee.Amount,
+			Amount: types.DefaultKeyRotationFeeAmount,
 		}
 	}
 	if err := params.Validate(); err != nil {

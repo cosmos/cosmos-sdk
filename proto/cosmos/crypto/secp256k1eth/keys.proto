@@ -1,0 +1,32 @@
+syntax = "proto3";
+package cosmos.crypto.secp256k1eth;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1eth";
+
+// PubKey is an Ethereum-compatible secp256k1 public key (33-byte compressed
+// SEC1) for handling CometBFT secp256k1eth validator keys in the SDK. It is
+// intended for validator-key use only: address derivation is the 20-byte
+// Ethereum address Keccak256(uncompressedPubKey[1:])[12:], matching CometBFT,
+// not ADR-28. For user/account-level Ethereum keys use an application key type
+// such as cosmos/evm's eth_secp256k1.
+message PubKey {
+  option (amino.name) = "tendermint/PubKeySecp256k1eth";
+  // The Amino encoding is simply the inner bytes field, and not the Amino
+  // encoding of the whole PubKey struct.
+  option (amino.message_encoding)     = "key_field";
+  option (gogoproto.goproto_stringer) = false;
+
+  bytes key = 1;
+}
+
+// PrivKey defines an Ethereum-compatible secp256k1 private key (32-byte
+// scalar).
+message PrivKey {
+  option (amino.name)             = "tendermint/PrivKeySecp256k1eth";
+  option (amino.message_encoding) = "key_field";
+
+  bytes key = 1;
+}

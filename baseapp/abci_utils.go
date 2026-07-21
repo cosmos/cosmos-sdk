@@ -240,15 +240,12 @@ func txGasForBlockAccounting(tx sdk.Tx, gasWanted uint64) uint64 {
 	return 0
 }
 
-// gasWithinBudget reports whether adding txGas to totalTxGas stays within maxGas.
-// Check before adding — declared gas can be attacker-controlled, so add-then-check could overflow uint64 past the limit.
+// gasWithinBudget checks before adding, since add-then-check on attacker-controlled gas can overflow uint64.
 func gasWithinBudget(txGas, totalTxGas, maxGas uint64) bool {
 	return txGas <= maxGas-totalTxGas
 }
 
-// blockMaxGas returns the consensus MaxGas for the block, or 0 if unset.
-// Panics for invalid negative values, matching BaseApp.GetMaximumBlockGas,
-// so ProcessProposal can't accept a block that FinalizeBlock will later panic on.
+// blockMaxGas panics on invalid negative MaxGas, matching BaseApp.GetMaximumBlockGas.
 func blockMaxGas(ctx sdk.Context) int64 {
 	b := ctx.ConsensusParams().Block
 	if b == nil {

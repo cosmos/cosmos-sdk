@@ -2,6 +2,7 @@ package baseapp_test
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"math"
 	"sort"
@@ -857,6 +858,34 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolRejectsOverfl
 	resp, err := ph.ProcessProposalHandler()(ctx, &abci.RequestProcessProposal{Txs: [][]byte{bz1, bz2}})
 	s.Require().NoError(err)
 	s.Require().Equal(abci.ResponseProcessProposal_REJECT, resp.Status)
+}
+
+func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_ProcessProposalPanicsOnInvalidMaxGas() {
+	ctx := s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{MaxGas: -2},
+	})
+
+	app := mock.NewMockProposalTxVerifier(gomock.NewController(s.T()))
+	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app)
+
+	s.Require().Panics(func() {
+		_, _ = ph.ProcessProposalHandler()(ctx, &abci.RequestProcessProposal{})
+	})
+}
+
+func (s *ABCIUtilsTestSuite) TestDefaultTxSelector_SelectTxForProposalRejectsOverflowGas() {
+	const maxBlockGas = 100
+	tx1, bz1 := s.buildSignedTx(maxBlockGas)
+	tx2, bz2 := s.buildSignedTx(math.MaxUint64 - maxBlockGas + 1)
+	maxTxBytes := uint64(len(bz1)+len(bz2)) * 2
+
+	ts := baseapp.NewDefaultTxSelector()
+	ts.SelectTxForProposal(context.Background(), maxTxBytes, maxBlockGas, tx1, bz1, maxBlockGas)
+	ts.SelectTxForProposal(context.Background(), maxTxBytes, maxBlockGas, tx2, bz2, math.MaxUint64-maxBlockGas+1)
+
+	got := ts.SelectedTxs(context.Background())
+	s.Require().Len(got, 1, "overflow tx must not be selected")
+	s.Require().Equal(bz1, got[0])
 }
 
 func marshalDelimitedFn(msg proto.Message) ([]byte, error) {

@@ -240,12 +240,24 @@ func txGasForBlockAccounting(tx sdk.Tx, gasWanted uint64) uint64 {
 	return 0
 }
 
+// gasWithinBudget reports whether adding txGas to totalTxGas stays within maxGas.
+// Check before adding — declared gas can be attacker-controlled, so add-then-check could overflow uint64 past the limit.
+func gasWithinBudget(txGas, totalTxGas, maxGas uint64) bool {
+	return txGas <= maxGas-totalTxGas
+}
+
 // blockMaxGas returns the consensus MaxGas for the block, or 0 if unset.
+// Panics for invalid negative values, matching BaseApp.GetMaximumBlockGas,
+// so ProcessProposal can't accept a block that FinalizeBlock will later panic on.
 func blockMaxGas(ctx sdk.Context) int64 {
-	if b := ctx.ConsensusParams().Block; b != nil {
-		return b.MaxGas
+	b := ctx.ConsensusParams().Block
+	if b == nil {
+		return 0
 	}
-	return 0
+	if b.MaxGas < -1 {
+		panic(fmt.Sprintf("invalid maximum block gas: %d", b.MaxGas))
+	}
+	return b.MaxGas
 }
 
 // SetTxSelector sets the TxSelector function on the DefaultProposalHandler.
@@ -432,9 +444,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 // is used in both steps, and applications must ensure that this is the case in
 // non-default handlers.
 func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHandler {
-	// With a no-op mempool, PrepareProposal may include txs that fail ante checks, so we
-	// can't run full ante verification here. We still decode each tx to enforce MaxBlockGas,
-	// so a byzantine proposer can't exploit the no-op FinalizeBlock gas meter.
+	// Skip ante-handler verification (PrepareProposal may include txs that fail ante checks), but still enforce MaxBlockGas so a byzantine proposer can't exploit the no-op FinalizeBlock gas meter.
 	verifyTx := h.txVerifier.ProcessProposalVerifyTx
 	if _, isNoOp := h.mempool.(mempool.NoOpMempool); h.mempool == nil || isNoOp {
 		verifyTx = func(txBytes []byte) (sdk.Tx, uint64, error) {
@@ -454,9 +464,8 @@ func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHan
 			}
 
 			if maxBlockGas > 0 {
-				// Check before adding — declared gas is attacker-controlled here, so add-then-check could overflow uint64 past the limit.
 				txGas := txGasForBlockAccounting(tx, gasWanted)
-				if txGas > uint64(maxBlockGas)-totalTxGas {
+				if !gasWithinBudget(txGas, totalTxGas, uint64(maxBlockGas)) {
 					return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 				}
 				totalTxGas += txGas
@@ -548,7 +557,7 @@ func (ts *defaultTxSelector) SelectTxForProposal(_ context.Context, maxTxBytes, 
 		// not been met.
 		if maxBlockGas > 0 {
 			txGas := txGasForBlockAccounting(memTx, gasWanted)
-			if (txGas + ts.totalTxGas) <= maxBlockGas {
+			if gasWithinBudget(txGas, ts.totalTxGas, maxBlockGas) {
 				ts.totalTxGas += txGas
 				ts.totalTxBytes += txSize
 				ts.selectedTxs = append(ts.selectedTxs, txBz)

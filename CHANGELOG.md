@@ -60,6 +60,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (staking) [#26471](https://github.com/cosmos/cosmos-sdk/pull/26471) Add genesis import/export support for validator consensus key rotation.
 * (crypto) [#26472](https://github.com/cosmos/cosmos-sdk/pull/26472) Add ML-DSA-65 (FIPS 204) support for user account keys: mnemonic-based keyring creation/recovery (`--algo ml_dsa_65`), transaction signing/verification, and an ante-handler signature-verification gas cost (`Params.SigVerifyCostMlDsa65`).
 * (enterprise/poa) [#26590](https://github.com/cosmos/cosmos-sdk/pull/26590) Add `MsgRotateConsPubKey` for POA validator consensus key rotation (operator self-service plus admin override).
+* (enterprise/poa) [#26614](https://github.com/cosmos/cosmos-sdk/pull/26614) Add ML-DSA-65 (mldsa65) validator key support to the PoA module via a `WithMlDsa65Support()` module option, raising `MaxPubKeyLength` to accommodate the larger keys.
 
 ### Improvements
 
@@ -70,7 +71,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth/tx) [#25221](https://github.com/cosmos/cosmos-sdk/issues/25221) Add `ConfigOptions.AminoJSONEncoder` so applications can configure a custom `aminojson.Encoder` (e.g. custom field encodings) for the `SIGN_MODE_LEGACY_AMINO_JSON` handler without replicating the SDK's `HandlerMap` construction.
 * chore(x/auth) [#26567](https://github.com/cosmos/cosmos-sdk/pull/26567): add a human-readable error
 * (blockstm) [#26592](https://github.com/cosmos/cosmos-sdk/pull/26592) Validate `ExecuteBlock` inputs (block size, store index mapping, and estimates) at the exported entry point so invalid input returns a descriptive error instead of an opaque "index out of range" panic.
-* (poa) [#26614](https://github.com/cosmos/cosmos-sdk/pull/26614) Update poa to support mldsa65 validator keys.
+* (cli) [#26604](https://github.com/cosmos/cosmos-sdk/pull/26604) Add consensus key algo to init and testnet CLIs.
 
 ### Bug Fixes
 

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	cmtconfig "github.com/cometbft/cometbft/config"
+	cmttypes "github.com/cometbft/cometbft/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -34,6 +35,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -57,6 +59,7 @@ var (
 
 type initArgs struct {
 	algo              string
+	consensusKeyAlgo  string
 	chainID           string
 	keyringBackend    string
 	minGasPrices      string
@@ -71,17 +74,18 @@ type initArgs struct {
 }
 
 type startArgs struct {
-	algo          string
-	apiAddress    string
-	chainID       string
-	enableLogging bool
-	grpcAddress   string
-	minGasPrices  string
-	numValidators int
-	outputDir     string
-	printMnemonic bool
-	rpcAddress    string
-	timeoutCommit time.Duration
+	algo             string
+	consensusKeyAlgo string
+	apiAddress       string
+	chainID          string
+	enableLogging    bool
+	grpcAddress      string
+	minGasPrices     string
+	numValidators    int
+	outputDir        string
+	printMnemonic    bool
+	rpcAddress       string
+	timeoutCommit    time.Duration
 }
 
 func addTestnetFlagsToCmd(cmd *cobra.Command) {
@@ -90,6 +94,7 @@ func addTestnetFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
 	cmd.Flags().String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
+	cmd.Flags().String(genutilcli.FlagConsensusKeyAlgo, cmttypes.ABCIPubKeyTypeEd25519, "algorithm for the validator consensus key (ed25519|secp256k1|bls12_381|ml_dsa_65)")
 
 	// support old flags name for backwards compatibility
 	cmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
@@ -156,6 +161,7 @@ Example:
 			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyType)
 			args.bondTokenDenom, _ = cmd.Flags().GetString(flagStakingDenom)
 			args.singleMachine, _ = cmd.Flags().GetBool(flagSingleHost)
+			args.consensusKeyAlgo, _ = cmd.Flags().GetString(genutilcli.FlagConsensusKeyAlgo)
 			config.Consensus.TimeoutCommit, err = cmd.Flags().GetDuration(flagCommitTimeout)
 			if err != nil {
 				return err
@@ -203,6 +209,7 @@ Example:
 			args.grpcAddress, _ = cmd.Flags().GetString(flagGRPCAddress)
 			args.printMnemonic, _ = cmd.Flags().GetBool(flagPrintMnemonic)
 			args.timeoutCommit, _ = cmd.Flags().GetDuration(flagCommitTimeout)
+			args.consensusKeyAlgo, _ = cmd.Flags().GetString(genutilcli.FlagConsensusKeyAlgo)
 
 			return startTestnet(cmd, args)
 		},
@@ -298,7 +305,7 @@ func initTestnetFiles(
 			}
 		}
 
-		nodeIDs[i], valPubKeys[i], err = genutil.InitializeNodeValidatorFiles(nodeConfig)
+		nodeIDs[i], valPubKeys[i], err = genutil.InitializeNodeValidatorFilesFromMnemonicWithKeyType(nodeConfig, "", args.consensusKeyAlgo)
 		if err != nil {
 			_ = os.RemoveAll(args.outputDir)
 			return err
@@ -393,7 +400,7 @@ func initTestnetFiles(
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), appConfig)
 	}
 
-	if err := initGenFiles(clientCtx, mm, args.chainID, genAccounts, genBalances, genFiles, args.numValidators); err != nil {
+	if err := initGenFiles(clientCtx, mm, args.chainID, genAccounts, genBalances, genFiles, args.numValidators, args.consensusKeyAlgo); err != nil {
 		return err
 	}
 
@@ -413,7 +420,7 @@ func initTestnetFiles(
 func initGenFiles(
 	clientCtx client.Context, mm module.BasicManager, chainID string,
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
-	genFiles []string, numValidators int,
+	genFiles []string, numValidators int, consensusKeyAlgo string,
 ) error {
 	appGenState := mm.DefaultGenesis(clientCtx.Codec)
 
@@ -446,6 +453,8 @@ func initGenFiles(
 	}
 
 	appGenesis := genutiltypes.NewAppGenesisWithVersion(chainID, appGenStateJSON)
+	appGenesis.Consensus.Params = cmttypes.DefaultConsensusParams()
+	appGenesis.Consensus.Params.Validator.PubKeyTypes = []string{consensusKeyAlgo}
 	// generate empty genesis files for each validator and save
 	for i := 0; i < numValidators; i++ {
 		if err := appGenesis.SaveAs(genFiles[i]); err != nil {
@@ -577,6 +586,7 @@ func startTestnet(cmd *cobra.Command, args startArgs) error {
 		networkConfig.ChainID = args.chainID
 	}
 	networkConfig.SigningAlgo = args.algo
+	networkConfig.ValidatorConsensusKeyType = args.consensusKeyAlgo
 	networkConfig.MinGasPrices = args.minGasPrices
 	networkConfig.NumValidators = args.numValidators
 	networkConfig.EnableLogging = args.enableLogging

@@ -29,19 +29,50 @@ func (k Keeper) ImportConsKeyRotations(ctx context.Context, histories []types.Co
 		if err != nil {
 			return err
 		}
-		oldConsAddr, err := k.consensusAddressCodec.StringToBytes(history.OldConsensusAddress)
-		if err != nil {
-			return err
+
+		// reconstruct the re-rotation rate-limit gate, present only while it is
+		// still inside the unbonding window.
+		if !history.MaturityTime.IsZero() {
+			if err := store.Set(types.GetConsKeyRotationQueueKey(history.MaturityTime, valAddr), []byte{}); err != nil {
+				return err
+			}
+			if err := store.Set(types.GetValidatorConsKeyRotationKey(valAddr), []byte{}); err != nil {
+				return err
+			}
 		}
 
-		if err := store.Set(types.GetConsKeyRotationQueueKey(history.MaturityTime, valAddr), oldConsAddr); err != nil {
-			return err
-		}
-		if err := store.Set(types.GetValidatorConsKeyRotationKey(valAddr), []byte{}); err != nil {
-			return err
-		}
-		if err := store.Set(types.GetRotationLockedConsAddrIndexKey(oldConsAddr), valAddr); err != nil {
-			return err
+		// reconstruct the historical evidence lock and its retirement queue entry.
+		//
+		// NOTE: EvidenceExpiryHeight is an absolute height, a zero-height
+		// export does not rebase it, so on a reset chain the height window
+		// never closes and the lock is retained until the preset absolute
+		// block height is reached. This is an accepted design decision as
+		// zero-height exports should be rare and even more rare if there are
+		// pending rotations happening during them. The outcome here is that a
+		// historical cons addr is locked for longer than necessary. If a chain
+		// operator requires them to be unlocked for some reason, they can
+		// manually edit the exported genesis file so they are not locked on
+		// import.
+		if history.OldConsensusAddress != "" {
+			oldConsAddr, err := k.consensusAddressCodec.StringToBytes(history.OldConsensusAddress)
+			if err != nil {
+				return err
+			}
+			if err := k.SetRotationLockedConsAddr(ctx, oldConsAddr, valAddr, types.ConsAddrLockRotatedFrom); err != nil {
+				return err
+			}
+			record := types.ConsKeyEvidenceExpiry{
+				ValidatorAddress: valAddr,
+				ExpiryTime:       history.EvidenceExpiryTime,
+				ExpiryHeight:     history.EvidenceExpiryHeight,
+			}
+			bz, err := k.cdc.Marshal(&record)
+			if err != nil {
+				return err
+			}
+			if err := store.Set(types.GetConsKeyEvidenceExpiryQueueKey(history.EvidenceExpiryTime, oldConsAddr), bz); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -60,7 +91,7 @@ func (k Keeper) ImportConsKeyRotations(ctx context.Context, histories []types.Co
 			return err
 		}
 
-		if err := store.Set(types.GetRotationLockedConsAddrIndexKey(sdk.ConsAddress(newPubKey.Address())), valAddr); err != nil {
+		if err := k.SetRotationLockedConsAddr(ctx, sdk.ConsAddress(newPubKey.Address()), valAddr, types.ConsAddrLockPendingTo); err != nil {
 			return err
 		}
 		if err := store.Set(types.GetConsKeyRotationApplyQueueKey(rotation.ApplyHeight, valAddr), newPubKeyBz); err != nil {
@@ -71,9 +102,82 @@ func (k Keeper) ImportConsKeyRotations(ctx context.Context, histories []types.Co
 	return nil
 }
 
-// ExportConsKeyRotationHistory returns consensus key rotation history records
-// that are still inside the unbonding window.
+// ExportConsKeyRotationHistory returns one record per rotated-away consensus key
+// whose evidence lock has not yet been retired, plus each validator's still
+// active re-rotation gate maturity. It walks the evidence-lock retirement queue
+// because that outlives the unbonding-keyed maturity queue.
 func (k Keeper) ExportConsKeyRotationHistory(ctx context.Context) (histories []types.ConsensusKeyRotationHistory, err error) {
+	// gate maturities are keyed per validator; collect them so each is emitted
+	// once, attached to the validator's first evidence-lock record below. Every
+	// active gate has an evidence-lock entry (both are written at rotation and
+	// the evidence lock always outlives the gate), so none is left unattached.
+	gateMaturity, err := k.consKeyRotationGateMaturities(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	store := k.storeService.OpenKVStore(ctx)
+	iterator, err := store.Iterator(types.ConsKeyEvidenceExpiryQueueKey, storetypes.PrefixEndBytes(types.ConsKeyEvidenceExpiryQueueKey))
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = errors.Join(err, iterator.Close())
+	}()
+
+	for ; iterator.Valid(); iterator.Next() {
+		// expiry_time is the queue key and is duplicated inside the record, so
+		// read it from the record below.
+		_, oldConsAddr, err := types.ParseConsKeyEvidenceExpiryQueueKey(iterator.Key())
+		if err != nil {
+			return nil, err
+		}
+		var record types.ConsKeyEvidenceExpiry
+		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
+			return nil, err
+		}
+
+		valAddrStr, err := k.validatorAddressCodec.BytesToString(record.ValidatorAddress)
+		if err != nil {
+			return nil, err
+		}
+		oldConsAddrStr, err := k.consensusAddressCodec.BytesToString(oldConsAddr)
+		if err != nil {
+			return nil, err
+		}
+
+		// attach the validator's gate maturity to its first record and clear it
+		// so the gate is reconstructed once on import. A zero time means the gate
+		// has already been retired.
+		//
+		// the reason we are doing this is because we may have multiple
+		// evidence expiry gates for a single validator, if they have rotated
+		// in multiple non overlapping unbonding periods that all fall within a
+		// single evidence expiry window. however they will still only ever
+		// have a single rotation within an unbonding period happening at a
+		// time. thus we recreate this relationship in the genesis export by
+		// having multiple ConsensusKeyRotationHistory entries (for the
+		// multiple evidence expiries we may be tracking for a validator), but
+		// only one will carry a non zero MaturityTime, to represent the single
+		// maturity lock that the validator is awaiting expiry on.
+		maturity := gateMaturity[valAddrStr]
+		delete(gateMaturity, valAddrStr)
+
+		histories = append(histories, types.ConsensusKeyRotationHistory{
+			ValidatorAddress:     valAddrStr,
+			OldConsensusAddress:  oldConsAddrStr,
+			MaturityTime:         maturity,
+			EvidenceExpiryTime:   record.ExpiryTime,
+			EvidenceExpiryHeight: record.ExpiryHeight,
+		})
+	}
+
+	return histories, nil
+}
+
+// consKeyRotationGateMaturities returns each validator's re-rotation rate-limit
+// maturity from the unbonding-keyed maturity queue.
+func (k Keeper) consKeyRotationGateMaturities(ctx context.Context) (maturities map[string]time.Time, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	iterator, err := store.Iterator(types.ConsKeyRotationQueueKey, storetypes.PrefixEndBytes(types.ConsKeyRotationQueueKey))
 	if err != nil {
@@ -83,6 +187,7 @@ func (k Keeper) ExportConsKeyRotationHistory(ctx context.Context) (histories []t
 		err = errors.Join(err, iterator.Close())
 	}()
 
+	maturities = make(map[string]time.Time)
 	for ; iterator.Valid(); iterator.Next() {
 		maturity, valAddr, err := types.ParseConsKeyRotationQueueKey(iterator.Key())
 		if err != nil {
@@ -92,19 +197,10 @@ func (k Keeper) ExportConsKeyRotationHistory(ctx context.Context) (histories []t
 		if err != nil {
 			return nil, err
 		}
-		oldConsAddrStr, err := k.consensusAddressCodec.BytesToString(iterator.Value())
-		if err != nil {
-			return nil, err
-		}
-
-		histories = append(histories, types.ConsensusKeyRotationHistory{
-			ValidatorAddress:    valAddrStr,
-			OldConsensusAddress: oldConsAddrStr,
-			MaturityTime:        maturity,
-		})
+		maturities[valAddrStr] = maturity
 	}
 
-	return histories, nil
+	return maturities, nil
 }
 
 // ExportPendingConsKeyRotations returns consensus key rotations whose deferred
@@ -217,8 +313,8 @@ func (k Keeper) HasConsKeyRotationInUnbondingWindow(ctx context.Context, valAddr
 
 // IsConsAddrLockedByRotation returns whether the given consensus address is
 // locked by a key rotation, either because some validator previously rotated
-// away from it (and is still inside the unbonding window) or because some
-// validator has enqueued a pending rotation targeting it.
+// away from it (and evidence for the old key can still be admitted) or because
+// some validator has enqueued a pending rotation targeting it.
 func (k Keeper) IsConsAddrLockedByRotation(ctx context.Context, consAddr sdk.ConsAddress) (bool, error) {
 	return k.storeService.OpenKVStore(ctx).Has(types.GetRotationLockedConsAddrIndexKey(consAddr))
 }
@@ -282,16 +378,25 @@ func (k Keeper) SetConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress, 
 
 	store := k.storeService.OpenKVStore(ctx)
 
-	// add to queue keyed by time so that we can iterate rotations happening by
-	// time and quickly remove ones that have matured (fallen out of the
-	// current unbonding period).
-	if err := store.Set(types.GetConsKeyRotationQueueKey(maturesAt, valAddr), oldConsAddr); err != nil {
+	// add to the maturity queue keyed by time so the end blocker can iterate
+	// rotations by time and retire the re-rotation rate limit once a rotation
+	// falls out of the current unbonding period. The value is unused; the
+	// per-validator marker below carries the rate-limit state.
+	if err := store.Set(types.GetConsKeyRotationQueueKey(maturesAt, valAddr), []byte{}); err != nil {
 		return err
 	}
 
 	// mark this validator has having rotated (used to block future rotation
 	// for this validator within the current unbonding period).
 	if err := store.Set(types.GetValidatorConsKeyRotationKey(valAddr), []byte{}); err != nil {
+		return err
+	}
+
+	// enqueue retirement of the old key's historical evidence lock. It is kept
+	// on its own schedule, longer than the unbonding-keyed queue above, because
+	// equivocation evidence for the rotated-away key stays admissible until both
+	// its time and its block-height windows close.
+	if err := k.setConsKeyEvidenceExpiry(ctx, valAddr, oldConsAddr); err != nil {
 		return err
 	}
 
@@ -814,21 +919,28 @@ func (k Keeper) PendingConsKeyRotations(ctx context.Context) (rotations PendingR
 	return rotations, nil
 }
 
-// PruneMaturedConsKeyRotations removes every rotation whose unbonding window
-// has elapsed at the current block time. It deletes the entries from the
-// maturity queue, the per validator pending index, and the rotated consensus
-// address index.
+// PruneMaturedConsKeyRotations retires consensus key rotation state whose
+// windows have elapsed at the current block. It removes the maturity-queue
+// entry and the per validator re-rotation gate once a rotation leaves the
+// unbonding window, and separately retires a rotated-away key's historical
+// evidence lock once equivocation evidence for it can no longer be admitted
+// (both the time and the block-height window closed).
 func (k Keeper) PruneMaturedConsKeyRotations(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockHeader().Time
+	blockHeight := sdkCtx.BlockHeader().Height
 
 	keys, err := k.maturedConsKeyRotationKeys(ctx, blockTime)
 	if err != nil {
 		return err
 	}
+	evidenceKeys, err := k.maturedConsKeyEvidenceLockKeys(ctx, blockTime, blockHeight)
+	if err != nil {
+		return err
+	}
 
 	store := k.storeService.OpenKVStore(ctx)
-	for _, key := range keys {
+	for _, key := range append(keys, evidenceKeys...) {
 		if err := store.Delete(key); err != nil {
 			return err
 		}
@@ -837,7 +949,8 @@ func (k Keeper) PruneMaturedConsKeyRotations(ctx context.Context) error {
 }
 
 // maturedConsKeyRotationKeys walks the maturity queue up to blockTime and
-// returns the full set of keys to delete to retire each matured rotation.
+// returns the keys to delete to retire the re-rotation rate limit of each
+// rotation that has left the unbonding window.
 func (k Keeper) maturedConsKeyRotationKeys(ctx context.Context, blockTime time.Time) (keys [][]byte, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	iterator, err := store.Iterator(
@@ -856,11 +969,60 @@ func (k Keeper) maturedConsKeyRotationKeys(ctx context.Context, blockTime time.T
 		if err != nil {
 			return nil, err
 		}
-		oldConsAddr := sdk.ConsAddress(iterator.Value())
-
 		keys = append(keys,
 			types.GetConsKeyRotationQueueKey(maturity, valAddr),
 			types.GetValidatorConsKeyRotationKey(valAddr),
+		)
+	}
+	return keys, nil
+}
+
+// maturedConsKeyEvidenceLockKeys walks the evidence-lock retirement queue up to
+// blockTime and returns the keys to delete for each rotated-away key whose
+// block-height window has also closed at blockHeight.
+func (k Keeper) maturedConsKeyEvidenceLockKeys(ctx context.Context, blockTime time.Time, blockHeight int64) (keys [][]byte, err error) {
+	store := k.storeService.OpenKVStore(ctx)
+
+	// the queue is keyed by the time window, so iterating up to blockTime yields
+	// the entries whose time window has passed
+	iterator, err := store.Iterator(
+		types.ConsKeyEvidenceExpiryQueueKey,
+		storetypes.PrefixEndBytes(types.GetConsKeyEvidenceExpiryQueueTimePrefix(blockTime)),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = errors.Join(err, iterator.Close())
+	}()
+
+	for ; iterator.Valid(); iterator.Next() {
+		expiryTime, oldConsAddr, err := types.ParseConsKeyEvidenceExpiryQueueKey(iterator.Key())
+		if err != nil {
+			return nil, err
+		}
+		if !blockTime.After(expiryTime) {
+			// time window closes strictly after expiryTime; the iterator bound
+			// includes the boundary, so skip an exact match.
+			continue
+		}
+
+		var record types.ConsKeyEvidenceExpiry
+		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
+			return nil, err
+		}
+
+		// a real expiry height is applyHeight + MaxAgeNumBlocks and so is always
+		// positive; a zero height marks the no-evidence-params fallback, where
+		// retirement is time-only and the height dimension does not gate.
+		if record.ExpiryHeight != 0 && blockHeight <= record.ExpiryHeight {
+			// evidence can still be admitted on the height dimension; keep the
+			// lock and re-check on a later block.
+			continue
+		}
+
+		keys = append(keys,
+			types.GetConsKeyEvidenceExpiryQueueKey(expiryTime, oldConsAddr),
 			types.GetRotationLockedConsAddrIndexKey(oldConsAddr),
 		)
 	}
@@ -873,8 +1035,62 @@ func rotationApplyHeight(ctx context.Context) int64 {
 	return sdk.UnwrapSDKContext(ctx).BlockHeight() + types.ConsensusUpdateDelay
 }
 
+// setConsKeyEvidenceExpiry enqueues retirement of the RotatedFrom lock on
+// oldConsAddr once equivocation evidence for the rotated-away key can no longer
+// be admitted.
+//
+// Known limitation: the horizon is fixed from the evidence params at rotation
+// time and is never revised. A later governance change that lengthens the
+// evidence window does not extend already-enqueued rotations, so evidence
+// re-admitted by such a change after this lock has expired is not attributable.
+func (k Keeper) setConsKeyEvidenceExpiry(ctx context.Context, valAddr sdk.ValAddress, oldConsAddr sdk.ConsAddress) error {
+	expiry, err := k.rotationEvidenceExpiry(ctx, valAddr)
+	if err != nil {
+		return err
+	}
+
+	bz, err := k.cdc.Marshal(&expiry)
+	if err != nil {
+		return err
+	}
+	return k.storeService.OpenKVStore(ctx).Set(types.GetConsKeyEvidenceExpiryQueueKey(expiry.ExpiryTime, oldConsAddr), bz)
+}
+
+// rotationEvidenceExpiry returns when a rotation should expire from an
+// evidence perspective. A rotation is expired once equivocation evidence
+// cannot be submitted against the validator on a different key than the key
+// they are rotating away from.
+//
+// Note that this is calculated strictly at the time of the rotation. The
+// parameters around how long evidence is valid may change mid rotation,
+// however these rotation evidence expiry values are never updated once set.
+func (k Keeper) rotationEvidenceExpiry(ctx context.Context, valAddr sdk.ValAddress) (types.ConsKeyEvidenceExpiry, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	unbondingTime, err := k.UnbondingTime(ctx)
+	if err != nil {
+		return types.ConsKeyEvidenceExpiry{}, err
+	}
+
+	expiryWindow := unbondingTime
+	var expiryHeight int64
+	if ev := sdkCtx.ConsensusParams().Evidence; ev != nil {
+		if ev.MaxAgeDuration > expiryWindow {
+			expiryWindow = ev.MaxAgeDuration
+		}
+		expiryHeight = rotationApplyHeight(ctx) + ev.MaxAgeNumBlocks
+	}
+	expiryTime := sdkCtx.BlockHeader().Time.Add(expiryWindow)
+
+	return types.ConsKeyEvidenceExpiry{
+		ValidatorAddress: valAddr,
+		ExpiryTime:       expiryTime,
+		ExpiryHeight:     expiryHeight,
+	}, nil
+}
+
 // rotationMaturityTime returns the time that a rotation will mature at given
-// the current context.
+// the current context. A rotation matures once the unbonding period has
+// elapsed.
 func (k Keeper) rotationMaturityTime(ctx context.Context) (time.Time, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	unbondingTime, err := k.UnbondingTime(ctx)

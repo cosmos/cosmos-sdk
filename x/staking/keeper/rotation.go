@@ -24,6 +24,31 @@ import (
 func (k Keeper) ImportConsKeyRotations(ctx context.Context, histories []types.ConsensusKeyRotationHistory, pending []types.PendingConsensusKeyRotation) error {
 	store := k.storeService.OpenKVStore(ctx)
 
+	hasPending := make(map[string]bool, len(pending))
+	for _, rotation := range pending {
+		valAddr, err := k.validatorAddressCodec.StringToBytes(rotation.ValidatorAddress)
+		if err != nil {
+			return err
+		}
+		hasPending[string(valAddr)] = true
+
+		var newPubKey cryptotypes.PubKey
+		if err := k.cdc.UnpackAny(rotation.NewPubkey, &newPubKey); err != nil {
+			return err
+		}
+		newPubKeyBz, err := k.cdc.MarshalInterface(newPubKey)
+		if err != nil {
+			return err
+		}
+
+		if err := k.SetRotationLockedConsAddr(ctx, sdk.ConsAddress(newPubKey.Address()), valAddr, types.ConsAddrLockPendingTo); err != nil {
+			return err
+		}
+		if err := store.Set(types.GetConsKeyRotationApplyQueueKey(rotation.ApplyHeight, valAddr), newPubKeyBz); err != nil {
+			return err
+		}
+	}
+
 	for _, history := range histories {
 		valAddr, err := k.validatorAddressCodec.StringToBytes(history.ValidatorAddress)
 		if err != nil {
@@ -41,26 +66,33 @@ func (k Keeper) ImportConsKeyRotations(ctx context.Context, histories []types.Co
 			}
 		}
 
-		// reconstruct the historical evidence lock and its retirement queue entry.
+		// reconstruct the historical evidence lock and its retirement queue
+		// entry.
 		//
-		// NOTE: EvidenceExpiryHeight is an absolute height, a zero-height
-		// export does not rebase it, so on a reset chain the height window
-		// never closes and the lock is retained until the preset absolute
-		// block height is reached. This is an accepted design decision as
-		// zero-height exports should be rare and even more rare if there are
-		// pending rotations happening during them. The outcome here is that a
-		// historical cons addr is locked for longer than necessary. If a chain
-		// operator requires them to be unlocked for some reason, they can
-		// manually edit the exported genesis file so they are not locked on
-		// import.
+		// NOTE: EvidenceExpiryHeight is an absolute height, a zero-height export
+		// does not rebase it, so on a reset chain the height window never closes
+		// and the lock is retained until the preset absolute block height is
+		// reached. This is an accepted design decision as zero-height exports
+		// should be rare, and even more so with pending rotations happening during
+		// them. The outcome is that a historical cons addr is locked for longer
+		// than necessary. A chain operator can manually edit the exported genesis
+		// file to unlock them on import if required.
 		if history.OldConsensusAddress != "" {
 			oldConsAddr, err := k.consensusAddressCodec.StringToBytes(history.OldConsensusAddress)
 			if err != nil {
 				return err
 			}
-			if err := k.SetRotationLockedConsAddr(ctx, oldConsAddr, valAddr, types.ConsAddrLockRotatedFrom); err != nil {
+
+			// the lock is PendingFrom while a rotation for this validator is still
+			// pending apply, and RotatedFrom once it has been applied.
+			kind := types.ConsAddrLockRotatedFrom
+			if hasPending[string(valAddr)] {
+				kind = types.ConsAddrLockPendingFrom
+			}
+			if err := k.SetRotationLockedConsAddr(ctx, oldConsAddr, valAddr, kind); err != nil {
 				return err
 			}
+
 			record := types.ConsKeyEvidenceExpiry{
 				ValidatorAddress: valAddr,
 				ExpiryTime:       history.EvidenceExpiryTime,
@@ -73,29 +105,6 @@ func (k Keeper) ImportConsKeyRotations(ctx context.Context, histories []types.Co
 			if err := store.Set(types.GetConsKeyEvidenceExpiryQueueKey(history.EvidenceExpiryTime, oldConsAddr), bz); err != nil {
 				return err
 			}
-		}
-	}
-
-	for _, rotation := range pending {
-		valAddr, err := k.validatorAddressCodec.StringToBytes(rotation.ValidatorAddress)
-		if err != nil {
-			return err
-		}
-
-		var newPubKey cryptotypes.PubKey
-		if err := k.cdc.UnpackAny(rotation.NewPubkey, &newPubKey); err != nil {
-			return err
-		}
-		newPubKeyBz, err := k.cdc.MarshalInterface(newPubKey)
-		if err != nil {
-			return err
-		}
-
-		if err := k.SetRotationLockedConsAddr(ctx, sdk.ConsAddress(newPubKey.Address()), valAddr, types.ConsAddrLockPendingTo); err != nil {
-			return err
-		}
-		if err := store.Set(types.GetConsKeyRotationApplyQueueKey(rotation.ApplyHeight, valAddr), newPubKeyBz); err != nil {
-			return err
 		}
 	}
 

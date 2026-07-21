@@ -538,13 +538,8 @@ func (app *BaseApp) GetMaximumBlockGas(ctx sdk.Context) uint64 {
 		return 0
 	}
 
-	maxGas := cp.Block.MaxGas
-
-	switch {
-	case maxGas < -1:
-		panic(fmt.Sprintf("invalid maximum block gas: %d", maxGas))
-
-	case maxGas == -1:
+	switch maxGas := validateMaxGas(cp.Block.MaxGas); maxGas {
+	case -1:
 		return 0
 
 	default:

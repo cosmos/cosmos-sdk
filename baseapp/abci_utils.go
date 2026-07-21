@@ -245,16 +245,21 @@ func gasWithinBudget(txGas, totalTxGas, maxGas uint64) bool {
 	return txGas <= maxGas-totalTxGas
 }
 
-// blockMaxGas panics on invalid negative MaxGas, matching BaseApp.GetMaximumBlockGas.
+// validateMaxGas panics if maxGas is an invalid CometBFT MaxGas value.
+func validateMaxGas(maxGas int64) int64 {
+	if maxGas < -1 {
+		panic(fmt.Sprintf("invalid maximum block gas: %d", maxGas))
+	}
+	return maxGas
+}
+
+// blockMaxGas returns the consensus MaxGas for the block, or 0 if unset.
 func blockMaxGas(ctx sdk.Context) int64 {
 	b := ctx.ConsensusParams().Block
 	if b == nil {
 		return 0
 	}
-	if b.MaxGas < -1 {
-		panic(fmt.Sprintf("invalid maximum block gas: %d", b.MaxGas))
-	}
-	return b.MaxGas
+	return validateMaxGas(b.MaxGas)
 }
 
 // SetTxSelector sets the TxSelector function on the DefaultProposalHandler.
@@ -289,10 +294,7 @@ func (h *DefaultProposalHandler) SetSignerExtractionAdapter(signerExtAdapter mem
 // FIFO order.
 func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
-		var maxBlockGas uint64
-		if b := ctx.ConsensusParams().Block; b != nil {
-			maxBlockGas = uint64(b.MaxGas)
-		}
+		maxBlockGas := uint64(blockMaxGas(ctx))
 
 		defer h.txSelector.Clear()
 
@@ -478,14 +480,6 @@ func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHan
 func NoOpPrepareProposal() sdk.PrepareProposalHandler {
 	return func(_ sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 		return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
-	}
-}
-
-// NoOpProcessProposal defines a no-op ProcessProposal Handler. It will always
-// return ACCEPT.
-func NoOpProcessProposal() sdk.ProcessProposalHandler {
-	return func(_ sdk.Context, _ *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
-		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
 	}
 }
 

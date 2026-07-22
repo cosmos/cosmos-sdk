@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtsecp256k1eth "github.com/cometbft/cometbft/crypto/secp256k1eth"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -32,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa65"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1eth"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/client/cli"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/keeper"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
@@ -131,6 +133,26 @@ func WithMlDsa65Support() ModuleOption {
 	return func(appModule *AppModule) {
 		appModule.pubkeyFactory[string(hd.MlDsa65Type)] = func(cdc codec.Codec, bz []byte) *codectypes.Any {
 			pubKey := &mldsa65.PubKey{
+				Key: bz,
+			}
+			anyPK, err := codectypes.NewAnyWithValue(pubKey)
+			if err != nil {
+				panic(err)
+			}
+
+			return anyPK
+		}
+	}
+}
+
+// WithSecp256k1EthSupport adds secp256k1eth pubkey support to the PoA module.
+// This is needed when you want to create validators with secp256k1eth keys.
+// IMPORTANT: You must also enable secp256k1eth in the consensus params by setting
+// consensus.params.validator.pub_key_types to include "secp256k1eth" in your genesis.
+func WithSecp256k1EthSupport() ModuleOption {
+	return func(appModule *AppModule) {
+		appModule.pubkeyFactory[cmtsecp256k1eth.KeyType] = func(cdc codec.Codec, bz []byte) *codectypes.Any {
+			pubKey := &secp256k1eth.PubKey{
 				Key: bz,
 			}
 			anyPK, err := codectypes.NewAnyWithValue(pubKey)

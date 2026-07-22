@@ -44,6 +44,7 @@ var (
 	DefaultRestPort      = 8080
 	DefaultGrpcPort      = 9090
 	DefaultP2PPort       = 16656
+	DefaultPprofPort     = 6060
 )
 
 type TestnetInitializer interface {
@@ -427,7 +428,11 @@ func (s *SystemUnderTest) StartNodes(t *testing.T, nodeIDs ...int) error {
 		}
 
 		home := s.nodePath(nodeID)
-		args := []string{"start", "--log_level=info", "--log_no_color", "--home=" + home}
+		args := []string{
+			"start", "--log_level=info", "--log_no_color",
+			fmt.Sprintf("--rpc.pprof_laddr=localhost:%d", DefaultPprofPort+nodeID),
+			"--home=" + home,
+		}
 
 		s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))
 		cmd := exec.Command( //nolint:gosec // used by tests only
@@ -863,7 +868,9 @@ func RunShellCmd(cmd string, args ...string) (string, error) {
 func (s *SystemUnderTest) startNodesAsync(t *testing.T, xargs ...string) {
 	t.Helper()
 	s.withEachNodeHome(func(i int, home string) {
-		args := append(xargs, "--home="+home)
+		// per-node pprof port: node configs may share one (legacy testnet init or
+		// copied config.toml) and CometBFT fails startup on a pprof bind conflict
+		args := append(xargs, fmt.Sprintf("--rpc.pprof_laddr=localhost:%d", DefaultPprofPort+i), "--home="+home)
 		s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))
 		cmd := exec.Command( //nolint:gosec // used by tests only
 			locateExecutable(s.execBinary),
@@ -1019,6 +1026,7 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 		fmt.Sprintf("--p2p.laddr=tcp://localhost:%d", node.P2PPort),
 		fmt.Sprintf("--rpc.laddr=tcp://localhost:%d", node.RPCPort),
 		fmt.Sprintf("--grpc.address=localhost:%d", DefaultGrpcPort+nodeNumber),
+		fmt.Sprintf("--rpc.pprof_laddr=localhost:%d", DefaultPprofPort+nodeNumber),
 		"--p2p.pex=false",
 		"--moniker=" + moniker,
 		"--log_level=info",

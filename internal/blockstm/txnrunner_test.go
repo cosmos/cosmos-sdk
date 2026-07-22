@@ -410,6 +410,7 @@ func TestPreEstimates(t *testing.T) {
 		require.Nil(t, estimates[0])
 
 		require.NotNil(t, memTxs[1])
+		require.NotNil(t, estimates[1])
 	})
 
 	t.Run("parallel processing with multiple workers", func(t *testing.T) {

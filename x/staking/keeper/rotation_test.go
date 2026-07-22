@@ -92,6 +92,14 @@ func (s *KeeperTestSuite) TestApplyConsKeyRotationState() {
 
 		_, err = s.stakingKeeper.GetValidatorByConsAddr(s.ctx, sdk.ConsAddress(oldPk.Address()))
 		require.Error(err)
+
+		var emitted bool
+		for _, e := range s.ctx.EventManager().Events() {
+			if e.Type == stakingtypes.EventTypeApplyConsPubKeyRotation {
+				emitted = true
+			}
+		}
+		require.True(emitted, "expected %s event", stakingtypes.EventTypeApplyConsPubKeyRotation)
 	})
 
 	s.T().Run("returns nil when validator no longer exists", func(t *testing.T) {

@@ -708,5 +708,26 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, err
 	}
 
+	maturesAt, err := k.rotationMaturityTime(ctx)
+	if err != nil {
+		return nil, err
+	}
+	evidenceExpiry, err := k.rotationEvidenceExpiry(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	attrs := []sdk.Attribute{
+		sdk.NewAttribute(types.AttributeKeyApplyHeight, strconv.FormatInt(rotationApplyHeight(ctx), 10)),
+		sdk.NewAttribute(types.AttributeKeyMaturityTime, maturesAt.Format(time.RFC3339)),
+		sdk.NewAttribute(types.AttributeKeyEvidenceExpiryTime, evidenceExpiry.ExpiryTime.Format(time.RFC3339)),
+		sdk.NewAttribute(types.AttributeKeyEvidenceExpiryHeight, strconv.FormatInt(evidenceExpiry.ExpiryHeight, 10)),
+		sdk.NewAttribute(types.AttributeKeyFeeBurned, keyRotationFee.String()),
+	}
+	err = k.emitConsKeyRotationEvent(ctx, types.EventTypeRotateConsPubKey, valAddr, sdk.ConsAddress(oldPk.Address()), newConsAddr, attrs...)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.MsgRotateConsPubKeyResponse{}, nil
 }

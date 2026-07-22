@@ -539,7 +539,46 @@ func (k Keeper) ApplyConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress
 	if err := k.SetRotationLockedConsAddr(ctx, oldConsAddr, valAddr, types.ConsAddrLockRotatedFrom); err != nil {
 		return err
 	}
+
+	if err := k.emitConsKeyRotationEvent(ctx, types.EventTypeApplyConsPubKeyRotation, valAddr, oldConsAddr, newConsAddr); err != nil {
+		return err
+	}
+
 	return k.Hooks().AfterValidatorConsKeyUpdated(ctx, oldConsAddr, newConsAddr, valAddr)
+}
+
+// emitConsKeyRotationEvent emits a consensus key rotation event of the given
+// type carrying the validator and old/new consensus addresses, plus any extra
+// attributes.
+func (k Keeper) emitConsKeyRotationEvent(
+	ctx context.Context,
+	event string,
+	valAddr sdk.ValAddress,
+	oldConsAddr sdk.ConsAddress,
+	newConsAddr sdk.ConsAddress,
+	attributes ...sdk.Attribute,
+) error {
+	valAddrStr, err := k.validatorAddressCodec.BytesToString(valAddr)
+	if err != nil {
+		return err
+	}
+	oldConsAddrStr, err := k.consensusAddressCodec.BytesToString(oldConsAddr)
+	if err != nil {
+		return err
+	}
+	newConsAddrStr, err := k.consensusAddressCodec.BytesToString(newConsAddr)
+	if err != nil {
+		return err
+	}
+
+	attrs := append([]sdk.Attribute{
+		sdk.NewAttribute(types.AttributeKeyValidator, valAddrStr),
+		sdk.NewAttribute(types.AttributeKeyOldConsAddr, oldConsAddrStr),
+		sdk.NewAttribute(types.AttributeKeyNewConsAddr, newConsAddrStr),
+	}, attributes...)
+
+	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvent(sdk.NewEvent(event, attrs...))
+	return nil
 }
 
 // PendingConsKeyRotationUpdate stores the rotation metadata needed to align

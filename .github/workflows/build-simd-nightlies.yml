@@ -84,6 +84,7 @@ jobs:
       id-token: write
       contents: read
       actions: read
+      attestations: read
 
     steps:
       - uses: actions/checkout@v6
@@ -162,6 +163,28 @@ jobs:
           .github/nightlies/build-site.sh \
             "${{ steps.channel.outputs.channel }}" \
             "${{ steps.channel.outputs.is_main }}"
+
+      - name: Verify provenance of site binaries
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          EXPECTED_WORKFLOW: .github/workflows/build-simd-nightlies.yml
+        run: |
+          set -euo pipefail
+          shopt -s nullglob globstar
+
+          archives=(site/**/*.tar.gz)
+          if [ ${#archives[@]} -eq 0 ]; then
+            echo "No binaries found under site/ to verify"
+            exit 0
+          fi
+
+          for archive in "${archives[@]}"; do
+            echo "Verifying provenance for $archive"
+            gh attestation verify "$archive" \
+              --repo "$REPO" \
+              --signer-workflow "$REPO/$EXPECTED_WORKFLOW"
+          done
 
       - uses: actions/configure-pages@v6
 

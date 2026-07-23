@@ -164,20 +164,21 @@ jobs:
             "${{ steps.channel.outputs.channel }}" \
             "${{ steps.channel.outputs.is_main }}"
 
-      - name: Verify provenance of site binaries
+      - name: Verify provenance of freshly built binaries
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
+          CHANNEL: ${{ steps.channel.outputs.channel }}
           EXPECTED_WORKFLOW: .github/workflows/build-simd-nightlies.yml
         run: |
           set -euo pipefail
-          shopt -s nullglob globstar
+          shopt -s nullglob
 
-          archives=(site/**/*.tar.gz)
+          archives=(site/nightlies/"$CHANNEL"/*.tar.gz)
           if [ ${#archives[@]} -eq 0 ]; then
-            echo "No binaries found under site/ to verify"
-            exit 0
+            echo "No freshly built binaries found for channel $CHANNEL to verify"
+            exit 1
           fi
 
           for archive in "${archives[@]}"; do

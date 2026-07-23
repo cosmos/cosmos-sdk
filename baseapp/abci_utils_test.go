@@ -2,6 +2,9 @@ package baseapp_test
 
 import (
 	"bytes"
+	"context"
+	"errors"
+	"math"
 	"sort"
 	"testing"
 
@@ -746,8 +749,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_RejectsOverGasTxs() {
 			app.EXPECT().PrepareProposalVerifyTx(tx).Return(bz, nil).AnyTimes()
 			app.EXPECT().ProcessProposalVerifyTx(bz).Return(tx, tc.recordedGas, nil).AnyTimes()
 
-			// ProcessProposalHandler short-circuits to NoOp when mempool is nil/NoOp,
-			// so use a real one. The Insert is what Prepare reads; Process ignores it.
+			// Use a real mempool so ProcessProposalHandler runs full ante-based gas accounting.
 			mp := mempool.NewPriorityMempool(mempool.DefaultPriorityNonceMempoolConfig())
 			s.Require().NoError(mp.Insert(
 				s.ctx.WithPriority(1), tx,
@@ -770,6 +772,120 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_RejectsOverGasTxs() {
 				"ProcessProposal should have rejected the over-gas block")
 		})
 	}
+}
+
+// Enforces MaxBlockGas via declared tx gas only — no ante-handler available in the NoOp mempool path.
+func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolRejectsOverGas() {
+	cases := []struct {
+		name        string
+		declaredGas uint64
+		maxBlockGas int64
+		wantStatus  abci.ResponseProcessProposal_ProposalStatus
+	}{
+		{"exceeds-max", 200, 100, abci.ResponseProcessProposal_REJECT},
+		{"at-max", 100, 100, abci.ResponseProcessProposal_ACCEPT},
+		{"under-max", 50, 100, abci.ResponseProcessProposal_ACCEPT},
+		{"no-limit", 9999, -1, abci.ResponseProcessProposal_ACCEPT},
+		{"zero-limit", 9999, 0, abci.ResponseProcessProposal_ACCEPT},
+	}
+	for _, tc := range cases {
+		s.Run(tc.name, func() {
+			tx, bz := s.buildSignedTx(tc.declaredGas)
+			ctx := s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+				Block: &cmtproto.BlockParams{MaxGas: tc.maxBlockGas},
+			})
+
+			app := mock.NewMockProposalTxVerifier(gomock.NewController(s.T()))
+			app.EXPECT().TxDecode(bz).Return(tx, nil).AnyTimes()
+
+			ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app)
+			resp, err := ph.ProcessProposalHandler()(ctx, &abci.RequestProcessProposal{Txs: [][]byte{bz}})
+			s.Require().NoError(err)
+			s.Require().Equal(tc.wantStatus, resp.Status)
+		})
+	}
+}
+
+// Individually-fine txs whose gas sums past MaxGas must still be rejected — the core byzantine proposer scenario.
+func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolRejectsMultiTxOverGas() {
+	tx1, bz1 := s.buildSignedTx(60)
+	tx2, bz2 := s.buildSignedTx(50) // sum = 110 > MaxGas=100
+
+	ctx := s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{MaxGas: 100},
+	})
+
+	app := mock.NewMockProposalTxVerifier(gomock.NewController(s.T()))
+	app.EXPECT().TxDecode(bz1).Return(tx1, nil).AnyTimes()
+	app.EXPECT().TxDecode(bz2).Return(tx2, nil).AnyTimes()
+
+	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app)
+	resp, err := ph.ProcessProposalHandler()(ctx, &abci.RequestProcessProposal{Txs: [][]byte{bz1, bz2}})
+	s.Require().NoError(err)
+	s.Require().Equal(abci.ResponseProcessProposal_REJECT, resp.Status)
+}
+
+func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolRejectsOnDecodeError() {
+	ctx := s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{MaxGas: 100},
+	})
+
+	corruptBz := []byte("not-a-valid-tx")
+	app := mock.NewMockProposalTxVerifier(gomock.NewController(s.T()))
+	app.EXPECT().TxDecode(corruptBz).Return(nil, errors.New("decode error")).AnyTimes()
+
+	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app)
+	resp, err := ph.ProcessProposalHandler()(ctx, &abci.RequestProcessProposal{Txs: [][]byte{corruptBz}})
+	s.Require().NoError(err)
+	s.Require().Equal(abci.ResponseProcessProposal_REJECT, resp.Status)
+}
+
+// Crafted declared gas must not wrap totalTxGas past a uint64 overflow to slip under MaxBlockGas.
+func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolRejectsOverflowGas() {
+	const maxBlockGas = 100
+	tx1, bz1 := s.buildSignedTx(maxBlockGas)
+	tx2, bz2 := s.buildSignedTx(math.MaxUint64 - maxBlockGas + 1)
+
+	ctx := s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{MaxGas: maxBlockGas},
+	})
+
+	app := mock.NewMockProposalTxVerifier(gomock.NewController(s.T()))
+	app.EXPECT().TxDecode(bz1).Return(tx1, nil).AnyTimes()
+	app.EXPECT().TxDecode(bz2).Return(tx2, nil).AnyTimes()
+
+	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app)
+	resp, err := ph.ProcessProposalHandler()(ctx, &abci.RequestProcessProposal{Txs: [][]byte{bz1, bz2}})
+	s.Require().NoError(err)
+	s.Require().Equal(abci.ResponseProcessProposal_REJECT, resp.Status)
+}
+
+func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_ProcessProposalPanicsOnInvalidMaxGas() {
+	ctx := s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{MaxGas: -2},
+	})
+
+	app := mock.NewMockProposalTxVerifier(gomock.NewController(s.T()))
+	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app)
+
+	s.Require().Panics(func() {
+		_, _ = ph.ProcessProposalHandler()(ctx, &abci.RequestProcessProposal{})
+	})
+}
+
+func (s *ABCIUtilsTestSuite) TestDefaultTxSelector_SelectTxForProposalRejectsOverflowGas() {
+	const maxBlockGas = 100
+	tx1, bz1 := s.buildSignedTx(maxBlockGas)
+	tx2, bz2 := s.buildSignedTx(math.MaxUint64 - maxBlockGas + 1)
+	maxTxBytes := uint64(len(bz1)+len(bz2)) * 2
+
+	ts := baseapp.NewDefaultTxSelector()
+	ts.SelectTxForProposal(context.Background(), maxTxBytes, maxBlockGas, tx1, bz1, maxBlockGas)
+	ts.SelectTxForProposal(context.Background(), maxTxBytes, maxBlockGas, tx2, bz2, math.MaxUint64-maxBlockGas+1)
+
+	got := ts.SelectedTxs(context.Background())
+	s.Require().Len(got, 1, "overflow tx must not be selected")
+	s.Require().Equal(bz1, got[0])
 }
 
 func marshalDelimitedFn(msg proto.Message) ([]byte, error) {

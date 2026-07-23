@@ -1112,7 +1112,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					MaxEntries:        stakingtypes.DefaultMaxEntries,
 					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
 					BondDenom:         stakingtypes.BondStatusBonded,
-					KeyRotationFee:    stakingtypes.DefaultKeyRotationFee,
+					KeyRotationFee:    sdk.NewCoin(sdk.DefaultBondDenom, stakingtypes.DefaultKeyRotationFeeAmount),
 				},
 			},
 			expErr:    true,
@@ -1129,7 +1129,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					MaxEntries:        stakingtypes.DefaultMaxEntries,
 					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
 					BondDenom:         stakingtypes.BondStatusBonded,
-					KeyRotationFee:    stakingtypes.DefaultKeyRotationFee,
+					KeyRotationFee:    sdk.NewCoin(sdk.DefaultBondDenom, stakingtypes.DefaultKeyRotationFeeAmount),
 				},
 			},
 			expErr:    true,
@@ -1146,7 +1146,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					MaxEntries:        stakingtypes.DefaultMaxEntries,
 					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
 					BondDenom:         "",
-					KeyRotationFee:    stakingtypes.DefaultKeyRotationFee,
+					KeyRotationFee:    sdk.NewCoin(sdk.DefaultBondDenom, stakingtypes.DefaultKeyRotationFeeAmount),
 				},
 			},
 			expErr:    true,
@@ -1163,7 +1163,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					MaxEntries:        stakingtypes.DefaultMaxEntries,
 					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
 					BondDenom:         "ghosttoken",
-					KeyRotationFee:    stakingtypes.DefaultKeyRotationFee,
+					KeyRotationFee:    sdk.NewInt64Coin("ghosttoken", 1000000),
 				},
 			},
 			expErr:    true,
@@ -1183,7 +1183,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					MaxEntries:        stakingtypes.DefaultMaxEntries,
 					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
 					BondDenom:         stakingtypes.BondStatusBonded,
-					KeyRotationFee:    stakingtypes.DefaultKeyRotationFee,
+					KeyRotationFee:    sdk.NewCoin(sdk.DefaultBondDenom, stakingtypes.DefaultKeyRotationFeeAmount),
 				},
 			},
 			expErr:    true,
@@ -1200,7 +1200,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					MaxEntries:        0,
 					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
 					BondDenom:         stakingtypes.BondStatusBonded,
-					KeyRotationFee:    stakingtypes.DefaultKeyRotationFee,
+					KeyRotationFee:    sdk.NewCoin(sdk.DefaultBondDenom, stakingtypes.DefaultKeyRotationFeeAmount),
 				},
 			},
 			expErr:    true,
@@ -1217,7 +1217,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
 					MinCommissionRate: stakingtypes.DefaultMinCommissionRate,
 					BondDenom:         "denom",
-					KeyRotationFee:    stakingtypes.DefaultKeyRotationFee,
+					KeyRotationFee:    sdk.NewCoin(sdk.DefaultBondDenom, stakingtypes.DefaultKeyRotationFeeAmount),
 				},
 			},
 			expErr:    true,
@@ -1385,7 +1385,7 @@ func (s *KeeperTestSuite) TestMsgRotateConsPubKey() {
 			newRotateConsPubKeyMsg: func() *stakingtypes.MsgRotateConsPubKey {
 				// submit a valid rotation for valAddr
 				valAddr, _ := createValidator(stakingtypes.Bonded)
-				feeCoins := sdk.NewCoins(stakingtypes.DefaultKeyRotationFee)
+				feeCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, stakingtypes.DefaultKeyRotationFeeAmount))
 				s.bankKeeper.EXPECT().
 					SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(valAddr), stakingtypes.KeyRotationFeePoolName, feeCoins).
 					Return(nil)

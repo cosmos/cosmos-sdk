@@ -38,6 +38,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## UNRELEASED
 
+### Improvements
+* (staking) [#26619](https://github.com/cosmos/cosmos-sdk/pull/26619) Emit `rotate_cons_pubkey` and `apply_cons_pubkey_rotation` events during key rotation.
+
 ### Breaking Changes
 
 * (mempool) [#25338](https://github.com/cosmos/cosmos-sdk/pull/25338) Respect gas wanted returned by the ante handler for block selection. Adds `InsertWithOption` to the `Mempool` interface (carries the ante-reported `GasWanted`) and changes the `SelectBy` callback to receive a `mempool.Tx` wrapper that exposes the stored value.

@@ -665,7 +665,7 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	}
 	validator, err := k.GetValidator(ctx, valAddr)
 	if err != nil {
-		return nil, types.ErrNoValidatorFound
+		return nil, err
 	}
 
 	if validator.IsJailed() {

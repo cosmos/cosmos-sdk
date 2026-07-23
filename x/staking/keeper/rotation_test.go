@@ -2,14 +2,17 @@ package keeper_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,6 +40,91 @@ func (s *KeeperTestSuite) bondedValidatorWithConsKey(valAddr sdk.ValAddress, pk 
 	require.NoError(s.stakingKeeper.SetValidator(s.ctx, v))
 	require.NoError(s.stakingKeeper.SetValidatorByConsAddr(s.ctx, v))
 	return v
+}
+
+// valUpdate builds an ABCI validator update for a consensus pubkey and power.
+func (s *KeeperTestSuite) valUpdate(pk cryptotypes.PubKey, power int64) abci.ValidatorUpdate {
+	cmtPk, err := cryptocodec.ToCmtProtoPublicKey(pk)
+	s.Require().NoError(err)
+	return abci.ValidatorUpdate{PubKey: cmtPk, Power: power}
+}
+
+func (s *KeeperTestSuite) TestProcessValidatorUpdatesForConsKeyRotationsJailWindow() {
+	oldPk := ed25519.GenPrivKey().PubKey()
+	newPk := ed25519.GenPrivKey().PubKey()
+	oldAddr := fmt.Sprintf("%X", oldPk.Address())
+	newAddr := fmt.Sprintf("%X", newPk.Address())
+
+	const emitHeight = 10
+	const power = 10
+
+	rotation := stakingkeeper.PendingConsKeyRotationUpdate{
+		OldPubKey:  oldPk,
+		NewPubKey:  newPk,
+		EmitHeight: emitHeight,
+		LastPower:  power,
+	}
+
+	cases := []struct {
+		name   string
+		height int64
+		base   []abci.ValidatorUpdate
+		expect map[string]int64
+	}{
+		{
+			// simulate a jail in the same EndBlock the swap is due by
+			// providing a 0 power update for the old key. expected to keep
+			// old@0 (a valid removal Comet can apply) and do not add the new
+			// key Comet never saw
+			name:   "jailed at emit height keeps old@0 and omits the new key",
+			height: emitHeight,
+			base:   []abci.ValidatorUpdate{s.valUpdate(oldPk, 0)},
+			expect: map[string]int64{oldAddr: 0},
+		},
+		{
+			// simulate a jail after the swap was emitted. Comet now tracks the
+			// new key, so the removal must target new@0. Emitting old@0 here
+			// would ask Comet to delete a key it no longer holds.
+			name:   "jailed after emit translates old@0 to new@0",
+			height: emitHeight + 1,
+			base:   []abci.ValidatorUpdate{s.valUpdate(oldPk, 0)},
+			expect: map[string]int64{newAddr: 0},
+		},
+		{
+			// normal power update at the emit height becomes the key swap.
+			name:   "power update at emit height becomes old@0,new@power",
+			height: emitHeight,
+			base:   []abci.ValidatorUpdate{s.valUpdate(oldPk, power)},
+			expect: map[string]int64{oldAddr: 0, newAddr: power},
+		},
+		{
+			// after the swap was emitted, a power update follows the new key.
+			name:   "power update after emit follows the new key",
+			height: emitHeight + 1,
+			base:   []abci.ValidatorUpdate{s.valUpdate(oldPk, power)},
+			expect: map[string]int64{newAddr: power},
+		},
+	}
+
+	for _, tc := range cases {
+		s.Run(tc.name, func() {
+			ctx := s.ctx.WithBlockHeight(tc.height)
+			updates, err := s.stakingKeeper.ProcessValidatorUpdatesForConsKeyRotations(
+				ctx,
+				[]stakingkeeper.PendingConsKeyRotationUpdate{rotation},
+				tc.base,
+			)
+			s.Require().NoError(err)
+
+			powers := make(map[string]int64, len(updates))
+			for _, u := range updates {
+				pk, err := cryptoenc.PubKeyFromProto(u.PubKey)
+				s.Require().NoError(err)
+				powers[fmt.Sprintf("%X", pk.Address())] = u.Power
+			}
+			s.Require().Equal(tc.expect, powers)
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestConsKeyRotationUpdate() {

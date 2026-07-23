@@ -68,6 +68,14 @@ func (m *mockFeeTx) GetGas() uint64 {
 	return 0
 }
 
+// grantFeeTx completes mockFeeTx into a full sdk.FeeTx: mockFeeTx lacks
+// FeeGranter, so preEstimates skips estimation for it.
+type grantFeeTx struct{ mockFeeTx }
+
+func (g *grantFeeTx) FeeGranter() []byte { return nil }
+
+var _ sdk.FeeTx = (*grantFeeTx)(nil)
+
 func mockTxDecoderWithFeeTx(txBytes []byte) (sdk.Tx, error) {
 	if len(txBytes) == 0 {
 		return nil, errors.New("empty tx")
@@ -390,10 +398,10 @@ func TestPreEstimates(t *testing.T) {
 			if txBytes[0] == 0x01 {
 				panic("estimation panic")
 			}
-			return &mockFeeTx{
+			return &grantFeeTx{mockFeeTx{
 				mockTx:   mockTx{txBytes: txBytes},
 				feePayer: sdk.AccAddress(txBytes),
-			}, nil
+			}}, nil
 		}
 
 		good := append(sdk.AccAddress("address1"), 0x02)

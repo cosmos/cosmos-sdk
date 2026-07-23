@@ -3,13 +3,15 @@
 package systemtests
 
 import (
-	"encoding/base64"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
+	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	"github.com/cometbft/cometbft/privval"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -92,7 +94,7 @@ func TestValidatorKeyRotationValidatorOffline(t *testing.T) {
 	newPubKey := ed25519.GenPrivKey().PubKey()
 	newPubKeyJSON := marshalPubKeyJSON(t, newPubKey)
 	rsp := cli.Run(
-		"tx", "staking", "rotate-cons-pub-key", marshalPubKeyJSON(t, newPubKey),
+		"tx", "staking", "rotate-cons-pub-key", newPubKeyJSON,
 		"--from=node1",
 		"--fees=1stake",
 		"--gas=300000",
@@ -179,6 +181,10 @@ func TestValidatorKeyRotationMulti(t *testing.T) {
 func TestValidatorKeyRotationJailedInWindow(t *testing.T) {
 	const rotNode = 1
 
+	// wait for 12 blocks to outlast 2x the signed blocks window + consensus
+	// update delay of a rotation
+	const waitBlocks = 12
+
 	sut := systemtests.Sut
 	sut.ResetChain(t)
 
@@ -195,7 +201,7 @@ func TestValidatorKeyRotationJailedInWindow(t *testing.T) {
 	sut.StartChain(t)
 
 	// Let the signed-blocks window arm before rotating.
-	sut.AwaitBlockHeight(t, 12, 60*time.Second)
+	sut.AwaitBlockHeight(t, waitBlocks, 60*time.Second)
 
 	oldPubKey := systemtests.LoadValidatorPubKeyForNode(t, sut, rotNode)
 	require.Positive(t, systemtests.QueryCometValidatorPower(sut.RPCClient(t), oldPubKey.Bytes()))
@@ -216,7 +222,7 @@ func TestValidatorKeyRotationJailedInWindow(t *testing.T) {
 
 	// The remaining validators must keep producing blocks through both the key
 	// swap and the jailing; a bad old@0/new@0 emission would halt here.
-	target := sut.CurrentHeight() + 12
+	target := sut.CurrentHeight() + waitBlocks
 	sut.AwaitBlockHeight(t, target, 90*time.Second)
 
 	// Confirm the jail actually fired
@@ -229,18 +235,16 @@ func TestValidatorKeyRotationJailedInWindow(t *testing.T) {
 // with the given ed25519 key so the node signs consensus messages under it.
 func writeCometValidatorKey(t *testing.T, nodePath string, priv *ed25519.PrivKey) {
 	t.Helper()
-	pub := priv.PubKey()
-	doc := fmt.Sprintf(`{
-  "address": "%X",
-  "pub_key": {"type": "tendermint/PubKeyEd25519", "value": "%s"},
-  "priv_key": {"type": "tendermint/PrivKeyEd25519", "value": "%s"}
-}`,
-		pub.Address(),
-		base64.StdEncoding.EncodeToString(pub.Bytes()),
-		base64.StdEncoding.EncodeToString(priv.Bytes()),
-	)
+	cmtPriv := cmted25519.PrivKey(priv.Bytes())
+	cmtPub := cmtPriv.PubKey()
+	doc, err := cmtjson.MarshalIndent(privval.FilePVKey{
+		Address: cmtPub.Address(),
+		PubKey:  cmtPub,
+		PrivKey: cmtPriv,
+	}, "", "  ")
+	require.NoError(t, err)
 	path := filepath.Join(systemtests.WorkDir, nodePath, "config", "priv_validator_key.json")
-	require.NoError(t, os.WriteFile(path, []byte(doc), 0o600))
+	require.NoError(t, os.WriteFile(path, doc, 0o600))
 }
 
 // requireContinuesSigning asserts the validator with the given consensus pubkey

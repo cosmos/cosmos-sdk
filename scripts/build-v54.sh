@@ -125,7 +125,7 @@ main() {
 	local root_dir
 	root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 	echo "" >&2
-	echo "Download failed. To build manually:" >&2
+	echo "Could not obtain a verified v0.54 binary (download, checksum, or provenance check failed). To build manually:" >&2
 	echo "  cd ${root_dir}" >&2
 	echo "  git checkout release/v0.54.x" >&2
 	echo "  make build" >&2

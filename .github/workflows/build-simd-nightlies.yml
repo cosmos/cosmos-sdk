@@ -165,6 +165,7 @@ jobs:
             "${{ steps.channel.outputs.is_main }}"
 
       - name: Verify provenance of site binaries
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}

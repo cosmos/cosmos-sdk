@@ -703,17 +703,26 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, err
 	}
 
-	// record the key rotation in the store
-	if err := k.SetConsKeyRotation(ctx, valAddr, oldPk, newPk); err != nil {
+	maturesAt, err := k.RotationMaturityTime(ctx)
+	if err != nil {
 		return nil, err
 	}
 
-	maturesAt, err := k.rotationMaturityTime(ctx)
+	// Note the evidence expiry time is calculated strictly at the time of the
+	// rotation. The parameters around how long evidence is valid may change
+	// mid rotation, however these rotation evidence expiry values are never
+	// updated once set. If chains choose to modify these parameters while
+	// rotations are in progress (specifically extending the period where
+	// evidence is admissible), validators that have rotated their keys will
+	// not be able to be slashed for equivocations committed when using their
+	// old keys.
+	evidenceExpiry, err := k.RotationEvidenceExpiry(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}
-	evidenceExpiry, err := k.rotationEvidenceExpiry(ctx, valAddr)
-	if err != nil {
+
+	// record the key rotation in the store
+	if err := k.SetConsKeyRotationWithExpirations(ctx, valAddr, oldPk, newPk, maturesAt, evidenceExpiry); err != nil {
 		return nil, err
 	}
 

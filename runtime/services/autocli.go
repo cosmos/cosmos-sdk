@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"strings"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
@@ -48,8 +49,8 @@ func ExtractAutoCLIOptions(appModules map[string]any) map[string]*autocliv1.Modu
 
 		cfg := &autocliConfigurator{}
 
-		// try to auto-discover options based on the last msg and query
-		// services registered for the module
+		// try to auto-discover options based on the msg and query services
+		// registered for the module
 		if mod, ok := mod.(module.HasServices); ok {
 			mod.RegisterServices(cfg)
 		}
@@ -66,23 +67,11 @@ func ExtractAutoCLIOptions(appModules map[string]any) map[string]*autocliv1.Modu
 			panic(cfg.Error())
 		}
 
-		haveServices := false
 		modOptions := &autocliv1.ModuleOptions{}
-		if cfg.msgServer.serviceName != "" {
-			haveServices = true
-			modOptions.Tx = &autocliv1.ServiceCommandDescriptor{
-				Service: cfg.msgServer.serviceName,
-			}
-		}
+		modOptions.Tx = newServiceCommandDescriptor(cfg.msgServer.serviceNames)
+		modOptions.Query = newServiceCommandDescriptor(cfg.queryServer.serviceNames)
 
-		if cfg.queryServer.serviceName != "" {
-			haveServices = true
-			modOptions.Query = &autocliv1.ServiceCommandDescriptor{
-				Service: cfg.queryServer.serviceName,
-			}
-		}
-
-		if haveServices {
+		if modOptions.Tx != nil || modOptions.Query != nil {
 			moduleOptions[modName] = modOptions
 		}
 	}
@@ -132,13 +121,57 @@ func (a *autocliConfigurator) RegisterService(sd *grpc.ServiceDesc, ss any) {
 }
 func (a *autocliConfigurator) Error() error { return nil }
 
-// autocliServiceRegistrar is used to capture the service name for registered services
+// autocliServiceRegistrar captures the names of every service registered for a
+// module. A module may register more than one msg or query service, so all of
+// them are retained instead of only the last one.
 type autocliServiceRegistrar struct {
-	serviceName string
+	serviceNames []string
 }
 
 func (a *autocliServiceRegistrar) RegisterService(sd *grpc.ServiceDesc, _ any) {
-	a.serviceName = sd.ServiceName
+	a.serviceNames = append(a.serviceNames, sd.ServiceName)
+}
+
+// newServiceCommandDescriptor builds a ServiceCommandDescriptor from the service
+// names registered for a single command type (tx or query). It returns nil when
+// no service was registered.
+//
+// The first service is exposed as the primary command. Any additional services
+// are attached as sub-commands so they are no longer silently dropped. The
+// sub-command name defaults to the lowercased short name of the service, falling
+// back to the fully qualified name when that would collide.
+func newServiceCommandDescriptor(serviceNames []string) *autocliv1.ServiceCommandDescriptor {
+	if len(serviceNames) == 0 {
+		return nil
+	}
+
+	desc := &autocliv1.ServiceCommandDescriptor{Service: serviceNames[0]}
+	if len(serviceNames) == 1 {
+		return desc
+	}
+
+	desc.SubCommands = make(map[string]*autocliv1.ServiceCommandDescriptor, len(serviceNames)-1)
+	for _, name := range serviceNames[1:] {
+		key := subCommandKey(name, desc.SubCommands)
+		desc.SubCommands[key] = &autocliv1.ServiceCommandDescriptor{Service: name}
+	}
+	return desc
+}
+
+// subCommandKey derives a unique sub-command name for a service. It prefers the
+// lowercased short name (the segment after the last dot) and falls back to the
+// lowercased fully qualified name when the short name is empty or already taken.
+func subCommandKey(serviceName string, taken map[string]*autocliv1.ServiceCommandDescriptor) string {
+	key := serviceName
+	if i := strings.LastIndexByte(serviceName, '.'); i >= 0 {
+		key = serviceName[i+1:]
+	}
+	key = strings.ToLower(key)
+
+	if _, exists := taken[key]; exists || key == "" {
+		key = strings.ToLower(serviceName)
+	}
+	return key
 }
 
 var _ autocliv1.QueryServer = &AutoCLIQueryService{}

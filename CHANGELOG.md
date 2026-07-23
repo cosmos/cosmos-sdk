@@ -64,6 +64,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (crypto) [#26472](https://github.com/cosmos/cosmos-sdk/pull/26472) Add ML-DSA-65 (FIPS 204) support for user account keys: mnemonic-based keyring creation/recovery (`--algo ml_dsa_65`), transaction signing/verification, and an ante-handler signature-verification gas cost (`Params.SigVerifyCostMlDsa65`).
 * (enterprise/poa) [#26590](https://github.com/cosmos/cosmos-sdk/pull/26590) Add `MsgRotateConsPubKey` for POA validator consensus key rotation (operator self-service plus admin override).
 * (enterprise/poa) [#26614](https://github.com/cosmos/cosmos-sdk/pull/26614) Add ML-DSA-65 (mldsa65) validator key support to the PoA module via a `WithMlDsa65Support()` module option, raising `MaxPubKeyLength` to accommodate the larger keys.
+* (crypto) [#26615](https://github.com/cosmos/cosmos-sdk/pull/26615) Add `secp256k1eth` validator consensus key type.
 
 ### Improvements
 

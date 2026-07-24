@@ -14,6 +14,7 @@ import (
 
 	"github.com/cometbft/cometbft/crypto"
 	mldsa "github.com/cometbft/cometbft/crypto/mldsa65"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -133,11 +134,13 @@ var (
 // both CometBFT validator addresses and SDK account addresses; it MUST NOT change
 // once accounts exist, as that would be a breaking change to derived addresses.
 func (pubKey PubKey) Address() crypto.Address {
-	pk, err := mldsa.NewPubKeyFromBytes(pubKey.Key)
-	if err != nil {
-		panic(fmt.Sprintf("mldsa65 pubkey: %v", err))
+	if len(pubKey.Key) != mldsa.PubKeySize {
+		panic("length of pubkey is incorrect")
 	}
-	return pk.Address()
+	// FIPS 204 packed encoding round-trips, so hashing the stored bytes matches
+	// what re-parsing then hashing would produce, without the expensive unpack.
+	// Mirrors CometBFT's mldsa65.PubKey.Address and the ed25519/secp256k1 keys.
+	return crypto.Address(tmhash.SumTruncated(pubKey.Key))
 }
 
 // VerifySignature verifies the given signature against msg.

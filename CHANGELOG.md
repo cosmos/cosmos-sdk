@@ -60,6 +60,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (staking) [#26471](https://github.com/cosmos/cosmos-sdk/pull/26471) Add genesis import/export support for validator consensus key rotation.
 * (crypto) [#26472](https://github.com/cosmos/cosmos-sdk/pull/26472) Add ML-DSA-65 (FIPS 204) support for user account keys: mnemonic-based keyring creation/recovery (`--algo ml_dsa_65`), transaction signing/verification, and an ante-handler signature-verification gas cost (`Params.SigVerifyCostMlDsa65`).
 * (enterprise/poa) [#26590](https://github.com/cosmos/cosmos-sdk/pull/26590) Add `MsgRotateConsPubKey` for POA validator consensus key rotation (operator self-service plus admin override).
+* (enterprise/poa) [#26614](https://github.com/cosmos/cosmos-sdk/pull/26614) Add ML-DSA-65 (mldsa65) validator key support to the PoA module via a `WithMlDsa65Support()` module option, raising `MaxPubKeyLength` to accommodate the larger keys.
+* (crypto) [#26615](https://github.com/cosmos/cosmos-sdk/pull/26615) Add `secp256k1eth` validator consensus key type.
 
 ### Improvements
 
@@ -70,6 +72,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth/tx) [#25221](https://github.com/cosmos/cosmos-sdk/issues/25221) Add `ConfigOptions.AminoJSONEncoder` so applications can configure a custom `aminojson.Encoder` (e.g. custom field encodings) for the `SIGN_MODE_LEGACY_AMINO_JSON` handler without replicating the SDK's `HandlerMap` construction.
 * chore(x/auth) [#26567](https://github.com/cosmos/cosmos-sdk/pull/26567): add a human-readable error
 * (blockstm) [#26592](https://github.com/cosmos/cosmos-sdk/pull/26592) Validate `ExecuteBlock` inputs (block size, store index mapping, and estimates) at the exported entry point so invalid input returns a descriptive error instead of an opaque "index out of range" panic.
+* (cli) [#26604](https://github.com/cosmos/cosmos-sdk/pull/26604) Add consensus key algo to init and testnet CLIs.
+* (crypto) [#26626](https://github.com/cosmos/cosmos-sdk/pull/26626) Update mldsa65 PubKey Address logic to validate length, remove unpacking.
 
 ### Bug Fixes
 
@@ -92,6 +96,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth/tx) [#26517](https://github.com/cosmos/cosmos-sdk/pull/26517) Return a decode error instead of panicking when a transaction's `SignerInfos` and `Signatures` counts disagree in `GetSignaturesV2`, or a multisig's `ModeInfos` and sub-signature counts disagree in `ModeInfoAndSigToSignatureData`.
 * (x/auth/ante) [#26573](https://github.com/cosmos/cosmos-sdk/pull/26573) Reject tx with extra SignerInfos in SetPubKeyDecorator.
 * (blockstm) [#26591](https://github.com/cosmos/cosmos-sdk/pull/26591) normalize non-positive worker count in `STMRunner.Run`.
+* (x/staking) [#26613](https://github.com/cosmos/cosmos-sdk/pull/26613) Require `key_rotation_fee` denom to equal `bond_denom` in `Params.Validate` and derive the default fee denom from the configured bond denom.
+* (x/staking) [#26611](https://github.com/cosmos/cosmos-sdk/pull/26611) Fix missing key rotation type tags on genesis import.
+* (blockstm) [#26627](https://github.com/cosmos/cosmos-sdk/pull/26627) Guard against block-stm estimate panic.
 
 ### Deprecated
 

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -24,13 +25,20 @@ import (
 func (k Keeper) ImportConsKeyRotations(ctx context.Context, histories []types.ConsensusKeyRotationHistory, pending []types.PendingConsensusKeyRotation) error {
 	store := k.storeService.OpenKVStore(ctx)
 
-	hasPending := make(map[string]bool, len(pending))
+	// the live cons addr of each validator that has a rotation pending apply,
+	// used below to pick out which of its history records that rotation is
+	// moving away from. A nil value means the validator no longer exists.
+	pendingLiveConsAddr := make(map[string]sdk.ConsAddress, len(pending))
 	for _, rotation := range pending {
 		valAddr, err := k.validatorAddressCodec.StringToBytes(rotation.ValidatorAddress)
 		if err != nil {
 			return err
 		}
-		hasPending[string(valAddr)] = true
+		liveConsAddr, err := k.validatorConsAddr(ctx, valAddr)
+		if err != nil {
+			return err
+		}
+		pendingLiveConsAddr[string(valAddr)] = liveConsAddr
 
 		var newPubKey cryptotypes.PubKey
 		if err := k.cdc.UnpackAny(rotation.NewPubkey, &newPubKey); err != nil {
@@ -83,10 +91,31 @@ func (k Keeper) ImportConsKeyRotations(ctx context.Context, histories []types.Co
 				return err
 			}
 
-			// the lock is PendingFrom while a rotation for this validator is still
-			// pending apply, and RotatedFrom once it has been applied.
+			// a validator can hold both an applied rotation whose old key
+			// still admits evidence and a rotation that has not applied yet.
+
+			// pendingLiveConsAddr is populated when iterating over pending
+			// rotations, check this validator that has a historical rotation,
+			// also has a pending rotation.
+			liveConsAddr, hasPendingRotation := pendingLiveConsAddr[string(valAddr)]
+
+			// the pending rotation for this validator has not swapped the
+			// validator's key yet, so check if the key in this history entry is
+			// the one that is currently live.
+			//
+			// history records are written at rotation submit time, so this is
+			// true only for a record whose rotation was exported before it
+			// reached its apply height. It is false for the validator's other
+			// records, whose rotations already applied and moved the live key on.
+			isPendingRotationKey := hasPendingRotation && bytes.Equal(liveConsAddr, oldConsAddr)
+
+			// a validator removed before its rotation applied keeps its pending
+			// entry but has no live key left to compare against, so its records
+			// stay PendingFrom as they are in live state.
+			liveKeyUnknown := hasPendingRotation && liveConsAddr == nil
+
 			kind := types.ConsAddrLockRotatedFrom
-			if hasPending[string(valAddr)] {
+			if isPendingRotationKey || liveKeyUnknown {
 				kind = types.ConsAddrLockPendingFrom
 			}
 			if err := k.SetRotationLockedConsAddr(ctx, oldConsAddr, valAddr, kind); err != nil {
@@ -109,6 +138,19 @@ func (k Keeper) ImportConsKeyRotations(ctx context.Context, histories []types.Co
 	}
 
 	return nil
+}
+
+// validatorConsAddr returns the validator's live consensus address, or nil if
+// the validator no longer exists.
+func (k Keeper) validatorConsAddr(ctx context.Context, valAddr sdk.ValAddress) (sdk.ConsAddress, error) {
+	validator, err := k.GetValidator(ctx, valAddr)
+	if err != nil {
+		if errors.Is(err, types.ErrNoValidatorFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return validator.GetConsAddr()
 }
 
 // ExportConsKeyRotationHistory returns one record per rotated-away consensus key

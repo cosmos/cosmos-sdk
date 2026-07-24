@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: "release/v0.54.x"
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: "go.mod"
       - run: make build
@@ -32,7 +32,7 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     needs: build
     steps:
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: "go.mod"
       - name: Install runsim
@@ -50,7 +50,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: "release/v0.54.x"
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: "go.mod"
       - uses: actions/cache@v5
@@ -68,7 +68,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: "release/v0.54.x"
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: "go.mod"
       - uses: actions/cache@v5
@@ -86,7 +86,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: "release/v0.54.x"
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: "go.mod"
       - uses: actions/cache@v5

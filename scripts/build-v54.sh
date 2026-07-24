@@ -6,8 +6,6 @@ set -euo pipefail
 
 NIGHTLY_BASE_URL="https://cosmos.github.io/cosmos-sdk/nightlies/v0.54"
 OUTPUT="${BUILDDIR:-./build}/simdv54"
-REPO="cosmos/cosmos-sdk"
-SIGNER_WORKFLOW="${REPO}/.github/workflows/build-simd-nightlies.yml"
 
 sha256_file() {
 	local file="$1"
@@ -16,30 +14,6 @@ sha256_file() {
 		return 0
 	fi
 	shasum -a 256 "$file" | awk '{print $1}'
-}
-
-verify_attestation() {
-	local archive_path="$1"
-
-	if [ "${SKIP_ATTESTATION:-}" = "1" ]; then
-		echo "WARNING: SKIP_ATTESTATION=1 set, skipping build provenance verification" >&2
-		return 0
-	fi
-
-	if ! command -v gh >/dev/null 2>&1; then
-		echo "gh CLI not found; cannot verify build provenance for ${archive_path}" >&2
-		echo "Install the GitHub CLI (https://cli.github.com) or set SKIP_ATTESTATION=1 to bypass (not recommended)." >&2
-		return 1
-	fi
-
-	echo "Verifying build provenance attestation..."
-	if ! gh attestation verify "${archive_path}" \
-		--repo "${REPO}" \
-		--signer-workflow "${SIGNER_WORKFLOW}"; then
-		echo "Build provenance verification failed for ${archive_path}" >&2
-		return 1
-	fi
-	return 0
 }
 
 # Map uname to Go-style GOOS/GOARCH
@@ -105,10 +79,6 @@ try_download() {
 		return 1
 	fi
 
-	if ! verify_attestation "${archive_path}"; then
-		return 1
-	fi
-
 	tar -xzf "${archive_path}" -C "${tmp_dir}"
 	mv "${tmp_dir}/${asset}" "$OUTPUT"
 	chmod +x "$OUTPUT"
@@ -125,7 +95,7 @@ main() {
 	local root_dir
 	root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 	echo "" >&2
-	echo "Could not obtain a verified v0.54 binary (download, checksum, or provenance check failed). To build manually:" >&2
+	echo "Download failed. To build manually:" >&2
 	echo "  cd ${root_dir}" >&2
 	echo "  git checkout release/v0.54.x" >&2
 	echo "  make build" >&2

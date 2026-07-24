@@ -15,10 +15,13 @@ import (
 // If the `page` number is not supplied, `DefaultPage` will be used.
 const DefaultPage = 1
 
-// DefaultLimit is the default `limit` for queries
-// if the `limit` is not supplied or exceeds the maximum
-// allowed value, paginate will use `DefaultLimit`
+// DefaultLimit is the default `limit` for queries if the `limit` is not supplied.
 const DefaultLimit = 100
+
+// MaxLimit is the maximum allowed `limit` for queries. Any caller-supplied
+// value exceeding this is rejected to prevent DoS via unbounded store
+// iteration.
+const MaxLimit = 10_000
 
 // ParsePagination validates PageRequest and returns page number & limit.
 func ParsePagination(pageReq *PageRequest) (page, limit int, err error) {
@@ -27,6 +30,12 @@ func ParsePagination(pageReq *PageRequest) (page, limit int, err error) {
 
 	if pageReq != nil {
 		offset = int(pageReq.Offset)
+
+		// Check uint64 before casting: values above math.MaxInt64 (e.g.
+		// ^uint64(0)) would wrap negative as int and hit the wrong error below.
+		if pageReq.Limit > MaxLimit {
+			return 1, 0, status.Errorf(codes.InvalidArgument, "limit must not exceed %d", MaxLimit)
+		}
 		limit = int(pageReq.Limit)
 	}
 	if offset < 0 {
@@ -157,6 +166,8 @@ func initPageRequestDefaults(pageRequest *PageRequest) *PageRequest {
 
 		// count total results when the limit is zero/not supplied
 		pageRequestCopy.CountTotal = true
+	} else if pageRequestCopy.Limit > MaxLimit {
+		pageRequestCopy.Limit = MaxLimit
 	}
 
 	return &pageRequestCopy

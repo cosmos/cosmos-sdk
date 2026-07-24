@@ -9,6 +9,7 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
 
 * [Breaking Changes](#breaking-changes)
     * [Removed: SIGN_MODE_TEXTUAL](#removed-sign_mode_textual)
+    * [`query.ParsePagination` rejects limits above 10,000](#queryparsepagination-rejects-limits-above-10000)
 * [New Features and Non-Breaking Changes](#new-features-and-non-breaking-changes)
     * [ML-DSA-65 Validator Keys](#ml-dsa-65-validator-consensus-keys) 
 
@@ -43,6 +44,14 @@ txConfig, err := tx.NewTxConfigWithOptions(cdc, tx.ConfigOptions{...})
 2. Remove any `SIGN_MODE_TEXTUAL` cases from signing mode handler switch statements.
 
 3. Remove Ledger wiring that depended on `SIGN_MODE_TEXTUAL`.
+
+### `query.ParsePagination` rejects limits above 10,000
+
+`types/query.ParsePagination` now returns an `InvalidArgument` error ("limit must not exceed 10000") when `PageRequest.Limit` exceeds `query.MaxLimit` (10,000). Previously the value was silently capped to 10,000, so a caller requesting a larger page size got a smaller page back with no indication anything was reduced.
+
+`query.Paginate` (used by most gRPC query handlers via `initPageRequestDefaults`) is unaffected and still silently caps oversized limits to 10,000.
+
+**Required action:** any client or indexer that intentionally requests `limit > 10000` from an endpoint backed by `ParsePagination` must lower its requested limit or handle the new error.
 
 ## New Features and Non-Breaking Changes
 

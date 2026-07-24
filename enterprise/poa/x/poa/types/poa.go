@@ -29,7 +29,7 @@ import (
 const MinPubKeyLength = 30
 
 // MaxPubKeyLength is the maximum allowed pubkey serialized length (includes proto overhead).
-const MaxPubKeyLength = 128
+const MaxPubKeyLength = 2048
 
 // ValidateBasic performs basic validation on a Validator.
 // It ensures that:

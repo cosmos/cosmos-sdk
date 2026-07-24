@@ -159,7 +159,7 @@ type BaseApp struct {
 	// when executing transactions in parallel.
 	// when disabled, the block gas meter in context is a noop one.
 	//
-	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
+	// SAFETY: safe when ProcessProposal enforces MaxBlockGas (the default handler does this).
 	// Defaults to true (block gas meter disabled by default).
 	disableBlockGasMeter bool
 
@@ -538,13 +538,8 @@ func (app *BaseApp) GetMaximumBlockGas(ctx sdk.Context) uint64 {
 		return 0
 	}
 
-	maxGas := cp.Block.MaxGas
-
-	switch {
-	case maxGas < -1:
-		panic(fmt.Sprintf("invalid maximum block gas: %d", maxGas))
-
-	case maxGas == -1:
+	switch maxGas := validateMaxGas(cp.Block.MaxGas); maxGas {
+	case -1:
 		return 0
 
 	default:

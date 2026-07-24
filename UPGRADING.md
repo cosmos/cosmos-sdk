@@ -30,12 +30,10 @@ The headline changes in this release are the removal of three legacy surfaces (`
 
 ### CometBFT Upgrade
 
-<!-- TODO(release): pin the final CometBFT tag here and in the prose below once it is cut. -->
-
-Cosmos SDK v0.55 requires a new CometBFT release (v0.54.x shipped with CometBFT `v0.39.0`). The v0.55.0 release will pin the final tag in `go.mod`; bump your app's `go.mod` to match. Relevant changes in the new CometBFT version:
+Cosmos SDK v0.55 requires CometBFT `v0.40.0` (the v0.54.x line shipped with `v0.39.x`, ending at `v0.39.3` in v0.54.3). Bump your app's `go.mod` to match the SDK's pin. Relevant changes in CometBFT v0.40.0:
 
 * Expanded `MaxSignatureSize` and per-validator `MaxCommitSigBytes` to accommodate post-quantum (ML-DSA-65) signatures.
-* A fix for the application-side mempool (`mempool.type = "app"`, supported since CometBFT v0.39.2 / SDK v0.54.3): the default socket transport was missing the `InsertTx` / `ReapTxs` cases, causing node self-kill ([cometbft#5958](https://github.com/cometbft/cometbft/pull/5958)). Chains using an app-side mempool over the socket transport need this release.
+* A fix for the application-side mempool (`mempool.type = "app"`, supported since CometBFT v0.39.2 / SDK v0.54.3): the default socket transport was missing the `InsertTx` / `ReapTxs` cases, causing node self-kill ([cometbft#5958](https://github.com/cometbft/cometbft/pull/5958)). Chains using an app-side mempool over the socket transport need v0.40.0.
 * Updated `DefaultBlockParams` ([cometbft#5987](https://github.com/cometbft/cometbft/pull/5987)). This changes defaults for new chains only; existing chains keep their on-chain consensus params.
 
 See the [CometBFT changelog](https://github.com/cometbft/cometbft/blob/main/CHANGELOG.md) for the full list.
@@ -182,7 +180,7 @@ Add `"params"` to `Deleted` as well if your app still had the `x/params` store m
 
 Skipping v0.54 and upgrading directly from `v0.53.x` to `v0.55.x` is supported as a single coordinated upgrade: one binary swap, one upgrade handler, one halt height. Work through the [v0.53.x → v0.54.x upgrade reference](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/UPGRADING.md) first — all of its required changes still apply — then apply this guide on top. The v0.54 hop's highlights, so you know what you're signing up for:
 
-* CometBFT `v0.38.x` → `v0.39.x` (LibP2P, `AdaptiveSync`); from v0.53 you jump straight to the CometBFT release v0.55 pins.
+* CometBFT `v0.38.x` → `v0.39.x` (LibP2P, `AdaptiveSync`); from v0.53 you jump straight to the `v0.40.0` release v0.55 pins.
 * Consolidation of `cosmossdk.io/x/*` vanity modules into `github.com/cosmos/cosmos-sdk/x/*`, plus the Log v2 and Store v2 moves.
 * `x/gov` keeper-initialization and `GovHooks` interface changes, `x/epochs` and `x/bank` wiring updates, and the `x/circuit` / `x/nft` / `x/crisis` deprecations.
 * IBC v11 (if your chain uses IBC).
@@ -222,7 +220,7 @@ Cosmos SDK v0.55 registers the NIST ML-DSA-65 (FIPS 204) post-quantum signature 
 
 **To opt in (new chains):** set `genesis.consensus_params.validator.pub_key_types` to `["ml_dsa_65"]` (or a list including it). Validators must then submit `MsgCreateValidator` with a `mldsa65.PubKey`. The `init` and `testnet` commands accept `--consensus-key-algo ml_dsa_65` to generate matching validator files ([#26604](https://github.com/cosmos/cosmos-sdk/pull/26604)). Test harnesses can use the new `testutil/network.Config.ValidatorConsensusKeyType` field together with `genutil.InitializeNodeValidatorFilesFromMnemonicWithKeyType` to spin up an in-process testnet pinned to ML-DSA-65.
 
-**Operational considerations:** ML-DSA-65 keys and signatures are substantially larger than ed25519 (pubkey 1952 bytes vs 32, signature 3309 bytes vs 64). Chains enabling this key type should review `consensus_params.block.max_bytes` and gossip framing limits accordingly. The CometBFT version this release depends on expanded `MaxSignatureSize` and the per-validator `MaxCommitSigBytes` to accommodate the larger signatures; downstream applications relying on the previous fixed values may need to be re-examined.
+**Operational considerations:** ML-DSA-65 keys and signatures are substantially larger than ed25519 (pubkey 1952 bytes vs 32, signature 3309 bytes vs 64). Chains enabling this key type should review `consensus_params.block.max_bytes` and gossip framing limits accordingly. CometBFT v0.40.0 expanded `MaxSignatureSize` and the per-validator `MaxCommitSigBytes` to accommodate the larger signatures; downstream applications relying on the previous fixed values may need to be re-examined.
 
 Existing chains can combine this with [key rotation](#validator-consensus-key-rotation) to move validators to post-quantum keys: add `ml_dsa_65` to `pub_key_types` via a consensus-params update, then have validators rotate.
 

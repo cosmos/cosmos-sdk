@@ -7,6 +7,7 @@ import (
 	"io"
 	"math"
 	"sort"
+	"strconv"
 	"strings"
 	"sync/atomic"
 
@@ -722,7 +723,58 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 		}
 	}
 
+	if err := rs.pruneCommitInfo(pruningHeight); err != nil {
+		rs.logger.Error("failed to prune commit-info", "prune_to", pruningHeight, "err", err)
+	}
+
 	return nil
+}
+
+const commitInfoPruneBatch = 20000
+
+func (rs *Store) pruneCommitInfo(pruningHeight int64) error {
+	if pruningHeight <= 1 {
+		return nil
+	}
+
+	iter, err := rs.db.Iterator([]byte("s/0"), []byte("s/:"))
+	if err != nil {
+		return err
+	}
+
+	keys := make([][]byte, 0, 1024)
+	for ; iter.Valid() && len(keys) < commitInfoPruneBatch; iter.Next() {
+		key := iter.Key()
+		suffix := key[len("s/"):]
+		version, perr := strconv.ParseInt(string(suffix), 10, 64)
+		if perr != nil || version >= pruningHeight {
+			continue
+		}
+
+		dk := make([]byte, len(key))
+		copy(dk, key)
+		keys = append(keys, dk)
+	}
+	iterErr := iter.Error()
+	if cerr := iter.Close(); cerr != nil && iterErr == nil {
+		iterErr = cerr
+	}
+	if iterErr != nil {
+		return iterErr
+	}
+	if len(keys) == 0 {
+		return nil
+	}
+
+	batch := rs.db.NewBatch()
+	defer batch.Close()
+	for _, key := range keys {
+		if err := batch.Delete(key); err != nil {
+			return err
+		}
+	}
+
+	return batch.WriteSync()
 }
 
 // GetStoreByName performs a lookup of a StoreKey given a store name typically

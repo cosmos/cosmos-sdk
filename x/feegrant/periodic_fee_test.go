@@ -80,6 +80,15 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			},
 			valid: false,
 		},
+		"zero period": {
+			// A zero period would make tryResetPeriod refill the spend limit on
+			// every Accept, bypassing the per-period cap, so it must be rejected.
+			allow: feegrant.PeriodicAllowance{
+				Period:           time.Duration(0),
+				PeriodSpendLimit: smallAtom,
+			},
+			valid: false,
+		},
 		"same period": {
 			allow: feegrant.PeriodicAllowance{
 				Basic: feegrant.BasicAllowance{
@@ -212,5 +221,36 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 				assert.Equal(t, tc.periodReset.String(), tc.allow.PeriodReset.String())
 			}
 		})
+	}
+}
+
+// TestPeriodicFeeZeroPeriodBypassesCap documents the behavior that motivates
+// rejecting a non-positive Period in ValidateBasic. With Period == 0,
+// tryResetPeriod refills PeriodCanSpend on every Accept (PeriodReset never
+// advances past the block time), so the per-period spend cap can be exceeded
+// arbitrarily within a single block. Accept is exercised directly here because
+// such an allowance can no longer pass ValidateBasic after the fix.
+func TestPeriodicFeeZeroPeriodBypassesCap(t *testing.T) {
+	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
+
+	periodLimit := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
+	fee := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
+
+	allowance := feegrant.PeriodicAllowance{
+		Period:           time.Duration(0),
+		PeriodSpendLimit: periodLimit,
+	}
+
+	// A zero period is rejected by validation, which is the actual guard.
+	require.Error(t, allowance.ValidateBasic())
+
+	// Demonstrate why: if such an allowance were accepted, the per-period cap of
+	// 10 could be spent repeatedly because each Accept resets PeriodCanSpend.
+	for i := 0; i < 3; i++ {
+		remove, err := allowance.Accept(ctx, fee, []sdk.Msg{})
+		require.NoError(t, err, "spend %d should not be rejected when Period == 0", i)
+		require.False(t, remove)
 	}
 }

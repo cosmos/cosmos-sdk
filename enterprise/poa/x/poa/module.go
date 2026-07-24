@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtsecp256k1eth "github.com/cometbft/cometbft/crypto/secp256k1eth"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -30,7 +31,9 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa65"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1eth"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/client/cli"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/keeper"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
@@ -39,13 +42,17 @@ import (
 )
 
 var (
-	_ module.HasABCIEndBlock  = AppModule{}
-	_ module.AppModuleBasic   = AppModuleBasic{}
-	_ module.HasServices      = AppModule{}
-	_ appmodule.AppModule     = AppModule{}
-	_ module.HasABCIGenesis   = AppModule{}
-	_ module.HasGenesisBasics = AppModuleBasic{}
+	_ module.HasABCIEndBlock     = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.HasServices         = AppModule{}
+	_ appmodule.AppModule        = AppModule{}
+	_ module.HasABCIGenesis      = AppModule{}
+	_ module.HasGenesisBasics    = AppModuleBasic{}
+	_ module.HasConsensusVersion = AppModule{}
 )
+
+// ConsensusVersion defines the current POA module consensus version.
+const ConsensusVersion = 2
 
 // AppModuleBasic defines the basic application module for the POA module.
 type AppModuleBasic struct {
@@ -118,6 +125,46 @@ func WithPubkeyFactory(f map[string]func(codec.Codec, []byte) *codectypes.Any) M
 	}
 }
 
+// WithMlDsa65Support adds mldsa65 pubkey support to the PoA module.
+// This is needed when you want to create validators with mldsa65 keys.
+// IMPORTANT: You must also enable mldsa65 in the consensus params by setting
+// consensus.params.validator.pub_key_types to include "ml_dsa_65" in your genesis.
+func WithMlDsa65Support() ModuleOption {
+	return func(appModule *AppModule) {
+		appModule.pubkeyFactory[string(hd.MlDsa65Type)] = func(cdc codec.Codec, bz []byte) *codectypes.Any {
+			pubKey := &mldsa65.PubKey{
+				Key: bz,
+			}
+			anyPK, err := codectypes.NewAnyWithValue(pubKey)
+			if err != nil {
+				panic(err)
+			}
+
+			return anyPK
+		}
+	}
+}
+
+// WithSecp256k1EthSupport adds secp256k1eth pubkey support to the PoA module.
+// This is needed when you want to create validators with secp256k1eth keys.
+// IMPORTANT: You must also enable secp256k1eth in the consensus params by setting
+// consensus.params.validator.pub_key_types to include "secp256k1eth" in your genesis.
+func WithSecp256k1EthSupport() ModuleOption {
+	return func(appModule *AppModule) {
+		appModule.pubkeyFactory[cmtsecp256k1eth.KeyType] = func(cdc codec.Codec, bz []byte) *codectypes.Any {
+			pubKey := &secp256k1eth.PubKey{
+				Key: bz,
+			}
+			anyPK, err := codectypes.NewAnyWithValue(pubKey)
+			if err != nil {
+				panic(err)
+			}
+
+			return anyPK
+		}
+	}
+}
+
 // WithSecp256k1Support adds secp256k1 pubkey support to the PoA module.
 // This is needed when you want to create validators with secp256k1 keys.
 // IMPORTANT: You must also enable secp256k1 in the consensus params by setting
@@ -179,7 +226,15 @@ func (AppModule) IsOnePerModuleType() {}
 func (m AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(m.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), m.keeper)
+
+	migrator := keeper.NewMigrator(m.keeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	}
 }
+
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // ExportGenesis exports the module's genesis state as JSON.
 // It delegates to the keeper's ExportGenesis method to retrieve the current state.

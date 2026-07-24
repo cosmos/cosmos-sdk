@@ -22,6 +22,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -1284,5 +1285,131 @@ func TestAdjustTotalAllocated(t *testing.T) {
 		total, err := f.poaKeeper.getTotalAllocated(f.ctx)
 		require.NoError(t, err)
 		require.Equal(t, delta1, total)
+	})
+}
+
+func TestRotateConsPubKeyFeeMigration(t *testing.T) {
+	t.Run("non-zero allocated fees move to new cons-addr, total unchanged", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, oldConsAddr, _ := createRotatableValidator(t, f, 100)
+
+		// Mint and checkpoint so the full balance is allocated under the old cons-addr.
+		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
+		require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
+
+		allocatedBefore, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, oldConsAddr.String())
+		require.NoError(t, err)
+		totalBefore, err := f.poaKeeper.getTotalAllocated(f.ctx)
+		require.NoError(t, err)
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		newConsAddr := sdk.GetConsAddress(newPubKey)
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey))
+
+		// New cons-addr holds the full balance, old entry is gone.
+		allocatedAfter, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, newConsAddr.String())
+		require.NoError(t, err)
+		require.Equal(t, allocatedBefore.Fees, allocatedAfter.Fees)
+
+		_, err = f.poaKeeper.validatorAllocatedFees.Get(f.ctx, oldConsAddr.String())
+		require.ErrorIs(t, err, collections.ErrNotFound)
+
+		// totalAllocatedFees is a move, not an add: unchanged across the rotation.
+		totalAfter, err := f.poaKeeper.getTotalAllocated(f.ctx)
+		require.NoError(t, err)
+		require.Equal(t, totalBefore, totalAfter)
+	})
+
+	t.Run("operator withdraws full balance after rotation", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+
+		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
+		require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey))
+
+		coins, err := f.poaKeeper.WithdrawValidatorFees(f.ctx, operatorAddr)
+		require.NoError(t, err)
+		require.Equal(t, fees, coins)
+		require.Equal(t, fees, f.bankKeeper.GetAllBalances(f.ctx, operatorAddr))
+	})
+
+	t.Run("zero accrued fees is a clean no-op for fee state", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, oldConsAddr, _ := createRotatableValidator(t, f, 100)
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		newConsAddr := sdk.GetConsAddress(newPubKey)
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey))
+
+		// No spurious entry under either cons-addr.
+		_, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, oldConsAddr.String())
+		require.ErrorIs(t, err, collections.ErrNotFound)
+		_, err = f.poaKeeper.validatorAllocatedFees.Get(f.ctx, newConsAddr.String())
+		require.ErrorIs(t, err, collections.ErrNotFound)
+
+		totalAllocated, err := f.poaKeeper.getTotalAllocated(f.ctx)
+		require.NoError(t, err)
+		require.True(t, totalAllocated.IsZero())
+	})
+
+	t.Run("withdrawable fees identical before and after rotation", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+
+		// Accrue fees by sending coins to the fee collector module account.
+		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
+
+		req := &poatypes.QueryWithdrawableFeesRequest{OperatorAddress: operatorAddr.String()}
+		before, err := f.poaKeeper.WithdrawableFees(f.ctx, req)
+		require.NoError(t, err)
+		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(1000))}, before.Fees.Fees)
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey))
+
+		// Query is keyed by operator address (unchanged), so it reports the same balance.
+		after, err := f.poaKeeper.WithdrawableFees(f.ctx, req)
+		require.NoError(t, err)
+		require.Equal(t, before.Fees.Fees, after.Fees.Fees)
+
+		// Withdraw the full pre-rotation balance.
+		coins, err := f.poaKeeper.WithdrawValidatorFees(f.ctx, operatorAddr)
+		require.NoError(t, err)
+		expected, _ := before.Fees.Fees.TruncateDecimal()
+		require.Equal(t, expected, coins)
+	})
+
+	t.Run("rotation fails closed when destination cons-addr already holds fees", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+
+		// Accrue fees so the source has an entry to migrate, otherwise the migrate
+		// returns early before ever reaching the destination guard.
+		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
+		require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		newConsAddr := sdk.GetConsAddress(newPubKey)
+
+		// Seed an orphan fee entry at the destination (no validator lives there,
+		// so the validators.Has guard doesn't catch it). A blind Set would drop
+		// this and strand the fees.
+		orphan := poatypes.ValidatorFees{Fees: sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 500))}
+		require.NoError(t, f.poaKeeper.validatorAllocatedFees.Set(f.ctx, newConsAddr.String(), orphan))
+
+		err := f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey)
+		require.ErrorIs(t, err, poatypes.ErrConsensusPubKeyInUse)
+
+		// The guard fires before the Set, so the orphan entry is untouched.
+		stillThere, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, newConsAddr.String())
+		require.NoError(t, err)
+		require.Equal(t, orphan.Fees, stillThere.Fees)
 	})
 }

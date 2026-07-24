@@ -24,6 +24,31 @@ import (
 func (k Keeper) ImportConsKeyRotations(ctx context.Context, histories []types.ConsensusKeyRotationHistory, pending []types.PendingConsensusKeyRotation) error {
 	store := k.storeService.OpenKVStore(ctx)
 
+	hasPending := make(map[string]bool, len(pending))
+	for _, rotation := range pending {
+		valAddr, err := k.validatorAddressCodec.StringToBytes(rotation.ValidatorAddress)
+		if err != nil {
+			return err
+		}
+		hasPending[string(valAddr)] = true
+
+		var newPubKey cryptotypes.PubKey
+		if err := k.cdc.UnpackAny(rotation.NewPubkey, &newPubKey); err != nil {
+			return err
+		}
+		newPubKeyBz, err := k.cdc.MarshalInterface(newPubKey)
+		if err != nil {
+			return err
+		}
+
+		if err := k.SetRotationLockedConsAddr(ctx, sdk.ConsAddress(newPubKey.Address()), valAddr, types.ConsAddrLockPendingTo); err != nil {
+			return err
+		}
+		if err := store.Set(types.GetConsKeyRotationApplyQueueKey(rotation.ApplyHeight, valAddr), newPubKeyBz); err != nil {
+			return err
+		}
+	}
+
 	for _, history := range histories {
 		valAddr, err := k.validatorAddressCodec.StringToBytes(history.ValidatorAddress)
 		if err != nil {
@@ -40,30 +65,12 @@ func (k Keeper) ImportConsKeyRotations(ctx context.Context, histories []types.Co
 		if err := store.Set(types.GetValidatorConsKeyRotationKey(valAddr), []byte{}); err != nil {
 			return err
 		}
-		if err := store.Set(types.GetRotationLockedConsAddrIndexKey(oldConsAddr), valAddr); err != nil {
-			return err
-		}
-	}
 
-	for _, rotation := range pending {
-		valAddr, err := k.validatorAddressCodec.StringToBytes(rotation.ValidatorAddress)
-		if err != nil {
-			return err
+		kind := types.ConsAddrLockRotatedFrom
+		if hasPending[string(valAddr)] {
+			kind = types.ConsAddrLockPendingFrom
 		}
-
-		var newPubKey cryptotypes.PubKey
-		if err := k.cdc.UnpackAny(rotation.NewPubkey, &newPubKey); err != nil {
-			return err
-		}
-		newPubKeyBz, err := k.cdc.MarshalInterface(newPubKey)
-		if err != nil {
-			return err
-		}
-
-		if err := store.Set(types.GetRotationLockedConsAddrIndexKey(sdk.ConsAddress(newPubKey.Address())), valAddr); err != nil {
-			return err
-		}
-		if err := store.Set(types.GetConsKeyRotationApplyQueueKey(rotation.ApplyHeight, valAddr), newPubKeyBz); err != nil {
+		if err := k.SetRotationLockedConsAddr(ctx, oldConsAddr, valAddr, kind); err != nil {
 			return err
 		}
 	}
@@ -579,7 +586,7 @@ func (k Keeper) ProcessValidatorUpdatesForConsKeyRotations(
 		updateSet.Append([]abci.ValidatorUpdate{oldUpdate, newUpdate}...)
 	}
 
-	return updateSet.Updates()
+	return updateSet.Updates(), nil
 }
 
 // rotatedValidatorUpdates rewrites a normal staking update for a validator
@@ -691,14 +698,14 @@ func (s *validatorUpdateSet) Append(updates ...abci.ValidatorUpdate) {
 	s.extra = append(s.extra, updates...)
 }
 
-// Updates returns the ordered validator updates and rejects duplicate addresses.
-func (s *validatorUpdateSet) Updates() ([]abci.ValidatorUpdate, error) {
+// Updates returns the ordered validator updates.
+func (s *validatorUpdateSet) Updates() []abci.ValidatorUpdate {
 	updates := make([]abci.ValidatorUpdate, 0, len(s.order)+len(s.extra))
 	for _, addr := range s.order {
 		updates = append(updates, s.replacements[addr]...)
 	}
 	updates = append(updates, s.extra...)
-	return updates, nil
+	return updates
 }
 
 // validatorUpdateAddress returns the cons addr for a validator update.

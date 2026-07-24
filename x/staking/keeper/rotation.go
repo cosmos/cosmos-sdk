@@ -376,7 +376,7 @@ func (k Keeper) HasConsKeyRotationApplyQueueEntry(ctx context.Context, applyHeig
 
 // SetConsKeyRotation writes the indexes that track a pending consensus key
 // rotation and sets a default rotation maturity and evidence expiration time.
-func (k Keeper) SetConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress, oldPubKey cryptotypes.PubKey, newPubKey cryptotypes.PubKey) error {
+func (k Keeper) SetConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress, oldPubKey, newPubKey cryptotypes.PubKey) error {
 	maturesAt, err := k.RotationMaturityTime(ctx)
 	if err != nil {
 		return err
@@ -389,8 +389,8 @@ func (k Keeper) SetConsKeyRotation(ctx context.Context, valAddr sdk.ValAddress, 
 	return k.SetConsKeyRotationWithExpirations(ctx, valAddr, oldPubKey, newPubKey, maturesAt, expiresAt)
 }
 
-// SetConsKeyRotation writes the indexes that track a pending consensus key
-// rotation.
+// SetConsKeyRotationWithExpirations writes the indexes that track a pending
+// consensus key rotation.
 func (k Keeper) SetConsKeyRotationWithExpirations(
 	ctx context.Context,
 	valAddr sdk.ValAddress,
@@ -426,7 +426,9 @@ func (k Keeper) SetConsKeyRotationWithExpirations(
 	if err != nil {
 		return err
 	}
-	store.Set(types.GetConsKeyEvidenceExpiryQueueKey(expiresAt.ExpiryTime, oldConsAddr), bz)
+	if err := store.Set(types.GetConsKeyEvidenceExpiryQueueKey(expiresAt.ExpiryTime, oldConsAddr), bz); err != nil {
+		return err
+	}
 
 	// Lock both the old and new cons addrs so that no validator can rotate to
 	// either while the rotation is pending. PendingFrom protects the old addr

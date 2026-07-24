@@ -73,8 +73,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#26408](https://github.com/cosmos/cosmos-sdk/pull/26408) Fix `MsgBeginRedelegate` failure when redelegating all shares from an unbonded source validator that is removed after unbonding.
 * (blockstm) [#26627](https://github.com/cosmos/cosmos-sdk/pull/26627) Guard against block-stm estimate panic.
 
-### Deprecated
-
 ## [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) - 2026-04-15
 
 This patch release contains only minor dependency bumps.

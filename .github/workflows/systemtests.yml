@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  attestations: read
 
 concurrency:
   group: ci-${{ github.ref }}-system-tests
@@ -64,6 +65,8 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Run SDK system tests
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: make test-sdk-system
 
       - name: Upload system test logs if failed

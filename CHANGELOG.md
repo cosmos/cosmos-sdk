@@ -98,6 +98,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#26611](https://github.com/cosmos/cosmos-sdk/pull/26611) Fix missing key rotation type tags on genesis import.
 * (blockstm) [#26627](https://github.com/cosmos/cosmos-sdk/pull/26627) Guard against block-stm estimate panic.
 
+### Client Breaking
+
+* (x/auth/tx) [#26399](https://github.com/cosmos/cosmos-sdk/pull/26399) `GetTxsEvent` now returns `InvalidArgument` when the deprecated `GetTxsEventRequest.pagination` field is populated, instead of silently ignoring it. Use the top-level `page`, `limit`, and `order_by` request fields instead.
+
 ### Deprecated
 
 ## [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) - 2026-04-15

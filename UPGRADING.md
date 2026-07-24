@@ -1,6 +1,6 @@
 # Upgrade Reference
 
-This document provides a reference for upgrading from `v0.54.x` to `v0.55.x` of Cosmos SDK.
+This document provides a reference for upgrading from `v0.54.x` to `v0.55.x` of Cosmos SDK. If you are upgrading directly from `v0.53.x`, see [Upgrading from v0.53.x](#upgrading-from-v053x) after reading the breaking changes below.
 
 For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.55.x/CHANGELOG.md).
 
@@ -17,6 +17,7 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [Staking: Key Rotation Fee Pool Module Account](#staking-key-rotation-fee-pool-module-account)
     * [genutil: ExportGenesisFileWithTime Signature](#genutil-exportgenesisfilewithtime-signature)
     * [Upgrade Handler and Store Migrations](#upgrade-handler-and-store-migrations)
+* [Upgrading from v0.53.x](#upgrading-from-v053x)
 * [New Features and Non-Breaking Changes](#new-features-and-non-breaking-changes)
     * [Validator Consensus Key Rotation](#validator-consensus-key-rotation)
     * [ML-DSA-65 Validator Consensus Keys](#ml-dsa-65-validator-consensus-keys)
@@ -176,6 +177,25 @@ func (app SimApp) RegisterUpgradeHandlers() {
 ```
 
 Add `"params"` to `Deleted` as well if your app still had the `x/params` store mounted.
+
+## Upgrading from v0.53.x
+
+Skipping v0.54 and upgrading directly from `v0.53.x` to `v0.55.x` is supported as a single coordinated upgrade: one binary swap, one upgrade handler, one halt height. Work through the [v0.53.x → v0.54.x upgrade reference](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/UPGRADING.md) first — all of its required changes still apply — then apply this guide on top. The v0.54 hop's highlights, so you know what you're signing up for:
+
+* CometBFT `v0.38.x` → `v0.39.x` (LibP2P, `AdaptiveSync`); from v0.53 you jump straight to the CometBFT release v0.55 pins.
+* Consolidation of `cosmossdk.io/x/*` vanity modules into `github.com/cosmos/cosmos-sdk/x/*`, plus the Log v2 and Store v2 moves.
+* `x/gov` keeper-initialization and `GovHooks` interface changes, `x/epochs` and `x/bank` wiring updates, and the `x/circuit` / `x/nft` / `x/crisis` deprecations.
+* IBC v11 (if your chain uses IBC).
+
+Where the two hops interact, land directly on the v0.55 state instead of transiting through v0.54's:
+
+* **Skip transient wiring.** Don't adopt v0.54 reference-app wiring that v0.55 removes in the same hop: the SIGN_MODE_TEXTUAL tx-config setup, `x/protocolpool` (if your v0.53 app didn't already wire it), and `distrkeeper.WithExternalCommunityPool`. Go straight to the v0.55 forms shown in this guide.
+* **Module constructors.** v0.54's constructor signatures still carried the legacy `exported.Subspace` arguments; use the v0.55 signatures from [Removed: x/params](#removed-xparams) directly.
+* **Custom mempools.** Implement the v0.55 `Mempool` interface ([Mempool Interface Changes](#mempool-interface-changes)) directly; don't bother with the v0.54 shape.
+* **Module migrations are cumulative.** `RunMigrations` walks each module from its v0.53 consensus version to the v0.55 target in one pass (`x/auth` 5 → 6 → 7, `x/staking` 5 → 6). No manual intervention is needed beyond the standard upgrade handler.
+* **Store upgrades.** The v0.53 → v0.54 hop required no store additions or deletions, so the combined store upgrade is exactly the snippet in [Upgrade Handler and Store Migrations](#upgrade-handler-and-store-migrations): delete `protocolpool` only if your v0.53 app had wired it, and `params` if its store was still mounted (more likely on a v0.53-era app). Use a single upgrade name, e.g. `v053-to-v055`.
+
+Test the full jump on a mainnet-state export before scheduling it: the two-version migration path gets far less ecosystem mileage than the single-version one.
 
 ## New Features and Non-Breaking Changes
 

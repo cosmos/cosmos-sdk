@@ -51,6 +51,13 @@ func TestValidateParams(t *testing.T) {
 	require.Error(t, params.Validate())
 
 	params = types.DefaultParams()
+	params.BondDenom = "uatom"
 	params.KeyRotationFee = sdk.NewInt64Coin("uatom", 1)
 	require.NoError(t, params.Validate())
+
+	// fee denom must match the bond denom
+	params = types.DefaultParams()
+	params.BondDenom = "uatom"
+	params.KeyRotationFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)
+	require.Error(t, params.Validate())
 }

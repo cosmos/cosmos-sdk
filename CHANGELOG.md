@@ -73,6 +73,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * chore(x/auth) [#26567](https://github.com/cosmos/cosmos-sdk/pull/26567): add a human-readable error
 * (blockstm) [#26592](https://github.com/cosmos/cosmos-sdk/pull/26592) Validate `ExecuteBlock` inputs (block size, store index mapping, and estimates) at the exported entry point so invalid input returns a descriptive error instead of an opaque "index out of range" panic.
 * (cli) [#26604](https://github.com/cosmos/cosmos-sdk/pull/26604) Add consensus key algo to init and testnet CLIs.
+* (crypto) [#26626](https://github.com/cosmos/cosmos-sdk/pull/26626) Update mldsa65 PubKey Address logic to validate length, remove unpacking.
 
 ### Bug Fixes
 

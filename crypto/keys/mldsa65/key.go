@@ -135,7 +135,7 @@ var (
 // once accounts exist, as that would be a breaking change to derived addresses.
 func (pubKey PubKey) Address() crypto.Address {
 	if len(pubKey.Key) != mldsa.PubKeySize {
-		panic("length of pubkey is incorrect")
+		panic(fmt.Sprintf("length of pubkey is incorrect, got: %d expected: %d", len(pubKey.Key), mldsa.PubKeySize))
 	}
 	// FIPS 204 packed encoding round-trips, so hashing the stored bytes matches
 	// what re-parsing then hashing would produce, without the expensive unpack.

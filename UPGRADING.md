@@ -222,6 +222,8 @@ Cosmos SDK v0.55 registers the NIST ML-DSA-65 (FIPS 204) post-quantum signature 
 
 **Operational considerations:** ML-DSA-65 keys and signatures are substantially larger than ed25519 (pubkey 1952 bytes vs 32, signature 3309 bytes vs 64). Chains enabling this key type should review `consensus_params.block.max_bytes` and gossip framing limits accordingly. CometBFT v0.40.0 expanded `MaxSignatureSize` and the per-validator `MaxCommitSigBytes` to accommodate the larger signatures; downstream applications relying on the previous fixed values may need to be re-examined.
 
+**Warning — IBC counterparties must upgrade first.** IBC light clients on counterparty chains verify your validator set's commit signatures using the counterparty's own compiled-in crypto. A counterparty running a stack that predates ML-DSA-65 support cannot verify signatures from the new key type: once validators holding sufficient voting power sign with it, your headers fail verification there, IBC packet flow with that chain stops, and the client eventually expires. Before enabling a new consensus key type on a chain with live IBC connections, coordinate so every counterparty chain is running a CometBFT/SDK stack that can verify it — the counterparty only needs the verification code on its nodes, not the key type in its own `pub_key_types`.
+
 Existing chains can combine this with [key rotation](#validator-consensus-key-rotation) to move validators to post-quantum keys: add `ml_dsa_65` to `pub_key_types` via a consensus-params update, then have validators rotate.
 
 ### ML-DSA-65 Account Keys
@@ -231,6 +233,8 @@ Existing chains can combine this with [key rotation](#validator-consensus-key-ro
 ### secp256k1eth Validator Consensus Keys
 
 [#26615](https://github.com/cosmos/cosmos-sdk/pull/26615) adds `crypto/keys/secp256k1eth`, wrapping CometBFT's Ethereum-style secp256k1 consensus key implementation with SDK codec registration. Intended for EVM-compatible chains that want validator consensus addresses derived the Ethereum way; opt in via `genesis.consensus_params.validator.pub_key_types`.
+
+The IBC counterparty warning from the [ML-DSA-65 section](#ml-dsa-65-validator-consensus-keys) applies here too: counterparty chains must run a stack that can verify secp256k1eth signatures before your validators adopt the key type, or IBC connections with them will break.
 
 ### Block-STM Configuration
 

@@ -84,6 +84,7 @@ jobs:
       id-token: write
       contents: read
       actions: read
+      attestations: read
 
     steps:
       - uses: actions/checkout@v6
@@ -162,6 +163,30 @@ jobs:
           .github/nightlies/build-site.sh \
             "${{ steps.channel.outputs.channel }}" \
             "${{ steps.channel.outputs.is_main }}"
+
+      - name: Verify provenance of freshly built binaries
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          CHANNEL: ${{ steps.channel.outputs.channel }}
+          EXPECTED_WORKFLOW: .github/workflows/build-simd-nightlies.yml
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          archives=(site/nightlies/"$CHANNEL"/*.tar.gz)
+          if [ ${#archives[@]} -eq 0 ]; then
+            echo "No freshly built binaries found for channel $CHANNEL to verify"
+            exit 1
+          fi
+
+          for archive in "${archives[@]}"; do
+            echo "Verifying provenance for $archive"
+            gh attestation verify "$archive" \
+              --repo "$REPO" \
+              --signer-workflow "$REPO/$EXPECTED_WORKFLOW"
+          done
 
       - uses: actions/configure-pages@v6
 

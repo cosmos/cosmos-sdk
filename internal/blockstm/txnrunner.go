@@ -175,11 +175,9 @@ func preEstimates(txs [][]byte, workers, authStore, bankStore int, coinDenom str
 	for i := 0; i < blockSize; i += chunk {
 		start := i
 		end := min(i+chunk, blockSize)
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			job(start, end)
-		}()
+		})
 	}
 	wg.Wait()
 

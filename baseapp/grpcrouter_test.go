@@ -189,10 +189,7 @@ func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GR
 	}()
 
 	for range n {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
+		wg.Go(func() {
 			// Wait until we get the green light to start.
 			ready <- true
 			<-greenlight
@@ -219,6 +216,6 @@ func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GR
 			require.NoError(t, err)
 			require.NotNil(t, res3)
 			require.Equal(t, spot, res3.HasAnimal.Animal.GetCachedValue())
-		}()
+		})
 	}
 }

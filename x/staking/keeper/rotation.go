@@ -586,7 +586,7 @@ func (k Keeper) ProcessValidatorUpdatesForConsKeyRotations(
 		updateSet.Append([]abci.ValidatorUpdate{oldUpdate, newUpdate}...)
 	}
 
-	return updateSet.Updates()
+	return updateSet.Updates(), nil
 }
 
 // rotatedValidatorUpdates rewrites a normal staking update for a validator
@@ -698,14 +698,14 @@ func (s *validatorUpdateSet) Append(updates ...abci.ValidatorUpdate) {
 	s.extra = append(s.extra, updates...)
 }
 
-// Updates returns the ordered validator updates and rejects duplicate addresses.
-func (s *validatorUpdateSet) Updates() ([]abci.ValidatorUpdate, error) {
+// Updates returns the ordered validator updates.
+func (s *validatorUpdateSet) Updates() []abci.ValidatorUpdate {
 	updates := make([]abci.ValidatorUpdate, 0, len(s.order)+len(s.extra))
 	for _, addr := range s.order {
 		updates = append(updates, s.replacements[addr]...)
 	}
 	updates = append(updates, s.extra...)
-	return updates, nil
+	return updates
 }
 
 // validatorUpdateAddress returns the cons addr for a validator update.

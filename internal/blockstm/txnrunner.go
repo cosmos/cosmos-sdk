@@ -112,45 +112,56 @@ func preEstimates(txs [][]byte, workers, authStore, bankStore int, coinDenom str
 	memTxs := make([]sdk.Tx, len(txs))
 	estimates := make([]MultiLocations, len(txs))
 
+	estimateOne := func(i int) {
+		defer func() {
+			if recover() != nil {
+				memTxs[i] = nil
+				estimates[i] = nil
+			}
+		}()
+
+		rawTx := txs[i]
+		tx, err := txDecoder(rawTx)
+		if err != nil {
+			return
+		}
+		memTxs[i] = tx
+
+		feeTx, ok := tx.(sdk.FeeTx)
+		if !ok {
+			return
+		}
+		feePayer := sdk.AccAddress(feeTx.FeePayer())
+
+		// account key
+		accKey, err := collections.EncodeKeyWithPrefix(
+			collections.NewPrefix(1),
+			sdk.AccAddressKey,
+			feePayer,
+		)
+		if err != nil {
+			return
+		}
+
+		// balance key
+		balanceKey, err := collections.EncodeKeyWithPrefix(
+			collections.NewPrefix(2),
+			collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
+			collections.Join(feePayer, coinDenom),
+		)
+		if err != nil {
+			return
+		}
+
+		estimates[i] = MultiLocations{
+			authStore: {accKey},
+			bankStore: {balanceKey},
+		}
+	}
+
 	job := func(start, end int) {
 		for i := start; i < end; i++ {
-			rawTx := txs[i]
-			tx, err := txDecoder(rawTx)
-			if err != nil {
-				continue
-			}
-			memTxs[i] = tx
-
-			feeTx, ok := tx.(sdk.FeeTx)
-			if !ok {
-				continue
-			}
-			feePayer := sdk.AccAddress(feeTx.FeePayer())
-
-			// account key
-			accKey, err := collections.EncodeKeyWithPrefix(
-				collections.NewPrefix(1),
-				sdk.AccAddressKey,
-				feePayer,
-			)
-			if err != nil {
-				continue
-			}
-
-			// balance key
-			balanceKey, err := collections.EncodeKeyWithPrefix(
-				collections.NewPrefix(2),
-				collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
-				collections.Join(feePayer, coinDenom),
-			)
-			if err != nil {
-				continue
-			}
-
-			estimates[i] = MultiLocations{
-				authStore: {accKey},
-				bankStore: {balanceKey},
-			}
+			estimateOne(i)
 		}
 	}
 

@@ -68,6 +68,14 @@ func (m *mockFeeTx) GetGas() uint64 {
 	return 0
 }
 
+// grantFeeTx completes mockFeeTx into a full sdk.FeeTx: mockFeeTx lacks
+// FeeGranter, so preEstimates skips estimation for it.
+type grantFeeTx struct{ mockFeeTx }
+
+func (g *grantFeeTx) FeeGranter() []byte { return nil }
+
+var _ sdk.FeeTx = (*grantFeeTx)(nil)
+
 func mockTxDecoderWithFeeTx(txBytes []byte) (sdk.Tx, error) {
 	if len(txBytes) == 0 {
 		return nil, errors.New("empty tx")
@@ -347,6 +355,34 @@ func TestPreEstimates(t *testing.T) {
 
 		// Valid transaction should have memTx
 		require.NotNil(t, memTxs[1])
+	})
+
+	t.Run("transaction that panics during estimation is skipped", func(t *testing.T) {
+		decoder := func(txBytes []byte) (sdk.Tx, error) {
+			if txBytes[0] == 0x01 {
+				panic("estimation panic")
+			}
+			return &grantFeeTx{mockFeeTx{
+				mockTx:   mockTx{txBytes: txBytes},
+				feePayer: sdk.AccAddress(txBytes),
+			}}, nil
+		}
+
+		good := append(sdk.AccAddress("address1"), 0x02)
+		txs := [][]byte{{0x01}, good}
+
+		// single worker so both txs share one chunk: the panic must not take
+		// the sibling down with it.
+		memTxs, estimates := preEstimates(txs, 1, 0, 1, "stake", decoder)
+
+		require.Len(t, memTxs, len(txs))
+		require.Len(t, estimates, len(txs))
+
+		require.Nil(t, memTxs[0])
+		require.Nil(t, estimates[0])
+
+		require.NotNil(t, memTxs[1])
+		require.NotNil(t, estimates[1])
 	})
 
 	t.Run("parallel processing with multiple workers", func(t *testing.T) {

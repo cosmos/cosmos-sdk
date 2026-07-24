@@ -110,8 +110,14 @@ func (k Keeper) ImportConsKeyRotations(ctx context.Context, histories []types.Co
 			isPendingRotationKey := hasPendingRotation && bytes.Equal(liveConsAddr, oldConsAddr)
 
 			// a validator removed before its rotation applied keeps its pending
-			// entry but has no live key left to compare against, so its records
-			// stay PendingFrom as they are in live state.
+			// entry but has no live key left to compare against, so we cannot
+			// tell its records apart and mark them all PendingFrom.
+			//
+			// the kind is unobservable for a removed validator, since
+			// ValidatorByHistoricalConsAddr resolves the lock and then fails on
+			// the missing validator either way. PendingFrom is the safer of the
+			// two, as it cannot attribute an old key to a validator later
+			// recreated at the same operator address.
 			liveKeyUnknown := hasPendingRotation && liveConsAddr == nil
 
 			kind := types.ConsAddrLockRotatedFrom

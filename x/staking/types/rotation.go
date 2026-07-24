@@ -20,7 +20,7 @@ func (h ConsensusKeyRotationHistory) Validate() (sdk.ValAddress, sdk.ConsAddress
 		return nil, nil, fmt.Errorf("invalid consensus key rotation old consensus address %s: %w", h.OldConsensusAddress, err)
 	}
 
-	// NOTE: note validating maturity time is non zero since a zero maturity
+	// NOTE: not validating maturity time is non zero since a zero maturity
 	// time is valid. it marks a record whose re rotation gate has already been
 	// retired while its evidence lock is still open.
 	return valAddr, oldConsAddr, nil

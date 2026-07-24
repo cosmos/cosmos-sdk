@@ -171,8 +171,7 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 		types.NewCoinSpentEvent(delegatorAddr, amt),
 	)
 
-	err := k.addCoins(ctx, moduleAccAddr, amt)
-	if err != nil {
+	if _, err := k.addCoins(ctx, moduleAccAddr, amt); err != nil {
 		return err
 	}
 
@@ -203,8 +202,7 @@ func (k BaseKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegato
 		return errorsmod.Wrap(err, "failed to track undelegation")
 	}
 
-	err = k.addCoins(ctx, delegatorAddr, amt)
-	if err != nil {
+	if _, err := k.addCoins(ctx, delegatorAddr, amt); err != nil {
 		return err
 	}
 
@@ -375,8 +373,7 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amounts.String())
 	}
 
-	err = k.addCoins(ctx, acc.GetAddress(), amounts)
-	if err != nil {
+	if _, err := k.addCoins(ctx, acc.GetAddress(), amounts); err != nil {
 		return err
 	}
 

@@ -182,13 +182,13 @@ func (suite *KeeperTestSuite) mockSendCoinsFromAccountToModuleVirtual(acc *autht
 
 func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccountVirtual(moduleAcc *authtypes.ModuleAccount, accAddr sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetModuleAddress(moduleAcc.Name).Return(moduleAcc.GetAddress())
-	suite.authKeeper.EXPECT().HasAccount(suite.ctx, accAddr).Return(true)
+	suite.authKeeper.EXPECT().HasAccount(suite.ctx, accAddr).Return(true).AnyTimes()
 }
 
 func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, accAddr sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetModuleAddress(moduleAcc.Name).Return(moduleAcc.GetAddress())
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, moduleAcc.GetAddress()).Return(moduleAcc)
-	suite.authKeeper.EXPECT().HasAccount(suite.ctx, accAddr).Return(true)
+	suite.authKeeper.EXPECT().HasAccount(suite.ctx, accAddr).Return(true).AnyTimes()
 }
 
 func (suite *KeeperTestSuite) mockBurnCoins(moduleAcc *authtypes.ModuleAccount) {
@@ -200,18 +200,18 @@ func (suite *KeeperTestSuite) mockSendCoinsFromModuleToModule(sender, receiver *
 	suite.authKeeper.EXPECT().GetModuleAddress(sender.Name).Return(sender.GetAddress())
 	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, receiver.Name).Return(receiver)
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, sender.GetAddress()).Return(sender)
-	suite.authKeeper.EXPECT().HasAccount(suite.ctx, receiver.GetAddress()).Return(true)
+	suite.authKeeper.EXPECT().HasAccount(suite.ctx, receiver.GetAddress()).Return(true).AnyTimes()
 }
 
 func (suite *KeeperTestSuite) mockSendCoinsFromAccountToModule(acc *authtypes.BaseAccount, moduleAcc *authtypes.ModuleAccount) {
 	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, acc.GetAddress()).Return(acc)
-	suite.authKeeper.EXPECT().HasAccount(suite.ctx, moduleAcc.GetAddress()).Return(true)
+	suite.authKeeper.EXPECT().HasAccount(suite.ctx, moduleAcc.GetAddress()).Return(true).AnyTimes()
 }
 
 func (suite *KeeperTestSuite) mockSendCoins(ctx context.Context, sender sdk.AccountI, receiver sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetAccount(ctx, sender.GetAddress()).Return(sender)
-	suite.authKeeper.EXPECT().HasAccount(ctx, receiver).Return(true)
+	suite.authKeeper.EXPECT().HasAccount(ctx, receiver).Return(true).AnyTimes()
 }
 
 func (suite *KeeperTestSuite) mockFundAccount(receiver sdk.AccAddress) {
@@ -224,7 +224,7 @@ func (suite *KeeperTestSuite) mockInputOutputCoins(inputs []sdk.AccountI, output
 		suite.authKeeper.EXPECT().GetAccount(suite.ctx, input.GetAddress()).Return(input)
 	}
 	for _, output := range outputs {
-		suite.authKeeper.EXPECT().HasAccount(suite.ctx, output).Return(true)
+		suite.authKeeper.EXPECT().HasAccount(suite.ctx, output).Return(true).AnyTimes()
 	}
 }
 
@@ -686,7 +686,7 @@ func (suite *KeeperTestSuite) TestSendCoinsVirtual() {
 		keeper.SendCoinsFromModuleToAccountVirtual(sdkCtx, authtypes.Burner, accAddrs[0], refundAmt),
 	)
 
-	suite.authKeeper.EXPECT().HasAccount(suite.ctx, burnerAcc.GetAddress()).Return(true)
+	suite.authKeeper.EXPECT().HasAccount(suite.ctx, burnerAcc.GetAddress()).Return(true).AnyTimes()
 	require.NoError(keeper.CreditVirtualAccounts(ctx))
 
 	require.Equal(math.NewInt(25), keeper.GetBalance(suite.ctx, burnerAcc.GetAddress(), feeDenom1).Amount)
@@ -741,7 +741,9 @@ func (suite *KeeperTestSuite) TestInputOutputCoins() {
 
 	// accounts has no funds, should error.
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(acc0)
-	suite.authKeeper.EXPECT().HasAccount(suite.ctx, gomock.Any()).Return(true).Times(len(outputs))
+	// With account creation deferred until after subUnlockedCoins, HasAccount
+	// is not called when the sender lacks funds and the send returns early.
+	suite.authKeeper.EXPECT().HasAccount(suite.ctx, gomock.Any()).Return(true).AnyTimes()
 	err := suite.bankKeeper.InputOutputCoins(ctx, input, outputs)
 	require.ErrorContains(err, "insufficient funds")
 
@@ -1071,7 +1073,9 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 			testFunc := func() {
 				err = suite.bankKeeper.InputOutputCoins(ctx, input, tc.outputs)
 			}
-			suite.authKeeper.EXPECT().HasAccount(gomock.Any(), gomock.Any()).Return(true).Times(len(tc.outputAddrs))
+			// HasAccount is only invoked when the recipient has no prior balance,
+			// so this expectation is best-effort.
+			suite.authKeeper.EXPECT().HasAccount(gomock.Any(), gomock.Any()).Return(true).AnyTimes()
 			suite.Require().NotPanics(testFunc, "InputOutputCoins")
 			if len(tc.expErr) > 0 {
 				suite.Assert().EqualError(err, tc.expErr, "InputOutputCoins error")
@@ -1138,6 +1142,40 @@ func (suite *KeeperTestSuite) TestSendCoins() {
 	})
 	require.Len(coins, 1)
 	require.Equal(newBarCoin(25), coins[0], "expected only bar coins in the account balance, got: %v", coins)
+}
+
+// TestSendCoinsSkipsHasAccountForExistingRecipient pins down the optimization
+// introduced for https://github.com/cosmos/cosmos-sdk/issues/24228: when the
+// recipient already holds a balance in one of the input denoms, BaseSendKeeper
+// must not probe `auth` via HasAccount (and therefore must not call
+// SetAccount). A future regression that unconditionally re-adds the probe
+// would fail this test.
+func (suite *KeeperTestSuite) TestSendCoinsSkipsHasAccountForExistingRecipient() {
+	ctx := suite.ctx
+	require := suite.Require()
+
+	sender := accAddrs[0]
+	recipient := accAddrs[1]
+	senderAcc := authtypes.NewBaseAccountWithAddress(sender)
+
+	// Fund both accounts so the recipient has a prior balance in foo.
+	suite.mockFundAccount(sender)
+	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, sender, sdk.NewCoins(newFooCoin(100))))
+	suite.mockFundAccount(recipient)
+	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, recipient, sdk.NewCoins(newFooCoin(10))))
+
+	// Only GetAccount on the sender is expected. HasAccount must NOT be
+	// called for the recipient because the prior balance implies an existing
+	// account.
+	suite.authKeeper.EXPECT().GetAccount(ctx, sender).Return(senderAcc)
+	suite.authKeeper.EXPECT().HasAccount(gomock.Any(), gomock.Any()).Times(0)
+	suite.authKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), gomock.Any()).Times(0)
+	suite.authKeeper.EXPECT().SetAccount(gomock.Any(), gomock.Any()).Times(0)
+
+	require.NoError(suite.bankKeeper.SendCoins(ctx, sender, recipient, sdk.NewCoins(newFooCoin(25))))
+
+	require.Equal(sdk.NewCoins(newFooCoin(75)), suite.bankKeeper.GetAllBalances(ctx, sender))
+	require.Equal(sdk.NewCoins(newFooCoin(35)), suite.bankKeeper.GetAllBalances(ctx, recipient))
 }
 
 func (suite *KeeperTestSuite) TestSendCoinsWithRestrictions() {
@@ -1520,7 +1558,7 @@ func (suite *KeeperTestSuite) TestSendCoinsFromVirtualEventsWithRestrictions() {
 	suite.bankKeeper.SetSendRestriction(restrictionNewTo(updatedToAddr))
 
 	// SendCoinsToVirtual stored coins under originalToAddr, so we send from there
-	suite.authKeeper.EXPECT().HasAccount(suite.ctx, updatedToAddr).Return(true)
+	suite.authKeeper.EXPECT().HasAccount(suite.ctx, updatedToAddr).Return(true).AnyTimes()
 	require.NoError(suite.bankKeeper.SendCoinsFromVirtual(suite.ctx, originalToAddr, originalToAddr, amt))
 
 	addressCodec := suite.authKeeper.AddressCodec()

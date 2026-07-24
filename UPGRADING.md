@@ -4,7 +4,7 @@ This document provides a reference for upgrading from `v0.54.x` to `v0.55.x` of 
 
 For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.55.x/CHANGELOG.md).
 
-The headline changes in this release are the removal of three legacy surfaces (`x/params`, `x/protocolpool`, and `SIGN_MODE_TEXTUAL`), a reworked app-side mempool interface, and validator consensus key rotation in `x/staking`. Key rotation ships enabled for every chain that upgrades — see [Validator Consensus Key Rotation](#validator-consensus-key-rotation) — and requires one line of wiring in `app.go`. Everything else in the new-features list (ML-DSA-65 keys, secp256k1eth keys, Block-STM, the application-side mempool ABCI) is opt-in.
+The headline changes in this release are the removal of three legacy surfaces (`x/params`, `x/protocolpool`, and `SIGN_MODE_TEXTUAL`), a reworked app-side mempool interface, and validator consensus key rotation in `x/staking`. Key rotation ships enabled for every chain that upgrades — see [Validator Consensus Key Rotation](#validator-consensus-key-rotation) — and requires one line of wiring in `app.go`. Everything else in the new-features list (ML-DSA-65 keys, secp256k1eth keys, config-driven Block-STM wiring) is opt-in.
 
 ## Table of Contents
 
@@ -22,8 +22,7 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [ML-DSA-65 Validator Consensus Keys](#ml-dsa-65-validator-consensus-keys)
     * [ML-DSA-65 Account Keys](#ml-dsa-65-account-keys)
     * [secp256k1eth Validator Consensus Keys](#secp256k1eth-validator-consensus-keys)
-    * [Block-STM Parallel Transaction Execution](#block-stm-parallel-transaction-execution)
-    * [Application-Side Mempool ABCI Methods](#application-side-mempool-abci-methods)
+    * [Block-STM Configuration](#block-stm-configuration)
 * [Behavior Changes Affecting Dapps and Indexers](#behavior-changes-affecting-dapps-and-indexers)
 
 ## Breaking Changes
@@ -35,7 +34,7 @@ The headline changes in this release are the removal of three legacy surfaces (`
 Cosmos SDK v0.55 requires a new CometBFT release (v0.54.x shipped with CometBFT `v0.39.0`). The v0.55.0 release will pin the final tag in `go.mod`; bump your app's `go.mod` to match. Relevant changes in the new CometBFT version:
 
 * Expanded `MaxSignatureSize` and per-validator `MaxCommitSigBytes` to accommodate post-quantum (ML-DSA-65) signatures.
-* New ABCI mempool methods `InsertTx` and `ReapTxs`, including socket-transport support ([cometbft#5958](https://github.com/cometbft/cometbft/pull/5958)), used by the SDK's [application-side mempool](#application-side-mempool-abci-methods).
+* A fix for the application-side mempool (`mempool.type = "app"`, supported since CometBFT v0.39.2 / SDK v0.54.3): the default socket transport was missing the `InsertTx` / `ReapTxs` cases, causing node self-kill ([cometbft#5958](https://github.com/cometbft/cometbft/pull/5958)). Chains using an app-side mempool over the socket transport need this release.
 * Updated `DefaultBlockParams` ([cometbft#5987](https://github.com/cometbft/cometbft/pull/5987)). This changes defaults for new chains only; existing chains keep their on-chain consensus params.
 
 See the [CometBFT changelog](https://github.com/cometbft/cometbft/blob/main/CHANGELOG.md) for the full list.
@@ -215,11 +214,11 @@ Existing chains can combine this with [key rotation](#validator-consensus-key-ro
 
 [#26615](https://github.com/cosmos/cosmos-sdk/pull/26615) adds `crypto/keys/secp256k1eth`, wrapping CometBFT's Ethereum-style secp256k1 consensus key implementation with SDK codec registration. Intended for EVM-compatible chains that want validator consensus addresses derived the Ethereum way; opt in via `genesis.consensus_params.validator.pub_key_types`.
 
-### Block-STM Parallel Transaction Execution
+### Block-STM Configuration
 
-v0.55 adds operator-facing configuration for parallel block execution with Block-STM ([#26208](https://github.com/cosmos/cosmos-sdk/pull/26208)): `block-executor` (`"sequential"`, the default, or `"block-stm"`), `block-stm-workers`, and `block-stm-pre-estimate` in `app.toml`.
+Block-STM parallel execution itself is not new — the engine (`baseapp/txnrunner`) and the `SetBlockSTMTxRunner` hook shipped in v0.54.x, wired programmatically per chain. v0.55 adds standard operator-facing configuration ([#26208](https://github.com/cosmos/cosmos-sdk/pull/26208)): `block-executor` (`"sequential"`, the default, or `"block-stm"`), `block-stm-workers`, and `block-stm-pre-estimate` in `app.toml`, plus a `baseapp/blockexec` helper that resolves them and installs the runner. Chains that already call `SetBlockSTMTxRunner` directly can keep that wiring or switch to the helper.
 
-To wire it, use the new `baseapp/blockexec` helper after creating your store keys (see `simapp/app.go`):
+To adopt the config-driven wiring, call `blockexec.Apply` after creating your store keys (see `simapp/app.go`):
 
 ```go
 stores := make([]storetypes.StoreKey, 0, len(keys))
@@ -234,12 +233,6 @@ blockexec.Apply(bApp, appOpts, stores, txConfig.TxDecoder(),
 `Apply` resolves the executor from `app.toml`/flags and installs the corresponding `TxRunner`; with the default `sequential` executor it preserves today's behavior, so the wiring is safe to add unconditionally. Block-STM requires the block gas meter to remain disabled (the default since v0.54) — enabling both panics at parameter assignment.
 
 Switching a running chain's executor is a per-node setting with identical state-transition results, but treat the first enablement as an operational rollout: test with your workload before flipping validators.
-
-### Application-Side Mempool ABCI Methods
-
-[#25620](https://github.com/cosmos/cosmos-sdk/pull/25620) and [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) add support for CometBFT's new application-side mempool ABCI methods. `BaseApp` exposes `SetInsertTxHandler` and `SetReapTxsHandler`; when CometBFT runs with `mempool.type = "app"`, it delegates mempool insertion and reaping to the application via `InsertTx` / `ReapTxs`. Both handlers must be set — `BaseApp` returns an error for these ABCI calls otherwise. Requires the CometBFT release this SDK version is pinned to (older versions lack socket-transport support for the new methods).
-
-Chains using CometBFT's built-in mempool need no changes.
 
 ## Behavior Changes Affecting Dapps and Indexers
 

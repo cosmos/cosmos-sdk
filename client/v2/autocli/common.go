@@ -87,7 +87,13 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 				}
 			} else {
 				// if the signer is not a flag, it is a positional argument
-				// we need to get the correct positional arguments
+				// we need to get the correct positional arguments.
+				// When the last positional argument is optional or varargs, cobra
+				// accepts a call with fewer arguments than the signer's index, so
+				// guard against an out-of-range access and fail gracefully.
+				if binder.SignerInfo.PositionalArgIndex >= len(args) {
+					return fmt.Errorf("expected %d positional arguments, got %d", binder.SignerInfo.PositionalArgIndex+1, len(args))
+				}
 				if err := cmd.Flags().Set(flags.FlagFrom, args[binder.SignerInfo.PositionalArgIndex]); err != nil {
 					return err
 				}

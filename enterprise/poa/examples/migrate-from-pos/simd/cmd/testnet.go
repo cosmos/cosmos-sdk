@@ -392,7 +392,7 @@ func initTestnetFiles(
 	err = collectGenFiles(
 		clientCtx, nodeConfig, args.chainID, nodeIDs, valPubKeys, validators,
 		args.outputDir, args.nodeDirPrefix, args.nodeDaemonHome, genBalIterator,
-		rpcPort, p2pPortStart, args.singleMachine, peerIDs,
+		rpcPort, p2pPortStart, pprofListen, prometheusListen, args.singleMachine, peerIDs,
 	)
 	if err != nil {
 		return err
@@ -466,7 +466,7 @@ func collectGenFiles(
 	validators []poatypes.Validator,
 	outputDir, nodeDirPrefix, nodeDaemonHome string,
 	genBalIterator banktypes.GenesisBalancesIterator,
-	rpcPortStart, p2pPortStart int,
+	rpcPortStart, p2pPortStart, pprofPortStart, prometheusPortStart int,
 	singleMachine bool,
 	peerIDs []string,
 ) error {
@@ -475,9 +475,14 @@ func collectGenFiles(
 
 	for i := range validators {
 		if singleMachine {
+			// Re-set every per-node port: nodeConfig is shared across
+			// iterations and written per node below, so any field not
+			// reassigned here keeps the previous node's value.
 			portOffset := i
 			nodeConfig.RPC.ListenAddress = fmt.Sprintf("tcp://0.0.0.0:%d", rpcPortStart+portOffset)
 			nodeConfig.P2P.ListenAddress = fmt.Sprintf("tcp://0.0.0.0:%d", p2pPortStart+portOffset)
+			nodeConfig.RPC.PprofListenAddress = fmt.Sprintf("localhost:%d", pprofPortStart+portOffset)
+			nodeConfig.Instrumentation.PrometheusListenAddr = fmt.Sprintf(":%d", prometheusPortStart+portOffset)
 		}
 
 		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)

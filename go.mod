@@ -65,11 +65,11 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.68.0
 	go.opentelemetry.io/contrib/otelconf v0.23.0
 	go.opentelemetry.io/contrib/propagators/b3 v1.43.0
-	go.opentelemetry.io/contrib/propagators/jaeger v1.43.0
-	go.opentelemetry.io/otel v1.43.0
-	go.opentelemetry.io/otel/log v0.19.0
-	go.opentelemetry.io/otel/metric v1.43.0
-	go.opentelemetry.io/otel/trace v1.43.0
+	go.opentelemetry.io/contrib/propagators/jaeger v1.44.0
+	go.opentelemetry.io/otel v1.44.0
+	go.opentelemetry.io/otel/log v0.20.0
+	go.opentelemetry.io/otel/metric v1.44.0
+	go.opentelemetry.io/otel/trace v1.44.0
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v3 v3.0.4
 	golang.org/x/crypto v0.53.0
@@ -113,7 +113,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.23 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.23 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.97.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.97.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signin v1.0.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.30.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.21 // indirect

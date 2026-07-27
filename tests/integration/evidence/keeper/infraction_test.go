@@ -398,6 +398,91 @@ func TestHandleDoubleSign_RotatedConsKey(t *testing.T) {
 	assert.Assert(t, len(values) == 1)
 }
 
+// TestHandleDoubleSign_RotatedConsKeyLingersForBlockWindow reproduces the
+// slashing escape this fix closes: after a rotation, block time advances past
+// the unbonding window while the block height stays inside the still-open
+// evidence block window. Late equivocation for the old key must still slash
+// and tombstone the fully-bonded validator, because the lock is retired on the
+// evidence horizon, not unbonding.
+func TestHandleDoubleSign_RotatedConsKeyLingersForBlockWindow(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+
+	unbonding, err := f.stakingKeeper.UnbondingTime(f.sdkCtx)
+	assert.NilError(t, err)
+	rotationTime := f.sdkCtx.BlockHeader().Time
+
+	// evidence stays admissible for a large block window that outlasts unbonding.
+	const maxAgeNumBlocks = int64(1_000_000)
+	evidenceParams := cmtproto.ConsensusParams{
+		Evidence: &cmtproto.EvidenceParams{
+			MaxAgeDuration:  unbonding,
+			MaxAgeNumBlocks: maxAgeNumBlocks,
+		},
+	}
+
+	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1).WithConsensusParams(evidenceParams)
+	populateValidators(t, f)
+
+	power := int64(100)
+	operatorAddr, oldPubKey := valAddresses[0], pubkeys[0]
+	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper)
+	tstaking.CreateValidatorWithValPower(operatorAddr, oldPubKey, power, true)
+
+	_, err = f.stakingKeeper.EndBlocker(f.sdkCtx.WithConsensusParams(evidenceParams))
+	assert.NilError(t, err)
+
+	oldConsAddr := sdk.ConsAddress(oldPubKey.Address())
+	assert.NilError(t, f.slashingKeeper.AddPubkey(f.sdkCtx, oldPubKey))
+	info := slashingtypes.NewValidatorSigningInfo(oldConsAddr, ctx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
+	assert.NilError(t, f.slashingKeeper.SetValidatorSigningInfo(f.sdkCtx, oldConsAddr, info))
+	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(ctx, oldPubKey.Address(), power, comet.BlockIDFlagCommit))
+
+	// rotate under the evidence params so the evidence-lock horizon is computed.
+	rotateCtx := f.sdkCtx.WithConsensusParams(evidenceParams)
+	newPubKey := ed25519.GenPrivKey().PubKey()
+	newConsAddr := sdk.ConsAddress(newPubKey.Address())
+	assert.NilError(t, f.stakingKeeper.SetConsKeyRotation(rotateCtx, operatorAddr, oldPubKey, newPubKey))
+	assert.NilError(t, f.stakingKeeper.ApplyConsKeyRotation(rotateCtx, operatorAddr, newPubKey))
+
+	// advance time past the unbonding window (the old prune horizon) while
+	// keeping the height inside the evidence block window, then prune.
+	prunedCtx := f.sdkCtx.WithConsensusParams(evidenceParams).
+		WithBlockTime(rotationTime.Add(unbonding + time.Hour)).
+		WithBlockHeight(50)
+	assert.NilError(t, f.stakingKeeper.PruneMaturedConsKeyRotations(prunedCtx))
+
+	// the RotatedFrom lock survived: the historical lookup still resolves.
+	histVal, err := f.stakingKeeper.ValidatorByHistoricalConsAddr(prunedCtx, oldConsAddr)
+	assert.NilError(t, err)
+	histConsAddr, err := histVal.GetConsAddr()
+	assert.NilError(t, err)
+	assert.DeepEqual(t, newConsAddr.Bytes(), histConsAddr)
+
+	val, err := f.stakingKeeper.Validator(prunedCtx, operatorAddr)
+	assert.NilError(t, err)
+	oldTokens := val.GetTokens()
+
+	// equivocation for the old key: the time window is exceeded but the block
+	// window is still open, so the evidence is admissible.
+	evCtx := prunedCtx.WithCometInfo(NewCometInfo(abci.RequestFinalizeBlock{
+		Misbehavior: []abci.Misbehavior{{
+			Validator: abci.Validator{Address: oldPubKey.Address(), Power: power},
+			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
+			Time:      rotationTime,
+			Height:    1,
+		}},
+	}))
+	assert.NilError(t, f.evidenceKeeper.BeginBlocker(evCtx))
+
+	// the still-bonded rotated validator is jailed, tombstoned, and slashed.
+	val, err = f.stakingKeeper.Validator(evCtx, operatorAddr)
+	assert.NilError(t, err)
+	assert.Assert(t, val.IsJailed())
+	assert.Assert(t, f.slashingKeeper.IsTombstoned(evCtx, newConsAddr))
+	assert.Assert(t, val.GetTokens().LT(oldTokens))
+}
+
 // TestHandleDoubleSign_RotatedThenRemoved verifies that equivocation evidence
 // referencing a rotated-away key whose validator has since been removed from
 // the store is ignored rather than surfacing a consensus-level error from

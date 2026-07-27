@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
@@ -29,7 +30,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/std"
@@ -158,6 +161,49 @@ func setupTest(t *testing.T) *testFixture {
 		bankKeeper: bankKeeper,
 		cdc:        cdc,
 	}
+}
+
+// commitBlock advances the last-committed-power snapshot and clears the transient
+// queue, as EndBlock followed by a block commit does in production. Use it after
+// setup so a later mutation is diffed against state CometBFT already committed.
+func commitBlock(t *testing.T, f *testFixture) {
+	t.Helper()
+	updates, err := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+	require.NoError(t, err)
+	require.NoError(t, f.poaKeeper.SetLastCommittedPower(f.ctx, updates))
+	// Simulate baseapp wiping the transient store between blocks.
+	n, err := f.poaKeeper.queuedUpdates.Len(f.ctx)
+	require.NoError(t, err)
+	for i := uint64(0); i < n; i++ {
+		_, err := f.poaKeeper.queuedUpdates.Pop(f.ctx)
+		require.NoError(t, err)
+	}
+}
+
+// updatePowers keys the reaped changeset by marshaled pubkey, failing if any
+// consensus pubkey appears more than once (the invariant CometBFT enforces).
+func updatePowers(t *testing.T, updates []abci.ValidatorUpdate) map[string]int64 {
+	t.Helper()
+	powers := make(map[string]int64, len(updates))
+	for _, u := range updates {
+		b, err := u.PubKey.Marshal()
+		require.NoError(t, err)
+		_, dup := powers[string(b)]
+		require.Falsef(t, dup, "pubkey %x appears twice in the changeset", b)
+		powers[string(b)] = u.Power
+	}
+	return powers
+}
+
+// cmtKey returns the marshaled CometBFT proto pubkey, matching the keys produced
+// by updatePowers, so a changeset can be looked up by a known pubkey.
+func cmtKey(t *testing.T, pk cryptotypes.PubKey) string {
+	t.Helper()
+	cmt, err := cryptocodec.ToCmtProtoPublicKey(pk)
+	require.NoError(t, err)
+	b, err := cmt.Marshal()
+	require.NoError(t, err)
+	return string(b)
 }
 
 // Helper to create a validator in POA keeper

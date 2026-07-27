@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth/ante) [#26573](https://github.com/cosmos/cosmos-sdk/pull/26573) Reject tx with extra `SignerInfos` in `SetPubKeyDecorator`.
 * (x/auth/tx) [#26527](https://github.com/cosmos/cosmos-sdk/pull/26527) Fix nil pointer panic in `GetSigningTxData` when a `SignerInfo` has a nil `PublicKey`.
 * (x/auth/tx) [#26571](https://github.com/cosmos/cosmos-sdk/pull/26571) Avoid nil pointer panic in `GetSigningTxData` for multisig `ModeInfo` with a nil `Multi` or nil `Bitarray`.
+* (crypto) [#26509](https://github.com/cosmos/cosmos-sdk/pull/26509) Bound `CompactBitArray` `GetIndex`/`SetIndex` by the `Elems` length to avoid out-of-range reads when decoding malformed multisig bit arrays.
 
 ### Deprecated
 

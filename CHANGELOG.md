@@ -38,6 +38,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## UNRELEASED
 
+### Improvements
+* (staking) [#26619](https://github.com/cosmos/cosmos-sdk/pull/26619) Emit `rotate_cons_pubkey` and `apply_cons_pubkey_rotation` events during key rotation.
+
 ### Breaking Changes
 
 * (mempool) [#25338](https://github.com/cosmos/cosmos-sdk/pull/25338) Respect gas wanted returned by the ante handler for block selection. Adds `InsertWithOption` to the `Mempool` interface (carries the ante-reported `GasWanted`) and changes the `SelectBy` callback to receive a `mempool.Tx` wrapper that exposes the stored value.
@@ -77,6 +80,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (codec) [#26587](https://github.com/cosmos/cosmos-sdk/pull/26587) Lower the nested `google.protobuf.Any` recursion depth cap in unknown-field validation from 10,000 to 64, reducing CPU-amplification DoS risk from deeply nested `Any` wrappers. No legitimate message nests `Any` anywhere near that deep.
 * (x/feegrant) [#26596](https://github.com/cosmos/cosmos-sdk/pull/26596) Honor the `PageRequest` offset and `count_total` in the `Allowances` and `AllowancesByGranter` gRPC queries, which previously collected grants inside the pagination predicate and so returned offset-skipped and beyond-limit results.
 * (x/authz) [#26588](https://github.com/cosmos/cosmos-sdk/pull/26588) Cap the number of expired grants pruned per `BeginBlocker` call to 200, matching `x/feegrant`'s existing pattern, so a block where many grants expire at once can't cause unbounded work.
 * (client) [#26524](https://github.com/cosmos/cosmos-sdk/pull/26524) Fix file handle leak in the `snapshot dump` command where chunk files were deferred-closed inside the loop, keeping every chunk's handle open until the command returned (follow-up to #25811).
@@ -95,10 +99,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth/tx) [#26527](https://github.com/cosmos/cosmos-sdk/pull/26527) Fix nil pointer panic in `GetSigningTxData` when a `SignerInfo` has a nil `PublicKey`.
 * (x/auth/tx) [#26517](https://github.com/cosmos/cosmos-sdk/pull/26517) Return a decode error instead of panicking when a transaction's `SignerInfos` and `Signatures` counts disagree in `GetSignaturesV2`, or a multisig's `ModeInfos` and sub-signature counts disagree in `ModeInfoAndSigToSignatureData`.
 * (x/auth/ante) [#26573](https://github.com/cosmos/cosmos-sdk/pull/26573) Reject tx with extra SignerInfos in SetPubKeyDecorator.
+* (block-stm) [#26583](https://github.com/cosmos/cosmos-sdk/pull/26583) Fix count validation tasks before advancing validationIdx to prevent lost updates.
 * (blockstm) [#26591](https://github.com/cosmos/cosmos-sdk/pull/26591) normalize non-positive worker count in `STMRunner.Run`.
 * (x/staking) [#26613](https://github.com/cosmos/cosmos-sdk/pull/26613) Require `key_rotation_fee` denom to equal `bond_denom` in `Params.Validate` and derive the default fee denom from the configured bond denom.
 * (x/staking) [#26611](https://github.com/cosmos/cosmos-sdk/pull/26611) Fix missing key rotation type tags on genesis import.
 * (blockstm) [#26627](https://github.com/cosmos/cosmos-sdk/pull/26627) Guard against block-stm estimate panic.
+* (x/staking) [#26616](https://github.com/cosmos/cosmos-sdk/pull/26616) Expire historical cons addr lookups only once equivocation evidence is no longer admissible.
+* (x/staking) [#26641](https://github.com/cosmos/cosmos-sdk/pull/26641) Allow multiple history entires in genesis import, and fix labeling of historical entries.
 
 ### Deprecated
 

@@ -56,6 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (telemetry) [#26390](https://github.com/cosmos/cosmos-sdk/pull/26390) Fix env var for otel telemetry initialization.
 * (x/staking) [#26408](https://github.com/cosmos/cosmos-sdk/pull/26408) Fix `MsgBeginRedelegate` failure when redelegating all shares from an unbonded source validator that is removed after unbonding.
 * (x/auth/tx) [#26527](https://github.com/cosmos/cosmos-sdk/pull/26527) Fix nil pointer panic in `GetSigningTxData` when a `SignerInfo` has a nil `PublicKey`.
+* (x/auth/tx) [#26571](https://github.com/cosmos/cosmos-sdk/pull/26571) Avoid nil pointer panic in `GetSigningTxData` for multisig `ModeInfo` with a nil `Multi` or nil `Bitarray`.
 
 ### Deprecated
 

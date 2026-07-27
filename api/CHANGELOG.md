@@ -25,14 +25,16 @@ Each entry must include the Github issue reference in the following format:
 ## [v1.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/api/v1.1.0) - 2026-07-27
 
 ### Features
-* [#26616](https://github.com/cosmos/cosmos-sdk/pull/26616) Add `ConsKeyEvidenceExpiry`, `ConsensusKeyRotationHistory.evidence_expiry_time`, and `.evidence_expiry_height`. `maturity_time` may now be zero, meaning the re-rotation gate is retired and only the evidence lock remains.
+* [#26678](https://github.com/cosmos/cosmos-sdk/pull/26678) Regenerate the API module against the latest protos:
+  * Add the `cosmos/crypto/mldsa65` package with `PubKey` and `PrivKey` for ML-DSA-65 (FIPS 204) validator keys.
+  * Add the `cosmos/crypto/secp256k1eth` package with `PubKey` and `PrivKey` for Ethereum-compatible secp256k1 validator keys.
+  * Add `Params.sig_verify_cost_mldsa65` to `cosmos/auth/v1beta1/auth.proto`.
+  * Add `ConsKeyEvidenceExpiry` to `cosmos/staking/v1beta1/staking.proto`.
+  * Add `ConsensusKeyRotationHistory.evidence_expiry_time` and `.evidence_expiry_height` to `cosmos/staking/v1beta1/genesis.proto`. `maturity_time` may now be zero, meaning the re-rotation gate is retired and 
 * [#26481](https://github.com/cosmos/cosmos-sdk/pull/26481) Add staking `Params.key_rotation_fee` to `cosmos/staking/v1beta1/staking.proto`.
 * [#26460](https://github.com/cosmos/cosmos-sdk/pull/26460) Add `ConsensusKeyRotationHistory` and `PendingConsensusKeyRotation` to `cosmos/staking/v1beta1/genesis.proto`.
 * [#26440](https://github.com/cosmos/cosmos-sdk/pull/26440) Add `Msg/RotateConsPubKey` with `MsgRotateConsPubKey` and `MsgRotateConsPubKeyResponse` to `cosmos/staking/v1beta1/tx.proto`.
 * [#25607](https://github.com/cosmos/cosmos-sdk/pull/25607) Add `tendermint.types.AuthorityParams` and `ConsensusParams.authority` and `cosmos.consensus.v1.MsgUpdateParams.auth`.
-* [#26615](https://github.com/cosmos/cosmos-sdk/pull/26615) Add the `cosmos/crypto/secp256k1eth` package with `PubKey` and `PrivKey` for Ethereum-compatible secp256k1 validator keys.
-* [#26472](https://github.com/cosmos/cosmos-sdk/pull/26472) Add `Params.sig_verify_cost_mldsa65` to `cosmos/auth/v1beta1/auth.proto`.
-* [#26436](https://github.com/cosmos/cosmos-sdk/pull/26436) Add the `cosmos/crypto/mldsa65` package with `PubKey` and `PrivKey` for ML-DSA-65 (FIPS 204) validator keys.
 
 ### API Breaking
 

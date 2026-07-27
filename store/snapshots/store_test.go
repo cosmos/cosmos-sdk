@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -330,4 +332,49 @@ func TestStore_Save(t *testing.T) {
 	_, err = store.Save(8, 1, makeChunks(nil))
 	require.NoError(t, err)
 	close(ch)
+}
+
+// TestStore_Save_ChunksWrittenToDisk verifies that chunk files exist on disk with correct
+// contents after Save returns. This is a write-path sanity check; crash-durability
+// (that Sync() forces data to stable storage) is a kernel contract that cannot be
+// verified in a unit test without crashing the process.
+func TestStore_Save_ChunksWrittenToDisk(t *testing.T) {
+	tempdir := GetTempDir(t)
+	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
+	require.NoError(t, err)
+
+	chunkData := [][]byte{{0xde, 0xad}, {0xbe, 0xef}}
+	snapshot, err := store.Save(1, 1, makeChunks(chunkData))
+	require.NoError(t, err)
+
+	for i, want := range chunkData {
+		path := store.PathChunk(snapshot.Height, snapshot.Format, uint32(i))
+		got, err := os.ReadFile(path)
+		require.NoErrorf(t, err, "chunk %d file should exist on disk", i)
+		assert.Equalf(t, want, got, "chunk %d file content should match", i)
+	}
+}
+
+// TestStore_Save_syncDirError verifies that a syncDir failure inside saveChunk propagates
+// back through Save. The injector succeeds for ancestor-directory syncs (mkdirAllSync) and
+// only fails when syncDir is called on the chunk-containing directory (syncAndClose path).
+func TestStore_Save_syncDirError(t *testing.T) {
+	tempdir := GetTempDir(t)
+	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
+	require.NoError(t, err)
+
+	// filepath.Dir of the chunk path is the snapshot directory that syncAndClose syncs
+	// after writing the chunk file — distinct from the ancestor directories synced by mkdirAllSync.
+	chunkDir := filepath.Dir(store.PathChunk(1, 1, 0))
+	injected := errors.New("injected syncDir error")
+	original := snapshots.SetSyncDirFn(func(path string) error {
+		if path == chunkDir {
+			return injected
+		}
+		return nil
+	})
+	defer snapshots.SetSyncDirFn(original)
+
+	_, err = store.Save(1, 1, makeChunks([][]byte{{0x01, 0x02}}))
+	require.ErrorContains(t, err, injected.Error())
 }

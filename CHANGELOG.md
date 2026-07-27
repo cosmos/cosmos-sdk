@@ -60,6 +60,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth/tx) [#26527](https://github.com/cosmos/cosmos-sdk/pull/26527) Fix nil pointer panic in `GetSigningTxData` when a `SignerInfo` has a nil `PublicKey`.
 * (x/auth/tx) [#26571](https://github.com/cosmos/cosmos-sdk/pull/26571) Avoid nil pointer panic in `GetSigningTxData` for multisig `ModeInfo` with a nil `Multi` or nil `Bitarray`.
 * (crypto) [#26529](https://github.com/cosmos/cosmos-sdk/pull/26529) Validate the SEC1 tag byte (`0x02`/`0x03`) when unmarshaling a `secp256k1.PubKey`, rejecting malformed compressed keys that previously passed the length-only check.
+* (crypto) [#26509](https://github.com/cosmos/cosmos-sdk/pull/26509) Bound compact bit array index by elems length to avoid out-of-range panics on malformed input.
 
 ### Deprecated
 

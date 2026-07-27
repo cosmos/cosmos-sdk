@@ -105,6 +105,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#26611](https://github.com/cosmos/cosmos-sdk/pull/26611) Fix missing key rotation type tags on genesis import.
 * (blockstm) [#26627](https://github.com/cosmos/cosmos-sdk/pull/26627) Guard against block-stm estimate panic.
 * (x/staking) [#26616](https://github.com/cosmos/cosmos-sdk/pull/26616) Expire historical cons addr lookups only once equivocation evidence is no longer admissible.
+* (x/poa) [#26642](https://github.com/cosmos/cosmos-sdk/pull/26642) Always return error when migrating fees to an occupied key.
 * (x/staking) [#26641](https://github.com/cosmos/cosmos-sdk/pull/26641) Allow multiple history entires in genesis import, and fix labeling of historical entries.
 
 ### Deprecated

@@ -75,13 +75,15 @@ func (k Keeper) GetPubkey(ctx context.Context, a cryptotypes.Address) (cryptotyp
 }
 
 // Slash attempts to slash a validator. The slash is delegated to the staking
-// module to make the necessary validator changes. It specifies no infraction reason.
+// module to make the necessary validator changes. The consensus address must be
+// the validator's current consensus address. It specifies no infraction reason.
 func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, fraction sdkmath.LegacyDec, power, distributionHeight int64) error {
 	return k.SlashWithInfractionReason(ctx, consAddr, fraction, power, distributionHeight, stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
 }
 
 // SlashWithInfractionReason attempts to slash a validator. The slash is delegated to the staking
-// module to make the necessary validator changes. It specifies an infraction reason.
+// module to make the necessary validator changes. The consensus address must be
+// the validator's current consensus address. It specifies an infraction reason.
 func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.ConsAddress, fraction sdkmath.LegacyDec, power, distributionHeight int64, infraction stakingtypes.Infraction) error {
 	coinsBurned, err := k.sk.SlashWithInfractionReason(ctx, consAddr, distributionHeight, power, fraction, infraction)
 	if err != nil {
@@ -110,7 +112,8 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 }
 
 // Jail attempts to jail a validator. The slash is delegated to the staking module
-// to make the necessary validator changes.
+// to make the necessary validator changes. The consensus address must be the
+// validator's current consensus address.
 func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

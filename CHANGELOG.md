@@ -38,6 +38,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## UNRELEASED
 
+### Improvements
+* (staking) [#26619](https://github.com/cosmos/cosmos-sdk/pull/26619) Emit `rotate_cons_pubkey` and `apply_cons_pubkey_rotation` events during key rotation.
+
 ### Breaking Changes
 
 * (mempool) [#25338](https://github.com/cosmos/cosmos-sdk/pull/25338) Respect gas wanted returned by the ante handler for block selection. Adds `InsertWithOption` to the `Mempool` interface (carries the ante-reported `GasWanted`) and changes the `SelectBy` callback to receive a `mempool.Tx` wrapper that exposes the stored value.
@@ -55,24 +58,52 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (staking) [#26440](https://github.com/cosmos/cosmos-sdk/pull/26440) Add basic key rotation for validator consensus keys.
 * (crypto) [#26436](https://github.com/cosmos/cosmos-sdk/pull/26436) Add ML-DSA-65 (FIPS 204) post-quantum validator consensus key type, with SDK key wrappers, Amino + interface-registry registration, multisig support, and a `hd.MlDsa65Type` constant.
 * (blockstm) [#26467](https://github.com/cosmos/cosmos-sdk/pull/26467) Track existence for `Has()` reads to reduce false conflicts.
+* (staking) [#26485](https://github.com/cosmos/cosmos-sdk/pull/26485) Add `key_rotation_fee` to `x/staking` params and register associated 5->6 migration.
 * (staking) [#26461](https://github.com/cosmos/cosmos-sdk/pull/26461) Wire `MsgRotateConsPubKey` into cli and add a happy path system test.
 * (staking) [#26471](https://github.com/cosmos/cosmos-sdk/pull/26471) Add genesis import/export support for validator consensus key rotation.
 * (crypto) [#26472](https://github.com/cosmos/cosmos-sdk/pull/26472) Add ML-DSA-65 (FIPS 204) support for user account keys: mnemonic-based keyring creation/recovery (`--algo ml_dsa_65`), transaction signing/verification, and an ante-handler signature-verification gas cost (`Params.SigVerifyCostMlDsa65`).
+* (enterprise/poa) [#26590](https://github.com/cosmos/cosmos-sdk/pull/26590) Add `MsgRotateConsPubKey` for POA validator consensus key rotation (operator self-service plus admin override).
+* (enterprise/poa) [#26614](https://github.com/cosmos/cosmos-sdk/pull/26614) Add ML-DSA-65 (mldsa65) validator key support to the PoA module via a `WithMlDsa65Support()` module option, raising `MaxPubKeyLength` to accommodate the larger keys.
+* (crypto) [#26615](https://github.com/cosmos/cosmos-sdk/pull/26615) Add `secp256k1eth` validator consensus key type.
 
 ### Improvements
 
+* (server/config) [#26572](https://github.com/cosmos/cosmos-sdk/pull/26572) Warn that `query-gas-limit = 0` (the default) is unbounded and exposes public RPC nodes to DoS via expensive queries.
 * (docs) [#25918](https://github.com/cosmos/cosmos-sdk/issues/25918) Regenerate Swagger API spec to reflect current proto state, including `authority` field on consensus params and removal of stale module-config definitions.
 * (baseapp) [#22368](https://github.com/cosmos/cosmos-sdk/issues/22368) Add `-race`-mode regression test (`TestABCI_Race_GRPC_Query_During_Commit`) covering concurrent `BaseApp.Query` and `FinalizeBlock`/`Commit`. Pins down the state-management mutex work added in #24655 and follow-ups so the data race reported against v0.50.x cannot regress silently.
+* (x/staking, x/slashing) [#26481](https://github.com/cosmos/cosmos-sdk/pull/26481) Resolve evidence against recently rotated consensus keys and migrate slashing signing state to the active consensus key.
+* (x/auth/tx) [#25221](https://github.com/cosmos/cosmos-sdk/issues/25221) Add `ConfigOptions.AminoJSONEncoder` so applications can configure a custom `aminojson.Encoder` (e.g. custom field encodings) for the `SIGN_MODE_LEGACY_AMINO_JSON` handler without replicating the SDK's `HandlerMap` construction.
+* chore(x/auth) [#26567](https://github.com/cosmos/cosmos-sdk/pull/26567): add a human-readable error
+* (blockstm) [#26592](https://github.com/cosmos/cosmos-sdk/pull/26592) Validate `ExecuteBlock` inputs (block size, store index mapping, and estimates) at the exported entry point so invalid input returns a descriptive error instead of an opaque "index out of range" panic.
+* (cli) [#26604](https://github.com/cosmos/cosmos-sdk/pull/26604) Add consensus key algo to init and testnet CLIs.
+* (crypto) [#26626](https://github.com/cosmos/cosmos-sdk/pull/26626) Update mldsa65 PubKey Address logic to validate length, remove unpacking.
 
 ### Bug Fixes
 
+* (x/feegrant) [#26596](https://github.com/cosmos/cosmos-sdk/pull/26596) Honor the `PageRequest` offset and `count_total` in the `Allowances` and `AllowancesByGranter` gRPC queries, which previously collected grants inside the pagination predicate and so returned offset-skipped and beyond-limit results.
+* (x/authz) [#26588](https://github.com/cosmos/cosmos-sdk/pull/26588) Cap the number of expired grants pruned per `BeginBlocker` call to 200, matching `x/feegrant`'s existing pattern, so a block where many grants expire at once can't cause unbounded work.
+* (client) [#26524](https://github.com/cosmos/cosmos-sdk/pull/26524) Fix file handle leak in the `snapshot dump` command where chunk files were deferred-closed inside the loop, keeping every chunk's handle open until the command returned (follow-up to #25811).
+* (x/distribution) [#26518](https://github.com/cosmos/cosmos-sdk/pull/26518) Return an error from internal historical rewards reads when the record is absent, preventing recovered reference-count panics during BlockSTM speculative execution.
+* (x/auth) [#26515](https://github.com/cosmos/cosmos-sdk/pull/26515) Bound the pubkey and signature indices in `ConsumeMultisignatureVerificationGas` and `VerifyMultisignature` so a multisig signature with a bit array larger than the key set, or with more set bits than supplied signatures, returns an error instead of panicking with index out of range.
 * (x/distribution) [#26406](https://github.com/cosmos/cosmos-sdk/pull/26406) Add fallback paths (delegator/validator owner, then community pool) when withdrawing delegator rewards or validator commission to a blocked address during `Begin/EndBlockers`. user msg initiated paths still return `ErrUnauthorized` when withdrawing to blocked addresses.
 * (x/gov) [#26353](https://github.com/cosmos/cosmos-sdk/pull/26353) Fix leading comma in `proposal_messages` event attribute emitted by `SubmitProposal`.
 * (telemetry) [#26390](https://github.com/cosmos/cosmos-sdk/pull/26390) Fix env var for otel telemetry initialization.
 * (x/staking) [#26408](https://github.com/cosmos/cosmos-sdk/pull/26408) Fix `MsgBeginRedelegate` failure when redelegating all shares from an unbonded source validator that is removed after unbonding.
 * (x/auth/tx) [#26422](https://github.com/cosmos/cosmos-sdk/pull/26422) Reuse the signing context from the codec's `InterfaceRegistry` when `ConfigOptions.SigningOptions` is unset so that `CustomGetSigners` registered via `NewInterfaceRegistryWithOptions` are honored by `NewTxConfig` / `NewTxConfigWithOptions`.
 * (x/staking) [#26460](https://github.com/cosmos/cosmos-sdk/pull/26460) Coalesce key rotation power updates to not emit duplicates.
+* (x/staking) [#26483](https://github.com/cosmos/cosmos-sdk/pull/26483) Block `MsgCreateValidator` from creating validators with cons addrs locked by key rotations.
 * (blockstm) [#25893](https://github.com/cosmos/cosmos-sdk/pull/25893) Fix CancelAll cancellation by clearing blocker ESTIMATE marks before waking suspended executors.
+* (crypto) [#26529](https://github.com/cosmos/cosmos-sdk/pull/26529) Validate the SEC1 tag byte (`0x02`/`0x03`) when unmarshaling a `secp256k1.PubKey`, rejecting malformed compressed keys that previously passed the length-only check.
+* (x/auth/tx) [#26571](https://github.com/cosmos/cosmos-sdk/pull/26571) Avoid nil pointer panic in `GetSigningTxData` for multisig `ModeInfo` with a nil `Multi` or nil `Bitarray`.
+* (x/auth/tx) [#26527](https://github.com/cosmos/cosmos-sdk/pull/26527) Fix nil pointer panic in `GetSigningTxData` when a `SignerInfo` has a nil `PublicKey`.
+* (x/auth/tx) [#26517](https://github.com/cosmos/cosmos-sdk/pull/26517) Return a decode error instead of panicking when a transaction's `SignerInfos` and `Signatures` counts disagree in `GetSignaturesV2`, or a multisig's `ModeInfos` and sub-signature counts disagree in `ModeInfoAndSigToSignatureData`.
+* (x/auth/ante) [#26573](https://github.com/cosmos/cosmos-sdk/pull/26573) Reject tx with extra SignerInfos in SetPubKeyDecorator.
+* (block-stm) [#26583](https://github.com/cosmos/cosmos-sdk/pull/26583) Fix count validation tasks before advancing validationIdx to prevent lost updates.
+* (blockstm) [#26591](https://github.com/cosmos/cosmos-sdk/pull/26591) normalize non-positive worker count in `STMRunner.Run`.
+* (x/staking) [#26613](https://github.com/cosmos/cosmos-sdk/pull/26613) Require `key_rotation_fee` denom to equal `bond_denom` in `Params.Validate` and derive the default fee denom from the configured bond denom.
+* (x/staking) [#26611](https://github.com/cosmos/cosmos-sdk/pull/26611) Fix missing key rotation type tags on genesis import.
+* (blockstm) [#26627](https://github.com/cosmos/cosmos-sdk/pull/26627) Guard against block-stm estimate panic.
+* (x/staking) [#26616](https://github.com/cosmos/cosmos-sdk/pull/26616) Expire historical cons addr lookups only once equivocation evidence is no longer admissible.
 
 ### Deprecated
 

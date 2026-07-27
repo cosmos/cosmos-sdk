@@ -209,7 +209,7 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 			return nil, err
 		}
 		current := rewards.Rewards
-		historical, err := k.GetValidatorHistoricalRewards(ctx, valAddr, rewards.Period-1)
+		historical, err := k.getValidatorHistoricalRewards(ctx, valAddr, rewards.Period-1, true)
 		if err != nil {
 			return nil, err
 		}

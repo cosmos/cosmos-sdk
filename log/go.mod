@@ -1,9 +1,9 @@
 module cosmossdk.io/log/v2
 
-go 1.26.4
+go 1.26.5
 
 require (
-	github.com/bytedance/sonic v1.15.1
+	github.com/bytedance/sonic v1.15.2
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.35.1
 	go.opentelemetry.io/otel/trace v1.44.0

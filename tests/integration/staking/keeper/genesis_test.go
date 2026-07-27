@@ -156,10 +156,11 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 	}
 
 	params := types.Params{
-		UnbondingTime: 10000,
-		MaxValidators: 1,
-		MaxEntries:    10,
-		BondDenom:     "stake",
+		UnbondingTime:  10000,
+		MaxValidators:  1,
+		MaxEntries:     10,
+		BondDenom:      "stake",
+		KeyRotationFee: sdk.NewInt64Coin("stake", 1000000),
 	}
 
 	require.Panics(t, func() {

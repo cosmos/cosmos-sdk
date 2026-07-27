@@ -45,6 +45,17 @@ func (h MultiStakingHooks) AfterValidatorRemoved(ctx context.Context, consAddr s
 	return nil
 }
 
+// AfterValidatorConsKeyUpdated calls the validator consensus key updated hook
+// for each registered hook.
+func (h MultiStakingHooks) AfterValidatorConsKeyUpdated(ctx context.Context, oldConsAddr, newConsAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
+	for i := range h {
+		if err := h[i].AfterValidatorConsKeyUpdated(ctx, oldConsAddr, newConsAddr, valAddr); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (h MultiStakingHooks) AfterValidatorBonded(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
 	for i := range h {
 		if err := h[i].AfterValidatorBonded(ctx, consAddr, valAddr); err != nil {

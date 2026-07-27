@@ -62,7 +62,7 @@ var _ servertypes.ABCI = (*BaseApp)(nil)
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
-	mu                sync.Mutex // mu protects the fields below.
+	mu                sync.RWMutex // mu protects concurrent access to name, version, appVersion.
 	logger            log.Logger
 	name              string                      // application name from abci.BlockInfo
 	db                dbm.DB                      // common DB backend
@@ -239,16 +239,22 @@ func NewBaseApp(
 
 // Name returns the name of the BaseApp.
 func (app *BaseApp) Name() string {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
 	return app.name
 }
 
 // AppVersion returns the application's protocol version.
 func (app *BaseApp) AppVersion() uint64 {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
 	return app.appVersion
 }
 
 // Version returns the application's version string.
 func (app *BaseApp) Version() string {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
 	return app.version
 }
 

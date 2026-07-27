@@ -78,9 +78,21 @@ message ConsensusKeyRotationHistory {
   // old_consensus_address is the consensus address rotated away from.
   string old_consensus_address = 2 [(cosmos_proto.scalar) = "cosmos.ConsensusAddressString"];
 
-  // maturity_time is the time when this rotation leaves the unbonding window.
+  // maturity_time is the unbonding-window maturity of this validator's
+  // re-rotation rate limit, present only while that gate is still active. A
+  // zero value means the gate has already been retired and only the evidence
+  // lock (below) remains.
   google.protobuf.Timestamp maturity_time = 3
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
+
+  // evidence_expiry_time is the time after which equivocation evidence for the
+  // rotated-away key can no longer be admitted on the time dimension.
+  google.protobuf.Timestamp evidence_expiry_time = 4
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
+
+  // evidence_expiry_height is the block height after which equivocation evidence
+  // for the rotated-away key can no longer be admitted on the height dimension.
+  int64 evidence_expiry_height = 5;
 }
 
 // PendingConsensusKeyRotation stores a consensus key rotation that is waiting

@@ -319,6 +319,8 @@ message Params {
     (amino.dont_omitempty) = true,
     (cosmos_proto.scalar)  = "cosmos.Dec"
   ];
+  // key_rotation_fee is the fee charged when rotating a validator's consensus key.
+  cosmos.base.v1beta1.Coin key_rotation_fee = 7 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a
@@ -390,4 +392,17 @@ enum Infraction {
 // TODO: explore moving this to proto/cosmos/base to separate modules from tendermint dependence
 message ValidatorUpdates {
   repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// ConsKeyEvidenceExpiry is the value stored in the evidence-lock retirement
+// queue: the validator that rotated and the time and height at which its
+// RotatedFrom lock may be retired because equivocation evidence for the
+// rotated-away key can no longer be admitted. The queue is keyed by expiry_time
+// for time-ordered iteration; expiry_time is duplicated here so the record is
+// self-describing.
+message ConsKeyEvidenceExpiry {
+  bytes                     validator_address = 1;
+  google.protobuf.Timestamp expiry_time       = 2
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
+  int64 expiry_height = 3;
 }

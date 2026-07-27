@@ -62,8 +62,21 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", pk)
 	}
 
-	if _, err := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); err == nil {
+	consAddr := sdk.GetConsAddress(pk)
+	locked, err := k.IsConsAddrLockedByRotation(ctx, consAddr)
+	if err != nil {
+		return nil, err
+	}
+	if locked {
+		return nil, types.ErrConsensusPubKeyInRotationHistory
+	}
+
+	_, err = k.GetValidatorByConsAddr(ctx, consAddr)
+	if err == nil {
 		return nil, types.ErrValidatorPubKeyExists
+	}
+	if !errors.Is(err, types.ErrNoValidatorFound) {
+		return nil, err
 	}
 
 	bondDenom, err := k.BondDenom(ctx)
@@ -652,7 +665,7 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	}
 	validator, err := k.GetValidator(ctx, valAddr)
 	if err != nil {
-		return nil, types.ErrNoValidatorFound
+		return nil, err
 	}
 
 	if validator.IsJailed() {
@@ -678,7 +691,11 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	// module account before burning. The pool is a burner module account so
 	// the fee is fully removed from supply and never mingles with bonded or
 	// unbonded staking balances.
-	feeCoins := sdk.NewCoins(types.DefaultKeyRotationFee)
+	keyRotationFee, err := k.KeyRotationFee(ctx)
+	if err != nil {
+		return nil, err
+	}
+	feeCoins := sdk.NewCoins(keyRotationFee)
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), types.KeyRotationFeePoolName, feeCoins); err != nil {
 		return nil, err
 	}
@@ -686,8 +703,38 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, err
 	}
 
+	maturesAt, err := k.RotationMaturityTime(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Note the evidence expiry time is calculated strictly at the time of the
+	// rotation. The parameters around how long evidence is valid may change
+	// mid rotation, however these rotation evidence expiry values are never
+	// updated once set. If chains choose to modify these parameters while
+	// rotations are in progress (specifically extending the period where
+	// evidence is admissible), validators that have rotated their keys will
+	// not be able to be slashed for equivocations committed when using their
+	// old keys.
+	evidenceExpiry, err := k.RotationEvidenceExpiry(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	// record the key rotation in the store
-	if err := k.SetConsKeyRotation(ctx, valAddr, oldPk, newPk); err != nil {
+	if err := k.SetConsKeyRotationWithExpirations(ctx, valAddr, oldPk, newPk, maturesAt, evidenceExpiry); err != nil {
+		return nil, err
+	}
+
+	attrs := []sdk.Attribute{
+		sdk.NewAttribute(types.AttributeKeyApplyHeight, strconv.FormatInt(rotationApplyHeight(ctx), 10)),
+		sdk.NewAttribute(types.AttributeKeyMaturityTime, maturesAt.Format(time.RFC3339)),
+		sdk.NewAttribute(types.AttributeKeyEvidenceExpiryTime, evidenceExpiry.ExpiryTime.Format(time.RFC3339)),
+		sdk.NewAttribute(types.AttributeKeyEvidenceExpiryHeight, strconv.FormatInt(evidenceExpiry.ExpiryHeight, 10)),
+		sdk.NewAttribute(types.AttributeKeyFeeBurned, keyRotationFee.String()),
+	}
+	err = k.emitConsKeyRotationEvent(ctx, types.EventTypeRotateConsPubKey, valAddr, sdk.ConsAddress(oldPk.Address()), newConsAddr, attrs...)
+	if err != nil {
 		return nil, err
 	}
 

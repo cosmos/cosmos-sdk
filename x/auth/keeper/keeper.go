@@ -338,6 +338,9 @@ func (ak AccountKeeper) RemoveExpiredUnorderedNonces(ctx sdk.Context) error {
 	}
 
 	for _, key := range keys {
+		if key.K1() == blkTime {
+			continue
+		}
 		if err := ak.UnorderedNonces.Remove(ctx, key); err != nil {
 			return err
 		}

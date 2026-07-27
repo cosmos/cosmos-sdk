@@ -437,7 +437,7 @@ func (svd SigVerificationDecorator) verifyUnorderedNonce(ctx sdk.Context, unorde
 			"unordered transaction must have timeout_timestamp set",
 		)
 	}
-	if !timeoutTimestamp.After(blockTime) {
+	if timeoutTimestamp.Before(blockTime) {
 		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"unordered transaction has a timeout_timestamp that has already passed",

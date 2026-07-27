@@ -208,3 +208,40 @@ func TestSigVerification_UnorderedTxs(t *testing.T) {
 		})
 	}
 }
+
+func TestUnorderedTx_NoReplayAtExactTimeout(t *testing.T) {
+	timeout := time.Unix(10, 0)
+	suite := setupUnorderedTxTestSuite(t, false, true)
+
+	suite.anteSuite.txBuilder = suite.anteSuite.clientCtx.TxConfig.NewTxBuilder()
+	require.NoError(t, suite.anteSuite.txBuilder.SetMsgs(suite.msgs...))
+	suite.anteSuite.txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
+	suite.anteSuite.txBuilder.SetGasLimit(testdata.NewTestGasLimit())
+	tx, err := suite.anteSuite.CreateTestUnorderedTx(
+		suite.anteSuite.ctx,
+		[]cryptotypes.PrivKey{suite.priv1, suite.priv2, suite.priv3},
+		[]uint64{suite.accs[0].GetAccountNumber(), suite.accs[1].GetAccountNumber(), suite.accs[2].GetAccountNumber()},
+		[]uint64{0, 0, 0},
+		suite.anteSuite.ctx.ChainID(),
+		suite.defaultSignMode,
+		true,
+		timeout,
+	)
+	require.NoError(t, err)
+	txBytes, err := suite.anteSuite.clientCtx.TxConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	baseCtx := suite.anteSuite.ctx.WithExecMode(sdk.ExecModeFinalize).WithIsSigverifyTx(true).WithTxBytes(txBytes)
+
+	// execute the tx in a block before its timeout.
+	_, err = suite.antehandler(baseCtx.WithBlockTime(timeout.Add(-time.Second)), tx, false)
+	require.NoError(t, err)
+
+	// PreBlock of the block whose time is exactly the timeout.
+	atTimeout := baseCtx.WithBlockTime(timeout)
+	require.NoError(t, suite.anteSuite.accountKeeper.RemoveExpiredUnorderedNonces(atTimeout))
+
+	// the same signed tx must not be accepted again in that block.
+	_, err = suite.antehandler(atTimeout, tx, false)
+	require.ErrorContains(t, err, "already used timeout")
+}

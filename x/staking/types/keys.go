@@ -82,9 +82,9 @@ var (
 	// the address must not be the target of a new rotation. The old key
 	// lookup also lets slashing/evidence handling associate an infraction
 	// on an old consensus key with the new consensus key. The old key entry
-	// is pruned when its rotation falls out of the unbonding window
-	// (determined by the ConsKeyRotationQueueKey); the new key entry is
-	// removed when the rotation is applied in the end blocker.
+	// is pruned once evidence for the rotated-away key can no longer be
+	// admitted (determined by the ConsKeyEvidenceExpiryQueueKey); the new key
+	// entry is removed when the rotation is applied in the end blocker.
 	//
 	// Value format: 1 byte kind || length-prefixed validator operator address.
 	RotationLockedConsAddrIndexKey = []byte{0x93} // prefix for the rotation-locked consensus address lookup
@@ -98,6 +98,18 @@ var (
 	// Key format: 0x94 || BigEndian(applyHeight uint64) || lengthPrefix(valAddr)
 	// Value:      marshaled cryptotypes.PubKey (the new consensus pubkey)
 	ConsKeyRotationApplyQueueKey = []byte{0x94}
+
+	// ConsKeyEvidenceExpiryQueueKey is the prefix for the queue that retires a
+	// RotatedFrom lock (RotationLockedConsAddrIndexKey) once equivocation
+	// evidence for the rotated-away key can no longer be admitted. Evidence is
+	// admissible while either the time or the block-height window still holds,
+	// so the lock must outlive both; unbonding alone is too short. The queue is
+	// keyed by the time window so the end blocker can iterate it in time order,
+	// and each entry also carries the height window, checked while walking.
+	//
+	// Key format: 0x95 || FormatTimeBytes(expiryTime) || lengthPrefix(oldConsAddr)
+	// Value:      marshaled ConsKeyEvidenceExpiry
+	ConsKeyEvidenceExpiryQueueKey = []byte{0x95}
 )
 
 // ConsensusUpdateDelay is CometBFT's two-block validator-update delay.
@@ -117,7 +129,7 @@ type ConsAddrLockType byte
 const (
 	// ConsAddrLockRotatedFrom marks a consensus address that a validator
 	// rotated away from and that remains valid for historical infractions until
-	// the rotation matures out of the unbonding window.
+	// equivocation evidence for it can no longer be admitted.
 	ConsAddrLockRotatedFrom ConsAddrLockType = 0x01
 
 	// ConsAddrLockPendingTo marks a consensus address targeted by an in-flight
@@ -535,6 +547,48 @@ func ParseConsKeyRotationQueueKey(bz []byte) (time.Time, sdk.ValAddress, error) 
 	kv.AssertKeyAtLeastLength(bz, prefixLen+timeLen+1+valAddrLen)
 
 	return ts, sdk.ValAddress(bz[prefixLen+timeLen+1 : prefixLen+timeLen+1+valAddrLen]), nil
+}
+
+// GetConsKeyEvidenceExpiryQueueKey returns the queue key for retiring the
+// RotatedFrom lock on oldConsAddr once its evidence time window closes at the
+// given expiryTime.
+func GetConsKeyEvidenceExpiryQueueKey(expiryTime time.Time, oldConsAddr sdk.ConsAddress) []byte {
+	timeBz := sdk.FormatTimeBytes(expiryTime)
+	addrBz := address.MustLengthPrefix(oldConsAddr)
+
+	key := make([]byte, len(ConsKeyEvidenceExpiryQueueKey)+len(timeBz)+len(addrBz))
+	copy(key, ConsKeyEvidenceExpiryQueueKey)
+	copy(key[len(ConsKeyEvidenceExpiryQueueKey):], timeBz)
+	copy(key[len(ConsKeyEvidenceExpiryQueueKey)+len(timeBz):], addrBz)
+	return key
+}
+
+// GetConsKeyEvidenceExpiryQueueTimePrefix returns the queue iteration prefix up
+// to the given time.
+func GetConsKeyEvidenceExpiryQueueTimePrefix(expiryTime time.Time) []byte {
+	return append(ConsKeyEvidenceExpiryQueueKey, sdk.FormatTimeBytes(expiryTime)...)
+}
+
+// ParseConsKeyEvidenceExpiryQueueKey extracts the expiry time and old consensus
+// address from a queue key.
+func ParseConsKeyEvidenceExpiryQueueKey(bz []byte) (time.Time, sdk.ConsAddress, error) {
+	prefixLen := len(ConsKeyEvidenceExpiryQueueKey)
+	if prefix := bz[:prefixLen]; !bytes.Equal(prefix, ConsKeyEvidenceExpiryQueueKey) {
+		return time.Time{}, nil, fmt.Errorf("invalid prefix; expected: %X, got: %X", ConsKeyEvidenceExpiryQueueKey, prefix)
+	}
+
+	timeLen := len(sdk.SortableTimeFormat)
+	kv.AssertKeyAtLeastLength(bz, prefixLen+timeLen+1)
+
+	ts, err := sdk.ParseTimeBytes(bz[prefixLen : prefixLen+timeLen])
+	if err != nil {
+		return time.Time{}, nil, err
+	}
+
+	addrLen := int(bz[prefixLen+timeLen])
+	kv.AssertKeyAtLeastLength(bz, prefixLen+timeLen+1+addrLen)
+
+	return ts, sdk.ConsAddress(bz[prefixLen+timeLen+1 : prefixLen+timeLen+1+addrLen]), nil
 }
 
 // GetValidatorConsKeyRotationKey returns the key for a validator's pending rotation record.

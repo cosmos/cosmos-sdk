@@ -83,18 +83,54 @@ func TestValidateGenesis(t *testing.T) {
 				ApplyHeight:      10,
 			}}
 		}, true},
-		{"duplicate consensus key rotation history", func(data *types.GenesisState) {
+		{"consensus key rotation history with retired maturity gate", func(data *types.GenesisState) {
+			data.Validators = cloneValidators(genValidators1)
+			data.ConsensusKeyRotationHistory = []types.ConsensusKeyRotationHistory{{
+				ValidatorAddress:    valAddr,
+				OldConsensusAddress: sdk.ConsAddress(ed25519.GenPrivKey().PubKey().Address()).String(),
+			}}
+		}, false},
+		{"multiple consensus key rotation history for validator", func(data *types.GenesisState) {
 			data.Validators = cloneValidators(genValidators1)
 			data.ConsensusKeyRotationHistory = []types.ConsensusKeyRotationHistory{
 				{
 					ValidatorAddress:    valAddr,
-					OldConsensusAddress: oldConsAddr,
+					OldConsensusAddress: sdk.ConsAddress(ed25519.GenPrivKey().PubKey().Address()).String(),
 					MaturityTime:        maturity,
 				},
 				{
 					ValidatorAddress:    valAddr,
-					OldConsensusAddress: oldConsAddr,
+					OldConsensusAddress: sdk.ConsAddress(ed25519.GenPrivKey().PubKey().Address()).String(),
+				},
+			}
+		}, false},
+		{"duplicate consensus key rotation maturity time", func(data *types.GenesisState) {
+			data.Validators = cloneValidators(genValidators1)
+			data.ConsensusKeyRotationHistory = []types.ConsensusKeyRotationHistory{
+				{
+					ValidatorAddress:    valAddr,
+					OldConsensusAddress: sdk.ConsAddress(ed25519.GenPrivKey().PubKey().Address()).String(),
 					MaturityTime:        maturity,
+				},
+				{
+					ValidatorAddress:    valAddr,
+					OldConsensusAddress: sdk.ConsAddress(ed25519.GenPrivKey().PubKey().Address()).String(),
+					MaturityTime:        maturity,
+				},
+			}
+		}, true},
+		{"duplicate consensus key rotation old consensus address", func(data *types.GenesisState) {
+			data.Validators = cloneValidators(genValidators1)
+			dupConsAddr := sdk.ConsAddress(ed25519.GenPrivKey().PubKey().Address()).String()
+			data.ConsensusKeyRotationHistory = []types.ConsensusKeyRotationHistory{
+				{
+					ValidatorAddress:    valAddr,
+					OldConsensusAddress: dupConsAddr,
+					MaturityTime:        maturity,
+				},
+				{
+					ValidatorAddress:    valAddr,
+					OldConsensusAddress: dupConsAddr,
 				},
 			}
 		}, true},

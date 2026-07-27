@@ -28,6 +28,7 @@ service Msg {
   rpc CreateValidator(MsgCreateValidator) returns (MsgCreateValidatorResponse);
   rpc UpdateValidators(MsgUpdateValidators) returns (MsgUpdateValidatorsResponse);
   rpc WithdrawFees(MsgWithdrawFees) returns (MsgWithdrawFeesResponse);
+  rpc RotateConsPubKey(MsgRotateConsPubKey) returns (MsgRotateConsPubKeyResponse);
 }
 
 message MsgUpdateParams {
@@ -68,3 +69,13 @@ message MsgWithdrawFees {
 }
 
 message MsgWithdrawFeesResponse {}
+
+message MsgRotateConsPubKey {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string              sender            = 1;
+  string              validator_address = 2;
+  google.protobuf.Any new_pub_key       = 3;
+}
+
+message MsgRotateConsPubKeyResponse {}

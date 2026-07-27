@@ -35,8 +35,35 @@ func ExecuteBlockWithEstimates(
 	estimates []MultiLocations, // txn -> multi-locations
 	txExecutor TxExecutor,
 ) error {
+	if blockSize < 0 {
+		return fmt.Errorf("invalid block size: %d", blockSize)
+	}
 	if blockSize > math.MaxUint32 {
 		return fmt.Errorf("block size overflows uint32: %d", blockSize)
+	}
+
+	// Store indices are used directly as slice indices, so they must be a
+	// permutation of [0, len(stores)); duplicates would leave nil stores.
+	seen := make([]bool, len(stores))
+	for key, i := range stores {
+		if i < 0 || i >= len(stores) {
+			return fmt.Errorf("store index out of range for %q: %d not in [0, %d)", key.Name(), i, len(stores))
+		}
+		if seen[i] {
+			return fmt.Errorf("duplicate store index: %d", i)
+		}
+		seen[i] = true
+	}
+
+	if len(estimates) > blockSize {
+		return fmt.Errorf("estimates length %d exceeds block size %d", len(estimates), blockSize)
+	}
+	for txn, est := range estimates {
+		for store := range est {
+			if store < 0 || store >= len(stores) {
+				return fmt.Errorf("estimate for txn %d references store index out of range: %d not in [0, %d)", txn, store, len(stores))
+			}
+		}
 	}
 
 	if executors < 0 {

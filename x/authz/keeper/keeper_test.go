@@ -382,7 +382,7 @@ func (s *TestSuite) TestDequeueAllGrantsQueue() {
 	require.NoError(err)
 
 	newCtx := s.ctx.WithBlockTime(exp.AddDate(1, 0, 0))
-	err = s.authzKeeper.DequeueAndDeleteExpiredGrants(newCtx)
+	err = s.authzKeeper.DequeueAndDeleteExpiredGrants(newCtx, authzmodule.MaxExpiredGrantsPerBlock)
 	require.NoError(err)
 
 	s.T().Log("verify expired grants are pruned from the state")
@@ -401,6 +401,46 @@ func (s *TestSuite) TestDequeueAllGrantsQueue() {
 	authzs, err = s.authzKeeper.GetAuthorizations(newCtx, granter, grantee)
 	require.NoError(err)
 	require.Len(authzs, 1)
+}
+
+func (s *TestSuite) TestDequeueAndDeleteExpiredGrantsCapsPerCall() {
+	require := s.Require()
+	addrs := s.addrs
+	exp := s.ctx.BlockTime().AddDate(0, 0, 1)
+	a := banktypes.SendAuthorization{SpendLimit: coins100}
+
+	// three grants sharing one expiration, between distinct granter/grantee pairs
+	pairs := [][2]sdk.AccAddress{
+		{addrs[0], addrs[1]},
+		{addrs[2], addrs[3]},
+		{addrs[4], addrs[5]},
+	}
+	for _, p := range pairs {
+		err := s.authzKeeper.SaveGrant(s.ctx, p[1], p[0], &a, &exp)
+		require.NoError(err)
+	}
+
+	newCtx := s.ctx.WithBlockTime(exp.AddDate(0, 0, 1))
+
+	remaining := func() int {
+		n := 0
+		for _, p := range pairs {
+			authzs, err := s.authzKeeper.GetAuthorizations(newCtx, p[1], p[0])
+			require.NoError(err)
+			n += len(authzs)
+		}
+		return n
+	}
+
+	// first call only prunes up to the limit, leaving the rest for the next call to resume
+	err := s.authzKeeper.DequeueAndDeleteExpiredGrants(newCtx, 2)
+	require.NoError(err)
+	require.Equal(1, remaining(), "expected exactly one grant left after pruning capped at 2 of 3")
+
+	// second call drains what's left
+	err = s.authzKeeper.DequeueAndDeleteExpiredGrants(newCtx, 2)
+	require.NoError(err)
+	require.Equal(0, remaining(), "expected no grants left after the backlog is fully drained")
 }
 
 func (s *TestSuite) TestGetAuthorization() {

@@ -106,6 +106,11 @@ type (
 		// doesn't require access to any other information.
 		ValidateBasic() error
 	}
+
+	// GasTx defines an interface for a transaction that contains gas wanted for mempool
+	GasTx interface {
+		GetGas() uint64
+	}
 )
 
 // TxDecoder unmarshals transaction bytes

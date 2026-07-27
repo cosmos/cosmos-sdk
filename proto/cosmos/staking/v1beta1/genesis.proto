@@ -7,6 +7,8 @@ import "gogoproto/gogo.proto";
 import "cosmos/staking/v1beta1/staking.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
 
 // GenesisState defines the staking module's genesis state.
 message GenesisState {
@@ -40,6 +42,16 @@ message GenesisState {
 
   // exported defines a bool to identify whether the chain dealing with exported or initialized genesis.
   bool exported = 8;
+
+  // consensus_key_rotation_history defines consensus key rotations that are
+  // still within the unbonding window.
+  repeated ConsensusKeyRotationHistory consensus_key_rotation_history = 9
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  // pending_consensus_key_rotations defines consensus key rotations whose
+  // SDK-side validator state has not reached its deferred apply height yet.
+  repeated PendingConsensusKeyRotation pending_consensus_key_rotations = 10
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // LastValidatorPower required for validator set update logic.
@@ -52,4 +64,38 @@ message LastValidatorPower {
 
   // power defines the power of the validator.
   int64 power = 2;
+}
+
+// ConsensusKeyRotationHistory stores the old consensus address for a
+// validator rotation until the unbonding window has elapsed.
+message ConsensusKeyRotationHistory {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // validator_address is the validator operator address.
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+
+  // old_consensus_address is the consensus address rotated away from.
+  string old_consensus_address = 2 [(cosmos_proto.scalar) = "cosmos.ConsensusAddressString"];
+
+  // maturity_time is the time when this rotation leaves the unbonding window.
+  google.protobuf.Timestamp maturity_time = 3
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
+}
+
+// PendingConsensusKeyRotation stores a consensus key rotation that is waiting
+// for its deferred SDK-side state update.
+message PendingConsensusKeyRotation {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // validator_address is the validator operator address.
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+
+  // new_pubkey is the consensus public key being rotated to.
+  google.protobuf.Any new_pubkey = 2 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
+
+  // apply_height is the block height where the SDK-side state update should
+  // occur.
+  int64 apply_height = 3;
 }

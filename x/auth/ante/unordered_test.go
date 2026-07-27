@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -34,8 +33,7 @@ func setupUnorderedTxTestSuite(t *testing.T, isCheckTx, withUnordered bool) *Uno
 
 	enabledSignModes := []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT}
 	txConfigOpts := authtx.ConfigOptions{
-		TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(anteSuite.clientCtx),
-		EnabledSignModes:           enabledSignModes,
+		EnabledSignModes: enabledSignModes,
 	}
 	var err error
 	anteSuite.clientCtx.TxConfig, err = authtx.NewTxConfigWithOptions(
@@ -69,8 +67,7 @@ func setupUnorderedTxTestSuite(t *testing.T, isCheckTx, withUnordered bool) *Uno
 
 	spkd := ante.NewSetPubKeyDecorator(anteSuite.accountKeeper)
 	txConfigOpts = authtx.ConfigOptions{
-		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(anteSuite.txBankKeeper),
-		EnabledSignModes:           enabledSignModes,
+		EnabledSignModes: enabledSignModes,
 	}
 	anteTxConfig, err := authtx.NewTxConfigWithOptions(
 		codec.NewProtoCodec(anteSuite.encCfg.InterfaceRegistry),

@@ -139,7 +139,7 @@ func fetchTxs(iterator mempool.Iterator, maxBytes int64) []sdk.Tx {
 		if numBytes += txSize; numBytes > maxBytes {
 			break
 		}
-		txs = append(txs, iterator.Tx())
+		txs = append(txs, iterator.Tx().Tx)
 		i := iterator.Next()
 		iterator = i
 	}
@@ -171,7 +171,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 	// same sender-nonce just overwrites a tx
 	for _, tx := range txs {
 		ctx = ctx.WithPriority(tx.priority)
-		err := s.mempool.Insert(ctx, tx)
+		err := s.mempool.Insert(ctx, tx, mempool.InsertOption{})
 		require.NoError(t, err)
 	}
 	require.Equal(t, len(accounts), s.mempool.CountTx())
@@ -180,7 +180,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 	s.resetMempool()
 	for i, tx := range txs {
 		tx.nonce = uint64(i)
-		err := s.mempool.Insert(ctx, tx)
+		err := s.mempool.Insert(ctx, tx, mempool.InsertOption{})
 		require.NoError(t, err)
 	}
 	require.Equal(t, txCount, s.mempool.CountTx())
@@ -193,17 +193,17 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 	tx := &sigErrTx{getSigs: func() ([]txsigning.SignatureV2, error) {
 		return nil, fmt.Errorf("error")
 	}}
-	require.Error(t, s.mempool.Insert(ctx, tx))
+	require.Error(t, s.mempool.Insert(ctx, tx, mempool.InsertOption{}))
 	require.Error(t, s.mempool.Remove(tx))
 	tx.getSigs = func() ([]txsigning.SignatureV2, error) {
 		return nil, nil
 	}
-	require.Error(t, s.mempool.Insert(ctx, tx))
+	require.Error(t, s.mempool.Insert(ctx, tx, mempool.InsertOption{}))
 	require.Error(t, s.mempool.Remove(tx))
 
 	// removing a tx not in the mempool should error
 	s.resetMempool()
-	require.NoError(t, s.mempool.Insert(ctx, txs[0]))
+	require.NoError(t, s.mempool.Insert(ctx, txs[0], mempool.InsertOption{}))
 	require.ErrorIs(t, s.mempool.Remove(txs[1]), mempool.ErrTxNotFound)
 
 	// inserting a tx with a different priority should overwrite the old tx
@@ -212,7 +212,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 		priority: txs[0].priority + 1,
 		nonce:    txs[0].nonce,
 	}
-	require.NoError(t, s.mempool.Insert(ctx, newPriorityTx))
+	require.NoError(t, s.mempool.Insert(ctx, newPriorityTx, mempool.InsertOption{}))
 	require.Equal(t, 1, s.mempool.CountTx())
 }
 
@@ -247,12 +247,12 @@ func (s *MempoolTestSuite) TestSampleTxs() {
 	delegatorTx, err := unmarshalTx(msgWithdrawDelegatorReward)
 
 	require.NoError(t, err)
-	require.NoError(t, mp.Insert(ctxt, delegatorTx))
+	require.NoError(t, mp.Insert(ctxt, delegatorTx, mempool.InsertOption{}))
 	require.Equal(t, 1, mp.CountTx())
 
 	proposalTx, err := unmarshalTx(msgMultiSigMsgSubmitProposal)
 	require.NoError(t, err)
-	require.NoError(t, mp.Insert(ctxt, proposalTx))
+	require.NoError(t, mp.Insert(ctxt, proposalTx, mempool.InsertOption{}))
 	require.Equal(t, 2, mp.CountTx())
 }
 

@@ -7,10 +7,42 @@ For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos
 
 ## Table of Contents
 
+* [Breaking Changes](#breaking-changes)
+    * [Removed: SIGN_MODE_TEXTUAL](#removed-sign_mode_textual)
 * [New Features and Non-Breaking Changes](#new-features-and-non-breaking-changes)
     * [ML-DSA-65 Validator Keys](#ml-dsa-65-validator-consensus-keys) 
 
 
+
+## Breaking Changes
+
+### Removed: SIGN_MODE_TEXTUAL
+
+`SIGN_MODE_TEXTUAL` (proto enum value `2`) and its entire implementation have been removed:
+
+- `x/tx/signing/textual/` — all renderers, the CBOR encoder, test data, and internal protos
+- `x/auth/tx/textual.go` and `ConfigOptions.TextualCoinMetadataQueryFn`
+- Ledger + SIGN_MODE_TEXTUAL integration in `client/` flags and tx factory
+
+The proto enum value `2` and string `"SIGN_MODE_TEXTUAL"` are **reserved** to prevent future reuse. ADR-050 is archived.
+
+**Required action** if your app enabled SIGN_MODE_TEXTUAL:
+
+1. Remove `TextualCoinMetadataQueryFn` from your `tx.ConfigOptions`:
+
+```go
+// Before
+txConfig, err := tx.NewTxConfigWithOptions(cdc, tx.ConfigOptions{
+    TextualCoinMetadataQueryFn: ...,
+})
+
+// After — field removed, omit it
+txConfig, err := tx.NewTxConfigWithOptions(cdc, tx.ConfigOptions{...})
+```
+
+2. Remove any `SIGN_MODE_TEXTUAL` cases from signing mode handler switch statements.
+
+3. Remove Ledger wiring that depended on `SIGN_MODE_TEXTUAL`.
 
 ## New Features and Non-Breaking Changes
 

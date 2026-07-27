@@ -2721,12 +2721,6 @@ const (
 	// SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is
 	// verified with raw bytes from Tx.
 	SignMode_SIGN_MODE_DIRECT SignMode = 1
-	// SIGN_MODE_TEXTUAL is a future signing mode that will verify some
-	// human-readable textual representation on top of the binary representation
-	// from SIGN_MODE_DIRECT.
-	//
-	// Since: cosmos-sdk 0.50
-	SignMode_SIGN_MODE_TEXTUAL SignMode = 2
 	// SIGN_MODE_DIRECT_AUX specifies a signing mode which uses
 	// SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does not
 	// require signers signing over other signers' `signer_info`.
@@ -2754,7 +2748,6 @@ var (
 	SignMode_name = map[int32]string{
 		0:   "SIGN_MODE_UNSPECIFIED",
 		1:   "SIGN_MODE_DIRECT",
-		2:   "SIGN_MODE_TEXTUAL",
 		3:   "SIGN_MODE_DIRECT_AUX",
 		127: "SIGN_MODE_LEGACY_AMINO_JSON",
 		191: "SIGN_MODE_EIP_191",
@@ -2762,7 +2755,6 @@ var (
 	SignMode_value = map[string]int32{
 		"SIGN_MODE_UNSPECIFIED":       0,
 		"SIGN_MODE_DIRECT":            1,
-		"SIGN_MODE_TEXTUAL":           2,
 		"SIGN_MODE_DIRECT_AUX":        3,
 		"SIGN_MODE_LEGACY_AMINO_JSON": 127,
 		"SIGN_MODE_EIP_191":           191,

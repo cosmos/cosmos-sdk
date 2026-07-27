@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 	"testing"
 	"time"
@@ -42,6 +43,50 @@ func TestExecuteBlock_CancelWakesSuspendedExecutors(t *testing.T) {
 		},
 	)
 	require.True(t, errors.Is(err, context.Canceled))
+}
+
+// CancelAll must clear an Executing blocker's ESTIMATE, not just the
+// Suspended waiter's — otherwise the woken waiter re-suspends on the same mark.
+func TestCancelAllClearsBlockerEstimate(t *testing.T) {
+	ctx := context.Background()
+	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
+	storage := NewMultiMemDB(stores)
+
+	// Pre-estimate: tx1 has key "k" marked as ESTIMATE — it is the blocker.
+	estimates := make([]MultiLocations, 3)
+	estimates[1] = MultiLocations{0: Locations{Key([]byte("k"))}}
+
+	scheduler := NewScheduler(3)
+	mv := NewMVMemoryWithEstimates(3, stores, MultiStoreToStorage(storage, stores), scheduler, estimates)
+
+	// tx1 is Executing (the blocker, NOT suspended).
+	_, ok := scheduler.txnStatus[1].TrySetExecuting()
+	require.True(t, ok)
+
+	// tx2 is Suspended on tx1's ESTIMATE.
+	_, ok = scheduler.txnStatus[2].TrySetExecuting()
+	require.True(t, ok)
+	cond := NewCondvar()
+	scheduler.txnStatus[2].Suspend(cond)
+
+	// Sanity: from tx2's perspective, key "k" currently reads as ESTIMATE.
+	mvData := mv.data[0].(*MVData)
+	_, _, isEstimate := mvData.Read(ctx, Key([]byte("k")), 2)
+	require.True(t, isEstimate, "precondition: tx1's estimate should be visible to tx2")
+
+	// Run the same callback the production code uses on ctx cancellation.
+	scheduler.CancelAll(func(i TxnIndex) {
+		mv.ClearEstimates(i)
+	})
+
+	// tx2 must be woken.
+	cond.Lock()
+	require.True(t, cond.notified)
+	cond.Unlock()
+
+	// Regression guard: blocker's ESTIMATE must be cleared too.
+	_, _, isEstimate = mvData.Read(ctx, Key([]byte("k")), 2)
+	require.False(t, isEstimate, "tx1's ESTIMATE must be cleared so tx2 doesn't re-suspend on resume")
 }
 
 func accountName(i int64) string {
@@ -219,6 +264,93 @@ func TestSTMHighContentionStress(t *testing.T) {
 						"iteration %d: parallel != sequential for store %s", i, store.Name())
 				}
 			}
+		})
+	}
+}
+
+func TestValidateInputs(t *testing.T) {
+	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0, StoreKeyBank: 1}
+
+	testCases := []struct {
+		name      string
+		blockSize int
+		stores    map[storetypes.StoreKey]int
+		estimates []MultiLocations
+		errSubstr string // empty means expect no error
+	}{
+		{
+			name:      "valid, no estimates",
+			blockSize: 4,
+			stores:    stores,
+		},
+		{
+			name:      "valid with estimates",
+			blockSize: 4,
+			stores:    stores,
+			estimates: []MultiLocations{0: {1: Locations{Key([]byte("k"))}}},
+		},
+		{
+			name:      "zero block size is allowed",
+			blockSize: 0,
+			stores:    stores,
+		},
+		{
+			name:      "negative block size",
+			blockSize: -1,
+			stores:    stores,
+			errSubstr: "invalid block size",
+		},
+		{
+			name:      "block size overflows uint32",
+			blockSize: math.MaxUint32 + 1,
+			stores:    stores,
+			errSubstr: "overflows uint32",
+		},
+		{
+			name:      "store index out of range",
+			blockSize: 4,
+			stores:    map[storetypes.StoreKey]int{StoreKeyAuth: 0, StoreKeyBank: 2},
+			errSubstr: "store index out of range",
+		},
+		{
+			name:      "negative store index",
+			blockSize: 4,
+			stores:    map[storetypes.StoreKey]int{StoreKeyAuth: -1},
+			errSubstr: "store index out of range",
+		},
+		{
+			name:      "duplicate store index",
+			blockSize: 4,
+			stores:    map[storetypes.StoreKey]int{StoreKeyAuth: 0, StoreKeyBank: 0},
+			errSubstr: "duplicate store index",
+		},
+		{
+			name:      "estimates longer than block",
+			blockSize: 1,
+			stores:    stores,
+			estimates: make([]MultiLocations, 2),
+			errSubstr: "exceeds block size",
+		},
+		{
+			name:      "estimate store index out of range",
+			blockSize: 4,
+			stores:    stores,
+			estimates: []MultiLocations{0: {5: Locations{Key([]byte("k"))}}},
+			errSubstr: "references store index out of range",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			storage := NewMultiMemDB(stores)
+			noop := func(TxnIndex, MultiStore) {}
+			err := ExecuteBlockWithEstimates(context.Background(), tc.blockSize, tc.stores, storage, 1, tc.estimates, noop)
+			if tc.errSubstr == "" {
+				require.NoError(t, err)
+				return
+			}
+			require.Error(t, err)
+			require.Contains(t, err.Error(), tc.errSubstr)
 		})
 	}
 }

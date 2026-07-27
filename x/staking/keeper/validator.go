@@ -58,6 +58,21 @@ func (k Keeper) GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAdd
 	return k.GetValidator(ctx, opAddr)
 }
 
+// ValidatorByHistoricalConsAddr resolves a consensus address that a validator
+// rotated away from and that is still retained for historical infractions. It
+// intentionally does not fall back to the live consensus address index.
+func (k Keeper) ValidatorByHistoricalConsAddr(ctx context.Context, historicalConsAddr sdk.ConsAddress) (types.Validator, error) {
+	kind, valAddr, found, err := k.GetRotationLockedConsAddr(ctx, historicalConsAddr)
+	if err != nil {
+		return types.Validator{}, err
+	}
+	if !found || kind != types.ConsAddrLockRotatedFrom {
+		return types.Validator{}, types.ErrNoValidatorFound
+	}
+
+	return k.GetValidator(ctx, valAddr)
+}
+
 func (k Keeper) mustGetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) types.Validator {
 	validator, err := k.GetValidatorByConsAddr(ctx, consAddr)
 	if err != nil {

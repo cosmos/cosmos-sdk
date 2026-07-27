@@ -151,6 +151,7 @@ func initFixture(tb testing.TB) *fixture {
 		banktypes.ModuleName: bankModule,
 		types.ModuleName:     stakingModule,
 	})
+	integrationApp.SetFinalizeBlockHeaderForwarding(true)
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 

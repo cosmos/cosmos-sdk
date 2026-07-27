@@ -19,12 +19,13 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -101,6 +102,40 @@ func TestSetPubKey_UnorderedNoEvents(t *testing.T) {
 	}
 }
 
+func TestSetPubKey_SignerInfoCountMismatch(t *testing.T) {
+	suite := SetupTestSuite(t, true)
+
+	// Build a raw tx with 2 SignerInfos but an empty body (0 message signers).
+	// This mimics an attacker injecting extra SignerInfos to trigger an
+	// index-out-of-range panic in the pubkeys loop.
+	single := &txtypes.ModeInfo{Sum: &txtypes.ModeInfo_Single_{Single: &txtypes.ModeInfo_Single{Mode: signing.SignMode_SIGN_MODE_DIRECT}}}
+	authInfo := &txtypes.AuthInfo{
+		SignerInfos: []*txtypes.SignerInfo{{ModeInfo: single}, {ModeInfo: single}},
+		Fee:         &txtypes.Fee{GasLimit: 200000},
+	}
+	authInfoBz, err := authInfo.Marshal()
+	require.NoError(t, err)
+
+	bodyBz, err := (&txtypes.TxBody{}).Marshal()
+	require.NoError(t, err)
+
+	raw := &txtypes.TxRaw{
+		BodyBytes:     bodyBz,
+		AuthInfoBytes: authInfoBz,
+		Signatures:    [][]byte{[]byte("sig1"), []byte("sig2")},
+	}
+	txBz, err := raw.Marshal()
+	require.NoError(t, err)
+
+	decodedTx, err := suite.clientCtx.TxConfig.TxDecoder()(txBz)
+	require.NoError(t, err)
+
+	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
+	noopNext := func(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) { return ctx, nil }
+	_, err = spkd.AnteHandle(suite.ctx, decodedTx, false, noopNext)
+	require.ErrorIs(t, err, sdkerrors.ErrTxDecode)
+}
+
 func TestConsumeSignatureVerificationGas(t *testing.T) {
 	suite := SetupTestSuite(t, true)
 	params := types.DefaultParams()
@@ -158,16 +193,38 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	}
 }
 
+func TestConsumeMultisignatureVerificationGasMalformedBitArray(t *testing.T) {
+	params := types.DefaultParams()
+	pkSet, _ := generatePubKeysAndSignatures(3, []byte{1, 2, 3, 4}, false)
+	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pkSet)
+
+	// more set bits than supplied signatures.
+	tooManyBits := multisig.NewMultisig(3)
+	tooManyBits.BitArray.SetIndex(0, true)
+	tooManyBits.BitArray.SetIndex(1, true)
+	tooManyBits.BitArray.SetIndex(2, true)
+
+	// bit array larger than the key set.
+	oversizedBits := &signing.MultiSignatureData{BitArray: cryptotypes.NewCompactBitArray(4)}
+	oversizedBits.BitArray.SetIndex(3, true)
+
+	for name, sig := range map[string]*signing.MultiSignatureData{
+		"more bits than signatures": tooManyBits,
+		"bit array exceeds key set": oversizedBits,
+	} {
+		t.Run(name, func(t *testing.T) {
+			require.Error(t, ante.ConsumeMultisignatureVerificationGas(storetypes.NewInfiniteGasMeter(), sig, multisigKey, params, 0))
+		})
+	}
+}
+
 func TestSigVerification(t *testing.T) {
 	suite := SetupTestSuite(t, true)
 	suite.txBankKeeper.EXPECT().DenomMetadata(gomock.Any(), gomock.Any()).Return(&banktypes.QueryDenomMetadataResponse{}, nil).AnyTimes()
 
-	enabledSignModes := []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_TEXTUAL, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
-	// Since TEXTUAL is not enabled by default, we create a custom TxConfig
-	// here which includes it.
+	enabledSignModes := []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
 	txConfigOpts := authtx.ConfigOptions{
-		TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(suite.clientCtx),
-		EnabledSignModes:           enabledSignModes,
+		EnabledSignModes: enabledSignModes,
 	}
 	var err error
 	suite.clientCtx.TxConfig, err = authtx.NewTxConfigWithOptions(
@@ -203,8 +260,7 @@ func TestSigVerification(t *testing.T) {
 
 	spkd := ante.NewSetPubKeyDecorator(suite.accountKeeper)
 	txConfigOpts = authtx.ConfigOptions{
-		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(suite.txBankKeeper),
-		EnabledSignModes:           enabledSignModes,
+		EnabledSignModes: enabledSignModes,
 	}
 	anteTxConfig, err := authtx.NewTxConfigWithOptions(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),

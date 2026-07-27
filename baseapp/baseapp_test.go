@@ -455,6 +455,18 @@ func TestOptionFunction(t *testing.T) {
 	require.Equal(t, bap.Name(), "new name", "BaseApp should have had name changed via option function")
 }
 
+// unwrappableRunner wraps a TxRunner and exposes it via Unwrap, mirroring how
+// applications (e.g. EVM chains) wrap the STMRunner.
+type unwrappableRunner struct {
+	inner sdk.TxRunner
+}
+
+func (r unwrappableRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]byte, deliverTx sdk.DeliverTxFunc) ([]*abci.ExecTxResult, error) {
+	return r.inner.Run(ctx, ms, txs, deliverTx)
+}
+
+func (r unwrappableRunner) Unwrap() sdk.TxRunner { return r.inner }
+
 func TestBlockGasMeterParallelRunnerPanic(t *testing.T) {
 	db := dbm.NewMemDB()
 
@@ -484,6 +496,17 @@ func TestBlockGasMeterParallelRunnerPanic(t *testing.T) {
 			func(t *testing.T, bap *baseapp.BaseApp) {
 				t.Helper()
 				require.NotPanics(t, func() { bap.SetBlockSTMTxRunner(txnrunner.NewSTMRunner(nil, nil, 0, true, nil)) })
+			},
+		},
+		{
+			// A wrapped STMRunner must still be detected through Unwrap, so the
+			// indeterminism guard fires even when the concrete type is hidden.
+			"panic on wrapped bstm + gas meter",
+			func(t *testing.T, bap *baseapp.BaseApp) {
+				t.Helper()
+				wrapped := unwrappableRunner{txnrunner.NewSTMRunner(nil, nil, 0, true, nil)}
+				bap.SetBlockSTMTxRunner(wrapped)
+				require.Panics(t, func() { bap.SetDisableBlockGasMeter(false) })
 			},
 		},
 	}

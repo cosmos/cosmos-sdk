@@ -70,8 +70,6 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	case flags.SignModeDirectAux:
 		signMode = signing.SignMode_SIGN_MODE_DIRECT_AUX
-	case flags.SignModeTextual:
-		signMode = signing.SignMode_SIGN_MODE_TEXTUAL
 	case flags.SignModeEIP191:
 		signMode = signing.SignMode_SIGN_MODE_EIP_191
 	}

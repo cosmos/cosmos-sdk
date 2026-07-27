@@ -49,7 +49,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	sigtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -58,7 +57,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -231,14 +229,9 @@ func NewSimApp(
 		),
 	)
 
-	enabledSignModes := append(authtx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
-	txConfigOpts := authtx.ConfigOptions{
-		EnabledSignModes:           enabledSignModes,
-		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
-	}
 	txConfig, err := authtx.NewTxConfigWithOptions(
 		appCodec,
-		txConfigOpts,
+		authtx.ConfigOptions{},
 	)
 	if err != nil {
 		panic(err)
@@ -254,7 +247,12 @@ func NewSimApp(
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		poa.NewAppModule(appCodec, app.POAKeeper, poa.WithSecp256k1Support()), // poa.WithSecp256k1Support() is an optional parameter to allow Secp256k1 keys as validators
+		poa.NewAppModule(
+			appCodec,
+			app.POAKeeper,
+			poa.WithSecp256k1Support(), // poa.WithSecp256k1Support() is an optional parameter to allow Secp256k1 keys as validators
+			poa.WithMlDsa65Support(),   // poa.WithMlDsa65Support() is an optional parameter to allow mldsa65 keys as validators
+		),
 	)
 
 	app.BasicModuleManager = module.NewBasicManagerFromManager(

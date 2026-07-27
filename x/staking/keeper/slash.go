@@ -11,7 +11,9 @@ import (
 	types "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Slash a validator for an infraction committed at a known height
+// Slash a validator for an infraction committed at a known height. The
+// consensus address must be the validator's current consensus address; callers
+// handling historical evidence must resolve it before calling Slash.
 // Find the contributing stake at that height and burn the specified slashFactor
 // of it, updating unbonding delegations & redelegations appropriately
 //
@@ -201,12 +203,13 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 	return tokensToBurn, nil
 }
 
-// SlashWithInfractionReason implementation doesn't require the infraction (types.Infraction) to work but is required by Interchain Security.
+// SlashWithInfractionReason slashes a validator using the validator's current
+// consensus address. The infraction reason is required by Interchain Security.
 func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.ConsAddress, infractionHeight, power int64, slashFactor math.LegacyDec, _ types.Infraction) (math.Int, error) {
 	return k.Slash(ctx, consAddr, infractionHeight, power, slashFactor)
 }
 
-// Jail jails a validator
+// Jail jails a validator by its current consensus address.
 func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
 	if err := k.jailValidator(ctx, validator); err != nil {

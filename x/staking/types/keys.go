@@ -85,6 +85,8 @@ var (
 	// is pruned when its rotation falls out of the unbonding window
 	// (determined by the ConsKeyRotationQueueKey); the new key entry is
 	// removed when the rotation is applied in the end blocker.
+	//
+	// Value format: 1 byte kind || length-prefixed validator operator address.
 	RotationLockedConsAddrIndexKey = []byte{0x93} // prefix for the rotation-locked consensus address lookup
 
 	// ConsKeyRotationApplyQueueKey is the prefix for the height-keyed queue
@@ -108,6 +110,26 @@ var (
 // lastHeightValsChanged = header.Height + 1 + 1; state/state.go documents
 // the invariant).
 const ConsensusUpdateDelay int64 = 2
+
+// ConsAddrLockType defines why a consensus address is locked by a key rotation.
+type ConsAddrLockType byte
+
+const (
+	// ConsAddrLockRotatedFrom marks a consensus address that a validator
+	// rotated away from and that remains valid for historical infractions until
+	// the rotation matures out of the unbonding window.
+	ConsAddrLockRotatedFrom ConsAddrLockType = 0x01
+
+	// ConsAddrLockPendingTo marks a consensus address targeted by an in-flight
+	// rotation. It prevents collisions but must not be used as historical
+	// evidence identity before the rotation is active.
+	ConsAddrLockPendingTo ConsAddrLockType = 0x02
+
+	// ConsAddrLockPendingFrom marks a consensus address that a validator is
+	// rotating away from, but that is still the validator's current address
+	// until the rotation applies.
+	ConsAddrLockPendingFrom ConsAddrLockType = 0x03
+)
 
 // UnbondingType defines the type of unbonding operation
 type UnbondingType int
@@ -524,6 +546,38 @@ func GetValidatorConsKeyRotationKey(valAddr sdk.ValAddress) []byte {
 // address that is locked by a pending or recently completed rotation.
 func GetRotationLockedConsAddrIndexKey(consAddr sdk.ConsAddress) []byte {
 	return append(RotationLockedConsAddrIndexKey, address.MustLengthPrefix(consAddr)...)
+}
+
+// RotationLockedConsAddrIndexValue returns the value for a locked consensus
+// address index entry.
+func RotationLockedConsAddrIndexValue(kind ConsAddrLockType, valAddr sdk.ValAddress) []byte {
+	valBz := address.MustLengthPrefix(valAddr)
+	bz := make([]byte, 1+len(valBz))
+	bz[0] = byte(kind)
+	copy(bz[1:], valBz)
+	return bz
+}
+
+// ParseRotationLockedConsAddrIndexValue parses a locked consensus address
+// index value.
+func ParseRotationLockedConsAddrIndexValue(bz []byte) (ConsAddrLockType, sdk.ValAddress, error) {
+	if len(bz) < 2 {
+		return 0, nil, fmt.Errorf("invalid rotation-locked consensus address value length: %d", len(bz))
+	}
+
+	kind := ConsAddrLockType(bz[0])
+	switch kind {
+	case ConsAddrLockPendingFrom, ConsAddrLockRotatedFrom, ConsAddrLockPendingTo:
+	default:
+		return 0, nil, fmt.Errorf("invalid rotation-locked consensus address kind: %d", kind)
+	}
+
+	addrLen := int(bz[1])
+	if len(bz) != 2+addrLen {
+		return 0, nil, fmt.Errorf("invalid rotation-locked consensus address value length: expected %d, got %d", 2+addrLen, len(bz))
+	}
+
+	return kind, sdk.ValAddress(bz[2:]), nil
 }
 
 // GetConsKeyRotationApplyQueueKey returns the queue key for a rotation whose

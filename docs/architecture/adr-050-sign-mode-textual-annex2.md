@@ -1,5 +1,7 @@
 # ADR 050: SIGN_MODE_TEXTUAL: Annex 2 XXX
 
+## Status: ARCHIVED
+
 ## Changelog
 
 * Oct 3, 2022: Initial Draft

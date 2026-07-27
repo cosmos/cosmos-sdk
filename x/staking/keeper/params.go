@@ -56,6 +56,12 @@ func (k Keeper) MinCommissionRate(ctx context.Context) (math.LegacyDec, error) {
 	return params.MinCommissionRate, err
 }
 
+// KeyRotationFee - Fee charged to rotate a validator's consensus key
+func (k Keeper) KeyRotationFee(ctx context.Context) (sdk.Coin, error) {
+	params, err := k.GetParams(ctx)
+	return params.KeyRotationFee, err
+}
+
 // SetParams sets the x/staking module parameters.
 // CONTRACT: This method performs no validation of the parameters.
 func (k Keeper) SetParams(ctx context.Context, params types.Params) error {

@@ -10,15 +10,20 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	any "github.com/cosmos/gogoproto/types/any"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -46,6 +51,12 @@ type GenesisState struct {
 	Redelegations []Redelegation `protobuf:"bytes,7,rep,name=redelegations,proto3" json:"redelegations"`
 	// exported defines a bool to identify whether the chain dealing with exported or initialized genesis.
 	Exported bool `protobuf:"varint,8,opt,name=exported,proto3" json:"exported,omitempty"`
+	// consensus_key_rotation_history defines consensus key rotations that are
+	// still within the unbonding window.
+	ConsensusKeyRotationHistory []ConsensusKeyRotationHistory `protobuf:"bytes,9,rep,name=consensus_key_rotation_history,json=consensusKeyRotationHistory,proto3" json:"consensus_key_rotation_history"`
+	// pending_consensus_key_rotations defines consensus key rotations whose
+	// SDK-side validator state has not reached its deferred apply height yet.
+	PendingConsensusKeyRotations []PendingConsensusKeyRotation `protobuf:"bytes,10,rep,name=pending_consensus_key_rotations,json=pendingConsensusKeyRotations,proto3" json:"pending_consensus_key_rotations"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -130,6 +141,20 @@ func (m *GenesisState) GetExported() bool {
 	return false
 }
 
+func (m *GenesisState) GetConsensusKeyRotationHistory() []ConsensusKeyRotationHistory {
+	if m != nil {
+		return m.ConsensusKeyRotationHistory
+	}
+	return nil
+}
+
+func (m *GenesisState) GetPendingConsensusKeyRotations() []PendingConsensusKeyRotation {
+	if m != nil {
+		return m.PendingConsensusKeyRotations
+	}
+	return nil
+}
+
 // LastValidatorPower required for validator set update logic.
 type LastValidatorPower struct {
 	// address is the address of the validator.
@@ -171,9 +196,100 @@ func (m *LastValidatorPower) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_LastValidatorPower proto.InternalMessageInfo
 
+// ConsensusKeyRotationHistory stores the old consensus address for a
+// validator rotation until the unbonding window has elapsed.
+type ConsensusKeyRotationHistory struct {
+	// validator_address is the validator operator address.
+	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
+	// old_consensus_address is the consensus address rotated away from.
+	OldConsensusAddress string `protobuf:"bytes,2,opt,name=old_consensus_address,json=oldConsensusAddress,proto3" json:"old_consensus_address,omitempty"`
+	// maturity_time is the time when this rotation leaves the unbonding window.
+	MaturityTime time.Time `protobuf:"bytes,3,opt,name=maturity_time,json=maturityTime,proto3,stdtime" json:"maturity_time"`
+}
+
+func (m *ConsensusKeyRotationHistory) Reset()         { *m = ConsensusKeyRotationHistory{} }
+func (m *ConsensusKeyRotationHistory) String() string { return proto.CompactTextString(m) }
+func (*ConsensusKeyRotationHistory) ProtoMessage()    {}
+func (*ConsensusKeyRotationHistory) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9b3dec8894f2831b, []int{2}
+}
+func (m *ConsensusKeyRotationHistory) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ConsensusKeyRotationHistory) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ConsensusKeyRotationHistory.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ConsensusKeyRotationHistory) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ConsensusKeyRotationHistory.Merge(m, src)
+}
+func (m *ConsensusKeyRotationHistory) XXX_Size() int {
+	return m.Size()
+}
+func (m *ConsensusKeyRotationHistory) XXX_DiscardUnknown() {
+	xxx_messageInfo_ConsensusKeyRotationHistory.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ConsensusKeyRotationHistory proto.InternalMessageInfo
+
+// PendingConsensusKeyRotation stores a consensus key rotation that is waiting
+// for its deferred SDK-side state update.
+type PendingConsensusKeyRotation struct {
+	// validator_address is the validator operator address.
+	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
+	// new_pubkey is the consensus public key being rotated to.
+	NewPubkey *any.Any `protobuf:"bytes,2,opt,name=new_pubkey,json=newPubkey,proto3" json:"new_pubkey,omitempty"`
+	// apply_height is the block height where the SDK-side state update should
+	// occur.
+	ApplyHeight int64 `protobuf:"varint,3,opt,name=apply_height,json=applyHeight,proto3" json:"apply_height,omitempty"`
+}
+
+func (m *PendingConsensusKeyRotation) Reset()         { *m = PendingConsensusKeyRotation{} }
+func (m *PendingConsensusKeyRotation) String() string { return proto.CompactTextString(m) }
+func (*PendingConsensusKeyRotation) ProtoMessage()    {}
+func (*PendingConsensusKeyRotation) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9b3dec8894f2831b, []int{3}
+}
+func (m *PendingConsensusKeyRotation) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PendingConsensusKeyRotation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PendingConsensusKeyRotation.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PendingConsensusKeyRotation) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PendingConsensusKeyRotation.Merge(m, src)
+}
+func (m *PendingConsensusKeyRotation) XXX_Size() int {
+	return m.Size()
+}
+func (m *PendingConsensusKeyRotation) XXX_DiscardUnknown() {
+	xxx_messageInfo_PendingConsensusKeyRotation.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PendingConsensusKeyRotation proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "cosmos.staking.v1beta1.GenesisState")
 	proto.RegisterType((*LastValidatorPower)(nil), "cosmos.staking.v1beta1.LastValidatorPower")
+	proto.RegisterType((*ConsensusKeyRotationHistory)(nil), "cosmos.staking.v1beta1.ConsensusKeyRotationHistory")
+	proto.RegisterType((*PendingConsensusKeyRotation)(nil), "cosmos.staking.v1beta1.PendingConsensusKeyRotation")
 }
 
 func init() {
@@ -181,40 +297,57 @@ func init() {
 }
 
 var fileDescriptor_9b3dec8894f2831b = []byte{
-	// 513 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x93, 0x31, 0x6f, 0xd3, 0x40,
-	0x18, 0x86, 0x6d, 0x4a, 0xd2, 0xf4, 0x52, 0x10, 0x1c, 0x09, 0x32, 0x19, 0x9c, 0x10, 0x75, 0x88,
-	0x0a, 0xb1, 0x69, 0xd8, 0xd8, 0x1a, 0x21, 0x50, 0xa5, 0x4a, 0x54, 0x2e, 0x65, 0xe8, 0x12, 0x5d,
-	0xea, 0x93, 0x73, 0x8a, 0x7d, 0x67, 0xf9, 0xbe, 0x94, 0xf2, 0x0f, 0x18, 0xd9, 0x58, 0x3b, 0x32,
-	0x32, 0xf4, 0x47, 0x74, 0xac, 0x3a, 0x21, 0x86, 0x0a, 0x25, 0x03, 0xfc, 0x0c, 0xe4, 0x3b, 0xc7,
-	0x18, 0xa5, 0x5e, 0x92, 0x38, 0xdf, 0xf3, 0x3e, 0xef, 0x27, 0xf9, 0x0e, 0x6d, 0x9d, 0x08, 0x19,
-	0x09, 0xe9, 0x4a, 0x20, 0x53, 0xc6, 0x03, 0xf7, 0x74, 0x67, 0x4c, 0x81, 0xec, 0xb8, 0x01, 0xe5,
-	0x54, 0x32, 0xe9, 0xc4, 0x89, 0x00, 0x81, 0x1f, 0x6b, 0xca, 0xc9, 0x28, 0x27, 0xa3, 0x5a, 0x8d,
-	0x40, 0x04, 0x42, 0x21, 0x6e, 0xfa, 0x4b, 0xd3, 0xad, 0x32, 0xe7, 0x32, 0xad, 0xa9, 0x27, 0x9a,
-	0x1a, 0xe9, 0x78, 0x56, 0xa0, 0x47, 0x0f, 0x49, 0xc4, 0xb8, 0x70, 0xd5, 0xa7, 0xfe, 0xab, 0xfb,
-	0xb5, 0x82, 0x36, 0xdf, 0xea, 0x9d, 0x0e, 0x81, 0x00, 0xc5, 0xbb, 0xa8, 0x1a, 0x93, 0x84, 0x44,
-	0xd2, 0x32, 0x3b, 0x66, 0xaf, 0x3e, 0xb0, 0x9d, 0xdb, 0x77, 0x74, 0x0e, 0x14, 0x35, 0xdc, 0xb8,
-	0xbc, 0x69, 0x1b, 0xdf, 0x7e, 0x7f, 0xdf, 0x36, 0xbd, 0x2c, 0x88, 0x8f, 0xd1, 0x83, 0x90, 0x48,
-	0x18, 0x81, 0x00, 0x12, 0x8e, 0x62, 0xf1, 0x91, 0x26, 0xd6, 0x9d, 0x8e, 0xd9, 0xdb, 0x1c, 0xbe,
-	0x48, 0xe1, 0x9f, 0x37, 0xed, 0xa6, 0x76, 0x4a, 0x7f, 0xea, 0x30, 0xe1, 0x46, 0x04, 0x26, 0xce,
-	0x1e, 0x87, 0xeb, 0x8b, 0x3e, 0xca, 0xca, 0xf6, 0x38, 0x68, 0xe7, 0xfd, 0xd4, 0xf4, 0x3e, 0x15,
-	0x1d, 0xa4, 0x1e, 0xcc, 0x50, 0x53, 0xb9, 0x4f, 0x49, 0xc8, 0x7c, 0x02, 0x22, 0xd1, 0x7e, 0x69,
-	0xad, 0x75, 0xd6, 0x7a, 0xf5, 0xc1, 0x76, 0xd9, 0xb6, 0xfb, 0x44, 0xc2, 0x87, 0x65, 0x46, 0xa9,
-	0x8a, 0x9b, 0x3f, 0x0a, 0x57, 0xc6, 0x12, 0xef, 0x23, 0x94, 0xb7, 0x48, 0xeb, 0xae, 0xf2, 0x3f,
-	0x2d, 0xf3, 0xe7, 0xe1, 0xa2, 0xb6, 0x90, 0xc7, 0xef, 0x50, 0xdd, 0xa7, 0x21, 0x0d, 0x08, 0x30,
-	0xc1, 0xa5, 0x55, 0x51, 0xba, 0x6e, 0x99, 0xee, 0x75, 0x8e, 0x16, 0x7d, 0x45, 0x03, 0x9e, 0xa2,
-	0xe6, 0x8c, 0x8f, 0x05, 0xf7, 0x19, 0x0f, 0x46, 0x45, 0x75, 0x55, 0xa9, 0x9f, 0x95, 0xa9, 0x8f,
-	0x96, 0xa1, 0xdb, 0x3b, 0x1a, 0xb3, 0xd5, 0xb9, 0xc4, 0x47, 0xe8, 0x5e, 0x42, 0x8b, 0x25, 0xeb,
-	0xaa, 0x64, 0xab, 0xac, 0xc4, 0x2b, 0xc0, 0x45, 0xfb, 0xff, 0x16, 0xdc, 0x42, 0x35, 0x7a, 0x16,
-	0x8b, 0x04, 0xa8, 0x6f, 0xd5, 0x3a, 0x66, 0xaf, 0xe6, 0xe5, 0xcf, 0xdd, 0x09, 0xc2, 0xab, 0x2f,
-	0x0d, 0x0f, 0xd0, 0x3a, 0xf1, 0xfd, 0x84, 0x4a, 0x7d, 0x3e, 0x37, 0x86, 0xd6, 0xf5, 0x45, 0xbf,
-	0x91, 0x6d, 0xb1, 0xab, 0x27, 0x87, 0x90, 0x30, 0x1e, 0x78, 0x4b, 0x10, 0x37, 0x50, 0xe5, 0xdf,
-	0x21, 0x5c, 0xf3, 0xf4, 0xc3, 0xab, 0xda, 0xe7, 0xf3, 0xb6, 0xf1, 0xe7, 0xbc, 0x6d, 0x0c, 0xdf,
-	0x5c, 0xce, 0x6d, 0xf3, 0x6a, 0x6e, 0x9b, 0xbf, 0xe6, 0xb6, 0xf9, 0x65, 0x61, 0x1b, 0x57, 0x0b,
-	0xdb, 0xf8, 0xb1, 0xb0, 0x8d, 0xe3, 0xe7, 0x01, 0x83, 0xc9, 0x6c, 0xec, 0x9c, 0x88, 0x28, 0xbb,
-	0x49, 0xd9, 0x57, 0x5f, 0xfa, 0x53, 0xf7, 0x2c, 0xbf, 0x89, 0xf0, 0x29, 0xa6, 0x72, 0x5c, 0x55,
-	0x57, 0xea, 0xe5, 0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x57, 0x29, 0x7a, 0x5e, 0xfc, 0x03, 0x00,
-	0x00,
+	// 795 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x95, 0x41, 0x6f, 0xe3, 0x44,
+	0x18, 0x86, 0xe3, 0x86, 0x6d, 0x93, 0x49, 0x8a, 0x76, 0x67, 0x13, 0x64, 0x52, 0x70, 0xd2, 0x68,
+	0x0f, 0xd1, 0x42, 0x6c, 0x36, 0x7b, 0xe3, 0xd6, 0x80, 0xa0, 0x15, 0xa5, 0x44, 0x69, 0xcb, 0xa1,
+	0x17, 0x6b, 0x12, 0x0f, 0x8e, 0x15, 0x7b, 0xc6, 0xf2, 0x8c, 0xdb, 0xfa, 0x8c, 0x90, 0x38, 0xf6,
+	0x17, 0xa0, 0x5e, 0x90, 0x38, 0x72, 0xe8, 0x8f, 0xa8, 0x38, 0x55, 0x3d, 0x21, 0x0e, 0x05, 0xb5,
+	0x07, 0xe0, 0x5f, 0x20, 0xcf, 0xd8, 0x89, 0xd3, 0xc4, 0x3d, 0x71, 0x49, 0x62, 0x7f, 0xef, 0xfb,
+	0x7c, 0xef, 0x7c, 0x13, 0x8f, 0xc1, 0xab, 0x31, 0x65, 0x1e, 0x65, 0x06, 0xe3, 0x68, 0xea, 0x10,
+	0xdb, 0x38, 0x7d, 0x33, 0xc2, 0x1c, 0xbd, 0x31, 0x6c, 0x4c, 0x30, 0x73, 0x98, 0xee, 0x07, 0x94,
+	0x53, 0xf8, 0x9e, 0x54, 0xe9, 0x89, 0x4a, 0x4f, 0x54, 0x8d, 0x9a, 0x4d, 0x6d, 0x2a, 0x24, 0x46,
+	0xfc, 0x4b, 0xaa, 0x1b, 0x79, 0xcc, 0xd4, 0x2d, 0x55, 0xef, 0x4b, 0x95, 0x29, 0xed, 0x49, 0x03,
+	0x59, 0x7a, 0x81, 0x3c, 0x87, 0x50, 0x43, 0x7c, 0xa6, 0x6a, 0x9b, 0x52, 0xdb, 0xc5, 0x86, 0xb8,
+	0x1a, 0x85, 0xdf, 0x19, 0x88, 0x44, 0x49, 0xa9, 0xf9, 0xb8, 0xc4, 0x1d, 0x0f, 0x33, 0x8e, 0x3c,
+	0x5f, 0x0a, 0xda, 0x3f, 0x6f, 0x80, 0xea, 0x97, 0x72, 0x3d, 0x87, 0x1c, 0x71, 0x0c, 0x77, 0xc0,
+	0xba, 0x8f, 0x02, 0xe4, 0x31, 0x55, 0x69, 0x29, 0x9d, 0x4a, 0x4f, 0xd3, 0x57, 0xaf, 0x4f, 0x1f,
+	0x08, 0x55, 0xbf, 0x7c, 0x7d, 0xd7, 0x2c, 0xfc, 0xf2, 0xf7, 0xaf, 0xaf, 0x95, 0x61, 0x62, 0x84,
+	0x27, 0xe0, 0xb9, 0x8b, 0x18, 0x37, 0x39, 0xe5, 0xc8, 0x35, 0x7d, 0x7a, 0x86, 0x03, 0x75, 0xad,
+	0xa5, 0x74, 0xaa, 0xfd, 0x4f, 0x62, 0xf1, 0x1f, 0x77, 0xcd, 0xba, 0x64, 0x32, 0x6b, 0xaa, 0x3b,
+	0xd4, 0xf0, 0x10, 0x9f, 0xe8, 0x7b, 0x84, 0xdf, 0x5e, 0x75, 0x41, 0xd2, 0x6c, 0x8f, 0x70, 0xc9,
+	0x7c, 0x37, 0x26, 0x1d, 0xc5, 0xa0, 0x41, 0xcc, 0x81, 0x0e, 0xa8, 0x0b, 0xf6, 0x29, 0x72, 0x1d,
+	0x0b, 0x71, 0x1a, 0x48, 0x3e, 0x53, 0x8b, 0xad, 0x62, 0xa7, 0xd2, 0x7b, 0x9d, 0x97, 0x76, 0x1f,
+	0x31, 0xfe, 0x6d, 0xea, 0x11, 0xa8, 0x6c, 0xf2, 0x97, 0xee, 0x52, 0x99, 0xc1, 0x7d, 0x00, 0x66,
+	0x5d, 0x98, 0xfa, 0x8e, 0xe0, 0x6f, 0xe7, 0xf1, 0x67, 0xe6, 0x2c, 0x36, 0xe3, 0x87, 0xdf, 0x80,
+	0x8a, 0x85, 0x5d, 0x6c, 0x23, 0xee, 0x50, 0xc2, 0xd4, 0x67, 0x02, 0xd7, 0xce, 0xc3, 0x7d, 0x3e,
+	0x93, 0x66, 0x79, 0x59, 0x02, 0x9c, 0x82, 0x7a, 0x48, 0x46, 0x94, 0x58, 0x0e, 0xb1, 0xcd, 0x2c,
+	0x7a, 0x5d, 0xa0, 0x3f, 0xca, 0x43, 0x1f, 0xa7, 0xa6, 0xd5, 0x3d, 0x6a, 0xe1, 0x72, 0x9d, 0xc1,
+	0x63, 0xb0, 0x19, 0xe0, 0x6c, 0x93, 0x0d, 0xd1, 0xe4, 0x55, 0x5e, 0x93, 0x61, 0x46, 0x9c, 0xa5,
+	0x2f, 0x52, 0x60, 0x03, 0x94, 0xf0, 0xb9, 0x4f, 0x03, 0x8e, 0x2d, 0xb5, 0xd4, 0x52, 0x3a, 0xa5,
+	0xe1, 0xec, 0x1a, 0x7e, 0xaf, 0x00, 0x6d, 0x4c, 0x09, 0xc3, 0x84, 0x85, 0xcc, 0x9c, 0xe2, 0xc8,
+	0x0c, 0x28, 0x17, 0x3e, 0x73, 0xe2, 0x30, 0x4e, 0x83, 0x48, 0x2d, 0x8b, 0x10, 0x6f, 0xf3, 0x42,
+	0x7c, 0x96, 0xba, 0xbf, 0xc2, 0xd1, 0x30, 0xf1, 0xee, 0x4a, 0x6b, 0x36, 0xd3, 0xd6, 0x38, 0x5f,
+	0x07, 0x7f, 0x50, 0x40, 0xd3, 0xc7, 0x72, 0xc8, 0xab, 0xd3, 0x30, 0x15, 0x3c, 0x1d, 0x63, 0x20,
+	0xed, 0xab, 0xd2, 0x64, 0x63, 0x7c, 0xe0, 0xe7, 0xeb, 0x58, 0x7b, 0x02, 0xe0, 0xf2, 0x5f, 0x18,
+	0xf6, 0xc0, 0x06, 0xb2, 0xac, 0x00, 0x33, 0xf9, 0xb4, 0x96, 0xfb, 0xea, 0xed, 0x55, 0xb7, 0x96,
+	0xe4, 0xd8, 0x91, 0x95, 0x43, 0x1e, 0x38, 0xc4, 0x1e, 0xa6, 0x42, 0x58, 0x03, 0xcf, 0xe6, 0x8f,
+	0x64, 0x71, 0x28, 0x2f, 0x3e, 0x2d, 0xfd, 0x78, 0xd9, 0x2c, 0xfc, 0x73, 0xd9, 0x2c, 0xb4, 0x7f,
+	0x5a, 0x03, 0x5b, 0x4f, 0x4c, 0x0e, 0x1e, 0x80, 0x17, 0xf3, 0x87, 0x6f, 0xb1, 0xfb, 0xf6, 0xed,
+	0x55, 0xf7, 0xc3, 0xa4, 0xfb, 0x2c, 0xe9, 0x62, 0x8c, 0xe7, 0xa7, 0x8f, 0xee, 0xc3, 0x63, 0x50,
+	0xa7, 0xae, 0x95, 0x19, 0x6e, 0xca, 0x5c, 0x5b, 0x62, 0xce, 0x62, 0x2d, 0x32, 0x5f, 0x52, 0xd7,
+	0x7a, 0x5c, 0x82, 0x07, 0x60, 0xd3, 0x43, 0x3c, 0x0c, 0x1c, 0x1e, 0x99, 0xf1, 0xa1, 0xa7, 0x16,
+	0xc5, 0x71, 0xd6, 0xd0, 0xe5, 0x89, 0xa8, 0xa7, 0x27, 0xa2, 0x7e, 0x94, 0x9e, 0x88, 0xfd, 0xcd,
+	0x78, 0x33, 0x2e, 0xfe, 0x6c, 0x2a, 0x72, 0x43, 0xaa, 0xa9, 0x3f, 0x56, 0x64, 0x06, 0xf4, 0xaf,
+	0x02, 0xb6, 0x9e, 0xd8, 0xd3, 0xff, 0x7d, 0x40, 0x5f, 0x03, 0x40, 0xf0, 0x99, 0xe9, 0x87, 0xa3,
+	0x29, 0x8e, 0xc4, 0x54, 0x2a, 0xbd, 0xda, 0xd2, 0x32, 0x76, 0x48, 0xd4, 0x57, 0x7f, 0x9b, 0xef,
+	0xfe, 0x38, 0x88, 0x7c, 0x4e, 0xf5, 0x41, 0x38, 0x8a, 0xb3, 0x95, 0x09, 0x3e, 0x1b, 0x08, 0x00,
+	0xdc, 0x06, 0x55, 0xe4, 0xfb, 0x6e, 0x64, 0x4e, 0xb0, 0x63, 0x4f, 0xb8, 0x98, 0x4b, 0x71, 0x58,
+	0x11, 0xf7, 0x76, 0xc5, 0xad, 0xf9, 0x5a, 0xfb, 0x5f, 0x5c, 0xdf, 0x6b, 0xca, 0xcd, 0xbd, 0xa6,
+	0xfc, 0x75, 0xaf, 0x29, 0x17, 0x0f, 0x5a, 0xe1, 0xe6, 0x41, 0x2b, 0xfc, 0xfe, 0xa0, 0x15, 0x4e,
+	0x3e, 0xb6, 0x1d, 0x3e, 0x09, 0x47, 0xfa, 0x98, 0x7a, 0xc9, 0x0b, 0x2a, 0xf9, 0xea, 0x32, 0x6b,
+	0x6a, 0x9c, 0xcf, 0x5e, 0x70, 0x3c, 0xf2, 0x31, 0x1b, 0xad, 0x8b, 0x9c, 0x6f, 0xff, 0x0b, 0x00,
+	0x00, 0xff, 0xff, 0xcc, 0x24, 0x0c, 0xcc, 0x53, 0x07, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -237,6 +370,34 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.PendingConsensusKeyRotations) > 0 {
+		for iNdEx := len(m.PendingConsensusKeyRotations) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PendingConsensusKeyRotations[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x52
+		}
+	}
+	if len(m.ConsensusKeyRotationHistory) > 0 {
+		for iNdEx := len(m.ConsensusKeyRotationHistory) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ConsensusKeyRotationHistory[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x4a
+		}
+	}
 	if m.Exported {
 		i--
 		if m.Exported {
@@ -375,6 +536,98 @@ func (m *LastValidatorPower) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *ConsensusKeyRotationHistory) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ConsensusKeyRotationHistory) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ConsensusKeyRotationHistory) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.MaturityTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.MaturityTime):])
+	if err2 != nil {
+		return 0, err2
+	}
+	i -= n2
+	i = encodeVarintGenesis(dAtA, i, uint64(n2))
+	i--
+	dAtA[i] = 0x1a
+	if len(m.OldConsensusAddress) > 0 {
+		i -= len(m.OldConsensusAddress)
+		copy(dAtA[i:], m.OldConsensusAddress)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.OldConsensusAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ValidatorAddress) > 0 {
+		i -= len(m.ValidatorAddress)
+		copy(dAtA[i:], m.ValidatorAddress)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.ValidatorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PendingConsensusKeyRotation) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PendingConsensusKeyRotation) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PendingConsensusKeyRotation) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ApplyHeight != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.ApplyHeight))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.NewPubkey != nil {
+		{
+			size, err := m.NewPubkey.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintGenesis(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ValidatorAddress) > 0 {
+		i -= len(m.ValidatorAddress)
+		copy(dAtA[i:], m.ValidatorAddress)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.ValidatorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintGenesis(dAtA []byte, offset int, v uint64) int {
 	offset -= sovGenesis(v)
 	base := offset
@@ -429,6 +682,18 @@ func (m *GenesisState) Size() (n int) {
 	if m.Exported {
 		n += 2
 	}
+	if len(m.ConsensusKeyRotationHistory) > 0 {
+		for _, e := range m.ConsensusKeyRotationHistory {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.PendingConsensusKeyRotations) > 0 {
+		for _, e := range m.PendingConsensusKeyRotations {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -444,6 +709,45 @@ func (m *LastValidatorPower) Size() (n int) {
 	}
 	if m.Power != 0 {
 		n += 1 + sovGenesis(uint64(m.Power))
+	}
+	return n
+}
+
+func (m *ConsensusKeyRotationHistory) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ValidatorAddress)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	l = len(m.OldConsensusAddress)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.MaturityTime)
+	n += 1 + l + sovGenesis(uint64(l))
+	return n
+}
+
+func (m *PendingConsensusKeyRotation) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ValidatorAddress)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if m.NewPubkey != nil {
+		l = m.NewPubkey.Size()
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if m.ApplyHeight != 0 {
+		n += 1 + sovGenesis(uint64(m.ApplyHeight))
 	}
 	return n
 }
@@ -739,6 +1043,74 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.Exported = bool(v != 0)
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConsensusKeyRotationHistory", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConsensusKeyRotationHistory = append(m.ConsensusKeyRotationHistory, ConsensusKeyRotationHistory{})
+			if err := m.ConsensusKeyRotationHistory[len(m.ConsensusKeyRotationHistory)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingConsensusKeyRotations", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PendingConsensusKeyRotations = append(m.PendingConsensusKeyRotations, PendingConsensusKeyRotation{})
+			if err := m.PendingConsensusKeyRotations[len(m.PendingConsensusKeyRotations)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGenesis(dAtA[iNdEx:])
@@ -836,6 +1208,290 @@ func (m *LastValidatorPower) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.Power |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ConsensusKeyRotationHistory) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ConsensusKeyRotationHistory: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ConsensusKeyRotationHistory: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OldConsensusAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OldConsensusAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaturityTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.MaturityTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PendingConsensusKeyRotation) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PendingConsensusKeyRotation: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PendingConsensusKeyRotation: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewPubkey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.NewPubkey == nil {
+				m.NewPubkey = &any.Any{}
+			}
+			if err := m.NewPubkey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApplyHeight", wireType)
+			}
+			m.ApplyHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApplyHeight |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

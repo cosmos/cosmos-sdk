@@ -362,22 +362,56 @@ func TestBuilderWithTimeoutTimestamp(t *testing.T) {
 	require.True(t, b.tx.Body.TimeoutTimestamp.Equal(timeoutTimestamp))
 }
 
-func TestGetSigningTxData_NilMultiBitarray(t *testing.T) {
+func TestGetSigningTxData_NilPublicKey(t *testing.T) {
 	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	w := newBuilder(marshaler)
 
 	_, pubkey, addr := testdata.KeyTestPubAddr()
 	require.NoError(t, w.SetMsgs(testdata.NewTestMsg(addr)))
 
-	pubKeyAny, err := codectypes.NewAnyWithValue(pubkey)
-	require.NoError(t, err)
+	// One signer provides a public key, the other omits it. A nil PublicKey is
+	// valid (the key can be omitted when already known, e.g. for some multisig
+	// sub-signers), and GetPubKeys already tolerates it. GetSigningTxData must
+	// convert the present key faithfully and not panic on the nil one.
+	withKey := signing.SignatureV2{
+		PubKey:   pubkey,
+		Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT},
+		Sequence: 0,
+	}
+	withoutKey := signing.SignatureV2{
+		PubKey:   nil,
+		Data:     &signing.SingleSignatureData{SignMode: signing.SignMode_SIGN_MODE_DIRECT},
+		Sequence: 1,
+	}
+	require.NoError(t, w.SetSignatures(withKey, withoutKey))
+
+	require.NotPanics(t, func() {
+		td := w.GetSigningTxData()
+		require.Len(t, td.AuthInfo.SignerInfos, 2)
+
+		// The present key is converted faithfully.
+		src := w.tx.AuthInfo.SignerInfos[0].PublicKey
+		require.NotNil(t, td.AuthInfo.SignerInfos[0].PublicKey)
+		require.Equal(t, src.TypeUrl, td.AuthInfo.SignerInfos[0].PublicKey.TypeUrl)
+		require.Equal(t, src.Value, td.AuthInfo.SignerInfos[0].PublicKey.Value)
+
+		// The omitted key stays nil instead of triggering a panic.
+		require.Nil(t, td.AuthInfo.SignerInfos[1].PublicKey)
+	})
+}
+
+func TestGetSigningTxData_NilMultiBitarray(t *testing.T) {
+	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	w := newBuilder(marshaler)
+
+	_, _, addr := testdata.KeyTestPubAddr()
+	require.NoError(t, w.SetMsgs(testdata.NewTestMsg(addr)))
 
 	// Inject a SignerInfo with ModeInfo_Multi whose Bitarray is nil — valid
 	// wire state that survives decoding if the field is omitted. Before the
 	// fix, adaptModeInfo would dereference nil and panic.
 	w.tx.AuthInfo.SignerInfos = []*txtypes.SignerInfo{
 		{
-			PublicKey: pubKeyAny,
 			ModeInfo: &txtypes.ModeInfo{
 				Sum: &txtypes.ModeInfo_Multi_{
 					Multi: &txtypes.ModeInfo_Multi{
@@ -399,15 +433,11 @@ func TestGetSigningTxData_NilModeInfoMulti(t *testing.T) {
 	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	w := newBuilder(marshaler)
 
-	_, pubkey, addr := testdata.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	require.NoError(t, w.SetMsgs(testdata.NewTestMsg(addr)))
-
-	pubKeyAny, err := codectypes.NewAnyWithValue(pubkey)
-	require.NoError(t, err)
 
 	w.tx.AuthInfo.SignerInfos = []*txtypes.SignerInfo{
 		{
-			PublicKey: pubKeyAny,
 			ModeInfo: &txtypes.ModeInfo{
 				Sum: &txtypes.ModeInfo_Multi_{
 					Multi: nil,

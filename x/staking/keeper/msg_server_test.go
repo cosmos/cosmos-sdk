@@ -1421,6 +1421,14 @@ func (s *KeeperTestSuite) TestMsgRotateConsPubKey() {
 				return
 			}
 			require.NoError(err)
+
+			var event *sdk.Event
+			for _, e := range s.ctx.EventManager().Events() {
+				if e.Type == stakingtypes.EventTypeRotateConsPubKey {
+					event = &e
+				}
+			}
+			require.NotNil(event, "expected %s event", stakingtypes.EventTypeRotateConsPubKey)
 		})
 	}
 }

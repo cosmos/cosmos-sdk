@@ -212,6 +212,8 @@ v0.55 adds consensus key rotation to `x/staking` ([#26440](https://github.com/co
 
 Indexers, exchanges, and monitoring that key validators by consensus address must handle the mapping changing over a validator's lifetime.
 
+For an overview of key rotation and the operator procedures, see [Key rotation](https://docs.cosmos.network/sdk/latest/keys/key-rotation), [Rotate a consensus key, Staking](https://docs.cosmos.network/sdk/latest/keys/rotate-validator-key), and [Rotate a consensus key, PoA](https://docs.cosmos.network/sdk/latest/keys/rotate-validator-key-poa).
+
 ### ML-DSA-65 Validator Consensus Keys
 
 Cosmos SDK v0.55 registers the NIST ML-DSA-65 (FIPS 204) post-quantum signature scheme as a supported validator consensus key type ([#26436](https://github.com/cosmos/cosmos-sdk/pull/26436)). The new `cosmos.crypto.mldsa65.PubKey` / `PrivKey` proto messages, Amino routes (`cometbft/PubKeyMlDsa65`, `cometbft/PrivKeyMlDsa65`), interface-registry registration, multisig amino route, and `hd.MlDsa65Type` constant are all enabled by default.
@@ -226,15 +228,21 @@ Cosmos SDK v0.55 registers the NIST ML-DSA-65 (FIPS 204) post-quantum signature 
 
 Existing chains can combine this with [key rotation](#validator-consensus-key-rotation) to move validators to post-quantum keys: add `ml_dsa_65` to `pub_key_types` via a consensus-params update, then have validators rotate.
 
+For the concepts and operator guides, see [Post-quantum keys](https://docs.cosmos.network/sdk/latest/keys/post-quantum-keys), [Enable ML-DSA keys](https://docs.cosmos.network/sdk/latest/keys/enable-ml-dsa-keys), and [Migrate a validator to ML-DSA](https://docs.cosmos.network/sdk/latest/keys/migrate-validator-ml-dsa).
+
 ### ML-DSA-65 Account Keys
 
 [#26472](https://github.com/cosmos/cosmos-sdk/pull/26472) extends ML-DSA-65 support to user account keys: keyring creation and mnemonic recovery (`--algo ml_dsa_65`), transaction signing and verification, and a new ante-handler gas cost param `SigVerifyCostMlDsa65` (added to `x/auth` params by the automatic 6 → 7 migration). No action is required; accounts using existing key types are unaffected.
+
+See [Create an ML-DSA account](https://docs.cosmos.network/sdk/latest/keys/create-ml-dsa-account) and [Post-quantum keys](https://docs.cosmos.network/sdk/latest/keys/post-quantum-keys).
 
 ### secp256k1eth Validator Consensus Keys
 
 [#26615](https://github.com/cosmos/cosmos-sdk/pull/26615) adds `crypto/keys/secp256k1eth`, wrapping CometBFT's Ethereum-style secp256k1 consensus key implementation with SDK codec registration. Intended for EVM-compatible chains that want validator consensus addresses derived the Ethereum way; opt in via `genesis.consensus_params.validator.pub_key_types`.
 
 The IBC counterparty warning from the [ML-DSA-65 section](#ml-dsa-65-validator-consensus-keys) applies here too: counterparty chains must run a stack that can verify secp256k1eth signatures before your validators adopt the key type, or IBC connections with them will break.
+
+See [Post-quantum keys](https://docs.cosmos.network/sdk/latest/keys/post-quantum-keys) for how the consensus key types compare.
 
 ### Block-STM Configuration
 

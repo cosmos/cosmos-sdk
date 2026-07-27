@@ -14,7 +14,7 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [Removed: x/protocolpool](#removed-xprotocolpool)
     * [Removed: SIGN_MODE_TEXTUAL](#removed-sign_mode_textual)
     * [Mempool Interface Changes](#mempool-interface-changes)
-    * [Staking: Key Rotation Fee Pool Module Account](#staking-key-rotation-fee-pool-module-account)
+    * [Staking: Key Rotation Wiring and Interface Changes](#staking-key-rotation-wiring-and-interface-changes)
     * [genutil: ExportGenesisFileWithTime Signature](#genutil-exportgenesisfilewithtime-signature)
     * [Upgrade Handler and Store Migrations](#upgrade-handler-and-store-migrations)
 * [Upgrading from v0.53.x](#upgrading-from-v053x)
@@ -109,11 +109,11 @@ The proto enum value `2` and string `"SIGN_MODE_TEXTUAL"` are **reserved** to pr
 * `Insert` gains an `InsertOption` parameter carrying the ante-reported gas: `Insert(context.Context, sdk.Tx, InsertOption) error`.
 * `Iterator.Tx()` now returns a `PooledTx` (`{Tx sdk.Tx; GasWanted uint64}`) instead of `sdk.Tx`.
 * `ExtMempool.SelectBy`'s callback now receives a `PooledTx`: `SelectBy(context.Context, [][]byte, func(PooledTx) bool)`.
-* `ExtMempool` gains `RemoveWithReason(context.Context, sdk.Tx, RemoveReason) error`, where `RemoveReason` identifies the caller (`run_tx.recheck`, `run_tx.finalize`, `prepare_proposal.remove_invalid`) and an optional error.
+* `ExtMempool.RemoveWithReason` and the `RemoveReason` type, introduced in v0.54, are unchanged.
 
 Custom `PrepareProposal` handlers that iterate the mempool should read gas from `PooledTx.GasWanted` rather than re-deriving it from the tx.
 
-### Staking: Key Rotation Fee Pool Module Account
+### Staking: Key Rotation Wiring and Interface Changes
 
 `x/staking` now requires a `key_rotation_fee_pool` module account with burn permissions — the staking keeper panics at construction if it is missing (`x/staking/keeper/keeper.go`). Add it to your `maccPerms`:
 
@@ -126,10 +126,10 @@ maccPerms = map[string][]string{
 
 This is required for **all** chains upgrading to v0.55, whether or not validators are expected to use [key rotation](#validator-consensus-key-rotation).
 
-Two module consensus-version bumps ship in this release and run automatically via `RunMigrations` in your upgrade handler:
+Key rotation also touches two staking keeper surfaces that external modules may implement or consume:
 
-* `x/staking` 5 → 6: adds the `key_rotation_fee` param, defaulting to `1000000` of the bond denom ([#26485](https://github.com/cosmos/cosmos-sdk/pull/26485)). `Params.Validate` requires the fee denom to equal `bond_denom` ([#26613](https://github.com/cosmos/cosmos-sdk/pull/26613)).
-* `x/auth` 6 → 7: adds the `SigVerifyCostMlDsa65` param with its default value ([#26472](https://github.com/cosmos/cosmos-sdk/pull/26472)).
+* The `StakingHooks` interface gains `AfterValidatorConsKeyUpdated(ctx context.Context, oldConsAddr, newConsAddr sdk.ConsAddress, valAddr sdk.ValAddress) error`, called when a rotation is applied. Custom `StakingHooks` implementations must add this method (returning `nil` is fine if you don't need the notification).
+* The staking keeper adds `ValidatorByHistoricalConsAddr(ctx, consAddr)`, which resolves a validator from a consensus address it used before a rotation. Modules that map consensus addresses to validators can no longer assume that mapping is immutable — see [Validator Consensus Key Rotation](#validator-consensus-key-rotation).
 
 ### genutil: ExportGenesisFileWithTime Signature
 
@@ -145,6 +145,15 @@ func ExportGenesisFileWithTime(genFile string, appGenesis *types.AppGenesis, gen
 ```
 
 ### Upgrade Handler and Store Migrations
+
+#### Module Migrations
+
+Two module consensus-version bumps ship in this release and run automatically via `RunMigrations` in your upgrade handler:
+
+* `x/staking` 5 → 6: adds the `key_rotation_fee` param, defaulting to `1000000` of the bond denom ([#26485](https://github.com/cosmos/cosmos-sdk/pull/26485)). `Params.Validate` requires the fee denom to equal `bond_denom` ([#26613](https://github.com/cosmos/cosmos-sdk/pull/26613)).
+* `x/auth` 6 → 7: adds the `SigVerifyCostMlDsa65` param with its default value ([#26472](https://github.com/cosmos/cosmos-sdk/pull/26472)).
+
+#### Reference Upgrade Handler
 
 A reference upgrade handler for this release (see `simapp/upgrades.go`):
 
@@ -210,7 +219,9 @@ v0.55 adds consensus key rotation to `x/staking` ([#26440](https://github.com/co
 * **Genesis.** Rotation history and pending-rotation state are included in staking genesis import/export ([#26471](https://github.com/cosmos/cosmos-sdk/pull/26471)); genesis export tooling that parses staking genesis JSON should expect the new fields.
 * **Events.** `rotate_cons_pubkey` is emitted when a rotation is scheduled (including apply height, maturity time, evidence-expiry time/height, and the burned fee) and `apply_cons_pubkey_rotation` when it is applied (validator, old and new consensus addresses) ([#26619](https://github.com/cosmos/cosmos-sdk/pull/26619)).
 
-Indexers, exchanges, and monitoring that key validators by consensus address must handle the mapping changing over a validator's lifetime.
+Indexers, exchanges, and monitoring that key validators by consensus address must handle the mapping changing over a validator's lifetime. On-chain, `keeper.ValidatorByHistoricalConsAddr` resolves a validator from a rotated-away consensus address.
+
+Chains built on the enterprise `x/poa` module have their own `MsgRotateConsPubKey` with different semantics — no fee, no rate limit, an admin override, and a same-block swap with no rotation history. Because the old consensus address is gone immediately, modules that attribute `LastCommit` signatures or vote extensions by consensus address need extra care across the swap; see the PoA guide below for the caveats and the operator runbook.
 
 For an overview of key rotation and the operator procedures, see [Key rotation](https://docs.cosmos.network/sdk/latest/keys/key-rotation), [Rotate a consensus key, Staking](https://docs.cosmos.network/sdk/latest/keys/rotate-validator-key), and [Rotate a consensus key, PoA](https://docs.cosmos.network/sdk/latest/keys/rotate-validator-key-poa).
 
@@ -260,7 +271,7 @@ blockexec.Apply(bApp, appOpts, stores, txConfig.TxDecoder(),
 )
 ```
 
-`Apply` resolves the executor from `app.toml`/flags and installs the corresponding `TxRunner`; with the default `sequential` executor it preserves today's behavior, so the wiring is safe to add unconditionally. Block-STM requires the block gas meter to remain disabled (the default since v0.54) — enabling both panics at parameter assignment.
+`Apply` resolves the executor from `app.toml`/flags and installs the corresponding `TxRunner`; with the default `sequential` executor it preserves today's behavior, so the wiring is safe to add unconditionally. Block-STM is incompatible with the block gas meter (disabled by default since v0.54): `Apply` disables the meter automatically when `block-stm` is selected, but chains wiring `SetBlockSTMTxRunner` directly must call `SetDisableBlockGasMeter(true)` first or the runner installation panics.
 
 Switching a running chain's executor is a per-node setting with identical state-transition results, but treat the first enablement as an operational rollout: test with your workload before flipping validators.
 

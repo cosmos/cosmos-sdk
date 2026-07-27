@@ -51,6 +51,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * (x/gov) [#26353](https://github.com/cosmos/cosmos-sdk/pull/26353) Fix leading comma in `proposal_messages` event attribute emitted by `SubmitProposal`.
+* (crypto) [#26509](https://github.com/cosmos/cosmos-sdk/pull/26509) Bound `CompactBitArray` `GetIndex`/`SetIndex` by the `Elems` length to avoid out-of-range reads when decoding malformed multisig bit arrays.
 
 ### Deprecated
 

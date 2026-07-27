@@ -15,7 +15,7 @@ require (
 	github.com/bgentry/speakeasy v0.2.0
 	github.com/bits-and-blooms/bitset v1.24.5
 	github.com/chzyer/readline v1.5.1
-	github.com/cockroachdb/errors v1.13.0
+	github.com/cockroachdb/errors v1.14.0
 	github.com/cometbft/cometbft v0.39.3
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/btree v1.0.0

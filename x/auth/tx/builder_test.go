@@ -361,8 +361,6 @@ func TestBuilderWithTimeoutTimestamp(t *testing.T) {
 	b := txBldr.(*wrapper)
 	require.True(t, b.tx.Body.TimeoutTimestamp.Equal(timeoutTimestamp))
 }
-<<<<<<< HEAD
-=======
 
 func TestGetSigningTxData_NilPublicKey(t *testing.T) {
 	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
@@ -454,4 +452,3 @@ func TestGetSigningTxData_NilModeInfoMulti(t *testing.T) {
 		require.NotNil(t, td.AuthInfo.SignerInfos[0].ModeInfo.GetMulti())
 	})
 }
->>>>>>> 3a2772b3f (fix(x/auth/tx): avoid nil pointer panic in GetSigningTxData for multisig ModeInfo with a nil Multi or nil Bitarray (#26571))

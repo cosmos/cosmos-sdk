@@ -30,7 +30,7 @@ Each entry must include the Github issue reference in the following format:
   * Add the `cosmos/crypto/secp256k1eth` package with `PubKey` and `PrivKey` for Ethereum-compatible secp256k1 validator keys.
   * Add `Params.sig_verify_cost_mldsa65` to `cosmos/auth/v1beta1/auth.proto`.
   * Add `ConsKeyEvidenceExpiry` to `cosmos/staking/v1beta1/staking.proto`.
-  * Add `ConsensusKeyRotationHistory.evidence_expiry_time` and `.evidence_expiry_height` to `cosmos/staking/v1beta1/genesis.proto`. `maturity_time` may now be zero, meaning the re-rotation gate is retired and 
+  * Add `ConsensusKeyRotationHistory.evidence_expiry_time` and `.evidence_expiry_height` to `cosmos/staking/v1beta1/genesis.proto`. `maturity_time` may now be zero, meaning the re-rotation gate is retired and only the evidence lock remains.
 * [#26481](https://github.com/cosmos/cosmos-sdk/pull/26481) Add staking `Params.key_rotation_fee` to `cosmos/staking/v1beta1/staking.proto`.
 * [#26460](https://github.com/cosmos/cosmos-sdk/pull/26460) Add `ConsensusKeyRotationHistory` and `PendingConsensusKeyRotation` to `cosmos/staking/v1beta1/genesis.proto`.
 * [#26440](https://github.com/cosmos/cosmos-sdk/pull/26440) Add `Msg/RotateConsPubKey` with `MsgRotateConsPubKey` and `MsgRotateConsPubKeyResponse` to `cosmos/staking/v1beta1/tx.proto`.

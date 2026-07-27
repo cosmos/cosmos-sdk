@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type keyData struct {
@@ -393,6 +394,49 @@ func TestMarshalAmino(t *testing.T) {
 			require.NoError(t, err)
 
 			require.Equal(t, tc.msg, tc.typ)
+		})
+	}
+}
+
+func TestPubKeyUnmarshalAminoSEC1Tag(t *testing.T) {
+	validKey := secp256k1.GenPrivKey().PubKey().Bytes()
+	require.Len(t, validKey, secp256k1.PubKeySize)
+	require.Truef(t, validKey[0] == 0x02 || validKey[0] == 0x03,
+		"generated compressed key has unexpected tag byte %#x", validKey[0])
+
+	// 33-byte buffers whose only meaningful difference is the leading tag byte;
+	// the remaining bytes are arbitrary because UnmarshalAmino validates the tag,
+	// not the full point.
+	withTag := func(tag byte) []byte {
+		bz := make([]byte, secp256k1.PubKeySize)
+		bz[0] = tag
+		return bz
+	}
+
+	testCases := []struct {
+		name   string
+		bz     []byte
+		expErr bool
+	}{
+		{"valid generated key", validKey, false},
+		{"tag 0x02 accepted", withTag(0x02), false},
+		{"tag 0x03 accepted", withTag(0x03), false},
+		{"invalid tag 0x00", withTag(0x00), true},
+		{"invalid tag 0x04", withTag(0x04), true},
+		{"invalid tag 0x05", append([]byte{0x05}, validKey[1:]...), true},
+		{"wrong length", validKey[:secp256k1.PubKeySize-1], true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var pk secp256k1.PubKey
+			err := pk.UnmarshalAmino(tc.bz)
+			if tc.expErr {
+				require.ErrorIs(t, err, sdkerrors.ErrInvalidPubKey)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tc.bz, pk.Key)
 		})
 	}
 }

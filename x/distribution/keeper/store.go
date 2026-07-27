@@ -129,10 +129,17 @@ func (k Keeper) IterateDelegatorStartingInfos(ctx context.Context, handler func(
 
 // GetValidatorHistoricalRewards gets historical rewards for a particular period
 func (k Keeper) GetValidatorHistoricalRewards(ctx context.Context, val sdk.ValAddress, period uint64) (rewards types.ValidatorHistoricalRewards, err error) {
+	return k.getValidatorHistoricalRewards(ctx, val, period, false)
+}
+
+func (k Keeper) getValidatorHistoricalRewards(ctx context.Context, val sdk.ValAddress, period uint64, strict bool) (rewards types.ValidatorHistoricalRewards, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	b, err := store.Get(types.GetValidatorHistoricalRewardsKey(val, period))
 	if err != nil {
 		return rewards, err
+	}
+	if strict && b == nil {
+		return rewards, types.ErrNoValidatorDistInfo.Wrapf("no historical rewards for validator %s period %d", val, period)
 	}
 
 	err = k.cdc.Unmarshal(b, &rewards)

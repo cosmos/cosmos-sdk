@@ -67,12 +67,12 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val staki
 	}
 
 	// return staking * (ending - starting)
-	starting, err := k.GetValidatorHistoricalRewards(ctx, valBz, startingPeriod)
+	starting, err := k.getValidatorHistoricalRewards(ctx, valBz, startingPeriod, true)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
 
-	ending, err := k.GetValidatorHistoricalRewards(ctx, valBz, endingPeriod)
+	ending, err := k.getValidatorHistoricalRewards(ctx, valBz, endingPeriod, true)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}

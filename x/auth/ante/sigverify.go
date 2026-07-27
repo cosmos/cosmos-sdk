@@ -75,6 +75,11 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return sdk.Context{}, err
 	}
 
+	if len(pubkeys) != len(signers) {
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrTxDecode,
+			"expected %d signer infos, got %d", len(signers), len(pubkeys))
+	}
+
 	signerStrs := make([]string, len(signers))
 	for i, pk := range pubkeys {
 		var err error
@@ -607,14 +612,23 @@ func ConsumeMultisignatureVerificationGas(
 	params types.Params, accSeq uint64,
 ) error {
 	size := sig.BitArray.Count()
-	sigIndex := 0
+	pubKeys := pubkey.GetPubKeys()
+	// the bit array is attacker-controlled and reaches this gas consumer before
+	// VerifyMultisignature runs its own checks, so bound it against the key set here.
+	if len(pubKeys) != size {
+		return fmt.Errorf("bit array size is incorrect, expecting: %d", len(pubKeys))
+	}
 
+	sigIndex := 0
 	for i := range size {
 		if !sig.BitArray.GetIndex(i) {
 			continue
 		}
+		if sigIndex >= len(sig.Signatures) {
+			return fmt.Errorf("signature size is incorrect %d", len(sig.Signatures))
+		}
 		sigV2 := signing.SignatureV2{
-			PubKey:   pubkey.GetPubKeys()[i],
+			PubKey:   pubKeys[i],
 			Data:     sig.Signatures[sigIndex],
 			Sequence: accSeq,
 		}

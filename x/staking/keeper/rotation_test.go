@@ -526,6 +526,60 @@ func (s *KeeperTestSuite) TestImportConsKeyRotationsRoundTrip() {
 	require.True(after.Tokens.LT(before.Tokens))
 }
 
+func (s *KeeperTestSuite) TestImportConsKeyRotationsAppliedAndPending() {
+	require := s.Require()
+	s.SetupTest()
+
+	pk0 := ed25519.GenPrivKey().PubKey()
+	pk1 := ed25519.GenPrivKey().PubKey()
+	pk2 := ed25519.GenPrivKey().PubKey()
+	_, valAddr := s.bondedValidator(pk0)
+	consAddr0 := sdk.ConsAddress(pk0.Address())
+	consAddr1 := sdk.ConsAddress(pk1.Address())
+	consAddr2 := sdk.ConsAddress(pk2.Address())
+
+	// rotate pk0 to pk1 and apply it, then queue pk1 to pk2 while the evidence
+	// lock on pk0 is still open, leaving the validator with two history records.
+	s.ctx = s.ctx.WithBlockHeight(100)
+	require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, pk0, pk1))
+	s.ctx = s.ctx.WithBlockHeight(100 + stakingtypes.ConsensusUpdateDelay)
+	require.NoError(s.stakingKeeper.ApplyConsKeyRotations(s.ctx))
+	require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, pk1, pk2))
+
+	histories, err := s.stakingKeeper.ExportConsKeyRotationHistory(s.ctx)
+	require.NoError(err)
+	require.Len(histories, 2)
+	pending, err := s.stakingKeeper.ExportPendingConsKeyRotations(s.ctx, s.ctx.BlockHeight())
+	require.NoError(err)
+	require.Len(pending, 1)
+
+	// restart from the export, the validator is live on pk1 as it was at export
+	s.SetupTest()
+	s.bondedValidatorWithConsKey(valAddr, pk1)
+	require.NoError(s.stakingKeeper.ImportConsKeyRotations(s.ctx, histories, pending))
+
+	// only the pending rotation's old key is PendingFrom, the applied rotation's
+	// old key stays RotatedFrom so evidence for it still resolves
+	kind, _, found, err := s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, consAddr0)
+	require.NoError(err)
+	require.True(found)
+	require.Equal(stakingtypes.ConsAddrLockRotatedFrom, kind)
+
+	kind, _, found, err = s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, consAddr1)
+	require.NoError(err)
+	require.True(found)
+	require.Equal(stakingtypes.ConsAddrLockPendingFrom, kind)
+
+	kind, _, found, err = s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, consAddr2)
+	require.NoError(err)
+	require.True(found)
+	require.Equal(stakingtypes.ConsAddrLockPendingTo, kind)
+
+	validator, err := s.stakingKeeper.ValidatorByHistoricalConsAddr(s.ctx, consAddr0)
+	require.NoError(err)
+	require.Equal(valAddr.String(), validator.OperatorAddress)
+}
+
 func (s *KeeperTestSuite) TestValidatorByHistoricalConsAddr() {
 	require := s.Require()
 

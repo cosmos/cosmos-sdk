@@ -12,6 +12,10 @@ queue_rules:
     merge_method: squash
 
 pull_request_rules:
+  - name: backport patches to v0.55.x branch
+    conditions:
+      - base=main
+      - label=backport/v0.55.x
   - name: backport patches to v0.54.x branch
     conditions:
       - base=main

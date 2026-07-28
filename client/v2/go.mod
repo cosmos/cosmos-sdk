@@ -3,7 +3,7 @@ module cosmossdk.io/client/v2
 go 1.26.5
 
 require (
-	cosmossdk.io/api v1.0.0
+	cosmossdk.io/api v1.1.0
 	cosmossdk.io/core v1.1.0
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/math v1.5.3

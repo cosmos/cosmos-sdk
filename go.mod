@@ -16,7 +16,7 @@ require (
 	github.com/bits-and-blooms/bitset v1.24.4
 	github.com/chzyer/readline v1.5.1
 	github.com/cockroachdb/errors v1.13.0
-	github.com/cometbft/cometbft v0.39.3
+	github.com/cometbft/cometbft v0.39.4
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/btree v1.0.0
 	github.com/cosmos/cosmos-db v1.1.3
@@ -49,7 +49,7 @@ require (
 	github.com/mdp/qrterminal/v3 v3.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.23.2
-	github.com/prometheus/common v0.67.5
+	github.com/prometheus/common v0.68.0
 	github.com/rs/zerolog v1.35.1
 	github.com/shirou/gopsutil/v4 v4.26.4
 	github.com/spf13/cast v1.10.0

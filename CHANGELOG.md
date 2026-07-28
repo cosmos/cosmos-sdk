@@ -38,8 +38,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## UNRELEASED
 
+### Breaking Changes
+
+### Features
+
 ### Improvements
-* (staking) [#26619](https://github.com/cosmos/cosmos-sdk/pull/26619) Emit `rotate_cons_pubkey` and `apply_cons_pubkey_rotation` events during key rotation.
+
+### Bug Fixes
+
+### Deprecated
+
+## [v0.55.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.55.0) - 2026-07-27
 
 ### Breaking Changes
 
@@ -77,6 +86,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [#26592](https://github.com/cosmos/cosmos-sdk/pull/26592) Validate `ExecuteBlock` inputs (block size, store index mapping, and estimates) at the exported entry point so invalid input returns a descriptive error instead of an opaque "index out of range" panic.
 * (cli) [#26604](https://github.com/cosmos/cosmos-sdk/pull/26604) Add consensus key algo to init and testnet CLIs.
 * (crypto) [#26626](https://github.com/cosmos/cosmos-sdk/pull/26626) Update mldsa65 PubKey Address logic to validate length, remove unpacking.
+* (staking) [#26619](https://github.com/cosmos/cosmos-sdk/pull/26619) Emit `rotate_cons_pubkey` and `apply_cons_pubkey_rotation` events during key rotation.
 
 ### Bug Fixes
 
@@ -106,6 +116,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#26611](https://github.com/cosmos/cosmos-sdk/pull/26611) Fix missing key rotation type tags on genesis import.
 * (blockstm) [#26627](https://github.com/cosmos/cosmos-sdk/pull/26627) Guard against block-stm estimate panic.
 * (x/staking) [#26616](https://github.com/cosmos/cosmos-sdk/pull/26616) Expire historical cons addr lookups only once equivocation evidence is no longer admissible.
+* (x/poa) [#26642](https://github.com/cosmos/cosmos-sdk/pull/26642) Always return error when migrating fees to an occupied key.
+* (x/staking) [#26641](https://github.com/cosmos/cosmos-sdk/pull/26641) Allow multiple history entires in genesis import, and fix labeling of historical entries.
 
 ### Deprecated
 

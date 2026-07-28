@@ -1389,8 +1389,7 @@ func TestRotateConsPubKeyFeeMigration(t *testing.T) {
 		f := setupTest(t)
 		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
 
-		// Accrue fees so the source has an entry to migrate, otherwise the migrate
-		// returns early before ever reaching the destination guard.
+		// Accrue fees so the source has an entry to migrate.
 		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
 		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
 		require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
@@ -1408,6 +1407,27 @@ func TestRotateConsPubKeyFeeMigration(t *testing.T) {
 		require.ErrorIs(t, err, poatypes.ErrConsensusPubKeyInUse)
 
 		// The guard fires before the Set, so the orphan entry is untouched.
+		stillThere, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, newConsAddr.String())
+		require.NoError(t, err)
+		require.Equal(t, orphan.Fees, stillThere.Fees)
+	})
+
+	t.Run("rotation fails closed on an occupied destination even with zero source fees", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		newConsAddr := sdk.GetConsAddress(newPubKey)
+
+		orphan := poatypes.ValidatorFees{Fees: sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 500))}
+		require.NoError(t, f.poaKeeper.validatorAllocatedFees.Set(f.ctx, newConsAddr.String(), orphan))
+
+		// The rotating validator has accrued nothing, so the source entry is
+		// absent. The destination guard must still reject.
+		err := f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey)
+		require.ErrorIs(t, err, poatypes.ErrConsensusPubKeyInUse)
+
+		// The operator does not inherit the orphan balance.
 		stillThere, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, newConsAddr.String())
 		require.NoError(t, err)
 		require.Equal(t, orphan.Fees, stillThere.Fees)

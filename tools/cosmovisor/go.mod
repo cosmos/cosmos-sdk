@@ -4,7 +4,7 @@ go 1.26.5
 
 require (
 	cosmossdk.io/log/v2 v2.1.0
-	github.com/cometbft/cometbft v0.39.3
+	github.com/cometbft/cometbft v0.39.4
 	github.com/cometbft/cometbft-db v1.0.4
 	github.com/cosmos/cosmos-sdk v0.54.3
 	github.com/fsnotify/fsnotify v1.10.1
@@ -181,9 +181,8 @@ require (
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
 	github.com/prometheus/client_golang v1.23.2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/common v0.67.5 // indirect
+	github.com/prometheus/common v0.68.0 // indirect
 	github.com/prometheus/procfs v0.20.1 // indirect
-	github.com/quic-go/quic-go v0.59.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/rs/cors v1.11.1 // indirect

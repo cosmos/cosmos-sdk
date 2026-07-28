@@ -54,6 +54,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 *July 28, 2026*
 
+### DEPENDENCIES
+
+* (deps) [#26690](https://github.com/cosmos/cosmos-sdk/pull/26690) update CometBFT to 0.39.4
+
 ### Features
 
 * (blockstm) [#26208](https://github.com/cosmos/cosmos-sdk/pull/26208) Add Block-STM configuration support: `block-executor`, `block-stm-workers` and `block-stm-pre-estimate`.

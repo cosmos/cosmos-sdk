@@ -34,11 +34,25 @@ Types of changes (Stanzas):
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
-# Changelog
+# CHANGELOG
 
 ## UNRELEASED
 
-### Breaking Changes
+### DEPENDENCIES
+
+### BUG FIXES
+
+### IMPROVEMENTS
+
+### FEATURES
+
+### STATE-BREAKING
+
+### API-BREAKING
+
+## [v0.54.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.4) 
+
+*July 28, 2026*
 
 ### Features
 
@@ -61,8 +75,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [#26591](https://github.com/cosmos/cosmos-sdk/pull/26591) normalize non-positive worker count in `STMRunner.Run`.
 * (x/distribution) [#26518](https://github.com/cosmos/cosmos-sdk/pull/26518) Return an error from internal historical rewards reads when the record is absent, preventing recovered reference-count panics during BlockSTM speculative execution.
 * (x/auth/tx) [#26517](https://github.com/cosmos/cosmos-sdk/pull/26517) Return a decode error instead of panicking when a transaction's `SignerInfos` and `Signatures` counts disagree in `GetSignaturesV2`, or a multisig's `ModeInfos` and sub-signature counts disagree in `ModeInfoAndSigToSignatureData`.
-
-### Deprecated
 
 ## [v0.54.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.3) - 2026-05-05
 

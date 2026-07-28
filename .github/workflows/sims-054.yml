@@ -32,6 +32,9 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     needs: build
     steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: "release/v0.54.x"
       - uses: actions/setup-go@v6
         with:
           go-version-file: "go.mod"

@@ -79,38 +79,7 @@ func TestManager(t *testing.T) {
 				},
 			},
 		},
-		"transactions are not removed if their timeout is equal to the block time": {
-			addFunc: []utxSequence{
-				{
-					[]byte("cosmos1"),
-					time.Unix(10, 0),
-				},
-				{
-					[]byte("cosmos2"),
-					time.Unix(10, 0),
-				},
-				{
-					[]byte("cosmos3"),
-					time.Unix(10, 0),
-				},
-			},
-			blockTime: time.Unix(10, 0),
-			expectContains: []utxSequence{
-				{
-					[]byte("cosmos1"),
-					time.Unix(10, 0),
-				},
-				{
-					[]byte("cosmos2"),
-					time.Unix(10, 0),
-				},
-				{
-					[]byte("cosmos3"),
-					time.Unix(10, 0),
-				},
-			},
-		},
-		"transactions are removed once the block time is past their timeout": {
+		"transactions are removed if their timeout is equal to the block time": {
 			addFunc: []utxSequence{
 				{
 					[]byte("cosmos1"),
@@ -256,10 +225,6 @@ func TestManager(t *testing.T) {
 			blockTime: time.Unix(10, 999999999),
 			expectContains: []utxSequence{
 				{
-					[]byte("cosmos2"),
-					time.Unix(10, 999999999),
-				},
-				{
 					[]byte("cosmos3"),
 					time.Unix(11, 0),
 				},
@@ -268,6 +233,10 @@ func TestManager(t *testing.T) {
 				{
 					[]byte("cosmos1"),
 					time.Unix(10, 999999998),
+				},
+				{
+					[]byte("cosmos2"),
+					time.Unix(10, 999999999),
 				},
 			},
 		},

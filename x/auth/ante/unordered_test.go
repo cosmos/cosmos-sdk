@@ -11,6 +11,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -139,9 +140,19 @@ func TestSigVerification_UnorderedTxs(t *testing.T) {
 			execMode:    sdk.ExecModeFinalize,
 			expectedErr: "unordered transaction has a timeout_timestamp that has already passed",
 		},
-		"timeout equal to current block time should pass": {
+		// The nonce for this timeout is pruned by PreBlock of the very block whose time equals
+		// it, so accepting the tx here would let it be replayed once. See
+		// TestUnorderedTx_NoReplayAtExactTimeout.
+		"timeout equal to current block time should fail": {
+			unordered:   true,
+			timeout:     time.Unix(10, 0),
+			blockTime:   time.Unix(10, 0),
+			execMode:    sdk.ExecModeFinalize,
+			expectedErr: "unordered transaction has a timeout_timestamp that has already passed",
+		},
+		"timeout one nanosecond after current block time should pass": {
 			unordered: true,
-			timeout:   time.Unix(10, 0),
+			timeout:   time.Unix(10, 1),
 			blockTime: time.Unix(10, 0),
 			execMode:  sdk.ExecModeFinalize,
 		},
@@ -233,15 +244,38 @@ func TestUnorderedTx_NoReplayAtExactTimeout(t *testing.T) {
 
 	baseCtx := suite.anteSuite.ctx.WithExecMode(sdk.ExecModeFinalize).WithIsSigverifyTx(true).WithTxBytes(txBytes)
 
-	// execute the tx in a block before its timeout.
+	containsNonces := func(ctx sdk.Context) []bool {
+		has := make([]bool, len(suite.accs))
+		for i, acc := range suite.accs {
+			var err error
+			has[i], err = suite.anteSuite.accountKeeper.ContainsUnorderedNonce(ctx, acc.GetAddress().Bytes(), timeout)
+			require.NoError(t, err)
+		}
+		return has
+	}
+
+	// execute the tx in a block before its timeout, which records a nonce per signer.
 	_, err = suite.antehandler(baseCtx.WithBlockTime(timeout.Add(-time.Second)), tx, false)
 	require.NoError(t, err)
+	require.Equal(t, []bool{true, true, true}, containsNonces(baseCtx), "nonces were not recorded")
 
-	// PreBlock of the block whose time is exactly the timeout.
+	// PreBlock of the block whose time is exactly the timeout prunes those nonces, so from here
+	// on the nonce no longer protects against a replay of this tx.
 	atTimeout := baseCtx.WithBlockTime(timeout)
 	require.NoError(t, suite.anteSuite.accountKeeper.RemoveExpiredUnorderedNonces(atTimeout))
+	require.Equal(t, []bool{false, false, false}, containsNonces(atTimeout), "nonces were not pruned at the timeout")
 
-	// the same signed tx must not be accepted again in that block.
+	// The timeout boundary must reject it instead: a tx is includable only strictly before its
+	// timeout, which is exactly the set of nonces the pruner keeps. Were this accepted, the tx
+	// would execute a second time and re-record the nonces it had just lost.
 	_, err = suite.antehandler(atTimeout, tx, false)
-	require.ErrorContains(t, err, "already used timeout")
+	require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
+	require.ErrorContains(t, err, "timeout_timestamp that has already passed")
+	require.Equal(t, []bool{false, false, false}, containsNonces(atTimeout), "rejected replay re-recorded nonces")
+
+	// and it stays rejected once the block time moves past the timeout.
+	afterTimeout := baseCtx.WithBlockTime(timeout.Add(time.Nanosecond))
+	_, err = suite.antehandler(afterTimeout, tx, false)
+	require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
+	require.ErrorContains(t, err, "timeout_timestamp that has already passed")
 }

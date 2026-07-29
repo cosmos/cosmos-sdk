@@ -40,6 +40,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+### State Machine Breaking
+
+* (x/auth) [#26672](https://github.com/cosmos/cosmos-sdk/pull/26672) An unordered transaction whose `timeout_timestamp` equals the block time is now rejected rather than accepted, so the set of valid transactions differs from previous versions at that exact boundary. Chains must adopt this at a coordinated upgrade height; a mixed network can diverge if such a transaction is proposed.
+
 ### Features
 
 ### Improvements
@@ -90,7 +94,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (x/auth) [#26672](https://github.com/cosmos/cosmos-sdk/pull/26672) Reject an unordered transaction whose `timeout_timestamp` equals the block time, closing a one-block replay window. `RemoveExpiredUnorderedNonces` prunes a nonce in the `PreBlock` of the very block whose time equals that nonce's timeout, but the ante handler still accepted the transaction in that block, so a signed unordered transaction could be replayed once with no nonce left to stop it. The ante check now matches the pruning boundary, requiring `timeout_timestamp` to be strictly greater than the block time as documented; nonce pruning itself is unchanged. Reaching this requires a `timeout_timestamp` matching a block time to the nanosecond, and a transaction landing exactly there is now rejected rather than included.
 * (codec) [#26587](https://github.com/cosmos/cosmos-sdk/pull/26587) Lower the nested `google.protobuf.Any` recursion depth cap in unknown-field validation from 10,000 to 64, reducing CPU-amplification DoS risk from deeply nested `Any` wrappers. No legitimate message nests `Any` anywhere near that deep.
 * (x/feegrant) [#26596](https://github.com/cosmos/cosmos-sdk/pull/26596) Honor the `PageRequest` offset and `count_total` in the `Allowances` and `AllowancesByGranter` gRPC queries, which previously collected grants inside the pagination predicate and so returned offset-skipped and beyond-limit results.
 * (x/authz) [#26588](https://github.com/cosmos/cosmos-sdk/pull/26588) Cap the number of expired grants pruned per `BeginBlocker` call to 200, matching `x/feegrant`'s existing pattern, so a block where many grants expire at once can't cause unbounded work.

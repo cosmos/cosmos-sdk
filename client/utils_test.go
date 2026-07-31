@@ -3,10 +3,77 @@ package client_test
 import (
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
+
+func TestReadPageRequest(t *testing.T) {
+	testCases := []struct {
+		name        string
+		args        []string
+		expected    *query.PageRequest
+		expectedErr string
+	}{
+		{
+			"defaults",
+			nil,
+			&query.PageRequest{Key: []byte{}, Limit: 100},
+			"",
+		},
+		{
+			"page sets offset",
+			[]string{"--page=3", "--limit=10"},
+			&query.PageRequest{Key: []byte{}, Offset: 20, Limit: 10},
+			"",
+		},
+		{
+			"page-key alone",
+			[]string{"--page-key=abc"},
+			&query.PageRequest{Key: []byte("abc"), Limit: 100},
+			"",
+		},
+		{
+			"page and offset",
+			[]string{"--page=2", "--offset=10"},
+			nil,
+			"page and offset cannot be used together",
+		},
+		{
+			"page and page-key",
+			[]string{"--page=2", "--page-key=abc"},
+			nil,
+			"page and page-key cannot be used together",
+		},
+		{
+			"page 1 and page-key is allowed",
+			[]string{"--page=1", "--page-key=abc"},
+			&query.PageRequest{Key: []byte("abc"), Limit: 100},
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := &cobra.Command{}
+			flags.AddPaginationFlagsToCmd(cmd, "things")
+			require.NoError(t, cmd.Flags().Parse(tc.args))
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if tc.expectedErr != "" {
+				require.ErrorContains(t, err, tc.expectedErr)
+				require.Nil(t, pageReq)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, pageReq)
+		})
+	}
+}
 
 func TestPaginate(t *testing.T) {
 	testCases := []struct {

@@ -46,6 +46,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (client) [#XXXXX](https://github.com/cosmos/cosmos-sdk/pull/XXXXX) `ReadPageRequest` now rejects `--page` combined with `--page-key` instead of silently converting the page to an offset and failing server-side with a misleading "either offset or key is expected, got both" error.
+
 ### Deprecated
 
 ## [v0.55.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.55.0) - 2026-07-27

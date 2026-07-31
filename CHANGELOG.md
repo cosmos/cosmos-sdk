@@ -44,7 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* (baseapp) [#]() Make mempool removal asynchronous during `FinalizeBlock`, recheck and `PrepareProposal` so that non-deterministic errors or panics from a node-local mempool can never cause a consensus failure. Removals are enqueued on a buffered channel and processed by a background worker which recovers from panics and logs errors.
+* (baseapp) [#26702](https://github.com/cosmos/cosmos-sdk/pull/26702) Make mempool removal asynchronous during `FinalizeBlock`, recheck and `PrepareProposal` so that non-deterministic errors or panics from a node-local mempool can never cause a consensus failure. Removals are enqueued on a buffered channel and processed by a background worker which recovers from panics and logs errors.
 
 ### Bug Fixes
 

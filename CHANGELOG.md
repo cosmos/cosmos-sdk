@@ -46,6 +46,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (types/query) [#XXXXX](https://github.com/cosmos/cosmos-sdk/pull/XXXXX) Fix `PageResponse.Total` in collections pagination when `count_total=true`: it now reports the real number of entries — all stored entries for unfiltered queries, entries matching the filter for filtered ones — instead of a value derived from the requested offset. Previously any offset exceeding that number inflated the total: `offset=400` on a 3-entry collection reported `total=400`, and a filtered query with 150 matches reported `total=200` for `offset=200` even on a larger collection. Affects CLI (`--page`/`--limit`), gRPC and REST queries backed by collections pagination.
+
 ### Deprecated
 
 ## [v0.55.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.55.0) - 2026-07-27

@@ -173,6 +173,39 @@ func TestCollectionPagination(t *testing.T) {
 				{Key: 10, Value: 10},
 			},
 		},
+		"with offset beyond collection size and count total": {
+			req: &PageRequest{
+				Offset:     400,
+				Limit:      10,
+				CountTotal: true,
+			},
+			expResp: &PageResponse{
+				Total: 300,
+			},
+		},
+		"with offset at collection size and count total": {
+			req: &PageRequest{
+				Offset:     300,
+				Limit:      10,
+				CountTotal: true,
+			},
+			expResp: &PageResponse{
+				Total: 300,
+			},
+		},
+		"filtered with offset beyond number of matches and count total": {
+			req: &PageRequest{
+				Offset:     200,
+				Limit:      10,
+				CountTotal: true,
+			},
+			expResp: &PageResponse{
+				Total: 150,
+			},
+			filter: func(key, value uint64) (bool, error) {
+				return key%2 == 0, nil
+			},
+		},
 		"filtered no key with error": {
 			req: &PageRequest{
 				Limit: 3,

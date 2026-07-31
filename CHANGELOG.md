@@ -40,6 +40,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+* (client) [#XXXXX](https://github.com/cosmos/cosmos-sdk/pull/XXXXX) `client.ReadPageRequest` now base64-decodes the `--page-key` flag, so the `next_key` printed by a paginated query can be passed straight back. Values that are not valid base64 — including the literal `null` printed as `next_key` on the last page — are rejected with an error. Raw values are no longer interpreted verbatim: a raw value that happens to be valid base64 cannot be detected and silently decodes to different bytes, so callers that passed raw key bytes must switch to the base64 form. `client.FlagSetWithPageKeyDecoded` and `client.MustFlagSetWithPageKeyDecoded` are now no-ops: they no longer mutate the flag set, and the `Must` variant no longer panics on invalid input.
+
 ### Features
 
 ### Improvements
@@ -47,6 +49,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 ### Deprecated
+
+* (client) [#XXXXX](https://github.com/cosmos/cosmos-sdk/pull/XXXXX) Deprecate `client.FlagSetWithPageKeyDecoded` and `client.MustFlagSetWithPageKeyDecoded`; they are now no-ops since `client.ReadPageRequest` decodes the page key itself.
 
 ## [v0.55.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.55.0) - 2026-07-27
 

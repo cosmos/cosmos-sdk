@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/base64"
+	"strings"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/spf13/pflag"
@@ -46,6 +47,8 @@ func Paginate(numObjs, page, limit, defLimit int) (start, end int) {
 }
 
 // ReadPageRequest reads and builds the necessary page request flags for pagination.
+// The --page-key flag is expected to hold the base64-encoded next_key emitted in the
+// previous page's response, i.e. exactly what the CLI prints, and is decoded here.
 func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 	pageKey, _ := flagSet.GetString(flags.FlagPageKey)
 	offset, _ := flagSet.GetUint64(flags.FlagOffset)
@@ -62,8 +65,21 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 		offset = (page - 1) * limit
 	}
 
+	// "null" is how JSON/YAML output prints the empty next_key of the last page; it
+	// decodes as valid base64 to garbage bytes, so it must be rejected before decoding.
+	if strings.EqualFold(pageKey, "null") {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
+			"invalid --%s %q: this is how an empty next_key is printed on the last page; there are no further pages", flags.FlagPageKey, pageKey)
+	}
+
+	key, err := base64.StdEncoding.DecodeString(pageKey)
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
+			"invalid --%s %q: %v; expected the base64-encoded next_key from the previous page response", flags.FlagPageKey, pageKey, err)
+	}
+
 	return &query.PageRequest{
-		Key:        []byte(pageKey),
+		Key:        key,
 		Offset:     offset,
 		Limit:      limit,
 		CountTotal: countTotal,
@@ -77,36 +93,14 @@ func NewClientFromNode(nodeURI string) (*rpchttp.HTTP, error) {
 	return rpchttp.New(nodeURI, "/websocket")
 }
 
-// FlagSetWithPageKeyDecoded returns the provided flagSet with the page-key value base64 decoded (if it exists).
-// This is for when the page-key is provided as a base64 string (e.g. from the CLI).
-// ReadPageRequest expects it to be the raw bytes.
-//
-// Common usage:
-// fs, err := client.FlagSetWithPageKeyDecoded(cmd.Flags())
-// pageReq, err := client.ReadPageRequest(fs)
+// Deprecated: ReadPageRequest now base64-decodes the page-key itself, so this is a
+// no-op returning flagSet unchanged. Decoding here as well would leave ReadPageRequest
+// with already-raw bytes to decode a second time. Call ReadPageRequest directly.
 func FlagSetWithPageKeyDecoded(flagSet *pflag.FlagSet) (*pflag.FlagSet, error) {
-	encoded, err := flagSet.GetString(flags.FlagPageKey)
-	if err != nil {
-		return flagSet, err
-	}
-	if len(encoded) > 0 {
-		var raw []byte
-		raw, err = base64.StdEncoding.DecodeString(encoded)
-		if err != nil {
-			return flagSet, err
-		}
-		_ = flagSet.Set(flags.FlagPageKey, string(raw))
-	}
 	return flagSet, nil
 }
 
-// MustFlagSetWithPageKeyDecoded calls FlagSetWithPageKeyDecoded and panics on error.
-//
-// Common usage: pageReq, err := client.ReadPageRequest(client.MustFlagSetWithPageKeyDecoded(cmd.Flags()))
+// Deprecated: see FlagSetWithPageKeyDecoded. This is a no-op returning flagSet unchanged.
 func MustFlagSetWithPageKeyDecoded(flagSet *pflag.FlagSet) *pflag.FlagSet {
-	rv, err := FlagSetWithPageKeyDecoded(flagSet)
-	if err != nil {
-		panic(err.Error())
-	}
-	return rv
+	return flagSet
 }

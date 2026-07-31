@@ -95,7 +95,7 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 	})
 
 	if err != nil && !errors.IsOf(err, collections.ErrInvalidIterator) {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, query.StatusOrInternal(err)
 	}
 
 	return &v1.QueryProposalsResponse{Proposals: filteredProposals, Pagination: pageRes}, nil
@@ -145,7 +145,7 @@ func (q queryServer) Votes(ctx context.Context, req *v1.QueryVotesRequest) (*v1.
 		return &value, nil
 	}, query.WithCollectionPaginationPairPrefix[uint64, sdk.AccAddress](req.ProposalId))
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, query.StatusOrInternal(err)
 	}
 
 	return &v1.QueryVotesResponse{Votes: votes, Pagination: pageRes}, nil
@@ -227,7 +227,7 @@ func (q queryServer) Deposits(ctx context.Context, req *v1.QueryDepositsRequest)
 		return &deposit, nil
 	}, query.WithCollectionPaginationPairPrefix[uint64, sdk.AccAddress](req.ProposalId))
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, query.StatusOrInternal(err)
 	}
 
 	return &v1.QueryDepositsResponse{Deposits: deposits, Pagination: pageRes}, nil

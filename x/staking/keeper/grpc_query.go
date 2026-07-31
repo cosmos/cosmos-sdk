@@ -50,7 +50,7 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 		return &types.Validator{}
 	})
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, query.StatusOrInternal(err)
 	}
 
 	vals := types.Validators{}
@@ -121,7 +121,7 @@ func (k Querier) ValidatorDelegations(ctx context.Context, req *types.QueryValid
 	if err != nil {
 		delegations, pageResponse, err := k.getValidatorDelegationsLegacy(ctx, req)
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			return nil, query.StatusOrInternal(err)
 		}
 
 		dels = types.Delegations{}
@@ -193,7 +193,7 @@ func (k Querier) ValidatorUnbondingDelegations(ctx context.Context, req *types.Q
 		return nil
 	})
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, query.StatusOrInternal(err)
 	}
 
 	return &types.QueryValidatorUnbondingDelegationsResponse{
@@ -302,7 +302,7 @@ func (k Querier) DelegatorDelegations(ctx context.Context, req *types.QueryDeleg
 		return nil
 	})
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, query.StatusOrInternal(err)
 	}
 
 	delegationResps, err := delegationsToDelegationResponses(ctx, k.Keeper, delegations)
@@ -371,7 +371,7 @@ func (k Querier) DelegatorUnbondingDelegations(ctx context.Context, req *types.Q
 		return nil
 	})
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, query.StatusOrInternal(err)
 	}
 
 	return &types.QueryDelegatorUnbondingDelegationsResponse{
@@ -417,7 +417,7 @@ func (k Querier) Redelegations(ctx context.Context, req *types.QueryRedelegation
 		redels, pageRes, err = queryAllRedelegations(store, k, req)
 	}
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, query.StatusOrInternal(err)
 	}
 	redelResponses, err := redelegationsToRedelegationResponses(ctx, k.Keeper, redels)
 	if err != nil {
@@ -465,7 +465,7 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 		return nil
 	})
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, query.StatusOrInternal(err)
 	}
 
 	return &types.QueryDelegatorValidatorsResponse{Validators: validators.Validators, Pagination: pageRes}, nil

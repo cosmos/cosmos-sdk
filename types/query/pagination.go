@@ -1,7 +1,7 @@
 package query
 
 import (
-	"fmt"
+	"bytes"
 	"math"
 
 	db "github.com/cosmos/cosmos-db"
@@ -54,7 +54,7 @@ func Paginate(
 	pageRequest = initPageRequestDefaults(pageRequest)
 
 	if pageRequest.Offset > 0 && pageRequest.Key != nil {
-		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+		return nil, status.Error(codes.InvalidArgument, "invalid request, either offset or key is expected, got both")
 	}
 
 	iterator := getIterator(prefixStore, pageRequest.Key, pageRequest.Reverse)
@@ -128,16 +128,25 @@ func getIterator(prefixStore types.KVStore, start []byte, reverse bool) db.Itera
 	if reverse {
 		var end []byte
 		if start != nil {
-			itr := prefixStore.Iterator(start, nil)
-			defer itr.Close()
-			if itr.Valid() {
-				itr.Next()
-				end = itr.Key()
-			}
+			// end is exclusive, so the immediate successor of start makes the
+			// reverse iteration begin at start itself and only walk down,
+			// whether or not start is an existing key.
+			end = append(bytes.Clone(start), 0)
 		}
 		return prefixStore.ReverseIterator(nil, end)
 	}
 	return prefixStore.Iterator(start, nil)
+}
+
+// StatusOrInternal returns err unchanged when it already carries a gRPC status
+// (like the codes.InvalidArgument errors pagination input validation returns),
+// and wraps anything else as codes.Internal so it does not surface as the
+// retryable-looking codes.Unknown on the gRPC port.
+func StatusOrInternal(err error) error {
+	if _, ok := status.FromError(err); ok {
+		return err
+	}
+	return status.Error(codes.Internal, err.Error())
 }
 
 // initPageRequestDefaults initializes a PageRequest's defaults when those are not set.

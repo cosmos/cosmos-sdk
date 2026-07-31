@@ -1,10 +1,11 @@
 package query
 
 import (
-	"fmt"
 	"math"
 
 	proto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
@@ -26,7 +27,7 @@ func FilteredPaginate(
 	pageRequest = initPageRequestDefaults(pageRequest)
 
 	if pageRequest.Offset > 0 && pageRequest.Key != nil {
-		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+		return nil, status.Error(codes.InvalidArgument, "invalid request, either offset or key is expected, got both")
 	}
 
 	var (
@@ -159,7 +160,7 @@ func GenericFilteredPaginate[T, F proto.Message](
 	results := []F{}
 
 	if pageRequest.Offset > 0 && pageRequest.Key != nil {
-		return results, nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+		return results, nil, status.Error(codes.InvalidArgument, "invalid request, either offset or key is expected, got both")
 	}
 
 	var (

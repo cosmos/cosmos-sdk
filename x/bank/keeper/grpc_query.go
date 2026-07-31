@@ -74,7 +74,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 		query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr),
 	)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
+		return nil, query.StatusOrInternal(err)
 	}
 
 	return &types.QueryAllBalancesResponse{Balances: balances, Pagination: pageRes}, nil
@@ -100,7 +100,7 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 		return sdk.NewCoin(key.K2(), zeroAmt), nil
 	}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr))
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
+		return nil, query.StatusOrInternal(err)
 	}
 
 	result := sdk.NewCoins()
@@ -141,7 +141,7 @@ func (k BaseKeeper) TotalSupply(ctx context.Context, req *types.QueryTotalSupply
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	totalSupply, pageRes, err := k.GetPaginatedTotalSupply(sdkCtx, req.Pagination)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, query.StatusOrInternal(err)
 	}
 
 	return &types.QueryTotalSupplyResponse{Supply: totalSupply, Pagination: pageRes}, nil
@@ -192,7 +192,7 @@ func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMeta
 		return nil
 	})
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, query.StatusOrInternal(err)
 	}
 
 	return &types.QueryDenomsMetadataResponse{
@@ -292,7 +292,7 @@ func (k BaseKeeper) SendEnabled(goCtx context.Context, req *types.QuerySendEnabl
 			},
 		)
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			return nil, query.StatusOrInternal(err)
 		}
 		resp.SendEnabled = results
 		resp.Pagination = pageResp

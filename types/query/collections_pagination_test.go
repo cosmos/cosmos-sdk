@@ -7,6 +7,8 @@ import (
 
 	db "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
@@ -207,6 +209,12 @@ func TestCollectionPagination(t *testing.T) {
 			require.Equal(t, tc.expResp, gotResponse)
 		})
 	}
+
+	t.Run("offset and key is codes.InvalidArgument", func(t *testing.T) {
+		_, _, err := CollectionPaginate(ctx, m, &PageRequest{Key: encodeKey(100), Offset: 1},
+			func(key, value uint64) (uint64, error) { return value, nil })
+		require.Equal(t, codes.InvalidArgument, status.Code(err))
+	})
 }
 
 type testStore struct {

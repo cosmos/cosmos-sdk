@@ -6,7 +6,11 @@ import (
 	"testing"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log/v2"
@@ -17,6 +21,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	testutilsims "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -200,7 +205,7 @@ func (s *paginationTestSuite) TestPagination() {
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq, false)
 	_, err = queryClient.AllBalances(gocontext.Background(), request)
 	s.Require().Error(err)
-	s.Require().Equal("rpc error: code = InvalidArgument desc = paginate: invalid request, either offset or key is expected, got both", err.Error())
+	s.Require().Equal("rpc error: code = InvalidArgument desc = invalid request, either offset or key is expected, got both", err.Error())
 
 	s.T().Log("verify paginate with offset greater than total results")
 	pageReq = &query.PageRequest{Offset: 300, Limit: defaultLimit, CountTotal: false}
@@ -333,7 +338,7 @@ func (s *paginationTestSuite) TestReversePagination() {
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq, false)
 	_, err = queryClient.AllBalances(gocontext.Background(), request)
 	s.Require().Error(err)
-	s.Require().Equal("rpc error: code = InvalidArgument desc = paginate: invalid request, either offset or key is expected, got both", err.Error())
+	s.Require().Equal("rpc error: code = InvalidArgument desc = invalid request, either offset or key is expected, got both", err.Error())
 
 	s.T().Log("verify paginate with offset greater than total results")
 	pageReq = &query.PageRequest{Offset: 300, Limit: defaultLimit, CountTotal: false, Reverse: true}
@@ -382,4 +387,77 @@ func (s *paginationTestSuite) TestPaginate() {
 	fmt.Println(&types.QueryAllBalancesResponse{Balances: balResult, Pagination: pageRes})
 	// Output:
 	// balances:<denom:"foo0denom" amount:"100" > pagination:<next_key:"foo1denom" total:2 >
+}
+
+// TestPaginateReverseKey pins reverse pagination with a Key cursor: iteration
+// starts at the cursor and only walks down, whether the cursor is the last
+// entry of the prefix range (which used to panic), sits between two stored
+// keys, or is a stale next_key whose row has since been deleted.
+func TestPaginateReverseKey(t *testing.T) {
+	cases := map[string]struct {
+		keys   []string
+		cursor string
+		want   []string
+	}{
+		"cursor is the last entry":    {[]string{"a", "b", "c"}, "c", []string{"c", "b", "a"}},
+		"cursor between stored keys":  {[]string{"a", "b", "c"}, "bb", []string{"b", "a"}},
+		"cursor deleted since issued": {[]string{"a", "c"}, "b", []string{"a"}},
+		"cursor before all keys":      {[]string{"a", "b", "c"}, "A", nil},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			store := prefix.NewStore(dbadapter.Store{DB: dbm.NewMemDB()}, []byte("pfx"))
+			for _, k := range tc.keys {
+				store.Set([]byte(k), []byte(k))
+			}
+
+			var got []string
+			res, err := query.Paginate(store, &query.PageRequest{
+				Key:     []byte(tc.cursor),
+				Limit:   10,
+				Reverse: true,
+			}, func(key, _ []byte) error {
+				got = append(got, string(key))
+				return nil
+			})
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+			require.Nil(t, res.NextKey)
+		})
+	}
+}
+
+// TestPaginationInputErrorCode pins the gRPC status code of pagination input
+// validation errors, so queriers returning them unwrapped don't surface a
+// retryable-looking codes.Unknown.
+func TestPaginationInputErrorCode(t *testing.T) {
+	store := prefix.NewStore(dbadapter.Store{DB: dbm.NewMemDB()}, []byte("pfx"))
+	req := &query.PageRequest{Key: []byte("a"), Offset: 1, Limit: 10}
+
+	_, err := query.Paginate(store, req, func(_, _ []byte) error { return nil })
+	require.Equal(t, codes.InvalidArgument, status.Code(err))
+
+	_, err = query.FilteredPaginate(store, req, func(_, _ []byte, _ bool) (bool, error) { return false, nil })
+	require.Equal(t, codes.InvalidArgument, status.Code(err))
+
+	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	_, _, err = query.GenericFilteredPaginate(cdc, store, req,
+		func(_ []byte, value *query.PageRequest) (*query.PageRequest, error) { return value, nil },
+		func() *query.PageRequest { return &query.PageRequest{} })
+	require.Equal(t, codes.InvalidArgument, status.Code(err))
+}
+
+// TestPaginationInputErrorCodeEndToEnd pins the status code a client sees from
+// a query handler that used to relabel pagination input errors codes.Internal.
+func (s *paginationTestSuite) TestPaginationInputErrorCodeEndToEnd() {
+	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.interfaceReg)
+	types.RegisterQueryServer(queryHelper, s.bankKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	_, err := queryClient.DenomsMetadata(gocontext.Background(), &types.QueryDenomsMetadataRequest{
+		Pagination: &query.PageRequest{Key: []byte("a"), Offset: 1},
+	})
+	s.Require().Equal(codes.InvalidArgument, status.Code(err))
+	s.Require().Equal("rpc error: code = InvalidArgument desc = invalid request, either offset or key is expected, got both", err.Error())
 }

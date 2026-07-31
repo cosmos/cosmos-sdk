@@ -76,7 +76,7 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 		}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.AccAddress](granteeAddr),
 	)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, query.StatusOrInternal(err)
 	}
 
 	return &feegrant.QueryAllowancesResponse{Allowances: grants, Pagination: pageRes}, nil
@@ -102,7 +102,7 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 		},
 	)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, query.StatusOrInternal(err)
 	}
 
 	return &feegrant.QueryAllowancesByGranterResponse{Allowances: grants, Pagination: pageRes}, nil

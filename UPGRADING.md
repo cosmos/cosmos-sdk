@@ -1,5 +1,13 @@
 # Upgrade Reference
 
+## Unreleased
+
+### Pagination errors are `InvalidArgument` gRPC status errors
+
+Malformed page requests (setting both `offset` and `key`) to the paginated query endpoints of `x/bank`, `x/staking`, `x/gov` and `x/feegrant` now fail with `codes.InvalidArgument` instead of `codes.Internal` (or `codes.Unknown` where handlers returned the error unwrapped). Clients and relayers that retry on `Internal`/`Unknown` should treat these as permanent input errors. Two message formats also change: `x/bank` `AllBalances`/`SpendableBalances` errors lose their `paginate: ` prefix, and non-status errors from those two queries are reported as `codes.Internal`.
+
+Reverse pagination with a `key` cursor no longer returns entries greater than the cursor when the cursor is not an exact stored key (for example a stale `next_key` whose row was deleted), and no longer panics when the cursor is the last entry of a prefix range.
+
 This document provides a reference for upgrading from `v0.54.x` to `v0.55.x` of Cosmos SDK. If you are upgrading directly from `v0.53.x`, see [Upgrading from v0.53.x](#upgrading-from-v053x) after reading the breaking changes below.
 
 For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.55.x/CHANGELOG.md).

@@ -2,7 +2,6 @@ package client
 
 import (
 	"encoding/base64"
-	"strings"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/spf13/pflag"
@@ -67,7 +66,7 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 
 	// "null" is how JSON/YAML output prints the empty next_key of the last page; it
 	// decodes as valid base64 to garbage bytes, so it must be rejected before decoding.
-	if strings.EqualFold(pageKey, "null") {
+	if pageKey == "null" {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid --%s %q: this is how an empty next_key is printed on the last page; there are no further pages", flags.FlagPageKey, pageKey)
 	}

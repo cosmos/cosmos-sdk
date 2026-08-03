@@ -1,14 +1,14 @@
 module cosmossdk.io/core
 
-go 1.26.4
+go 1.26.5
 
 require (
-	cosmossdk.io/api v1.0.0
+	cosmossdk.io/api v1.1.0
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/math v1.5.3
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/stretchr/testify v1.11.1
-	google.golang.org/grpc v1.81.1
+	google.golang.org/grpc v1.82.1
 	google.golang.org/protobuf v1.36.11
 )
 

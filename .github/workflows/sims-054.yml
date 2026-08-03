@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: "release/v0.54.x"
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: "go.mod"
       - run: make build
@@ -32,7 +32,10 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     needs: build
     steps:
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@v6
+        with:
+          ref: "release/v0.54.x"
+      - uses: actions/setup-go@v7
         with:
           go-version-file: "go.mod"
       - name: Install runsim
@@ -50,7 +53,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: "release/v0.54.x"
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: "go.mod"
       - uses: actions/cache@v5
@@ -68,7 +71,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: "release/v0.54.x"
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: "go.mod"
       - uses: actions/cache@v5
@@ -86,7 +89,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: "release/v0.54.x"
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: "go.mod"
       - uses: actions/cache@v5
@@ -106,7 +109,7 @@ jobs:
     if: ${{ failure() }}
     steps:
       - name: Notify Slack on failure
-        uses: rtCamp/action-slack-notify@v2.4.0
+        uses: rtCamp/action-slack-notify@33ca3be66c6f378fe1610fd1d5258632dbed5e58 # v2.4.0
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: sdk-sims

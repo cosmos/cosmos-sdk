@@ -53,7 +53,7 @@ func TestRotateConsPubKey_MsgServerQueuesAndEndBlockerApplies(t *testing.T) {
 
 	// fee debited from the operator account and burned (total supply
 	// decreases by exactly the fee)
-	fee := types.DefaultKeyRotationFee
+	fee := sdk.NewCoin(bondDenom, types.DefaultKeyRotationFeeAmount)
 	assert.DeepEqual(t, accBalBefore.Sub(fee), f.bankKeeper.GetBalance(f.sdkCtx, accAddr, bondDenom))
 	assert.DeepEqual(t, supplyBefore.Sub(fee), f.bankKeeper.GetSupply(f.sdkCtx, bondDenom))
 

@@ -2,13 +2,18 @@ package keeper_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,8 +24,15 @@ import (
 // bondedValidator stores and bonds a validator with the given consensus
 // pubkey, returns the validator record together with its operator address.
 func (s *KeeperTestSuite) bondedValidator(pk cryptotypes.PubKey) (stakingtypes.Validator, sdk.ValAddress) {
-	require := s.Require()
 	valAddr := sdk.ValAddress(pk.Address())
+	return s.bondedValidatorWithConsKey(valAddr, pk), valAddr
+}
+
+// bondedValidatorWithConsKey bonds a validator at an explicit operator address
+// with a consensus key that need not be derived from that address, as happens
+// after a consensus key rotation.
+func (s *KeeperTestSuite) bondedValidatorWithConsKey(valAddr sdk.ValAddress, pk cryptotypes.PubKey) stakingtypes.Validator {
+	require := s.Require()
 	v, err := stakingtypes.NewValidator(valAddr.String(), pk, stakingtypes.Description{Moniker: "v"})
 	require.NoError(err)
 	v.Status = stakingtypes.Bonded
@@ -28,7 +40,92 @@ func (s *KeeperTestSuite) bondedValidator(pk cryptotypes.PubKey) (stakingtypes.V
 	v.DelegatorShares = math.LegacyNewDecFromInt(v.Tokens)
 	require.NoError(s.stakingKeeper.SetValidator(s.ctx, v))
 	require.NoError(s.stakingKeeper.SetValidatorByConsAddr(s.ctx, v))
-	return v, valAddr
+	return v
+}
+
+// valUpdate builds an ABCI validator update for a consensus pubkey and power.
+func (s *KeeperTestSuite) valUpdate(pk cryptotypes.PubKey, power int64) abci.ValidatorUpdate {
+	cmtPk, err := cryptocodec.ToCmtProtoPublicKey(pk)
+	s.Require().NoError(err)
+	return abci.ValidatorUpdate{PubKey: cmtPk, Power: power}
+}
+
+func (s *KeeperTestSuite) TestProcessValidatorUpdatesForConsKeyRotationsJailWindow() {
+	oldPk := ed25519.GenPrivKey().PubKey()
+	newPk := ed25519.GenPrivKey().PubKey()
+	oldAddr := fmt.Sprintf("%X", oldPk.Address())
+	newAddr := fmt.Sprintf("%X", newPk.Address())
+
+	const emitHeight = 10
+	const power = 10
+
+	rotation := stakingkeeper.PendingConsKeyRotationUpdate{
+		OldPubKey:  oldPk,
+		NewPubKey:  newPk,
+		EmitHeight: emitHeight,
+		LastPower:  power,
+	}
+
+	cases := []struct {
+		name   string
+		height int64
+		base   []abci.ValidatorUpdate
+		expect map[string]int64
+	}{
+		{
+			// simulate a jail in the same EndBlock the swap is due by
+			// providing a 0 power update for the old key. expected to keep
+			// old@0 (a valid removal Comet can apply) and do not add the new
+			// key Comet never saw
+			name:   "jailed at emit height keeps old@0 and omits the new key",
+			height: emitHeight,
+			base:   []abci.ValidatorUpdate{s.valUpdate(oldPk, 0)},
+			expect: map[string]int64{oldAddr: 0},
+		},
+		{
+			// simulate a jail after the swap was emitted. Comet now tracks the
+			// new key, so the removal must target new@0. Emitting old@0 here
+			// would ask Comet to delete a key it no longer holds.
+			name:   "jailed after emit translates old@0 to new@0",
+			height: emitHeight + 1,
+			base:   []abci.ValidatorUpdate{s.valUpdate(oldPk, 0)},
+			expect: map[string]int64{newAddr: 0},
+		},
+		{
+			// normal power update at the emit height becomes the key swap.
+			name:   "power update at emit height becomes old@0,new@power",
+			height: emitHeight,
+			base:   []abci.ValidatorUpdate{s.valUpdate(oldPk, power)},
+			expect: map[string]int64{oldAddr: 0, newAddr: power},
+		},
+		{
+			// after the swap was emitted, a power update follows the new key.
+			name:   "power update after emit follows the new key",
+			height: emitHeight + 1,
+			base:   []abci.ValidatorUpdate{s.valUpdate(oldPk, power)},
+			expect: map[string]int64{newAddr: power},
+		},
+	}
+
+	for _, tc := range cases {
+		s.Run(tc.name, func() {
+			ctx := s.ctx.WithBlockHeight(tc.height)
+			updates, err := s.stakingKeeper.ProcessValidatorUpdatesForConsKeyRotations(
+				ctx,
+				[]stakingkeeper.PendingConsKeyRotationUpdate{rotation},
+				tc.base,
+			)
+			s.Require().NoError(err)
+
+			powers := make(map[string]int64, len(updates))
+			for _, u := range updates {
+				pk, err := cryptoenc.PubKeyFromProto(u.PubKey)
+				s.Require().NoError(err)
+				powers[fmt.Sprintf("%X", pk.Address())] = u.Power
+			}
+			s.Require().Equal(tc.expect, powers)
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestConsKeyRotationUpdate() {
@@ -83,6 +180,14 @@ func (s *KeeperTestSuite) TestApplyConsKeyRotationState() {
 
 		_, err = s.stakingKeeper.GetValidatorByConsAddr(s.ctx, sdk.ConsAddress(oldPk.Address()))
 		require.Error(err)
+
+		var emitted bool
+		for _, e := range s.ctx.EventManager().Events() {
+			if e.Type == stakingtypes.EventTypeApplyConsPubKeyRotation {
+				emitted = true
+			}
+		}
+		require.True(emitted, "expected %s event", stakingtypes.EventTypeApplyConsPubKeyRotation)
 	})
 
 	s.T().Run("returns nil when validator no longer exists", func(t *testing.T) {
@@ -336,6 +441,145 @@ func (s *KeeperTestSuite) TestRotationLockedConsAddrIndex() {
 	require.False(found)
 }
 
+func (s *KeeperTestSuite) TestImportConsKeyRotationsRoundTrip() {
+	require := s.Require()
+	s.SetupTest()
+
+	// validator A: rotate and apply, leaving a RotatedFrom history entry.
+	oldPkA := ed25519.GenPrivKey().PubKey()
+	newPkA := ed25519.GenPrivKey().PubKey()
+	_, valAddrA := s.bondedValidator(oldPkA)
+	oldConsAddrA := sdk.ConsAddress(oldPkA.Address())
+	newConsAddrA := sdk.ConsAddress(newPkA.Address())
+
+	s.ctx = s.ctx.WithBlockHeight(100)
+	require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddrA, oldPkA, newPkA))
+	s.ctx = s.ctx.WithBlockHeight(100 + stakingtypes.ConsensusUpdateDelay)
+	require.NoError(s.stakingKeeper.ApplyConsKeyRotations(s.ctx))
+
+	// validator B: rotate without applying, then remove the validator before
+	// apply. The live path keeps the PendingFrom lock for exactly this case, so
+	// the pending entry outlives the validator record and must still import.
+	oldPkB := ed25519.GenPrivKey().PubKey()
+	newPkB := ed25519.GenPrivKey().PubKey()
+	vB, valAddrB := s.bondedValidator(oldPkB)
+	oldConsAddrB := sdk.ConsAddress(oldPkB.Address())
+	newConsAddrB := sdk.ConsAddress(newPkB.Address())
+	require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddrB, oldPkB, newPkB))
+
+	vB.Status = stakingtypes.Unbonded
+	vB.Tokens = math.ZeroInt()
+	vB.DelegatorShares = math.LegacyZeroDec()
+	require.NoError(s.stakingKeeper.SetValidator(s.ctx, vB))
+	require.NoError(s.stakingKeeper.RemoveValidator(s.ctx, valAddrB))
+
+	histories, err := s.stakingKeeper.ExportConsKeyRotationHistory(s.ctx)
+	require.NoError(err)
+	pending, err := s.stakingKeeper.ExportPendingConsKeyRotations(s.ctx, s.ctx.BlockHeight())
+	require.NoError(err)
+
+	// restart from the export: validator A is live on its post-rotation key.
+	// validator B is gone, so only its rotation state is imported.
+	s.SetupTest()
+	s.bondedValidatorWithConsKey(valAddrA, newPkA)
+	require.NoError(s.stakingKeeper.ImportConsKeyRotations(s.ctx, histories, pending))
+
+	// the removed validator's pending locks still round trip with the correct
+	// kinds despite the missing validator record.
+	kindB, gotValB, found, err := s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, oldConsAddrB)
+	require.NoError(err)
+	require.True(found)
+	require.Equal(stakingtypes.ConsAddrLockPendingFrom, kindB)
+	require.Equal(valAddrB, gotValB)
+
+	kindBTo, _, found, err := s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, newConsAddrB)
+	require.NoError(err)
+	require.True(found)
+	require.Equal(stakingtypes.ConsAddrLockPendingTo, kindBTo)
+
+	// Now exercise the evidence handling path against validator A's rotated-away key,
+	// mirroring handleEquivocationEvidence: the old cons addr no longer resolves
+	// live, so it must resolve through the historical lookup.
+	s.ctx = s.ctx.WithBlockHeight(200)
+	_, err = s.stakingKeeper.ValidatorByConsAddr(s.ctx, oldConsAddrA)
+	require.ErrorIs(err, stakingtypes.ErrNoValidatorFound)
+
+	validator, err := s.stakingKeeper.ValidatorByHistoricalConsAddr(s.ctx, oldConsAddrA)
+	require.NoError(err)
+	require.Equal(valAddrA.String(), validator.OperatorAddress)
+	currentConsAddr, err := validator.GetConsAddr()
+	require.NoError(err)
+	require.Equal(newConsAddrA.Bytes(), currentConsAddr)
+
+	before, err := s.stakingKeeper.GetValidator(s.ctx, valAddrA)
+	require.NoError(err)
+
+	// Ensure we are able to slash the rotated validator on their resolved
+	// current cons addr.
+	s.bankKeeper.EXPECT().BurnCoins(gomock.Any(), stakingtypes.BondedPoolName, gomock.Any()).Return(nil)
+	burned, err := s.stakingKeeper.Slash(s.ctx, currentConsAddr, s.ctx.BlockHeight(), 10, math.LegacyNewDecWithPrec(5, 1))
+	require.NoError(err)
+
+	require.True(burned.IsPositive())
+	after, err := s.stakingKeeper.GetValidator(s.ctx, valAddrA)
+	require.NoError(err)
+	require.True(after.Tokens.LT(before.Tokens))
+}
+
+func (s *KeeperTestSuite) TestImportConsKeyRotationsAppliedAndPending() {
+	require := s.Require()
+	s.SetupTest()
+
+	pk0 := ed25519.GenPrivKey().PubKey()
+	pk1 := ed25519.GenPrivKey().PubKey()
+	pk2 := ed25519.GenPrivKey().PubKey()
+	_, valAddr := s.bondedValidator(pk0)
+	consAddr0 := sdk.ConsAddress(pk0.Address())
+	consAddr1 := sdk.ConsAddress(pk1.Address())
+	consAddr2 := sdk.ConsAddress(pk2.Address())
+
+	// rotate pk0 to pk1 and apply it, then queue pk1 to pk2 while the evidence
+	// lock on pk0 is still open, leaving the validator with two history records.
+	s.ctx = s.ctx.WithBlockHeight(100)
+	require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, pk0, pk1))
+	s.ctx = s.ctx.WithBlockHeight(100 + stakingtypes.ConsensusUpdateDelay)
+	require.NoError(s.stakingKeeper.ApplyConsKeyRotations(s.ctx))
+	require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, pk1, pk2))
+
+	histories, err := s.stakingKeeper.ExportConsKeyRotationHistory(s.ctx)
+	require.NoError(err)
+	require.Len(histories, 2)
+	pending, err := s.stakingKeeper.ExportPendingConsKeyRotations(s.ctx, s.ctx.BlockHeight())
+	require.NoError(err)
+	require.Len(pending, 1)
+
+	// restart from the export, the validator is live on pk1 as it was at export
+	s.SetupTest()
+	s.bondedValidatorWithConsKey(valAddr, pk1)
+	require.NoError(s.stakingKeeper.ImportConsKeyRotations(s.ctx, histories, pending))
+
+	// only the pending rotation's old key is PendingFrom, the applied rotation's
+	// old key stays RotatedFrom so evidence for it still resolves
+	kind, _, found, err := s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, consAddr0)
+	require.NoError(err)
+	require.True(found)
+	require.Equal(stakingtypes.ConsAddrLockRotatedFrom, kind)
+
+	kind, _, found, err = s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, consAddr1)
+	require.NoError(err)
+	require.True(found)
+	require.Equal(stakingtypes.ConsAddrLockPendingFrom, kind)
+
+	kind, _, found, err = s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, consAddr2)
+	require.NoError(err)
+	require.True(found)
+	require.Equal(stakingtypes.ConsAddrLockPendingTo, kind)
+
+	validator, err := s.stakingKeeper.ValidatorByHistoricalConsAddr(s.ctx, consAddr0)
+	require.NoError(err)
+	require.Equal(valAddr.String(), validator.OperatorAddress)
+}
+
 func (s *KeeperTestSuite) TestValidatorByHistoricalConsAddr() {
 	require := s.Require()
 
@@ -387,9 +631,11 @@ func (s *KeeperTestSuite) TestValidatorByHistoricalConsAddr() {
 		require.True(errors.Is(err, stakingtypes.ErrNoValidatorFound))
 	})
 
-	s.T().Run("stops resolving after maturity pruning", func(t *testing.T) {
+	s.T().Run("stops resolving after maturity pruning without evidence params", func(t *testing.T) {
 		s.SetupTest()
 
+		// no consensus evidence params are set, so retirement collapses to the
+		// unbonding maturity (the pre-fix behavior).
 		oldPk := ed25519.GenPrivKey().PubKey()
 		newPk := ed25519.GenPrivKey().PubKey()
 		_, valAddr := s.bondedValidator(oldPk)
@@ -403,6 +649,101 @@ func (s *KeeperTestSuite) TestValidatorByHistoricalConsAddr() {
 
 		_, err := s.stakingKeeper.ValidatorByHistoricalConsAddr(s.ctx, oldConsAddr)
 		require.True(errors.Is(err, stakingtypes.ErrNoValidatorFound))
+	})
+
+	s.T().Run("keeps resolving until the evidence block window closes", func(t *testing.T) {
+		s.SetupTest()
+
+		// evidence stays admissible for a long block window that outlasts
+		// unbonding in wall-clock time; the lock must survive until the block
+		// window also closes.
+		const maxAgeNumBlocks = int64(1_000_000)
+		s.ctx = s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Evidence: &cmtproto.EvidenceParams{
+				MaxAgeDuration:  stakingtypes.DefaultUnbondingTime,
+				MaxAgeNumBlocks: maxAgeNumBlocks,
+			},
+		}).WithBlockHeight(100)
+
+		oldPk := ed25519.GenPrivKey().PubKey()
+		newPk := ed25519.GenPrivKey().PubKey()
+		_, valAddr := s.bondedValidator(oldPk)
+		oldConsAddr := sdk.ConsAddress(oldPk.Address())
+		applyHeight := s.ctx.BlockHeight() + stakingtypes.ConsensusUpdateDelay
+
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, oldPk, newPk))
+		require.NoError(s.stakingKeeper.ApplyConsKeyRotation(s.ctx, valAddr, newPk))
+
+		// advance time past unbonding and the evidence time window, but keep the
+		// height inside the evidence block window.
+		s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(2 * stakingtypes.DefaultUnbondingTime))
+		require.NoError(s.stakingKeeper.PruneMaturedConsKeyRotations(s.ctx))
+
+		// the re-rotation gate is retired, but the evidence lock still resolves.
+		hasGate, err := s.stakingKeeper.HasConsKeyRotationInUnbondingWindow(s.ctx, valAddr)
+		require.NoError(err)
+		require.False(hasGate)
+
+		validator, err := s.stakingKeeper.ValidatorByHistoricalConsAddr(s.ctx, oldConsAddr)
+		require.NoError(err)
+		require.Equal(valAddr.String(), validator.OperatorAddress)
+
+		// once the height passes the evidence block window too, the lock retires.
+		s.ctx = s.ctx.WithBlockHeight(applyHeight + maxAgeNumBlocks + 1)
+		require.NoError(s.stakingKeeper.PruneMaturedConsKeyRotations(s.ctx))
+
+		_, err = s.stakingKeeper.ValidatorByHistoricalConsAddr(s.ctx, oldConsAddr)
+		require.True(errors.Is(err, stakingtypes.ErrNoValidatorFound))
+	})
+
+	s.T().Run("re-rotation after gate retirement keeps independent evidence locks", func(t *testing.T) {
+		s.SetupTest()
+
+		const maxAgeNumBlocks = int64(1_000_000)
+		s.ctx = s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Evidence: &cmtproto.EvidenceParams{
+				MaxAgeDuration:  stakingtypes.DefaultUnbondingTime,
+				MaxAgeNumBlocks: maxAgeNumBlocks,
+			},
+		}).WithBlockHeight(100)
+
+		pk0 := ed25519.GenPrivKey().PubKey()
+		pk1 := ed25519.GenPrivKey().PubKey()
+		pk2 := ed25519.GenPrivKey().PubKey()
+		_, valAddr := s.bondedValidator(pk0)
+		cons0 := sdk.ConsAddress(pk0.Address())
+		cons1 := sdk.ConsAddress(pk1.Address())
+
+		// first rotation pk0 -> pk1, applied.
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, pk0, pk1))
+		require.NoError(s.stakingKeeper.ApplyConsKeyRotation(s.ctx, valAddr, pk1))
+
+		// advance past unbonding so the first gate retires, then prune.
+		s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(stakingtypes.DefaultUnbondingTime + time.Second))
+		require.NoError(s.stakingKeeper.PruneMaturedConsKeyRotations(s.ctx))
+		hasGate, err := s.stakingKeeper.HasConsKeyRotationInUnbondingWindow(s.ctx, valAddr)
+		require.NoError(err)
+		require.False(hasGate)
+
+		// second rotation pk1 -> pk2 is now allowed and must set a fresh gate.
+		require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, pk1, pk2))
+		require.NoError(s.stakingKeeper.ApplyConsKeyRotation(s.ctx, valAddr, pk2))
+		hasGate, err = s.stakingKeeper.HasConsKeyRotationInUnbondingWindow(s.ctx, valAddr)
+		require.NoError(err)
+		require.True(hasGate, "second rotation must set a fresh re-rotation gate")
+
+		// pruning again (the first rotation is still lingering for its block
+		// window) must not clobber the fresh gate, and both old keys must resolve.
+		require.NoError(s.stakingKeeper.PruneMaturedConsKeyRotations(s.ctx))
+		hasGate, err = s.stakingKeeper.HasConsKeyRotationInUnbondingWindow(s.ctx, valAddr)
+		require.NoError(err)
+		require.True(hasGate, "fresh gate must survive pruning of the earlier rotation")
+
+		for _, cons := range []sdk.ConsAddress{cons0, cons1} {
+			validator, err := s.stakingKeeper.ValidatorByHistoricalConsAddr(s.ctx, cons)
+			require.NoError(err)
+			require.Equal(valAddr.String(), validator.OperatorAddress)
+		}
 	})
 }
 
@@ -878,4 +1219,65 @@ func (s *KeeperTestSuite) TestPruneMaturedConsKeyRotations() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestConsKeyRotationGenesisRoundTrip() {
+	require := s.Require()
+	s.SetupTest()
+
+	const maxAgeNumBlocks = int64(1_000_000)
+	s.ctx = s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Evidence: &cmtproto.EvidenceParams{
+			MaxAgeDuration:  stakingtypes.DefaultUnbondingTime,
+			MaxAgeNumBlocks: maxAgeNumBlocks,
+		},
+	}).WithBlockHeight(100)
+
+	pk0 := ed25519.GenPrivKey().PubKey()
+	pk1 := ed25519.GenPrivKey().PubKey()
+	_, valAddr := s.bondedValidator(pk0)
+	consAddr := sdk.ConsAddress(pk0.Address())
+	applyHeight := s.ctx.BlockHeight() + stakingtypes.ConsensusUpdateDelay
+
+	require.NoError(s.stakingKeeper.SetConsKeyRotation(s.ctx, valAddr, pk0, pk1))
+	require.NoError(s.stakingKeeper.ApplyConsKeyRotation(s.ctx, valAddr, pk1))
+
+	// export carries the gate maturity plus the evidence-lock horizon.
+	histories, err := s.stakingKeeper.ExportConsKeyRotationHistory(s.ctx)
+	require.NoError(err)
+	require.Len(histories, 1)
+	require.Equal(valAddr.String(), histories[0].ValidatorAddress)
+	require.Equal(consAddr.String(), histories[0].OldConsensusAddress)
+	require.False(histories[0].MaturityTime.IsZero(), "active gate maturity must be exported")
+	require.Equal(applyHeight+maxAgeNumBlocks, histories[0].EvidenceExpiryHeight)
+
+	// import into a fresh store and confirm the gate, the evidence lock, and its
+	// retirement queue are all restored.
+	s.SetupTest()
+	s.ctx = s.ctx.WithBlockHeight(100)
+	require.NoError(s.stakingKeeper.ImportConsKeyRotations(s.ctx, histories, nil))
+
+	hasGate, err := s.stakingKeeper.HasConsKeyRotationInUnbondingWindow(s.ctx, valAddr)
+	require.NoError(err)
+	require.True(hasGate)
+
+	kind, gotVal, found, err := s.stakingKeeper.GetRotationLockedConsAddr(s.ctx, consAddr)
+	require.NoError(err)
+	require.True(found)
+	require.Equal(stakingtypes.ConsAddrLockRotatedFrom, kind)
+	require.Equal(valAddr.Bytes(), gotVal.Bytes())
+
+	// the retirement queue survived: pruning before the block window closes keeps
+	// the lock; pruning after retires it.
+	beforeCtx := s.ctx.WithBlockTime(s.ctx.BlockTime().Add(2 * stakingtypes.DefaultUnbondingTime)).WithBlockHeight(100)
+	require.NoError(s.stakingKeeper.PruneMaturedConsKeyRotations(beforeCtx))
+	locked, err := s.stakingKeeper.IsConsAddrLockedByRotation(beforeCtx, consAddr)
+	require.NoError(err)
+	require.True(locked, "imported lock must be kept while its block window is open")
+
+	afterCtx := beforeCtx.WithBlockHeight(applyHeight + maxAgeNumBlocks + 1)
+	require.NoError(s.stakingKeeper.PruneMaturedConsKeyRotations(afterCtx))
+	locked, err = s.stakingKeeper.IsConsAddrLockedByRotation(afterCtx, consAddr)
+	require.NoError(err)
+	require.False(locked, "imported lock must retire once its block window closes")
 }

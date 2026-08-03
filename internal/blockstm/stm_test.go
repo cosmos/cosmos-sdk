@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 	"testing"
 	"time"
@@ -263,6 +264,93 @@ func TestSTMHighContentionStress(t *testing.T) {
 						"iteration %d: parallel != sequential for store %s", i, store.Name())
 				}
 			}
+		})
+	}
+}
+
+func TestValidateInputs(t *testing.T) {
+	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0, StoreKeyBank: 1}
+
+	testCases := []struct {
+		name      string
+		blockSize int
+		stores    map[storetypes.StoreKey]int
+		estimates []MultiLocations
+		errSubstr string // empty means expect no error
+	}{
+		{
+			name:      "valid, no estimates",
+			blockSize: 4,
+			stores:    stores,
+		},
+		{
+			name:      "valid with estimates",
+			blockSize: 4,
+			stores:    stores,
+			estimates: []MultiLocations{0: {1: Locations{Key([]byte("k"))}}},
+		},
+		{
+			name:      "zero block size is allowed",
+			blockSize: 0,
+			stores:    stores,
+		},
+		{
+			name:      "negative block size",
+			blockSize: -1,
+			stores:    stores,
+			errSubstr: "invalid block size",
+		},
+		{
+			name:      "block size overflows uint32",
+			blockSize: math.MaxUint32 + 1,
+			stores:    stores,
+			errSubstr: "overflows uint32",
+		},
+		{
+			name:      "store index out of range",
+			blockSize: 4,
+			stores:    map[storetypes.StoreKey]int{StoreKeyAuth: 0, StoreKeyBank: 2},
+			errSubstr: "store index out of range",
+		},
+		{
+			name:      "negative store index",
+			blockSize: 4,
+			stores:    map[storetypes.StoreKey]int{StoreKeyAuth: -1},
+			errSubstr: "store index out of range",
+		},
+		{
+			name:      "duplicate store index",
+			blockSize: 4,
+			stores:    map[storetypes.StoreKey]int{StoreKeyAuth: 0, StoreKeyBank: 0},
+			errSubstr: "duplicate store index",
+		},
+		{
+			name:      "estimates longer than block",
+			blockSize: 1,
+			stores:    stores,
+			estimates: make([]MultiLocations, 2),
+			errSubstr: "exceeds block size",
+		},
+		{
+			name:      "estimate store index out of range",
+			blockSize: 4,
+			stores:    stores,
+			estimates: []MultiLocations{0: {5: Locations{Key([]byte("k"))}}},
+			errSubstr: "references store index out of range",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			storage := NewMultiMemDB(stores)
+			noop := func(TxnIndex, MultiStore) {}
+			err := ExecuteBlockWithEstimates(context.Background(), tc.blockSize, tc.stores, storage, 1, tc.estimates, noop)
+			if tc.errSubstr == "" {
+				require.NoError(t, err)
+				return
+			}
+			require.Error(t, err)
+			require.Contains(t, err.Error(), tc.errSubstr)
 		})
 	}
 }

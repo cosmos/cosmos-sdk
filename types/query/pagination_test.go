@@ -389,10 +389,6 @@ func (s *paginationTestSuite) TestPaginate() {
 	// balances:<denom:"foo0denom" amount:"100" > pagination:<next_key:"foo1denom" total:2 >
 }
 
-// TestPaginateReverseKey pins reverse pagination with a Key cursor: iteration
-// starts at the cursor and only walks down, whether the cursor is the last
-// entry of the prefix range (which used to panic), sits between two stored
-// keys, or is a stale next_key whose row has since been deleted.
 func TestPaginateReverseKey(t *testing.T) {
 	cases := map[string]struct {
 		keys   []string
@@ -428,9 +424,6 @@ func TestPaginateReverseKey(t *testing.T) {
 	}
 }
 
-// TestPaginationInputErrorCode pins the gRPC status code of pagination input
-// validation errors, so queriers returning them unwrapped don't surface a
-// retryable-looking codes.Unknown.
 func TestPaginationInputErrorCode(t *testing.T) {
 	store := prefix.NewStore(dbadapter.Store{DB: dbm.NewMemDB()}, []byte("pfx"))
 	req := &query.PageRequest{Key: []byte("a"), Offset: 1, Limit: 10}
@@ -448,8 +441,6 @@ func TestPaginationInputErrorCode(t *testing.T) {
 	require.Equal(t, codes.InvalidArgument, status.Code(err))
 }
 
-// TestPaginationInputErrorCodeEndToEnd pins the status code a client sees from
-// a query handler that used to relabel pagination input errors codes.Internal.
 func (s *paginationTestSuite) TestPaginationInputErrorCodeEndToEnd() {
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.interfaceReg)
 	types.RegisterQueryServer(queryHelper, s.bankKeeper)

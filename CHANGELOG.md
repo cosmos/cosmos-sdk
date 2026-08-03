@@ -40,7 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
-* (types/query) [#XXXXX](https://github.com/cosmos/cosmos-sdk/pull/XXXXX) Pagination input validation errors from `Paginate`, `FilteredPaginate`, `GenericFilteredPaginate` and `CollectionFilteredPaginate` are now gRPC status errors with `codes.InvalidArgument`, matching `ParsePagination`, and the paginated query handlers in `x/bank`, `x/staking`, `x/gov` and `x/feegrant` propagate them unchanged (via the new `query.StatusOrInternal` helper) instead of relabelling them `codes.Internal`. Clients matching on the previous codes or messages must update: these endpoints returned `codes.Internal` (or the retryable-looking `codes.Unknown` where the error was returned unwrapped) for malformed page requests, and `x/bank`'s `AllBalances`/`SpendableBalances` messages lose the `paginate: ` prefix. Non-status errors from those two queries are now reported as `codes.Internal`; errors that already carry a gRPC status keep their own code.
+* (types/query) [#XXXXX](https://github.com/cosmos/cosmos-sdk/pull/XXXXX) Pagination input validation errors now return gRPC `codes.InvalidArgument` across pagination helpers and paginated queries in `x/bank`, `x/staking`, `x/gov` and `x/feegrant`; clients matching prior codes or messages must update.
 
 ### Features
 

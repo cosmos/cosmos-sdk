@@ -128,20 +128,14 @@ func getIterator(prefixStore types.KVStore, start []byte, reverse bool) db.Itera
 	if reverse {
 		var end []byte
 		if start != nil {
-			// end is exclusive, so the immediate successor of start makes the
-			// reverse iteration begin at start itself and only walk down,
-			// whether or not start is an existing key.
-			end = append(bytes.Clone(start), 0)
+			end = types.InclusiveEndBytes(bytes.Clone(start))
 		}
 		return prefixStore.ReverseIterator(nil, end)
 	}
 	return prefixStore.Iterator(start, nil)
 }
 
-// StatusOrInternal returns err unchanged when it already carries a gRPC status
-// (like the codes.InvalidArgument errors pagination input validation returns),
-// and wraps anything else as codes.Internal so it does not surface as the
-// retryable-looking codes.Unknown on the gRPC port.
+// StatusOrInternal preserves gRPC statuses and wraps other errors as codes.Internal.
 func StatusOrInternal(err error) error {
 	if _, ok := status.FromError(err); ok {
 		return err

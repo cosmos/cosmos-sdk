@@ -228,12 +228,7 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V], T any](
 	}
 
 	if countTotal {
-		// every entry that matches the predicate (every entry, if predicateFunc
-		// is nil) increments exactly one of skipped or count: skipped++ runs
-		// only while skipped < offset, count++ only after. Their sum is thus
-		// the real number of matching entries — unlike count + offset, which
-		// overcounts whenever the offset overshoots and the iterator exhausts
-		// with skipped < offset.
+		// skipped may be less than offset; skipped + count is always the number of matching entries.
 		resp.Total = count + skipped
 	}
 	return results, resp, nil

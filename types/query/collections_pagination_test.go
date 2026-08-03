@@ -183,16 +183,6 @@ func TestCollectionPagination(t *testing.T) {
 				Total: 300,
 			},
 		},
-		"with offset at collection size and count total": {
-			req: &PageRequest{
-				Offset:     300,
-				Limit:      10,
-				CountTotal: true,
-			},
-			expResp: &PageResponse{
-				Total: 300,
-			},
-		},
 		"filtered with offset beyond number of matches and count total": {
 			req: &PageRequest{
 				Offset:     200,

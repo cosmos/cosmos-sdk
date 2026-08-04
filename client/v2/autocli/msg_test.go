@@ -217,6 +217,36 @@ func TestMsgOptionsError(t *testing.T) {
 	assert.ErrorContains(t, err, "invalid argument")
 }
 
+// TestMsgMissingPositionalSignerArg ensures that omitting a positional signer
+// argument fails gracefully instead of panicking with an index-out-of-range.
+// When the last positional argument is optional, cobra accepts a call with one
+// fewer argument than the signer's index, which previously caused
+// args[SignerInfo.PositionalArgIndex] to be accessed out of range.
+func TestMsgMissingPositionalSignerArg(t *testing.T) {
+	fixture := initFixture(t)
+
+	// from_address is the signer and is placed last as an optional positional
+	// argument, so a call with only the preceding arguments passes cobra's
+	// argument validation but leaves the signer argument unset.
+	_, err := runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
+		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod: "Send",
+				PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					{ProtoField: "to_address"},
+					{ProtoField: "amount"},
+					{ProtoField: "from_address", Optional: true},
+				},
+			},
+		},
+		EnhanceCustomCommand: true,
+	}), "send",
+		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1000stake",
+	)
+	assert.ErrorContains(t, err, "expected 3 positional arguments, got 2")
+}
+
 func TestHelpMsg(t *testing.T) {
 	fixture := initFixture(t)
 

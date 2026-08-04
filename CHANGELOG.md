@@ -40,6 +40,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+### State Machine Breaking
+
+* (x/auth) [#26672](https://github.com/cosmos/cosmos-sdk/pull/26672) An unordered transaction whose `timeout_timestamp` equals the block time is now rejected rather than accepted, so the set of valid transactions differs from previous versions at that exact boundary. Chains must adopt this at a coordinated upgrade height; a mixed network can diverge if such a transaction is proposed.
+
 ### Features
 
 ### Improvements

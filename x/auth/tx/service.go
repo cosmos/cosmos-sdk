@@ -48,9 +48,19 @@ func (s txServer) GetTxsEvent(_ context.Context, req *txtypes.GetTxsEventRequest
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
 
-	orderBy := parseOrderBy(req.OrderBy)
+	// Reject any populated Pagination field. It was deprecated in v0.46 and the
+	// top-level page / limit / order_by request fields supersede it. Silently
+	// translating it would force the SDK to maintain a compatibility shim
+	// indefinitely; returning an explicit error makes the migration visible to
+	// clients. See #25886.
+	if req.Pagination != nil && (req.Pagination.Limit != 0 || req.Pagination.Offset != 0 || req.Pagination.Key != nil || req.Pagination.CountTotal || req.Pagination.Reverse) {
+		return nil, status.Error(
+			codes.InvalidArgument,
+			"GetTxsEventRequest.pagination is deprecated and no longer honored; use the top-level page, limit, and order_by fields instead",
+		)
+	}
 
-	result, err := QueryTxsByEvents(s.clientCtx, int(req.Page), int(req.Limit), req.Query, orderBy)
+	result, err := QueryTxsByEvents(s.clientCtx, int(req.Page), int(req.Limit), req.Query, parseOrderBy(req.OrderBy))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

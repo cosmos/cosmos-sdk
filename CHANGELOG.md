@@ -118,6 +118,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/poa) [#26642](https://github.com/cosmos/cosmos-sdk/pull/26642) Always return error when migrating fees to an occupied key.
 * (x/staking) [#26641](https://github.com/cosmos/cosmos-sdk/pull/26641) Allow multiple history entires in genesis import, and fix labeling of historical entries.
 
+### Client Breaking
+
+* (x/auth/tx) [#26399](https://github.com/cosmos/cosmos-sdk/pull/26399) `GetTxsEvent` now returns `InvalidArgument` when the deprecated `GetTxsEventRequest.pagination` field is populated, instead of silently ignoring it. Use the top-level `page`, `limit`, and `order_by` request fields instead.
+
 ### Deprecated
 
 ## [v0.54.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.2) - 2026-04-15

@@ -867,7 +867,11 @@ func (d *LegacyDec) MarshalTo(data []byte) (n int, err error) {
 // Unmarshal implements the gogo proto custom type interface.
 func (d *LegacyDec) Unmarshal(data []byte) error {
 	if len(data) == 0 {
-		d = nil
+		// Initialize to zero instead of leaving the receiver's internal big.Int
+		// nil (the previous `d = nil` only reassigned the local pointer copy).
+		// A nil internal value makes later methods like IsNegative panic; this
+		// mirrors the UnmarshalJSON path.
+		d.i = new(big.Int)
 		return nil
 	}
 

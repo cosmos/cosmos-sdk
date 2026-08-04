@@ -1127,3 +1127,27 @@ func TestLoadVersionPruning(t *testing.T) {
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(7), lastCommitID)
 }
+
+// closeCountingDB wraps a dbm.DB and panics on a second Close, mimicking
+// PebbleDB's "pebble: closed" behavior, to prove BaseApp.Close idempotency.
+type closeCountingDB struct {
+	dbm.DB
+	closeCount int
+}
+
+func (d *closeCountingDB) Close() error {
+	d.closeCount++
+	if d.closeCount > 1 {
+		panic("pebble: closed")
+	}
+	return nil
+}
+
+func TestBaseAppCloseIdempotent(t *testing.T) {
+	db := &closeCountingDB{DB: dbm.NewMemDB()}
+	app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), db, nil)
+
+	require.NoError(t, app.Close())
+	require.NotPanics(t, func() { _ = app.Close() }, "second Close must be idempotent")
+	require.Equal(t, 1, db.closeCount, "underlying db.Close must be called exactly once")
+}

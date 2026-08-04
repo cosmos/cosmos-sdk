@@ -66,6 +66,7 @@ type BaseApp struct {
 	logger            log.Logger
 	name              string                      // application name from abci.BlockInfo
 	db                dbm.DB                      // common DB backend
+	closeOnce         sync.Once                   // ensures Close cleanup runs at most once
 	cms               storetypes.CommitMultiStore // Main (uncached) state
 	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
 	storeLoader       StoreLoader                 // function to handle store loading, may be overridden with SetStoreLoader()
@@ -1158,7 +1159,19 @@ func (app *BaseApp) StreamingManager() storetypes.StreamingManager {
 }
 
 // Close is called in start cmd to gracefully cleanup resources.
+// It is idempotent: cleanup runs at most once, so it is safe to call from
+// multiple shutdown paths (e.g. deferred cleanup and a signal handler).
+// Closing an already-closed backend such as PebbleDB otherwise panics
+// ("pebble: closed").
 func (app *BaseApp) Close() error {
+	var err error
+	app.closeOnce.Do(func() {
+		err = app.close()
+	})
+	return err
+}
+
+func (app *BaseApp) close() error {
 	var errs []error
 
 	// Close app.db (opened by cosmos-sdk/server/start.go call to openDB)

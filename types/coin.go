@@ -274,7 +274,7 @@ func (coins Coins) Validate() error {
 				return fmt.Errorf("duplicate denomination %s", coin.Denom)
 			}
 			if !coin.IsPositive() {
-				return fmt.Errorf("coin %s amount is not positive", coin.Denom)
+				return fmt.Errorf("coin %s amount is not positive", coin)
 			}
 
 			// we compare each coin against the last denom

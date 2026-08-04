@@ -716,6 +716,18 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 	if newEarliest > currentEarliest {
 		batch := rs.db.NewBatch()
 		defer batch.Close()
+
+		// Delete stale commit-info metadata (s/<version>) for the heights just
+		// pruned. This is symmetric with the IAVL version pruning above; without
+		// it the metadata DB grows unbounded, as one CommitInfo record is written
+		// per block and never removed. currentEarliest is the previously persisted
+		// earliest version, so lower keys were already deleted by earlier prunes.
+		for v := currentEarliest; v <= pruningHeight; v++ {
+			if err := batch.Delete([]byte(fmt.Sprintf(commitInfoKeyFmt, v))); err != nil {
+				rs.logger.Error("failed to delete stale commit info", "version", v, "err", err)
+			}
+		}
+
 		flushEarliestVersion(batch, newEarliest)
 		if err := batch.WriteSync(); err != nil {
 			rs.logger.Error("failed to persist earliest version", "err", err)

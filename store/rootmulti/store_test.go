@@ -1189,3 +1189,34 @@ func TestEarliestVersionPersistence(t *testing.T) {
 	require.Equal(t, earliestBeforeRestart, ms2.EarliestVersion(),
 		"earliest version should persist across restarts")
 }
+
+// TestPruningDeletesCommitInfo ensures that pruning removes the commit-info
+// metadata records (s/<version>) for pruned heights, not just the IAVL tree
+// versions. Without this, the metadata DB grows unbounded (one CommitInfo
+// record per block, forever) even on aggressively pruning nodes.
+func TestPruningDeletesCommitInfo(t *testing.T) {
+	db := dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 1))
+	require.NoError(t, ms.LoadLatestVersion())
+
+	for i := 0; i < 10; i++ {
+		ms.Commit()
+	}
+
+	// Wait for pruning to advance the earliest available version.
+	require.Eventually(t, func() bool { return ms.EarliestVersion() > 1 },
+		time.Second, 10*time.Millisecond)
+
+	earliest := ms.EarliestVersion()
+	require.Greater(t, earliest, int64(1))
+
+	// Every pruned height's commit-info must be deleted.
+	for v := int64(1); v < earliest; v++ {
+		_, err := ms.GetCommitInfo(v)
+		require.Error(t, err, "commit info for pruned height %d should be deleted", v)
+	}
+
+	// Retained heights must still have their commit-info.
+	_, err := ms.GetCommitInfo(ms.LatestVersion())
+	require.NoError(t, err)
+}

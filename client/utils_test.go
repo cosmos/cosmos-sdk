@@ -92,7 +92,7 @@ func pageFlags(t *testing.T, pageKey string) *pflag.FlagSet {
 }
 
 func TestReadPageRequestPageKeyRoundTrip(t *testing.T) {
-	rawKey := []byte{0xff, 0xfe, 0x01, 0x7e, '/', '+'}
+	rawKey := []byte{0x9e, 0xe9, 0x65}
 
 	out, err := codec.ProtoMarshalJSON(&query.PageResponse{NextKey: rawKey}, nil)
 	require.NoError(t, err)
@@ -100,6 +100,7 @@ func TestReadPageRequestPageKeyRoundTrip(t *testing.T) {
 		NextKey string `json:"next_key"`
 	}
 	require.NoError(t, json.Unmarshal(out, &resp))
+	require.Equal(t, "null", resp.NextKey)
 
 	pageReq, err := client.ReadPageRequest(pageFlags(t, resp.NextKey))
 	require.NoError(t, err)
@@ -116,16 +117,6 @@ func TestReadPageRequestPageKeyInvalidBase64(t *testing.T) {
 	pageReq, err := client.ReadPageRequest(pageFlags(t, "not base64!"))
 	require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
 	require.ErrorContains(t, err, "invalid --page-key")
-	require.Nil(t, pageReq)
-}
-
-// TestReadPageRequestPageKeyNullLiteral checks that the literal "null" a JSON/YAML
-// response prints as the last page's empty next_key is rejected instead of being
-// base64-decoded to garbage bytes.
-func TestReadPageRequestPageKeyNullLiteral(t *testing.T) {
-	pageReq, err := client.ReadPageRequest(pageFlags(t, "null"))
-	require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
-	require.ErrorContains(t, err, "last page")
 	require.Nil(t, pageReq)
 }
 

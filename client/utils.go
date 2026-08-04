@@ -64,13 +64,6 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 		offset = (page - 1) * limit
 	}
 
-	// "null" is how JSON/YAML output prints the empty next_key of the last page; it
-	// decodes as valid base64 to garbage bytes, so it must be rejected before decoding.
-	if pageKey == "null" {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
-			"invalid --%s %q: this is how an empty next_key is printed on the last page; there are no further pages", flags.FlagPageKey, pageKey)
-	}
-
 	key, err := base64.StdEncoding.DecodeString(pageKey)
 	if err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,

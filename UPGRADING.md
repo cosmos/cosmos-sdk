@@ -31,7 +31,7 @@ The headline changes in this release are the removal of three legacy surfaces (`
 
 ### client: `--page-key` is base64-decoded; page-key helpers are no-ops
 
-`client.ReadPageRequest` now base64-decodes the `--page-key` flag, so the `next_key` printed by a paginated query response can be passed straight back. Values that are not valid base64 — including the literal `null` printed on the last page — are rejected with an error. A raw value that happens to be valid base64 cannot be detected and silently decodes to different bytes, so callers that passed raw key bytes must switch to the base64 form.
+`client.ReadPageRequest` now base64-decodes the `--page-key` flag, so the `next_key` printed by a paginated query response can be passed straight back. Values that are not valid base64 are rejected with an error. A raw value that happens to be valid base64 cannot be detected and silently decodes to different bytes, so callers that passed raw key bytes must switch to the base64 form.
 
 `client.FlagSetWithPageKeyDecoded` and `client.MustFlagSetWithPageKeyDecoded` are deprecated no-ops: they return the flag set unchanged, no longer mutate it, and the `Must` variant no longer panics on invalid input. Remove these calls and pass the printed `next_key` directly to `--page-key`.
 

@@ -75,7 +75,17 @@ type BaseApp struct {
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
 
-	mempool     mempool.Mempool // application side mempool
+	mempool mempool.Mempool // application side mempool
+
+	// mempoolRemoveCh is a buffered channel of mempool removal requests
+	// processed asynchronously by a dedicated worker goroutine, keeping mempool
+	// removal errors and panics out of the consensus-critical path.
+	mempoolRemoveCh chan mempoolRemoveRequest
+	// mempoolRemoveWg tracks the async mempool removal worker goroutine.
+	mempoolRemoveWg sync.WaitGroup
+	// mempoolRemoveOnce guards shutdown of the async mempool removal queue.
+	mempoolRemoveOnce sync.Once
+
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
 	postHandler sdk.PostHandler // post handler, optional
 
@@ -196,7 +206,11 @@ func NewBaseApp(
 		app.SetMempool(mempool.NoOpMempool{})
 	}
 
+	app.mempoolRemoveCh = make(chan mempoolRemoveRequest, mempoolRemoveQueueSize)
+	app.startMempoolRemoveWorker()
+
 	abciProposalHandler := NewDefaultProposalHandler(app.mempool, app)
+	abciProposalHandler.SetMempoolRemovalFunc(app.enqueueMempoolRemove)
 
 	if app.abciHandlers.PrepareProposalHandler == nil {
 		app.SetPrepareProposal(abciProposalHandler.PrepareProposalHandler())
@@ -902,15 +916,13 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 
 		if err != nil {
 			if mode == execModeReCheck {
-				// if the ante handler fails on recheck, we want to remove the tx from the mempool
-				errMempool := mempool.RemoveWithReason(ctx, app.mempool, tx, mempool.RemoveReason{
+				// if the ante handler fails on recheck, we want to remove the tx from the mempool.
+				// removal is asynchronous: mempool errors/panics must not propagate into
+				// the consensus state machine (mempool state is node-local).
+				app.enqueueMempoolRemove(tx, mempool.RemoveReason{
 					Caller: mempool.CallerRunTxRecheck,
 					Error:  err,
 				})
-
-				if errMempool != nil {
-					return gInfo, nil, anteEvents, errors.Join(err, errMempool)
-				}
 			}
 
 			return gInfo, nil, nil, err
@@ -927,11 +939,10 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 			return gInfo, nil, anteEvents, err
 		}
 	case execModeFinalize:
-		reason := mempool.RemoveReason{Caller: mempool.CallerRunTxFinalize}
-		err = mempool.RemoveWithReason(ctx, app.mempool, tx, reason)
-		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-			return gInfo, nil, anteEvents, fmt.Errorf("failed to remove tx from mempool: %w", err)
-		}
+		// Removal is asynchronous: the mempool is node-local state and must not
+		// influence block execution. Errors and panics from the removal happen on
+		// a background worker goroutine where they are logged and ignored.
+		app.enqueueMempoolRemove(tx, mempool.RemoveReason{Caller: mempool.CallerRunTxFinalize})
 	}
 
 	// Create a new Context based off of the existing Context with a MultiStore branch
@@ -1160,6 +1171,16 @@ func (app *BaseApp) StreamingManager() storetypes.StreamingManager {
 // Close is called in start cmd to gracefully cleanup resources.
 func (app *BaseApp) Close() error {
 	var errs []error
+
+	// Stop the async mempool removal worker. Removal requests are only enqueued
+	// while the consensus engine is running, so no requests are expected after
+	// Close is called; the worker drains whatever is left.
+	app.mempoolRemoveOnce.Do(func() {
+		if app.mempoolRemoveCh != nil {
+			close(app.mempoolRemoveCh)
+			app.mempoolRemoveWg.Wait()
+		}
+	})
 
 	// Close app.db (opened by cosmos-sdk/server/start.go call to openDB)
 	if app.db != nil {

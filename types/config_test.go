@@ -100,3 +100,9 @@ func (s *configTestSuite) TestConfig_ScopeKeyFormat() {
 	key := getConfigKey()
 	s.Require().True(strings.Count(key, "|") == 2, "scope key should have 2 pipe separators")
 }
+
+func BenchmarkGetConfig(b *testing.B) {
+	for b.Loop() {
+		GetConfig()
+	}
+}

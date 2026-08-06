@@ -39,7 +39,12 @@ func getConfigKey() string {
 	if id := os.Getenv(EnvConfigScope); id != "" {
 		return id
 	}
+	return defaultConfigKey()
+}
 
+// defaultConfigKey memoizes the "hostname|binary|pid" fallback: the three
+// syscalls behind it are process-invariant.
+var defaultConfigKey = sync.OnceValue(func() string {
 	exe, errExec := os.Executable()
 	host, errHost := os.Hostname()
 	pid := os.Getpid()
@@ -52,7 +57,7 @@ func getConfigKey() string {
 	}
 
 	return fmt.Sprintf("%s|%s|%d", host, exe, pid)
-}
+})
 
 // NewConfig returns a new Config with default values.
 func NewConfig() *Config {

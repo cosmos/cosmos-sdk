@@ -34,6 +34,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## Unreleased
+
+### Bug Fixes
+
+* (autocli) #26673 Correctly encode `cosmos.Dec` fields supplied in positional JSON arguments.
+
 ## [v2.0.0-beta.11](https://github.com/cosmos/cosmos-sdk/tree/client/v2.0.0-beta.11) - 2025-05-30
 
 ### Bug Fixes

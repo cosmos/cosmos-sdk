@@ -265,7 +265,7 @@ This patch release contains only minor dependency bumps.
 
 * (cli) [#25485](https://github.com/cosmos/cosmos-sdk/pull/25485) Avoid failed to convert address field in `withdraw-validator-commission` cmd.
 * (baseapp) [#25642](https://github.com/cosmos/cosmos-sdk/pull/25642) Mark pre-block events for indexing based on local configuration.
-* (baseapp) [#26433](https://github.com/cosmos/cosmos-sdk/pull/26433) Emit gen-tx events on the finalize-block `EventManager` during `ExecuteGenesisTx` so indexers that rely solely on events do not miss genesis state changes.
+* (baseapp) [#26738](https://github.com/cosmos/cosmos-sdk/pull/26738) Emit gen-tx events on the finalize-block `EventManager` during `ExecuteGenesisTx` so indexers that rely solely on events do not miss genesis state changes.
 
 ### Deprecated
 

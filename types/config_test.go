@@ -97,6 +97,7 @@ func (s *configTestSuite) TestConfig_ScopePerBinary_EnvRestoration() {
 }
 
 func (s *configTestSuite) TestConfig_ScopeKeyFormat() {
+	s.T().Setenv(EnvConfigScope, "")
 	key := getConfigKey()
 	s.Require().True(strings.Count(key, "|") == 2, "scope key should have 2 pipe separators")
 }

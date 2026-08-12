@@ -102,6 +102,7 @@ func (s *configTestSuite) TestConfig_ScopeKeyFormat() {
 }
 
 func BenchmarkGetConfig(b *testing.B) {
+	b.Setenv(EnvConfigScope, "")
 	for b.Loop() {
 		GetConfig()
 	}

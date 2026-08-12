@@ -42,8 +42,7 @@ func getConfigKey() string {
 	return defaultConfigKey()
 }
 
-// defaultConfigKey memoizes the "hostname|binary|pid" fallback: the three
-// syscalls behind it are process-invariant.
+// defaultConfigKey freezes the fallback registry key for the process lifetime.
 var defaultConfigKey = sync.OnceValue(func() string {
 	exe, errExec := os.Executable()
 	host, errHost := os.Hostname()

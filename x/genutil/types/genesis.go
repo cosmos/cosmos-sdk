@@ -181,6 +181,7 @@ func NewConsensusGenesis(params cmtproto.ConsensusParams, validators []cmttypes.
 			Validator: cmttypes.ValidatorParams{
 				PubKeyTypes: params.Validator.PubKeyTypes,
 			},
+			// Preserve the vote extension enable height when exporting genesis state.
 			ABCI: cmttypes.ABCIParams{
 				VoteExtensionsEnableHeight: params.GetAbci().GetVoteExtensionsEnableHeight(),
 			},

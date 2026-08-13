@@ -797,6 +797,15 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		return nil, err
 	}
 
+	// Genesis-tx events (see ExecuteGenesisTx) have no response of their own to
+	// travel in — ResponseInitChain has no Events field — so they're carried
+	// forward and included here. Read-only: app.genesisEvents is cleared by
+	// FinalizeBlock only after this function succeeds, so a failure partway
+	// through doesn't lose them for a retry at the same height.
+	if req.Height == app.initialHeight {
+		events = append(events, app.genesisEvents...)
+	}
+
 	// NOTE: Header populated here is intentionally partial; it omits Version, LastBlockID,
 	// LastCommitHash, DataHash, ValidatorsHash, ConsensusHash, LastResultsHash, and EvidenceHash.
 	// As a result, the HistoricalInfo headers stored by x/staking are unreliable and cannot reproduce
@@ -1022,6 +1031,11 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	nonOEStart := time.Now()
 	res, err = app.internalFinalizeBlock(context.Background(), req)
 	measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.NonOEInternalFinalize }, nonOEStart)
+
+	if err == nil && req.Height == app.initialHeight {
+		app.genesisEvents = nil
+	}
+
 	if res != nil {
 		whStart := time.Now()
 		res.AppHash = app.workingHash()

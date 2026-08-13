@@ -181,6 +181,9 @@ func NewConsensusGenesis(params cmtproto.ConsensusParams, validators []cmttypes.
 			Validator: cmttypes.ValidatorParams{
 				PubKeyTypes: params.Validator.PubKeyTypes,
 			},
+			ABCI: cmttypes.ABCIParams{
+				VoteExtensionsEnableHeight: params.GetAbci().GetVoteExtensionsEnableHeight(),
+			},
 		},
 		Validators: validators,
 	}

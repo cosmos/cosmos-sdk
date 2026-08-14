@@ -1593,7 +1593,9 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	require.Equal(t, 0, pool.CountTx())
+	// mempool removal is asynchronous: wait for the finalized txs to be removed
+	// from the mempool before asserting on its contents.
+	require.Eventually(t, func() bool { return pool.CountTx() == 0 }, 5*time.Second, 10*time.Millisecond)
 
 	require.NotEmpty(t, res.TxResults[0].Events)
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
@@ -2604,6 +2606,10 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	require.True(t, resp.IsErr())
 	require.Equal(t, "recheck failed in ante handler", resp.Log)
 
+	// mempool removal is asynchronous: wait for the recheck removal to be
+	// processed before asserting on the mempool or building the next proposal.
+	require.Eventually(t, func() bool { return pool.CountTx() == 1 }, 5*time.Second, 10*time.Millisecond)
+
 	// call prepareProposal again, should return only the second tx
 	resPrepareProposal, err = suite.baseApp.PrepareProposal(&reqPrepareProposal)
 	require.NoError(t, err)
@@ -2632,7 +2638,9 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	require.Equal(t, 0, pool.CountTx())
+	// mempool removal is asynchronous: wait for the finalized txs to be removed
+	// from the mempool before asserting on its contents.
+	require.Eventually(t, func() bool { return pool.CountTx() == 0 }, 5*time.Second, 10*time.Millisecond)
 
 	require.NotEmpty(t, res.TxResults[0].Events)
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))

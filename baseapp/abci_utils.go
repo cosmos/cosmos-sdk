@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
@@ -213,6 +212,11 @@ type (
 		txVerifier       ProposalTxVerifier
 		txSelector       TxSelector
 		signerExtAdapter mempool.SignerExtractionAdapter
+		// removeTx removes a tx from the mempool. It is invoked to evict invalid
+		// txs discovered during PrepareProposal. It defaults to a synchronous,
+		// error-tolerant removal; BaseApp replaces it with an asynchronous
+		// enqueuer so a mempool removal can never fail block production.
+		removeTx func(tx sdk.Tx, reason mempool.RemoveReason)
 	}
 )
 
@@ -222,7 +226,19 @@ func NewDefaultProposalHandler(mp mempool.Mempool, txVerifier ProposalTxVerifier
 		txVerifier:       txVerifier,
 		txSelector:       NewDefaultTxSelector(),
 		signerExtAdapter: mempool.NewDefaultSignerExtractionAdapter(),
+		removeTx: func(tx sdk.Tx, reason mempool.RemoveReason) {
+			// best-effort removal: mempool state is node-local and must not
+			// affect block production.
+			_ = mempool.RemoveWithReason(context.Background(), mp, tx, reason)
+		},
 	}
+}
+
+// SetMempoolRemovalFunc sets the function used to remove invalid txs from the
+// mempool during PrepareProposal. BaseApp sets it to an asynchronous enqueuer
+// so that mempool errors or panics never fail block production.
+func (h *DefaultProposalHandler) SetMempoolRemovalFunc(removeTx func(tx sdk.Tx, reason mempool.RemoveReason)) {
+	h.removeTx = removeTx
 }
 
 // txGasForBlockAccounting returns the gas to count against MaxGas for tx.
@@ -397,15 +413,10 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 		}
 
 		for _, invalidTx := range invalidTxs {
-			reason := mempool.RemoveReason{
+			h.removeTx(invalidTx.tx, mempool.RemoveReason{
 				Caller: mempool.CallerPrepareProposalRemoveInvalid,
 				Error:  invalidTx.err,
-			}
-
-			err := mempool.RemoveWithReason(ctx, h.mempool, invalidTx.tx, reason)
-			if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-				return nil, err
-			}
+			})
 		}
 
 		return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs(ctx)}, nil

@@ -40,18 +40,42 @@ func TestJSONMessageFlagLegacyDec(t *testing.T) {
 	types := new(protoregistry.Types)
 	require.NoError(t, types.RegisterMessage(messageType))
 
-	ctx := context.Background()
-	value := jsonMessageFlagType{messageDesc: descriptor}.NewValue(
-		&ctx,
-		&Builder{TypeResolver: types},
-	)
-	require.NoError(t, value.Set(`{"inflationMax":"0.020000000000000000"}`))
+	testCases := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "human readable decimal is encoded as atomics",
+			input: `{"inflationMax":"0.020000000000000000"}`,
+			want:  "20000000000000000",
+		},
+		{
+			// Atomics are indistinguishable from a human readable integer, so
+			// input that already encodes the field must survive untouched
+			// instead of being scaled by LegacyPrecision a second time.
+			name:  "atomics are left as supplied",
+			input: `{"inflationMax":"20000000000000000"}`,
+			want:  "20000000000000000",
+		},
+	}
 
-	got, err := value.Get(protoreflect.Value{})
-	require.NoError(t, err)
-	require.Equal(
-		t,
-		"20000000000000000",
-		got.Message().Get(descriptor.Fields().ByName("inflation_max")).String(),
-	)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			value := jsonMessageFlagType{messageDesc: descriptor}.NewValue(
+				&ctx,
+				&Builder{TypeResolver: types},
+			)
+			require.NoError(t, value.Set(tc.input))
+
+			got, err := value.Get(protoreflect.Value{})
+			require.NoError(t, err)
+			require.Equal(
+				t,
+				tc.want,
+				got.Message().Get(descriptor.Fields().ByName("inflation_max")).String(),
+			)
+		})
+	}
 }

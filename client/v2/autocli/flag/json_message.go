@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"strings"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -201,6 +202,13 @@ func normalizeLegacyDecValue(value json.RawMessage) (json.RawMessage, error) {
 	var text string
 	if err := json.Unmarshal(value, &text); err != nil {
 		return nil, err
+	}
+	// A cosmos.Dec field carries atomics: an integer already scaled by
+	// LegacyPrecision. Only the decimal point distinguishes a human-readable
+	// value from one that is encoded, so integer input is passed through
+	// untouched rather than scaled a second time.
+	if !strings.Contains(text, ".") {
+		return value, nil
 	}
 	dec, err := math.LegacyNewDecFromStr(text)
 	if err != nil {

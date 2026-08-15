@@ -12,10 +12,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TestABCI_GenesisTxEvents_DoNotLeakPastFirstBlock guards the other half of
-// the #25984 contract: genesis-tx events must appear exactly once, in the
-// first block's FinalizeBlock response, and must not reappear in later
-// blocks (which would indicate app.genesisEvents was never cleared).
+// TestABCI_GenesisTxEvents_DoNotLeakPastFirstBlock verifies that genesis transaction
+// events appear in the first block's response and are absent from later blocks.
 func TestABCI_GenesisTxEvents_DoNotLeakPastFirstBlock(t *testing.T) {
 	var (
 		txBytes []byte

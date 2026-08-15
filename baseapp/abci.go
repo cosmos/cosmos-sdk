@@ -797,11 +797,8 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		return nil, err
 	}
 
-	// Genesis-tx events (see ExecuteGenesisTx) have no response of their own to
-	// travel in — ResponseInitChain has no Events field — so they're carried
-	// forward and included here. Read-only: app.genesisEvents is cleared by
-	// FinalizeBlock only after this function succeeds, so a failure partway
-	// through doesn't lose them for a retry at the same height.
+	// genesis transaction events cannot be returned by ResponseInitChain, so include
+	// them in the first block's response.
 	if req.Height == app.initialHeight {
 		events = append(events, app.genesisEvents...)
 	}

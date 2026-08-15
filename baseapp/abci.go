@@ -69,6 +69,13 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		}
 	}
 
+	// Reset any genesis-tx events left over from a previous InitChain call in
+	// this process (see ExecuteGenesisTx). Without this, a CometBFT restart at
+	// height 0 that re-runs InitChain before the first FinalizeBlock succeeds
+	// would replay the genesis txs and duplicate their events in the first
+	// block's response.
+	app.genesisEvents = nil
+
 	// initialize states with a correct header
 	app.stateManager.SetState(execModeFinalize, app.cms, initHeader, app.logger, app.streamingManager)
 	app.stateManager.SetState(execModeCheck, app.cms, initHeader, app.logger, app.streamingManager)

@@ -94,6 +94,10 @@ func normalizeLegacyDecJSON(
 	descriptor protoreflect.MessageDescriptor,
 	messageBytes []byte,
 ) ([]byte, error) {
+	if descriptor.ParentFile().Package() == "google.protobuf" {
+		return messageBytes, nil
+	}
+
 	var value map[string]json.RawMessage
 	if err := json.Unmarshal(messageBytes, &value); err != nil {
 		return nil, err
@@ -146,7 +150,7 @@ func normalizeLegacyDecField(
 				return nil, err
 			}
 			for i, item := range values {
-				normalized, err := normalizeLegacyDecValue(item)
+				normalized, err := normalizeLegacyDecValue(field, item)
 				if err != nil {
 					return nil, err
 				}
@@ -155,7 +159,7 @@ func normalizeLegacyDecField(
 			return json.Marshal(values)
 		}
 
-		return normalizeLegacyDecValue(value)
+		return normalizeLegacyDecValue(field, value)
 	}
 
 	if field.Kind() != protoreflect.MessageKind {
@@ -195,7 +199,10 @@ func normalizeLegacyDecField(
 	return normalizeLegacyDecJSON(field.Message(), value)
 }
 
-func normalizeLegacyDecValue(value json.RawMessage) (json.RawMessage, error) {
+func normalizeLegacyDecValue(
+	field protoreflect.FieldDescriptor,
+	value json.RawMessage,
+) (json.RawMessage, error) {
 	if len(value) == 0 || value[0] != '"' {
 		return value, nil
 	}
@@ -214,5 +221,13 @@ func normalizeLegacyDecValue(value json.RawMessage) (json.RawMessage, error) {
 	if err != nil {
 		return nil, err
 	}
-	return json.Marshal(dec.BigInt().String())
+	atomics := dec.BigInt().String()
+	switch field.Kind() {
+	case protoreflect.StringKind:
+		return json.Marshal(atomics)
+	case protoreflect.BytesKind:
+		return json.Marshal([]byte(atomics))
+	default:
+		return nil, fmt.Errorf("unsupported cosmos.Dec field kind %s", field.Kind())
+	}
 }

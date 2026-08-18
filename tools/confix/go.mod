@@ -58,7 +58,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.2 // indirect
 	github.com/cosmos/iavl v1.2.8 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
-	github.com/cosmos/ledger-cosmos-go v1.0.0 // indirect
+	github.com/cosmos/ledger-cosmos-go v1.0.1 // indirect
 	github.com/creachadair/mds v0.27.1 // indirect
 	github.com/danieljoos/wincred v1.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect

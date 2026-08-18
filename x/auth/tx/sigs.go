@@ -148,14 +148,14 @@ func modeInfoAndSigToSignatureData(modeInfo *tx.ModeInfo, sig []byte, depth int,
 	case *tx.ModeInfo_Multi_:
 		multi := modeInfo.Multi
 
+		if len(multi.ModeInfos) > budget.limits.MaxBreadth {
+			return nil, errorsmod.Wrapf(sdkerrors.ErrTxDecode,
+				"multisig breadth %d exceeds maximum of %d", len(multi.ModeInfos), budget.limits.MaxBreadth)
+		}
+
 		sigs, err := decodeMultisignatures(sig)
 		if err != nil {
 			return nil, err
-		}
-
-		if len(sigs) > budget.limits.MaxBreadth {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrTxDecode,
-				"multisig breadth %d exceeds maximum of %d", len(sigs), budget.limits.MaxBreadth)
 		}
 
 		if len(multi.ModeInfos) != len(sigs) {

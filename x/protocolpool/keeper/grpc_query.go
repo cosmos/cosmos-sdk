@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -49,12 +48,12 @@ func (k Querier) ContinuousFund(ctx context.Context, req *types.QueryContinuousF
 
 	acc, err := k.authKeeper.AddressCodec().StringToBytes(req.Recipient)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, fmt.Errorf("invalid address: %w", err).Error())
+		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err)
 	}
 
 	fund, err := k.Keeper.ContinuousFunds.Get(sdkCtx, acc)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("not found %s", req.Recipient))
+		return nil, status.Errorf(codes.NotFound, "not found %s", req.Recipient)
 	}
 
 	return &types.QueryContinuousFundResponse{ContinuousFund: fund}, nil
@@ -70,7 +69,7 @@ func (k Querier) ContinuousFunds(ctx context.Context, req *types.QueryContinuous
 
 	funds, err := k.GetAllContinuousFunds(sdkCtx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, fmt.Errorf("failed to fetch continuous funds: %w", err).Error())
+		return nil, status.Errorf(codes.Internal, "failed to fetch continuous funds: %s", err)
 	}
 
 	return &types.QueryContinuousFundsResponse{ContinuousFunds: funds}, nil

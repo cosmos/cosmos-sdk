@@ -117,7 +117,7 @@ func (k Querier) ValidatorOutstandingRewards(ctx context.Context, req *types.Que
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, req.ValidatorAddress)
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, "%s", req.ValidatorAddress)
 	}
 
 	rewards, err := k.GetValidatorOutstandingRewards(ctx, valAdr)
@@ -149,7 +149,7 @@ func (k Querier) ValidatorCommission(ctx context.Context, req *types.QueryValida
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, req.ValidatorAddress)
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, "%s", req.ValidatorAddress)
 	}
 	commission, err := k.GetValidatorAccumulatedCommission(ctx, valAdr)
 	if err != nil {

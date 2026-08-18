@@ -3,9 +3,12 @@ package tx
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -53,9 +56,88 @@ func SignatureDataToModeInfoAndSig(data signing.SignatureData) (*tx.ModeInfo, []
 	}
 }
 
-// ModeInfoAndSigToSignatureData converts a ModeInfo and raw bytes signature to a SignatureData or returns
-// an error
+// MultisigLimits bounds the work that decoding a single multisig ModeInfo tree may cost.
+type MultisigLimits struct {
+	MaxDepth               int
+	MaxBreadth             int
+	MaxTotalSignatures     int
+	MaxTotalSignatureBytes int
+}
+
+func DefaultMultisigLimits() MultisigLimits {
+	return MultisigLimits{
+		MaxDepth:               2,
+		MaxBreadth:             32,
+		MaxTotalSignatures:     32 + 32*32,
+		MaxTotalSignatureBytes: 4 << 20,
+	}
+}
+
+// Validate rejects limits that would refuse every multisig transaction.
+func (l MultisigLimits) Validate() error {
+	for _, limit := range []struct {
+		name  string
+		value int
+	}{
+		{"MaxDepth", l.MaxDepth},
+		{"MaxBreadth", l.MaxBreadth},
+		{"MaxTotalSignatures", l.MaxTotalSignatures},
+		{"MaxTotalSignatureBytes", l.MaxTotalSignatureBytes},
+	} {
+		if limit.value <= 0 {
+			return fmt.Errorf("MultisigLimits.%s must be positive, got %d", limit.name, limit.value)
+		}
+	}
+
+	return nil
+}
+
+// multisigBudget accumulates what a single ModeInfo tree has cost so far.
+type multisigBudget struct {
+	limits MultisigLimits
+	sigs   int
+	bytes  int
+}
+
+// charge accounts for one decoded multisig level.
+func (b *multisigBudget) charge(sigs [][]byte) error {
+	b.sigs += len(sigs)
+	if b.sigs > b.limits.MaxTotalSignatures {
+		return errorsmod.Wrapf(sdkerrors.ErrTxDecode,
+			"total multisig signatures %d exceeds maximum of %d", b.sigs, b.limits.MaxTotalSignatures)
+	}
+
+	for _, sig := range sigs {
+		b.bytes += len(sig)
+	}
+	if b.bytes > b.limits.MaxTotalSignatureBytes {
+		return errorsmod.Wrapf(sdkerrors.ErrTxDecode,
+			"total multisig signature bytes %d exceeds maximum of %d", b.bytes, b.limits.MaxTotalSignatureBytes)
+	}
+
+	return nil
+}
+
+// ModeInfoAndSigToSignatureData converts a ModeInfo and raw bytes signature to a
+// SignatureData under DefaultMultisigLimits, or returns an error.
 func ModeInfoAndSigToSignatureData(modeInfo *tx.ModeInfo, sig []byte) (signing.SignatureData, error) {
+	return ModeInfoAndSigToSignatureDataWithLimits(modeInfo, sig, DefaultMultisigLimits())
+}
+
+// ModeInfoAndSigToSignatureDataWithLimits converts a ModeInfo and raw bytes signature to a
+// SignatureData under the given limits, or returns an error.
+func ModeInfoAndSigToSignatureDataWithLimits(modeInfo *tx.ModeInfo, sig []byte, limits MultisigLimits) (signing.SignatureData, error) {
+	return modeInfoAndSigToSignatureData(modeInfo, sig, 0, &multisigBudget{limits: limits})
+}
+
+// modeInfoAndSigToSignatureData recurses over a ModeInfo tree, decoding the matching
+// MultiSignature bytes at each level.
+func modeInfoAndSigToSignatureData(modeInfo *tx.ModeInfo, sig []byte, depth int, budget *multisigBudget) (signing.SignatureData, error) {
+	if depth > budget.limits.MaxDepth {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrTxDecode,
+			"multisig nesting depth %d exceeds maximum of %d", depth, budget.limits.MaxDepth)
+	}
+
 	switch modeInfo := modeInfo.Sum.(type) {
 	case *tx.ModeInfo_Single_:
 		return &signing.SingleSignatureData{
@@ -71,13 +153,22 @@ func ModeInfoAndSigToSignatureData(modeInfo *tx.ModeInfo, sig []byte) (signing.S
 			return nil, err
 		}
 
+		if len(sigs) > budget.limits.MaxBreadth {
+			return nil, errorsmod.Wrapf(sdkerrors.ErrTxDecode,
+				"multisig breadth %d exceeds maximum of %d", len(sigs), budget.limits.MaxBreadth)
+		}
+
 		if len(multi.ModeInfos) != len(sigs) {
 			return nil, fmt.Errorf("expected %d multisig signatures, got %d", len(multi.ModeInfos), len(sigs))
 		}
 
+		if err := budget.charge(sigs); err != nil {
+			return nil, err
+		}
+
 		sigv2s := make([]signing.SignatureData, len(sigs))
 		for i, mi := range multi.ModeInfos {
-			sigv2s[i], err = ModeInfoAndSigToSignatureData(mi, sigs[i])
+			sigv2s[i], err = modeInfoAndSigToSignatureData(mi, sigs[i], depth+1, budget)
 			if err != nil {
 				return nil, err
 			}

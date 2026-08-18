@@ -76,7 +76,6 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	)
 	require.NoError(err)
-	require.NoError(s.network.WaitForNextBlock())
 
 	// delegate 500 tokens to validator1
 	args := []string{
@@ -88,9 +87,15 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	}
 	cmd := stakingcli.NewDelegateCmd(clientCtx.InterfaceRegistry.SigningContext().ValidatorAddressCodec(), clientCtx.InterfaceRegistry.SigningContext().AddressCodec())
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	// The funding transaction above is broadcast in sync mode, so it has only
+	// reached the mempool once the command returns. Retry until it is committed,
+	// otherwise signing from newAddr fails while looking up its account number
+	// and sequence because the account does not exist on chain yet.
+	err = s.network.RetryForBlocks(func() error {
+		_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+		return err
+	}, 3)
 	require.NoError(err)
-	require.NoError(s.network.WaitForNextBlock())
 
 	// delegate 500 tokens to validator2
 	args = []string{
@@ -101,7 +106,12 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	}
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	// Likewise retry until the delegation above is committed, so that this
+	// transaction is signed with an up to date sequence number.
+	err = s.network.RetryForBlocks(func() error {
+		_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+		return err
+	}, 3)
 	require.NoError(err)
 
 	var out testutil.BufferWriter

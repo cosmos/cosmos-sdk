@@ -423,7 +423,8 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 // verifyUnorderedNonce verifies the unordered nonce of an unordered transaction.
 // This checks that:
 // 1. The unordered transaction's timeout timestamp is set.
-// 2. The unordered transaction's timeout timestamp is not in the past.
+// 2. The unordered transaction's timeout timestamp is strictly in the future, so that it
+// is never accepted in a block in which its nonce is pruned.
 // 3. The unordered transaction's timeout timestamp is not more than the max TTL.
 // 4. The unordered transaction's nonce has not been used previously.
 //
@@ -437,7 +438,10 @@ func (svd SigVerificationDecorator) verifyUnorderedNonce(ctx sdk.Context, unorde
 			"unordered transaction must have timeout_timestamp set",
 		)
 	}
-	if timeoutTimestamp.Before(blockTime) {
+	// Must stay in sync with AccountKeeper.RemoveExpiredUnorderedNonces, which prunes every
+	// nonce whose timeout is at or before the block time. Accepting a timeout equal to the
+	// block time would accept a tx in the very block its nonce is pruned, letting it replay.
+	if !timeoutTimestamp.After(blockTime) {
 		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"unordered transaction has a timeout_timestamp that has already passed",

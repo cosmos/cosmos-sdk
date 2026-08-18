@@ -28,19 +28,32 @@ jobs:
       - name: "Go vulnerability check"
         id: govuln
         run: |
+          # Known vulnerabilities that are accepted rather than fixed:
+          #   GO-2025-3443 - golang.org/x/crypto/ssh, pre-existing allowance
+          #   GO-2026-5932 - golang.org/x/crypto/openpgp, no fix exists as the
+          #                  package is unmaintained by design
+          ALLOWED_VULNS="GO-2025-3443 GO-2026-5932"
+
           # Run the vulnerability check and capture its output (ignoring non-zero exit codes)
           make vulncheck 2>&1 | tee govulncheck-output.txt || true
+
+          # Make sure govulncheck actually ran; otherwise an install or build failure
+          # would leave an empty report and pass this check vacuously.
+          if ! grep -qE 'No vulnerabilities found|Your code is affected by' govulncheck-output.txt; then
+            echo "govulncheck did not produce a report, see the output above; failing..."
+            exit 1
+          fi
 
           # Extract vulnerability identifiers from the output (e.g., GO-2025-3443)
           vulnerabilities=$(grep -o 'GO-[0-9]\{4\}-[0-9]\+' govulncheck-output.txt | sort | uniq)
           echo "Detected vulnerabilities: $vulnerabilities"
 
-          # Check if any vulnerability other than GO-2025-3443 exists
+          # Fail on any vulnerability that is not in the allow list above
           for vuln in $vulnerabilities; do
-            if [ "$vuln" != "GO-2025-3443" ]; then
-              echo "Found vulnerability $vuln, failing..."
-              exit 1
-            fi
+            case " $ALLOWED_VULNS " in
+              *" $vuln "*) ;;
+              *) echo "Found vulnerability $vuln, failing..."; exit 1 ;;
+            esac
           done
 
-          echo "Only known vulnerability (GO-2025-3443) present. Continuing."
+          echo "Only known vulnerabilities ($ALLOWED_VULNS) present. Continuing."

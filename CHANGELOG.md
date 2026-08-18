@@ -36,6 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## UNRELEASED
+
+### Breaking Changes
+
+* (deps) [#26721](https://github.com/cosmos/cosmos-sdk/pull/26721) Bump the minimum Go version to 1.25. `github.com/cosmos/ledger-cosmos-go` v1.0.1 declares `go 1.25`, which raises the SDK's own `go` directive from 1.23.2 to 1.25. Applications building against this release must upgrade their Go toolchain to 1.25 or later.
+
 ## [v0.53.8](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.8) - 2026-07-27
 
 ### Improvements

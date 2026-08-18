@@ -101,7 +101,7 @@ func (cms Store) SetTracer(w io.Writer) types.MultiStore {
 // be overwritten. It is implied that the caller should update the context when
 // necessary between tracing operations. It returns a modified MultiStore.
 //
-// The merged context is materialised into a fresh map rather than written into
+// The merged context is materialized into a fresh map rather than written into
 // cms.traceContext in place. Concurrent CacheMultiStore() callers iterate that
 // map via Clone() (see NewFromKVStore), so an in-place maps.Copy races with
 // them on shared references — exactly the failure mode #25841 captured.

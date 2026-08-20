@@ -36,6 +36,8 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
+* [#XXXX](https://github.com/cosmos/cosmos-sdk/pull/XXXX) Back up node `config.toml`/`app.toml` on `SetupChain` and restore them on `ResetChain`, so config edits made by one test no longer leak into later tests. Config edits must now be made after a reset — `ResetChain`, and `ModifyGenesisJSON` which resets internally, put the config files back to their post-setup state.
+
 ## [v1.3.0] - 2025-07-23
 
 * [#24962](https://github.com/cosmos/cosmos-sdk/pull/24962) Allow chain id to be configured via `--chain-id` flag.

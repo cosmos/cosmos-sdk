@@ -45,6 +45,9 @@ var (
 	DefaultGrpcPort      = 9090
 	DefaultP2PPort       = 16656
 	DefaultPprofPort     = 6060
+
+	// nodeConfigFiles are the per node config files backed up on setup and restored on reset
+	nodeConfigFiles = []string{"config.toml", "app.toml"}
 )
 
 type TestnetInitializer interface {
@@ -172,6 +175,13 @@ func (s *SystemUnderTest) SetupChain(initArgs ...string) {
 	src = filepath.Join(WorkDir, s.nodePath(0), "keyring-test")
 	dest = filepath.Join(WorkDir, s.outputDir, "keyring-test")
 	MustCopyFilesInDir(src, dest)
+	// backup node configs
+	s.withEachNodeHome(func(_ int, home string) {
+		for _, tomlFile := range nodeConfigFiles {
+			src := filepath.Join(WorkDir, home, "config", tomlFile)
+			MustCopyFile(src, src+".orig")
+		}
+	})
 }
 
 func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
@@ -724,13 +734,17 @@ func (s *SystemUnderTest) ResetDirtyChain(t *testing.T) {
 	}
 }
 
-// ResetChain stops and clears all nodes state via 'unsafe-reset-all'
+// ResetChain stops and clears all nodes state via 'unsafe-reset-all'.
+// Genesis, keyring and the node config files are restored to the state created on setup,
+// so any config edit a test needs must be made after the reset, not before. Note that
+// ModifyGenesisJSON resets the chain as well.
 func (s *SystemUnderTest) ResetChain(t *testing.T) {
 	t.Helper()
 	t.Log("Reset chain")
 	s.StopChain()
 	restoreOriginalGenesis(t, s)
 	restoreOriginalKeyring(t, s)
+	restoreOriginalConfigs(t, s)
 	s.resetBuffers()
 
 	// remove all additional nodes
@@ -1008,7 +1022,7 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 	allNodes := s.AllNodes(t)
 	node := allNodes[len(allNodes)-1]
 	// quick hack: copy config and overwrite by start params
-	for _, tomlFile := range []string{"config.toml", "app.toml"} {
+	for _, tomlFile := range nodeConfigFiles {
 		configFile := filepath.Join(configPath, tomlFile)
 		_ = os.Remove(configFile)
 		_ = MustCopyFile(filepath.Join(WorkDir, s.nodePath(0), "config", tomlFile), configFile)
@@ -1271,6 +1285,18 @@ func restoreOriginalGenesis(t *testing.T, s *SystemUnderTest) {
 	t.Helper()
 	src := filepath.Join(WorkDir, s.nodePath(0), "config", "genesis.json.orig")
 	s.setGenesis(t, src)
+}
+
+// restoreOriginalConfigs replaces the nodes config files by the ones created on setup, so
+// that per-test edits (pruning, block retention, ...) do not leak into later tests
+func restoreOriginalConfigs(t *testing.T, s *SystemUnderTest) {
+	t.Helper()
+	for i := 0; i < s.initialNodesCount; i++ {
+		for _, tomlFile := range nodeConfigFiles {
+			dest := filepath.Join(WorkDir, s.nodePath(i), "config", tomlFile)
+			MustCopyFile(dest+".orig", dest)
+		}
+	}
 }
 
 // restoreOriginalKeyring replaces test keyring with original

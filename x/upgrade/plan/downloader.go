@@ -48,7 +48,7 @@ func DownloadUpgrade(dstRoot, url, daemonName string) error {
 // If the archive contains /{daemonName} and not /bin/{daemonName}, then /{daemonName} will be moved to /bin/{daemonName}.
 // If this returns nil, the download was successful, and {dstDir}/bin/{daemonName} is a regular executable file.
 func downloadUpgradeAsArchive(dstDir, url, daemonName string) error {
-	err := getter.Get(dstDir, url)
+	err := newGetterClient(url, dstDir, true).Get()
 	if err != nil {
 		return err
 	}
@@ -142,8 +142,11 @@ func ValidateURL(urlStr string, mustChecksum bool) error {
 	return nil
 }
 
-// getFile downloads the given url into the provided directory.
-func getFile(url, dst string) error {
+// newGetterClient builds a go-getter client with the security options every
+// cosmovisor download must use: symlinks are disabled and the HTTP getter ignores
+// the X-Terraform-Get redirect header so a download server cannot point the fetch
+// at an arbitrary source. https://github.com/hashicorp/go-getter#security-options
+func newGetterClient(url, dst string, dir bool) *getter.Client {
 	httpGetter := &getter.HttpGetter{
 		Client:                cleanhttp.DefaultClient(),
 		XTerraformGetDisabled: true,
@@ -153,15 +156,18 @@ func getFile(url, dst string) error {
 	goGetterGetters["http"] = httpGetter
 	goGetterGetters["https"] = httpGetter
 
-	// https://github.com/hashicorp/go-getter#security-options
-	getterClient := &getter.Client{
+	return &getter.Client{
 		Ctx:             context.Background(),
 		DisableSymlinks: true,
 		Src:             url,
 		Dst:             dst,
 		Pwd:             dst,
+		Dir:             dir,
 		Getters:         goGetterGetters,
 	}
+}
 
-	return getterClient.Get()
+// getFile downloads the given url into the provided directory.
+func getFile(url, dst string) error {
+	return newGetterClient(url, dst, false).Get()
 }

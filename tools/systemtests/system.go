@@ -738,6 +738,8 @@ func (s *SystemUnderTest) ResetDirtyChain(t *testing.T) {
 // Genesis, keyring and the node config files are restored to the state created on setup,
 // so any config edit a test needs must be made after the reset, not before. Note that
 // ModifyGenesisJSON resets the chain as well.
+// Tests that relocate node data/state paths must clean the old paths themselves; supporting
+// those edits requires resetting both the active and restored paths.
 func (s *SystemUnderTest) ResetChain(t *testing.T) {
 	t.Helper()
 	t.Log("Reset chain")

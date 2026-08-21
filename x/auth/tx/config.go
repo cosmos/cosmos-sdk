@@ -55,6 +55,10 @@ type ConfigOptions struct {
 	JSONDecoder sdk.TxDecoder
 	// JSONEncoder is the encoder that will be used to encode json transactions.
 	JSONEncoder sdk.TxEncoder
+	// MultisigLimits bounds multisig decoding. If nil, DefaultMultisigLimits is used.
+	// These limits are consensus-relevant: every validator on a chain must use identical
+	// values, so they must not be derived from node-local configuration.
+	MultisigLimits *MultisigLimits
 }
 
 // DefaultSignModes are the default sign modes enabled for protobuf transactions.
@@ -161,14 +165,22 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 		jsonDecoder: configOptions.JSONDecoder,
 		jsonEncoder: configOptions.JSONEncoder,
 	}
+	multisigLimits := DefaultMultisigLimits()
+	if configOptions.MultisigLimits != nil {
+		multisigLimits = *configOptions.MultisigLimits
+		if err := multisigLimits.Validate(); err != nil {
+			return nil, err
+		}
+	}
+
 	if configOptions.ProtoDecoder == nil {
-		txConfig.decoder = DefaultTxDecoder(protoCodec)
+		txConfig.decoder = DefaultTxDecoderWithLimits(protoCodec, multisigLimits)
 	}
 	if configOptions.ProtoEncoder == nil {
 		txConfig.encoder = DefaultTxEncoder()
 	}
 	if configOptions.JSONDecoder == nil {
-		txConfig.jsonDecoder = DefaultJSONTxDecoder(protoCodec)
+		txConfig.jsonDecoder = DefaultJSONTxDecoderWithLimits(protoCodec, multisigLimits)
 	}
 	if configOptions.JSONEncoder == nil {
 		txConfig.jsonEncoder = DefaultJSONTxEncoder(protoCodec)

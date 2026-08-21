@@ -14,8 +14,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-// DefaultTxDecoder returns a default protobuf TxDecoder using the provided Marshaler.
+// DefaultTxDecoder returns a default protobuf TxDecoder using the provided Marshaler and
+// DefaultMultisigLimits.
 func DefaultTxDecoder(cdc codec.Codec) sdk.TxDecoder {
+	return DefaultTxDecoderWithLimits(cdc, DefaultMultisigLimits())
+}
+
+// DefaultTxDecoderWithLimits returns a default protobuf TxDecoder using the provided
+// Marshaler, applying the given limits when decoding multisig signatures.
+func DefaultTxDecoderWithLimits(cdc codec.Codec, limits MultisigLimits) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		// Make sure txBytes follow ADR-027.
 		err := rejectNonADR027TxRaw(txBytes)
@@ -74,12 +81,20 @@ func DefaultTxDecoder(cdc codec.Codec) sdk.TxDecoder {
 			authInfoBz:                   raw.AuthInfoBytes,
 			txBodyHasUnknownNonCriticals: txBodyHasUnknownNonCriticals,
 			cdc:                          cdc,
+			multisigLimits:               &limits,
 		}, nil
 	}
 }
 
-// DefaultJSONTxDecoder returns a default protobuf JSON TxDecoder using the provided Marshaler.
+// DefaultJSONTxDecoder returns a default protobuf JSON TxDecoder using the provided
+// Marshaler and DefaultMultisigLimits.
 func DefaultJSONTxDecoder(cdc codec.Codec) sdk.TxDecoder {
+	return DefaultJSONTxDecoderWithLimits(cdc, DefaultMultisigLimits())
+}
+
+// DefaultJSONTxDecoderWithLimits returns a default protobuf JSON TxDecoder using the
+// provided Marshaler, applying the given limits when decoding multisig signatures.
+func DefaultJSONTxDecoderWithLimits(cdc codec.Codec, limits MultisigLimits) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		var theTx tx.Tx
 		err := cdc.UnmarshalJSON(txBytes, &theTx)
@@ -88,8 +103,9 @@ func DefaultJSONTxDecoder(cdc codec.Codec) sdk.TxDecoder {
 		}
 
 		return &wrapper{
-			tx:  &theTx,
-			cdc: cdc,
+			tx:             &theTx,
+			cdc:            cdc,
+			multisigLimits: &limits,
 		}, nil
 	}
 }

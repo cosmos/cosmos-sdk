@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Breaking Changes
 
 * (x/auth) [#26672](https://github.com/cosmos/cosmos-sdk/pull/26672) An unordered transaction whose `timeout_timestamp` equals the block time is now rejected
+* (x/auth/tx) [#26753](https://github.com/cosmos/cosmos-sdk/pull/26753) Add `ConfigOptions.MultisigLimits` so applications can configure the bounds applied when decoding nested multisig signatures.
 
 ### Features
 

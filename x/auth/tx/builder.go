@@ -39,8 +39,21 @@ type wrapper struct {
 
 	txBodyHasUnknownNonCriticals bool
 
+	// multisigLimits bounds multisig decoding in GetSignaturesV2. Nil on wrappers built
+	// outside a decoder (client-side builders), which fall back to DefaultMultisigLimits.
+	multisigLimits *MultisigLimits
+
 	signers [][]byte
 	msgsV2  []protov2.Message
+}
+
+// limits returns the configured multisig limits, or the defaults if this wrapper was
+// built without them.
+func (w *wrapper) limits() MultisigLimits {
+	if w.multisigLimits == nil {
+		return DefaultMultisigLimits()
+	}
+	return *w.multisigLimits
 }
 
 var (
@@ -257,6 +270,7 @@ func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 			"expected %d signatures, got %d", n, len(sigs))
 	}
 	res := make([]signing.SignatureV2, n)
+	limits := w.limits()
 
 	for i, si := range signerInfos {
 		// handle nil signatures (in case of simulation)
@@ -266,7 +280,7 @@ func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 			}
 		} else {
 			var err error
-			sigData, err := ModeInfoAndSigToSignatureData(si.ModeInfo, sigs[i])
+			sigData, err := ModeInfoAndSigToSignatureDataWithLimits(si.ModeInfo, sigs[i], limits)
 			if err != nil {
 				return nil, err
 			}

@@ -4,6 +4,7 @@ package cosmovisor_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -567,4 +568,56 @@ func (b *buffer) Reset() {
 	b.m.Lock()
 	defer b.m.Unlock()
 	b.b.Reset()
+}
+
+// TestLaunchProcess_CheckPendingUpgradeFiresInsideRun pins that
+// Launcher.Run consults Launcher.CheckPendingUpgrade before launching the
+// subprocess. Pre-stages a data/upgrade-info.json pointing at chain2 while
+// the current symlink still points at genesis (the crash-restart scenario
+// the pre-startup check exists to recover from). If Run were to skip
+// CheckPendingUpgrade, the genesis "Genesis ..." script would launch and
+// the stdout assertion below would fail.
+func TestLaunchProcess_CheckPendingUpgradeFiresInsideRun(t *testing.T) {
+	cfg := prepareConfig(
+		t,
+		fmt.Sprintf("%s/%s", workDir, "testdata/validate"),
+		cosmovisor.Config{
+			Name:             "dummyd",
+			PollInterval:     15,
+			UnsafeSkipBackup: true,
+		},
+	)
+
+	// Sanity-check the precondition: current link starts on genesis.
+	currentBin, err := cfg.CurrentBin()
+	require.NoError(t, err)
+	rPath, err := filepath.EvalSymlinks(cfg.GenesisBin())
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
+
+	bz, err := json.Marshal(upgradetypes.Plan{Name: "chain2", Height: 49})
+	require.NoError(t, err)
+	require.NoError(t, os.MkdirAll(filepath.Dir(cfg.UpgradeInfoFilePath()), 0o755))
+	require.NoError(t, os.WriteFile(cfg.UpgradeInfoFilePath(), bz, 0o600))
+
+	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmosvisor")
+	launcher, err := cosmovisor.NewLauncher(logger, cfg)
+	require.NoError(t, err)
+
+	stdin, _ := os.Open(os.DevNull)
+	stdout, stderr := newBuffer(), newBuffer()
+
+	doUpgrade, err := launcher.Run([]string{"second", "run", "--verbose"}, stdin, stdout, stderr)
+	require.NoError(t, err)
+	require.False(t, doUpgrade)
+	require.Empty(t, stderr.String())
+	require.Equal(t, "Chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
+
+	// Current link now points at the upgrade binary — observable proof
+	// that CheckPendingUpgrade executed inside Run before subprocess launch.
+	currentBin, err = cfg.CurrentBin()
+	require.NoError(t, err)
+	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain2"))
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 }

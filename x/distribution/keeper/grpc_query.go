@@ -297,7 +297,11 @@ func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDel
 			}
 
 			delRewards = append(delRewards, types.NewDelegationDelegatorReward(del.GetValidatorAddr(), delReward))
-			total = total.Add(delReward...)
+			// WithdrawDelegationRewards truncates each delegation independently
+			// before sending coins. Sum those truncated amounts so Total matches
+			// what is actually claimable rather than the raw DecCoin sum.
+			truncated, _ := delReward.TruncateDecimal()
+			total = total.Add(sdk.NewDecCoinsFromCoins(truncated...)...)
 			return false
 		},
 	)

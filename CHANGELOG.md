@@ -50,6 +50,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (x/distribution) [#24406](https://github.com/cosmos/cosmos-sdk/issues/24406) `DelegationTotalRewards` `Total` now sums the truncated (claimable) reward of each delegation instead of the raw `DecCoins` sum.
+
 ### Deprecated
 
 ## [v0.55.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.55.0) - 2026-07-27

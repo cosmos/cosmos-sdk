@@ -36,6 +36,10 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* [#26387](https://github.com/cosmos/cosmos-sdk/pull/26387) Fix aliasing bug in `MinInt` and `MaxInt` — result no longer shares internal pointer with inputs.
+
 ## [math/v1.5.3](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.5.3) - 2025-04-04
 
 * [#24375](https://github.com/cosmos/cosmos-sdk/pull/24375) Remove GDA decimal type.  NOTE: the previous v1.5.x family releases have been retracted as they were released with broken features.  This release sets `math` to support everything in the `v1.4.x` family  with testing improvements and dependency bumps

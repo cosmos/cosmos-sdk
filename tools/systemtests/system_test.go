@@ -12,21 +12,16 @@ import (
 // file edited after setup is put back from its backup. The SetupChain/ResetChain wiring
 // around it needs a node binary and is exercised by the system test suites.
 func TestRestoreOriginalConfigs(t *testing.T) {
-	const (
-		outputDir  = "testnet"
-		project    = "simd"
-		nodesCount = 2
-	)
+	const nodesCount = 2
 
 	oldWorkDir := WorkDir
 	t.Cleanup(func() { WorkDir = oldWorkDir })
 	WorkDir = t.TempDir()
 
 	sut := &SystemUnderTest{
-		outputDir:         outputDir,
-		projectName:       project,
+		outputDir:         "testnet",
+		projectName:       "simd",
 		initialNodesCount: nodesCount,
-		nodesCount:        nodesCount,
 	}
 
 	// setup: pristine config plus the backup SetupChain takes

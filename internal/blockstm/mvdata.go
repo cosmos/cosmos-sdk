@@ -69,11 +69,6 @@ func (d *GMVData[V]) getIndex(ctx context.Context, key Key) *BitmapIndex {
 	return outer.Index
 }
 
-// getIndexOrDefault set a new tree atomically if not found.
-func (d *GMVData[V]) getIndexOrDefault(ctx context.Context, key Key) *BitmapIndex {
-	return d.index.GetOrDefault(ctx, indexEntry{Key: key}, (*indexEntry).Init).Index
-}
-
 // Consolidate returns wroteNewLocation
 func (d *GMVData[V]) Consolidate(ctx context.Context, version TxnVersion, writeSet *GMemDB[V]) bool {
 	start := instNow()
@@ -90,10 +85,12 @@ func (d *GMVData[V]) Consolidate(ctx context.Context, version TxnVersion, writeS
 		WriteSet:    writeSet,
 	})
 
+	var newIndexes []indexEntry
 	var wroteNewLocation bool
 	if prevData == nil {
+		newIndexes = make([]indexEntry, 0, writeSet.Len())
 		writeSet.Scan(func(key Key, _ V) bool {
-			d.setIndex(ctx, key, version.Index)
+			newIndexes = append(newIndexes, indexEntry{Key: key})
 			return true
 		})
 		wroteNewLocation = true
@@ -102,7 +99,7 @@ func (d *GMVData[V]) Consolidate(ctx context.Context, version TxnVersion, writeS
 		DiffMemDB(prevData.WriteSet, writeSet, func(key Key, is_new bool) bool {
 			if is_new {
 				// new key, add to index
-				d.setIndex(ctx, key, version.Index)
+				newIndexes = append(newIndexes, indexEntry{Key: key})
 				wroteNewLocation = true
 			} else {
 				// deleted key, delete from index
@@ -111,6 +108,7 @@ func (d *GMVData[V]) Consolidate(ctx context.Context, version TxnVersion, writeS
 			return true
 		})
 	}
+	d.setIndexes(ctx, newIndexes, version.Index)
 
 	return wroteNewLocation
 }
@@ -176,15 +174,32 @@ func (d *GMVData[V]) InitWithEstimates(ctx context.Context, txn TxnIndex, estima
 		WriteSet: writeSet,
 	})
 
-	for _, key := range estimates {
-		d.setIndex(ctx, key, txn)
-	}
+	indexes := make([]indexEntry, 0, writeSet.Len())
+	writeSet.Scan(func(key Key, _ V) bool {
+		indexes = append(indexes, indexEntry{Key: key})
+		return true
+	})
+	d.setIndexes(ctx, indexes, txn)
 }
 
-// setIndex adds txn to the key's bitmap index.
-func (d *GMVData[V]) setIndex(ctx context.Context, key Key, txn TxnIndex) {
-	idx := d.getIndexOrDefault(ctx, key)
-	idx.Set(txn)
+func (d *GMVData[V]) setIndexes(ctx context.Context, indexes []indexEntry, txn TxnIndex) {
+	if len(indexes) == 0 {
+		return
+	}
+	initIndex := func(entry *indexEntry) {
+		entry.Init()
+		entry.Index.Set(txn)
+	}
+	if len(indexes) == 1 {
+		entry := d.index.GetOrDefault(ctx, indexes[0], initIndex)
+		entry.Index.Set(txn)
+		return
+	}
+
+	indexes = d.index.BatchGetOrDefault(ctx, indexes, initIndex)
+	for _, entry := range indexes {
+		entry.Index.Set(txn)
+	}
 }
 
 // deleteIndex removes txn from the key's bitmap index.

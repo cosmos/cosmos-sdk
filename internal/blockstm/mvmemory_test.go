@@ -148,6 +148,21 @@ func TestMVMemoryRecord(t *testing.T) {
 	}
 }
 
+func TestMVMemoryViewUnregisteredStore(t *testing.T) {
+	ctx := context.Background()
+	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
+	storage := NewMultiMemDB(stores)
+	mv := NewMVMemory(1, stores, MultiStoreToStorage(storage, stores), NewScheduler(1))
+
+	view := mv.View(ctx, 0)
+	func() {
+		defer func() {
+			require.Equal(t, `Block-STM accessed unregistered store "bank"`, recover())
+		}()
+		view.GetKVStore(StoreKeyBank)
+	}()
+}
+
 func TestMVMemoryDelete(t *testing.T) {
 	ctx := context.Background()
 	nonceKey, balanceKey := []byte("nonce"), []byte("balance")

@@ -31,7 +31,16 @@ func (k *Keeper) EndBlocker(ctx sdk.Context) ([]abci.ValidatorUpdate, error) {
 	if ctx.BlockHeight() == 1 {
 		validateFeeRecipient()
 	}
-	return k.ReapValidatorUpdates(ctx), nil
+
+	updates, err := k.ReapValidatorUpdates(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := k.SetLastCommittedPower(ctx, updates); err != nil {
+		return nil, err
+	}
+
+	return updates, nil
 }
 
 // validateFeeRecipient panics if the ante handler's fee recipient is not set

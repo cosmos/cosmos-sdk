@@ -34,18 +34,18 @@ func TestMigrate(t *testing.T) {
 		k := &mockParamsKeeper{params: params}
 
 		require.NoError(t, Migrate(ctx, k))
-		require.Equal(t, sdk.NewCoin("uatom", types.DefaultKeyRotationFee.Amount), k.params.KeyRotationFee)
+		require.Equal(t, sdk.NewCoin("uatom", types.DefaultKeyRotationFeeAmount), k.params.KeyRotationFee)
 		require.NoError(t, k.params.Validate())
 	})
 
 	t.Run("preserves pre-existing key rotation fee", func(t *testing.T) {
 		params := types.DefaultParams()
 		params.BondDenom = "uatom"
-		params.KeyRotationFee = sdk.NewInt64Coin("oldfee", 42)
+		params.KeyRotationFee = sdk.NewInt64Coin("uatom", 42)
 		k := &mockParamsKeeper{params: params}
 
 		require.NoError(t, Migrate(ctx, k))
-		require.Equal(t, sdk.NewInt64Coin("oldfee", 42), k.params.KeyRotationFee)
+		require.Equal(t, sdk.NewInt64Coin("uatom", 42), k.params.KeyRotationFee)
 		require.NoError(t, k.params.Validate())
 	})
 

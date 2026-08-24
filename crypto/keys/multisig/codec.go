@@ -3,12 +3,14 @@ package multisig
 import (
 	"github.com/cometbft/cometbft/crypto/bls12381"
 	cmtmldsa65 "github.com/cometbft/cometbft/crypto/mldsa65"
+	cmtsecp256k1eth "github.com/cometbft/cometbft/crypto/secp256k1eth"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	bls12_381 "github.com/cosmos/cosmos-sdk/crypto/keys/bls12_381"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa65"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1eth"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -33,6 +35,8 @@ func init() {
 		bls12381.PubKeyName, nil)
 	AminoCdc.RegisterConcrete(&mldsa65.PubKey{},
 		cmtmldsa65.PubKeyName, nil)
+	AminoCdc.RegisterConcrete(&secp256k1eth.PubKey{},
+		cmtsecp256k1eth.PubKeyName, nil)
 	AminoCdc.RegisterConcrete(&LegacyAminoPubKey{},
 		PubKeyAminoRoute, nil)
 }

@@ -134,11 +134,10 @@ type consKeyRotationValidatorIndexes struct {
 }
 
 // consKeyRotationHistoryIndexes tracks rotation history entries that should
-// continue locking old consensus keys during the unbonding window.
+// continue locking old consensus keys while evidence for them is admissible.
 type consKeyRotationHistoryIndexes struct {
 	byValidatorAddress                 map[string]struct{}
-	byConsensusAddress                 map[string]struct{}
-	consensusAddressByValidatorAddress map[string]string
+	validatorAddressByConsensusAddress map[string]string
 }
 
 // buildGenesisValidatorIndex creates a lookup of validators listed in the
@@ -171,9 +170,9 @@ func buildGenesisValidatorIndex(data *types.GenesisState) (consKeyRotationValida
 	return indexes, nil
 }
 
-// validateConsKeyRotationHistory validates already applied rotations that are
-// still inside the unbonding window and returns the old consensus key locks
-// restored from genesis.
+// validateConsKeyRotationHistory validates already applied rotations whose old
+// keys still admit evidence and returns the old consensus key locks restored
+// from genesis.
 func validateConsKeyRotationHistory(
 	data *types.GenesisState,
 	validatorIndexes consKeyRotationValidatorIndexes,
@@ -181,9 +180,9 @@ func validateConsKeyRotationHistory(
 	history := data.GetConsensusKeyRotationHistory()
 	indexes := consKeyRotationHistoryIndexes{
 		byValidatorAddress:                 make(map[string]struct{}, len(history)),
-		byConsensusAddress:                 make(map[string]struct{}, len(history)),
-		consensusAddressByValidatorAddress: make(map[string]string, len(history)),
+		validatorAddressByConsensusAddress: make(map[string]string, len(history)),
 	}
+	gatedValidators := make(map[string]struct{}, len(history))
 
 	for _, h := range history {
 		// decode both addresses before using them as canonical map keys
@@ -192,24 +191,30 @@ func validateConsKeyRotationHistory(
 			return consKeyRotationHistoryIndexes{}, err
 		}
 
-		// a validator can only have one history record inside the unbonding
-		// window, and history is only valid for validators present in genesis
-		if _, found := indexes.byValidatorAddress[string(valAddr)]; found {
-			return consKeyRotationHistoryIndexes{}, fmt.Errorf("duplicate consensus key rotation history for validator %s", h.ValidatorAddress)
-		}
+		// history is only valid for validators present in genesis
 		if _, found := validatorIndexes.byValidatorAddress[string(valAddr)]; !found {
 			return consKeyRotationHistoryIndexes{}, fmt.Errorf("consensus key rotation history for unknown validator %s", h.ValidatorAddress)
 		}
 		indexes.byValidatorAddress[string(valAddr)] = struct{}{}
 
-		// a rotated-away consensus address can only be locked by one history
+		// a validator can hold one record per rotated away key that still
+		// admits evidence, but only one of them carries its re rotation gate
+		// maturity, since a validator can have only a single rotation in
+		// progress at a time
+		if !h.MaturityTime.IsZero() {
+			if _, found := gatedValidators[string(valAddr)]; found {
+				return consKeyRotationHistoryIndexes{}, fmt.Errorf("duplicate consensus key rotation maturity time for validator %s", h.ValidatorAddress)
+			}
+			gatedValidators[string(valAddr)] = struct{}{}
+		}
+
+		// a rotated away consensus address can only be locked by one history
 		// entry
 		consAddrKey := string(oldConsAddr)
-		if _, found := indexes.byConsensusAddress[consAddrKey]; found {
+		if _, found := indexes.validatorAddressByConsensusAddress[consAddrKey]; found {
 			return consKeyRotationHistoryIndexes{}, fmt.Errorf("duplicate consensus key rotation old consensus address %s", h.OldConsensusAddress)
 		}
-		indexes.byConsensusAddress[consAddrKey] = struct{}{}
-		indexes.consensusAddressByValidatorAddress[string(valAddr)] = consAddrKey
+		indexes.validatorAddressByConsensusAddress[consAddrKey] = string(valAddr)
 	}
 
 	return indexes, nil
@@ -257,7 +262,7 @@ func validatePendingConsKeyRotations(
 		if _, found := validatorIndexes.validatorAddressByConsensusAddress[newConsAddrKey]; found {
 			return fmt.Errorf("pending consensus key rotation for validator %s targets a live consensus key", rotation.ValidatorAddress)
 		}
-		if _, found := historyIndexes.byConsensusAddress[newConsAddrKey]; found {
+		if _, found := historyIndexes.validatorAddressByConsensusAddress[newConsAddrKey]; found {
 			return fmt.Errorf("pending consensus key rotation for validator %s targets a consensus key in rotation history", rotation.ValidatorAddress)
 		}
 		pendingNewConsAddrs[newConsAddrKey] = struct{}{}
@@ -266,7 +271,7 @@ func validatePendingConsKeyRotations(
 	// history can lock a live key only while that same validator has a pending
 	// rotation. Once the rotation has applied, the old key should no longer be
 	// live in the validator set.
-	for valAddr, historyConsAddr := range historyIndexes.consensusAddressByValidatorAddress {
+	for historyConsAddr, valAddr := range historyIndexes.validatorAddressByConsensusAddress {
 		liveValAddr, found := validatorIndexes.validatorAddressByConsensusAddress[historyConsAddr]
 		if !found {
 			continue

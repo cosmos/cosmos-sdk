@@ -70,14 +70,9 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 		return nil, err
 	}
 
-	var grants []*feegrant.Grant
-
-	_, pageRes, err := query.CollectionFilteredPaginate(c, q.FeeAllowance, req.Pagination,
-		func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (include bool, err error) {
-			grants = append(grants, &grant)
-			return true, nil
-		}, func(_ collections.Pair[sdk.AccAddress, sdk.AccAddress], value feegrant.Grant) (*feegrant.Grant, error) {
-			return &value, nil
+	grants, pageRes, err := query.CollectionPaginate(c, q.FeeAllowance, req.Pagination,
+		func(_ collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (*feegrant.Grant, error) {
+			return &grant, nil
 		}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.AccAddress](granteeAddr),
 	)
 	if err != nil {
@@ -98,15 +93,9 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 		return nil, err
 	}
 
-	var grants []*feegrant.Grant
-	_, pageRes, err := query.CollectionFilteredPaginate(c, q.FeeAllowance, req.Pagination,
-		func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (include bool, err error) {
-			if !sdk.AccAddress(granterAddr).Equals(key.K2()) {
-				return false, nil
-			}
-
-			grants = append(grants, &grant)
-			return true, nil
+	grants, pageRes, err := query.CollectionFilteredPaginate(c, q.FeeAllowance, req.Pagination,
+		func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], _ feegrant.Grant) (bool, error) {
+			return sdk.AccAddress(granterAddr).Equals(key.K2()), nil
 		},
 		func(_ collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (*feegrant.Grant, error) {
 			return &grant, nil

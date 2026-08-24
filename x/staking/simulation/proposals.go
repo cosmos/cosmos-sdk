@@ -41,6 +41,7 @@ func SimulateMsgUpdateParams(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) 
 
 	params := types.DefaultParams()
 	params.BondDenom = simtypes.RandStringOfLength(r, 10)
+	params.KeyRotationFee = sdk.NewCoin(params.BondDenom, types.DefaultKeyRotationFeeAmount)
 	params.HistoricalEntries = uint32(simtypes.RandIntBetween(r, 0, 1000))
 	params.MaxEntries = uint32(simtypes.RandIntBetween(r, 1, 1000))
 	params.MaxValidators = uint32(simtypes.RandIntBetween(r, 1, 1000))

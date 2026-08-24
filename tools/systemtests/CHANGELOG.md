@@ -36,7 +36,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
-* [#XXXX](https://github.com/cosmos/cosmos-sdk/pull/XXXX) Restore each node's `config.toml` and `app.toml` to their post-`SetupChain` state during `ResetChain`, preventing cross-test config leaks. Apply config edits after `ResetChain` or `ModifyGenesisJSON`, which resets internally.
+* [#26774](https://github.com/cosmos/cosmos-sdk/pull/26774) Restore each node's `config.toml` and `app.toml` to their post-`SetupChain` state during `ResetChain`, preventing cross-test config leaks. Apply config edits after `ResetChain` or `ModifyGenesisJSON`, which resets internally.
 
 ## [v1.3.0] - 2025-07-23
 

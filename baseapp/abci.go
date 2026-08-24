@@ -1160,7 +1160,7 @@ func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.R
 				Value:     bz,
 			}
 
-	case "version":
+		case "version":
 			return &abci.ResponseQuery{
 				Codespace: sdkerrors.RootCodespace,
 				Height:    req.Height,

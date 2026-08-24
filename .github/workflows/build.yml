@@ -21,7 +21,7 @@ jobs:
         go-arch: ["amd64", "arm64"] # drop 32 bit support for now (and maybe forever)
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: "go.mod"
       - name: install aarch64-gcc
@@ -56,7 +56,7 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: "go.mod"
           cache: true

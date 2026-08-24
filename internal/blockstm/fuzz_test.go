@@ -1,12 +1,14 @@
+//go:build blockstm_fuzz
+
 package blockstm
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"errors"
 	"fmt"
 	"math/rand"
-	"os"
 	"sort"
 	"sync"
 	"testing"
@@ -16,34 +18,9 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
-// This file contains a property-based / fuzz harness for the whole Block-STM
-// engine. The core oracle is the same one TestSTM uses: parallel execution of a
-// block must produce byte-identical state to sequential execution of the same
-// block. On top of that we assert parallel execution is itself deterministic
-// (two parallel runs agree), which is what catches scheduler-order-dependent
-// races that a single run can pass by luck.
-//
-// Transactions are descriptor-driven: each carries a generated read/write/delete
-// set over a bounded key universe, with written values derived from values read,
-// so a tx is a deterministic function of input state (keeping the oracle valid).
-// The per-field docs on txSpec describe the individual dimensions.
-//
-// Out of scope, because they do not exist at the internal/blockstm layer
-// (baseapp / VM-level concerns): SkipRest / block early termination, and block
-// gas limits / block cutting.
-//
-// These tests run real parallel execution and assert serializability. They are
-// gated behind RUN_BLOCKSTM_STRESS so the ordinary `go test` run cannot flake on
-// a scheduler that does not yet satisfy the property: until the
-// TryValidateNextVersion lost-update fix lands, parallel execution can violate
-// serializability nondeterministically. The nightly/active-fuzz job sets the
-// variable; once the fix is merged the gate can be dropped.
-func skipUnlessStress(tb testing.TB) {
-	tb.Helper()
-	if os.Getenv("RUN_BLOCKSTM_STRESS") == "" {
-		tb.Skip("set RUN_BLOCKSTM_STRESS=1 to run blockstm parallel-oracle tests (see fuzz_test.go header)")
-	}
-}
+// This fuzz harness compares sequential execution with two parallel executions
+// of the same block. Generated transactions derive their writes from values read
+// from a bounded key universe, keeping execution deterministic for the oracle.
 
 var (
 	fuzzStores   = map[storetypes.StoreKey]int{StoreKeyAuth: 0, StoreKeyBank: 1}
@@ -59,7 +36,7 @@ func fuzzKeyBytes(keyID int) []byte {
 	return []byte(fmt.Sprintf("k%06d", keyID))
 }
 
-// pre-write estimation variants: none, exact match, wrong keys, present but
+// Pre-write estimation variants: none, exact match, wrong keys, present but
 // empty output, and partial match.
 const (
 	estNone = iota
@@ -89,13 +66,8 @@ type txSpec struct {
 	// readOwnWrites makes the tx read back its own first write and increment it,
 	// exercising read-after-write within a single incarnation's view.
 	readOwnWrites bool
-	// dynamic makes the tx's read/write SETS depend on the value of a selector
-	// key (it executes branches[selector value % len]). Different incarnations
-	// read different selector values and so take different branches — the
-	// incarnation-dependent behavior aptos-core injects, kept oracle-safe by
-	// keying on read data rather than a raw incarnation counter. Directly
-	// stresses the changed-write-set-across-incarnations path (Consolidate /
-	// wroteNewPath) where the lost-update bug lived.
+	// dynamic selects a read/write set based on the current selector value,
+	// exercising transactions whose access sets can change across incarnations.
 	dynamic  bool
 	selector int
 	branches []branchSpec
@@ -121,8 +93,8 @@ func (r *byteReader) u8() int {
 	return int(b)
 }
 
-// intn returns a value in [0, n). Biased for large n, which is fine for a
-// generator — we only need coverage, not uniformity.
+// intn maps one input byte into [0, n). The fuzz generator calls this only with
+// n <= 256; uniform distribution is not required.
 func (r *byteReader) intn(n int) int {
 	if n <= 0 {
 		return 0
@@ -170,7 +142,7 @@ func genTxSpec(c chooser, universe, maxRW, iterMod int) txSpec {
 	if c.u8()%4 == 0 {
 		s.dynamic = true
 		s.selector = c.intn(universe)
-		nBranches := 2 + c.intn(2) // 2 or 3 alternative behaviors
+		nBranches := 2 + c.intn(2)
 		for b := 0; b < nBranches; b++ {
 			var br branchSpec
 			for j := 0; j <= c.intn(maxRW); j++ {
@@ -187,6 +159,8 @@ func genTxSpec(c chooser, universe, maxRW, iterMod int) txSpec {
 		s.estMode = estNone
 	}
 
+	normalizeEstimateMode(&s)
+
 	// estEmpty models "estimated to write, but produces no output": drop the
 	// write and delete sets (both are output), keeping the estimate below.
 	if s.estMode == estEmpty {
@@ -195,6 +169,16 @@ func genTxSpec(c chooser, universe, maxRW, iterMod int) txSpec {
 		s.deletes = nil
 	}
 	return s
+}
+
+func normalizeEstimateMode(s *txSpec) {
+	if s.estMode != estPartial {
+		return
+	}
+	footprint := uniqueKeyIDs(append(append([]int{}, s.writes...), s.deletes...))
+	if len(footprint) < 2 {
+		s.estMode = estMatch
+	}
 }
 
 func genBlock(c chooser, maxTxs, maxUniverse, maxExecutors int) (executors int, specs []txSpec, seed []int) {
@@ -240,8 +224,6 @@ func makeTx(txIdx int, s txSpec) Tx {
 		var sum uint64
 		reads, writes := s.reads, s.writes
 
-		// Dynamic: the branch (hence read/write set) is chosen by the selector's
-		// current value. See txSpec.dynamic.
 		if s.dynamic && len(s.branches) > 0 {
 			sk, _ := fuzzStoreOf(s.selector)
 			var sel uint64
@@ -260,16 +242,18 @@ func makeTx(txIdx int, s txSpec) Tx {
 			}
 		}
 
-		// range read: fold the whole auth store into the sum, adding a range
+		// Fold the whole auth store into the sum, adding a range
 		// dependency so any prior write to a scanned key invalidates this tx.
 		if s.iterate {
-			it := ms.GetKVStore(StoreKeyAuth).Iterator(nil, nil)
-			for ; it.Valid(); it.Next() {
-				if len(it.Value()) == 8 {
-					sum += binary.BigEndian.Uint64(it.Value())
+			func() {
+				it := ms.GetKVStore(StoreKeyAuth).Iterator(nil, nil)
+				defer it.Close()
+				for ; it.Valid(); it.Next() {
+					if len(it.Value()) == 8 {
+						sum += binary.BigEndian.Uint64(it.Value())
+					}
 				}
-			}
-			it.Close()
+			}()
 		}
 
 		val := sum + uint64(txIdx) + 1
@@ -321,9 +305,8 @@ func buildEstimates(specs []txSpec) []MultiLocations {
 
 	estimates := make([]MultiLocations, len(specs))
 	for i, s := range specs {
-		// A tx's write footprint is writes ∪ deletes (a delete is a tombstone
-		// write), so the estimate modes model it, not just writes.
-		footprint := append(append([]int{}, s.writes...), s.deletes...)
+		// Deletes also belong to the write footprint because they create tombstones.
+		footprint := uniqueKeyIDs(append(append([]int{}, s.writes...), s.deletes...))
 		var keyIDs []int
 		switch s.estMode {
 		case estNone:
@@ -341,6 +324,8 @@ func buildEstimates(specs []txSpec) []MultiLocations {
 			// a strict, non-empty subset requires at least 2 keys
 			if len(footprint) >= 2 {
 				keyIDs = footprint[:len(footprint)/2]
+			} else {
+				keyIDs = footprint
 			}
 		}
 		if len(keyIDs) == 0 {
@@ -349,6 +334,40 @@ func buildEstimates(specs []txSpec) []MultiLocations {
 		estimates[i] = locationsByStore(keyIDs)
 	}
 	return estimates
+}
+
+func TestBuildEstimatesPartialFallbackDeduplicatesKeys(t *testing.T) {
+	spec := txSpec{
+		writes:  []int{2, 2},
+		deletes: []int{2},
+		estMode: estPartial,
+	}
+	normalizeEstimateMode(&spec)
+	require.Equal(t, estMatch, spec.estMode)
+
+	estimates := buildEstimates([]txSpec{spec})
+
+	require.Len(t, estimates, 1)
+	require.Equal(t, Locations{Key(fuzzKeyBytes(2))}, estimates[0][0])
+	require.Equal(t, Locations{Key(fuzzKeyBytes(2))}, locationsByStore([]int{2, 2})[0])
+
+	bankLocations := locationsByStore([]int{3, 3})
+	require.Len(t, bankLocations, 1)
+	require.NotContains(t, bankLocations, 0)
+	require.Equal(t, Locations{Key(fuzzKeyBytes(3))}, bankLocations[1])
+}
+
+func uniqueKeyIDs(keyIDs []int) []int {
+	seen := make(map[int]struct{}, len(keyIDs))
+	unique := make([]int, 0, len(keyIDs))
+	for _, id := range keyIDs {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		unique = append(unique, id)
+	}
+	return unique
 }
 
 func locationsByStore(keyIDs []int) MultiLocations {
@@ -360,7 +379,13 @@ func locationsByStore(keyIDs []int) MultiLocations {
 	out := make(MultiLocations, len(byStore))
 	for si, keys := range byStore {
 		sort.Slice(keys, func(a, b int) bool { return string(keys[a]) < string(keys[b]) })
-		out[si] = keys
+		unique := keys[:0]
+		for _, key := range keys {
+			if len(unique) == 0 || !bytes.Equal(unique[len(unique)-1], key) {
+				unique = append(unique, key)
+			}
+		}
+		out[si] = unique
 	}
 	return out
 }
@@ -444,8 +469,6 @@ func checkInterrupt(t *testing.T, specs []txSpec, executors int, estimates []Mul
 }
 
 func FuzzBlockSTM(f *testing.F) {
-	skipUnlessStress(f)
-
 	// A few seeds spanning empty, tiny, and medium inputs.
 	f.Add([]byte{})
 	f.Add([]byte{1, 2, 3, 4, 5, 6, 7, 8})
@@ -468,10 +491,8 @@ func FuzzBlockSTM(f *testing.F) {
 }
 
 // TestBlockSTMRandomizedLarge exercises large blocks (up to a few thousand txs)
-// with fixed seeds for reproducibility. Gated behind RUN_BLOCKSTM_STRESS (see the
-// file header) and skipped in -short mode.
+// with fixed seeds for reproducibility. It is skipped in -short mode.
 func TestBlockSTMRandomizedLarge(t *testing.T) {
-	skipUnlessStress(t)
 	if testing.Short() {
 		t.Skip("skipping large randomized block-stm test in short mode")
 	}
@@ -485,9 +506,8 @@ func TestBlockSTMRandomizedLarge(t *testing.T) {
 
 			specs := make([]txSpec, numTxs)
 			for i := range specs {
-				// wider read/write sets (maxRW=6); iterate is rare here (1/32)
-				// since a full-store scan folded into a tx serializes it against
-				// all prior writes, which is expensive on thousand-tx blocks.
+				// Range scans are rare here because they conflict with prior writes
+				// to the scanned store and are expensive for large blocks.
 				specs[i] = genTxSpec(c, universe, 6, 32)
 			}
 			estimates := buildEstimates(specs)

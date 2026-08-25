@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/test-go/testify/require"
+	"github.com/stretchr/testify/require"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
@@ -155,12 +155,9 @@ func TestMVMemoryViewUnregisteredStore(t *testing.T) {
 	mv := NewMVMemory(1, stores, MultiStoreToStorage(storage, stores), NewScheduler(1))
 
 	view := mv.View(ctx, 0)
-	func() {
-		defer func() {
-			require.Equal(t, `Block-STM accessed unregistered store "bank"`, recover())
-		}()
+	require.PanicsWithValuef(t, `Block-STM accessed unregistered store "bank"`, func() {
 		view.GetKVStore(StoreKeyBank)
-	}()
+	}, "accessing an unregistered store should panic")
 }
 
 func TestMVMemoryDelete(t *testing.T) {

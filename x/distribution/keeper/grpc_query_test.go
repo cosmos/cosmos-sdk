@@ -379,7 +379,6 @@ func TestQueryDelegationTotalRewards(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
-	bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
@@ -427,7 +426,7 @@ func TestQueryDelegationTotalRewards(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
-	// 1.6 per validator: raw sum is 3.2, but each withdraw truncates to 1, so claimable is 2.
+	// 1.6 per validator: the raw sum is 3.2, but each withdrawal truncates to 1, so only 2 is claimable.
 	frac := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyMustNewDecFromStr("1.6")}}
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val0, frac))
 	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val1, frac))
@@ -453,25 +452,21 @@ func TestQueryDelegationTotalRewards(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("total matches sum of truncated claimable rewards", func(t *testing.T) {
+	t.Run("total is the raw sum and claimable is the per-delegation truncation", func(t *testing.T) {
 		resp, err := querier.DelegationTotalRewards(ctx, &disttypes.QueryDelegationTotalRewardsRequest{
 			DelegatorAddress: addr.String(),
 		})
 		require.NoError(t, err)
-		require.Len(t, resp.Rewards, 2)
 
-		rawTotal := sdk.DecCoins{}
-		var claimable sdk.DecCoins
+		require.Len(t, resp.Rewards, 2)
 		for _, r := range resp.Rewards {
 			require.True(t, r.Reward.Equal(frac), "per-delegation reward should stay full precision, got %s", r.Reward)
-			rawTotal = rawTotal.Add(r.Reward...)
-			truncated, _ := r.Reward.TruncateDecimal()
-			claimable = claimable.Add(sdk.NewDecCoinsFromCoins(truncated...)...)
 		}
 
-		require.True(t, rawTotal.Equal(sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyMustNewDecFromStr("3.2")}}))
-		require.True(t, claimable.Equal(sdk.NewDecCoins(sdk.NewDecCoin(sdk.DefaultBondDenom, math.NewInt(2)))))
-		require.True(t, resp.Total.Equal(claimable), "Total=%s want claimable=%s (not raw sum %s)", resp.Total, claimable, rawTotal)
-		require.False(t, resp.Total.Equal(rawTotal), "Total must not be the untruncated DecCoin sum")
+		wantTotal := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyMustNewDecFromStr("3.2")}}
+		require.True(t, resp.Total.Equal(wantTotal), "Total=%s want %s", resp.Total, wantTotal)
+
+		wantClaimable := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2))
+		require.True(t, resp.Claimable.Equal(wantClaimable), "Claimable=%s want %s", resp.Claimable, wantClaimable)
 	})
 }

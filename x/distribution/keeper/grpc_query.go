@@ -266,6 +266,7 @@ func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDel
 	}
 
 	total := sdk.DecCoins{}
+	claimable := sdk.Coins{}
 	var delRewards []types.DelegationDelegatorReward
 
 	delAdr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddress)
@@ -297,11 +298,12 @@ func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDel
 			}
 
 			delRewards = append(delRewards, types.NewDelegationDelegatorReward(del.GetValidatorAddr(), delReward))
-			// WithdrawDelegationRewards truncates each delegation independently
-			// before sending coins. Sum those truncated amounts so Total matches
-			// what is actually claimable rather than the raw DecCoin sum.
+			total = total.Add(delReward...)
+			// WithdrawDelegationRewards truncates each delegation independently before
+			// sending coins, so the claimable amount must be accumulated per delegation
+			// rather than truncated once at the end.
 			truncated, _ := delReward.TruncateDecimal()
-			total = total.Add(sdk.NewDecCoinsFromCoins(truncated...)...)
+			claimable = claimable.Add(truncated...)
 			return false
 		},
 	)
@@ -309,7 +311,7 @@ func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDel
 		return nil, err
 	}
 
-	return &types.QueryDelegationTotalRewardsResponse{Rewards: delRewards, Total: total}, nil
+	return &types.QueryDelegationTotalRewardsResponse{Rewards: delRewards, Total: total, Claimable: claimable}, nil
 }
 
 // DelegatorValidators queries the validators list of a delegator

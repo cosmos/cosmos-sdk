@@ -996,7 +996,7 @@ Example Output:
       "reward": [
         {
           "denom": "stake",
-          "amount": "1000000000000000"
+          "amount": "1500000000000000000"
         }
       ]
     }
@@ -1004,7 +1004,13 @@ Example Output:
   "total": [
     {
       "denom": "stake",
-      "amount": "1000000000000000"
+      "amount": "1500000000000000000"
+    }
+  ],
+  "claimable": [
+    {
+      "denom": "stake",
+      "amount": "1"
     }
   ]
 }

@@ -113,6 +113,8 @@ type mockSnapshotter struct {
 	announcedHeights map[int64]struct{}
 	prunedHeights    map[int64]struct{}
 	snapshotInterval uint64
+	snapshotStarted  chan struct{}
+	snapshotRelease  chan struct{}
 }
 
 func (m *mockSnapshotter) AnnounceSnapshotHeight(height int64) {
@@ -150,6 +152,10 @@ func (m *mockSnapshotter) Restore(
 }
 
 func (m *mockSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
+	if m.snapshotStarted != nil {
+		close(m.snapshotStarted)
+		<-m.snapshotRelease
+	}
 	for _, item := range m.items {
 		if err := snapshottypes.WriteExtensionPayload(protoWriter, item); err != nil {
 			return err
@@ -183,7 +189,9 @@ func (m *mockSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 
 var _ snapshottypes.Snapshotter = (*mockErrorSnapshotter)(nil)
 
-type mockErrorSnapshotter struct{}
+type mockErrorSnapshotter struct {
+	prunedHeights map[int64]struct{}
+}
 
 func (m *mockErrorSnapshotter) AnnounceSnapshotHeight(height int64) {
 }
@@ -207,6 +215,7 @@ func (m *mockErrorSnapshotter) SupportedFormats() []uint32 {
 }
 
 func (m *mockErrorSnapshotter) PruneSnapshotHeight(height int64) {
+	m.prunedHeights[height] = struct{}{}
 }
 
 func (m *mockErrorSnapshotter) GetSnapshotInterval() uint64 {

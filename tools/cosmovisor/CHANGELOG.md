@@ -36,6 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v1.7.3 - 2026-08-26
+
+### Improvements
+
+* [#26780](https://github.com/cosmos/cosmos-sdk/pull/26780) Publish prebuilt artifacts for the Go 1.26 compatibility fix introduced in v1.7.2; the v1.7.2 GitHub release contained no downloadable binaries.
+
 ## v1.7.2 - 2026-08-26
 
 ### Bug Fixes

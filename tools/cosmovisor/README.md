@@ -53,7 +53,7 @@ Release branches have the following format `release/cosmovisor/vA.B.x`, where A 
 
 ### Installation
 
-You can download Cosmovisor from the [GitHub releases](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv1.7.2).
+You can download Cosmovisor from the [GitHub releases](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv1.7.3).
 
 To install the latest version of `cosmovisor`, run the following command:
 
@@ -64,7 +64,7 @@ go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@latest
 To install a specific version, you can specify the version:
 
 ```shell
-go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.7.2
+go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.7.3
 ```
 
 Run `cosmovisor version` to check the cosmovisor version.

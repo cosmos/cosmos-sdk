@@ -2,6 +2,7 @@ project_name: cosmovisor
 
 release:
   disable: false
+  draft: true
   name_template: "{{.Tag}}"
 
 before:

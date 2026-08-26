@@ -206,6 +206,42 @@ type mockErrorSnapshotter struct {
 	canceledHeights map[int64]struct{}
 }
 
+type legacySnapshotter struct {
+	inner *mockSnapshotter
+}
+
+func (m *legacySnapshotter) AnnounceSnapshotHeight(height int64) {
+	m.inner.AnnounceSnapshotHeight(height)
+}
+
+func (m *legacySnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
+	return m.inner.Snapshot(height, protoWriter)
+}
+
+func (m *legacySnapshotter) Restore(height uint64, format uint32, protoReader protoio.Reader) (snapshottypes.SnapshotItem, error) {
+	return m.inner.Restore(height, format, protoReader)
+}
+
+func (m *legacySnapshotter) SnapshotFormat() uint32 {
+	return m.inner.SnapshotFormat()
+}
+
+func (m *legacySnapshotter) SupportedFormats() []uint32 {
+	return m.inner.SupportedFormats()
+}
+
+func (m *legacySnapshotter) PruneSnapshotHeight(height int64) {
+	m.inner.PruneSnapshotHeight(height)
+}
+
+func (m *legacySnapshotter) GetSnapshotInterval() uint64 {
+	return m.inner.GetSnapshotInterval()
+}
+
+func (m *legacySnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
+	m.inner.SetSnapshotInterval(snapshotInterval)
+}
+
 func (m *mockErrorSnapshotter) AnnounceSnapshotHeight(height int64) {
 }
 

@@ -294,6 +294,24 @@ func TestManager_CreateDoesNotPruneOnSnapshotSaveError(t *testing.T) {
 	require.True(t, didCancelHeight)
 }
 
+func TestManager_CreateNotifiesLegacySnapshotAnnouncer(t *testing.T) {
+	inner := &mockSnapshotter{
+		announcedHeights: make(map[int64]struct{}),
+		prunedHeights:    make(map[int64]struct{}),
+	}
+	snapshotter := &legacySnapshotter{inner: inner}
+	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
+	require.NoError(t, err)
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
+
+	_, err = manager.Create(1)
+	require.NoError(t, err)
+	_, announced := inner.announcedHeights[1]
+	require.True(t, announced)
+	_, pruned := inner.prunedHeights[1]
+	require.True(t, pruned)
+}
+
 type mockExtensionSnapshotter struct {
 	types.ExtensionSnapshotter
 	formats []uint32

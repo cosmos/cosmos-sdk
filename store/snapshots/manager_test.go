@@ -278,7 +278,10 @@ func TestManager_Restore(t *testing.T) {
 }
 
 func TestManager_CreateDoesNotPruneOnSnapshotSaveError(t *testing.T) {
-	snapshotter := &mockErrorSnapshotter{prunedHeights: make(map[int64]struct{})}
+	snapshotter := &mockErrorSnapshotter{
+		prunedHeights:   make(map[int64]struct{}),
+		canceledHeights: make(map[int64]struct{}),
+	}
 	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
 	require.NoError(t, err)
 	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
@@ -287,6 +290,8 @@ func TestManager_CreateDoesNotPruneOnSnapshotSaveError(t *testing.T) {
 	require.Error(t, err)
 	_, didPruneHeight := snapshotter.prunedHeights[1]
 	require.False(t, didPruneHeight)
+	_, didCancelHeight := snapshotter.canceledHeights[1]
+	require.True(t, didCancelHeight)
 }
 
 type mockExtensionSnapshotter struct {

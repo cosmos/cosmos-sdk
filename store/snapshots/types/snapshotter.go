@@ -10,6 +10,13 @@ type SnapshotAnnouncer interface {
 	AnnounceSnapshotHeight(height int64)
 }
 
+// SnapshotLifecycle coordinates snapshot start, completion, and failure.
+type SnapshotLifecycle interface {
+	StartSnapshot(height int64)
+	CompleteSnapshot(height int64)
+	FailSnapshot(height int64)
+}
+
 // Snapshotter is something that can create and restore snapshots, consisting of streamed binary
 // chunks - all of which must be read from the channel and closed. If an unsupported format is
 // given, it must return ErrUnknownFormat (possibly wrapped with fmt.Errorf).

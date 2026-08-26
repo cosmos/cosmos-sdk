@@ -121,6 +121,10 @@ func (m *mockSnapshotter) AnnounceSnapshotHeight(height int64) {
 	m.announcedHeights[height] = struct{}{}
 }
 
+func (m *mockSnapshotter) StartSnapshot(height int64) {
+	m.AnnounceSnapshotHeight(height)
+}
+
 func (m *mockSnapshotter) Restore(
 	height uint64, format uint32, protoReader protoio.Reader,
 ) (snapshottypes.SnapshotItem, error) {
@@ -179,6 +183,14 @@ func (m *mockSnapshotter) PruneSnapshotHeight(height int64) {
 	m.prunedHeights[height] = struct{}{}
 }
 
+func (m *mockSnapshotter) CompleteSnapshot(height int64) {
+	m.PruneSnapshotHeight(height)
+}
+
+func (m *mockSnapshotter) FailSnapshot(height int64) {
+	delete(m.announcedHeights, height)
+}
+
 func (m *mockSnapshotter) GetSnapshotInterval() uint64 {
 	return m.snapshotInterval
 }
@@ -190,10 +202,14 @@ func (m *mockSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 var _ snapshottypes.Snapshotter = (*mockErrorSnapshotter)(nil)
 
 type mockErrorSnapshotter struct {
-	prunedHeights map[int64]struct{}
+	prunedHeights   map[int64]struct{}
+	canceledHeights map[int64]struct{}
 }
 
 func (m *mockErrorSnapshotter) AnnounceSnapshotHeight(height int64) {
+}
+
+func (m *mockErrorSnapshotter) StartSnapshot(height int64) {
 }
 
 func (m *mockErrorSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
@@ -216,6 +232,14 @@ func (m *mockErrorSnapshotter) SupportedFormats() []uint32 {
 
 func (m *mockErrorSnapshotter) PruneSnapshotHeight(height int64) {
 	m.prunedHeights[height] = struct{}{}
+}
+
+func (m *mockErrorSnapshotter) CompleteSnapshot(height int64) {
+	m.PruneSnapshotHeight(height)
+}
+
+func (m *mockErrorSnapshotter) FailSnapshot(height int64) {
+	m.canceledHeights[height] = struct{}{}
 }
 
 func (m *mockErrorSnapshotter) GetSnapshotInterval() uint64 {
@@ -288,11 +312,23 @@ func (m *hungSnapshotter) AnnounceSnapshotHeight(height int64) {
 	m.announcedSnapHeights[height] = struct{}{}
 }
 
+func (m *hungSnapshotter) StartSnapshot(height int64) {
+	m.AnnounceSnapshotHeight(height)
+}
+
 func (m *hungSnapshotter) PruneSnapshotHeight(height int64) {
 	if _, ok := m.announcedSnapHeights[height]; !ok {
 		panic(fmt.Sprintf("snap height %d was not announced", height))
 	}
 	m.prunedHeights[height] = struct{}{}
+}
+
+func (m *hungSnapshotter) CompleteSnapshot(height int64) {
+	m.PruneSnapshotHeight(height)
+}
+
+func (m *hungSnapshotter) FailSnapshot(height int64) {
+	delete(m.announcedSnapHeights, height)
 }
 
 func (m *hungSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {

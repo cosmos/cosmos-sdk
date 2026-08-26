@@ -365,6 +365,21 @@ func (rs *Store) AnnounceSnapshotHeight(height int64) {
 	rs.pruningManager.AnnounceSnapshotHeight(height)
 }
 
+// StartSnapshot tracks a snapshot while it is being created.
+func (rs *Store) StartSnapshot(height int64) {
+	rs.pruningManager.StartSnapshot(height)
+}
+
+// CompleteSnapshot records a successfully completed snapshot.
+func (rs *Store) CompleteSnapshot(height int64) {
+	rs.pruningManager.CompleteSnapshot(height)
+}
+
+// FailSnapshot removes a failed snapshot from in-flight tracking.
+func (rs *Store) FailSnapshot(height int64) {
+	rs.pruningManager.FailSnapshot(height)
+}
+
 // SetInterBlockCache sets the Store's internal inter-block (persistent) cache.
 // When this is defined, all CommitKVStores will be wrapped with their respective
 // inter-block cache.

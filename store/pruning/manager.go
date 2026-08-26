@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"slices"
-	"sort"
 	"sync"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -22,15 +21,11 @@ type Manager struct {
 	logger           log.Logger
 	opts             types.PruningOptions
 	snapshotInterval uint64
-	// Snapshots are taken in a separate goroutine from the regular execution
-	// and can be delivered asynchronously via HandleSnapshotHeight.
-	// Therefore, we sync access to pruneSnapshotHeights, inflightSnapshotHeights and initFromStore with this mutex.
-	pruneSnapshotHeightsMx sync.RWMutex
-	// These are the heights that are multiples of snapshotInterval and kept for state sync snapshots.
-	// The heights are added to be pruned when a snapshot is complete.
-	pruneSnapshotHeights    []int64
-	inflightSnapshotHeights []int64
-	initFromStore           bool
+	// Snapshots are taken in a separate goroutine from regular execution.
+	pruneSnapshotHeightsMx  sync.RWMutex
+	completedSnapshotHeight int64
+	inflightSnapshotHeights map[int64]struct{}
+	loadedFromDisk          bool
 }
 
 // NegativeHeightsError is returned when a negative height is provided to the manager.
@@ -52,10 +47,10 @@ var pruneSnapshotHeightsKey = []byte("s/prunesnapshotheights")
 // by calling SetOptions.
 func NewManager(db dbm.DB, logger log.Logger) *Manager {
 	return &Manager{
-		db:                   db,
-		logger:               logger,
-		opts:                 types.NewPruningOptions(types.PruningNothing),
-		pruneSnapshotHeights: []int64{0}, // init with 0 block height
+		db:                      db,
+		logger:                  logger,
+		opts:                    types.NewPruningOptions(types.PruningNothing),
+		inflightSnapshotHeights: make(map[int64]struct{}),
 	}
 }
 
@@ -69,64 +64,62 @@ func (m *Manager) GetOptions() types.PruningOptions {
 	return m.opts
 }
 
-// AnnounceSnapshotHeight announces a new snapshot height for tracking and pruning.
-func (m *Manager) AnnounceSnapshotHeight(height int64) {
+// StartSnapshot tracks a snapshot while it is being created.
+func (m *Manager) StartSnapshot(height int64) {
 	if m.opts.GetPruningStrategy() == types.PruningNothing || height <= 0 {
 		return
 	}
 	m.pruneSnapshotHeightsMx.Lock()
 	defer m.pruneSnapshotHeightsMx.Unlock()
-	// called in ascending order so no sorting required
-	m.inflightSnapshotHeights = append(m.inflightSnapshotHeights, height)
+	m.inflightSnapshotHeights[height] = struct{}{}
+}
+
+// AnnounceSnapshotHeight is kept for compatibility with legacy callers.
+func (m *Manager) AnnounceSnapshotHeight(height int64) {
+	m.StartSnapshot(height)
+}
+
+// FailSnapshot removes a failed snapshot height from in-flight tracking.
+func (m *Manager) FailSnapshot(height int64) {
+	if m.opts.GetPruningStrategy() == types.PruningNothing || height <= 0 {
+		return
+	}
+	m.pruneSnapshotHeightsMx.Lock()
+	defer m.pruneSnapshotHeightsMx.Unlock()
+	delete(m.inflightSnapshotHeights, height)
 }
 
 // HandleSnapshotHeight persists the snapshot height to be pruned at the next appropriate
 // height defined by the pruning strategy. It flushes the update to disk and panics if the flush fails.
 // The input height must be greater than 0, and the pruning strategy must not be set to pruning nothing.
 // If either of these conditions is not met, this function does nothing.
-func (m *Manager) HandleSnapshotHeight(height int64) {
+func (m *Manager) CompleteSnapshot(height int64) {
 	if m.opts.GetPruningStrategy() == types.PruningNothing || height <= 0 {
 		return
 	}
 
-	m.logger.Debug("HandleSnapshotHeight", "height", height)
+	m.logger.Debug("CompleteSnapshot", "height", height)
 
 	m.pruneSnapshotHeightsMx.Lock()
 	defer m.pruneSnapshotHeightsMx.Unlock()
 
-	// remove from the in-flight list
-	if position := slices.Index(m.inflightSnapshotHeights, height); position != -1 {
-		m.inflightSnapshotHeights = append(m.inflightSnapshotHeights[:position], m.inflightSnapshotHeights[position+1:]...)
-	}
+	delete(m.inflightSnapshotHeights, height)
 
-	if m.initFromStore {
-		// drop the legacy state as it may belong to a different interval or an outdated snapshot
-		// that is not in sequence with the current one
-		m.pruneSnapshotHeights = m.pruneSnapshotHeights[1:]
-		m.initFromStore = false
+	if height > m.completedSnapshotHeight {
+		m.completedSnapshotHeight = height
 	}
-
-	m.pruneSnapshotHeights = append(m.pruneSnapshotHeights, height)
-	sort.Slice(m.pruneSnapshotHeights, func(i, j int) bool { return m.pruneSnapshotHeights[i] < m.pruneSnapshotHeights[j] })
-
-	// in-flight snapshots may land out of order due to the concurrent nature of the snapshotter.
-	// we need to detect them to prevent pruning their heights while the snapshots are still in progress.
-	k := 1
-	for ; k < len(m.pruneSnapshotHeights); k++ {
-		if m.pruneSnapshotHeights[k] != m.pruneSnapshotHeights[k-1]+int64(m.snapshotInterval) {
-			// gap detected, snapshot is in-flight
-			break
-		}
-	}
-	// compact the height list for the snapshots in sequence
-	// the last snapshot height is used to allow pruning up to the next interval height
-	m.pruneSnapshotHeights = m.pruneSnapshotHeights[k-1:]
+	m.loadedFromDisk = false
 
 	// flush the max height to store so that they are not lost if a crash happens.
 	// only the max height matters as there are no in-flight snapshots after a restart
-	if err := storePruningSnapshotHeight(m.db, slices.Max(m.pruneSnapshotHeights)); err != nil {
+	if err := storePruningSnapshotHeight(m.db, m.completedSnapshotHeight); err != nil {
 		panic(err)
 	}
+}
+
+// HandleSnapshotHeight is kept for compatibility with legacy callers.
+func (m *Manager) HandleSnapshotHeight(height int64) {
+	m.CompleteSnapshot(height)
 }
 
 // SetSnapshotInterval sets the interval at which the snapshots are taken.
@@ -155,22 +148,18 @@ func (m *Manager) GetPruningHeight(height int64) int64 {
 	m.pruneSnapshotHeightsMx.RLock()
 	defer m.pruneSnapshotHeightsMx.RUnlock()
 
-	if len(m.pruneSnapshotHeights) == 0 { // do not prune before an initial snapshot
-		return 0
-	}
-
-	// highest version based on completed snapshots
-	snHeight := m.pruneSnapshotHeights[0] - 1
-	if !m.initFromStore { // ensure non-legacy data
-		// with no inflight snapshots, we may prune up to the next snap interval -1
-		snHeight += int64(m.snapshotInterval)
+	completedLimit := m.completedSnapshotHeight - 1
+	if !m.loadedFromDisk {
+		completedLimit += int64(m.snapshotInterval)
 	}
 	if len(m.inflightSnapshotHeights) == 0 {
-		return min(snHeight, pruneHeight)
+		return min(completedLimit, pruneHeight)
 	}
-	// highest version based on started snapshots
-	inFlightHeight := m.inflightSnapshotHeights[0] - 1
-	return min(snHeight, pruneHeight, inFlightHeight)
+	inFlightHeight := int64(^uint64(0) >> 1)
+	for snapshotHeight := range m.inflightSnapshotHeights {
+		inFlightHeight = min(inFlightHeight, snapshotHeight-1)
+	}
+	return min(completedLimit, pruneHeight, inFlightHeight)
 }
 
 // LoadSnapshotHeights loads the snapshot heights from the database as a crash recovery.
@@ -191,8 +180,8 @@ func (m *Manager) LoadSnapshotHeights(db dbm.DB) error {
 	m.pruneSnapshotHeightsMx.Lock()
 	defer m.pruneSnapshotHeightsMx.Unlock()
 	// restore max only as there are no in-flight snapshots after a restart
-	m.pruneSnapshotHeights = []int64{slices.Max(loadedPruneSnapshotHeights)}
-	m.initFromStore = true
+	m.completedSnapshotHeight = slices.Max(loadedPruneSnapshotHeights)
+	m.loadedFromDisk = true
 	return nil
 }
 

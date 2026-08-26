@@ -8,8 +8,8 @@ require (
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/google/go-cmp v0.7.0
-	github.com/stretchr/testify v1.11.1
-	google.golang.org/protobuf v1.36.11
+	github.com/stretchr/testify v1.12.1
+	google.golang.org/protobuf v1.36.12
 	pgregory.net/rapid v1.3.0
 )
 
@@ -23,7 +23,6 @@ require (
 	github.com/cockroachdb/pebble v1.1.5 // indirect
 	github.com/cockroachdb/redact v1.1.8 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/getsentry/sentry-go v0.42.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -44,12 +43,12 @@ require (
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a // indirect
 	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 retract v1.0.0

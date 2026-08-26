@@ -36,6 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v1.7.2 - 2026-08-26
+
+### Bug Fixes
+
+* [#26778](https://github.com/cosmos/cosmos-sdk/pull/26778) Update `github.com/bytedance/sonic` to v1.15.1 to fix builds with Go 1.26 and later failing with `invalid reference to encoding/json.unquoteBytes`.
+
 ## v1.7.1 - 2025-01-12
 
 ### Bug Fixes

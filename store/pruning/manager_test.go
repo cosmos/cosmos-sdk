@@ -82,6 +82,21 @@ func TestSnapshotLifecycleRestartAndDuplicateCalls(t *testing.T) {
 	assert.Equal(t, int64(28), restarted.GetPruningHeight(30))
 }
 
+func TestCompleteSnapshotDoesNotPersistDuplicateOrLowerHeight(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	manager := NewManager(mock.NewMockDB(ctrl), log.NewNopLogger())
+	manager.SetOptions(types.NewPruningOptions(types.PruningEverything))
+	manager.completedSnapshotHeight = 10
+
+	manager.StartSnapshot(10)
+	manager.CompleteSnapshot(10)
+	manager.StartSnapshot(5)
+	manager.CompleteSnapshot(5)
+
+	assert.Empty(t, manager.inflightSnapshotHeights)
+	assert.Equal(t, int64(10), manager.completedSnapshotHeight)
+}
+
 func TestStrategies(t *testing.T) {
 	testcases := map[string]struct {
 		strategy         types.PruningOptions

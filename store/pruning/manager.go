@@ -102,10 +102,11 @@ func (m *Manager) CompleteSnapshot(height int64) {
 
 	delete(m.inflightSnapshotHeights, height)
 
-	if height > m.completedSnapshotHeight {
-		m.completedSnapshotHeight = height
-		m.loadedFromDisk = false
+	if height <= m.completedSnapshotHeight {
+		return
 	}
+	m.completedSnapshotHeight = height
+	m.loadedFromDisk = false
 
 	// flush the max height to store so that they are not lost if a crash happens.
 	// only the max height matters as there are no in-flight snapshots after a restart

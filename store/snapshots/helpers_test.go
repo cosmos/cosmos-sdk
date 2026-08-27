@@ -210,6 +210,10 @@ type legacySnapshotter struct {
 	inner *mockSnapshotter
 }
 
+type failingLegacySnapshotter struct {
+	*legacySnapshotter
+}
+
 func (m *legacySnapshotter) AnnounceSnapshotHeight(height int64) {
 	m.inner.AnnounceSnapshotHeight(height)
 }
@@ -240,6 +244,10 @@ func (m *legacySnapshotter) GetSnapshotInterval() uint64 {
 
 func (m *legacySnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 	m.inner.SetSnapshotInterval(snapshotInterval)
+}
+
+func (m *failingLegacySnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
+	return errors.New("mock snapshot error")
 }
 
 func (m *mockErrorSnapshotter) AnnounceSnapshotHeight(height int64) {

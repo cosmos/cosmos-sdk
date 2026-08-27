@@ -72,6 +72,14 @@ func TestSnapshotLifecycleRestartAndDuplicateCalls(t *testing.T) {
 	require.NoError(t, restarted.LoadSnapshotHeights(db))
 	assert.Empty(t, restarted.inflightSnapshotHeights)
 	assert.Equal(t, int64(9), restarted.GetPruningHeight(20))
+	restarted.CompleteSnapshot(10)
+	restarted.CompleteSnapshot(5)
+	assert.True(t, restarted.loadedFromDisk)
+	assert.Equal(t, int64(9), restarted.GetPruningHeight(20))
+	restarted.StartSnapshot(20)
+	restarted.CompleteSnapshot(20)
+	assert.False(t, restarted.loadedFromDisk)
+	assert.Equal(t, int64(28), restarted.GetPruningHeight(30))
 }
 
 func TestStrategies(t *testing.T) {

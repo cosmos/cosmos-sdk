@@ -312,6 +312,24 @@ func TestManager_CreateNotifiesLegacySnapshotAnnouncer(t *testing.T) {
 	require.True(t, pruned)
 }
 
+func TestManager_CreateDoesNotNotifyLegacySnapshotAnnouncerOnSaveError(t *testing.T) {
+	inner := &mockSnapshotter{
+		announcedHeights: make(map[int64]struct{}),
+		prunedHeights:    make(map[int64]struct{}),
+	}
+	snapshotter := &failingLegacySnapshotter{legacySnapshotter: &legacySnapshotter{inner: inner}}
+	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
+	require.NoError(t, err)
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
+
+	_, err = manager.Create(1)
+	require.Error(t, err)
+	_, announced := inner.announcedHeights[1]
+	require.False(t, announced)
+	_, pruned := inner.prunedHeights[1]
+	require.False(t, pruned)
+}
+
 type mockExtensionSnapshotter struct {
 	types.ExtensionSnapshotter
 	formats []uint32

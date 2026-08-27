@@ -194,8 +194,6 @@ func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 
 	if m.lifecycle != nil {
 		m.lifecycle.StartSnapshot(int64(height))
-	} else if m.announcer != nil {
-		m.announcer.AnnounceSnapshotHeight(int64(height))
 	}
 
 	// Spawn goroutine to generate snapshot chunks and pass their io.ReadClosers through a channel
@@ -213,6 +211,9 @@ func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 	if m.lifecycle != nil {
 		m.lifecycle.CompleteSnapshot(int64(height))
 	} else {
+		if m.announcer != nil {
+			m.announcer.AnnounceSnapshotHeight(int64(height))
+		}
 		m.multistore.PruneSnapshotHeight(int64(height))
 	}
 	return snapshot, nil

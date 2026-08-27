@@ -47,6 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (types) [#26729](https://github.com/cosmos/cosmos-sdk/pull/26729) Memoize `GetConfig`'s "hostname|binary|pid" registry-key fallback, which derived the executable path, hostname, and PID on every call.
+* (store) [#26782](https://github.com/cosmos/cosmos-sdk/pull/26782) Avoid concurrent access to random source
 
 ### Bug Fixes
 

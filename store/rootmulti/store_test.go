@@ -760,9 +760,10 @@ func TestMultiStore_PruningWithIntervalUpdates(t *testing.T) {
 					height := ms.Commit().Version
 					if height != 0 && snapshotInterval != 0 && uint64(height)%snapshotInterval == 0 {
 						ms.pruningManager.AnnounceSnapshotHeight(height)
+						delay := time.Duration(rnd.Int31n(int32(time.Millisecond)))
 						wg.Add(1)
 						go func() { // random completion order
-							time.Sleep(time.Duration(rnd.Int31n(int32(time.Millisecond))))
+							time.Sleep(delay)
 							ms.pruningManager.HandleSnapshotHeight(height)
 							wg.Done()
 						}()

@@ -51,3 +51,17 @@ func TestCacheMergeIteratorMemoizedSource(t *testing.T) {
 		})
 	}
 }
+
+func TestCacheMergeIteratorInvalidSourcePanics(t *testing.T) {
+	iter := &cacheMergeIterator[[]byte]{
+		valid:   true,
+		current: mergeIteratorSource(99),
+	}
+
+	require.Panics(t, func() {
+		iter.Key()
+	})
+	require.Panics(t, func() {
+		iter.Value()
+	})
+}

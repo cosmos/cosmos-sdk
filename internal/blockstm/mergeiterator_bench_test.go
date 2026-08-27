@@ -23,7 +23,7 @@ func BenchmarkCacheMergeIterator(b *testing.B) {
 					b.ReportAllocs()
 					b.SetBytes(int64(keyCount))
 					for b.Loop() {
-						var parentIter, cacheIter = parent.Iterator(nil, nil), cache.Iterator(nil, nil)
+						parentIter, cacheIter := parent.Iterator(nil, nil), cache.Iterator(nil, nil)
 						if !ascending {
 							parentIter = parent.ReverseIterator(nil, nil)
 							cacheIter = cache.ReverseIterator(nil, nil)

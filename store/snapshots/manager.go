@@ -40,7 +40,7 @@ type Manager struct {
 	// multistore is the store from which snapshots are taken.
 	multistore types.Snapshotter
 	lifecycle  types.SnapshotLifecycle
-	announcer  types.SnapshotAnnouncer
+	announcer  legacySnapshotAnnouncer
 	logger     log.Logger
 
 	mtx               sync.Mutex
@@ -49,6 +49,12 @@ type Manager struct {
 	chRestoreDone     <-chan restoreDone
 	restoreSnapshot   *types.Snapshot
 	restoreChunkIndex uint32
+}
+
+// legacySnapshotAnnouncer preserves compatibility with snapshotters that only
+// implement the pre-SnapshotLifecycle announcement method.
+type legacySnapshotAnnouncer interface {
+	AnnounceSnapshotHeight(height int64)
 }
 
 // operation represents a Manager operation. Only one operation can be in progress at a time.
@@ -80,10 +86,10 @@ func NewManager(store *Store, opts types.SnapshotOptions, multistore types.Snaps
 		extensions = map[string]types.ExtensionSnapshotter{}
 	}
 	var lifecycle types.SnapshotLifecycle
-	var announcer types.SnapshotAnnouncer
+	var announcer legacySnapshotAnnouncer
 	if v, ok := multistore.(types.SnapshotLifecycle); ok {
 		lifecycle = v
-	} else if v, ok := multistore.(types.SnapshotAnnouncer); ok {
+	} else if v, ok := multistore.(legacySnapshotAnnouncer); ok {
 		announcer = v
 	}
 	return &Manager{

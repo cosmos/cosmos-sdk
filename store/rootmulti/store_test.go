@@ -726,7 +726,7 @@ func TestMultiStore_PruningWithIntervalUpdates(t *testing.T) {
 				commitSnapN(30, 20)
 				ms.pruningManager.HandleSnapshotHeight(10)
 			},
-			expPruneHeight: 34, // completed checkpoint 30, capped by current height and keep recent
+			expPruneHeight: 34, // completed checkpoint 40, capped by current height and keep recent
 		},
 		"snap height sequential - snap interval decreased": {
 			do: func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64) {

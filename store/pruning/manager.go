@@ -89,10 +89,7 @@ func (m *Manager) FailSnapshot(height int64) {
 	delete(m.inflightSnapshotHeights, height)
 }
 
-// HandleSnapshotHeight persists the snapshot height to be pruned at the next appropriate
-// height defined by the pruning strategy. It flushes the update to disk and panics if the flush fails.
-// The input height must be greater than 0, and the pruning strategy must not be set to pruning nothing.
-// If either of these conditions is not met, this function does nothing.
+// CompleteSnapshot records a successfully completed snapshot height.
 func (m *Manager) CompleteSnapshot(height int64) {
 	if m.opts.GetPruningStrategy() == types.PruningNothing || height <= 0 {
 		return

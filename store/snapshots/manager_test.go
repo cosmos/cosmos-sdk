@@ -312,7 +312,7 @@ func TestManager_CreateNotifiesLegacySnapshotAnnouncer(t *testing.T) {
 	require.True(t, pruned)
 }
 
-func TestManager_CreateDoesNotNotifyLegacySnapshotAnnouncerOnSaveError(t *testing.T) {
+func TestManager_CreateCompletesLegacySnapshotAnnouncerOnSaveError(t *testing.T) {
 	inner := &mockSnapshotter{
 		announcedHeights: make(map[int64]struct{}),
 		prunedHeights:    make(map[int64]struct{}),
@@ -325,9 +325,9 @@ func TestManager_CreateDoesNotNotifyLegacySnapshotAnnouncerOnSaveError(t *testin
 	_, err = manager.Create(1)
 	require.Error(t, err)
 	_, announced := inner.announcedHeights[1]
-	require.False(t, announced)
+	require.True(t, announced)
 	_, pruned := inner.prunedHeights[1]
-	require.False(t, pruned)
+	require.True(t, pruned)
 }
 
 type mockExtensionSnapshotter struct {

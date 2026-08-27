@@ -37,6 +37,8 @@ func SetMinGasPrices(gasPricesStr string) func(*BaseApp) {
 }
 
 // SetQueryGasLimit returns an option that sets a gas limit for queries.
+// A value of 0 means unbounded — callers should prefer an explicit limit
+// to avoid DoS on public RPC endpoints.
 func SetQueryGasLimit(queryGasLimit uint64) func(*BaseApp) {
 	if queryGasLimit == 0 {
 		queryGasLimit = math.MaxUint64

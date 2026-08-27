@@ -93,3 +93,21 @@ func TestGenPrivKeyFromSeedWrongSize(t *testing.T) {
 	_, err := mldsa65.GenPrivKeyFromSeed(make([]byte, cmtmldsa65.SeedSize-1))
 	require.Error(t, err)
 }
+
+// TestAddressMatchesParsedKey pins the length-check + hash implementation of
+// Address() to the value the previous parse-then-hash implementation produced:
+// the cometbft PubKey parsed from the same bytes must yield the identical address.
+func TestAddressMatchesParsedKey(t *testing.T) {
+	priv, err := mldsa65.GenPrivKey()
+	require.NoError(t, err)
+	pub := priv.PubKey()
+
+	parsed, err := cmtmldsa65.NewPubKeyFromBytes(pub.Bytes())
+	require.NoError(t, err)
+	require.Equal(t, parsed.Address().Bytes(), pub.Address().Bytes())
+}
+
+func TestAddressPanicsOnWrongSize(t *testing.T) {
+	pub := mldsa65.PubKey{Key: make([]byte, cmtmldsa65.PubKeySize-1)}
+	require.Panics(t, func() { pub.Address() })
+}

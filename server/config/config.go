@@ -58,7 +58,9 @@ type BaseConfig struct {
 	MinGasPrices string `mapstructure:"minimum-gas-prices"`
 
 	// The maximum amount of gas a grpc/Rest query may consume.
-	// If set to 0, it is unbounded.
+	// If set to 0, it is unbounded. WARNING: the default is 0 (unbounded), which
+	// exposes public RPC nodes to DoS via expensive queries. Set an explicit limit
+	// for any node that serves untrusted clients.
 	QueryGasLimit uint64 `mapstructure:"query-gas-limit"`
 
 	// BlockExecutor selects the block transaction execution strategy.

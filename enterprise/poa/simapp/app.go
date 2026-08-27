@@ -247,7 +247,12 @@ func NewSimApp(
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		poa.NewAppModule(appCodec, app.POAKeeper, poa.WithSecp256k1Support()), // poa.WithSecp256k1Support() is an optional parameter to allow Secp256k1 keys as validators
+		poa.NewAppModule(
+			appCodec,
+			app.POAKeeper,
+			poa.WithSecp256k1Support(), // poa.WithSecp256k1Support() is an optional parameter to allow Secp256k1 keys as validators
+			poa.WithMlDsa65Support(),   // poa.WithMlDsa65Support() is an optional parameter to allow mldsa65 keys as validators
+		),
 	)
 
 	app.BasicModuleManager = module.NewBasicManagerFromManager(

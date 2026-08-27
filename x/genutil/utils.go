@@ -13,6 +13,7 @@ import (
 	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/crypto/mldsa65"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/cometbft/cometbft/crypto/secp256k1eth"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/privval"
 	"github.com/cosmos/go-bip39"
@@ -173,6 +174,12 @@ func generateValidatorPrivKey(keyType, mnemonic string) (cmtcrypto.PrivKey, erro
 			return secp256k1.GenPrivKey(), nil
 		}
 		return secp256k1.GenPrivKeySecp256k1(seed), nil
+
+	case secp256k1eth.KeyType:
+		if seed == nil {
+			return secp256k1eth.GenPrivKey(), nil
+		}
+		return secp256k1eth.GenPrivKeySecp256k1Eth(seed), nil
 
 	case bls12381.KeyType:
 		if seed == nil {

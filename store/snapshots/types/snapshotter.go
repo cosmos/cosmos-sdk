@@ -11,7 +11,8 @@ type SnapshotAnnouncer interface {
 	AnnounceSnapshotHeight(height int64)
 }
 
-// SnapshotLifecycle coordinates snapshot start, completion, and failure.
+// SnapshotLifecycle coordinates snapshot creation with pruning. Each StartSnapshot call is
+// followed by either CompleteSnapshot after the snapshot is saved or FailSnapshot on failure.
 type SnapshotLifecycle interface {
 	StartSnapshot(height int64)
 	CompleteSnapshot(height int64)

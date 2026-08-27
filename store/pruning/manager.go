@@ -22,8 +22,10 @@ type Manager struct {
 	opts             types.PruningOptions
 	snapshotInterval uint64
 	// Snapshots are taken in a separate goroutine from regular execution.
-	pruneSnapshotHeightsMx  sync.RWMutex
+	pruneSnapshotHeightsMx sync.RWMutex
+	// completedSnapshotHeight is the highest durably completed snapshot.
 	completedSnapshotHeight int64
+	// inflightSnapshotHeights is memory-only and contains snapshots without a terminal transition.
 	inflightSnapshotHeights map[int64]struct{}
 	loadedFromDisk          bool
 }
@@ -71,6 +73,9 @@ func (m *Manager) StartSnapshot(height int64) {
 	}
 	m.pruneSnapshotHeightsMx.Lock()
 	defer m.pruneSnapshotHeightsMx.Unlock()
+	if height <= m.completedSnapshotHeight {
+		return
+	}
 	m.inflightSnapshotHeights[height] = struct{}{}
 }
 
@@ -100,19 +105,20 @@ func (m *Manager) CompleteSnapshot(height int64) {
 	m.pruneSnapshotHeightsMx.Lock()
 	defer m.pruneSnapshotHeightsMx.Unlock()
 
-	delete(m.inflightSnapshotHeights, height)
-
 	if height <= m.completedSnapshotHeight {
+		delete(m.inflightSnapshotHeights, height)
 		return
 	}
-	m.completedSnapshotHeight = height
-	m.loadedFromDisk = false
 
 	// flush the max height to store so that they are not lost if a crash happens.
 	// only the max height matters as there are no in-flight snapshots after a restart
-	if err := storePruningSnapshotHeight(m.db, m.completedSnapshotHeight); err != nil {
+	if err := storePruningSnapshotHeight(m.db, height); err != nil {
 		panic(err)
 	}
+
+	m.completedSnapshotHeight = height
+	m.loadedFromDisk = false
+	delete(m.inflightSnapshotHeights, height)
 }
 
 // HandleSnapshotHeight is kept for compatibility with legacy callers.

@@ -82,6 +82,7 @@ var (
 	_ types.CommitMultiStore          = (*Store)(nil)
 	_ types.Queryable                 = (*Store)(nil)
 	_ snapshottypes.SnapshotAnnouncer = (*Store)(nil)
+	_ snapshottypes.SnapshotLifecycle = (*Store)(nil)
 )
 
 // NewStore returns a reference to a new Store object with the provided DB. The

@@ -143,6 +143,13 @@ type BaseApp struct {
 	// which informs CometBFT what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
 
+	// genesisEvents holds events emitted by genesis transactions during InitChain.
+	// InitChain has no response field through which these events can be returned.
+	// They are therefore carried forward and included in the first
+	// ResponseFinalizeBlock. The events are cleared after a successful
+	// FinalizeBlock at the initial height.
+	genesisEvents []abci.Event
+
 	// streamingManager for managing instances and configuration of ABCIListener services
 	streamingManager storetypes.StreamingManager
 

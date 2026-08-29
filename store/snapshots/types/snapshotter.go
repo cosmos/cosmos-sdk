@@ -5,8 +5,6 @@ import (
 )
 
 // SnapshotAnnouncer defines an interface for announcing snapshot initiation at a specified height.
-//
-// Deprecated: implement SnapshotLifecycle to coordinate snapshot start, completion, and failure.
 type SnapshotAnnouncer interface {
 	// AnnounceSnapshotHeight informs the underlying system of a snapshot being initiated at a given height.
 	AnnounceSnapshotHeight(height int64)

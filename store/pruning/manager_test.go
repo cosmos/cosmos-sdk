@@ -29,7 +29,7 @@ func TestFailSnapshot(t *testing.T) {
 	manager := NewManager(db.NewMemDB(), log.NewNopLogger())
 	manager.SetOptions(types.NewCustomPruningOptions(10, 1))
 	manager.SetSnapshotInterval(10)
-	manager.AnnounceSnapshotHeight(10)
+	manager.StartSnapshot(10)
 	manager.FailSnapshot(10)
 	manager.FailSnapshot(10)
 
@@ -229,7 +229,7 @@ func TestStrategies(t *testing.T) {
 				if tc.snapshotInterval != 0 {
 					if curHeight > int64(tc.snapshotInterval) && curHeight%int64(tc.snapshotInterval) == int64(tc.snapshotInterval)-1 {
 						snapHeight := curHeight - int64(tc.snapshotInterval) + 1
-						manager.AnnounceSnapshotHeight(snapHeight)
+						manager.StartSnapshot(snapHeight)
 						manager.HandleSnapshotHeight(snapHeight)
 						snHeight = curHeight
 					}
@@ -338,7 +338,7 @@ func TestGetPruningHeight(t *testing.T) {
 			opts:        types.PruningOptions{KeepRecent: 5, Interval: 10, Strategy: types.PruningCustom},
 			setup: func(mgr *Manager) {
 				mgr.SetSnapshotInterval(15)
-				mgr.AnnounceSnapshotHeight(15)
+				mgr.StartSnapshot(15)
 				mgr.HandleSnapshotHeight(15)
 			},
 			exp: map[int64]int64{
@@ -354,7 +354,7 @@ func TestGetPruningHeight(t *testing.T) {
 			opts:        types.PruningOptions{KeepRecent: 5, Interval: 10, Strategy: types.PruningCustom},
 			setup: func(mgr *Manager) {
 				mgr.SetSnapshotInterval(15)
-				mgr.AnnounceSnapshotHeight(15)
+				mgr.StartSnapshot(15)
 			},
 			exp: map[int64]int64{
 				10: 4, // 10 - 5 (keep) - 1
@@ -366,8 +366,8 @@ func TestGetPruningHeight(t *testing.T) {
 			opts:        types.PruningOptions{KeepRecent: 5, Interval: 10, Strategy: types.PruningCustom},
 			setup: func(mgr *Manager) {
 				mgr.SetSnapshotInterval(15)
-				mgr.AnnounceSnapshotHeight(15)
-				mgr.AnnounceSnapshotHeight(30)
+				mgr.StartSnapshot(15)
+				mgr.StartSnapshot(30)
 				mgr.HandleSnapshotHeight(30)
 			},
 			exp: map[int64]int64{

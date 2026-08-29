@@ -79,7 +79,7 @@ func (m *Manager) StartSnapshot(height int64) {
 	m.inflightSnapshotHeights[height] = struct{}{}
 }
 
-// AnnounceSnapshotHeight is kept for compatibility with legacy callers.
+// AnnounceSnapshotHeight announces a new snapshot height for tracking and pruning.
 func (m *Manager) AnnounceSnapshotHeight(height int64) {
 	m.StartSnapshot(height)
 }

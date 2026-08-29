@@ -40,7 +40,6 @@ type Manager struct {
 	// multistore is the store from which snapshots are taken.
 	multistore types.Snapshotter
 	lifecycle  types.SnapshotLifecycle
-	announcer  legacySnapshotAnnouncer
 	logger     log.Logger
 
 	mtx               sync.Mutex
@@ -49,12 +48,6 @@ type Manager struct {
 	chRestoreDone     <-chan restoreDone
 	restoreSnapshot   *types.Snapshot
 	restoreChunkIndex uint32
-}
-
-// legacySnapshotAnnouncer preserves compatibility with snapshotters that only
-// implement the pre-SnapshotLifecycle announcement method.
-type legacySnapshotAnnouncer interface {
-	AnnounceSnapshotHeight(height int64)
 }
 
 // operation represents a Manager operation. Only one operation can be in progress at a time.
@@ -86,18 +79,14 @@ func NewManager(store *Store, opts types.SnapshotOptions, multistore types.Snaps
 		extensions = map[string]types.ExtensionSnapshotter{}
 	}
 	var lifecycle types.SnapshotLifecycle
-	var announcer legacySnapshotAnnouncer
 	if v, ok := multistore.(types.SnapshotLifecycle); ok {
 		lifecycle = v
-	} else if v, ok := multistore.(legacySnapshotAnnouncer); ok {
-		announcer = v
 	}
 	return &Manager{
 		store:      store,
 		opts:       opts,
 		multistore: multistore,
 		lifecycle:  lifecycle,
-		announcer:  announcer,
 		extensions: extensions,
 		logger:     logger,
 	}
@@ -200,8 +189,6 @@ func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 
 	if m.lifecycle != nil {
 		m.lifecycle.StartSnapshot(int64(height))
-	} else if m.announcer != nil {
-		m.announcer.AnnounceSnapshotHeight(int64(height))
 	}
 
 	// Spawn goroutine to generate snapshot chunks and pass their io.ReadClosers through a channel
@@ -212,8 +199,6 @@ func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 	if err != nil {
 		if m.lifecycle != nil {
 			m.lifecycle.FailSnapshot(int64(height))
-		} else if m.announcer != nil {
-			m.multistore.PruneSnapshotHeight(int64(height))
 		}
 		return nil, err
 	}

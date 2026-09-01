@@ -240,7 +240,7 @@ func (k *Keeper) ReapValidatorUpdates(ctx sdk.Context) ([]abci.ValidatorUpdate, 
 			return nil, err
 		}
 		if !committed {
-			// comet doesnt know about this pubkey, and we are setting it to 0
+			// comet doesn't know about this pubkey, and we are setting it to 0
 			// with this update (i.e. a delete), this is an invalid operation
 			// so we drop it (the pubkey is __already__ at zero power in
 			// comet's eyes).

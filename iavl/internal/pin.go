@@ -23,7 +23,7 @@ package internal
 // active users there are of a particular memory-mapped region.
 type Pin interface {
 	// Unpin releases the Pin, allowing the underlying memory to be unmapped.
-	// Implementors should ensure that Unpin() is idempotent and only unpins the
+	// Implementers should ensure that Unpin() is idempotent and only unpins the
 	// memory once even if called multiple times.
 	Unpin()
 }

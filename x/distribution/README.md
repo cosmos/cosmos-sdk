@@ -660,6 +660,9 @@ rewards:
 total:
 - amount: "1000000.000000000000000000"
   denom: stake
+claimable:
+- amount: "1000000"
+  denom: stake
 ```
 
 ##### slashes

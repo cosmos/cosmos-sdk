@@ -621,8 +621,8 @@ func (app *BaseApp) getBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
 }
 
 func (app *BaseApp) getContextForTx(mode sdk.ExecMode, txBytes []byte, txIndex int) sdk.Context {
-	app.mu.Lock()
-	defer app.mu.Unlock()
+	app.mu.RLock()
+	defer app.mu.RUnlock()
 
 	modeState := app.stateManager.GetState(mode)
 	if modeState == nil {

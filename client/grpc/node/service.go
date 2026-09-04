@@ -20,6 +20,7 @@ func RegisterNodeService(clientCtx client.Context, server gogogrpc.Server, cfg c
 // on the given mux object.
 func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.ServeMux) {
 	_ = RegisterServiceHandlerClient(context.Background(), mux, NewServiceClient(clientConn))
+	_ = RegisterLogsServiceHandlerClient(context.Background(), mux, NewLogsServiceClient(clientConn))
 }
 
 var _ ServiceServer = queryServer{}

@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (x/distribution) [#26749](https://github.com/cosmos/cosmos-sdk/pull/26749) Add a `claimable` field to `QueryDelegationTotalRewardsResponse`, reporting the withdrawable amount as `sdk.Coins` by truncating each delegation reward the way `Msg/WithdrawDelegatorReward` does. `total` keeps its documented meaning as the raw `DecCoins` sum ([#24406](https://github.com/cosmos/cosmos-sdk/issues/24406)).
+* (server) [#26803](https://github.com/cosmos/cosmos-sdk/pull/26803) Add per-block application log capture, off by default. Set `[block-logs] retain-blocks` in `app.toml` to keep the application log of the last N blocks under `data/block-logs/<height>.jsonl` (every level, regardless of `log_level`) and query it with the new `cosmos.base.node.v1beta1.LogsService/Logs` gRPC method or `GET /cosmos/base/node/v1beta1/logs`. The capture is a pure passthrough on the application logger (`server/blocklog`) and never touches state; the query is served directly by the gRPC server, not over ABCI Query.
 
 ### Improvements
 

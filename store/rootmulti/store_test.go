@@ -726,7 +726,7 @@ func TestMultiStore_PruningWithIntervalUpdates(t *testing.T) {
 				commitSnapN(30, 20)
 				ms.pruningManager.HandleSnapshotHeight(10)
 			},
-			expPruneHeight: 29, // 10 (legacy state not cleared) + 20 - 1
+			expPruneHeight: 34, // completed checkpoint 40, capped by current height and keep recent
 		},
 		"snap height sequential - snap interval decreased": {
 			do: func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64) {
@@ -759,7 +759,7 @@ func TestMultiStore_PruningWithIntervalUpdates(t *testing.T) {
 				for range n {
 					height := ms.Commit().Version
 					if height != 0 && snapshotInterval != 0 && uint64(height)%snapshotInterval == 0 {
-						ms.pruningManager.AnnounceSnapshotHeight(height)
+						ms.pruningManager.StartSnapshot(height)
 						wg.Add(1)
 						go func() { // random completion order
 							time.Sleep(time.Duration(rnd.Int31n(int32(time.Millisecond))))

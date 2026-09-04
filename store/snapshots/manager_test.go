@@ -88,7 +88,7 @@ func TestManager_Take(t *testing.T) {
 	_, err = manager.Create(3)
 	require.Error(t, err)
 	_, didPruneHeight := snapshotter.prunedHeights[3]
-	require.True(t, didPruneHeight)
+	require.False(t, didPruneHeight)
 
 	// creating a snapshot at a higher height should be fine, and should return it
 	snapshot, err := manager.Create(5)
@@ -115,6 +115,33 @@ func TestManager_Take(t *testing.T) {
 	manager = setupBusyManager(t)
 	_, err = manager.Create(9)
 	require.Error(t, err)
+}
+
+func TestManager_CreateDoesNotPruneWhenSnapshotIsBusy(t *testing.T) {
+	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
+	require.NoError(t, err)
+	snapshotter := &mockSnapshotter{
+		announcedHeights: make(map[int64]struct{}),
+		prunedHeights:    make(map[int64]struct{}),
+		snapshotStarted:  make(chan struct{}),
+		snapshotRelease:  make(chan struct{}),
+	}
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
+
+	createDone := make(chan error, 1)
+	go func() {
+		_, createErr := manager.Create(1)
+		createDone <- createErr
+	}()
+	<-snapshotter.snapshotStarted
+
+	_, err = manager.Create(2)
+	require.Error(t, err)
+	_, didPruneHeight := snapshotter.prunedHeights[2]
+	require.False(t, didPruneHeight)
+
+	close(snapshotter.snapshotRelease)
+	require.NoError(t, <-createDone)
 }
 
 func TestManager_Prune(t *testing.T) {
@@ -195,7 +222,7 @@ func TestManager_Restore(t *testing.T) {
 	_, err = manager.Create(4)
 	require.Error(t, err)
 	_, didPruneHeight := target.prunedHeights[4]
-	require.True(t, didPruneHeight)
+	require.False(t, didPruneHeight)
 
 	_, err = manager.Prune(1)
 	require.Error(t, err)
@@ -250,14 +277,39 @@ func TestManager_Restore(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestManager_TakeError(t *testing.T) {
-	snapshotter := &mockErrorSnapshotter{}
+func TestManager_CreateDoesNotPruneOnSnapshotSaveError(t *testing.T) {
+	snapshotter := &mockErrorSnapshotter{
+		prunedHeights:   make(map[int64]struct{}),
+		canceledHeights: make(map[int64]struct{}),
+	}
 	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
 	require.NoError(t, err)
 	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
 
 	_, err = manager.Create(1)
 	require.Error(t, err)
+	_, didPruneHeight := snapshotter.prunedHeights[1]
+	require.False(t, didPruneHeight)
+	_, didCancelHeight := snapshotter.canceledHeights[1]
+	require.True(t, didCancelHeight)
+}
+
+func TestManager_CreatePrunesWithoutSnapshotLifecycle(t *testing.T) {
+	inner := &mockSnapshotter{
+		announcedHeights: make(map[int64]struct{}),
+		prunedHeights:    make(map[int64]struct{}),
+	}
+	snapshotter := &snapshotterWithoutLifecycle{
+		Snapshotter:   inner,
+		prunedHeights: make(map[int64]struct{}),
+	}
+	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
+	require.NoError(t, err)
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
+
+	_, err = manager.Create(1)
+	require.NoError(t, err)
+	require.Contains(t, snapshotter.prunedHeights, int64(1))
 }
 
 type mockExtensionSnapshotter struct {

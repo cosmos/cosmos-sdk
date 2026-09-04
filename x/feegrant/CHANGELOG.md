@@ -28,6 +28,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * [#24134](https://github.com/cosmos/cosmos-sdk/pull/24134) Add validation to prevent duplicate fee grants in genesis state.
+* [#26537](https://github.com/cosmos/cosmos-sdk/pull/26537) Reject a non-positive `Period` in `PeriodicAllowance.ValidateBasic`; a zero period made `tryResetPeriod` refill the spend limit on every `Accept`, bypassing the per-period cap.
 
 ## [v0.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/feegrant/v0.2.0) - 2025-04-24
 

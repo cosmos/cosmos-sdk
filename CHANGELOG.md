@@ -44,6 +44,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (x/distribution) [#26749](https://github.com/cosmos/cosmos-sdk/pull/26749) Add a `claimable` field to `QueryDelegationTotalRewardsResponse`, reporting the withdrawable amount as `sdk.Coins` by truncating each delegation reward the way `Msg/WithdrawDelegatorReward` does. `total` keeps its documented meaning as the raw `DecCoins` sum ([#24406](https://github.com/cosmos/cosmos-sdk/issues/24406)).
+
 ### Improvements
 
 * (types) [#26729](https://github.com/cosmos/cosmos-sdk/pull/26729) Memoize `GetConfig`'s "hostname|binary|pid" registry-key fallback, which derived the executable path, hostname, and PID on every call.

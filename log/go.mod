@@ -3,7 +3,7 @@ module cosmossdk.io/log/v2
 go 1.26.6
 
 require (
-	github.com/bytedance/sonic v1.15.2
+	github.com/bytedance/sonic v1.15.3
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.35.1
 	go.opentelemetry.io/otel/trace v1.46.0
@@ -11,7 +11,7 @@ require (
 
 require (
 	github.com/bytedance/gopkg v0.1.4 // indirect
-	github.com/bytedance/sonic/loader v0.5.1 // indirect
+	github.com/bytedance/sonic/loader v0.5.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect

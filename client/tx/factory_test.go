@@ -14,8 +14,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestFactoryPrepare(t *testing.T) {
@@ -123,8 +126,93 @@ func TestFactory_getSimSignatureData(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := Factory{}.getSimSignatureData(tt.pk)
+			got, err := Factory{}.getSimSignatureData(tt.pk)
+			require.NoError(t, err)
 			require.IsType(t, tt.wantType, got)
 		})
 	}
+}
+
+// TestFactory_getSimSignatureDataMultisig asserts that the dummy signature data built for
+// a multisig sender is accepted by the ante handler's gas consumer, which requires the bit
+// array to be sized to the full key set. See https://github.com/cosmos/cosmos-sdk/issues/26759.
+func TestFactory_getSimSignatureDataMultisig(t *testing.T) {
+	nestedKey := multisig.NewLegacyAminoPubKey(1, []types.PubKey{
+		secp256k1.GenPrivKey().PubKey(),
+		secp256k1.GenPrivKey().PubKey(),
+	})
+
+	tests := []struct {
+		name     string
+		pk       *multisig.LegacyAminoPubKey
+		wantSigs int
+		wantBits int
+	}{
+		{
+			name:     "1 of 1",
+			pk:       multisig.NewLegacyAminoPubKey(1, []types.PubKey{secp256k1.GenPrivKey().PubKey()}),
+			wantSigs: 1,
+			wantBits: 1,
+		},
+		{
+			name: "2 of 3",
+			pk: multisig.NewLegacyAminoPubKey(2, []types.PubKey{
+				secp256k1.GenPrivKey().PubKey(),
+				secp256k1.GenPrivKey().PubKey(),
+				secp256k1.GenPrivKey().PubKey(),
+			}),
+			wantSigs: 2,
+			wantBits: 3,
+		},
+		{
+			name: "nested multisig sub key",
+			pk: multisig.NewLegacyAminoPubKey(2, []types.PubKey{
+				nestedKey,
+				secp256k1.GenPrivKey().PubKey(),
+				secp256k1.GenPrivKey().PubKey(),
+			}),
+			wantSigs: 2,
+			wantBits: 3,
+		},
+	}
+
+	params := authtypes.DefaultParams()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := Factory{}.getSimSignatureData(tt.pk)
+			require.NoError(t, err)
+			data, ok := got.(*signing.MultiSignatureData)
+			require.True(t, ok)
+
+			require.Len(t, data.Signatures, tt.wantSigs)
+			require.Equal(t, tt.wantBits, data.BitArray.Count())
+			require.Equal(t, tt.wantSigs, data.BitArray.NumTrueBitsBefore(data.BitArray.Count()))
+
+			// the ante handler rejects a bit array that is not sized to the key set, so the
+			// dummy data must pass the gas consumer for `--gas auto` to work.
+			err = ante.ConsumeMultisignatureVerificationGas(
+				storetypes.NewInfiniteGasMeter(), data, tt.pk, params, 0,
+			)
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestFactory_getSimSignatureDataErrors(t *testing.T) {
+	t.Parallel()
+
+	t.Run("threshold exceeds keys", func(t *testing.T) {
+		pk := &multisig.LegacyAminoPubKey{Threshold: 2}
+		_, err := Factory{}.getSimSignatureData(pk)
+		require.ErrorContains(t, err, "multisig threshold 2 exceeds number of keys 0")
+	})
+
+	t.Run("subkey type assertion fails", func(t *testing.T) {
+		pk := &multisig.LegacyAminoPubKey{
+			Threshold: 1,
+			PubKeys:   []*codectypes.Any{{}},
+		}
+		_, err := Factory{}.getSimSignatureData(pk)
+		require.ErrorContains(t, err, "failed to convert proto Any to public key")
+	})
 }

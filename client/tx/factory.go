@@ -442,11 +442,16 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
+	sigData, err := f.getSimSignatureData(pk)
+	if err != nil {
+		return nil, err
+	}
+
 	// Create an empty signature literal as the ante handler will populate with a
 	// sentinel pubkey.
 	sig := signing.SignatureV2{
 		PubKey:   pk,
-		Data:     f.getSimSignatureData(pk),
+		Data:     sigData,
 		Sequence: f.Sequence(),
 	}
 	if err := txb.SetSignatures(sig); err != nil {
@@ -489,22 +494,39 @@ func (f Factory) getSimPK() (cryptotypes.PubKey, error) {
 
 // getSimSignatureData based on the pubKey type gets the correct SignatureData type
 // to use for building a simulation tx.
-func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) signing.SignatureData {
+func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) (signing.SignatureData, error) {
 	multisigPubKey, ok := pk.(*multisig.LegacyAminoPubKey)
 	if !ok {
-		return &signing.SingleSignatureData{SignMode: f.signMode}
+		return &signing.SingleSignatureData{SignMode: f.signMode}, nil
 	}
 
+	// The bit array must be sized to the whole key set and have exactly threshold bits
+	// set, otherwise the ante handler rejects the simulation tx before estimating gas.
+	subKeys := multisigPubKey.PubKeys
+	if int(multisigPubKey.Threshold) > len(subKeys) {
+		return nil, fmt.Errorf("cannot build signature for simulation, multisig threshold %d exceeds number of keys %d", multisigPubKey.Threshold, len(subKeys))
+	}
+
+	bitArray := cryptotypes.NewCompactBitArray(len(subKeys))
 	multiSignatureData := make([]signing.SignatureData, 0, multisigPubKey.Threshold)
-	for i := uint32(0); i < multisigPubKey.Threshold; i++ {
-		multiSignatureData = append(multiSignatureData, &signing.SingleSignatureData{
-			SignMode: f.SignMode(),
-		})
+	for i := 0; i < int(multisigPubKey.Threshold); i++ {
+		bitArray.SetIndex(i, true)
+		subKey, ok := subKeys[i].GetCachedValue().(cryptotypes.PubKey)
+		if !ok {
+			return nil, errors.New("cannot build signature for simulation, failed to convert proto Any to public key")
+		}
+
+		sigData, err := f.getSimSignatureData(subKey)
+		if err != nil {
+			return nil, err
+		}
+		multiSignatureData = append(multiSignatureData, sigData)
 	}
 
 	return &signing.MultiSignatureData{
+		BitArray:   bitArray,
 		Signatures: multiSignatureData,
-	}
+	}, nil
 }
 
 // Prepare ensures the account defined by ctx.GetFromAddress() exists and

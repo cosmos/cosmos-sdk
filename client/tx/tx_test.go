@@ -14,7 +14,9 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -23,6 +25,7 @@ import (
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -128,6 +131,57 @@ func TestBuildSimTx(t *testing.T) {
 	bz, err := txf.BuildSimTx(msg)
 	require.NoError(t, err)
 	require.NotNil(t, bz)
+}
+
+// TestBuildSimTxMultisig checks that the simulation tx built for a multisig sender is
+// accepted by the ante handler's signature gas consumer, which is what `--gas auto`
+// relies on. Regression test for https://github.com/cosmos/cosmos-sdk/issues/26759.
+func TestBuildSimTxMultisig(t *testing.T) {
+	encodingConfig := moduletestutil.MakeTestEncodingConfig()
+	banktypes.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+	cdc := codec.NewProtoCodec(encodingConfig.InterfaceRegistry)
+	txCfg := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+
+	defaultSignMode, err := signing.APISignModeToInternal(txCfg.SignModeHandler().DefaultMode())
+	require.NoError(t, err)
+
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, cdc)
+	require.NoError(t, err)
+
+	path := hd.CreateHDPath(118, 0, 0).String()
+	pubKeys := make([]cryptotypes.PubKey, 3)
+	for i := range pubKeys {
+		record, _, err := kb.NewMnemonic(fmt.Sprintf("test_key%d", i), keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+		require.NoError(t, err)
+		pubKeys[i], err = record.GetPubKey()
+		require.NoError(t, err)
+	}
+
+	multisigPk := kmultisig.NewLegacyAminoPubKey(2, pubKeys)
+	_, err = kb.SaveMultisig("multi", multisigPk)
+	require.NoError(t, err)
+
+	txf := mockTxFactory(txCfg).
+		WithSignMode(defaultSignMode).
+		WithKeybase(kb).
+		WithFromName("multi").
+		WithSimulateAndExecute(true)
+
+	msg := banktypes.NewMsgSend(sdk.AccAddress(multisigPk.Address()), sdk.AccAddress("to"), nil)
+	bz, err := txf.BuildSimTx(msg)
+	require.NoError(t, err)
+	require.NotNil(t, bz)
+
+	simTx, err := txCfg.TxDecoder()(bz)
+	require.NoError(t, err)
+
+	sigs, err := simTx.(signing.SigVerifiableTx).GetSignaturesV2()
+	require.NoError(t, err)
+	require.Len(t, sigs, 1)
+
+	require.NoError(t, ante.DefaultSigVerificationGasConsumer(
+		storetypes.NewInfiniteGasMeter(), sigs[0], authtypes.DefaultParams(),
+	))
 }
 
 func TestBuildUnsignedTx(t *testing.T) {

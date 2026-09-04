@@ -130,7 +130,7 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 
 // UpdateAllowance updates the existing grant.
 func (k Keeper) UpdateAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
-	_, err := k.getGrant(ctx, granter, grantee)
+	existing, err := k.getGrant(ctx, granter, grantee)
 	if err != nil {
 		return err
 	}
@@ -138,6 +138,42 @@ func (k Keeper) UpdateAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 	grant, err := feegrant.NewGrant(granter, grantee, feeAllowance)
 	if err != nil {
 		return err
+	}
+
+	// The pruning queue is keyed by expiration, so it has to follow the grant whenever the
+	// expiration changes. Without this, a stale queue entry deletes a grant that is still
+	// valid (old expiry retained), or a newly expiring grant is never reachable by
+	// RemoveExpiredAllowances at all (expiry added where there was none).
+	oldAllowance, err := existing.GetGrant()
+	if err != nil {
+		return err
+	}
+
+	oldExp, err := oldAllowance.ExpiresAt()
+	if err != nil {
+		return err
+	}
+
+	newExp, err := feeAllowance.ExpiresAt()
+	if err != nil {
+		return err
+	}
+
+	unchanged := (oldExp == nil && newExp == nil) ||
+		(oldExp != nil && newExp != nil && oldExp.Equal(*newExp))
+
+	if !unchanged {
+		if oldExp != nil {
+			if err := k.FeeAllowanceQueue.Remove(ctx, collections.Join3(*oldExp, grantee, granter)); err != nil {
+				return err
+			}
+		}
+
+		if newExp != nil {
+			if err := k.FeeAllowanceQueue.Set(ctx, collections.Join3(*newExp, grantee, granter), true); err != nil {
+				return err
+			}
+		}
 	}
 
 	if err := k.FeeAllowance.Set(ctx, collections.Join(grantee, granter), grant); err != nil {

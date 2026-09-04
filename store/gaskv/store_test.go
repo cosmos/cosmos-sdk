@@ -78,10 +78,10 @@ func TestGasKVStoreIterator(t *testing.T) {
 	vc := iterator.Value()
 	require.Equal(t, vc, valFmt(0))
 	iterator.Next()
-	require.Equal(t, types.Gas(14667), meter.GasConsumed())
+	require.Equal(t, types.Gas(14595), meter.GasConsumed())
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
-	require.Equal(t, types.Gas(14697), meter.GasConsumed())
+	require.Equal(t, types.Gas(14595), meter.GasConsumed())
 	require.NoError(t, iterator.Error())
 
 	reverseIterator := st.ReverseIterator(nil, nil)
@@ -98,7 +98,40 @@ func TestGasKVStoreIterator(t *testing.T) {
 	reverseIterator.Next()
 	require.False(t, reverseIterator.Valid())
 	require.Panics(t, reverseIterator.Next)
-	require.Equal(t, types.Gas(15135), meter.GasConsumed())
+	require.Equal(t, types.Gas(14931), meter.GasConsumed())
+}
+
+// TestGasKVStoreIteratorChargesEachElementOnce ensures iterating over a KVStore
+// meters gas proportional to each key/value pair exactly once: the first pair is
+// charged when the iterator is created (seek to first), and every subsequent
+// pair is charged by the Next() call that lands on it. Regression test for
+// https://github.com/cosmos/cosmos-sdk/issues/15854, where the first pair was
+// charged twice.
+func TestGasKVStoreIteratorChargesEachElementOnce(t *testing.T) {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	meter := types.NewGasMeter(1_000_000)
+	st := gaskv.NewStore(mem, meter, types.KVGasConfig())
+
+	const n = 5
+	for i := 0; i < n; i++ {
+		st.Set(keyFmt(i), valFmt(i))
+	}
+
+	gasBefore := meter.GasConsumed()
+
+	iter := st.Iterator(nil, nil)
+	t.Cleanup(func() { _ = iter.Close() })
+
+	// Standard iteration pattern. The trailing Next() in the loop advances past
+	// the last element and must not meter any key/value bytes.
+	for ; iter.Valid(); iter.Next() {
+	}
+
+	gasConfig := types.KVGasConfig()
+	perElement := gasConfig.ReadCostPerByte * types.Gas(len(keyFmt(0))+len(valFmt(0)))
+	expected := types.Gas(n)*perElement + types.Gas(n+1)*gasConfig.IterNextCostFlat
+
+	require.Equal(t, expected, meter.GasConsumed()-gasBefore)
 }
 
 func TestGasKVStoreOutOfGasSet(t *testing.T) {

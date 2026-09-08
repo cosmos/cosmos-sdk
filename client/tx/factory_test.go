@@ -199,7 +199,7 @@ func TestFactory_getSimSignatureDataErrors(t *testing.T) {
 	t.Run("threshold exceeds keys", func(t *testing.T) {
 		pk := &multisig.LegacyAminoPubKey{Threshold: 2}
 		_, err := Factory{}.getSimSignatureData(pk)
-		require.ErrorContains(t, err, "multisig threshold 2 exceeds number of keys 0")
+		require.ErrorContains(t, err, "multisig threshold 2 exceeds key count 0")
 	})
 
 	t.Run("subkey type assertion fails", func(t *testing.T) {

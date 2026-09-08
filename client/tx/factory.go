@@ -500,10 +500,9 @@ func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) (signing.SignatureDa
 		return &signing.SingleSignatureData{SignMode: f.signMode}, nil
 	}
 
-	// BitArray must match pubkey count; ante rejects a nil/undersized array.
 	subKeys := multisigPubKey.PubKeys
 	if int(multisigPubKey.Threshold) > len(subKeys) {
-		return nil, fmt.Errorf("cannot build signature for simulation, multisig threshold %d exceeds number of keys %d", multisigPubKey.Threshold, len(subKeys))
+		return nil, fmt.Errorf("multisig threshold %d exceeds key count %d", multisigPubKey.Threshold, len(subKeys))
 	}
 
 	bitArray := cryptotypes.NewCompactBitArray(len(subKeys))

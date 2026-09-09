@@ -118,9 +118,11 @@ func (oe *OptimisticExecution) Execute(req *abci.RequestProcessProposal) {
 	}()
 }
 
-// AbortIfNeeded aborts the OE if the request hash is not the same as the one in
-// the running OE. Returns true if the OE was aborted.
-func (oe *OptimisticExecution) AbortIfNeeded(reqHash []byte) bool {
+// AbortIfNeeded aborts the OE if the incoming FinalizeBlock request does not
+// match the running OE. A height mismatch is treated as a stale OE (e.g.
+// ProcessProposal was skipped for the next height) and aborts without a hash
+// mismatch error. Returns true if the OE was aborted.
+func (oe *OptimisticExecution) AbortIfNeeded(reqHash []byte, reqHeight int64) bool {
 	if oe == nil {
 		return false
 	}
@@ -128,8 +130,16 @@ func (oe *OptimisticExecution) AbortIfNeeded(reqHash []byte) bool {
 	oe.mtx.Lock()
 	defer oe.mtx.Unlock()
 
+	// Prefer height check so a leftover OE from a prior height is not logged as
+	// a hash mismatch when ProcessProposal for the next height was skipped.
+	if oe.request.Height != reqHeight {
+		oe.logger.Info("OE aborted due to stale height", "oe_hash", hex.EncodeToString(oe.request.Hash), "req_hash", hex.EncodeToString(reqHash), "oe_height", oe.request.Height, "req_height", reqHeight)
+		oe.cancelFunc()
+		return true
+	}
+
 	if !bytes.Equal(oe.request.Hash, reqHash) {
-		oe.logger.Error("OE aborted due to hash mismatch", "oe_hash", hex.EncodeToString(oe.request.Hash), "req_hash", hex.EncodeToString(reqHash), "oe_height", oe.request.Height, "req_height", oe.request.Height)
+		oe.logger.Error("OE aborted due to hash mismatch", "oe_hash", hex.EncodeToString(oe.request.Hash), "req_hash", hex.EncodeToString(reqHash), "oe_height", oe.request.Height, "req_height", reqHeight)
 		oe.cancelFunc()
 		return true
 	} else if oe.abortRate > 0 && rand.Intn(100) < oe.abortRate {

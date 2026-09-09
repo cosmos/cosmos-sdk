@@ -312,6 +312,38 @@ func TestManager_CreatePrunesWithoutSnapshotLifecycle(t *testing.T) {
 	require.Contains(t, snapshotter.prunedHeights, int64(1))
 }
 
+func TestManager_CreateNotifiesLegacySnapshotAnnouncer(t *testing.T) {
+	inner := &mockSnapshotter{
+		announcedHeights: make(map[int64]struct{}),
+		prunedHeights:    make(map[int64]struct{}),
+	}
+	snapshotter := &legacySnapshotter{inner: inner}
+	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
+	require.NoError(t, err)
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
+
+	_, err = manager.Create(1)
+	require.NoError(t, err)
+	require.Contains(t, inner.announcedHeights, int64(1))
+	require.Contains(t, inner.prunedHeights, int64(1))
+}
+
+func TestManager_CreateCompletesLegacySnapshotAnnouncerOnSaveError(t *testing.T) {
+	inner := &mockSnapshotter{
+		announcedHeights: make(map[int64]struct{}),
+		prunedHeights:    make(map[int64]struct{}),
+	}
+	snapshotter := &failingLegacySnapshotter{legacySnapshotter: &legacySnapshotter{inner: inner}}
+	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
+	require.NoError(t, err)
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
+
+	_, err = manager.Create(1)
+	require.Error(t, err)
+	require.Contains(t, inner.announcedHeights, int64(1))
+	require.Contains(t, inner.prunedHeights, int64(1))
+}
+
 type mockExtensionSnapshotter struct {
 	types.ExtensionSnapshotter
 	formats []uint32

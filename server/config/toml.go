@@ -269,6 +269,21 @@ stop-node-on-err = {{ .Streaming.ABCI.StopNodeOnErr }}
 # Note, this configuration only applies to SDK built-in app-side mempool
 # implementations.
 max-txs = {{ .Mempool.MaxTxs }}
+
+###############################################################################
+###                         Block Logs                                      ###
+###############################################################################
+
+[block-logs]
+# retain-blocks is the number of most recent blocks whose application logs are
+# kept on disk under <home>/data/block-logs/<height>.jsonl and served by the
+# node Logs query (gRPC cosmos.base.node.v1beta1.LogsService, REST
+# GET /cosmos/base/node/v1beta1/logs). 0 (the default) disables capture.
+#
+# When enabled, every log line the application emits while executing a block is
+# recorded at every level, regardless of log_level, so the disk cost is roughly
+# the debug-level log volume of the last retain-blocks blocks.
+retain-blocks = {{ .BlockLogs.RetainBlocks }}
 `
 
 var configTemplate *template.Template

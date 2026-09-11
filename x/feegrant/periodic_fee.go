@@ -102,8 +102,12 @@ func (a PeriodicAllowance) ValidateBasic() error {
 	}
 
 	// check times
-	if a.Period.Seconds() < 0 {
-		return errorsmod.Wrap(ErrInvalidDuration, "negative clock step")
+	// The period must be strictly positive. A non-positive period makes
+	// tryResetPeriod refill PeriodCanSpend on every Accept (PeriodReset never
+	// advances past the block time), which silently bypasses the per-period
+	// spend cap.
+	if a.Period.Seconds() <= 0 {
+		return errorsmod.Wrap(ErrInvalidDuration, "period must be positive")
 	}
 
 	return nil

@@ -144,6 +144,7 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 						SpendLimit: suite.atom,
 						Expiration: &oneYear,
 					},
+					Period:           time.Hour * 24,
 					PeriodSpendLimit: suite.atom,
 				})
 				suite.Require().NoError(err)
@@ -164,6 +165,7 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 						SpendLimit: suite.atom,
 						Expiration: &oneYear,
 					},
+					Period:           time.Hour * 24,
 					PeriodSpendLimit: suite.atom,
 				})
 				suite.Require().NoError(err)
@@ -246,6 +248,7 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 						SpendLimit: suite.atom,
 						Expiration: &oneYear,
 					},
+					Period:           time.Hour * 24,
 					PeriodSpendLimit: suite.atom,
 				})
 				suite.Require().NoError(err)

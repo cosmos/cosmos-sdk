@@ -35,6 +35,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* [#15854](https://github.com/cosmos/cosmos-sdk/issues/15854) Fix `gaskv` iterator metering the first iterated element's gas twice, so each key/value pair is charged exactly once.
+
 ## v2.0.0 (April 10, 2026)
 
 ### API Breaking

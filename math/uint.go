@@ -197,7 +197,11 @@ func (u *Uint) MarshalTo(data []byte) (n int, err error) {
 // Unmarshal implements the gogo proto custom type interface.
 func (u *Uint) Unmarshal(data []byte) error {
 	if len(data) == 0 {
-		u = nil
+		// Initialize to zero instead of leaving the receiver's internal big.Int
+		// nil (the previous `u = nil` only reassigned the local pointer copy).
+		// A nil internal value makes later methods panic; this mirrors the
+		// UnmarshalJSON path.
+		u.i = new(big.Int)
 		return nil
 	}
 

@@ -486,8 +486,14 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 
 	mp.priorityIndex.Remove(tk)
 	senderTxs.Remove(tk)
+	if senderTxs.Len() == 0 {
+		delete(mp.senderIndices, sender)
+	}
 	delete(mp.scores, scoreKey)
 	mp.priorityCounts[score.priority]--
+	if mp.priorityCounts[score.priority] == 0 {
+		delete(mp.priorityCounts, score.priority)
+	}
 
 	return nil
 }
@@ -502,28 +508,14 @@ func IsEmpty[C comparable](mempool Mempool) error {
 	if mp.priorityIndex.Len() != 0 {
 		return fmt.Errorf("priorityIndex not empty")
 	}
-
-	countKeys := make([]C, 0, len(mp.priorityCounts))
-	for k := range mp.priorityCounts {
-		countKeys = append(countKeys, k)
+	if len(mp.scores) != 0 {
+		return fmt.Errorf("scores has %d stale entries", len(mp.scores))
 	}
-
-	for _, k := range countKeys {
-		if mp.priorityCounts[k] != 0 {
-			return fmt.Errorf("priorityCounts not zero at %v, got %v", k, mp.priorityCounts[k])
-		}
+	if len(mp.priorityCounts) != 0 {
+		return fmt.Errorf("priorityCounts has %d stale entries", len(mp.priorityCounts))
 	}
-
-	senderKeys := make([]string, 0, len(mp.senderIndices))
-	for k := range mp.senderIndices {
-		senderKeys = append(senderKeys, k)
+	if len(mp.senderIndices) != 0 {
+		return fmt.Errorf("senderIndices has %d stale entries", len(mp.senderIndices))
 	}
-
-	for _, k := range senderKeys {
-		if mp.senderIndices[k].Len() != 0 {
-			return fmt.Errorf("senderIndex not empty for sender %v", k)
-		}
-	}
-
 	return nil
 }

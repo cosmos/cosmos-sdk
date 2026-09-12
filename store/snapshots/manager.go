@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"os"
 	"slices"
 	"sort"
 	"sync"
@@ -300,12 +299,19 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 		return err
 	}
 
+	restoreStarted := false
+	defer func() {
+		if !restoreStarted {
+			m.endLocked()
+		}
+	}()
+
 	// Start an asynchronous snapshot restoration, passing chunks and completion status via channels.
 	chChunkIDs := make(chan uint32, chunkIDBufferSize)
 	chDone := make(chan restoreDone, 1)
 
 	dir := m.store.pathSnapshot(snapshot.Height, snapshot.Format)
-	if err := os.MkdirAll(dir, 0o750); err != nil {
+	if err := mkdirAllSync(dir, m.store.dir, 0o750); err != nil {
 		return errorsmod.Wrapf(err, "failed to create snapshot directory %q", dir)
 	}
 
@@ -320,6 +326,7 @@ func (m *Manager) Restore(snapshot types.Snapshot) error {
 		close(chDone)
 	}()
 
+	restoreStarted = true
 	m.chRestore = chChunkIDs
 	m.chRestoreDone = chDone
 	m.restoreSnapshot = &snapshot
@@ -348,7 +355,7 @@ func (m *Manager) loadChunkStream(height uint64, format uint32, chunkIDs <-chan 
 // doRestoreSnapshot do the heavy work of snapshot restoration after preliminary checks on request have passed.
 func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.ReadCloser) error {
 	dir := m.store.pathSnapshot(snapshot.Height, snapshot.Format)
-	if err := os.MkdirAll(dir, 0o750); err != nil {
+	if err := mkdirAllSync(dir, m.store.dir, 0o750); err != nil {
 		return errorsmod.Wrapf(err, "failed to create snapshot directory %q", dir)
 	}
 

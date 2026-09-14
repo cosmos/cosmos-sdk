@@ -135,8 +135,9 @@ func adaptModeInfo(legacy *tx.ModeInfo, res *txv1beta1.ModeInfo) {
 		}
 		multiModeInfos := mi.Multi.ModeInfos
 		modeInfos := make([]*txv1beta1.ModeInfo, len(multiModeInfos))
-		for _, modeInfo := range multiModeInfos {
-			adaptModeInfo(modeInfo, &txv1beta1.ModeInfo{})
+		for i, modeInfo := range multiModeInfos {
+			modeInfos[i] = &txv1beta1.ModeInfo{}
+			adaptModeInfo(modeInfo, modeInfos[i])
 		}
 		var bitarray *multisigv1beta1.CompactBitArray
 		if mi.Multi.Bitarray != nil {

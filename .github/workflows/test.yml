@@ -567,6 +567,30 @@ jobs:
           path: ./tools/confix/coverage.out
           retention-days: 1
 
+  test-systemtests-tools:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: "tools/systemtests/go.mod"
+          cache: true
+          cache-dependency-path: tools/systemtests/go.sum
+      - uses: technote-space/get-diff-action@f27caffdd0fb9b13f4fc191c016bb4e0632844af # v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            tools/systemtests/**/*.go
+            tools/systemtests/go.mod
+            tools/systemtests/go.sum
+      - name: tests
+        if: env.GIT_DIFF
+        run: |
+          cd tools/systemtests
+          go test -mod=readonly -timeout 10m ./...
+
   test-store:
     runs-on: ubuntu-26.04
     steps:

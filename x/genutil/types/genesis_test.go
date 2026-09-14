@@ -36,6 +36,32 @@ func TestAppGenesis_Unmarshal(t *testing.T) {
 	assert.DeepEqual(t, genesis.Consensus.Params.Block.MaxBytes, int64(22020096))
 }
 
+func TestNewConsensusGenesisPreservesABCIParams(t *testing.T) {
+	t.Run("vote extensions enable height", func(t *testing.T) {
+		params := cmttypes.DefaultConsensusParams().ToProto()
+		params.Abci.VoteExtensionsEnableHeight = 1
+
+		genesis := types.NewConsensusGenesis(params, nil)
+		assert.Equal(t, genesis.Params.ABCI.VoteExtensionsEnableHeight, int64(1))
+
+		genesisJSON, err := json.Marshal(genesis)
+		assert.NilError(t, err)
+
+		var exportedGenesis types.ConsensusGenesis
+		err = json.Unmarshal(genesisJSON, &exportedGenesis)
+		assert.NilError(t, err)
+		assert.Equal(t, exportedGenesis.Params.ABCI.VoteExtensionsEnableHeight, int64(1))
+	})
+
+	t.Run("nil ABCI params", func(t *testing.T) {
+		params := cmttypes.DefaultConsensusParams().ToProto()
+		params.Abci = nil
+
+		genesis := types.NewConsensusGenesis(params, nil)
+		assert.Equal(t, genesis.Params.ABCI.VoteExtensionsEnableHeight, int64(0))
+	})
+}
+
 func TestAppGenesis_ValidGenesis(t *testing.T) {
 	// validate can read cometbft genesis file
 	genesis, err := types.AppGenesisFromFile("testdata/cmt_genesis.json")

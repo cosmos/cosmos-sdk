@@ -39,7 +39,11 @@ func getConfigKey() string {
 	if id := os.Getenv(EnvConfigScope); id != "" {
 		return id
 	}
+	return defaultConfigKey()
+}
 
+// defaultConfigKey freezes the fallback registry key for the process lifetime.
+var defaultConfigKey = sync.OnceValue(func() string {
 	exe, errExec := os.Executable()
 	host, errHost := os.Hostname()
 	pid := os.Getpid()
@@ -52,7 +56,7 @@ func getConfigKey() string {
 	}
 
 	return fmt.Sprintf("%s|%s|%d", host, exe, pid)
-}
+})
 
 // NewConfig returns a new Config with default values.
 func NewConfig() *Config {

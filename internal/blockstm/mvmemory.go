@@ -2,6 +2,7 @@ package blockstm
 
 import (
 	"context"
+	"fmt"
 	"sync/atomic"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
@@ -104,7 +105,10 @@ func (mv *MVMemory) View(ctx context.Context, txn TxnIndex) *MultiMVMemoryView {
 }
 
 func (mv *MVMemory) newMVView(ctx context.Context, name storetypes.StoreKey, txn TxnIndex) MVView {
-	i := mv.stores[name]
+	i, ok := mv.stores[name]
+	if !ok {
+		panic(fmt.Sprintf("Block-STM accessed unregistered store %q", name.Name()))
+	}
 	return NewMVView(ctx, i, mv.storage[i], mv.GetMVStore(i), mv.scheduler, txn)
 }
 

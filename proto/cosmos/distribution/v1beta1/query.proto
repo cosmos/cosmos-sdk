@@ -217,6 +217,15 @@ message QueryDelegationTotalRewardsResponse {
     (amino.dont_omitempty)   = true,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
   ];
+  // claimable defines the amount that can actually be withdrawn. Each delegation reward is truncated
+  // individually, mirroring what Msg/WithdrawDelegatorReward pays out, so claimable is at most total.
+  repeated cosmos.base.v1beta1.Coin claimable = 3 [
+    (cosmos_proto.field_added_in) = "cosmos-sdk 0.56",
+    (gogoproto.nullable)          = false,
+    (amino.dont_omitempty)        = true,
+    (amino.encoding)              = "legacy_coins",
+    (gogoproto.castrepeated)      = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // QueryDelegatorValidatorsRequest is the request type for the

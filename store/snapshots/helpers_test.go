@@ -9,11 +9,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
 	db "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	errorsmod "cosmossdk.io/errors"
@@ -235,9 +237,8 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 	go func() {
 		defer close(done)
 		_, err := mgr.Create(1)
-		require.NoError(t, err)
-		_, didPruneHeight := hung.prunedHeights[1]
-		require.True(t, didPruneHeight)
+		assert.NoError(t, err)
+		assert.True(t, hung.didPruneHeight(1))
 	}()
 	time.Sleep(10 * time.Millisecond)
 
@@ -252,7 +253,10 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 
 // hungSnapshotter can be used to test operations in progress. Call close to end the snapshot.
 type hungSnapshotter struct {
-	ch                   chan struct{}
+	ch chan struct{}
+	// mtx guards the height maps, which are touched both by the goroutine
+	// blocked in Snapshot and by the test goroutine issuing further calls.
+	mtx                  sync.Mutex
 	announcedSnapHeights map[int64]struct{}
 	prunedHeights        map[int64]struct{}
 	snapshotInterval     uint64
@@ -276,14 +280,26 @@ func (m *hungSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) er
 }
 
 func (m *hungSnapshotter) AnnounceSnapshotHeight(height int64) {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
 	m.announcedSnapHeights[height] = struct{}{}
 }
 
 func (m *hungSnapshotter) PruneSnapshotHeight(height int64) {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
 	if _, ok := m.announcedSnapHeights[height]; !ok {
 		panic(fmt.Sprintf("snap height %d was not announced", height))
 	}
 	m.prunedHeights[height] = struct{}{}
+}
+
+// didPruneHeight reports whether PruneSnapshotHeight was called for height.
+func (m *hungSnapshotter) didPruneHeight(height int64) bool {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+	_, ok := m.prunedHeights[height]
+	return ok
 }
 
 func (m *hungSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {

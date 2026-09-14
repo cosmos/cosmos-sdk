@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (enterprise/poa) [#26814](https://github.com/cosmos/cosmos-sdk/pull/26814) Do not panic in fee checkpointing when the rounded per-validator allocations exceed the module balance by dust; subtract safely and allocate only the denoms that have unallocated fees.
 * (client/tx) [#26759](https://github.com/cosmos/cosmos-sdk/issues/26759) Populate the multisig bit array in simulation txs so `--gas auto` works for multisig senders.
 * (blockstm) [#26772](https://github.com/cosmos/cosmos-sdk/pull/26772) Panic with a descriptive error when accessing an unregistered store instead of silently using store index zero.
 * (x/genutil) [#26741](https://github.com/cosmos/cosmos-sdk/issues/26741) Preserve vote extension enable height when exporting genesis state.

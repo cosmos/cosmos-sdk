@@ -692,3 +692,16 @@ func BenchmarkIntOverflowCheckTime(b *testing.B) {
 	}
 	sink = nil
 }
+
+func TestMinMaxIntAliasing(t *testing.T) {
+	a := math.NewInt(5)
+	b := math.NewInt(10)
+
+	resMin := math.MinInt(a, b)
+	resMin.BigIntMut().SetInt64(999)
+	require.Equal(t, int64(5), a.Int64(), "MinInt: input a was mutated")
+
+	resMax := math.MaxInt(a, b)
+	resMax.BigIntMut().SetInt64(999)
+	require.Equal(t, int64(10), b.Int64(), "MaxInt: input b was mutated")
+}

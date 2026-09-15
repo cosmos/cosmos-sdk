@@ -9,13 +9,11 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sync"
 	"testing"
 	"time"
 
 	db "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	errorsmod "cosmossdk.io/errors"
@@ -115,9 +113,11 @@ type mockSnapshotter struct {
 	announcedHeights map[int64]struct{}
 	prunedHeights    map[int64]struct{}
 	snapshotInterval uint64
+	snapshotStarted  chan struct{}
+	snapshotRelease  chan struct{}
 }
 
-func (m *mockSnapshotter) AnnounceSnapshotHeight(height int64) {
+func (m *mockSnapshotter) StartSnapshot(height int64) {
 	m.announcedHeights[height] = struct{}{}
 }
 
@@ -152,6 +152,10 @@ func (m *mockSnapshotter) Restore(
 }
 
 func (m *mockSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
+	if m.snapshotStarted != nil {
+		close(m.snapshotStarted)
+		<-m.snapshotRelease
+	}
 	for _, item := range m.items {
 		if err := snapshottypes.WriteExtensionPayload(protoWriter, item); err != nil {
 			return err
@@ -175,6 +179,14 @@ func (m *mockSnapshotter) PruneSnapshotHeight(height int64) {
 	m.prunedHeights[height] = struct{}{}
 }
 
+func (m *mockSnapshotter) CompleteSnapshot(height int64) {
+	m.PruneSnapshotHeight(height)
+}
+
+func (m *mockSnapshotter) FailSnapshot(height int64) {
+	delete(m.announcedHeights, height)
+}
+
 func (m *mockSnapshotter) GetSnapshotInterval() uint64 {
 	return m.snapshotInterval
 }
@@ -185,9 +197,67 @@ func (m *mockSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 
 var _ snapshottypes.Snapshotter = (*mockErrorSnapshotter)(nil)
 
-type mockErrorSnapshotter struct{}
+type mockErrorSnapshotter struct {
+	prunedHeights   map[int64]struct{}
+	canceledHeights map[int64]struct{}
+}
 
-func (m *mockErrorSnapshotter) AnnounceSnapshotHeight(height int64) {
+type snapshotterWithoutLifecycle struct {
+	snapshottypes.Snapshotter
+	prunedHeights map[int64]struct{}
+}
+
+func (m *snapshotterWithoutLifecycle) PruneSnapshotHeight(height int64) {
+	m.prunedHeights[height] = struct{}{}
+}
+
+type legacySnapshotter struct {
+	inner *mockSnapshotter
+}
+
+type failingLegacySnapshotter struct {
+	*legacySnapshotter
+}
+
+func (m *legacySnapshotter) AnnounceSnapshotHeight(height int64) {
+	m.inner.announcedHeights[height] = struct{}{}
+}
+
+func (m *legacySnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
+	return m.inner.Snapshot(height, protoWriter)
+}
+
+func (m *legacySnapshotter) Restore(
+	height uint64, format uint32, protoReader protoio.Reader,
+) (snapshottypes.SnapshotItem, error) {
+	return m.inner.Restore(height, format, protoReader)
+}
+
+func (m *legacySnapshotter) SnapshotFormat() uint32 {
+	return m.inner.SnapshotFormat()
+}
+
+func (m *legacySnapshotter) SupportedFormats() []uint32 {
+	return m.inner.SupportedFormats()
+}
+
+func (m *legacySnapshotter) PruneSnapshotHeight(height int64) {
+	m.inner.PruneSnapshotHeight(height)
+}
+
+func (m *legacySnapshotter) GetSnapshotInterval() uint64 {
+	return m.inner.GetSnapshotInterval()
+}
+
+func (m *legacySnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
+	m.inner.SetSnapshotInterval(snapshotInterval)
+}
+
+func (m *failingLegacySnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
+	return errors.New("mock snapshot error")
+}
+
+func (m *mockErrorSnapshotter) StartSnapshot(height int64) {
 }
 
 func (m *mockErrorSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
@@ -209,6 +279,15 @@ func (m *mockErrorSnapshotter) SupportedFormats() []uint32 {
 }
 
 func (m *mockErrorSnapshotter) PruneSnapshotHeight(height int64) {
+	m.prunedHeights[height] = struct{}{}
+}
+
+func (m *mockErrorSnapshotter) CompleteSnapshot(height int64) {
+	m.PruneSnapshotHeight(height)
+}
+
+func (m *mockErrorSnapshotter) FailSnapshot(height int64) {
+	m.canceledHeights[height] = struct{}{}
 }
 
 func (m *mockErrorSnapshotter) GetSnapshotInterval() uint64 {
@@ -237,8 +316,9 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 	go func() {
 		defer close(done)
 		_, err := mgr.Create(1)
-		assert.NoError(t, err)
-		assert.True(t, hung.didPruneHeight(1))
+		require.NoError(t, err)
+		_, didPruneHeight := hung.prunedHeights[1]
+		require.True(t, didPruneHeight)
 	}()
 	time.Sleep(10 * time.Millisecond)
 
@@ -253,10 +333,7 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 
 // hungSnapshotter can be used to test operations in progress. Call close to end the snapshot.
 type hungSnapshotter struct {
-	ch chan struct{}
-	// mtx guards the height maps, which are touched both by the goroutine
-	// blocked in Snapshot and by the test goroutine issuing further calls.
-	mtx                  sync.Mutex
+	ch                   chan struct{}
 	announcedSnapHeights map[int64]struct{}
 	prunedHeights        map[int64]struct{}
 	snapshotInterval     uint64
@@ -279,27 +356,23 @@ func (m *hungSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) er
 	return nil
 }
 
-func (m *hungSnapshotter) AnnounceSnapshotHeight(height int64) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
+func (m *hungSnapshotter) StartSnapshot(height int64) {
 	m.announcedSnapHeights[height] = struct{}{}
 }
 
 func (m *hungSnapshotter) PruneSnapshotHeight(height int64) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
 	if _, ok := m.announcedSnapHeights[height]; !ok {
 		panic(fmt.Sprintf("snap height %d was not announced", height))
 	}
 	m.prunedHeights[height] = struct{}{}
 }
 
-// didPruneHeight reports whether PruneSnapshotHeight was called for height.
-func (m *hungSnapshotter) didPruneHeight(height int64) bool {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-	_, ok := m.prunedHeights[height]
-	return ok
+func (m *hungSnapshotter) CompleteSnapshot(height int64) {
+	m.PruneSnapshotHeight(height)
+}
+
+func (m *hungSnapshotter) FailSnapshot(height int64) {
+	delete(m.announcedSnapHeights, height)
 }
 
 func (m *hungSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {

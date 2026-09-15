@@ -28,6 +28,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server/blocklog"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/v2"
@@ -48,6 +49,8 @@ type Context struct {
 	Viper  *viper.Viper
 	Config *cmtcfg.Config
 	Logger log.Logger
+	// BlockLogs is the per-block log store, nil unless [block-logs] retain-blocks > 0.
+	BlockLogs *blocklog.Store
 }
 
 func NewDefaultContext() *Context {
@@ -59,7 +62,7 @@ func NewDefaultContext() *Context {
 }
 
 func NewContext(v *viper.Viper, config *cmtcfg.Config, logger log.Logger) *Context {
-	return &Context{v, config, logger}
+	return &Context{Viper: v, Config: config, Logger: logger}
 }
 
 func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) {

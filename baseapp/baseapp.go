@@ -64,6 +64,7 @@ type BaseApp struct {
 	// initialized on creation
 	mu                sync.RWMutex // mu protects concurrent access to name, version, appVersion.
 	logger            log.Logger
+	blockLog          blockLogRecorder            // non-nil when the logger captures per-block logs
 	name              string                      // application name from abci.BlockInfo
 	db                dbm.DB                      // common DB backend
 	cms               storetypes.CommitMultiStore // Main (uncached) state
@@ -174,6 +175,14 @@ type BaseApp struct {
 	txRunner sdk.TxRunner
 }
 
+// blockLogRecorder is implemented by loggers that capture the application
+// log per block (see server/blocklog). BaseApp discovers it on its logger,
+// like log.VerboseModeLogger, so no app wiring is needed.
+type blockLogRecorder interface {
+	BeginBlockLog(height int64)
+	CommitBlockLog()
+}
+
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
 // variadic number of option functions, which act on the BaseApp to set
 // configuration choices.
@@ -226,6 +235,8 @@ func NewBaseApp(
 	// Initialize with an empty interface registry to avoid nil pointer dereference.
 	// Unless SetInterfaceRegistry is called with an interface registry with proper address codecs baseapp will panic.
 	app.cdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+
+	app.blockLog, _ = logger.(blockLogRecorder)
 
 	protoFiles, err := proto.MergedRegistry()
 	if err != nil {

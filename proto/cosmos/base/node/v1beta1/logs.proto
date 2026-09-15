@@ -1,0 +1,62 @@
+syntax = "proto3";
+package cosmos.base.node.v1beta1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/node";
+
+// LogsService exposes the application log lines captured while executing
+// blocks (see the `[block-logs]` section of app.toml). It is node-local: it is
+// served directly by the node's gRPC server, never over ABCI Query, and reads
+// no application state.
+service LogsService {
+  // Logs returns the application log entries captured while executing blocks
+  // in the requested height range.
+  rpc Logs(LogsRequest) returns (LogsResponse) {
+    option (google.api.http).get = "/cosmos/base/node/v1beta1/logs";
+  }
+}
+
+// LogsRequest defines the request structure for the Logs gRPC query.
+message LogsRequest {
+  // start is the first height to return, inclusive. 0 means the last captured
+  // height. It is clipped up to the retention window.
+  int64 start = 1;
+  // end is the last height to return, inclusive. 0 means the last captured
+  // height.
+  int64 end = 2;
+  // level is the minimum level to return, inclusive, one of debug, info, warn
+  // or error. Defaults to info.
+  string level = 3;
+  // module, when set, only returns entries whose module field matches exactly.
+  string module = 4;
+  // pagination defines an optional pagination for the request. Only key and
+  // limit are supported.
+  cosmos.base.query.v1beta1.PageRequest pagination = 5;
+}
+
+// LogEntry is one captured application log line.
+message LogEntry {
+  // height is the block during whose execution the line was emitted.
+  int64 height = 1;
+  // time is the wall clock time the line was emitted, RFC3339Nano.
+  string time = 2;
+  // level is the log level: debug, info, warn or error.
+  string level = 3;
+  // module is the value of the module field, if any.
+  string module = 4;
+  // msg is the log message.
+  string msg = 5;
+  // fields holds the remaining key/value pairs of the line, values stringified.
+  map<string, string> fields = 6;
+}
+
+// LogsResponse defines the response structure for the Logs gRPC query.
+message LogsResponse {
+  // entries is the page of matching log entries, ordered by height then
+  // emission order.
+  repeated LogEntry entries = 1;
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

@@ -5,8 +5,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 
@@ -488,4 +490,39 @@ func TestGetSigningTxData_MultisigModeInfos(t *testing.T) {
 	require.NotNil(t, multiModeInfo.ModeInfos[1])
 	require.Equal(t, signingv1beta1.SignMode_SIGN_MODE_DIRECT, multiModeInfo.ModeInfos[0].GetSingle().Mode)
 	require.Equal(t, signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, multiModeInfo.ModeInfos[1].GetSingle().Mode)
+}
+
+func TestAdaptModeInfo_MultisigNilChildModeInfo(t *testing.T) {
+	// a nil nested ModeInfo is what SignatureDataToModeInfoAndSig yields for a
+	// nil sub-signature; it cannot be reached through the builder because the
+	// gogoproto AuthInfo does not marshal with a nil element either, so drive
+	// adaptModeInfo directly
+	legacy := &txtypes.ModeInfo{
+		Sum: &txtypes.ModeInfo_Multi_{
+			Multi: &txtypes.ModeInfo_Multi{
+				Bitarray: cryptotypes.NewCompactBitArray(2),
+				ModeInfos: []*txtypes.ModeInfo{
+					{Sum: &txtypes.ModeInfo_Single_{Single: &txtypes.ModeInfo_Single{Mode: signing.SignMode_SIGN_MODE_DIRECT}}},
+					nil,
+				},
+			},
+		},
+	}
+
+	res := &txv1beta1.ModeInfo{}
+	adaptModeInfo(legacy, res)
+
+	multiModeInfo := res.GetMulti()
+	require.NotNil(t, multiModeInfo)
+	require.Len(t, multiModeInfo.ModeInfos, 2)
+	require.Equal(t, signingv1beta1.SignMode_SIGN_MODE_DIRECT, multiModeInfo.ModeInfos[0].GetSingle().Mode)
+
+	// the nil child must become an empty ModeInfo, not a nil element: a nil
+	// element in a protov2 repeated field panics in proto.Marshal
+	require.NotNil(t, multiModeInfo.ModeInfos[1])
+	require.Nil(t, multiModeInfo.ModeInfos[1].Sum)
+	require.NotPanics(t, func() {
+		_, err := proto.Marshal(res)
+		require.NoError(t, err)
+	})
 }

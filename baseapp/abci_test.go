@@ -2537,6 +2537,53 @@ func TestOptimisticExecution(t *testing.T) {
 	require.Equal(t, int64(50), suite.baseApp.LastBlockHeight())
 }
 
+// TestOptimisticExecutionSkipProcessProposal ensures that after OE successfully
+// finalizes height H, a FinalizeBlock for H+1 with no ProcessProposal does not
+// hit a leftover OE / spurious hash mismatch (issue #26766).
+func TestOptimisticExecutionSkipProcessProposal(t *testing.T) {
+	suite := NewBaseAppSuite(t, baseapp.SetOptimisticExecution())
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	runBlock := func(withProcessProposal bool) {
+		t.Helper()
+		tx := newTxCounter(t, suite.txConfig, 0, 1)
+		txBytes, err := suite.txConfig.TxEncoder()(tx)
+		require.NoError(t, err)
+
+		height := suite.baseApp.LastBlockHeight() + 1
+		hash := []byte("hash-" + strconv.FormatInt(height, 10))
+
+		if withProcessProposal {
+			respProcProp, err := suite.baseApp.ProcessProposal(&abci.RequestProcessProposal{
+				Txs:    [][]byte{txBytes},
+				Height: height,
+				Hash:   hash,
+			})
+			require.NoError(t, err)
+			require.Equal(t, abci.ResponseProcessProposal_ACCEPT, respProcProp.Status)
+		}
+
+		_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Txs:    [][]byte{txBytes},
+			Hash:   hash,
+		})
+		require.NoError(t, err)
+		_, err = suite.baseApp.Commit()
+		require.NoError(t, err)
+		require.Equal(t, height, suite.baseApp.LastBlockHeight())
+	}
+
+	// Height 2 runs with OE (height > initialHeight).
+	runBlock(true)
+	// Height 3: skip ProcessProposal, still finalize (OE must not be stale).
+	runBlock(false)
+}
+
 func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	pool := mempool.NewPriorityMempool[int64](mempool.PriorityNonceMempoolConfig[int64]{
 		TxPriority:      mempool.NewDefaultTxPriority(),

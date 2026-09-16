@@ -901,14 +901,11 @@ func TestImportPubKey(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			// The armor decoder does not verify the CRC-24 footer, so a
-			// modified body is rejected when the key it decodes to is
-			// unmarshalled rather than by the armor layer itself.
 			name:        "modified armor",
 			uid:         "modified",
 			backend:     BackendTest,
 			armor:       "-----BEGIN TENDERMINT PUBLIC KEY-----\nversion: 0.0.1\ntype: secp256k1\n\nCh8vY29zbW8zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOlcgxiZM4cR0LA\nwum483+L6zRnXC6zEKtQ4FEa6z0VrA==\n=CqBG\n-----END TENDERMINT PUBLIC KEY-----",
-			expectedErr: fmt.Errorf("no concrete type registered for type URL /cosmo3.crypto.secp256k1.PubKey against interface *types.PubKey"),
+			expectedErr: fmt.Errorf("couldn't unarmor bytes: %s", crypto.ErrArmorChecksum),
 		},
 		{
 			name:        "empty armor",

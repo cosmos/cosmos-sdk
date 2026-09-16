@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Breaking Changes
 
 * (x/auth) [#26672](https://github.com/cosmos/cosmos-sdk/pull/26672) An unordered transaction whose `timeout_timestamp` equals the block time is now rejected
+* (x/gov) [#26827](https://github.com/cosmos/cosmos-sdk/pull/26827) Remove the unused `types.ParamSubspace` interface, a leftover from the `x/params` removal in v0.55.
 
 ### Features
 

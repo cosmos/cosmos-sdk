@@ -90,8 +90,8 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx context.Context, pagination *que
 }
 
 // NewBaseKeeper returns a new BaseKeeper object with a given codec, dedicated
-// store key, an AccountKeeper implementation, and a parameter Subspace used to
-// store and fetch module parameters. The BaseKeeper also accepts a
+// store service, an AccountKeeper implementation, and an authority address
+// allowed to update module parameters. The BaseKeeper also accepts a
 // blocklist map. This blocklist describes the set of addresses that are not allowed
 // to receive funds through direct and explicit actions, for example, by using a MsgSend or
 // by using a SendCoinsFromModuleToAccount execution.

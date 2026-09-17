@@ -2,10 +2,12 @@ package crypto
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/ProtonMail/go-crypto/openpgp/armor"
 	"github.com/cometbft/cometbft/crypto"
@@ -285,5 +287,81 @@ func DecodeArmor(armorStr string) (blockType string, headers map[string]string, 
 	if err != nil {
 		return "", nil, nil, err
 	}
+
+	// The decoder no longer checks the CRC-24 footer, which RFC 9580
+	// deprecated, so check it here. Without this a corrupted export could
+	// decode into a different but structurally valid key, and a public key has
+	// no authentication tag to fail later.
+	if err := verifyArmorChecksum(armorStr, data); err != nil {
+		return "", nil, nil, err
+	}
+
 	return block.Type, block.Header, data, nil
+}
+
+// ErrArmorChecksum is returned when an armored block's contents do not match
+// its CRC-24 footer, meaning the block was corrupted in transit or storage.
+var ErrArmorChecksum = errors.New("armor invalid: checksum mismatch")
+
+// CRC-24 parameters, from RFC 4880, section 6.1.
+const (
+	crc24Init = 0xb704ce
+	crc24Poly = 0x1864cfb
+	crc24Mask = 0xffffff
+)
+
+// crc24 computes the CRC-24 checksum of data.
+func crc24(data []byte) uint32 {
+	crc := uint32(crc24Init)
+	for _, b := range data {
+		crc ^= uint32(b) << 16
+		for range 8 {
+			crc <<= 1
+			if crc&0x1000000 != 0 {
+				crc ^= crc24Poly
+			}
+		}
+	}
+	return crc & crc24Mask
+}
+
+// armorEnd begins the trailer line that closes an armored block.
+const armorEnd = "-----END "
+
+// verifyArmorChecksum checks data against the CRC-24 footer of the block it was
+// decoded from. The decoder neither checks the footer nor reports it, so we
+// locate it ourselves: a footer is a "=XXXX" line immediately before a block's
+// trailer, and a base64 body line never starts with '=' because lines break on
+// a multiple of four characters and so never split a group. Anchoring on the
+// trailer stops a stray line being read as a footer, and where more than one
+// block carries one, any footer that matches is taken as the decoded block's,
+// since only the decoder knows which block it read.
+//
+// A block with no footer is accepted, as RFC 9580 deprecated it.
+func verifyArmorChecksum(armorStr string, data []byte) error {
+	var sum [3]byte
+	crc := crc24(data)
+	sum[0], sum[1], sum[2] = byte(crc>>16), byte(crc>>8), byte(crc)
+	want := "=" + base64.StdEncoding.EncodeToString(sum[:])
+
+	lines := strings.Split(armorStr, "\n")
+	found := ""
+	for i, line := range lines {
+		line = strings.TrimSpace(line)
+		if len(line) != 5 || line[0] != '=' {
+			continue
+		}
+		if i+1 >= len(lines) || !strings.HasPrefix(strings.TrimSpace(lines[i+1]), armorEnd) {
+			continue
+		}
+		if line == want {
+			return nil
+		}
+		found = line
+	}
+
+	if found == "" {
+		return nil
+	}
+	return fmt.Errorf("%w: contents do not match footer %q", ErrArmorChecksum, found)
 }

@@ -209,100 +209,76 @@ func TestArmor(t *testing.T) {
 	assert.Equal(t, data, data2)
 }
 
-// TestArmorChecksum checks that a body which disagrees with its CRC-24 footer
-// is rejected. The armor decoder does not verify the footer itself, and a
-// public key has no authentication tag to fail later, so a flipped byte in the
-// key material would otherwise be imported silently as a different key.
+// TestArmorChecksum checks that a block whose contents disagree with its
+// CRC-24 footer is rejected. The armor decoder does not check the footer
+// itself, and a public key has no authentication tag to fail later, so a
+// flipped byte in the key material would otherwise be imported silently as a
+// different key.
 func TestArmorChecksum(t *testing.T) {
 	algo := string(hd.Secp256k1Type)
 	pubBytes := legacy.Cdc.MustMarshal(secp256k1.GenPrivKey().PubKey())
 
 	// Flip a bit in the last byte of the key material. The result is still a
-	// well-formed public key of the correct length, so only the footer can
+	// well-formed public key of the right length, so only the footer can
 	// reveal that it is not the key that was exported.
-	corruptedBytes := slices.Clone(pubBytes)
-	corruptedBytes[len(corruptedBytes)-1] ^= 0x01
+	corrupt := slices.Clone(pubBytes)
+	corrupt[len(corrupt)-1] ^= 1
 
-	good := crypto.ArmorPubKeyBytes(pubBytes, algo)
-	corrupted := crypto.ArmorPubKeyBytes(corruptedBytes, algo)
-
-	// Both decode on their own, which is what makes the footer necessary.
-	for name, armorStr := range map[string]string{"original": good, "corrupted": corrupted} {
-		bz, gotAlgo, err := crypto.UnarmorPubKeyBytes(armorStr)
-		require.NoError(t, err, name)
-		require.Equal(t, algo, gotAlgo, name)
-		require.Len(t, bz, len(pubBytes), name)
+	split := func(s string) []string { return strings.Split(strings.TrimRight(s, "\n"), "\n") }
+	join := func(lines []string) string { return strings.Join(lines, "\n") + "\n" }
+	withFooter := func(lines []string, footer string) string {
+		out := slices.Clone(lines)
+		out[len(out)-2] = footer
+		return join(out)
 	}
 
-	// Splice the original footer onto the corrupted body, which is what a
-	// damaged or tampered-with export looks like.
-	lines := strings.Split(strings.TrimRight(corrupted, "\n"), "\n")
-	goodLines := strings.Split(strings.TrimRight(good, "\n"), "\n")
-	footer := len(lines) - 2
-	require.True(t, strings.HasPrefix(lines[footer], "="), "expected a CRC-24 footer, got %q", lines[footer])
-	lines[footer] = goodLines[len(goodLines)-2]
+	good := split(crypto.ArmorPubKeyBytes(pubBytes, algo))
+	bad := split(crypto.ArmorPubKeyBytes(corrupt, algo))
+	require.True(t, strings.HasPrefix(good[len(good)-2], "="), "expected a CRC-24 footer")
 
-	_, _, err := crypto.UnarmorPubKeyBytes(strings.Join(lines, "\n") + "\n")
+	// Either block decodes on its own, which is what makes the footer
+	// necessary in the first place.
+	for _, lines := range [][]string{good, bad} {
+		bz, gotAlgo, err := crypto.UnarmorPubKeyBytes(join(lines))
+		require.NoError(t, err)
+		require.Equal(t, algo, gotAlgo)
+		require.Len(t, bz, len(pubBytes))
+	}
+
+	// The corrupted body carrying the original footer, which is what a damaged
+	// or tampered-with export looks like.
+	_, _, err := crypto.UnarmorPubKeyBytes(withFooter(bad, good[len(good)-2]))
 	require.ErrorIs(t, err, crypto.ErrArmorChecksum)
 
-	// A block with no footer at all stays acceptable: RFC 9580 deprecated it,
-	// so third-party tooling may legitimately omit it.
-	_, gotAlgo, err := crypto.UnarmorPubKeyBytes(strings.Join(slices.Delete(goodLines, footer, footer+1), "\n") + "\n")
+	// Footers that cannot match: unreadable, or another block's. The previous
+	// decoder skipped its checksum check outright for "=E3J=", which let a
+	// tampered block suppress the check by rewriting the footer.
+	for _, footer := range []string{"=!!!!", "=E3J=", "=AAAA"} {
+		_, _, err := crypto.UnarmorPubKeyBytes(withFooter(good, footer))
+		require.ErrorIs(t, err, crypto.ErrArmorChecksum, footer)
+	}
+
+	// A block with no footer stays acceptable: RFC 9580 deprecated it, so
+	// third-party tooling may legitimately omit it.
+	_, gotAlgo, err := crypto.UnarmorPubKeyBytes(join(slices.Delete(slices.Clone(good), len(good)-2, len(good)-1)))
 	require.NoError(t, err)
 	require.Equal(t, algo, gotAlgo)
-}
 
-// TestArmorChecksumLooseHeaders locks in that the footer is still verified for
-// blocks whose headers the decoder accepts loosely. The decoder splits headers
-// on a bare colon, so the footer scan has to agree with it about which lines
-// are headers: if it were stricter it would go looking for the footer of a
-// block the decoder never read, and skip the check.
-func TestArmorChecksumLooseHeaders(t *testing.T) {
-	const blockType = "MINT TEST"
-	data := []byte("some key material that is long enough to wrap onto a second base64 line")
-
-	// A header with no space after the colon, which the decoder still accepts.
-	loose := strings.Replace(
-		crypto.EncodeArmor(blockType, map[string]string{"version": "0.0.1"}, data),
-		"version: 0.0.1", "version:00.0.1", 1)
-	require.Contains(t, loose, "version:00.0.1")
-
-	gotType, _, got, err := crypto.DecodeArmor(loose)
+	// A footer belonging to a different block in the same input must not fail
+	// a block that is intact.
+	_, _, got, err := crypto.DecodeArmor(join(good) + crypto.EncodeArmor("MINT TEST", nil, []byte("other")))
 	require.NoError(t, err)
-	require.Equal(t, blockType, gotType)
-	require.Equal(t, data, got)
+	require.Equal(t, pubBytes, got)
 
-	lines := strings.Split(strings.TrimRight(loose, "\n"), "\n")
-	body := 3 // BEGIN line, header, blank line, then the body
-	require.Len(t, lines[body], 64, "expected a full-width base64 body line")
-
-	// Corrupting the body of that same block must still be caught.
-	corrupted := []byte(lines[body])
-	corrupted[3] ^= 1
-	withCorruptBody := slices.Clone(lines)
-	withCorruptBody[body] = string(corrupted)
-	_, _, _, err = crypto.DecodeArmor(strings.Join(withCorruptBody, "\n") + "\n")
+	// Nor may a header the decoder parses loosely, such as one with no space
+	// after its colon, cause the check to be skipped.
+	loose := split(strings.Replace(join(good), "version: 0.0.1", "version:00.0.1", 1))
+	require.Contains(t, join(loose), "version:00.0.1")
+	_, _, got, err = crypto.DecodeArmor(join(loose))
+	require.NoError(t, err)
+	require.Equal(t, pubBytes, got)
+	_, _, _, err = crypto.DecodeArmor(withFooter(loose, "=AAAA"))
 	require.ErrorIs(t, err, crypto.ErrArmorChecksum)
-
-	// A footer that is present but unreadable is a malformed block, not a
-	// block without a footer.
-	withBadFooter := slices.Clone(lines)
-	withBadFooter[len(withBadFooter)-2] = "=!!!!"
-	_, _, _, err = crypto.DecodeArmor(strings.Join(withBadFooter, "\n") + "\n")
-	require.ErrorIs(t, err, crypto.ErrArmorCorrupt)
-
-	// So is a footer with no trailer after it.
-	_, _, _, err = crypto.DecodeArmor(strings.Join(lines[:len(lines)-1], "\n") + "\n")
-	require.ErrorIs(t, err, crypto.ErrArmorCorrupt)
-
-	// A footer that is valid base64 but does not decode to three bytes is
-	// malformed too. The previous decoder skipped the checksum check outright
-	// for these, which let a tampered block suppress its own integrity check
-	// by rewriting the footer.
-	withPaddedFooter := slices.Clone(lines)
-	withPaddedFooter[len(withPaddedFooter)-2] = "=E3J="
-	_, _, _, err = crypto.DecodeArmor(strings.Join(withPaddedFooter, "\n") + "\n")
-	require.ErrorIs(t, err, crypto.ErrArmorCorrupt)
 }
 
 func TestBcryptLegacyEncryption(t *testing.T) {

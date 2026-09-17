@@ -905,7 +905,7 @@ func TestImportPubKey(t *testing.T) {
 			uid:         "modified",
 			backend:     BackendTest,
 			armor:       "-----BEGIN TENDERMINT PUBLIC KEY-----\nversion: 0.0.1\ntype: secp256k1\n\nCh8vY29zbW8zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOlcgxiZM4cR0LA\nwum483+L6zRnXC6zEKtQ4FEa6z0VrA==\n=CqBG\n-----END TENDERMINT PUBLIC KEY-----",
-			expectedErr: fmt.Errorf("couldn't unarmor bytes: %s", crypto.ErrArmorChecksum),
+			expectedErr: fmt.Errorf("couldn't unarmor bytes: %w", crypto.ErrArmorChecksum),
 		},
 		{
 			name:        "empty armor",

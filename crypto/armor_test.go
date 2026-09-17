@@ -246,13 +246,14 @@ func TestArmorChecksum(t *testing.T) {
 	}
 
 	// The corrupted body carrying the original footer, which is what a damaged
-	// or tampered-with export looks like.
-	_, _, err := crypto.UnarmorPubKeyBytes(withFooter(bad, good[len(good)-2]))
+	// export looks like.
+	tampered := withFooter(bad, good[len(good)-2])
+	_, _, err := crypto.UnarmorPubKeyBytes(tampered)
 	require.ErrorIs(t, err, crypto.ErrArmorChecksum)
 
 	// Footers that cannot match: unreadable, or another block's. The previous
-	// decoder skipped its checksum check outright for "=E3J=", which let a
-	// tampered block suppress the check by rewriting the footer.
+	// decoder skipped its checksum check outright for "=E3J=", so a block whose
+	// footer had been rewritten that way went through unchecked.
 	for _, footer := range []string{"=!!!!", "=E3J=", "=AAAA"} {
 		_, _, err := crypto.UnarmorPubKeyBytes(withFooter(good, footer))
 		require.ErrorIs(t, err, crypto.ErrArmorChecksum, footer)
@@ -276,13 +277,28 @@ func TestArmorChecksum(t *testing.T) {
 		require.Equal(t, pubBytes, got)
 	}
 
-	var got []byte
+	// Nor may a block the decoder skipped be mistaken for the block it
+	// returned: that would check a footer the returned block does not have, or
+	// check the wrong one. The decoder skips a block whose header line holds no
+	// type, and one whose headers do not parse.
+	for _, prefix := range []string{
+		"-----BEGIN -----\n-----END -----\n",
+		"-----BEGIN -----\n=AAAA\n-----END -----\n",
+		good[0] + "\nnocolon\n" + strings.Replace(good[0], "-----BEGIN ", "-----END ", 1) + "\n",
+	} {
+		_, _, _, err := crypto.DecodeArmor(prefix + tampered)
+		require.ErrorIs(t, err, crypto.ErrArmorChecksum, prefix)
+
+		_, _, got, err := crypto.DecodeArmor(prefix + join(good))
+		require.NoError(t, err, prefix)
+		require.Equal(t, pubBytes, got, prefix)
+	}
 
 	// Nor may a header the decoder parses loosely, such as one with no space
 	// after its colon, cause the check to be skipped.
 	loose := split(strings.Replace(join(good), "version: 0.0.1", "version:00.0.1", 1))
 	require.Contains(t, join(loose), "version:00.0.1")
-	_, _, got, err = crypto.DecodeArmor(join(loose))
+	_, _, got, err := crypto.DecodeArmor(join(loose))
 	require.NoError(t, err)
 	require.Equal(t, pubBytes, got)
 	_, _, _, err = crypto.DecodeArmor(withFooter(loose, "=AAAA"))

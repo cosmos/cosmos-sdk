@@ -292,7 +292,7 @@ func DecodeArmor(armorStr string) (blockType string, headers map[string]string, 
 	// deprecated, so check it here. Without this a corrupted export could
 	// decode into a different but structurally valid key, and a public key has
 	// no authentication tag to fail later.
-	if err := verifyArmorChecksum(armorStr, data); err != nil {
+	if err := verifyArmorChecksum(armorStr, block.Type, data); err != nil {
 		return "", nil, nil, err
 	}
 
@@ -327,36 +327,18 @@ func crc24(data []byte) uint32 {
 
 // Lines that delimit an armored block, from RFC 4880, section 6.2.
 const (
-	armorBegin = "-----BEGIN "
-	armorEnd   = "-----END "
+	armorBegin     = "-----BEGIN "
+	armorEnd       = "-----END "
+	armorEndOfLine = "-----"
 )
 
 // verifyArmorChecksum checks data against the CRC-24 footer of the block it was
 // decoded from. The decoder neither checks the footer nor reports it, so we
-// locate it ourselves, and have to be careful to read the right one: the input
-// may hold several blocks, of which the decoder returned the first.
-//
-// The footer sits on the line just before that block's trailer, and a base64
-// body line never starts with '=' because lines break on a multiple of four
-// characters and so never split a group. A block with no footer is accepted,
-// as RFC 9580 deprecated it.
-func verifyArmorChecksum(armorStr string, data []byte) error {
-	lines := strings.Split(armorStr, "\n")
-
-	begin := 0
-	for begin < len(lines) && !strings.HasPrefix(strings.TrimSpace(lines[begin]), armorBegin) {
-		begin++
-	}
-	trailer := begin + 1
-	for trailer < len(lines) && !strings.HasPrefix(strings.TrimSpace(lines[trailer]), armorEnd) {
-		trailer++
-	}
-	if trailer >= len(lines) {
-		return nil
-	}
-
-	footer := strings.TrimSpace(lines[trailer-1])
-	if len(footer) != 5 || footer[0] != '=' {
+// locate it ourselves. A block with no footer is accepted, as RFC 9580
+// deprecated it.
+func verifyArmorChecksum(armorStr, blockType string, data []byte) error {
+	footer, ok := findArmorFooter(strings.Split(armorStr, "\n"), blockType)
+	if !ok {
 		return nil
 	}
 
@@ -367,4 +349,67 @@ func verifyArmorChecksum(armorStr string, data []byte) error {
 		return fmt.Errorf("%w: contents do not match footer %q", ErrArmorChecksum, footer)
 	}
 	return nil
+}
+
+// findArmorFooter returns the CRC-24 footer of the block the decoder decoded,
+// if that block carries one. The input may hold several blocks, and the decoder
+// returns the first one it can parse, so we have to skip the candidates it
+// skips: a block whose header line carries another type, and one whose headers
+// do not parse. Reading a skipped block's footer would check the wrong bytes,
+// or, when that block has no footer, skip the check altogether.
+//
+// Within the block, the footer sits where the decoder stops reading the body:
+// at the first line that is a lone base64 group prefixed with '=', or at the
+// trailer. A base64 body line never looks like a footer, because lines break on
+// a multiple of four characters and so never split a group.
+func findArmorFooter(lines []string, blockType string) (string, bool) {
+	for i := range lines {
+		if !isArmorBegin(lines[i], blockType) {
+			continue
+		}
+		body, ok := armorBodyStart(lines, i+1)
+		if !ok {
+			continue
+		}
+		for _, line := range lines[body:] {
+			// The decoder matches these against the raw line, so strip only
+			// the carriage return that reading the line would have dropped.
+			line = strings.TrimSuffix(line, "\r")
+			if strings.HasPrefix(line, armorEnd) {
+				return "", false
+			}
+			if len(line) == 5 && line[0] == '=' {
+				return line, true
+			}
+		}
+		return "", false
+	}
+	return "", false
+}
+
+// isArmorBegin reports whether line is the header line of a block of blockType,
+// by the same reading the decoder gives it: the type is taken from a fixed
+// offset, so the line has to be long enough to hold a non-empty one.
+func isArmorBegin(line, blockType string) bool {
+	line = strings.TrimSpace(line)
+	if len(line) <= len(armorBegin)+len(armorEndOfLine) || !strings.HasPrefix(line, armorBegin) {
+		return false
+	}
+	return line[len(armorBegin):len(line)-len(armorEndOfLine)] == blockType
+}
+
+// armorBodyStart returns the index of the first body line of a block whose
+// headers start at lines[i], and whether those headers are ones the decoder
+// accepts: "Key: Value" lines terminated by a blank line.
+func armorBodyStart(lines []string, i int) (int, bool) {
+	for ; i < len(lines); i++ {
+		line := strings.TrimSpace(lines[i])
+		if len(line) == 0 {
+			return i + 1, true
+		}
+		if !strings.Contains(line, ":") {
+			return 0, false
+		}
+	}
+	return 0, false
 }

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"slices"
+	"strings"
 	"testing"
 
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
@@ -205,6 +207,102 @@ func TestArmor(t *testing.T) {
 	require.Nil(t, err, "%+v", err)
 	assert.Equal(t, blockType, blockType2)
 	assert.Equal(t, data, data2)
+}
+
+// TestArmorChecksum checks that a block whose contents disagree with its
+// CRC-24 footer is rejected. The armor decoder does not check the footer
+// itself, and a public key has no authentication tag to fail later, so a
+// flipped byte in the key material would otherwise be imported silently as a
+// different key.
+func TestArmorChecksum(t *testing.T) {
+	algo := string(hd.Secp256k1Type)
+	pubBytes := legacy.Cdc.MustMarshal(secp256k1.GenPrivKey().PubKey())
+
+	// Flip a bit in the last byte of the key material. The result is still a
+	// well-formed public key of the right length, so only the footer can
+	// reveal that it is not the key that was exported.
+	corrupt := slices.Clone(pubBytes)
+	corrupt[len(corrupt)-1] ^= 1
+
+	split := func(s string) []string { return strings.Split(strings.TrimRight(s, "\n"), "\n") }
+	join := func(lines []string) string { return strings.Join(lines, "\n") + "\n" }
+	withFooter := func(lines []string, footer string) string {
+		out := slices.Clone(lines)
+		out[len(out)-2] = footer
+		return join(out)
+	}
+
+	good := split(crypto.ArmorPubKeyBytes(pubBytes, algo))
+	bad := split(crypto.ArmorPubKeyBytes(corrupt, algo))
+	require.True(t, strings.HasPrefix(good[len(good)-2], "="), "expected a CRC-24 footer")
+
+	// Either block decodes on its own, which is what makes the footer
+	// necessary in the first place.
+	for _, lines := range [][]string{good, bad} {
+		bz, gotAlgo, err := crypto.UnarmorPubKeyBytes(join(lines))
+		require.NoError(t, err)
+		require.Equal(t, algo, gotAlgo)
+		require.Len(t, bz, len(pubBytes))
+	}
+
+	// The corrupted body carrying the original footer, which is what a damaged
+	// export looks like.
+	tampered := withFooter(bad, good[len(good)-2])
+	_, _, err := crypto.UnarmorPubKeyBytes(tampered)
+	require.ErrorIs(t, err, crypto.ErrArmorChecksum)
+
+	// Footers that cannot match: unreadable, or another block's. The previous
+	// decoder skipped its checksum check outright for "=E3J=", so a block whose
+	// footer had been rewritten that way went through unchecked.
+	for _, footer := range []string{"=!!!!", "=E3J=", "=AAAA"} {
+		_, _, err := crypto.UnarmorPubKeyBytes(withFooter(good, footer))
+		require.ErrorIs(t, err, crypto.ErrArmorChecksum, footer)
+	}
+
+	// A block with no footer stays acceptable: RFC 9580 deprecated it, so
+	// third-party tooling may legitimately omit it.
+	footerless := join(slices.Delete(slices.Clone(good), len(good)-2, len(good)-1))
+	_, gotAlgo, err := crypto.UnarmorPubKeyBytes(footerless)
+	require.NoError(t, err)
+	require.Equal(t, algo, gotAlgo)
+
+	// A footer belonging to a later block in the same input must not be read as
+	// the decoded block's, whether or not that block has a footer of its own.
+	// Only the second case leaves the other block's footer as the only one in
+	// the input, so both are worth covering.
+	other := crypto.EncodeArmor("MINT TEST", nil, []byte("other"))
+	for _, in := range []string{join(good) + other, footerless + other} {
+		_, _, got, err := crypto.DecodeArmor(in)
+		require.NoError(t, err)
+		require.Equal(t, pubBytes, got)
+	}
+
+	// Nor may a block the decoder skipped be mistaken for the block it
+	// returned: that would check a footer the returned block does not have, or
+	// check the wrong one. The decoder skips a block whose header line holds no
+	// type, and one whose headers do not parse.
+	for _, prefix := range []string{
+		"-----BEGIN -----\n-----END -----\n",
+		"-----BEGIN -----\n=AAAA\n-----END -----\n",
+		good[0] + "\nnocolon\n" + strings.Replace(good[0], "-----BEGIN ", "-----END ", 1) + "\n",
+	} {
+		_, _, _, err := crypto.DecodeArmor(prefix + tampered)
+		require.ErrorIs(t, err, crypto.ErrArmorChecksum, prefix)
+
+		_, _, got, err := crypto.DecodeArmor(prefix + join(good))
+		require.NoError(t, err, prefix)
+		require.Equal(t, pubBytes, got, prefix)
+	}
+
+	// Nor may a header the decoder parses loosely, such as one with no space
+	// after its colon, cause the check to be skipped.
+	loose := split(strings.Replace(join(good), "version: 0.0.1", "version:00.0.1", 1))
+	require.Contains(t, join(loose), "version:00.0.1")
+	_, _, got, err := crypto.DecodeArmor(join(loose))
+	require.NoError(t, err)
+	require.Equal(t, pubBytes, got)
+	_, _, _, err = crypto.DecodeArmor(withFooter(loose, "=AAAA"))
+	require.ErrorIs(t, err, crypto.ErrArmorChecksum)
 }
 
 func TestBcryptLegacyEncryption(t *testing.T) {

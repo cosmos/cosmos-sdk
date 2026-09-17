@@ -2,15 +2,17 @@ package crypto
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
+	"github.com/ProtonMail/go-crypto/openpgp/armor"
 	"github.com/cometbft/cometbft/crypto"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/chacha20poly1305"
-	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck //TODO: remove this dependency
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -285,5 +287,129 @@ func DecodeArmor(armorStr string) (blockType string, headers map[string]string, 
 	if err != nil {
 		return "", nil, nil, err
 	}
+
+	// The decoder no longer checks the CRC-24 footer, which RFC 9580
+	// deprecated, so check it here. Without this a corrupted export could
+	// decode into a different but structurally valid key, and a public key has
+	// no authentication tag to fail later.
+	if err := verifyArmorChecksum(armorStr, block.Type, data); err != nil {
+		return "", nil, nil, err
+	}
+
 	return block.Type, block.Header, data, nil
+}
+
+// ErrArmorChecksum is returned when an armored block's contents do not match
+// its CRC-24 footer, meaning the block was corrupted in transit or storage.
+var ErrArmorChecksum = errors.New("armor invalid: checksum mismatch")
+
+// CRC-24 parameters, from RFC 4880, section 6.1.
+const (
+	crc24Init = 0xb704ce
+	crc24Poly = 0x1864cfb
+	crc24Mask = 0xffffff
+)
+
+// crc24 computes the CRC-24 checksum of data.
+func crc24(data []byte) uint32 {
+	crc := uint32(crc24Init)
+	for _, b := range data {
+		crc ^= uint32(b) << 16
+		for range 8 {
+			crc <<= 1
+			if crc&0x1000000 != 0 {
+				crc ^= crc24Poly
+			}
+		}
+	}
+	return crc & crc24Mask
+}
+
+// Lines that delimit an armored block, from RFC 4880, section 6.2.
+const (
+	armorBegin     = "-----BEGIN "
+	armorEnd       = "-----END "
+	armorEndOfLine = "-----"
+)
+
+// verifyArmorChecksum checks data against the CRC-24 footer of the block it was
+// decoded from. The decoder neither checks the footer nor reports it, so we
+// locate it ourselves. A block with no footer is accepted, as RFC 9580
+// deprecated it.
+func verifyArmorChecksum(armorStr, blockType string, data []byte) error {
+	footer, ok := findArmorFooter(strings.Split(armorStr, "\n"), blockType)
+	if !ok {
+		return nil
+	}
+
+	var sum [3]byte
+	crc := crc24(data)
+	sum[0], sum[1], sum[2] = byte(crc>>16), byte(crc>>8), byte(crc)
+	if want := "=" + base64.StdEncoding.EncodeToString(sum[:]); footer != want {
+		return fmt.Errorf("%w: contents do not match footer %q", ErrArmorChecksum, footer)
+	}
+	return nil
+}
+
+// findArmorFooter returns the CRC-24 footer of the block the decoder decoded,
+// if that block carries one. The input may hold several blocks, and the decoder
+// returns the first one it can parse, so we have to skip the candidates it
+// skips: a block whose header line carries another type, and one whose headers
+// do not parse. Reading a skipped block's footer would check the wrong bytes,
+// or, when that block has no footer, skip the check altogether.
+//
+// Within the block, the footer sits where the decoder stops reading the body:
+// at the first line that is a lone base64 group prefixed with '=', or at the
+// trailer. A base64 body line never looks like a footer, because lines break on
+// a multiple of four characters and so never split a group.
+func findArmorFooter(lines []string, blockType string) (string, bool) {
+	for i := range lines {
+		if !isArmorBegin(lines[i], blockType) {
+			continue
+		}
+		body, ok := armorBodyStart(lines, i+1)
+		if !ok {
+			continue
+		}
+		for _, line := range lines[body:] {
+			// The decoder matches these against the raw line, so strip only
+			// the carriage return that reading the line would have dropped.
+			line = strings.TrimSuffix(line, "\r")
+			if strings.HasPrefix(line, armorEnd) {
+				return "", false
+			}
+			if len(line) == 5 && line[0] == '=' {
+				return line, true
+			}
+		}
+		return "", false
+	}
+	return "", false
+}
+
+// isArmorBegin reports whether line is the header line of a block of blockType,
+// by the same reading the decoder gives it: the type is taken from a fixed
+// offset, so the line has to be long enough to hold a non-empty one.
+func isArmorBegin(line, blockType string) bool {
+	line = strings.TrimSpace(line)
+	if len(line) <= len(armorBegin)+len(armorEndOfLine) || !strings.HasPrefix(line, armorBegin) {
+		return false
+	}
+	return line[len(armorBegin):len(line)-len(armorEndOfLine)] == blockType
+}
+
+// armorBodyStart returns the index of the first body line of a block whose
+// headers start at lines[i], and whether those headers are ones the decoder
+// accepts: "Key: Value" lines terminated by a blank line.
+func armorBodyStart(lines []string, i int) (int, bool) {
+	for ; i < len(lines); i++ {
+		line := strings.TrimSpace(lines[i])
+		if len(line) == 0 {
+			return i + 1, true
+		}
+		if !strings.Contains(line, ":") {
+			return 0, false
+		}
+	}
+	return 0, false
 }

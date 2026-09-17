@@ -260,15 +260,23 @@ func TestArmorChecksum(t *testing.T) {
 
 	// A block with no footer stays acceptable: RFC 9580 deprecated it, so
 	// third-party tooling may legitimately omit it.
-	_, gotAlgo, err := crypto.UnarmorPubKeyBytes(join(slices.Delete(slices.Clone(good), len(good)-2, len(good)-1)))
+	footerless := join(slices.Delete(slices.Clone(good), len(good)-2, len(good)-1))
+	_, gotAlgo, err := crypto.UnarmorPubKeyBytes(footerless)
 	require.NoError(t, err)
 	require.Equal(t, algo, gotAlgo)
 
-	// A footer belonging to a different block in the same input must not fail
-	// a block that is intact.
-	_, _, got, err := crypto.DecodeArmor(join(good) + crypto.EncodeArmor("MINT TEST", nil, []byte("other")))
-	require.NoError(t, err)
-	require.Equal(t, pubBytes, got)
+	// A footer belonging to a later block in the same input must not be read as
+	// the decoded block's, whether or not that block has a footer of its own.
+	// Only the second case leaves the other block's footer as the only one in
+	// the input, so both are worth covering.
+	other := crypto.EncodeArmor("MINT TEST", nil, []byte("other"))
+	for _, in := range []string{join(good) + other, footerless + other} {
+		_, _, got, err := crypto.DecodeArmor(in)
+		require.NoError(t, err)
+		require.Equal(t, pubBytes, got)
+	}
+
+	var got []byte
 
 	// Nor may a header the decoder parses loosely, such as one with no space
 	// after its colon, cause the check to be skipped.

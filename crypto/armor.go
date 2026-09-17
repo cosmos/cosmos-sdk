@@ -325,43 +325,46 @@ func crc24(data []byte) uint32 {
 	return crc & crc24Mask
 }
 
-// armorEnd begins the trailer line that closes an armored block.
-const armorEnd = "-----END "
+// Lines that delimit an armored block, from RFC 4880, section 6.2.
+const (
+	armorBegin = "-----BEGIN "
+	armorEnd   = "-----END "
+)
 
 // verifyArmorChecksum checks data against the CRC-24 footer of the block it was
 // decoded from. The decoder neither checks the footer nor reports it, so we
-// locate it ourselves: a footer is a "=XXXX" line immediately before a block's
-// trailer, and a base64 body line never starts with '=' because lines break on
-// a multiple of four characters and so never split a group. Anchoring on the
-// trailer stops a stray line being read as a footer, and where more than one
-// block carries one, any footer that matches is taken as the decoded block's,
-// since only the decoder knows which block it read.
+// locate it ourselves, and have to be careful to read the right one: the input
+// may hold several blocks, of which the decoder returned the first.
 //
-// A block with no footer is accepted, as RFC 9580 deprecated it.
+// The footer sits on the line just before that block's trailer, and a base64
+// body line never starts with '=' because lines break on a multiple of four
+// characters and so never split a group. A block with no footer is accepted,
+// as RFC 9580 deprecated it.
 func verifyArmorChecksum(armorStr string, data []byte) error {
+	lines := strings.Split(armorStr, "\n")
+
+	begin := 0
+	for begin < len(lines) && !strings.HasPrefix(strings.TrimSpace(lines[begin]), armorBegin) {
+		begin++
+	}
+	trailer := begin + 1
+	for trailer < len(lines) && !strings.HasPrefix(strings.TrimSpace(lines[trailer]), armorEnd) {
+		trailer++
+	}
+	if trailer >= len(lines) {
+		return nil
+	}
+
+	footer := strings.TrimSpace(lines[trailer-1])
+	if len(footer) != 5 || footer[0] != '=' {
+		return nil
+	}
+
 	var sum [3]byte
 	crc := crc24(data)
 	sum[0], sum[1], sum[2] = byte(crc>>16), byte(crc>>8), byte(crc)
-	want := "=" + base64.StdEncoding.EncodeToString(sum[:])
-
-	lines := strings.Split(armorStr, "\n")
-	found := ""
-	for i, line := range lines {
-		line = strings.TrimSpace(line)
-		if len(line) != 5 || line[0] != '=' {
-			continue
-		}
-		if i+1 >= len(lines) || !strings.HasPrefix(strings.TrimSpace(lines[i+1]), armorEnd) {
-			continue
-		}
-		if line == want {
-			return nil
-		}
-		found = line
+	if want := "=" + base64.StdEncoding.EncodeToString(sum[:]); footer != want {
+		return fmt.Errorf("%w: contents do not match footer %q", ErrArmorChecksum, footer)
 	}
-
-	if found == "" {
-		return nil
-	}
-	return fmt.Errorf("%w: contents do not match footer %q", ErrArmorChecksum, found)
+	return nil
 }

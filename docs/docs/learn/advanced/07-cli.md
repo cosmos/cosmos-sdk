@@ -66,7 +66,7 @@ Learn more [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/server).
 Next is an example `rootCmd` function from the `simapp` application. It instantiates the root command, adds a [*persistent* flag](#flags) and `PreRun` function to be run before every execution, and adds all of the necessary subcommands.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L47-L130
+https://github.com/cosmos/cosmos-sdk/blob/main/simapp/simd/cmd/root.go#L23-L87
 ```
 
 :::tip
@@ -80,13 +80,13 @@ By default app uses CometBFT app config template from Cosmos SDK, which can be o
 Here's an example code to override default `app.toml` template.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L144-L199
+https://github.com/cosmos/cosmos-sdk/blob/main/simapp/simd/cmd/commands.go#L45-L98
 ```
 
 The `initAppConfig()` also allows overriding the default Cosmos SDK's [server config](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/server/config/config.go#L231). One example is the `min-gas-prices` config, which defines the minimum gas prices a validator is willing to accept for processing a transaction. By default, the Cosmos SDK sets this parameter to `""` (empty string), which forces all validators to tweak their own `app.toml` and set a non-empty value, or else the node will halt on startup. This might not be the best UX for validators, so the chain developer can set a default `app.toml` value for validators inside this `initAppConfig()` function.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L164-L180
+https://github.com/cosmos/cosmos-sdk/blob/main/simapp/simd/cmd/commands.go#L64-L77
 ```
 
 The root-level `status` and `keys` subcommands are common across most applications and do not interact with application state. The bulk of an application's functionality - what users can actually *do* with it - is enabled by its `tx` and `query` commands.
@@ -96,7 +96,7 @@ The root-level `status` and `keys` subcommands are common across most applicatio
 [Transactions](./01-transactions.md) are objects wrapping [`Msg`s](../../build/building-modules/02-messages-and-queries.md#messages) that trigger state changes. To enable the creation of transactions using the CLI interface, a function `txCommand` is generally added to the `rootCmd`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L222-L229
+https://github.com/cosmos/cosmos-sdk/blob/main/simapp/simd/cmd/commands.go#L123-L130
 ```
 
 This `txCommand` function adds all the transaction available to end-users for the application. This typically includes:
@@ -108,7 +108,7 @@ This `txCommand` function adds all the transaction available to end-users for th
 Here is an example of a `txCommand` aggregating these subcommands from the `simapp` application:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L270-L292
+https://github.com/cosmos/cosmos-sdk/blob/main/simapp/simd/cmd/commands.go#L165-L187
 ```
 
 :::tip
@@ -121,7 +121,7 @@ Read more about [AutoCLI](https://docs.cosmos.network/main/core/autocli) in its 
 [**Queries**](../../build/building-modules/02-messages-and-queries.md#queries) are objects that allow users to retrieve information about the application's state. To enable the creation of queries using the CLI interface, a function `queryCommand` is generally added to the `rootCmd`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L222-L229
+https://github.com/cosmos/cosmos-sdk/blob/main/simapp/simd/cmd/commands.go#L123-L130
 ```
 
 This `queryCommand` function adds all the queries available to end-users for the application. This typically includes:
@@ -135,7 +135,7 @@ This `queryCommand` function adds all the queries available to end-users for the
 Here is an example of a `queryCommand` aggregating subcommands from the `simapp` application:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L249-L268
+https://github.com/cosmos/cosmos-sdk/blob/main/simapp/simd/cmd/commands.go#L143-L163
 ```
 
 :::tip
@@ -179,7 +179,7 @@ It is vital that the root command of an application uses `PersistentPreRun()` co
 Here is an example of an `PersistentPreRun()` function from `simapp`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L81-L120
+https://github.com/cosmos/cosmos-sdk/blob/main/simapp/simd/cmd/root.go#L47-L71
 ```
 
 The `SetCmdClientContextHandler` call reads persistent flags via `ReadPersistentCommandFlags` which creates a `client.Context` and sets that on the root command's `Context`.

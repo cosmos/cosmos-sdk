@@ -72,7 +72,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/server/types/app.go#L69
 In practice, the [constructor of the application](../beginner/00-app-anatomy.md#constructor-function) is passed as the `appCreator`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L294-L308
+https://github.com/cosmos/cosmos-sdk/blob/main/simapp/simd/cmd/commands.go#L190-L201
 ```
 
 Then, the instance of `app` is used to instantiate a new CometBFT node:

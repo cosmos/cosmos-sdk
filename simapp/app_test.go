@@ -38,6 +38,7 @@ import (
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/epochs"
@@ -559,4 +560,28 @@ func TestAddressCodecFactory(t *testing.T) {
 	require.NotNil(t, consAddressCodec)
 	_, ok = consAddressCodec.(customAddressCodec)
 	require.True(t, ok)
+}
+
+func TestConsensusParamsRejectPubKeyTypeInUse(t *testing.T) {
+	app := Setup(t, false)
+	ctx := app.NewContext(false)
+
+	params, err := app.ConsensusParamsKeeper.ParamsStore.Get(ctx)
+	require.NoError(t, err)
+	updateParams := func(pubKeyTypes ...string) error {
+		msg := &consensustypes.MsgUpdateParams{
+			Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			Block:     params.Block,
+			Evidence:  params.Evidence,
+			Validator: &cmtproto.ValidatorParams{PubKeyTypes: pubKeyTypes},
+		}
+		_, err := app.MsgServiceRouter().Handler(msg)(ctx, msg)
+		return err
+	}
+
+	// the genesis validator uses an ed25519 consensus key
+	err = updateParams(cmttypes.ABCIPubKeyTypeSecp256k1)
+	require.ErrorIs(t, err, stakingtypes.ErrValidatorPubKeyTypeNotSupported)
+
+	require.NoError(t, updateParams(cmttypes.ABCIPubKeyTypeEd25519, cmttypes.ABCIPubKeyTypeSecp256k1))
 }

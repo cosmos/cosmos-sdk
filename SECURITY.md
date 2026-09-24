@@ -1,29 +1,3 @@
-# Coordinated Vulnerability Disclosure Policy
-
-> **IMPORTANT**: *DO NOT* open public issues on this repository for security
-> vulnerabilities.
-
----
-
-## Canonical Policies
-
-Our canonical policies are maintained here:
-
-- **Security Policy (reporting process, scope, disclosure standards):**  
-  https://github.com/cosmos/security/blob/main/SECURITY.md
-
-- **Release & Maintenance Policy (supported versions, lifecycle, EOL):**  
-  https://github.com/cosmos/security/blob/main/POLICY.md
-
-- **HackerOne Bug Bounty Program:**  
-  https://hackerone.com/cosmos
-
-All vulnerability scope, supported versions, lifecycle timelines, and reporting
-procedures are governed by the Security Policy and Release & Maintenance Policy
-linked above.
-
----
-
 ## Reporting a Vulnerability
 
 **Private Disclosure Required**
@@ -48,3 +22,6 @@ Submission of a report constitutes agreement to participate in
 testing, and deployment of a fix prior to public release of details.
 
 ------------------------------------------------------------------------
+### More information
+
+* See [Maintenance and Security](https://github.com/cosmos/security) for detailed policies.

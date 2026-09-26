@@ -69,6 +69,13 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		}
 	}
 
+	// Reset any genesis-tx events left over from a previous InitChain call in
+	// this process (see ExecuteGenesisTx). Without this, a CometBFT restart at
+	// height 0 that re-runs InitChain before the first FinalizeBlock succeeds
+	// would replay the genesis txs and duplicate their events in the first
+	// block's response.
+	app.genesisEvents = nil
+
 	// initialize states with a correct header
 	app.stateManager.SetState(execModeFinalize, app.cms, initHeader, app.logger, app.streamingManager)
 	app.stateManager.SetState(execModeCheck, app.cms, initHeader, app.logger, app.streamingManager)
@@ -797,6 +804,12 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		return nil, err
 	}
 
+	// genesis transaction events cannot be returned by ResponseInitChain, so include
+	// them in the first block's response.
+	if req.Height == app.initialHeight {
+		events = append(events, app.genesisEvents...)
+	}
+
 	// NOTE: Header populated here is intentionally partial; it omits Version, LastBlockID,
 	// LastCommitHash, DataHash, ValidatorsHash, ConsensusHash, LastResultsHash, and EvidenceHash.
 	// As a result, the HistoricalInfo headers stored by x/staking are unreliable and cannot reproduce
@@ -1022,6 +1035,11 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	nonOEStart := time.Now()
 	res, err = app.internalFinalizeBlock(context.Background(), req)
 	measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.NonOEInternalFinalize }, nonOEStart)
+
+	if err == nil && req.Height == app.initialHeight {
+		app.genesisEvents = nil
+	}
+
 	if res != nil {
 		whStart := time.Now()
 		res.AppHash = app.workingHash()

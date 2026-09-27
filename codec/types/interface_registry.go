@@ -37,7 +37,7 @@ func UnpackInterfaces(x interface{}, unpacker gogoprotoany.AnyUnpacker) error {
 	return nil
 }
 
-var protoMessageType = reflect.TypeOf((*proto.Message)(nil)).Elem()
+var protoMessageType = reflect.TypeFor[proto.Message]()
 
 // InterfaceRegistry provides a mechanism for registering interfaces and
 // implementations that can be safely unpacked from Any

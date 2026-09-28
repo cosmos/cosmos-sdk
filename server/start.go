@@ -29,6 +29,7 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/hashicorp/go-metrics"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
@@ -41,8 +42,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
+	"github.com/cosmos/cosmos-sdk/server/blocklog"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
@@ -114,6 +117,9 @@ const (
 	FlagBlockExecutor       = "block-executor"
 	FlagBlockSTMWorkers     = "block-stm-workers"
 	FlagBlockSTMPreEstimate = "block-stm-pre-estimate"
+
+	// FlagBlockLogsRetainBlocks is the app.toml key and start flag for per-block log capture.
+	FlagBlockLogsRetainBlocks = "block-logs.retain-blocks"
 
 	// testnet keys
 
@@ -245,7 +251,21 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 		svrCtx.Logger = log.NewMultiLogger(svrCtx.Logger, otelLogger)
 	}
 
-	app, appCleanupFn, err := startApp(svrCtx, appCreator, opts)
+	// Per-block log capture wraps only the logger handed to the application, so
+	// CometBFT and server components are not captured. BaseApp discovers the
+	// wrapper on its logger and brackets FinalizeBlock..Commit with it.
+	appLogger := svrCtx.Logger
+	if retain := cast.ToUint64(svrCtx.Viper.Get(FlagBlockLogsRetainBlocks)); retain > 0 {
+		store, err := blocklog.Open(filepath.Join(svrCtx.Config.RootDir, "data", "block-logs"), retain, svrCtx.Logger)
+		if err != nil {
+			return fmt.Errorf("failed to open block log store: %w", err)
+		}
+		svrCtx.BlockLogs = store
+		appLogger = blocklog.Wrap(svrCtx.Logger, store, log.ModuleKey, "server")
+		svrCtx.Logger.Info("per-block log capture enabled", "retain-blocks", retain)
+	}
+
+	app, appCleanupFn, err := startApp(svrCtx, appLogger, appCreator, opts)
 	if err != nil {
 		return fmt.Errorf("failed to start app: %w", err)
 	}
@@ -517,6 +537,10 @@ func StartGrpcServer(
 		return nil, clientCtx, err
 	}
 
+	// The node Logs query is served directly by this server (never over ABCI
+	// Query); it must be registered before Serve.
+	nodeservice.RegisterLogsService(grpcSrv, svrCtx.BlockLogs)
+
 	// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
 	// that the server is gracefully shut down.
 	g.Go(func() error {
@@ -621,7 +645,7 @@ func getCtx(svrCtx *Context, block bool) (*errgroup.Group, context.Context) {
 	return g, ctx
 }
 
-func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions) (app types.Application, cleanupFn func(), err error) {
+func startApp(svrCtx *Context, logger log.Logger, appCreator types.AppCreator, opts StartCmdOptions) (app types.Application, cleanupFn func(), err error) {
 	home := svrCtx.Config.RootDir
 	db, err := opts.DBOpener(home, GetAppDBBackend(svrCtx.Viper))
 	if err != nil {
@@ -629,12 +653,12 @@ func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions
 	}
 
 	if isTestnet, ok := svrCtx.Viper.Get(KeyIsTestnet).(bool); ok && isTestnet {
-		app, err = testnetify(svrCtx, appCreator, db)
+		app, err = testnetify(svrCtx, logger, appCreator, db)
 		if err != nil {
 			return app, func() {}, err
 		}
 	} else {
-		app = appCreator(svrCtx.Logger, db, svrCtx.Viper)
+		app = appCreator(logger, db, svrCtx.Viper)
 	}
 
 	cleanupFn = func() {
@@ -753,7 +777,7 @@ you want to test the upgrade handler itself.
 
 // testnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
 // that the state in the data folder represents. The chainID of the local genesis file is modified to match the provided chainID.
-func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB) (types.Application, error) {
+func testnetify(ctx *Context, logger log.Logger, testnetAppCreator types.AppCreator, db dbm.DB) (types.Application, error) {
 	config := ctx.Config
 
 	newChainID, ok := ctx.Viper.Get(KeyNewChainID).(string)
@@ -822,7 +846,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB) (ty
 
 	ctx.Viper.Set(KeyNewValAddr, validatorAddress)
 	ctx.Viper.Set(KeyUserPubKey, userPubKey)
-	testnetApp := testnetAppCreator(ctx.Logger, db, ctx.Viper)
+	testnetApp := testnetAppCreator(logger, db, ctx.Viper)
 
 	var success bool
 	defer func() {
@@ -1035,6 +1059,7 @@ func addStartNodeFlags(cmd *cobra.Command, opts StartCmdOptions) {
 	cmd.Flags().String(FlagBlockExecutor, serverconfig.DefaultBlockExecutor, "Block executor mode (block-stm|sequential)")
 	cmd.Flags().Int(FlagBlockSTMWorkers, serverconfig.DefaultBlockSTMWorkers, "Number of workers for block-stm execution (0 = auto)")
 	cmd.Flags().Bool(FlagBlockSTMPreEstimate, serverconfig.DefaultBlockSTMPreEstimate, "Enable pre-estimation for block-stm execution")
+	cmd.Flags().Uint64(FlagBlockLogsRetainBlocks, 0, "Number of recent blocks whose application logs are captured to <home>/data/block-logs and served by the node Logs query (0 = disabled)")
 
 	// support old flags name for backwards compatibility
 	cmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {

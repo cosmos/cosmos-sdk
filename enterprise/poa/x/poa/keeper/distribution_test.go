@@ -1156,6 +1156,49 @@ func TestGetUnallocatedFees(t *testing.T) {
 	})
 }
 
+func TestGetUnallocatedFeesRoundingOvershoot(t *testing.T) {
+	// Six equal-power validators splitting 1 unit: each share rounds up to
+	// 0.166666666666666667, so the allocated total (1.000000000000000002)
+	// exceeds the module balance. The next checkpoint must not panic.
+	f := setupTest(t)
+	var validatorAddr string
+	for i := 1; i <= 6; i++ {
+		validatorAddr, _ = createValidator(t, f, i, 100)
+	}
+
+	fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1))
+	require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
+	require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
+
+	totalAllocated, err := f.poaKeeper.getTotalAllocated(f.ctx)
+	require.NoError(t, err)
+	require.True(t, totalAllocated.AmountOf("stake").GT(math.LegacyNewDec(1)))
+
+	// overshoot is treated as nothing left to allocate
+	unallocated, err := f.poaKeeper.getUnallocatedFees(f.ctx)
+	require.NoError(t, err)
+	require.True(t, unallocated.IsZero())
+
+	// new fees in another denom are still allocated despite the overshoot
+	require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("atom", 600))))
+	unallocated, err = f.poaKeeper.getUnallocatedFees(f.ctx)
+	require.NoError(t, err)
+	require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(600))}, unallocated)
+
+	// second checkpoint before any new fees arrive
+	require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
+
+	// query path
+	_, err = f.poaKeeper.WithdrawableFees(f.ctx, &poatypes.QueryWithdrawableFeesRequest{OperatorAddress: validatorAddr})
+	require.NoError(t, err)
+
+	// withdraw path
+	validatorAddrSdk, err := sdk.AccAddressFromBech32(validatorAddr)
+	require.NoError(t, err)
+	_, err = f.poaKeeper.WithdrawValidatorFees(f.ctx, validatorAddrSdk)
+	require.NoError(t, err)
+}
+
 func TestAdjustTotalAllocated(t *testing.T) {
 	t.Run("increases total allocated", func(t *testing.T) {
 		f := setupTest(t)

@@ -10,7 +10,7 @@ This document details how to build CLI and REST interfaces for a module. Example
 
 :::note Pre-requisite Readings
 
-* [CLI](https://docs.cosmos.network/main/core/cli)
+* [CLI](https://docs.cosmos.network/sdk/latest/learn/concepts/cli-grpc-rest)
 
 :::
 
@@ -103,7 +103,7 @@ keyring.NewAutoCLIKeyring(kb)
 ## Signing
 
 `autocli` supports signing transactions with the keyring.
-The [`cosmos.msg.v1.signer` protobuf annotation](https://docs.cosmos.network/main/build/building-modules/protobuf-annotations) defines the signer field of the message.
+The [`cosmos.msg.v1.signer` protobuf annotation](https://docs.cosmos.network/sdk/latest/guides/reference/protobuf-annotations) defines the signer field of the message.
 This field is automatically filled when using the `--from` flag or defining the signer as a positional argument.
 
 :::warning
@@ -232,7 +232,7 @@ If not set to true, `AutoCLI` will not generate commands for the module if there
 
 ### Skip a command
 
-AutoCLI automatically skips unsupported commands when [`cosmos_proto.method_added_in` protobuf annotation](https://docs.cosmos.network/main/build/building-modules/protobuf-annotations) is present.
+AutoCLI automatically skips unsupported commands when [`cosmos_proto.method_added_in` protobuf annotation](https://docs.cosmos.network/sdk/latest/guides/reference/protobuf-annotations) is present.
 
 Additionally, a command can be manually skipped using the `autocliv1.RpcCommandOptions`:
 

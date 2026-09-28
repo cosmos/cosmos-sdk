@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"slices"
 	"sort"
@@ -185,7 +186,7 @@ func UnpackAccounts(accountsAny []*types.Any) (GenesisAccounts, error) {
 	for i, any := range accountsAny {
 		acc, ok := any.GetCachedValue().(GenesisAccount)
 		if !ok {
-			return nil, fmt.Errorf("expected genesis account")
+			return nil, errors.New("expected genesis account")
 		}
 		accounts[i] = acc
 	}

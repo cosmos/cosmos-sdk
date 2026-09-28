@@ -143,7 +143,8 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 					panic(fmt.Errorf("failed to stat upgrade info file: %w", err))
 				}
 			}
-			if stat.Size() == 0 {
+			// stop waiting as soon as the write has landed
+			if stat.Size() != 0 {
 				break
 			}
 		}

@@ -434,5 +434,5 @@ func readMnemonicFromFile(filePath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(bz), nil
+	return strings.TrimSpace(string(bz)), nil
 }

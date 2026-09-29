@@ -289,6 +289,7 @@ Observable changes between v0.54.x and v0.55.x that don't require code changes b
 * **`x/authz` prunes at most 200 expired grants per begin block** ([#26588](https://github.com/cosmos/cosmos-sdk/pull/26588)); mass-expiry cleanup now spreads across blocks.
 * **`x/distribution` reward withdrawals to blocked addresses** during begin/end block fall back to the delegator/validator owner and then the community pool instead of failing ([#26406](https://github.com/cosmos/cosmos-sdk/pull/26406)). User-initiated withdrawals to blocked addresses still return `ErrUnauthorized`.
 * **`x/feegrant` `Allowances` and `AllowancesByGranter` queries** now honor `PageRequest.offset` and `count_total` correctly ([#26596](https://github.com/cosmos/cosmos-sdk/pull/26596)); clients that compensated for the old off-by-page results should re-check.
+* **`gaskv` iterator gas** now charges each key/value pair exactly once ([#15854](https://github.com/cosmos/cosmos-sdk/issues/15854)). `Next()` previously metered the pair the caller had just read before advancing, so the first pair was charged twice and the pair at the final `Next()` was never charged by byte. Every pair an iterator reads — including the last one when it stops early — is now charged. Gas consumed per call site can go up or down depending on how many pairs are read, so re-check gas limits and `--gas auto` estimates on EVM-compatible chains and any chain using a custom `KVGasConfig`.
 
 ## x/feegrant (unreleased)
 

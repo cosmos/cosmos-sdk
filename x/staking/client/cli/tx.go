@@ -50,6 +50,7 @@ func NewTxCmd(valAddrCodec, ac address.Codec) *cobra.Command {
 		NewRedelegateCmd(valAddrCodec, ac),
 		NewUnbondCmd(valAddrCodec, ac),
 		NewCancelUnbondingDelegation(valAddrCodec, ac),
+		NewRotateConsPubKeyCmd(valAddrCodec),
 	)
 
 	return stakingTxCmd
@@ -172,6 +173,49 @@ func NewEditValidatorCmd(ac address.Codec) *cobra.Command {
 	cmd.Flags().AddFlagSet(flagSetDescriptionEdit())
 	cmd.Flags().AddFlagSet(flagSetCommissionUpdate())
 	cmd.Flags().AddFlagSet(FlagSetMinSelfDelegation())
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewRotateConsPubKeyCmd returns a CLI command handler for creating a MsgRotateConsPubKey transaction.
+func NewRotateConsPubKeyCmd(valAddrCodec address.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "rotate-cons-pub-key [new-pubkey]",
+		Short: "Rotate a validator consensus public key",
+		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Rotate a validator consensus public key.
+
+Example:
+$ %s tx staking rotate-cons-pub-key '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"..."}' --from myvalidator
+`, version.AppName),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			var pubKey cryptotypes.PubKey
+			if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(args[0]), &pubKey); err != nil {
+				return fmt.Errorf("invalid consensus pubkey JSON: %w", err)
+			}
+
+			valAddr, err := valAddrCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
+			msg, err := types.NewMsgRotateConsPubKey(valAddr, pubKey)
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

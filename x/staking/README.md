@@ -948,6 +948,7 @@ The staking module contains the following parameters:
 | HistoricalEntries | uint32           | 10000                  |
 | BondDenom         | string           | "stake"                |
 | MinCommissionRate | string           | "0.000000000000000000" |
+| KeyRotationFee    | sdk.Coin         | "1000000stake"         |
 
 ## Client
 

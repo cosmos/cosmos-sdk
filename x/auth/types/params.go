@@ -11,16 +11,27 @@ const (
 	DefaultTxSizeCostPerByte      uint64 = 10
 	DefaultSigVerifyCostED25519   uint64 = 590
 	DefaultSigVerifyCostSecp256k1 uint64 = 1000
+
+	// DefaultSigVerifyCostMlDsa65 is the gas cost of one ML-DSA-65 (FIPS 204)
+	// signature verification. Derived from a verification benchmark relative to
+	// the secp256k1 anchor (1000):
+	//
+	//	BenchmarkVerification/secp256k1   120147 ns/op
+	//	BenchmarkVerification/ml_dsa_65    95544 ns/op   (~0.80x)
+	//
+	// The large ML-DSA signature is additionally charged via TxSizeCostPerByte.
+	DefaultSigVerifyCostMlDsa65 uint64 = 750
 )
 
 // NewParams creates a new Params object
-func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64) Params {
+func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1, sigVerifyCostMlDsa65 uint64) Params {
 	return Params{
 		MaxMemoCharacters:      maxMemoCharacters,
 		TxSigLimit:             txSigLimit,
 		TxSizeCostPerByte:      txSizeCostPerByte,
 		SigVerifyCostED25519:   sigVerifyCostED25519,
 		SigVerifyCostSecp256k1: sigVerifyCostSecp256k1,
+		SigVerifyCostMlDsa65:   sigVerifyCostMlDsa65,
 	}
 }
 
@@ -32,6 +43,7 @@ func DefaultParams() Params {
 		TxSizeCostPerByte:      DefaultTxSizeCostPerByte,
 		SigVerifyCostED25519:   DefaultSigVerifyCostED25519,
 		SigVerifyCostSecp256k1: DefaultSigVerifyCostSecp256k1,
+		SigVerifyCostMlDsa65:   DefaultSigVerifyCostMlDsa65,
 	}
 }
 
@@ -55,6 +67,19 @@ func validateTxSigLimit(i any) error {
 
 	if v == 0 {
 		return fmt.Errorf("invalid tx signature limit: %d", v)
+	}
+
+	return nil
+}
+
+func validateSigVerifyCostMlDsa65(i any) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("invalid ML-DSA-65 signature verification cost: %d", v)
 	}
 
 	return nil
@@ -121,6 +146,9 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateSigVerifyCostSecp256k1(p.SigVerifyCostSecp256k1); err != nil {
+		return err
+	}
+	if err := validateSigVerifyCostMlDsa65(p.SigVerifyCostMlDsa65); err != nil {
 		return err
 	}
 	if err := validateMaxMemoCharacters(p.MaxMemoCharacters); err != nil {

@@ -9,9 +9,12 @@ import (
 // - NotBondedPool -> "not_bonded_tokens_pool"
 //
 // - BondedPool -> "bonded_tokens_pool"
+//
+// - KeyRotationFeePool -> "key_rotation_fee_pool"
 const (
-	NotBondedPoolName = "not_bonded_tokens_pool"
-	BondedPoolName    = "bonded_tokens_pool"
+	NotBondedPoolName      = "not_bonded_tokens_pool"
+	BondedPoolName         = "bonded_tokens_pool"
+	KeyRotationFeePoolName = "key_rotation_fee_pool"
 )
 
 // NewPool creates a new Pool instance used for queries

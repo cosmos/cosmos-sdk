@@ -62,7 +62,7 @@ var _ servertypes.ABCI = (*BaseApp)(nil)
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
-	mu                sync.Mutex // mu protects the fields below.
+	mu                sync.RWMutex // mu protects concurrent access to name, version, appVersion.
 	logger            log.Logger
 	name              string                      // application name from abci.BlockInfo
 	db                dbm.DB                      // common DB backend
@@ -142,6 +142,13 @@ type BaseApp struct {
 	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs CometBFT what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
+
+	// genesisEvents holds events emitted by genesis transactions during InitChain.
+	// InitChain has no response field through which these events can be returned.
+	// They are therefore carried forward and included in the first
+	// ResponseFinalizeBlock. The events are cleared after a successful
+	// FinalizeBlock at the initial height.
+	genesisEvents []abci.Event
 
 	// streamingManager for managing instances and configuration of ABCIListener services
 	streamingManager storetypes.StreamingManager
@@ -239,16 +246,22 @@ func NewBaseApp(
 
 // Name returns the name of the BaseApp.
 func (app *BaseApp) Name() string {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
 	return app.name
 }
 
 // AppVersion returns the application's protocol version.
 func (app *BaseApp) AppVersion() uint64 {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
 	return app.appVersion
 }
 
 // Version returns the application's version string.
 func (app *BaseApp) Version() string {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
 	return app.version
 }
 
@@ -916,7 +929,7 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 
 	switch mode {
 	case execModeCheck:
-		err = app.mempool.Insert(ctx, tx)
+		err = app.mempool.Insert(ctx, tx, mempool.InsertOption{GasWanted: gasWanted})
 		if err != nil {
 			return gInfo, nil, anteEvents, err
 		}
@@ -1125,18 +1138,18 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 // ProcessProposal state internally will be discarded. <nil, err> will be
 // returned if the transaction cannot be decoded. <Tx, nil> will be returned if
 // the transaction is valid, otherwise <Tx, err> will be returned.
-func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
+func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (msg sdk.Tx, gasWanted uint64, err error) {
 	tx, err := app.txDecoder(txBz)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	_, _, _, err = app.RunTx(execModeProcessProposal, txBz, tx, -1, nil, nil)
+	gInfo, _, _, err := app.RunTx(execModeProcessProposal, txBz, tx, -1, nil, nil)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return tx, nil
+	return tx, gInfo.GasWanted, nil
 }
 
 func (app *BaseApp) TxDecode(txBytes []byte) (sdk.Tx, error) {

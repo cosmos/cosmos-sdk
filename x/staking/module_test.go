@@ -30,4 +30,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 
 	acc = accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.NotBondedPoolName))
 	require.NotNil(t, acc)
+
+	acc = accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.KeyRotationFeePoolName))
+	require.NotNil(t, acc)
 }

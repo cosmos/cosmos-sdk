@@ -95,8 +95,13 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, cdc codec.BinaryCodec, genesis *ty
 		}
 	}
 
-	// Return queued validator updates
-	updates := k.ReapValidatorUpdates(ctx)
-
+	// Compute the initial changeset and seed LastCommittedPower
+	updates, err := k.ReapValidatorUpdates(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := k.SetLastCommittedPower(ctx, updates); err != nil {
+		return nil, err
+	}
 	return updates, nil
 }

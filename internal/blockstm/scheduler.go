@@ -114,12 +114,16 @@ func (s *Scheduler) NextVersionToExecute() TxnVersion {
 // TryValidateNextVersion get the next transaction index to validate,
 // returns invalid version if no task is available.
 func (s *Scheduler) TryValidateNextVersion(idxToValidate uint64) (TxnVersion, bool) {
+	IncrAtomic(&s.numActiveTasks)
+
 	if !s.validationIdx.CompareAndSwap(idxToValidate, idxToValidate+1) {
+		DecrAtomic(&s.numActiveTasks)
 		return InvalidTxnVersion, false
 	}
 
 	incarnation, ok := s.txnStatus[idxToValidate].IsExecuted()
 	if !ok {
+		DecrAtomic(&s.numActiveTasks)
 		return InvalidTxnVersion, false
 	}
 
@@ -139,7 +143,6 @@ func (s *Scheduler) NextTask() (TxnVersion, TaskKind) {
 
 	if preferValidate {
 		if version, ok := s.TryValidateNextVersion(validationIdx); ok {
-			IncrAtomic(&s.numActiveTasks)
 			return version, TaskKindValidation
 		}
 	}

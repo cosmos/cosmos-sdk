@@ -180,8 +180,7 @@ func (pkl PrivKeyLedgerSecp256k1) PubKey() types.PubKey {
 	return pkl.CachedPubKey
 }
 
-// Sign returns a secp256k1 signature for the corresponding message using
-// SIGN_MODE_TEXTUAL.
+// Sign returns a secp256k1 signature for the corresponding message.
 func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
 	device, err := getDevice()
 	if err != nil {

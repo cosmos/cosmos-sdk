@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
@@ -249,6 +250,49 @@ func (suite *KeeperTestSuite) TestFeeAllowancesByGranter() {
 			}
 		})
 	}
+}
+
+// TestFeeAllowancesPagination checks that the Allowances and AllowancesByGranter
+// queries honor the PageRequest offset and count_total. The returned grants must come
+// from the pagination transform, not from a side effect inside the predicate: the
+// predicate is also invoked for offset-skipped items and for every remaining item during
+// the count_total sweep, so appending there over-collects out-of-range grants.
+func (suite *KeeperTestSuite) TestFeeAllowancesPagination() {
+	grantee := suite.addrs[0]
+	suite.grantFeeAllowance(suite.addrs[1], grantee)
+	suite.grantFeeAllowance(suite.addrs[2], grantee)
+	suite.grantFeeAllowance(suite.addrs[3], grantee)
+
+	// offset must skip grants, not merely advance the page cursor
+	resp, err := suite.feegrantKeeper.Allowances(suite.ctx, &feegrant.QueryAllowancesRequest{
+		Grantee:    grantee.String(),
+		Pagination: &query.PageRequest{Limit: 10, Offset: 1},
+	})
+	suite.Require().NoError(err)
+	suite.Require().Len(resp.Allowances, 2)
+
+	// a limited page with count_total must return only the page, not every match
+	resp, err = suite.feegrantKeeper.Allowances(suite.ctx, &feegrant.QueryAllowancesRequest{
+		Grantee:    grantee.String(),
+		Pagination: &query.PageRequest{Limit: 2, CountTotal: true},
+	})
+	suite.Require().NoError(err)
+	suite.Require().Len(resp.Allowances, 2)
+	suite.Require().Equal(uint64(3), resp.Pagination.Total)
+
+	// same guarantees on the granter-filtered query
+	granter := suite.addrs[5]
+	suite.grantFeeAllowance(granter, suite.addrs[6])
+	suite.grantFeeAllowance(granter, suite.addrs[7])
+	suite.grantFeeAllowance(granter, suite.addrs[8])
+
+	byGranter, err := suite.feegrantKeeper.AllowancesByGranter(suite.ctx, &feegrant.QueryAllowancesByGranterRequest{
+		Granter:    granter.String(),
+		Pagination: &query.PageRequest{Limit: 2, CountTotal: true},
+	})
+	suite.Require().NoError(err)
+	suite.Require().Len(byGranter.Allowances, 2)
+	suite.Require().Equal(uint64(3), byGranter.Pagination.Total)
 }
 
 func (suite *KeeperTestSuite) grantFeeAllowance(granter, grantee sdk.AccAddress) {

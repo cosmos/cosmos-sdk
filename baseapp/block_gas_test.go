@@ -175,7 +175,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed
-			baseGas := uint64(58359) // baseGas is the gas consumed before tx msg
+			baseGas := uint64(58386) // baseGas is the gas consumed before tx msg
 			expGasConsumed := min(addUint64Saturating(tc.gasToConsume, baseGas), uint64(simtestutil.DefaultConsensusParams.Block.MaxGas))
 			require.Equal(t, int(expGasConsumed), int(ctx.BlockGasMeter().GasConsumed()))
 			// tx fee is always deducted

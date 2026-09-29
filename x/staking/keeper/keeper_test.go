@@ -26,9 +26,10 @@ import (
 )
 
 var (
-	bondedAcc    = authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName)
-	notBondedAcc = authtypes.NewEmptyModuleAccount(stakingtypes.NotBondedPoolName)
-	PKs          = simtestutil.CreateTestPubKeys(500)
+	bondedAcc         = authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName)
+	notBondedAcc      = authtypes.NewEmptyModuleAccount(stakingtypes.NotBondedPoolName)
+	keyRotationFeeAcc = authtypes.NewEmptyModuleAccount(stakingtypes.KeyRotationFeePoolName)
+	PKs               = simtestutil.CreateTestPubKeys(500)
 )
 
 type KeeperTestSuite struct {
@@ -54,6 +55,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	accountKeeper := stakingtestutil.NewMockAccountKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.BondedPoolName).Return(bondedAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.NotBondedPoolName).Return(notBondedAcc.GetAddress())
+	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.KeyRotationFeePoolName).Return(keyRotationFeeAcc.GetAddress())
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)

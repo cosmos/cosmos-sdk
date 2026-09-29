@@ -1,409 +1,164 @@
 # Upgrade Reference
 
-This document provides a reference for upgrading from `v0.53.x` to `v0.54.x` of Cosmos SDK.
+This document provides a reference for upgrading from `v0.54.x` to `v0.55.x` of Cosmos SDK. If you are upgrading directly from `v0.53.x`, see [Upgrading from v0.53.x](#upgrading-from-v053x) after reading the breaking changes below.
 
-Note, always read the [App Wiring Changes](#app-wiring-changes) section for more information on application wiring updates.
+For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.55.x/CHANGELOG.md).
 
-For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/CHANGELOG.md).
+The headline changes in this release are the removal of three legacy surfaces (`x/params`, `x/protocolpool`, and `SIGN_MODE_TEXTUAL`), a reworked app-side mempool interface, and validator consensus key rotation in `x/staking`. Key rotation ships enabled for every chain that upgrades — see [Validator Consensus Key Rotation](#validator-consensus-key-rotation) — and requires one line of wiring in `app.go`. Everything else in the new-features list (ML-DSA-65 keys, secp256k1eth keys, config-driven Block-STM wiring) is opt-in.
 
 ## Table of Contents
 
-- [Upgrade Checklist](#upgrade-checklist)
-- [Required Changes](#required-changes)
-    - [App Wiring Changes](#app-wiring-changes)
-        - [x/gov](#xgov)
-            - [Keeper Initialization](#keeper-initialization)
-            - [GovHooks Interface](#govhooks-interface)
-        - [x/epochs](#xepochs)
-        - [x/bank](#xbank)
-        - [NodeService](#nodeservice)
-    - [Removed Go Modules](#removed-go-modules)
-    - [Renamed Go Modules](#renamed-go-modules)
-    - [Module Version Updates](#module-version-updates)
-    - [Log v2](#log-v2)
-    - [Store v2](#store-v2)
-- [Conditional Changes](#conditional-changes)
-    - [Module Deprecations](#module-deprecations)
-        - [x/circuit](#xcircuit)
-        - [x/nft](#xnft)
-        - [x/crisis](#xcrisis)
-    - [Cosmos Enterprise](#cosmos-enterprise)
-        - [Groups Module](#groups-module)
-        - [PoA Module](#poa-module)
-- [New Features and Non-Breaking Changes](#new-features-and-non-breaking-changes)
-    - [Telemetry](#telemetry)
-        - [OpenTelemetry](#opentelemetry)
-    - [Centralized Authority via Consensus Params](#centralized-authority-via-consensus-params)
-        - [How AuthorityParams Works](#how-authorityparams-works)
-- [Upgrade Handler](#upgrade-handler)
-- [IBC v11 Updates](#ibc-v11-updates)
-- [Cosmos Performance Upgrades (Experimental)](#cosmos-performance-upgrades-experimental)
-    - [Cosmos SDK](#cosmos-sdk)
-        - [BlockSTM](#blockstm)
-    - [CometBFT v0.39 Updates](#cometbft-v039-updates)
-        - [LibP2P](#libp2p)
-        - [`AdaptiveSync`](#adaptivesync)
+* [Breaking Changes](#breaking-changes)
+    * [CometBFT Upgrade](#cometbft-upgrade)
+    * [Removed: x/params](#removed-xparams)
+    * [Removed: x/protocolpool](#removed-xprotocolpool)
+    * [Removed: SIGN_MODE_TEXTUAL](#removed-sign_mode_textual)
+    * [Mempool Interface Changes](#mempool-interface-changes)
+    * [Staking: Key Rotation Wiring and Interface Changes](#staking-key-rotation-wiring-and-interface-changes)
+    * [genutil: ExportGenesisFileWithTime Signature](#genutil-exportgenesisfilewithtime-signature)
+    * [Upgrade Handler and Store Migrations](#upgrade-handler-and-store-migrations)
+* [Upgrading from v0.53.x](#upgrading-from-v053x)
+* [New Features and Non-Breaking Changes](#new-features-and-non-breaking-changes)
+    * [Validator Consensus Key Rotation](#validator-consensus-key-rotation)
+    * [ML-DSA-65 Validator Consensus Keys](#ml-dsa-65-validator-consensus-keys)
+    * [ML-DSA-65 Account Keys](#ml-dsa-65-account-keys)
+    * [secp256k1eth Validator Consensus Keys](#secp256k1eth-validator-consensus-keys)
+    * [Block-STM Configuration](#block-stm-configuration)
+* [Behavior Changes Affecting Dapps and Indexers](#behavior-changes-affecting-dapps-and-indexers)
 
+## Breaking Changes
 
-## Upgrade Checklist
+### CometBFT Upgrade
 
-Use this checklist first, then read the linked sections for the exact code or wiring changes.
+Cosmos SDK v0.55 requires CometBFT `v0.40.0` (the v0.54.x line shipped with `v0.39.x`, ending at `v0.39.3` in v0.54.3). Bump your app's `go.mod` to match the SDK's pin. Relevant changes in CometBFT v0.40.0:
 
-- [ ] Update `x/gov` keeper wiring, as the `x/gov` module has been decoupled from `x/staking`. See [Keeper Initialization](#keeper-initialization).
-- [ ] Update your governance hooks if you implement `AfterProposalSubmission`. See [GovHooks Interface](#govhooks-interface).
-- [ ] Update `x/epochs.NewAppModule` if your app includes `x/epochs`. See [x/epochs](#xepochs).
-- [ ] Put `x/bank` first in `SetOrderEndBlockers`. See [x/bank](#xbank).
-- [ ] Update your node service registration if your app exposes `NodeService`. See [NodeService](#nodeservice).
-- [ ] Migrate imports for removed `x/` Go modules. See [Removed Go Modules](#removed-go-modules).
-- [ ] Update required Cosmos SDK Go module dependencies. See [Module Version Updates](#module-version-updates).
-- [ ] Migrate to `contrib/` imports if you use `x/circuit`, `x/nft`, or `x/crisis`. See [Module Deprecations](#module-deprecations).
-- [ ] Migrate to Cosmos Enterprise if you use the `x/group` module. See [Groups Module](#groups-module).
-- [ ] Update imports to `cosmossdk.io/log/v2` if your app imports the log package directly. See [Log v2](#log-v2).
-- [ ] Migrate imports to `github.com/cosmos/cosmos-sdk/store/v2`. See [Store v2](#store-v2).
-- [ ] Migrate any remaining `BaseApp.NewUncachedContext()` usage. See [Store v2](#store-v2).
-- [ ] If using `systemtests` update import to `github.com/cosmos/cosmos-sdk/tools/systemtests`. See [Renamed Go Modules](#renamed-go-modules).
-- [ ] Review [IBC v11 Updates](#ibc-v11-updates) if your chain uses IBC. Several APIs have been removed.
-- [ ] Review [Centralized Authority via Consensus Params](#centralized-authority-via-consensus-params). No upgrade action is required to keep using per-keeper authorities.
-- [ ] Review [Telemetry](#telemetry). No upgrade action is required to keep existing telemetry wiring, but upgrading to OpenTelemetry is strongly encouraged.
-- [ ] Review [PoA Module](#poa-module) if you are interested in adopting the new Cosmos Enterprise Proof of Authority module.
-- [ ] Review [Cosmos Performance Upgrades (Experimental)](#cosmos-performance-upgrades-experimental) if you are interested in experimenting with BlockSTM, LibP2P, or AdaptiveSync.
+* Expanded `MaxSignatureSize` and per-validator `MaxCommitSigBytes` to accommodate post-quantum (ML-DSA-65) signatures.
+* A fix for the application-side mempool (`mempool.type = "app"`, supported since CometBFT v0.39.2 / SDK v0.54.3): the default socket transport was missing the `InsertTx` / `ReapTxs` cases, causing node self-kill ([cometbft#5958](https://github.com/cometbft/cometbft/pull/5958)). Chains using an app-side mempool over the socket transport need v0.40.0.
+* Updated `DefaultBlockParams` ([cometbft#5987](https://github.com/cometbft/cometbft/pull/5987)). This changes defaults for new chains only; existing chains keep their on-chain consensus params.
 
-## Required Changes
+See the [CometBFT changelog](https://github.com/cometbft/cometbft/blob/main/CHANGELOG.md) for the full list.
 
-All chains upgrading to `v0.54.x` should review and apply the changes in this section.
+### Removed: x/params
 
-### App Wiring Changes
+[#25546](https://github.com/cosmos/cosmos-sdk/pull/25546) removes the `x/params` module entirely (only a tombstone README remains). Module parameters have been managed by each module since v0.47; v0.55 removes the leftover machinery:
 
-#### x/gov
+1. If your app still imports `x/params` (a `paramskeeper.Keeper`, per-module `Subspace`s, or the legacy gov proposal handler), remove that wiring. If the `params` store is still mounted, delete it in your store upgrades (see [Upgrade Handler and Store Migrations](#upgrade-handler-and-store-migrations)). Chains that have not yet migrated legacy subspace params to module-managed params must complete that migration **before** upgrading to v0.55 — the migration code is gone.
 
-##### Keeper Initialization
+2. Drop the trailing `exported.Subspace` argument (typically passed as `nil`) from the module constructors that carried it for legacy migrations:
 
-The `x/gov` module has been decoupled from `x/staking`. The `keeper.NewKeeper` constructor now requires a `CalculateVoteResultsAndVotingPowerFn` parameter instead of a `StakingKeeper`.
-
-**Before:**
 ```go
-govKeeper := govkeeper.NewKeeper(
-    appCodec,
-    runtime.NewKVStoreService(keys[govtypes.StoreKey]),
-    app.AccountKeeper,
-    app.BankKeeper,
-    app.StakingKeeper, // REMOVED IN v0.54
-    app.DistrKeeper,
-    app.MsgServiceRouter(),
-    govConfig,
-    authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-)
+// Before                                                          // After
+auth.NewAppModule(cdc, accountKeeper, randGenAccountsFn, nil)      auth.NewAppModule(cdc, accountKeeper, randGenAccountsFn)
+bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)             bank.NewAppModule(cdc, bankKeeper, accountKeeper)
+gov.NewAppModule(cdc, &govKeeper, accountKeeper, bankKeeper, nil)  gov.NewAppModule(cdc, &govKeeper, accountKeeper, bankKeeper)
+mint.NewAppModule(cdc, mintKeeper, accountKeeper, nil, nil)        mint.NewAppModule(cdc, mintKeeper, accountKeeper, nil)
+slashing.NewAppModule(cdc, keeper, ak, bk, sk, nil, registry)      slashing.NewAppModule(cdc, keeper, ak, bk, sk, registry)
+distr.NewAppModule(cdc, keeper, ak, bk, stakingKeeper, nil)        distr.NewAppModule(cdc, keeper, ak, bk, stakingKeeper)
+staking.NewAppModule(cdc, keeper, ak, bk, nil)                     staking.NewAppModule(cdc, keeper, ak, bk)
 ```
 
-**After:**
+(`mint.NewAppModule` retains its deprecated `InflationCalculationFn` parameter; only the subspace argument is removed.)
+
+### Removed: x/protocolpool
+
+[#26421](https://github.com/cosmos/cosmos-sdk/pull/26421) removes the `x/protocolpool` module and its proto/API surface from the SDK. The `distrkeeper.WithExternalCommunityPool` extension point is removed with it — `x/distribution` always uses its internal `FeePool` community pool again, and `MsgFundCommunityPool` / `MsgCommunityPoolSpend` operate on it directly.
+
+**Required action** if your app wired `x/protocolpool` (the v0.54 SimApp default):
+
+1. Remove all `protocolpool` wiring from `app.go`: the imports, the `ProtocolPoolKeeper` field and its `NewKeeper` call, the `protocolpooltypes.ModuleName` and `protocolpooltypes.ProtocolPoolEscrowAccount` entries in `maccPerms`, the module manager entry, and its entries in the begin-block, end-block, init-genesis, and export orders.
+2. Remove `distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper)` from your `distrkeeper.NewKeeper` call.
+3. Delete the `protocolpool` store in your store upgrades (see [Upgrade Handler and Store Migrations](#upgrade-handler-and-store-migrations)).
+4. Balances held by the protocolpool module accounts are bank state and are **not** migrated automatically. Decide where those funds go and move them in your upgrade handler — e.g. transfer them to the `x/distribution` community pool so community-pool spend proposals keep working.
+
+If your app never wired `x/protocolpool`, no action is needed beyond not being able to import it.
+
+### Removed: SIGN_MODE_TEXTUAL
+
+`SIGN_MODE_TEXTUAL` (proto enum value `2`) and its entire implementation have been removed ([#26456](https://github.com/cosmos/cosmos-sdk/pull/26456)):
+
+* `x/tx/signing/textual/` — all renderers, the CBOR encoder, test data, and internal protos
+* `x/auth/tx/textual.go` and `ConfigOptions.TextualCoinMetadataQueryFn`
+* Ledger + SIGN_MODE_TEXTUAL integration in `client/` flags and tx factory
+
+The proto enum value `2` and string `"SIGN_MODE_TEXTUAL"` are **reserved** to prevent future reuse. ADR-050 is archived.
+
+**Required action** if your app enabled SIGN_MODE_TEXTUAL:
+
+1. Remove `TextualCoinMetadataQueryFn` from your `tx.ConfigOptions`:
+
+    ```go
+    // Before
+    txConfig, err := tx.NewTxConfigWithOptions(cdc, tx.ConfigOptions{
+        TextualCoinMetadataQueryFn: ...,
+    })
+
+    // After — field removed, omit it
+    txConfig, err := tx.NewTxConfigWithOptions(cdc, tx.ConfigOptions{...})
+    ```
+
+2. Remove any `SIGN_MODE_TEXTUAL` cases from signing mode handler switch statements.
+
+3. Remove Ledger wiring that depended on `SIGN_MODE_TEXTUAL`. Client-side root command wiring that constructed a textual-enabled tx config for online mode (as v0.54 SimApp did in `simd/cmd/root.go`) should be deleted as well.
+
+### Mempool Interface Changes
+
+[#25338](https://github.com/cosmos/cosmos-sdk/pull/25338) changes the `types/mempool` interfaces so the mempool stores the gas wanted reported by the ante handler at `CheckTx` time, and block selection uses that value instead of the tx-declared gas limit.
+
+**Required action** if you implement a custom mempool (chains using the SDK's built-in mempools or no app-side mempool just recompile):
+
+* `Insert` gains an `InsertOption` parameter carrying the ante-reported gas: `Insert(context.Context, sdk.Tx, InsertOption) error`.
+* `Iterator.Tx()` now returns a `PooledTx` (`{Tx sdk.Tx; GasWanted uint64}`) instead of `sdk.Tx`.
+* `ExtMempool.SelectBy`'s callback now receives a `PooledTx`: `SelectBy(context.Context, [][]byte, func(PooledTx) bool)`.
+* `ExtMempool.RemoveWithReason` and the `RemoveReason` type, introduced in v0.54, are unchanged.
+
+Custom `PrepareProposal` handlers that iterate the mempool should read gas from `PooledTx.GasWanted` rather than re-deriving it from the tx.
+
+### Staking: Key Rotation Wiring and Interface Changes
+
+`x/staking` now requires a `key_rotation_fee_pool` module account with burn permissions — the staking keeper panics at construction if it is missing (`x/staking/keeper/keeper.go`). Add it to your `maccPerms`:
+
 ```go
-govKeeper := govkeeper.NewKeeper(
-    appCodec,
-    runtime.NewKVStoreService(keys[govtypes.StoreKey]),
-    app.AccountKeeper,
-    app.BankKeeper,
-    app.DistrKeeper,
-    app.MsgServiceRouter(),
-    govConfig,
-    authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-    govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(app.StakingKeeper), // ADDED IN v0.54
-)
-```
-
-For applications using depinject, the governance module now accepts an optional `CalculateVoteResultsAndVotingPowerFn`. If not provided, it will use the `StakingKeeper` (also optional) to create the default function.
-
-##### GovHooks Interface
-
-The `AfterProposalSubmission` hook now includes the proposer address as a parameter.
-
-**Before:**
-```go
-func (h MyGovHooks) AfterProposalSubmission(ctx context.Context, proposalID uint64) error {
-    // implementation
+maccPerms = map[string][]string{
+    // ...existing entries...
+    stakingtypes.KeyRotationFeePoolName: {authtypes.Burner},
 }
 ```
 
-**After:**
+This is required for **all** chains upgrading to v0.55, whether or not validators are expected to use [key rotation](#validator-consensus-key-rotation).
+
+Key rotation also touches two staking keeper surfaces that external modules may implement or consume:
+
+* The `StakingHooks` interface gains `AfterValidatorConsKeyUpdated(ctx context.Context, oldConsAddr, newConsAddr sdk.ConsAddress, valAddr sdk.ValAddress) error`, called when a rotation is applied. Custom `StakingHooks` implementations must add this method (returning `nil` is fine if you don't need the notification).
+* The staking keeper adds `ValidatorByHistoricalConsAddr(ctx, consAddr)`, which resolves a validator from a consensus address it used before a rotation. Modules that map consensus addresses to validators can no longer assume that mapping is immutable — see [Validator Consensus Key Rotation](#validator-consensus-key-rotation).
+
+### genutil: ExportGenesisFileWithTime Signature
+
+[#26468](https://github.com/cosmos/cosmos-sdk/pull/26468) consolidates `ExportGenesisFileWithTime`'s arguments so the exported file preserves consensus params (previously they were rebuilt from defaults, dropping the caller's values):
+
 ```go
-func (h MyGovHooks) AfterProposalSubmission(ctx context.Context, proposalID uint64, proposerAddr sdk.AccAddress) error {
-    // implementation
-}
+// Before
+func ExportGenesisFileWithTime(genFile, chainID string, validators []cmttypes.GenesisValidator,
+    appState json.RawMessage, genTime time.Time) error
+
+// After — build the AppGenesis yourself; everything you set on it is preserved
+func ExportGenesisFileWithTime(genFile string, appGenesis *types.AppGenesis, genTime time.Time) error
 ```
 
-#### x/epochs
+### Upgrade Handler and Store Migrations
 
-The epochs module's `NewAppModule` function now requires the epoch keeper by pointer instead of value, fixing a bug related to setting hooks via depinject.
+#### Module Migrations
 
-#### x/bank
+Two module consensus-version bumps ship in this release and run automatically via `RunMigrations` in your upgrade handler:
 
-The bank module now contains an `EndBlock` method to support the new BlockSTM experimental package. BlockSTM requires coordinating object store access across parallel execution workers, and `x/bank`'s `EndBlock` handles the finalization step for that. **All applications must make this change**, whether or not they enable BlockSTM, because the `EndBlock` registration is now part of the module's standard lifecycle.
+* `x/staking` 5 → 6: adds the `key_rotation_fee` param, defaulting to `1000000` of the bond denom ([#26485](https://github.com/cosmos/cosmos-sdk/pull/26485)). `Params.Validate` requires the fee denom to equal `bond_denom` ([#26613](https://github.com/cosmos/cosmos-sdk/pull/26613)).
+* `x/auth` 6 → 7: adds the `SigVerifyCostMlDsa65` param with its default value ([#26472](https://github.com/cosmos/cosmos-sdk/pull/26472)).
 
-```go
-	app.ModuleManager.SetOrderEndBlockers(
-		banktypes.ModuleName,
-        // other modules...
-)
-```
+#### Reference Upgrade Handler
 
-#### NodeService
-
-The node service has been updated to return the node's earliest store height in the `Status` query. Please update your registration with the following code (make sure you are already updated to `github.com/cosmos/cosmos-sdk/store/v2`):
+A reference upgrade handler for this release (see `simapp/upgrades.go`):
 
 ```go
-func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
-	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg, func() int64 {
-		return app.CommitMultiStore().EarliestVersion()
-	})
-}
-```
-
-### Removed Go Modules
-
-Most `cosmossdk.io` vanity URLs for modules under `x/` have been removed. These separate Go modules caused dependency version management to be unpredictable; different modules could be pinned to different SDK versions, leading to compatibility issues. Consolidating everything under `github.com/cosmos/cosmos-sdk` gives developers a single, versioned dependency to manage.
-
-The following must be updated:
-
-- `cosmossdk.io/x/evidence` -> `github.com/cosmos/cosmos-sdk/x/evidence`
-- `cosmossdk.io/x/feegrant` -> `github.com/cosmos/cosmos-sdk/x/feegrant` 
-- `cosmossdk.io/x/upgrade` -> `github.com/cosmos/cosmos-sdk/x/upgrade`
-- `cosmossdk.io/x/tx` -> `github.com/cosmos/cosmos-sdk/x/tx`
-
-### Renamed Go Modules
-
-The `cosmossdk.io/systemtests` go module is now named `github.com/cosmos/cosmos-sdk/tools/systemtests`.
-
-
-### Module Version Updates
-
-- `cosmossdk.io/client/v2` has been updated to v2.11.0
-
-### Log v2
-
-The log package has been updated to `v2`. Applications using v0.54.0+ of Cosmos SDK will be required to update imports to `cosmossdk.io/log/v2`. Usage of the logger itself does not need to be updated.
-The v2 release of log adds contextual methods to the logger interface (InfoContext, DebugContext, etc.), allowing logs to be correlated with OpenTelemetry traces.
-To learn more about the new features offered in `log/v2`, as well as setting up log correlation, see the [log package documentation](https://docs.cosmos.network/sdk/latest/guides/testing/log).
-
-### Store v2
-
-The store package has been updated to `v2`. Applications using v0.54.0+ of
-Cosmos SDK will be required to update imports to
-`github.com/cosmos/cosmos-sdk/store/v2`. 
-
-`BaseApp.NewUncachedContext()` was deprecated as part of this work. With store v2, writes must go through a cache/branch first; the SDK no longer exposes a helper that lets applications write directly against the root `CommitMultiStore`.
-
-If you previously used `BaseApp.NewUncachedContext()` in tests:
-
-- Replace `app.NewUncachedContext(false, header)` with `app.NewNextBlockContext(header)` when the test needs a writable context between `Commit()` and the next `FinalizeBlock()`.
-- Replace `app.NewUncachedContext(true, header)` with `app.NewContext(true)` or `app.NewContextLegacy(true, header)` when the test only needs the `CheckTx` state.
-
-Below is an example of migrating away from `NewUncachedContext`.
-```go
-func TestApp(t *testing.T) {
-	db := dbm.NewMemDB()
-	logger := log.NewTestLogger(t)
-	app := NewSimappWithCustomOptions(t, false, SetupOptions{
-		Logger:  logger.With("instance", "first"),
-		DB:      db,
-		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
-	})
-
-	/*
-	    Before the updates, most code would look like:
-	
-	    ctx := gaiaApp.NewUncachedContext(true, tmproto.Header{}) // CheckTx context
-	    app.MyKeeper.MyMethod(ctx, ...)
-	
-	    The main thing to be aware of is when you are using checkTx state and finalizeState.
-	    NewNextBlockContext will overwrite the finalize state and return a context that writes to that state.
-        Reading from checkTx state without committing will not reflect the changes made in finalizeBlock state UNLESS you have committed.
-	 */
-	ctx := app.BaseApp.NewNextBlockContext(cmtproto.Header{}) // gets finalize block state
-	app.BankKeeper.SetSendEnabled(ctx, "foobar", true)
-	_, err := app.Commit() // commit the out-of-band changes.
-    require.NoError(t, err)
-	
-	// since we committed, we can now read the out-of-band changes via checkTx state.
-	// If we didn't commit above, we could read this value by passing `false` to NewContext, which would give us a handle
-	// on the finalize block state. However, if you DID commit like we did above, you MUST use `true` here.
-	res, err := app.BankKeeper.SendEnabled(app.BaseApp.NewContext(true), &banktypes.QuerySendEnabledRequest{
-		Denoms:     []string{"foobar"},
-		Pagination: nil,
-	})
-	require.NoError(t, err)
-	require.Len(t, res.SendEnabled, 1)
-	require.Equal(t, "foobar", res.SendEnabled[0].Denom)
-}
-```
-
-## Conditional Changes
-
-These changes apply if your chain uses the affected modules, packages, or integrations.
-
-### Module Deprecations
-
-Cosmos SDK v0.54.0 drops support for the circuit, nft, and crisis modules. Developers can still use these modules,
-however, they will no longer be actively maintained by Cosmos Labs.
-
-#### x/circuit
-
-The circuit module is no longer being actively maintained by Cosmos Labs and was moved to `contrib/x/circuit`. 
-
-#### x/nft
-
-The nft module is no longer being actively maintained by Cosmos Labs and was moved to `contrib/x/nft`.
-
-#### x/crisis
-
-The crisis module is no longer being actively maintained by Cosmos Labs and was moved to `contrib/x/crisis`.
-
-### Cosmos Enterprise
-
-[Cosmos Enterprise](https://docs.cosmos.network/enterprise/overview) is a comprehensive suite of blockchain services and technologies to future-proof your organization's digital ledger capabilities. It combines hardened protocol modules, infrastructure components, and proactive support and enablement from the engineers building the Cosmos technology stack.
-
-Cosmos Enterprise is built for organizations that require reliability, security, and operational confidence as they scale critical blockchain infrastructure in enterprise production environments.
-
-#### Groups Module
-
-The groups module is now maintained under the Cosmos Enterprise offering. If your application uses `x/group`, you will need to migrate your code to the Enterprise-distributed package and obtain a Cosmos Enterprise license to continue using it. Please see [Cosmos Enterprise](https://docs.cosmos.network/enterprise/overview) to learn more.
-
-#### PoA Module
-
-Cosmos SDK v0.54 includes a Proof of Authority (POA) module under the Cosmos Enterprise offering. Please see [Cosmos Enterprise](https://docs.cosmos.network/enterprise/components/poa/overview) to learn more about using the PoA module in your application.
-
-## New Features and Non-Breaking Changes
-
-These changes are informational and optional to adopt during the upgrade; they are not required for a successful migration.
-
-### Telemetry
-
-The telemetry package has been deprecated and users are encouraged to switch to OpenTelemetry.
-
-#### OpenTelemetry
-
-Previously, Cosmos SDK telemetry support was provided by `github.com/hashicorp/go-metrics` which was undermaintained and only supported metrics instrumentation.
-
-OpenTelemetry provides an integrated solution for metrics, traces, and logging which is widely adopted and actively maintained.
-
-The existing wrapper functions in the `telemetry` package required acquiring mutex locks and map lookups for every metric operation which is suboptimal. OpenTelemetry's API uses atomic concurrency wherever possible and should introduce less performance overhead during metric collection.
-
-See the [telemetry documentation](https://docs.cosmos.network/sdk/latest/guides/testing/telemetry) to learn how to set up OpenTelemetry with Cosmos SDK v0.54.0+. 
-
-
-Below is a quick reference on setting up and using meters and traces with OpenTelemetry:
-
-```go
-package mymodule
-
-import (
-	"context"
-
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/trace"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-// Declare package-level meter and tracer using otel.Meter() and otel.Tracer().
-// Instruments should be created once at package initialization and reused.
-var (
-	tracer       = otel.Tracer("cosmos-sdk/x/mymodule")
-	meter        = otel.Meter("cosmos-sdk/x/mymodule")
-	txCounter    metric.Int64Counter
-	latencyHist  metric.Float64Histogram
-)
-
-func init() {
-	var err error
-	txCounter, err = meter.Int64Counter(
-		"mymodule.tx.count",
-		metric.WithDescription("Number of transactions processed"),
-	)
-	if err != nil {
-		panic(err)
-	}
-	latencyHist, err = meter.Float64Histogram(
-		"mymodule.tx.latency",
-		metric.WithDescription("Transaction processing latency"),
-		metric.WithUnit("ms"),
-	)
-	if err != nil {
-		panic(err)
-	}
-}
-
-// ExampleWithContext demonstrates tracing with a standard context.Context.
-// Use tracer.Start directly when you have a Go context.
-func ExampleWithContext(ctx context.Context) error {
-	ctx, span := tracer.Start(ctx, "ExampleWithContext",
-		trace.WithAttributes(attribute.String("key", "value")),
-	)
-	defer span.End()
-
-	// Record metrics
-	txCounter.Add(ctx, 1)
-
-	if err := doWork(ctx); err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
-	}
-
-	return nil
-}
-
-// ExampleWithSDKContext demonstrates tracing with sdk.Context.
-// Use ctx.StartSpan to properly propagate the span through the SDK context.
-func ExampleWithSDKContext(ctx sdk.Context) error {
-	ctx, span := ctx.StartSpan(tracer, "ExampleWithSDKContext",
-		trace.WithAttributes(attribute.String("module", "mymodule")),
-	)
-	defer span.End()
-
-	// Record metrics (sdk.Context implements context.Context)
-	txCounter.Add(ctx, 1)
-
-	// Create child spans for sub-operations
-	ctx, childSpan := ctx.StartSpan(tracer, "ExampleWithSDKContext.SubOperation")
-	// ... do sub-operation work ...
-	childSpan.End()
-
-	return nil
-}
-```
-
-### Centralized Authority via Consensus Params
-
-Authority management can now be centralized via the `x/consensus` module. A new `AuthorityParams` field in `ConsensusParams` stores the authority address on-chain. When set, it takes precedence over the per-keeper authority parameter.
-
-**This feature introduces no breaking changes**: Keeper constructors still accept the `authority` parameter. It is now used as a **fallback** when no authority is configured in consensus params. Existing code continues to work without changes.
-
-#### How AuthorityParams Works
-
-When a module validates authority (e.g., in `UpdateParams`), it checks consensus params first. If no authority is set there, it falls back to the keeper's `authority` field:
-
-```go
-authority := sdkCtx.Authority() // from consensus params
-if authority == "" {
-    authority = k.authority       // fallback to keeper field
-}
-if authority != msg.Authority {
-    return nil, errors.Wrapf(...)
-}
-```
-
-To enable centralized authority, set the `AuthorityParams` in consensus params via a governance proposal targeting the `x/consensus` module's `MsgUpdateParams`.
-
-## Upgrade Handler
-
-This section provides a reference example for implementing the on-chain upgrade itself.
-
-The following is an example upgrade handler for upgrading from **v0.53.6** to **v0.54.0**.
-
-```go
-const UpgradeName = "v0.53.6-to-v0.54.0"
+const UpgradeName = "v054-to-v055"
 
 func (app SimApp) RegisterUpgradeHandlers() {
     app.UpgradeKeeper.SetUpgradeHandler(
@@ -419,91 +174,115 @@ func (app SimApp) RegisterUpgradeHandlers() {
     }
 
     if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-      storeUpgrades := storetypes.StoreUpgrades{
-        Added: []string{},
-      }
-      // configure store loader that checks if version == upgradeHeight and applies store upgrades
-      app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+        storeUpgrades := storetypes.StoreUpgrades{
+            Added:   []string{},
+            Deleted: []string{"protocolpool"},
+        }
+        app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
     }
 }
 ```
 
-## IBC v11 Updates
+Add `"params"` to `Deleted` as well if your app still had the `x/params` store mounted.
 
-IBC v11 introduces several improvements, removes long-deprecated APIs (`ParamSubspace` from all Keeper constructors, `MsgSubmitMisbehaviour`, and `ibcwasmtypes.Checksums`), and adds custom address codec support in the transfer module to enable Cosmos EVM compatibility with IBC transfers.
+## Upgrading from v0.53.x
 
-Read the [Changelog](https://github.com/cosmos/ibc-go/blob/main/CHANGELOG.md) and [v11 Migration Guide](https://docs.cosmos.network/ibc/latest/migrations/v10-to-v11) for more information.
+Skipping v0.54 and upgrading directly from `v0.53.x` to `v0.55.x` is supported as a single coordinated upgrade: one binary swap, one upgrade handler, one halt height. Work through the [v0.53.x → v0.54.x upgrade reference](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/UPGRADING.md) first — all of its required changes still apply — then apply this guide on top. The v0.54 hop's highlights, so you know what you're signing up for:
 
-## Cosmos Performance Upgrades (Experimental)
+* CometBFT `v0.38.x` → `v0.39.x` (LibP2P, `AdaptiveSync`); from v0.53 you jump straight to the `v0.40.0` release v0.55 pins.
+* Consolidation of `cosmossdk.io/x/*` vanity modules into `github.com/cosmos/cosmos-sdk/x/*`, plus the Log v2 and Store v2 moves.
+* `x/gov` keeper-initialization and `GovHooks` interface changes, `x/epochs` and `x/bank` wiring updates, and the `x/circuit` / `x/nft` / `x/crisis` deprecations.
+* IBC v11 (if your chain uses IBC).
 
-For Q1 of 2026, Cosmos Labs has been focusing on greatly improving performance of Cosmos SDK applications. v0.54 of Cosmos SDK introduces support for several performance-related features across the stack. The SDK introduces [BlockSTM](#blockstm) for concurrent transactions, and CometBFT introduces [LibP2P](#libp2p) and [`AdaptiveSync`](#adaptivesync).
+Where the two hops interact, land directly on the v0.55 state instead of transiting through v0.54's:
 
-NOTE: It is important to emphasize that the following are **experimental** features. We DO NOT recommend running chains with these features enabled in production without extensive testing. 
+* **Skip transient wiring.** Don't adopt v0.54 reference-app wiring that v0.55 removes in the same hop: the SIGN_MODE_TEXTUAL tx-config setup, `x/protocolpool` (if your v0.53 app didn't already wire it), and `distrkeeper.WithExternalCommunityPool`. Go straight to the v0.55 forms shown in this guide.
+* **Module constructors.** v0.54's constructor signatures still carried the legacy `exported.Subspace` arguments; use the v0.55 signatures from [Removed: x/params](#removed-xparams) directly.
+* **Custom mempools.** Implement the v0.55 `Mempool` interface ([Mempool Interface Changes](#mempool-interface-changes)) directly; don't bother with the v0.54 shape.
+* **Module migrations are cumulative.** `RunMigrations` walks each module from its v0.53 consensus version to the v0.55 target in one pass (`x/auth` 5 → 6 → 7, `x/staking` 5 → 6). No manual intervention is needed beyond the standard upgrade handler.
+* **Store upgrades.** The v0.53 → v0.54 hop required no store additions or deletions, so the combined store upgrade is exactly the snippet in [Upgrade Handler and Store Migrations](#upgrade-handler-and-store-migrations): delete `protocolpool` only if your v0.53 app had wired it, and `params` if its store was still mounted (more likely on a v0.53-era app). Use a single upgrade name, e.g. `v053-to-v055`.
 
-### Cosmos SDK
+Test the full jump on a mainnet-state export before scheduling it: the two-version migration path gets far less ecosystem mileage than the single-version one.
 
-#### BlockSTM
+## New Features and Non-Breaking Changes
 
-BlockSTM enables deterministic, concurrent execution of transactions, improving block execution speeds and throughput. 
+These changes are optional to adopt during the upgrade; they are not required for a successful migration. The exception is key rotation, which is active on every v0.55 chain once the required wiring above is in place.
 
-Developers interested in experimenting with BlockSTM should read the [documentation](https://docs.cosmos.network/sdk/latest/experimental/blockstm).
+### Validator Consensus Key Rotation
 
-Below is an example of setting up BlockSTM:
+v0.55 adds consensus key rotation to `x/staking` ([#26440](https://github.com/cosmos/cosmos-sdk/pull/26440)): a validator operator can submit `MsgRotateConsPubKey` (wired into the CLI, [#26461](https://github.com/cosmos/cosmos-sdk/pull/26461)) to replace their consensus key without unbonding. Key properties:
 
-> **⚠️ Warning:** BlockSTM is experimental. Ensure thorough testing before enabling in production.
+* **Fee.** Each rotation charges the `key_rotation_fee` staking param (default `1000000` of the bond denom) from the operator account; the fee is burned via the `key_rotation_fee_pool` module account.
+* **Rate limit.** One rotation per validator per unbonding period.
+* **Applied in the end blocker.** The rotation is scheduled by the msg server and applied at the end of the block; CometBFT is informed through a validator-set update.
+* **Evidence and slashing.** Equivocation evidence against a rotated-away (historical) consensus address remains attributable to the validator until the evidence is no longer admissible — i.e. until both `evidence.max_age_num_blocks` and `evidence.max_age_duration` have elapsed since the rotation, which can be later than the unbonding time ([#26481](https://github.com/cosmos/cosmos-sdk/pull/26481), [#26616](https://github.com/cosmos/cosmos-sdk/pull/26616)). Slashing signing info is migrated to the active consensus key. Governance changes that extend the evidence-age params after a rotation's expiry has been computed are not retroactively applied; chains should account for this when tuning evidence params.
+* **Genesis.** Rotation history and pending-rotation state are included in staking genesis import/export ([#26471](https://github.com/cosmos/cosmos-sdk/pull/26471)); genesis export tooling that parses staking genesis JSON should expect the new fields.
+* **Events.** `rotate_cons_pubkey` is emitted when a rotation is scheduled (including apply height, maturity time, evidence-expiry time/height, and the burned fee) and `apply_cons_pubkey_rotation` when it is applied (validator, old and new consensus addresses) ([#26619](https://github.com/cosmos/cosmos-sdk/pull/26619)).
+
+Indexers, exchanges, and monitoring that key validators by consensus address must handle the mapping changing over a validator's lifetime. On-chain, `keeper.ValidatorByHistoricalConsAddr` resolves a validator from a rotated-away consensus address.
+
+Chains built on the enterprise `x/poa` module have their own `MsgRotateConsPubKey` with different semantics — no fee, no rate limit, an admin override, and a same-block swap with no rotation history. Because the old consensus address is gone immediately, modules that attribute `LastCommit` signatures or vote extensions by consensus address need extra care across the swap; see the PoA guide below for the caveats and the operator runbook.
+
+For an overview of key rotation and the operator procedures, see [Key rotation](https://docs.cosmos.network/sdk/latest/keys/key-rotation), [Rotate a consensus key, Staking](https://docs.cosmos.network/sdk/latest/keys/rotate-validator-key), and [Rotate a consensus key, PoA](https://docs.cosmos.network/sdk/latest/keys/rotate-validator-key-poa).
+
+### ML-DSA-65 Validator Consensus Keys
+
+Cosmos SDK v0.55 registers the NIST ML-DSA-65 (FIPS 204) post-quantum signature scheme as a supported validator consensus key type ([#26436](https://github.com/cosmos/cosmos-sdk/pull/26436)). The new `cosmos.crypto.mldsa65.PubKey` / `PrivKey` proto messages, Amino routes (`cometbft/PubKeyMlDsa65`, `cometbft/PrivKeyMlDsa65`), interface-registry registration, multisig amino route, and `hd.MlDsa65Type` constant are all enabled by default.
+
+**Action required:** none. Existing chains continue to accept only the consensus key types listed in `genesis.consensus_params.validator.pub_key_types` (still `["ed25519"]` by default). No state-machine-relevant behavior changes for chains that do not opt in.
+
+**To opt in (new chains):** set `genesis.consensus_params.validator.pub_key_types` to `["ml_dsa_65"]` (or a list including it). Validators must then submit `MsgCreateValidator` with a `mldsa65.PubKey`. The `init` and `testnet` commands accept `--consensus-key-algo ml_dsa_65` to generate matching validator files ([#26604](https://github.com/cosmos/cosmos-sdk/pull/26604)). Test harnesses can use the new `testutil/network.Config.ValidatorConsensusKeyType` field together with `genutil.InitializeNodeValidatorFilesFromMnemonicWithKeyType` to spin up an in-process testnet pinned to ML-DSA-65.
+
+**Operational considerations:** ML-DSA-65 keys and signatures are substantially larger than ed25519 (pubkey 1952 bytes vs 32, signature 3309 bytes vs 64). Chains enabling this key type should review `consensus_params.block.max_bytes` and gossip framing limits accordingly. The cometbft commit lift in this release expanded `MaxSignatureSize` and the per-validator `MaxCommitSigBytes` to accommodate the larger signatures; downstream applications relying on the previous fixed values may need to be re-examined.
+
+**Warning — IBC counterparties must upgrade first.** IBC light clients on counterparty chains verify your validator set's commit signatures using the counterparty's own compiled-in crypto. A counterparty running a stack that predates ML-DSA-65 support cannot verify signatures from the new key type: once validators holding sufficient voting power sign with it, your headers fail verification there, IBC packet flow with that chain stops, and the client eventually expires. Before enabling a new consensus key type on a chain with live IBC connections, coordinate so every counterparty chain is running a CometBFT/SDK stack that can verify it — the counterparty only needs the verification code on its nodes, not the key type in its own `pub_key_types`.
+
+Existing chains can combine this with [key rotation](#validator-consensus-key-rotation) to move validators to post-quantum keys: add `ml_dsa_65` to `pub_key_types` via a consensus-params update, then have validators rotate.
+
+For the concepts and operator guides, see [Post-quantum keys](https://docs.cosmos.network/sdk/latest/keys/post-quantum-keys), [Enable ML-DSA keys](https://docs.cosmos.network/sdk/latest/keys/enable-ml-dsa-keys), and [Migrate a validator to ML-DSA](https://docs.cosmos.network/sdk/latest/keys/migrate-validator-ml-dsa).
+
+### ML-DSA-65 Account Keys
+
+[#26472](https://github.com/cosmos/cosmos-sdk/pull/26472) extends ML-DSA-65 support to user account keys: keyring creation and mnemonic recovery (`--algo ml_dsa_65`), transaction signing and verification, and a new ante-handler gas cost param `SigVerifyCostMlDsa65` (added to `x/auth` params by the automatic 6 → 7 migration). No action is required; accounts using existing key types are unaffected.
+
+See [Create an ML-DSA account](https://docs.cosmos.network/sdk/latest/keys/create-ml-dsa-account) and [Post-quantum keys](https://docs.cosmos.network/sdk/latest/keys/post-quantum-keys).
+
+### secp256k1eth Validator Consensus Keys
+
+[#26615](https://github.com/cosmos/cosmos-sdk/pull/26615) adds `crypto/keys/secp256k1eth`, wrapping CometBFT's Ethereum-style secp256k1 consensus key implementation with SDK codec registration. Intended for EVM-compatible chains that want validator consensus addresses derived the Ethereum way; opt in via `genesis.consensus_params.validator.pub_key_types`.
+
+The IBC counterparty warning from the [ML-DSA-65 section](#ml-dsa-65-validator-consensus-keys) applies here too: counterparty chains must run a stack that can verify secp256k1eth signatures before your validators adopt the key type, or IBC connections with them will break.
+
+See [Post-quantum keys](https://docs.cosmos.network/sdk/latest/keys/post-quantum-keys) for how the consensus key types compare.
+
+### Block-STM Configuration
+
+Block-STM parallel execution itself is not new — the engine (`baseapp/txnrunner`) and the `SetBlockSTMTxRunner` hook shipped in v0.54.x, wired programmatically per chain. v0.55 adds standard operator-facing configuration ([#26208](https://github.com/cosmos/cosmos-sdk/pull/26208)): `block-executor` (`"sequential"`, the default, or `"block-stm"`), `block-stm-workers`, and `block-stm-pre-estimate` in `app.toml`, plus a `baseapp/blockexec` helper that resolves them and installs the runner. Chains that already call `SetBlockSTMTxRunner` directly can keep that wiring or switch to the helper.
+
+To adopt the config-driven wiring, call `blockexec.Apply` after creating your store keys (see `simapp/app.go`):
 
 ```go
-import (
-    "runtime"
-
-    "github.com/cosmos/cosmos-sdk/baseapp/blockstm"
-)
-
-oKeys := storetypes.NewObjectStoreKeys(banktypes.ObjectStoreKey)
-
-keys := storetypes.NewKVStoreKeys(
-    authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
-    // ... other store keys
-)
-
-// Collect non-transient store keys
-var nonTransientKeys []storetypes.StoreKey
+stores := make([]storetypes.StoreKey, 0, len(keys))
 for _, k := range keys {
-    nonTransientKeys = append(nonTransientKeys, k)
+    stores = append(stores, k)
 }
-for _, k := range oKeys {
-    nonTransientKeys = append(nonTransientKeys, k)
-}
-
-// Enable BlockSTM runner
-bApp.SetBlockSTMTxRunner(blockstm.NewSTMRunner(
-    txConfig.TxDecoder(),
-    nonTransientKeys,
-    min(runtime.GOMAXPROCS(0), runtime.NumCPU()),
-    true,  // debug logging
-    sdk.DefaultBondDenom,
-))
-
-// Optionally disable block gas meter for better performance
-bApp.SetDisableBlockGasMeter(true)
-
-// Set ObjectStoreKey on bank module
-app.BankKeeper = app.BankKeeper.WithObjStoreKey(oKeys[banktypes.ObjectStoreKey])
+blockexec.Apply(bApp, appOpts, stores, txConfig.TxDecoder(),
+    func(storetypes.MultiStore) string { return sdk.DefaultBondDenom },
+)
 ```
 
-### CometBFT v0.39 Updates
+`Apply` resolves the executor from `app.toml`/flags and installs the corresponding `TxRunner`; with the default `sequential` executor it preserves today's behavior, so the wiring is safe to add unconditionally. Block-STM is incompatible with the block gas meter (disabled by default since v0.54): `Apply` disables the meter automatically when `block-stm` is selected, but chains wiring `SetBlockSTMTxRunner` directly must call `SetDisableBlockGasMeter(true)` first or the runner installation panics.
 
-#### LibP2P
+Switching a running chain's executor is a per-node setting with identical state-transition results, but treat the first enablement as an operational rollout: test with your workload before flipping validators.
 
-libp2p replaces CometBFT's legacy `comet-p2p` transport layer with [go-libp2p](https://libp2p.io/). It adds native stream-oriented transport, concurrent receive pipelines, and autoscaled worker pools per reactor, reducing queue pressure and improving message flow under load. In benchmarks, libp2p has been a key contributor to reaching over 2000 TPS. Beyond raw throughput, it improves network liveness by making peer communication and block propagation more resilient under sustained congestion and sudden load spikes.
+## Behavior Changes Affecting Dapps and Indexers
 
-Unlike other opt-in features, **to opt-in to libp2p, every validator in the network must upgrade together**. CometBFT p2p and libp2p are fundamentally incompatible and cannot interoperate. Because of this, a coordinated network-wide migration at a specific upgrade height is required. 
+Observable changes between v0.54.x and v0.55.x that don't require code changes but may affect downstream consumers:
 
-See the [libp2p page](https://docs.cosmos.network/cometbft/latest/docs/experimental/lib-p2p) in the CometBFT documentation for details.
-
-#### `AdaptiveSync`
-
-`AdaptiveSync` allows a node to run `blocksync` and consensus at the same time for faster recovery behavior. In the default flow, a node starts in `blocksync`, catches up, then switches to consensus. Under sustained load, a node can remain behind and struggle to catch up. With `adaptive_sync` enabled, consensus still works normally, but it can also ingest already available blocks from `blocksync`, allowing nodes to recover more quickly during traffic spikes. `AdaptiveSync` does not change consensus safety or finality rules.
-
-See the [`AdaptiveSync` documentation](https://docs.cosmos.network/cometbft/latest/docs/core/block-sync#adaptivesync) for details.
-
+* **Block selection uses ante-reported gas.** Proposals are packed using the gas wanted returned by the ante handler at `CheckTx` time rather than the tx-declared gas limit ([#25338](https://github.com/cosmos/cosmos-sdk/pull/25338)). Block composition can differ for txs whose ante-reported gas diverges from their declared limit.
+* **Staking emits key-rotation events** (`rotate_cons_pubkey`, `apply_cons_pubkey_rotation`), and validator consensus addresses can change over time ([#26619](https://github.com/cosmos/cosmos-sdk/pull/26619)).
+* **`x/gov` `proposal_messages` event attribute** no longer has a leading comma ([#26353](https://github.com/cosmos/cosmos-sdk/pull/26353)).
+* **`x/authz` prunes at most 200 expired grants per begin block** ([#26588](https://github.com/cosmos/cosmos-sdk/pull/26588)); mass-expiry cleanup now spreads across blocks.
+* **`x/distribution` reward withdrawals to blocked addresses** during begin/end block fall back to the delegator/validator owner and then the community pool instead of failing ([#26406](https://github.com/cosmos/cosmos-sdk/pull/26406)). User-initiated withdrawals to blocked addresses still return `ErrUnauthorized`.
+* **`x/feegrant` `Allowances` and `AllowancesByGranter` queries** now honor `PageRequest.offset` and `count_total` correctly ([#26596](https://github.com/cosmos/cosmos-sdk/pull/26596)); clients that compensated for the old off-by-page results should re-check.
+* **`cachekv.Has` no longer loads the value on a cache miss**, and the redundant `Has` before `Get` in `bank.getSendEnabled` and `upgrade.getProtocolVersion` is gone ([#26448](https://github.com/cosmos/cosmos-sdk/issues/26448)). Sending coins now costs `HasCost` (1000 gas at the default `KVGasConfig`) less per send-enabled check, and `x/upgrade` reads the protocol version with a single store read. Re-check gas limits and `--gas auto` estimates if your chain relies on these costs for out-of-gas or fee behavior.

@@ -113,6 +113,12 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]abci.ValidatorUpda
 		)
 	}
 
+	// prune consensus key rotations that have fallen out of the current
+	// unbonding period.
+	if err := k.PruneMaturedConsKeyRotations(ctx); err != nil {
+		return nil, err
+	}
+
 	return validatorUpdates, nil
 }
 
@@ -138,12 +144,23 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	totalPower := math.ZeroInt()
 	amtFromBondedToNotBonded, amtFromNotBondedToBonded := math.ZeroInt(), math.ZeroInt()
 
+	// drain's swap of validator.ConsensusPubkey must be visible to subsequent
+	// reads in this EndBlock.
+	if err := k.ApplyConsKeyRotations(ctx); err != nil {
+		return nil, err
+	}
+
 	// Retrieve the last validator set.
 	// The persistent set is updated later in this function.
 	// (see LastValidatorPowerKey).
 	last, err := k.getLastValidatorsByAddr(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get last validator set: %w", err)
+	}
+
+	pendingRotations, err := k.PendingConsKeyRotationUpdates(ctx, last)
+	if err != nil {
+		return nil, err
 	}
 
 	// Iterate over validators, highest power to lowest.
@@ -236,6 +253,11 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 		}
 
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
+	}
+
+	updates, err = k.ProcessValidatorUpdatesForConsKeyRotations(ctx, pendingRotations, updates)
+	if err != nil {
+		return nil, err
 	}
 
 	// Update the pools based on the recent updates in the validator set:

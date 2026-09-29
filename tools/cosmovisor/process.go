@@ -270,7 +270,10 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 		currentUpgrade = upgradetypes.Plan{}
 	}
 
-	cmdDone := make(chan error)
+	// Buffered so the goroutine can always deliver cmd.Wait()'s result and
+	// return: on the upgrade path below the select picks MonitorUpdate and
+	// never receives from cmdDone, which would otherwise leak this goroutine.
+	cmdDone := make(chan error, 1)
 	go func() {
 		cmdDone <- cmd.Wait()
 	}()
@@ -285,8 +288,10 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 			l.logger.Info("sent interrupt to app, waiting for exit")
 			_ = cmd.Process.Signal(syscall.SIGTERM)
 
-			// Wait app exit
-			psChan := make(chan *os.ProcessState)
+			// Wait app exit. Buffered so the goroutine can always deliver the
+			// process state and return: on the ShutdownGrace timeout below the
+			// select stops receiving from psChan, which would otherwise leak it.
+			psChan := make(chan *os.ProcessState, 1)
 			go func() {
 				pstate, _ := cmd.Process.Wait()
 				psChan <- pstate

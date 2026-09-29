@@ -27,6 +27,7 @@ func (app *SimApp) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAd
 	if forZeroHeight {
 		height = 0
 		app.prepForZeroHeightGenesis(ctx, jailAllowedAddrs)
+		ctx = ctx.WithBlockHeight(height)
 	}
 
 	genState, err := app.ModuleManager.ExportGenesisForModules(ctx, app.appCodec, modulesToExport)
@@ -219,6 +220,10 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 
 	_, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := app.StakingKeeper.PrepareConsKeyRotationsForZeroHeightExport(ctx); err != nil {
 		log.Fatal(err)
 	}
 

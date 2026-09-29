@@ -27,6 +27,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 	// first TM block is at height 1, so state updates applied from
 	// genesis.json are in block 0.
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	exportedInitialHeight := sdkCtx.BlockHeight()
 	sdkCtx = sdkCtx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
 	ctx = sdkCtx
 
@@ -174,8 +175,23 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 		panic(fmt.Sprintf("not bonded pool balance is different from not bonded coins: %s <-> %s", notBondedBalance, notBondedCoins))
 	}
 
+	// materialize the key rotation fee pool so it exists from genesis. fees
+	// only ever transit through it, so it carries no genesis balance.
+	if keyRotationFeePool := k.GetKeyRotationFeePool(ctx); keyRotationFeePool == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.KeyRotationFeePoolName))
+	}
+
+	if err := k.ImportConsKeyRotations(ctx, data.ConsensusKeyRotationHistory, data.PendingConsensusKeyRotations); err != nil {
+		panic(err)
+	}
+
 	// don't need to run CometBFT updates if we exported
 	if data.Exported {
+		pendingRotations, err := k.PendingConsKeyRotations(ctx)
+		if err != nil {
+			panic(err)
+		}
+
 		for _, lv := range data.LastValidatorPowers {
 			valAddr, err := k.validatorAddressCodec.StringToBytes(lv.Address)
 			if err != nil {
@@ -192,7 +208,11 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 				panic(fmt.Sprintf("validator %s not found", lv.Address))
 			}
 
-			update := validator.ABCIValidatorUpdate(k.PowerReduction(ctx))
+			pk, err := pendingRotations.EffectiveKeyForGenesis(valAddr, validator, exportedInitialHeight)
+			if err != nil {
+				panic(err)
+			}
+			update := validator.ABCIValidatorUpdateWithPubKey(k.PowerReduction(ctx), pk)
 			update.Power = lv.Power // keep the next-val-set offset, use the last power for the first block
 			res = append(res, update)
 		}
@@ -266,14 +286,27 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
+	consKeyRotationHistory, err := k.ExportConsKeyRotationHistory(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	exportedInitialHeight := ctx.BlockHeight() + 1
+	pendingConsKeyRotations, err := k.ExportPendingConsKeyRotations(ctx, exportedInitialHeight)
+	if err != nil {
+		panic(err)
+	}
+
 	return &types.GenesisState{
-		Params:               params,
-		LastTotalPower:       totalPower,
-		LastValidatorPowers:  lastValidatorPowers,
-		Validators:           allValidators,
-		Delegations:          allDelegations,
-		UnbondingDelegations: unbondingDelegations,
-		Redelegations:        redelegations,
-		Exported:             true,
+		Params:                       params,
+		LastTotalPower:               totalPower,
+		LastValidatorPowers:          lastValidatorPowers,
+		Validators:                   allValidators,
+		Delegations:                  allDelegations,
+		UnbondingDelegations:         unbondingDelegations,
+		Redelegations:                redelegations,
+		Exported:                     true,
+		ConsensusKeyRotationHistory:  consKeyRotationHistory,
+		PendingConsensusKeyRotations: pendingConsKeyRotations,
 	}
 }

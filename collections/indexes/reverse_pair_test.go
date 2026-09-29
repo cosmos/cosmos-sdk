@@ -1,11 +1,14 @@
 package indexes
 
 import (
+	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
+	store "cosmossdk.io/collections/corecompat"
 )
 
 type (
@@ -71,6 +74,74 @@ func TestReversePair(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, pks)
 }
+
+func TestReversePairIteratorPrimaryKeysCloseError(t *testing.T) {
+	closeErr := errors.New("close error")
+	sk, ctx := deps()
+
+	sb := collections.NewSchemaBuilder(sk)
+	keyCodec := collections.PairKeyCodec(collections.StringKey, collections.StringKey)
+	idxMap := collections.NewIndexedMap(
+		sb, collections.NewPrefix("balances"), "balances",
+		keyCodec, collections.Uint64Value,
+		balanceIndex{Denom: NewReversePair[Amount](sb, collections.NewPrefix("denom_index"), "denom_index", keyCodec)},
+	)
+	_, err := sb.Build()
+	require.NoError(t, err)
+	require.NoError(t, idxMap.Set(ctx, collections.Join("address1", "osmo"), 100))
+
+	errSk := closeErrKVStoreService{KVStoreService: sk, closeErr: closeErr}
+	sb2 := collections.NewSchemaBuilder(errSk)
+	idxMap2 := collections.NewIndexedMap(
+		sb2, collections.NewPrefix("balances"), "balances",
+		keyCodec, collections.Uint64Value,
+		balanceIndex{Denom: NewReversePair[Amount](sb2, collections.NewPrefix("denom_index"), "denom_index", keyCodec)},
+	)
+	_, err = sb2.Build()
+	require.NoError(t, err)
+
+	iter, err := idxMap2.Indexes.Denom.MatchExact(ctx, "osmo")
+	require.NoError(t, err)
+	_, err = iter.PrimaryKeys()
+	require.ErrorIs(t, err, closeErr)
+}
+
+type closeErrKVStoreService struct {
+	store.KVStoreService
+	closeErr error
+}
+
+func (s closeErrKVStoreService) OpenKVStore(ctx context.Context) store.KVStore {
+	return closeErrKVStore{KVStore: s.KVStoreService.OpenKVStore(ctx), closeErr: s.closeErr}
+}
+
+type closeErrKVStore struct {
+	store.KVStore
+	closeErr error
+}
+
+func (s closeErrKVStore) Iterator(start, end []byte) (store.Iterator, error) {
+	iter, err := s.KVStore.Iterator(start, end)
+	if err != nil {
+		return nil, err
+	}
+	return closeErrIter{Iterator: iter, closeErr: s.closeErr}, nil
+}
+
+func (s closeErrKVStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
+	iter, err := s.KVStore.ReverseIterator(start, end)
+	if err != nil {
+		return nil, err
+	}
+	return closeErrIter{Iterator: iter, closeErr: s.closeErr}, nil
+}
+
+type closeErrIter struct {
+	store.Iterator
+	closeErr error
+}
+
+func (i closeErrIter) Close() error { return i.closeErr }
 
 func TestUncheckedReversePair(t *testing.T) {
 	sk, ctx := deps()

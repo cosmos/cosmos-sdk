@@ -55,7 +55,7 @@ func testMempoolProperties(t *rapid.T) {
 	senderTxRaw := getSenderTxMap(txs)
 
 	for _, tx := range txs {
-		err := mp.Insert(ctx, tx)
+		err := mp.Insert(ctx, tx, mempool.InsertOption{})
 		require.NoError(t, err)
 	}
 
@@ -96,7 +96,7 @@ func fetchAllTxs(iterator mempool.Iterator) []testTx {
 	var txs []testTx
 	for iterator != nil {
 		tx := iterator.Tx()
-		txs = append(txs, tx.(testTx))
+		txs = append(txs, tx.Tx.(testTx))
 		i := iterator.Next()
 		iterator = i
 	}

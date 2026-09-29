@@ -32,4 +32,6 @@ var (
 	ErrInvalidPubKeyLength            = errors.Register(ModuleName, 10, "invalid pubkey length")
 	ErrInvalidAllocatedFees           = errors.Register(ModuleName, 11, "invalid allocated fees")
 	ErrInvalidValidatorPower          = errors.Register(ModuleName, 12, "invalid validator power")
+	ErrConsensusPubKeyInUse           = errors.Register(ModuleName, 13, "consensus pubkey already in use by another validator")
+	ErrNoOpRotation                   = errors.Register(ModuleName, 14, "new consensus pubkey matches the current one, nothing to rotate")
 )

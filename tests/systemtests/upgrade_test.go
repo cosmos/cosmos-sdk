@@ -74,6 +74,12 @@ func TestChainUpgrade(t *testing.T) {
 	proposalStatus := gjson.Get(raw, "proposal.status").String()
 	require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw)
 
+	legacyStakingParamsRaw := cli.CustomQuery("q", "staking", "params")
+	require.False(t,
+		gjson.Get(legacyStakingParamsRaw, "params.key_rotation_fee").Exists(),
+		legacyStakingParamsRaw,
+	)
+
 	t.Log("waiting for upgrade info")
 	systest.Sut.AwaitUpgradeInfo(t)
 	systest.Sut.StopChain()
@@ -90,6 +96,15 @@ func TestChainUpgrade(t *testing.T) {
 		gjson.Get(mintParamsRaw, "params.max_supply").Exists() || gjson.Get(mintParamsRaw, "params.maxSupply").Exists(),
 		mintParamsRaw,
 	)
+
+	stakingParamsRaw := cli.CustomQuery("q", "staking", "params")
+	bondDenom := gjson.Get(stakingParamsRaw, "params.bond_denom")
+	require.True(t, bondDenom.Exists(), stakingParamsRaw)
+
+	keyRotationFee := gjson.Get(stakingParamsRaw, "params.key_rotation_fee")
+	require.True(t, keyRotationFee.Exists(), stakingParamsRaw)
+	require.Equal(t, "1000000", keyRotationFee.Get("amount").String(), stakingParamsRaw)
+	require.Equal(t, bondDenom.String(), keyRotationFee.Get("denom").String(), stakingParamsRaw)
 
 	regex, err := regexp.Compile("DBG this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
 	require.NoError(t, err)

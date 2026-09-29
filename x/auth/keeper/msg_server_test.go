@@ -32,6 +32,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					TxSizeCostPerByte:      5,
 					SigVerifyCostED25519:   694,
 					SigVerifyCostSecp256k1: 511,
+					SigVerifyCostMlDsa65:   750,
 				},
 			},
 			expectErr: true,
@@ -47,6 +48,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					TxSizeCostPerByte:      5,
 					SigVerifyCostED25519:   694,
 					SigVerifyCostSecp256k1: 511,
+					SigVerifyCostMlDsa65:   750,
 				},
 			},
 			expectErr: true,
@@ -62,6 +64,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					TxSizeCostPerByte:      0,
 					SigVerifyCostED25519:   694,
 					SigVerifyCostSecp256k1: 511,
+					SigVerifyCostMlDsa65:   750,
 				},
 			},
 			expectErr: true,
@@ -77,6 +80,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					TxSizeCostPerByte:      5,
 					SigVerifyCostED25519:   0,
 					SigVerifyCostSecp256k1: 511,
+					SigVerifyCostMlDsa65:   750,
 				},
 			},
 			expectErr: true,
@@ -92,6 +96,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					TxSizeCostPerByte:      5,
 					SigVerifyCostED25519:   694,
 					SigVerifyCostSecp256k1: 0,
+					SigVerifyCostMlDsa65:   750,
 				},
 			},
 			expectErr: true,
@@ -122,6 +127,7 @@ func (s *KeeperTestSuite) TestUpdateParamsAuthority() {
 		TxSizeCostPerByte:      5,
 		SigVerifyCostED25519:   694,
 		SigVerifyCostSecp256k1: 511,
+		SigVerifyCostMlDsa65:   750,
 	}
 
 	s.Run("fallback to keeper authority", func() {

@@ -93,6 +93,14 @@ func (i *treeInstrument) Start(cfg map[string]any) error {
 	return nil
 }
 
+// treeNow returns time.Now() when tree instrumentation is active, zero time otherwise.
+func treeNow() time.Time {
+	if treeInst == nil {
+		return time.Time{}
+	}
+	return time.Now()
+}
+
 func measureSince(ctx context.Context, get func() metric.Int64Histogram, start time.Time) {
 	if treeInst == nil {
 		return

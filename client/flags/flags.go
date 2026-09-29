@@ -33,8 +33,6 @@ const (
 	SignModeLegacyAminoJSON = "amino-json"
 	// SignModeDirectAux is the value of the --sign-mode flag for SIGN_MODE_DIRECT_AUX
 	SignModeDirectAux = "direct-aux"
-	// SignModeTextual is the value of the --sign-mode flag for SIGN_MODE_TEXTUAL.
-	SignModeTextual = "textual"
 	// SignModeEIP191 is the value of the --sign-mode flag for SIGN_MODE_EIP_191
 	SignModeEIP191 = "eip-191"
 )
@@ -136,7 +134,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	f.Bool(FlagGenerateOnly, false, "Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)")
 	f.Bool(FlagOffline, false, "Offline mode (does not allow any online functionality)")
 	f.BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
-	f.String(FlagSignMode, "", "Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature")
+	f.String(FlagSignMode, "", "Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature")
 	f.Uint64(FlagTimeoutHeight, 0, "DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height")
 	f.Duration(TimeoutDuration, 0, "TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutDuration, the transaction will be rejected.")
 	f.Bool(FlagUnordered, false, "Enable unordered transaction delivery; must be used in conjunction with --timeout-duration")

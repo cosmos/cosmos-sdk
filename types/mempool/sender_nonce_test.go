@@ -121,7 +121,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 			for i, ts := range tt.txs {
 				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
 				c := ctx.WithPriority(tx.priority)
-				err := pool.Insert(c, tx)
+				err := pool.Insert(c, tx, mempool.InsertOption{})
 				require.NoError(t, err)
 			}
 
@@ -163,10 +163,10 @@ func (s *MempoolTestSuite) TestMaxTx() {
 	require.Nil(t, itr)
 
 	ctx = ctx.WithPriority(tx.priority)
-	err := mp.Insert(ctx, tx)
+	err := mp.Insert(ctx, tx, mempool.InsertOption{})
 	require.NoError(t, err)
 	ctx = ctx.WithPriority(tx.priority)
-	err = mp.Insert(ctx, tx2)
+	err = mp.Insert(ctx, tx2, mempool.InsertOption{})
 	require.Equal(t, mempool.ErrMempoolTxMaxCapacity, err)
 }
 
@@ -182,7 +182,7 @@ func (s *MempoolTestSuite) TestTxRejectedWithUnorderedAndSequence() {
 		priority:  rand.Int63(),
 		unordered: true,
 	}
-	err := mp.Insert(ctx, txSender)
+	err := mp.Insert(ctx, txSender, mempool.InsertOption{})
 	require.ErrorContains(t, err, "unordered txs must not have sequence set")
 }
 
@@ -205,7 +205,7 @@ func (s *MempoolTestSuite) TestTxNotFoundOnSender() {
 	}
 
 	ctx = ctx.WithPriority(tx.priority)
-	err := mp.Insert(ctx, txSender)
+	err := mp.Insert(ctx, txSender, mempool.InsertOption{})
 	require.NoError(t, err)
 	err = mp.Remove(tx)
 	require.Equal(t, mempool.ErrTxNotFound, err)
@@ -236,7 +236,7 @@ func (s *MempoolTestSuite) TestUnorderedTx() {
 
 	for _, tx := range txs {
 		c := ctx.WithPriority(tx.priority)
-		require.NoError(t, mp.Insert(c, tx))
+		require.NoError(t, mp.Insert(c, tx, mempool.InsertOption{}))
 	}
 
 	require.Equal(t, 4, mp.CountTx())

@@ -182,6 +182,13 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
 					GovProposal:    true,
 				},
+				{
+					RpcMethod:      "RotateConsPubKey",
+					Use:            "rotate-cons-pub-key [new-pubkey]",
+					Short:          "Rotate a validator consensus public key",
+					Example:        fmt.Sprintf(`%s tx staking rotate-cons-pub-key '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"..."}' --from myvalidator`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "new_pubkey"}},
+				},
 			},
 			EnhanceCustomCommand: false, // use custom commands only until v0.51
 		},

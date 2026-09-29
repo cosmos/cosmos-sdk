@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	stderrors "errors"
 	"time"
 
 	"github.com/bits-and-blooms/bitset"
@@ -48,6 +49,32 @@ func (k Keeper) SetValidatorSigningInfo(ctx context.Context, address sdk.ConsAdd
 	}
 
 	return store.Set(types.ValidatorSigningInfoKey(address), bz)
+}
+
+// DeleteValidatorSigningInfo deletes the signing info for a consensus address.
+func (k Keeper) DeleteValidatorSigningInfo(ctx context.Context, address sdk.ConsAddress) error {
+	store := k.storeService.OpenKVStore(ctx)
+	return store.Delete(types.ValidatorSigningInfoKey(address))
+}
+
+// MoveValidatorSigningInfo moves signing info from one consensus address to
+// another.
+func (k Keeper) MoveValidatorSigningInfo(ctx context.Context, oldAddr, newAddr sdk.ConsAddress) error {
+	info, err := k.GetValidatorSigningInfo(ctx, oldAddr)
+	if err != nil {
+		if errors.IsOf(err, types.ErrNoSigningInfoFound) {
+			// validators can rotate before they have ever bonded, in which
+			// case slashing has no signing info to move yet
+			return nil
+		}
+		return err
+	}
+
+	info.Address = newAddr.String()
+	if err := k.SetValidatorSigningInfo(ctx, newAddr, info); err != nil {
+		return err
+	}
+	return k.DeleteValidatorSigningInfo(ctx, oldAddr)
 }
 
 // IterateValidatorSigningInfos iterates over the stored ValidatorSigningInfo
@@ -209,6 +236,53 @@ func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddres
 	for ; iter.Valid(); iter.Next() {
 		err = store.Delete(iter.Key())
 		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// MoveMissedBlockBitmap moves missed block bitmap chunks from one consensus
+// address to another.
+func (k Keeper) MoveMissedBlockBitmap(ctx context.Context, oldAddr, newAddr sdk.ConsAddress) (err error) {
+	store := k.storeService.OpenKVStore(ctx)
+	oldPrefix := types.ValidatorMissedBlockBitmapPrefixKey(oldAddr)
+	newPrefix := types.ValidatorMissedBlockBitmapPrefixKey(newAddr)
+
+	iter, err := store.Iterator(oldPrefix, storetypes.PrefixEndBytes(oldPrefix))
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = stderrors.Join(err, iter.Close())
+	}()
+
+	type bitmapChunk struct {
+		oldKey []byte
+		newKey []byte
+		value  []byte
+	}
+
+	// collect chunks so we dont delete while iterating
+	var chunks []bitmapChunk
+	for ; iter.Valid(); iter.Next() {
+		// old key is the old consensus address + bitmap chunk index
+		oldKey := append([]byte(nil), iter.Key()...)
+
+		// new key is the new consensus address + bitmap chunk index (remove
+		// old prefix from the old key to just get the chunk index)
+		newKey := append(append([]byte(nil), newPrefix...), oldKey[len(oldPrefix):]...)
+
+		value := append([]byte(nil), iter.Value()...)
+		chunks = append(chunks, bitmapChunk{oldKey: oldKey, newKey: newKey, value: value})
+	}
+
+	// move chunks to new key, remove old key
+	for _, chunk := range chunks {
+		if err := store.Set(chunk.newKey, chunk.value); err != nil {
+			return err
+		}
+		if err := store.Delete(chunk.oldKey); err != nil {
 			return err
 		}
 	}

@@ -109,6 +109,12 @@ const (
 
 	FlagMempoolMaxTxs = "mempool.max-txs"
 
+	// block stm related flags
+
+	FlagBlockExecutor       = "block-executor"
+	FlagBlockSTMWorkers     = "block-stm-workers"
+	FlagBlockSTMPreEstimate = "block-stm-pre-estimate"
+
 	// testnet keys
 
 	KeyIsTestnet             = "is-testnet"
@@ -1026,6 +1032,9 @@ func addStartNodeFlags(cmd *cobra.Command, opts StartCmdOptions) {
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
 	cmd.Flags().Int(FlagMempoolMaxTxs, mempool.DefaultMaxTx, "Sets MaxTx value for the app-side mempool")
 	cmd.Flags().Duration(FlagShutdownGrace, 0*time.Second, "On Shutdown, duration to wait for resource clean up")
+	cmd.Flags().String(FlagBlockExecutor, serverconfig.DefaultBlockExecutor, "Block executor mode (block-stm|sequential)")
+	cmd.Flags().Int(FlagBlockSTMWorkers, serverconfig.DefaultBlockSTMWorkers, "Number of workers for block-stm execution (0 = auto)")
+	cmd.Flags().Bool(FlagBlockSTMPreEstimate, serverconfig.DefaultBlockSTMPreEstimate, "Enable pre-estimation for block-stm execution")
 
 	// support old flags name for backwards compatibility
 	cmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {

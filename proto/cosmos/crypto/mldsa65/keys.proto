@@ -1,0 +1,30 @@
+syntax = "proto3";
+package cosmos.crypto.mldsa65;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/mldsa65";
+
+// PubKey is an ML-DSA-65 (FIPS 204) public key for handling CometBFT keys in
+// the SDK. It is intended for validator-key use and must not be used in
+// application-level account contexts because it does not implement ADR-28
+// address derivation. If you want to use ML-DSA-65 at the user/account level,
+// define a new proto message and follow ADR-28 for address construction.
+message PubKey {
+  option (amino.name) = "cometbft/PubKeyMlDsa65";
+  // The Amino encoding is simply the inner bytes field, and not the Amino
+  // encoding of the whole PubKey struct.
+  option (amino.message_encoding)     = "key_field";
+  option (gogoproto.goproto_stringer) = false;
+
+  bytes key = 1;
+}
+
+// PrivKey defines an ML-DSA-65 private key (FIPS 204 packed form).
+message PrivKey {
+  option (amino.name)             = "cometbft/PrivKeyMlDsa65";
+  option (amino.message_encoding) = "key_field";
+
+  bytes key = 1;
+}

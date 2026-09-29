@@ -22,6 +22,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -542,4 +543,80 @@ func TestInitGenesis(t *testing.T) {
 		require.Equal(t, poaModuleFees, poaModuleBalanceAfterImport,
 			"poa module balance should remain unchanged during genesis import")
 	})
+}
+
+// TestGenesisRoundTripAfterRotation locks in that a same-block key rotation needs no
+// new GenesisState field: after rotating a validator's consensus key (which also
+// migrates accrued fees), an export/import round trip reproduces the validator under
+// its new cons-addr with the same power, metadata, pubkey, fees, and total power.
+func TestGenesisRoundTripAfterRotation(t *testing.T) {
+	f := setupTest(t)
+
+	adminAddr := sdk.AccAddress("admin-rotation")
+	require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr.String()}))
+
+	operatorAddr, oldConsAddr, _ := createRotatableValidator(t, f, 100)
+
+	// Mint and checkpoint so the full balance is allocated under the old cons-addr.
+	fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
+	require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
+	require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
+
+	// Rotate the consensus key. This re-keys the record and migrates fees.
+	newPubKey := ed25519.GenPrivKey().PubKey()
+	newConsAddr := sdk.GetConsAddress(newPubKey)
+	require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey))
+
+	// Capture post-rotation state to compare against the imported state.
+	allocatedBefore, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, newConsAddr.String())
+	require.NoError(t, err)
+	totalAllocatedBefore, err := f.poaKeeper.getTotalAllocated(f.ctx)
+	require.NoError(t, err)
+	totalPowerBefore, err := f.poaKeeper.GetTotalPower(f.ctx)
+	require.NoError(t, err)
+	validatorBefore, err := f.poaKeeper.GetValidatorByOperatorAddress(f.ctx, operatorAddr)
+	require.NoError(t, err)
+
+	exportedGenesis, err := f.poaKeeper.ExportGenesis(f.ctx)
+	require.NoError(t, err)
+
+	// Fresh keeper, then import the exported state.
+	f = setupTest(t)
+	_, err = f.poaKeeper.InitGenesis(f.ctx, f.cdc, exportedGenesis)
+	require.NoError(t, err)
+
+	// Validator resolves under the new cons-addr; the old cons-addr has no entry.
+	hasOld, err := f.poaKeeper.validators.Has(f.ctx, oldConsAddr)
+	require.NoError(t, err)
+	require.False(t, hasOld, "old cons-addr should have no entry after round trip")
+
+	importedValidators, err := f.poaKeeper.GetAllValidators(f.ctx)
+	require.NoError(t, err)
+	require.Len(t, importedValidators, 1)
+
+	imported, err := f.poaKeeper.GetValidatorByOperatorAddress(f.ctx, operatorAddr)
+	require.NoError(t, err)
+	require.Equal(t, validatorBefore.Power, imported.Power)
+	require.Equal(t, validatorBefore.Metadata.Moniker, imported.Metadata.Moniker)
+	require.Equal(t, validatorBefore.Metadata.Description, imported.Metadata.Description)
+	require.Equal(t, operatorAddr.String(), imported.Metadata.OperatorAddress)
+
+	// Imported pubkey is the rotated key: it derives the new cons-addr.
+	var importedPubKey cryptotypes.PubKey
+	require.NoError(t, f.cdc.UnpackAny(imported.PubKey, &importedPubKey))
+	require.True(t, newPubKey.Equals(importedPubKey))
+	require.Equal(t, newConsAddr, sdk.GetConsAddress(importedPubKey))
+
+	// Migrated fees live under the new cons-addr and match the pre-export balance.
+	allocatedAfter, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, newConsAddr.String())
+	require.NoError(t, err)
+	require.Equal(t, allocatedBefore.Fees, allocatedAfter.Fees)
+
+	totalAllocatedAfter, err := f.poaKeeper.getTotalAllocated(f.ctx)
+	require.NoError(t, err)
+	require.Equal(t, totalAllocatedBefore, totalAllocatedAfter)
+
+	totalPowerAfter, err := f.poaKeeper.GetTotalPower(f.ctx)
+	require.NoError(t, err)
+	require.Equal(t, totalPowerBefore, totalPowerAfter)
 }

@@ -25,8 +25,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var adminAddr = sdk.AccAddress("admin").String()
@@ -1916,4 +1918,170 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 		balance := f.bankKeeper.GetBalance(f.ctx, opAddrSdk, "stake")
 		require.Equal(t, math.NewInt(1000), balance.Amount)
 	})
+}
+
+func TestMsgServerRotateConsPubKey(t *testing.T) {
+	t.Run("operator self-rotate applies and operator index resolves to new cons-addr", func(t *testing.T) {
+		f := setupTest(t)
+		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		operatorAddr, oldConsAddr, _ := createRotatableValidator(t, f, 100)
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		newConsAddr := sdk.GetConsAddress(newPubKey)
+
+		msg := &poatypes.MsgRotateConsPubKey{
+			Sender:           operatorAddr.String(),
+			ValidatorAddress: operatorAddr.String(),
+			NewPubKey:        types.UnsafePackAny(newPubKey),
+		}
+
+		resp, err := msgServer.RotateConsPubKey(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		// Operator index resolves to the new cons-addr; old entry is gone.
+		resolved, err := f.poaKeeper.validators.Indexes.OperatorAddress.MatchExact(f.ctx, operatorAddr.String())
+		require.NoError(t, err)
+		require.Equal(t, newConsAddr, resolved)
+
+		exists, err := f.poaKeeper.validators.Has(f.ctx, oldConsAddr)
+		require.NoError(t, err)
+		require.False(t, exists)
+
+		// EndBlock surfaces old@0 and new@power to CometBFT; validator keeps its power.
+		updates, err := f.poaKeeper.EndBlocker(f.ctx.WithBlockHeight(2))
+		require.NoError(t, err)
+		require.NotEmpty(t, updates)
+
+		v, err := f.poaKeeper.GetValidatorByOperatorAddress(f.ctx, operatorAddr)
+		require.NoError(t, err)
+		require.Equal(t, int64(100), v.Power)
+		require.Equal(t, newConsAddr, sdk.GetConsAddress(mustPubKey(t, f, v.PubKey)))
+	})
+
+	t.Run("admin rotates another validator", func(t *testing.T) {
+		f := setupTest(t)
+		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		newConsAddr := sdk.GetConsAddress(newPubKey)
+
+		msg := &poatypes.MsgRotateConsPubKey{
+			Sender:           adminAddr,
+			ValidatorAddress: operatorAddr.String(),
+			NewPubKey:        types.UnsafePackAny(newPubKey),
+		}
+
+		resp, err := msgServer.RotateConsPubKey(f.ctx, msg)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+
+		resolved, err := f.poaKeeper.validators.Indexes.OperatorAddress.MatchExact(f.ctx, operatorAddr.String())
+		require.NoError(t, err)
+		require.Equal(t, newConsAddr, resolved)
+	})
+
+	t.Run("unrelated sender is rejected", func(t *testing.T) {
+		f := setupTest(t)
+		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+		stranger := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+
+		msg := &poatypes.MsgRotateConsPubKey{
+			Sender:           stranger.String(),
+			ValidatorAddress: operatorAddr.String(),
+			NewPubKey:        types.UnsafePackAny(ed25519.GenPrivKey().PubKey()),
+		}
+
+		_, err := msgServer.RotateConsPubKey(f.ctx, msg)
+		require.Error(t, err)
+		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+	})
+
+	t.Run("unknown target validator is rejected", func(t *testing.T) {
+		f := setupTest(t)
+		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		operatorAddr := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+		msg := &poatypes.MsgRotateConsPubKey{
+			Sender:           operatorAddr.String(),
+			ValidatorAddress: operatorAddr.String(),
+			NewPubKey:        types.UnsafePackAny(ed25519.GenPrivKey().PubKey()),
+		}
+
+		_, err := msgServer.RotateConsPubKey(f.ctx, msg)
+		require.ErrorIs(t, err, poatypes.ErrUnknownValidator)
+	})
+
+	t.Run("rotate to an in-use key is rejected", func(t *testing.T) {
+		f := setupTest(t)
+		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+		_, _, otherConsPubKey := createRotatableValidator(t, f, 100)
+
+		msg := &poatypes.MsgRotateConsPubKey{
+			Sender:           operatorAddr.String(),
+			ValidatorAddress: operatorAddr.String(),
+			NewPubKey:        types.UnsafePackAny(otherConsPubKey),
+		}
+
+		_, err := msgServer.RotateConsPubKey(f.ctx, msg)
+		require.ErrorIs(t, err, poatypes.ErrConsensusPubKeyInUse)
+	})
+
+	t.Run("no-op rotation to the current key is rejected", func(t *testing.T) {
+		f := setupTest(t)
+		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		operatorAddr, _, consPubKey := createRotatableValidator(t, f, 100)
+
+		msg := &poatypes.MsgRotateConsPubKey{
+			Sender:           operatorAddr.String(),
+			ValidatorAddress: operatorAddr.String(),
+			NewPubKey:        types.UnsafePackAny(consPubKey),
+		}
+
+		_, err := msgServer.RotateConsPubKey(f.ctx, msg)
+		require.ErrorIs(t, err, poatypes.ErrNoOpRotation)
+	})
+
+	t.Run("wrong-type pubkey is rejected", func(t *testing.T) {
+		f := setupTest(t)
+		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
+		msgServer := NewMsgServer(f.poaKeeper)
+
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+
+		// Restrict consensus params to secp256k1 so an ed25519 rotation is rejected.
+		f.ctx = f.ctx.WithConsensusParams(cmtproto.ConsensusParams{
+			Validator: &cmtproto.ValidatorParams{PubKeyTypes: []string{"secp256k1"}},
+		})
+
+		msg := &poatypes.MsgRotateConsPubKey{
+			Sender:           operatorAddr.String(),
+			ValidatorAddress: operatorAddr.String(),
+			NewPubKey:        types.UnsafePackAny(ed25519.GenPrivKey().PubKey()),
+		}
+
+		_, err := msgServer.RotateConsPubKey(f.ctx, msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "is not in the consensus parameters")
+	})
+}
+
+// mustPubKey decodes a validator's stored pubkey Any for cons-address assertions.
+func mustPubKey(t *testing.T, f *testFixture, any *types.Any) cryptotypes.PubKey {
+	t.Helper()
+	var pubKey cryptotypes.PubKey
+	require.NoError(t, f.poaKeeper.cdc.UnpackAny(any, &pubKey))
+	return pubKey
 }

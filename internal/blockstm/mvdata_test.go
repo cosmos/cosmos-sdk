@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/test-go/testify/require"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func TestEmptyMVData(t *testing.T) {
@@ -89,6 +91,88 @@ func TestReadErrConversion(t *testing.T) {
 	var readErr ErrReadError
 	require.True(t, errors.As(err, &readErr))
 	require.Equal(t, TxnIndex(1), readErr.BlockingTxn)
+}
+
+type panickingStorage struct{}
+
+func (panickingStorage) GetStoreType() storetypes.StoreType              { panic("not allowed") }
+func (panickingStorage) Get([]byte) []byte                               { panic("not allowed") }
+func (panickingStorage) Has([]byte) bool                                 { panic("validation re-probed storage") }
+func (panickingStorage) Iterator(_, _ []byte) storetypes.Iterator        { panic("not allowed") }
+func (panickingStorage) ReverseIterator(_, _ []byte) storetypes.Iterator { panic("not allowed") }
+
+func TestHasReadValidation(t *testing.T) {
+	ctx := context.Background()
+	k := []byte("k")
+
+	cases := []struct {
+		name    string
+		setup   func(*MVData, *MemDB)
+		desc    HasDescriptor
+		storage Storage // nil → use the populated MemDB
+		valid   bool
+	}{
+		{
+			name: "mvdata_version_flip_preserves_existence",
+			setup: func(d *MVData, _ *MemDB) {
+				d.Consolidate(ctx, TxnVersion{1, 0}, KV(k, []byte("v1")))
+				d.Consolidate(ctx, TxnVersion{2, 0}, KV(k, []byte("v2")))
+			},
+			desc:  HasDescriptor{Key: k, Exists: true},
+			valid: true,
+		},
+		{
+			name: "mvdata_delete_flips_existence",
+			setup: func(d *MVData, _ *MemDB) {
+				d.Consolidate(ctx, TxnVersion{1, 0}, KV(k, []byte("v")))
+				d.Consolidate(ctx, TxnVersion{2, 0}, KV(k, nil))
+			},
+			desc:  HasDescriptor{Key: k, Exists: true},
+			valid: false,
+		},
+		{
+			name:  "storage_fallback_matches",
+			setup: func(_ *MVData, s *MemDB) { s.Set(k, []byte("pre")) },
+			desc:  HasDescriptor{Key: k, Exists: true},
+			valid: true,
+		},
+		{
+			name:  "storage_fallback_mismatch",
+			setup: func(_ *MVData, s *MemDB) { s.Set(k, []byte("pre")) },
+			desc:  HasDescriptor{Key: k, Exists: false},
+			valid: false,
+		},
+		{
+			name:    "from_storage_skips_probe",
+			desc:    HasDescriptor{Key: k, Exists: true, FromStorage: true},
+			storage: panickingStorage{},
+			valid:   true,
+		},
+		{
+			name: "estimate_invalidates",
+			setup: func(d *MVData, _ *MemDB) {
+				d.Consolidate(ctx, TxnVersion{1, 0}, KV(k, []byte("v")))
+				d.ConvertWritesToEstimates(1)
+			},
+			desc:  HasDescriptor{Key: k, Exists: true},
+			valid: false,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			data := NewMVData(10)
+			memdb := NewMemDB()
+			if tc.setup != nil {
+				tc.setup(data, memdb)
+			}
+			storage := Storage(memdb)
+			if tc.storage != nil {
+				storage = tc.storage
+			}
+			rs := &ReadSet{HasReads: []HasDescriptor{tc.desc}}
+			require.Equal(t, tc.valid, data.ValidateReadSet(ctx, 3, rs, storage))
+		})
+	}
 }
 
 func TestSnapshot(t *testing.T) {

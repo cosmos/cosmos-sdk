@@ -79,6 +79,8 @@ func newTestEnvironment(tb testing.TB) *KeeperTestEnvironment {
 		Return(authtypes.NewEmptyModuleAccount(types.BondedPoolName).GetAddress())
 	accountKeeper.EXPECT().GetModuleAddress(types.NotBondedPoolName).
 		Return(authtypes.NewEmptyModuleAccount(types.NotBondedPoolName).GetAddress())
+	accountKeeper.EXPECT().GetModuleAddress(types.KeyRotationFeePoolName).
+		Return(authtypes.NewEmptyModuleAccount(types.KeyRotationFeePoolName).GetAddress())
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)

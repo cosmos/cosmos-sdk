@@ -1,9 +1,11 @@
 package blockstm_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -27,6 +29,7 @@ import (
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -59,6 +62,7 @@ const (
 	opUndelegate      operationKind = "undelegate"
 	opRedelegate      operationKind = "redelegate"
 	opCancelUnbonding operationKind = "cancel-unbonding"
+	opWithdrawReward  operationKind = "withdraw-reward"
 )
 
 type operation struct {
@@ -98,6 +102,95 @@ func TestBlockSTMDeterminism(t *testing.T) {
 		), maximumOperations)
 		runOperations(t, rt, genesisState, valSet, accounts, accountAddrs, validatorPubKeys, ops, 8)
 	})
+}
+
+func TestSequentialDistributionWithdrawRewardNoRecoveredPanic(t *testing.T) {
+	runDistributionWithdrawRewardNoRecoveredPanic(t, false, 0)
+}
+
+func TestBlockSTMDistributionWithdrawRewardNoRecoveredPanic(t *testing.T) {
+	runDistributionWithdrawRewardNoRecoveredPanic(t, true, 32)
+}
+
+func runDistributionWithdrawRewardNoRecoveredPanic(t *testing.T, enableBlockSTM bool, blockSTMExecutors int) {
+	t.Helper()
+	accountCount := 32
+	validatorCount := 2
+	accounts := generateAccounts(accountCount)
+	accountAddrs := getAddrs(accounts)
+	validatorPubKeys := generateValidatorPubKeys(accountCount)
+	genesisState, valSet := buildGenesisState(t, accounts)
+
+	var logBuf bytes.Buffer
+	logger := log.NewLogger(&logBuf, log.OutputJSONOption())
+	blockSTMApp := newTestApplicationWithLogger(t, dbm.NewMemDB(), genesisState, valSet, enableBlockSTM, blockSTMExecutors, logger)
+	initTestApplication(t, blockSTMApp, accounts, accountAddrs, validatorPubKeys, validatorCount)
+
+	delegateOps := make([]operation, 0, accountCount-validatorCount)
+	for i := validatorCount; i < accountCount; i++ {
+		delegateOps = append(delegateOps, operation{
+			kind:      opDelegate,
+			account:   i,
+			validator: i % validatorCount,
+			amount:    10,
+		})
+	}
+
+	res, _ := finalizeAndCommitNextBlock(
+		t,
+		blockSTMApp.app,
+		buildTxs(
+			t,
+			blockSTMApp.app,
+			accounts,
+			accountAddrs,
+			validatorPubKeys,
+			blockSTMApp.app.LastBlockHeight()+1,
+			delegateOps,
+		),
+	)
+	requireSuccessfulTxResults(t, res.TxResults)
+
+	logBuf.Reset()
+	for block := 0; block < 300; block++ {
+		ops := make([]operation, 0, accountCount-validatorCount)
+		for i := validatorCount; i < accountCount; i++ {
+			ops = append(ops, operation{
+				kind:      opWithdrawReward,
+				account:   i,
+				validator: i % validatorCount,
+			})
+		}
+
+		height := blockSTMApp.app.LastBlockHeight() + 1
+		txBytes := buildTxs(t, blockSTMApp.app, accounts, accountAddrs, validatorPubKeys, height, ops)
+		res, _ := finalizeAndCommitNextBlock(t, blockSTMApp.app, txBytes)
+		for i, result := range res.TxResults {
+			// In BlockSTM mode, ErrNoValidatorDistInfo (code 6) is acceptable: parallel
+			// execution may read a historical rewards period written by a concurrent tx
+			// before it commits, returning an error instead of the old silent-nil panic path.
+			if result.Code != 0 && (!enableBlockSTM || result.Code != distrtypes.ErrNoValidatorDistInfo.ABCICode()) {
+				t.Errorf("tx %d unexpected result: code=%d log=%s", i, result.Code, result.Log)
+			}
+		}
+
+		logOutput := logBuf.String()
+		if strings.Contains(logOutput, "cannot set negative reference count") {
+			t.Fatalf("recovered distribution negative reference-count panic at test block %d: %s", block, firstMatchingLine(logOutput, "cannot set negative reference count"))
+		}
+		if strings.Contains(logOutput, "panic recovered in runTx") {
+			t.Fatalf("unexpected recovered panic at test block %d: %s", block, firstMatchingLine(logOutput, "panic recovered in runTx"))
+		}
+	}
+}
+
+func firstMatchingLine(logOutput, substr string) string {
+	for _, line := range strings.Split(logOutput, "\n") {
+		if strings.Contains(line, substr) {
+			return line
+		}
+	}
+	return ""
 }
 
 func runOperations(
@@ -177,8 +270,19 @@ func newTestApplication(
 	blockSTMExecutors int,
 ) testApplication {
 	tb.Helper()
+	return newTestApplicationWithLogger(tb, db, genesisState, valSet, enableBlockSTM, blockSTMExecutors, log.NewNopLogger())
+}
 
-	logger := log.NewNopLogger()
+func newTestApplicationWithLogger(
+	tb testing.TB,
+	db dbm.DB,
+	genesisState []byte,
+	valSet *cmttypes.ValidatorSet,
+	enableBlockSTM bool,
+	blockSTMExecutors int,
+	logger log.Logger,
+) testApplication {
+	tb.Helper()
 
 	app := simapp.NewSimApp(
 		logger,
@@ -349,6 +453,11 @@ func generateOperations(rt *rapid.T, s state, maxOps int) []operation {
 				amount:    amount,
 			})
 
+		case opWithdrawReward:
+			delegations := positiveDelegations(s.delegations)
+			ref := rapid.SampledFrom(delegations).Draw(rt, opLabel(i, "delegation"))
+			ops = append(ops, operation{kind: kind, account: ref.delegator, validator: ref.validator})
+
 		default:
 			rt.Fatalf("unsupported operation kind %q", kind)
 		}
@@ -373,6 +482,7 @@ func availableOps(s state) []operationKind {
 
 	if len(positiveDelegations(s.delegations)) > 0 {
 		kinds = append(kinds, opUndelegate)
+		kinds = append(kinds, opWithdrawReward)
 	}
 
 	if len(redelegationSources(s)) > 0 {
@@ -563,6 +673,12 @@ func buildTxs(
 				sdk.ValAddress(accountAddrs[op.validator]).String(),
 				height,
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, op.amount),
+			)
+
+		case opWithdrawReward:
+			msg = distrtypes.NewMsgWithdrawDelegatorReward(
+				accountAddrs[op.account].String(),
+				sdk.ValAddress(accountAddrs[op.validator]).String(),
 			)
 
 		default:

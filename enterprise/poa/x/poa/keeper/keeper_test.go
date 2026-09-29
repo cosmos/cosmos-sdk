@@ -57,7 +57,8 @@ func TestReapValidatorUpdates(t *testing.T) {
 
 	t.Run("initially empty", func(t *testing.T) {
 		// Initially, there should be no updates
-		updates := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		updates, err := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		require.NoError(t, err)
 		require.Empty(t, updates)
 	})
 
@@ -81,9 +82,61 @@ func TestReapValidatorUpdates(t *testing.T) {
 		require.NoError(t, err)
 
 		// ReapValidatorUpdates should return the queued updates
-		updates := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		updates, err := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		require.NoError(t, err)
 		require.Len(t, updates, 1)
 		require.Equal(t, int64(100), updates[0].Power)
+	})
+
+	t.Run("double rotation", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, origKey := createRotatableValidator(t, f, 100)
+		commitBlock(t, f) // commit X@100 so it is in CometBFT's set
+
+		firstKey := ed25519.GenPrivKey().PubKey()
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, firstKey))
+		secondKey := ed25519.GenPrivKey().PubKey()
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, secondKey))
+
+		updates, err := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		require.NoError(t, err)
+
+		// should only be two updates, one to set the original key to 0 power, and
+		// another to set second key to original keys power.
+		powers := updatePowers(t, updates)
+		require.Len(t, powers, 2)
+		require.Equal(t, int64(0), powers[cmtKey(t, origKey)], "original key removed")
+		require.Equal(t, int64(100), powers[cmtKey(t, secondKey)], "final key added at power")
+
+		// ensure first key is not in the set
+		_, firstSeen := powers[cmtKey(t, firstKey)]
+		require.False(t, firstSeen, "intermediate key never surfaces")
+	})
+
+	t.Run("power update and rotation", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, consAddr, origKey := createRotatableValidator(t, f, 100)
+		commitBlock(t, f) // commit X@100
+
+		// raise the committed validators power to 150
+		require.NoError(t, f.poaKeeper.UpdateValidator(f.ctx, consAddr, poatypes.Validator{
+			Power:    150,
+			Metadata: &poatypes.ValidatorMetadata{Moniker: "v", OperatorAddress: operatorAddr.String()},
+		}))
+
+		// also start rotating
+		newKey := ed25519.GenPrivKey().PubKey()
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newKey))
+
+		updates, err := f.poaKeeper.ReapValidatorUpdates(f.ctx)
+		require.NoError(t, err)
+
+		// should only be two updates, one to set the original key to 0 power,
+		// and another to set second key to original keys raised power
+		powers := updatePowers(t, updates)
+		require.Len(t, powers, 2)
+		require.Equal(t, int64(0), powers[cmtKey(t, origKey)], "committed key removed")
+		require.Equal(t, int64(150), powers[cmtKey(t, newKey)], "new key added at raised power")
 	})
 }
 

@@ -144,6 +144,7 @@ func AuthModule() ModuleOption {
 					{Account: "mint", Permissions: []string{"minter"}},
 					{Account: "bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
+					{Account: "key_rotation_fee_pool", Permissions: []string{"burner"}},
 					{Account: "gov", Permissions: []string{"burner"}},
 					{Account: "nft"},
 				},

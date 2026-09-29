@@ -30,6 +30,15 @@ type ReadDescriptor struct {
 	Version TxnVersion
 }
 
+// HasDescriptor records a Has() observation. Validation checks Exists, not version.
+// FromStorage marks reads served from immutable pre-state, so validation can skip
+// re-probing storage when MVData still has no entry for the key.
+type HasDescriptor struct {
+	Key         Key
+	Exists      bool
+	FromStorage bool
+}
+
 type IteratorOptions struct {
 	// [Start, End) is the range of the iterator
 	Start     Key
@@ -49,6 +58,7 @@ type IteratorDescriptor struct {
 
 type ReadSet struct {
 	Reads     []ReadDescriptor
+	HasReads  []HasDescriptor
 	Iterators []IteratorDescriptor
 }
 
@@ -70,7 +80,7 @@ type MVStore interface {
 	ClearEstimates(txn TxnIndex)
 	ConsolidateEmpty(context.Context, TxnIndex)
 
-	ValidateReadSet(context.Context, TxnIndex, *ReadSet) bool
+	ValidateReadSet(context.Context, TxnIndex, *ReadSet, Storage) bool
 	SnapshotToStore(context.Context, storetypes.Store)
 }
 

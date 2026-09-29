@@ -19,6 +19,13 @@ func (k Keeper) GetNotBondedPool(ctx context.Context) (notBondedPool sdk.ModuleA
 	return k.authKeeper.GetModuleAccount(ctx, types.NotBondedPoolName)
 }
 
+// GetKeyRotationFeePool returns the key rotation fee pool's module account.
+// Consensus key rotation fees are routed through this account before being
+// burned.
+func (k Keeper) GetKeyRotationFeePool(ctx context.Context) (keyRotationFeePool sdk.ModuleAccountI) {
+	return k.authKeeper.GetModuleAccount(ctx, types.KeyRotationFeePoolName)
+}
+
 // bondedTokensToNotBonded transfers coins from the bonded to the not bonded pool within staking
 func (k Keeper) bondedTokensToNotBonded(ctx context.Context, tokens math.Int) error {
 	bondDenom, err := k.BondDenom(ctx)

@@ -53,6 +53,10 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
 	}
 
+	if addr := ak.GetModuleAddress(types.KeyRotationFeePoolName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.KeyRotationFeePoolName))
+	}
+
 	// ensure that authority is a valid AccAddress
 	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic("authority is not a valid acc address")

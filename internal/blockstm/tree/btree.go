@@ -3,7 +3,6 @@ package tree
 import (
 	"context"
 	"sync/atomic"
-	"time"
 
 	"github.com/cosmos/btree"
 	"go.opentelemetry.io/otel/metric"
@@ -27,12 +26,12 @@ func NewBTree[T any](less func(a, b T) bool, degree int) *BTree[T] {
 }
 
 func (bt *BTree[T]) Get(ctx context.Context, item T) (result T, ok bool) {
-	defer measureSince(ctx, func() metric.Int64Histogram { return treeInst.Get }, time.Now())
+	defer measureSince(ctx, func() metric.Int64Histogram { return treeInst.Get }, treeNow())
 	return bt.Load().Get(item)
 }
 
 func (bt *BTree[T]) GetOrDefault(ctx context.Context, item T, fillDefaults func(*T)) T {
-	defer measureSince(ctx, func() metric.Int64Histogram { return treeInst.GetOrDefault }, time.Now())
+	defer measureSince(ctx, func() metric.Int64Histogram { return treeInst.GetOrDefault }, treeNow())
 	for {
 		t := bt.Load()
 		result, ok := t.Get(item)
@@ -50,7 +49,7 @@ func (bt *BTree[T]) GetOrDefault(ctx context.Context, item T, fillDefaults func(
 }
 
 func (bt *BTree[T]) Set(ctx context.Context, item T) (prev T, ok bool) {
-	defer measureSince(ctx, func() metric.Int64Histogram { return treeInst.Set }, time.Now())
+	defer measureSince(ctx, func() metric.Int64Histogram { return treeInst.Set }, treeNow())
 	for {
 		t := bt.Load()
 		c := t.Copy()
@@ -63,7 +62,7 @@ func (bt *BTree[T]) Set(ctx context.Context, item T) (prev T, ok bool) {
 }
 
 func (bt *BTree[T]) Delete(ctx context.Context, item T) (prev T, ok bool) {
-	defer measureSince(ctx, func() metric.Int64Histogram { return treeInst.Delete }, time.Now())
+	defer measureSince(ctx, func() metric.Int64Histogram { return treeInst.Delete }, treeNow())
 	for {
 		t := bt.Load()
 		c := t.Copy()
@@ -76,7 +75,7 @@ func (bt *BTree[T]) Delete(ctx context.Context, item T) (prev T, ok bool) {
 }
 
 func (bt *BTree[T]) Scan(ctx context.Context, iter func(item T) bool) {
-	defer measureSince(ctx, func() metric.Int64Histogram { return treeInst.Scan }, time.Now())
+	defer measureSince(ctx, func() metric.Int64Histogram { return treeInst.Scan }, treeNow())
 	bt.Load().Scan(iter)
 }
 
@@ -90,7 +89,7 @@ func (bt *BTree[T]) Iter() btree.IterG[T] {
 
 // ReverseSeek returns the first item that is less than or equal to the pivot
 func (bt *BTree[T]) ReverseSeek(ctx context.Context, pivot T) (result T, ok bool) {
-	defer measureSince(ctx, func() metric.Int64Histogram { return treeInst.ReverseSeek }, time.Now())
+	defer measureSince(ctx, func() metric.Int64Histogram { return treeInst.ReverseSeek }, treeNow())
 	bt.Load().Descend(pivot, func(item T) bool {
 		result = item
 		ok = true

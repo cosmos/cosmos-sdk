@@ -3,7 +3,6 @@ package blockstm
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"go.opentelemetry.io/otel/metric"
 )
@@ -71,7 +70,7 @@ func (e *Executor) Run() error {
 }
 
 func (e *Executor) TryExecute(version TxnVersion) (TxnVersion, TaskKind) {
-	start := time.Now()
+	start := instNow()
 	e.scheduler.executedTxns.Add(1)
 	view := e.execute(version.Index)
 

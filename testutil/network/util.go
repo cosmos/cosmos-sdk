@@ -154,8 +154,18 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 			return err
 		}
 
-		// overwrite each validator's genesis file to have a canonical genesis time
-		if err := genutil.ExportGenesisFileWithTime(genFile, cfg.ChainID, nil, appState, genTime); err != nil {
+		// overwrite each validator's genesis file to have a canonical genesis
+		// time, preserving any custom ConsensusParams (e.g. the
+		// Validator.PubKeyTypes the network was bootstrapped with).
+		// genutil.ExportGenesisFileWithTime is unsuitable here because it
+		// builds a fresh AppGenesis whose ConsensusParams default back to
+		// `[ed25519]`, wiping ml_dsa_65 or any other opt-in key type.
+		appGenesis.GenesisTime = genTime
+		appGenesis.AppState = appState
+		if appGenesis.Consensus != nil {
+			appGenesis.Consensus.Validators = nil
+		}
+		if err := genutil.ExportGenesisFile(appGenesis, genFile); err != nil {
 			return err
 		}
 	}
@@ -188,12 +198,22 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 		return err
 	}
 
+	consensus := &genutiltypes.ConsensusGenesis{
+		Validators: nil,
+	}
+	// When the caller pins validators to a non-default consensus key type
+	// (e.g. ml_dsa_65), pre-populate ConsensusParams so the staking module
+	// won't reject MsgCreateValidator at InitChain with
+	// "validator pubkey type is not supported".
+	if cfg.ValidatorConsensusKeyType != "" {
+		params := cmttypes.DefaultConsensusParams()
+		params.Validator.PubKeyTypes = []string{cfg.ValidatorConsensusKeyType}
+		consensus.Params = params
+	}
 	appGenesis := genutiltypes.AppGenesis{
-		ChainID:  cfg.ChainID,
-		AppState: appGenStateJSON,
-		Consensus: &genutiltypes.ConsensusGenesis{
-			Validators: nil,
-		},
+		ChainID:   cfg.ChainID,
+		AppState:  appGenStateJSON,
+		Consensus: consensus,
 	}
 
 	// generate empty genesis files for each validator and save

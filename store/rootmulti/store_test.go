@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"fmt"
 	"math/rand"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	dbm "github.com/cosmos/cosmos-db"
+	iavltree "github.com/cosmos/iavl"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -17,6 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/v2/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
+	"github.com/cosmos/cosmos-sdk/store/v2/internal/kv"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/v2/internal/maps"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/transient"
@@ -542,6 +545,165 @@ func TestMultiStoreQuery(t *testing.T) {
 	qres, err = multi.Query(&query)
 	require.NoError(t, err)
 	require.Equal(t, v2, qres.Value)
+}
+
+func TestMultiStoreQuery_SubspaceHistoricalHeight(t *testing.T) {
+	db := dbm.NewMemDB()
+	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	require.NoError(t, multi.LoadLatestVersion())
+
+	prefix := []byte("pfx/")
+	k1 := []byte("pfx/a")
+	k2 := []byte("pfx/b")
+	v1old, v2, v1new := []byte("v1old"), []byte("v2"), []byte("v1new")
+
+	store1 := multi.GetStoreByName("store1").(types.KVStore)
+	store1.Set(k1, v1old)
+	store1.Set(k2, v2)
+	h1 := multi.Commit().Version
+
+	store1 = multi.GetStoreByName("store1").(types.KVStore)
+	store1.Set(k1, v1new)
+	multi.Commit()
+
+	qres, err := multi.Query(&types.RequestQuery{Path: "/store1/subspace", Data: prefix, Height: h1})
+	require.NoError(t, err)
+	require.Equal(t, uint32(0), qres.Code)
+
+	var pairs kv.Pairs
+	require.NoError(t, pairs.Unmarshal(qres.Value))
+	require.Len(t, pairs.Pairs, 2)
+	require.Equal(t, v1old, pairs.Pairs[0].Value)
+	require.Equal(t, v2, pairs.Pairs[1].Value)
+
+	qresH2, err := multi.Query(&types.RequestQuery{Path: "/store1/subspace", Data: prefix, Height: h1 + 1})
+	require.NoError(t, err)
+	var pairsH2 kv.Pairs
+	require.NoError(t, pairsH2.Unmarshal(qresH2.Value))
+	require.Equal(t, v1new, pairsH2.Pairs[0].Value)
+}
+
+func TestMultiStoreQuery_SubspaceHeightZero(t *testing.T) {
+	db := dbm.NewMemDB()
+	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	require.NoError(t, multi.LoadLatestVersion())
+
+	prefix := []byte("pfx/")
+	k1 := []byte("pfx/a")
+	v1old, v1new := []byte("v1old"), []byte("v1new")
+
+	store1 := multi.GetStoreByName("store1").(types.KVStore)
+	store1.Set(k1, v1old)
+	h1 := multi.Commit().Version
+
+	store1 = multi.GetStoreByName("store1").(types.KVStore)
+	store1.Set(k1, v1new)
+	multi.Commit()
+
+	qres, err := multi.Query(&types.RequestQuery{Path: "/store1/subspace", Data: prefix, Height: 0})
+	require.NoError(t, err)
+	require.Equal(t, uint32(0), qres.Code)
+	require.Equal(t, h1, qres.Height)
+
+	var pairs kv.Pairs
+	require.NoError(t, pairs.Unmarshal(qres.Value))
+	require.Len(t, pairs.Pairs, 1)
+	require.Equal(t, v1old, pairs.Pairs[0].Value)
+
+	db2 := dbm.NewMemDB()
+	multi2 := newMultiStoreWithMounts(db2, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	require.NoError(t, multi2.LoadLatestVersion())
+
+	store1 = multi2.GetStoreByName("store1").(types.KVStore)
+	store1.Set(k1, v1old)
+	hOnly := multi2.Commit().Version
+
+	qres2, err := multi2.Query(&types.RequestQuery{Path: "/store1/subspace", Data: prefix, Height: 0})
+	require.NoError(t, err)
+	require.Equal(t, uint32(0), qres2.Code)
+	require.Equal(t, hOnly, qres2.Height)
+
+	var pairs2 kv.Pairs
+	require.NoError(t, pairs2.Unmarshal(qres2.Value))
+	require.Len(t, pairs2.Pairs, 1)
+	require.Equal(t, v1old, pairs2.Pairs[0].Value)
+}
+
+func TestMultiStoreQuery_SubspacePrunedHeight(t *testing.T) {
+	db := dbm.NewMemDB()
+	multi := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(1, 1))
+	require.NoError(t, multi.LoadLatestVersion())
+
+	prefix := []byte("pfx/")
+	k1 := []byte("pfx/a")
+
+	store1 := multi.GetStoreByName("store1").(types.KVStore)
+	store1.Set(k1, []byte("v1"))
+	h1 := multi.Commit().Version
+
+	multi.GetStoreByName("store1").(types.KVStore).Set(k1, []byte("v2"))
+	multi.Commit()
+	multi.GetStoreByName("store1").(types.KVStore).Set(k1, []byte("v3"))
+	multi.Commit()
+
+	require.Eventually(t, func() bool {
+		_, err := multi.CacheMultiStoreWithVersion(h1)
+		return err != nil
+	}, time.Second, 10*time.Millisecond)
+
+	qres, err := multi.Query(&types.RequestQuery{Path: "/store1/subspace", Data: prefix, Height: h1})
+	require.NoError(t, err)
+	require.Equal(t, iavltree.ErrVersionDoesNotExist.Error(), qres.Log)
+	require.Nil(t, qres.Value)
+}
+
+// FuzzSubspaceQuery verifies /subspace query invariants across arbitrary prefix and height inputs.
+// To run: go test -fuzz=FuzzSubspaceQuery -fuzztime=30s ./store/rootmulti/...
+func FuzzSubspaceQuery(f *testing.F) {
+	db := dbm.NewMemDB()
+	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	require.NoError(f, multi.LoadLatestVersion())
+
+	store1 := multi.GetStoreByName("store1").(types.KVStore)
+	store1.Set([]byte("a"), []byte("val-a"))
+	store1.Set([]byte("a\x00"), []byte("val-a0"))
+	store1.Set([]byte("\x00"), []byte("val-null"))
+	hLatest := multi.Commit().Version
+
+	f.Add([]byte("a"), hLatest)
+	f.Add([]byte(""), hLatest)
+	f.Add([]byte("\x00"), hLatest)
+	f.Add([]byte("a\x00"), hLatest)
+	f.Add([]byte("a"), int64(0))
+	f.Add([]byte("a"), int64(1))
+	f.Add([]byte("a"), hLatest+1)
+
+	f.Fuzz(func(t *testing.T, prefix []byte, height int64) {
+		qres, err := multi.Query(&types.RequestQuery{
+			Path:   "/store1/subspace",
+			Data:   prefix,
+			Height: height,
+		})
+
+		if len(prefix) == 0 {
+			require.Error(t, err)
+			return
+		}
+		require.NoError(t, err)
+
+		if height < 0 || height > hLatest {
+			require.Equal(t, iavltree.ErrVersionDoesNotExist.Error(), qres.Log)
+			require.Nil(t, qres.Value)
+			return
+		}
+
+		var pairs kv.Pairs
+		require.NoError(t, pairs.Unmarshal(qres.Value))
+		for _, p := range pairs.Pairs {
+			require.True(t, len(p.Key) >= len(prefix) && bytes.Equal(p.Key[:len(prefix)], prefix),
+				"key %x does not have prefix %x", p.Key, prefix)
+		}
+	})
 }
 
 func TestMultiStore_Pruning(t *testing.T) {

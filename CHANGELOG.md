@@ -42,6 +42,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/auth) [#26672](https://github.com/cosmos/cosmos-sdk/pull/26672) An unordered transaction whose `timeout_timestamp` equals the block time is now rejected
 
+### State Machine Breaking
+
+* (store) [#15854](https://github.com/cosmos/cosmos-sdk/issues/15854) Fix `gaskv` iterator charging the first key/value pair twice and never charging the pair it advances onto. `Next()` now advances the underlying iterator before metering, so every key/value pair presented to the caller is charged exactly once. Iterating `n` elements is `n * ReadCostPerByte * (len(key) + len(value)) + (n+1) * IterNextCostFlat`, which is lower than before by one element's read cost. Chains that rely on `gaskv` gas costs for out-of-gas or fee behavior should re-check their gas estimates.
+
 ### Features
 
 * (x/distribution) [#26749](https://github.com/cosmos/cosmos-sdk/pull/26749) Add a `claimable` field to `QueryDelegationTotalRewardsResponse`, reporting the withdrawable amount as `sdk.Coins` by truncating each delegation reward the way `Msg/WithdrawDelegatorReward` does. `total` keeps its documented meaning as the raw `DecCoins` sum ([#24406](https://github.com/cosmos/cosmos-sdk/issues/24406)).

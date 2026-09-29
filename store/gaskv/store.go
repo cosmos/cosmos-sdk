@@ -157,10 +157,10 @@ func (gi *gasIterator[V]) Valid() bool {
 
 // Next implements the Iterator interface. It seeks to the next key/value pair
 // in the iterator. It incurs a flat gas cost for seeking and a variable gas
-// cost based on the current value's length if the iterator is valid.
+// cost based on the new current value's length if the iterator is valid.
 func (gi *gasIterator[V]) Next() {
-	gi.consumeSeekGas()
 	gi.parent.Next()
+	gi.consumeSeekGas()
 }
 
 // Key implements the Iterator interface. It returns the current key and it does
@@ -187,7 +187,9 @@ func (gi *gasIterator[V]) Error() error {
 }
 
 // consumeSeekGas consumes on each iteration step a flat gas cost and a variable gas cost
-// based on the current value's length.
+// based on the current value's length. For the initial seek (iterator creation) this meters
+// the first key/value pair; for each Next() call it meters the pair the iterator has just
+// advanced to, so every pair presented to the caller is metered exactly once.
 func (gi *gasIterator[V]) consumeSeekGas() {
 	if gi.Valid() {
 		key := gi.Key()

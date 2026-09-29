@@ -78,10 +78,10 @@ func TestGasKVStoreIterator(t *testing.T) {
 	vc := iterator.Value()
 	require.Equal(t, vc, valFmt(0))
 	iterator.Next()
-	require.Equal(t, types.Gas(14667), meter.GasConsumed())
+	require.Equal(t, types.Gas(14595), meter.GasConsumed())
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
-	require.Equal(t, types.Gas(14697), meter.GasConsumed())
+	require.Equal(t, types.Gas(14595), meter.GasConsumed())
 	require.NoError(t, iterator.Error())
 
 	reverseIterator := st.ReverseIterator(nil, nil)
@@ -98,7 +98,54 @@ func TestGasKVStoreIterator(t *testing.T) {
 	reverseIterator.Next()
 	require.False(t, reverseIterator.Valid())
 	require.Panics(t, reverseIterator.Next)
-	require.Equal(t, types.Gas(15135), meter.GasConsumed())
+	require.Equal(t, types.Gas(14931), meter.GasConsumed())
+}
+
+// TestGasKVStoreIteratorChargesEachElementOnce ensures iterating a KVStore meters gas
+// proportional to each key/value pair exactly once: the first pair is charged when the
+// iterator is created, and each subsequent pair is charged by the Next() call that lands
+// on it. Regression test for #15854, where the first pair was charged twice and the
+// iterator never metered the pair it advanced onto.
+func TestGasKVStoreIteratorChargesEachElementOnce(t *testing.T) {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	meter := types.NewGasMeter(1_000_000)
+	st := gaskv.NewStore(mem, meter, types.KVGasConfig())
+
+	const n = 5
+	for i := 0; i < n; i++ {
+		st.Set(keyFmt(i), valFmt(i))
+	}
+
+	gasConfig := types.KVGasConfig()
+	perElement := gasConfig.ReadCostPerByte * types.Gas(len(keyFmt(0))+len(valFmt(0)))
+
+	// Forward: the initial seek charges pair 0, and the n-1 Next() calls that land on a
+	// valid pair each charge one element, so every element is charged once.
+	gasBefore := meter.GasConsumed()
+	iter := st.Iterator(nil, nil)
+	t.Cleanup(func() { _ = iter.Close() })
+
+	seen := 0
+	for ; iter.Valid(); iter.Next() {
+		seen++
+	}
+	require.Equal(t, n, seen)
+
+	// n elements charged once each, plus the flat cost of the n+1 seek steps (the
+	// initial seek plus one Next() per element, the last landing past the end).
+	require.Equal(t, types.Gas(n)*perElement+types.Gas(n+1)*gasConfig.IterNextCostFlat, meter.GasConsumed()-gasBefore)
+
+	// Reverse: identical accounting.
+	gasBefore = meter.GasConsumed()
+	revIter := st.ReverseIterator(nil, nil)
+	t.Cleanup(func() { _ = revIter.Close() })
+
+	seen = 0
+	for ; revIter.Valid(); revIter.Next() {
+		seen++
+	}
+	require.Equal(t, n, seen)
+	require.Equal(t, types.Gas(n)*perElement+types.Gas(n+1)*gasConfig.IterNextCostFlat, meter.GasConsumed()-gasBefore)
 }
 
 func TestGasKVStoreOutOfGasSet(t *testing.T) {

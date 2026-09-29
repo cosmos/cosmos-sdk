@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -445,4 +446,29 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 	validator, err = keeper.GetValidator(ctx, valAddr)
 	require.NoError(err)
 	require.Equal(stakingtypes.Unbonded, validator.Status)
+}
+
+func (s *KeeperTestSuite) TestValidateValidatorPubKeyTypes() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
+
+	edPk := PKs[0]
+	edVal := testutil.NewValidator(s.T(), sdk.ValAddress(edPk.Address()), edPk)
+	require.NoError(keeper.SetValidator(ctx, edVal))
+
+	// an unbonded validator counts too: it can bond again and then needs a valid key type
+	secpPk := secp256k1.GenPrivKey().PubKey()
+	secpVal := testutil.NewValidator(s.T(), sdk.ValAddress(secpPk.Address()), secpPk)
+	require.Equal(stakingtypes.Unbonded, secpVal.Status)
+	require.NoError(keeper.SetValidator(ctx, secpVal))
+
+	require.NoError(keeper.ValidateValidatorPubKeyTypes(ctx, []string{edPk.Type(), secpPk.Type()}))
+
+	err := keeper.ValidateValidatorPubKeyTypes(ctx, []string{edPk.Type()})
+	require.ErrorIs(err, stakingtypes.ErrValidatorPubKeyTypeNotSupported)
+	require.ErrorContains(err, secpVal.GetOperator())
+
+	err = keeper.ValidateValidatorPubKeyTypes(ctx, []string{secpPk.Type()})
+	require.ErrorIs(err, stakingtypes.ErrValidatorPubKeyTypeNotSupported)
+	require.ErrorContains(err, edVal.GetOperator())
 }

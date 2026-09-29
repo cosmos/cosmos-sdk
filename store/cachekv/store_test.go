@@ -666,6 +666,36 @@ func (krc *keyRangeCounter) key() int {
 	return thisKeyRange.start + krc.idx
 }
 
+func TestCacheKVStoreHas(t *testing.T) {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	st := cachekv.NewStore(mem)
+
+	// key not present in either cache or parent
+	require.False(t, st.Has(keyFmt(1)))
+
+	// set in parent only, cache miss → Has reads from parent
+	mem.Set(keyFmt(1), valFmt(1))
+	require.True(t, st.Has(keyFmt(1)))
+
+	// Has must NOT preload the value: modifying parent after Has should be
+	// visible on the next Get (i.e. the value was not cached by Has).
+	mem.Set(keyFmt(1), valFmt(2))
+	require.Equal(t, valFmt(2), st.Get(keyFmt(1)))
+
+	// set in cache → cache hit path
+	st.Set(keyFmt(2), valFmt(2))
+	require.True(t, st.Has(keyFmt(2)))
+
+	// deleted in cache → cache hit returns false even if parent has value
+	mem.Set(keyFmt(3), valFmt(3))
+	st.Set(keyFmt(3), valFmt(3))
+	st.Delete(keyFmt(3))
+	require.False(t, st.Has(keyFmt(3)))
+
+	require.Panics(t, func() { st.Has(nil) })
+	require.Panics(t, func() { st.Has([]byte{}) })
+}
+
 //--------------------------------------------------------
 
 func bz(s string) []byte { return []byte(s) }

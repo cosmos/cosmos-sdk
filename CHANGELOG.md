@@ -42,6 +42,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/auth) [#26672](https://github.com/cosmos/cosmos-sdk/pull/26672) An unordered transaction whose `timeout_timestamp` equals the block time is now rejected
 
+### State Machine Breaking
+
+* (store, x/bank, x/upgrade) [#26448](https://github.com/cosmos/cosmos-sdk/issues/26448) Fix `cachekv.Has` to perform a true existence check instead of loading the value on a cache miss, and drop the now-redundant `Has` before `Get` in `bank.getSendEnabled` and `upgrade.getProtocolVersion`. This removes `HasCost` (1000 gas at the default `KVGasConfig`) per `IsSendEnabled` check on the `SendCoins` hot path. Chains that rely on these gas costs for out-of-gas or fee behavior should re-check their gas estimates.
+
 ### Features
 
 * (x/distribution) [#26749](https://github.com/cosmos/cosmos-sdk/pull/26749) Add a `claimable` field to `QueryDelegationTotalRewardsResponse`, reporting the withdrawable amount as `sdk.Coins` by truncating each delegation reward the way `Msg/WithdrawDelegatorReward` does. `total` keeps its documented meaning as the raw `DecCoins` sum ([#24406](https://github.com/cosmos/cosmos-sdk/issues/24406)).

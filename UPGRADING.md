@@ -279,6 +279,7 @@ Switching a running chain's executor is a per-node setting with identical state-
 
 Observable changes between v0.54.x and v0.55.x that don't require code changes but may affect downstream consumers:
 
+* **Send-enabled checks cost 1000 less gas per denom.** `cachekv.Store.Has` is now a true existence check (it falls back to `parent.Has` rather than `parent.Get`), and the redundant `Has` that preceded a `Get` in `bank.getSendEnabled` and `upgrade.getProtocolVersion` is gone ([#26448](https://github.com/cosmos/cosmos-sdk/issues/26448)). A `MsgSend` now consumes `HasCost` (1000 at the default `KVGasConfig`) less for each denom in `IsSendEnabledCoins`. Chains with a tight `--gas-limit` or a gas-based fee floor should re-check simulations; gas estimation for bank sends shifts slightly downward.
 * **Block selection uses ante-reported gas.** Proposals are packed using the gas wanted returned by the ante handler at `CheckTx` time rather than the tx-declared gas limit ([#25338](https://github.com/cosmos/cosmos-sdk/pull/25338)). Block composition can differ for txs whose ante-reported gas diverges from their declared limit.
 * **Staking emits key-rotation events** (`rotate_cons_pubkey`, `apply_cons_pubkey_rotation`), and validator consensus addresses can change over time ([#26619](https://github.com/cosmos/cosmos-sdk/pull/26619)).
 * **`x/gov` `proposal_messages` event attribute** no longer has a leading comma ([#26353](https://github.com/cosmos/cosmos-sdk/pull/26353)).

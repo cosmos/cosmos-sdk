@@ -491,11 +491,9 @@ func (k BaseSendKeeper) GetAllSendEnabledEntries(ctx context.Context) []types.Se
 //	    sendEnabled = DefaultSendEnabled
 //	}
 func (k BaseSendKeeper) getSendEnabled(ctx context.Context, denom string) (bool, bool) {
-	has, err := k.SendEnabled.Has(ctx, denom)
-	if err != nil || !has {
-		return false, false
-	}
-
+	// Get returns a wrapped collections.ErrNotFound when the denom has no
+	// explicit entry, which is the same condition Has was checking for, so the
+	// separate Has call (and its HasCost gas) is redundant here.
 	v, err := k.SendEnabled.Get(ctx, denom)
 	if err != nil {
 		return false, false

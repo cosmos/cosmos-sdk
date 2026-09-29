@@ -101,8 +101,20 @@ func (store *GStore[V]) Set(key []byte, value V) {
 
 // Has implements types.KVStore.
 func (store *GStore[V]) Has(key []byte) bool {
-	value := store.Get(key)
-	return !store.isZero(value)
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
+
+	types.AssertValidKey(key)
+
+	if cacheValue, ok := store.cache[conv.UnsafeBytesToStr(key)]; ok {
+		return !store.isZero(cacheValue.value)
+	}
+
+	// Do not fall back to parent.Get: that would load the value into the cache
+	// for a call that only needs an existence check. The next Get will read the
+	// parent anyway, and callers that follow Has with Get are charged for both
+	// operations at the gaskv layer.
+	return store.parent.Has(key)
 }
 
 // Delete implements types.KVStore.

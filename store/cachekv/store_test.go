@@ -627,6 +627,37 @@ func (kr keyRange) len() int {
 	return kr.end - kr.start
 }
 
+func TestCacheKVStoreHasIsExistenceCheck(t *testing.T) {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	st := cachekv.NewStore(mem)
+
+	// absent from both cache and parent
+	require.False(t, st.Has(keyFmt(1)))
+
+	// present in parent only: cache miss must consult the parent
+	mem.Set(keyFmt(1), valFmt(1))
+	require.True(t, st.Has(keyFmt(1)))
+
+	// Has must not preload the value into the cache. If it did, the update
+	// below would be masked by the stale cached value.
+	mem.Set(keyFmt(1), valFmt(2))
+	require.Equal(t, valFmt(2), st.Get(keyFmt(1)),
+		"Has must not cache the parent value; a later parent write must be visible")
+
+	// cache hit
+	st.Set(keyFmt(2), valFmt(2))
+	require.True(t, st.Has(keyFmt(2)))
+
+	// deleted in cache: shadowed even though the parent still has the value
+	mem.Set(keyFmt(3), valFmt(3))
+	st.Set(keyFmt(3), valFmt(3))
+	st.Delete(keyFmt(3))
+	require.False(t, st.Has(keyFmt(3)))
+
+	require.Panics(t, func() { st.Has(nil) })
+	require.Panics(t, func() { st.Has([]byte{}) })
+}
+
 func newKeyRangeCounter(kr []keyRange) *keyRangeCounter {
 	return &keyRangeCounter{keyRanges: kr}
 }

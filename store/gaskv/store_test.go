@@ -7,6 +7,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/v2/gaskv"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
@@ -116,4 +117,44 @@ func TestGasKVStoreOutOfGasIterator(t *testing.T) {
 	iterator := st.Iterator(nil, nil)
 	iterator.Next()
 	require.Panics(t, func() { iterator.Value() }, "Expected out-of-gas")
+}
+
+// TestGasKVStoreHasPlusGetVsGet pins the gas cost of the Has -> Get access
+// pattern on the real gaskv -> cachekv -> dbadapter stack. bank.getSendEnabled
+// and upgrade.getProtocolVersion used to pay both a Has and a Get for a single
+// logical read; the Has is now redundant, so this asserts the saving is exactly
+// HasCost so it cannot regress silently.
+func TestGasKVStoreHasPlusGetVsGet(t *testing.T) {
+	cfg := types.KVGasConfig()
+	newStore := func(meter types.GasMeter) *gaskv.Store {
+		mem := dbadapter.Store{DB: dbm.NewMemDB()}
+		mem.Set(keyFmt(1), valFmt(1))
+		return gaskv.NewStore(cachekv.NewStore(mem), meter, cfg)
+	}
+
+	meterGet := types.NewGasMeter(100000)
+	_ = newStore(meterGet).Get(keyFmt(1))
+	gasGet := meterGet.GasConsumed()
+
+	meterHasGet := types.NewGasMeter(100000)
+	st := newStore(meterHasGet)
+	_ = st.Has(keyFmt(1))
+	_ = st.Get(keyFmt(1))
+	gasHasGet := meterHasGet.GasConsumed()
+
+	require.Equal(t, cfg.HasCost, gasHasGet-gasGet,
+		"Has followed by Get must cost exactly HasCost more than Get alone")
+
+	// Get itself is ReadCostFlat + ReadCostPerByte over key and value.
+	expectedGet := cfg.ReadCostFlat +
+		cfg.ReadCostPerByte*types.Gas(len(keyFmt(1))) +
+		cfg.ReadCostPerByte*types.Gas(len(valFmt(1)))
+	require.Equal(t, expectedGet, gasGet,
+		"Get must charge ReadCostFlat plus per-byte cost for key and value")
+
+	// A bare Has must not be charged the read cost of loading the value.
+	meterHas := types.NewGasMeter(100000)
+	_ = newStore(meterHas).Has(keyFmt(1))
+	require.Equal(t, cfg.HasCost, meterHas.GasConsumed(),
+		"Has must charge HasCost only, regardless of value length")
 }

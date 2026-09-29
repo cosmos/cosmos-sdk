@@ -53,6 +53,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [#26779](https://github.com/cosmos/cosmos-sdk/pull/26779) perf(blockstm): memoize merge iterator source.
 
 
+### State Machine Breaking
+
+* (store, x/bank, x/upgrade) [#26448](https://github.com/cosmos/cosmos-sdk/issues/26448) Make `cachekv.Store.Has` a true existence check by falling back to `parent.Has` instead of `parent.Get`, and drop the redundant `Has` that preceded a `Get` in `bank.getSendEnabled` and `upgrade.getProtocolVersion`. `IsSendEnabledDenom` now consumes `HasCost` (1000 gas at the default `KVGasConfig`) less per call on the `SendCoins` hot path.
+
 ### Bug Fixes
 
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.

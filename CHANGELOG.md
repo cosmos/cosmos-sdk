@@ -79,6 +79,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (keys) [#26833](https://github.com/cosmos/cosmos-sdk/pull/26833) Strip leading and trailing whitespace when reading a mnemonic from a source file.
 * (x/auth/tx) [#26955](https://github.com/cosmos/cosmos-sdk/pull/26955) `GetBlockWithTxs` now uses the default limit when `pagination.limit` is 0; a request that set only `offset` or `count_total` returned no txs. Reverse pagination now walks back from the last tx and includes the first one, with `offset` counted from the end like other paginated queries.
 * (client/debug) [#26957](https://github.com/cosmos/cosmos-sdk/pull/26957) `debug raw-bytes` now accepts byte values above 127, such as the `[10 21 13 255]` in its own help text; each value was parsed as a signed 8-bit integer.
+* (store) [#23891](https://github.com/cosmos/cosmos-sdk/issues/23891) Serialize the inter-block cache against concurrent readers and writers so a read-through can no longer overwrite a newer committed value with a stale one.
 
 ### Deprecated
 

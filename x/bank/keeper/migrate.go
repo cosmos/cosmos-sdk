@@ -40,7 +40,9 @@ func (k BaseKeeper) MigrateLegacyBalances(ctx context.Context) (int, error) {
 		closed = true
 		return iter.Close()
 	}
-	defer closeIter()
+	defer func() {
+		_ = closeIter()
+	}()
 
 	var pending []legacyBalance
 	for ; iter.Valid(); iter.Next() {

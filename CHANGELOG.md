@@ -60,6 +60,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [#26772](https://github.com/cosmos/cosmos-sdk/pull/26772) Panic with a descriptive error when accessing an unregistered store instead of silently using store index zero.
 * (x/genutil) [#26741](https://github.com/cosmos/cosmos-sdk/issues/26741) Preserve vote extension enable height when exporting genesis state.
 * (baseapp) [#26738](https://github.com/cosmos/cosmos-sdk/pull/26738) Return genesis transaction events in the first block's `FinalizeBlock` response so block indexers can observe them.
+* (store) [#23891](https://github.com/cosmos/cosmos-sdk/issues/23891) Serialize the inter-block cache against concurrent readers and writers so a read-through can no longer overwrite a newer committed value with a stale one.
 
 ### Deprecated
 

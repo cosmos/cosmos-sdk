@@ -2,6 +2,7 @@ package cache
 
 import (
 	"fmt"
+	"sync"
 
 	lru "github.com/hashicorp/golang-lru"
 
@@ -28,6 +29,14 @@ type (
 	CommitKVStoreCache struct {
 		types.CommitKVStore
 		cache *lru.ARCCache
+
+		// mtx guards the cache against concurrent readers and writers. Every
+		// mutation of the cache goes through Set/Delete, so a value read under
+		// RLock is stable. Get is read-modify-write on a cache miss and must hold
+		// the write lock across both the underlying read and the write-back,
+		// otherwise a concurrent Set can publish a newer value that the in-flight
+		// read-through then overwrites with a stale one.
+		mtx sync.RWMutex
 	}
 
 	// CommitKVStoreCacheManager maintains a mapping from a StoreKey to a
@@ -97,13 +106,32 @@ func (ckv *CommitKVStoreCache) CacheWrap() types.CacheWrap {
 // Get retrieves a value by key. It will first look in the write-through cache.
 // If the value doesn't exist in the write-through cache, the query is delegated
 // to the underlying CommitKVStore.
+//
+// A cache hit is served under a read lock, since cached entries are immutable
+// once written. A cache miss is a read-modify-write and therefore runs under the
+// write lock for its whole duration: releasing the lock between the underlying
+// read and the write-back would let a concurrent Set publish a newer value only
+// for this call to overwrite it with the stale one it just read.
 func (ckv *CommitKVStoreCache) Get(key []byte) []byte {
 	types.AssertValidKey(key)
 
 	keyStr := string(key)
+
+	ckv.mtx.RLock()
 	valueI, ok := ckv.cache.Get(keyStr)
+	ckv.mtx.RUnlock()
 	if ok {
 		// cache hit
+		return valueI.([]byte)
+	}
+
+	ckv.mtx.Lock()
+	defer ckv.mtx.Unlock()
+
+	// Re-check under the write lock: a concurrent Set or Get may have populated
+	// the entry while this call was waiting, in which case that value is newer
+	// than anything the underlying store would return.
+	if valueI, ok := ckv.cache.Get(keyStr); ok {
 		return valueI.([]byte)
 	}
 
@@ -120,6 +148,9 @@ func (ckv *CommitKVStoreCache) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 
+	ckv.mtx.Lock()
+	defer ckv.mtx.Unlock()
+
 	ckv.cache.Add(string(key), value)
 	ckv.CommitKVStore.Set(key, value)
 }
@@ -127,6 +158,9 @@ func (ckv *CommitKVStoreCache) Set(key, value []byte) {
 // Delete removes a key/value pair from both the write-through cache and the
 // underlying CommitKVStore.
 func (ckv *CommitKVStoreCache) Delete(key []byte) {
+	ckv.mtx.Lock()
+	defer ckv.mtx.Unlock()
+
 	ckv.cache.Remove(string(key))
 	ckv.CommitKVStore.Delete(key)
 }

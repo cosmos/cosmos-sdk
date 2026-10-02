@@ -3,11 +3,16 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/protowire"
+	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/runtime/protoiface"
+	"google.golang.org/protobuf/types/descriptorpb"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -29,6 +34,7 @@ type MessageRouter interface {
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
+	internalMsgs      map[string]struct{}
 	hybridHandlers    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
 	circuitBreaker    CircuitBreaker
 }
@@ -39,6 +45,7 @@ var _ gogogrpc.Server = &MsgServiceRouter{}
 func NewMsgServiceRouter() *MsgServiceRouter {
 	return &MsgServiceRouter{
 		routes:         map[string]MsgServiceHandler{},
+		internalMsgs:   map[string]struct{}{},
 		hybridHandlers: map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
 	}
 }
@@ -155,6 +162,14 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 		)
 	}
 
+	internal, err := isInternalMsg(requestTypeName)
+	if err != nil {
+		return err // fail-closed: no descriptor, no registration
+	}
+	if internal {
+		msr.internalMsgs[requestTypeName] = struct{}{}
+	}
+
 	// Check that each service is only registered once. If a service is
 	// registered more than once, then we should error. Since we can't
 	// return an error (`Server.RegisterService` interface restriction) we
@@ -219,3 +234,59 @@ func noopDecoder(_ any) error { return nil }
 func noopInterceptor(_ context.Context, _ any, _ *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (any, error) {
 	return nil, nil
 }
+
+// IsInternal reports whether the Msg with the given type URL is marked
+// (cosmos.msg.v1.internal) = true.
+func (msr *MsgServiceRouter) IsInternal(typeURL string) bool {
+	_, ok := msr.internalMsgs[typeURL]
+	return ok
+}
+
+func isInternalMsg(typeURL string) (bool, error) {
+	name := protoreflect.FullName(strings.TrimPrefix(typeURL, "/"))
+	d, err := proto.HybridResolver.FindDescriptorByName(name)
+	if err != nil {
+		return false, fmt.Errorf("cannot resolve descriptor for %s: %w", typeURL, err)
+	}
+	md, ok := d.(protoreflect.MessageDescriptor)
+	if !ok {
+		return false, fmt.Errorf("%s is not a message descriptor", typeURL)
+	}
+	opts, _ := md.Options().(*descriptorpb.MessageOptions)
+	return hasInternalOption(opts)
+}
+
+// hasInternalOption reads (cosmos.msg.v1.internal) from the raw wire bytes of the
+// options, so it works whether or not the extension is known to the resolver.
+func hasInternalOption(opts *descriptorpb.MessageOptions) (bool, error) {
+	if opts == nil {
+		return false, nil // no options: external by default
+	}
+	bz, err := protov2.Marshal(opts) // includes unknown fields
+	if err != nil {
+		return false, err
+	}
+	for len(bz) > 0 {
+		num, typ, n := protowire.ConsumeTag(bz)
+		if n < 0 {
+			return false, protowire.ParseError(n)
+		}
+		bz = bz[n:]
+		if num == internalExtensionNumber && typ == protowire.VarintType {
+			v, n := protowire.ConsumeVarint(bz)
+			if n < 0 {
+				return false, protowire.ParseError(n)
+			}
+			return v != 0, nil
+		}
+		n = protowire.ConsumeFieldValue(num, typ, bz)
+		if n < 0 {
+			return false, protowire.ParseError(n)
+		}
+		bz = bz[n:]
+	}
+	return false, nil
+}
+
+// internalExtensionNumber is the field number of (cosmos.msg.v1.internal).
+const internalExtensionNumber protowire.Number = 11110007

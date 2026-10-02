@@ -44,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (baseapp) [#26594](https://github.com/cosmos/cosmos-sdk/issues/26594) Add the `cosmos.msg.v1.internal` message option. `MsgServiceRouter.IsInternal` reports marked messages, `RunTx` rejects them when submitted as top-level tx messages (in CheckTx, simulate and block execution), and `x/authz` refuses to dispatch them via `MsgExec`. No SDK message is marked internal yet.
 * (x/distribution) [#26749](https://github.com/cosmos/cosmos-sdk/pull/26749) Add a `claimable` field to `QueryDelegationTotalRewardsResponse`, reporting the withdrawable amount as `sdk.Coins` by truncating each delegation reward the way `Msg/WithdrawDelegatorReward` does. `total` keeps its documented meaning as the raw `DecCoins` sum ([#24406](https://github.com/cosmos/cosmos-sdk/issues/24406)).
 
 ### Improvements

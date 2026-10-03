@@ -1023,7 +1023,7 @@ loop:
 		importer.Close()
 	}
 
-	rs.flushMetadata(rs.db, int64(height), rs.buildCommitInfo(int64(height)))
+	rs.flushMetadata(rs.db, int64(height), rs.buildCommitInfo(int64(height), nil))
 	return snapshotItem, rs.LoadLatestVersion()
 }
 
@@ -1084,7 +1084,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 	}
 }
 
-func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
+func (rs *Store) buildCommitInfo(version int64, existedAt map[string]struct{}) *types.CommitInfo {
 	keys := keysFromStoreKeyMap(rs.stores)
 	storeInfos := []types.StoreInfo{}
 	for _, key := range keys {
@@ -1092,6 +1092,14 @@ func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
 		storeType := store.GetStoreType()
 		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory || storeType == types.StoreTypeObject {
 			continue
+		}
+		// A store that did not exist at this version was added by an upgrade
+		// after it, so it must not be recorded in the commit info. A nil
+		// existedAt means no filtering, which is what the restore path wants.
+		if existedAt != nil {
+			if _, ok := existedAt[key.Name()]; !ok {
+				continue
+			}
 		}
 		storeInfos = append(storeInfos, types.StoreInfo{
 			Name:     key.Name(),
@@ -1110,21 +1118,75 @@ func (rs *Store) RollbackToVersion(target int64) error {
 		return fmt.Errorf("invalid rollback height target: %d", target)
 	}
 
+	// The commit info at the target version records which stores existed then. A
+	// store added by an upgrade after the target is absent from it and has no
+	// version at or below target, so there is nothing to roll back for it.
+	targetInfo, err := rs.GetCommitInfo(target)
+	if err != nil {
+		return err
+	}
+
+	existedAt := make(map[string]struct{}, len(targetInfo.StoreInfos))
+	for _, si := range targetInfo.StoreInfos {
+		existedAt[si.Name] = struct{}{}
+	}
+
 	for key, store := range rs.stores {
 		if store.GetStoreType() == types.StoreTypeIAVL {
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
 			store = rs.getCommitKVStore(key)
-			err := store.(*iavl.Store).LoadVersionForOverwriting(target)
-			if err != nil {
+			iavlStore, ok := store.(*iavl.Store)
+			if !ok {
+				return fmt.Errorf("expected IAVL store for key %s, got %T", key.Name(), store)
+			}
+
+			// Without this guard LoadVersionForOverwriting fails with "version does
+			// not exist" and aborts the rollback of every other store. The
+			// version check also covers a store whose commit info is missing
+			// because a previous commit was interrupted.
+			if _, existed := existedAt[key.Name()]; !existed {
+				continue
+			}
+			if first, ok := firstIAVLVersion(iavlStore); !ok || first > target {
+				continue
+			}
+
+			if err := iavlStore.LoadVersionForOverwriting(target); err != nil {
 				return err
 			}
 		}
 	}
 
-	rs.flushMetadata(rs.db, target, rs.buildCommitInfo(target))
+	rs.flushMetadata(rs.db, target, rs.buildCommitInfo(target, existedAt))
+
+	// A store added after the target must not be loaded back at the target
+	// version: it has no commit id there, so loadVersion would reject it with
+	// a version mismatch. Drop it from the mounted stores; the upgrade that
+	// adds it runs again when the rolled-back block is re-executed.
+	for key := range rs.stores {
+		if _, existed := existedAt[key.Name()]; existed {
+			continue
+		}
+		if _, mounted := rs.storesParams[key]; !mounted {
+			continue
+		}
+		delete(rs.stores, key)
+		delete(rs.storesParams, key)
+		delete(rs.keysByName, key.Name())
+	}
 
 	return rs.LoadLatestVersion()
+}
+
+// firstIAVLVersion returns the earliest version stored in an IAVL tree.
+func firstIAVLVersion(store *iavl.Store) (int64, bool) {
+	versions := store.GetAllVersions()
+	if len(versions) == 0 {
+		return 0, false
+	}
+
+	return int64(versions[0]), true
 }
 
 // SetCommitHeader sets the commit block header of the store.

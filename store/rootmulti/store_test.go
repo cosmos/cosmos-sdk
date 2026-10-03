@@ -1190,3 +1190,61 @@ func TestEarliestVersionPersistence(t *testing.T) {
 	require.Equal(t, earliestBeforeRestart, ms2.EarliestVersion(),
 		"earliest version should persist across restarts")
 }
+
+// TestRollbackToVersionWithStoreAddedAfterTarget reproduces #20472: rolling back
+// a height that precedes a module added by an upgrade fails with "version does
+// not exist", because the new module's store has no version at or below target.
+func TestRollbackToVersionWithStoreAddedAfterTarget(t *testing.T) {
+	db := dbm.NewMemDB()
+
+	key1 := types.NewKVStoreKey("store1")
+	key2 := types.NewKVStoreKey("store2")
+
+	rs := NewStore(db, log.NewNopLogger())
+	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	rs.MountStoreWithDB(key1, types.StoreTypeIAVL, nil)
+
+	require.NoError(t, rs.LoadLatestVersion())
+
+	// Commit a few versions with only store1 mounted.
+	for i := 0; i < 3; i++ {
+		rs.Commit()
+	}
+	target := rs.LastCommitID().Version
+	require.EqualValues(t, 3, target)
+
+	// Simulate a restart into a new binary whose upgrade adds store2.
+	rs = NewStore(db, log.NewNopLogger())
+	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	rs.MountStoreWithDB(key1, types.StoreTypeIAVL, nil)
+	rs.MountStoreWithDB(key2, types.StoreTypeIAVL, nil)
+	require.NoError(t, rs.LoadLatestVersionAndUpgrade(&types.StoreUpgrades{Added: []string{"store2"}}))
+
+	rs.getCommitKVStore(key1).Set([]byte("k"), []byte("v1"))
+	rs.getCommitKVStore(key2).Set([]byte("k"), []byte("v2"))
+	rs.Commit()
+	rs.getCommitKVStore(key1).Set([]byte("k"), []byte("v2"))
+	rs.Commit()
+
+	// store2 must not be present in the commit info recorded at the target.
+	targetInfo, err := rs.GetCommitInfo(target)
+	require.NoError(t, err)
+	for _, si := range targetInfo.StoreInfos {
+		require.NotEqual(t, "store2", si.Name)
+	}
+
+	// Before the fix this fails with: version does not exist.
+	require.NoError(t, rs.RollbackToVersion(target))
+
+	// The pre-existing store must be back at its state as of the target.
+	require.EqualValues(t, target, rs.LastCommitID().Version)
+	require.Nil(t, rs.getCommitKVStore(key1).Get([]byte("k")))
+
+	// The post-target store must not be recorded in the new commit info, or
+	// LoadLatestVersion would reject the version mismatch.
+	newInfo, err := rs.GetCommitInfo(target)
+	require.NoError(t, err)
+	for _, si := range newInfo.StoreInfos {
+		require.NotEqual(t, "store2", si.Name)
+	}
+}

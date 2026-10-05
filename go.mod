@@ -62,7 +62,7 @@ require (
 	go.opentelemetry.io/contrib/bridges/otelslog v0.20.1
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.70.0
 	go.opentelemetry.io/contrib/instrumentation/host v0.71.0
-	go.opentelemetry.io/contrib/instrumentation/runtime v0.69.0
+	go.opentelemetry.io/contrib/instrumentation/runtime v0.71.0
 	go.opentelemetry.io/contrib/otelconf v0.25.0
 	go.opentelemetry.io/contrib/propagators/b3 v1.45.0
 	go.opentelemetry.io/contrib/propagators/jaeger v1.45.0

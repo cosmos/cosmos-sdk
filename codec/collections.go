@@ -136,8 +136,7 @@ func (c collValue2[T, PT]) ValueType() string {
 // interface value. The codec must be able to marshal and unmarshal the
 // interface.
 func CollInterfaceValue[T proto.Message](codec BinaryCodec) collcodec.ValueCodec[T] {
-	var x T // assertion
-	if reflect.TypeOf(&x).Elem().Kind() != reflect.Interface {
+	if reflect.TypeFor[T]().Kind() != reflect.Interface {
 		panic("CollInterfaceValue can only be used with interface types")
 	}
 	return collInterfaceValue[T]{codec.(Codec)}

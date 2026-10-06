@@ -868,6 +868,10 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		if handler == nil {
 			return sdk.GasInfo{}, nil, nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "no message handler found for %T", msg)
 		}
+		if app.msgServiceRouter.IsInternal(sdk.MsgTypeURL(msg)) {
+			return sdk.GasInfo{}, nil, nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized,
+				"message %s is internal-only and cannot be submitted in a transaction", sdk.MsgTypeURL(msg))
+		}
 	}
 
 	if app.anteHandler != nil {

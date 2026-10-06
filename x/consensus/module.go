@@ -104,6 +104,8 @@ type ModuleInputs struct {
 	Cdc          codec.Codec
 	StoreService storetypes.KVStoreService
 	EventManager event.Service
+
+	PubKeyTypesChecker types.ValidatorPubKeyTypesChecker `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -122,6 +124,9 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	k := keeper.NewKeeper(in.Cdc, in.StoreService, authority.String(), in.EventManager)
+	if in.PubKeyTypesChecker != nil {
+		k.SetValidatorPubKeyTypesChecker(in.PubKeyTypesChecker)
+	}
 	m := NewAppModule(in.Cdc, k)
 	baseappOpt := func(app *baseapp.BaseApp) {
 		app.SetParamStore(k.ParamsStore)

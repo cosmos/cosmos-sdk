@@ -22,6 +22,8 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
+* [#26803](https://github.com/cosmos/cosmos-sdk/pull/26803) Add `cosmos.base.node.v1beta1.LogsService` (`Logs` query, `LogsRequest`, `LogEntry`, `LogsResponse`) for per-block application log capture.
+
 ## [v1.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/api/v1.1.0) - 2026-07-27
 
 ### Features

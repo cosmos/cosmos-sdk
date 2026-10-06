@@ -1,6 +1,7 @@
 package cli
 
 import (
+	errors "errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -66,7 +67,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 			}
 
 			if len(coins) == 0 {
-				return fmt.Errorf("invalid coins")
+				return errors.New("invalid coins")
 			}
 
 			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
@@ -111,7 +112,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.`,
 			}
 
 			if coins.IsZero() {
-				return fmt.Errorf("must send positive amount")
+				return errors.New("must send positive amount")
 			}
 
 			split, err := cmd.Flags().GetBool(FlagSplit)

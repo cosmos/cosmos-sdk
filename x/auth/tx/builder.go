@@ -2,7 +2,7 @@ package tx
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -105,7 +105,7 @@ func (w *wrapper) GetTimeoutTimeStamp() time.Time {
 
 func (w *wrapper) ValidateBasic() error {
 	if w.tx == nil {
-		return fmt.Errorf("bad Tx")
+		return errors.New("bad Tx")
 	}
 
 	if err := w.tx.ValidateBasic(); err != nil {

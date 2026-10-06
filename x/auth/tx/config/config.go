@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"errors"
 	"fmt"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -128,7 +129,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler, error) {
 	if in.BankKeeper == nil {
-		return nil, fmt.Errorf("both AccountKeeper and BankKeeper are required")
+		return nil, errors.New("both AccountKeeper and BankKeeper are required")
 	}
 
 	anteHandler, err := ante.NewAnteHandler(

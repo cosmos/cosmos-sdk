@@ -205,7 +205,7 @@ func (ma ModuleAccount) GetPermissions() []string {
 
 // SetPubKey - Implements AccountI
 func (ma ModuleAccount) SetPubKey(pubKey cryptotypes.PubKey) error {
-	return fmt.Errorf("not supported for module accounts")
+	return errors.New("not supported for module accounts")
 }
 
 // Validate checks for errors on the account fields

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -262,7 +263,7 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 	}
 
 	if !isSigner {
-		return fmt.Errorf("signing key is not a part of multisig key")
+		return errors.New("signing key is not a part of multisig key")
 	}
 
 	if err = authclient.SignTxWithSignerAddress(
@@ -445,7 +446,7 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx 
 			return err
 		}
 		if !isSigner {
-			return fmt.Errorf("signing key is not a part of multisig key")
+			return errors.New("signing key is not a part of multisig key")
 		}
 
 		err = authclient.SignTxWithSignerAddress(

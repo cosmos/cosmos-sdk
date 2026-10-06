@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -174,7 +175,7 @@ func (p Params) ValidateBasic() error {
 	}
 
 	if p.VotingPeriod == nil {
-		return fmt.Errorf("voting period must not be nil")
+		return errors.New("voting period must not be nil")
 	}
 	if p.VotingPeriod.Seconds() <= 0 {
 		return fmt.Errorf("voting period must be positive: %s", p.VotingPeriod)

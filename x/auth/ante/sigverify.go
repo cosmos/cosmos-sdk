@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"time"
 
@@ -690,7 +691,7 @@ func flattenSignatures(data signing.SignatureData) ([][]byte, error) {
 func flattenSignaturesAtDepth(data signing.SignatureData, depth, maxDepth, maxLength int) ([][]byte, error) {
 	switch {
 	case data == nil:
-		return nil, fmt.Errorf("SignatureData is required")
+		return nil, errors.New("SignatureData is required")
 	case depth > maxDepth:
 		return nil, fmt.Errorf("max depth of %d reached", maxDepth)
 	}

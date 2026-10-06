@@ -17,7 +17,7 @@ block.
 
 ## Modules specifications
 
-Go to the [module directory](https://docs.cosmos.network/main/modules)
+Go to the [module directory](https://docs.cosmos.network/sdk/latest/modules)
 
 ## CometBFT
 

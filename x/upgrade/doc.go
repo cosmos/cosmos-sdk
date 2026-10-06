@@ -7,6 +7,6 @@ Without software support for upgrades, upgrading a live chain is risky because a
 their state machines at exactly the same point in the process. If this is not done correctly, there can be state
 inconsistencies which are hard to recover from.
 
-For more information, read the documentation on https://docs.cosmos.network/main/modules/upgrade.
+For more information, read the documentation on https://docs.cosmos.network/sdk/latest/modules/upgrade.
 */
 package upgrade

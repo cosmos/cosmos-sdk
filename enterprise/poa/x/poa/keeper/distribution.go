@@ -101,11 +101,21 @@ func (k *Keeper) getUnallocatedFees(ctx sdk.Context) (unallocated sdk.DecCoins, 
 		return nil, err
 	}
 
-	// Calculate unallocated fees = fee_collector - total_allocated
-	unallocated = feeCollectorBalanceDec.Sub(totalAllocated)
+	// Calculate unallocated fees = fee_collector - total_allocated.
+	// The per-validator shares are rounded, so their sum can exceed the
+	// balance of a denom by a few units of dust. DecCoins.Sub panics on a
+	// negative result, so subtract safely and keep only the denoms that still
+	// have something to allocate.
+	diff, _ := feeCollectorBalanceDec.SafeSub(totalAllocated)
+	unallocated = sdk.DecCoins{}
+	for _, coin := range diff {
+		if coin.IsPositive() {
+			unallocated = append(unallocated, coin)
+		}
+	}
 
 	// If no unallocated fees, return zero
-	if unallocated.IsZero() || !unallocated.IsAllPositive() {
+	if unallocated.IsZero() {
 		return sdk.DecCoins{}, nil
 	}
 

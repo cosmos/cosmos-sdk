@@ -29,10 +29,10 @@ A Cosmos SDK module that implements a Proof of Authority (PoA) consensus mechani
 
 **Documentation:**
 - [README](./poa/README.md) - Quick start and usage guide
-- [API Reference](./poa/docs/api.md) - gRPC queries and transactions
-- [Architecture](./poa/docs/architecture.md) - System design and module interactions
-- [Distribution](./poa/docs/distribution.md) - Fee distribution mechanics
-- [Governance](./poa/docs/governance.md) - Governance integration details
+- [Usage](./poa/README.md#usage) - Query and transaction commands
+- [Architecture](./poa/README.md#architecture) - System design and module interactions
+- [Fee Distribution](./poa/README.md#fee-distribution) - Fee distribution mechanics
+- [Governance](./poa/README.md#governance-integration) - Governance integration details
 
 **Quick Links:**
 - [Installation & Setup](./poa/README.md#quick-start)
@@ -54,12 +54,12 @@ A Cosmos SDK module that allows the creation and management of on-chain multisig
 
 **Documentation:**
 - [README](./group/README.md) - Overview and quick start
-- [API Reference](./group/docs/api.md) - gRPC queries and transactions
-- [Architecture](./group/docs/architecture.md) - System design and module interactions
+- [Usage](./group/README.md#usage) - Query and transaction commands
+- [Architecture](./group/README.md#architecture) - System design and module interactions
 
 **Quick Links:**
 - [Build & Test](./group/README.md#quick-start)
-- [Module Structure](./group/README.md#module-structure)
+- [Module Specification](./group/x/group/README.md)
 
 ## Integration with Core SDK
 

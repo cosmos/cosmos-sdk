@@ -64,8 +64,8 @@ While there are no definitive guidelines for writing modules, here are some impo
 Modules are by convention defined in the `./x/` subfolder (e.g. the `bank` module will be defined in the `./x/bank` folder). They generally share the same core components:
 
 * A [`keeper`](./06-keeper.md), used to access the module's store(s) and update the state.
-* A [`Msg` service](./02-messages-and-queries.md#messages), used to process messages when they are routed to the module by [`BaseApp`](../../learn/advanced/00-baseapp.md#message-routing) and trigger state-transitions.
-* A [query service](./04-query-services.md), used to process user queries when they are routed to the module by [`BaseApp`](../../learn/advanced/00-baseapp.md#query-routing).
+* A [`Msg` service](./02-messages-and-queries.md#messages), used to process messages when they are routed to the module by [`BaseApp`](../../learn/advanced/00-baseapp.md#msg-service-router) and trigger state-transitions.
+* A [query service](./04-query-services.md), used to process user queries when they are routed to the module by [`BaseApp`](../../learn/advanced/00-baseapp.md#grpc-query-router).
 * Interfaces, for end users to query the subset of the state defined by the module and create `message`s of the custom types defined in the module.
 
 In addition to these components, modules implement the `AppModule` interface in order to be managed by the [`module manager`](./01-module-manager.md).

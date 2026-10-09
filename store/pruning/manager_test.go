@@ -25,6 +25,122 @@ func TestNewManager(t *testing.T) {
 	require.Equal(t, types.PruningNothing, manager.GetOptions().GetPruningStrategy())
 }
 
+func TestFailSnapshot(t *testing.T) {
+	manager := NewManager(db.NewMemDB(), log.NewNopLogger())
+	manager.SetOptions(types.NewCustomPruningOptions(10, 1))
+	manager.SetSnapshotInterval(10)
+	manager.StartSnapshot(10)
+	manager.FailSnapshot(10)
+	manager.FailSnapshot(10)
+
+	assert.Empty(t, manager.inflightSnapshotHeights)
+	assert.Equal(t, int64(9), manager.GetPruningHeight(20))
+}
+
+func TestSnapshotLifecycleTransitions(t *testing.T) {
+	newManager := func() *Manager {
+		manager := NewManager(db.NewMemDB(), log.NewNopLogger())
+		manager.SetOptions(types.NewCustomPruningOptions(1, 10))
+		manager.SetSnapshotInterval(10)
+		return manager
+	}
+
+	manager := newManager()
+	manager.StartSnapshot(10)
+	manager.FailSnapshot(10)
+	manager.StartSnapshot(20)
+	manager.CompleteSnapshot(20)
+	assert.Equal(t, int64(28), manager.GetPruningHeight(30))
+
+	manager = newManager()
+	manager.StartSnapshot(10)
+	manager.StartSnapshot(20)
+	manager.CompleteSnapshot(20)
+	assert.Equal(t, int64(9), manager.GetPruningHeight(30))
+	manager.FailSnapshot(10)
+	assert.Equal(t, int64(28), manager.GetPruningHeight(30))
+}
+
+func TestSnapshotLifecycleRestartAndDuplicateCalls(t *testing.T) {
+	db := db.NewMemDB()
+	manager := NewManager(db, log.NewNopLogger())
+	manager.SetOptions(types.NewCustomPruningOptions(1, 10))
+	manager.SetSnapshotInterval(10)
+	manager.StartSnapshot(10)
+	manager.StartSnapshot(10)
+	assert.Len(t, manager.inflightSnapshotHeights, 1)
+	manager.CompleteSnapshot(10)
+	manager.CompleteSnapshot(10)
+
+	restarted := NewManager(db, log.NewNopLogger())
+	restarted.SetOptions(types.NewCustomPruningOptions(1, 10))
+	restarted.SetSnapshotInterval(10)
+	require.NoError(t, restarted.LoadSnapshotHeights(db))
+	assert.Empty(t, restarted.inflightSnapshotHeights)
+	assert.Equal(t, int64(9), restarted.GetPruningHeight(20))
+	restarted.CompleteSnapshot(10)
+	restarted.CompleteSnapshot(5)
+	assert.True(t, restarted.loadedFromDisk)
+	assert.Equal(t, int64(9), restarted.GetPruningHeight(20))
+	restarted.StartSnapshot(20)
+	restarted.CompleteSnapshot(20)
+	assert.False(t, restarted.loadedFromDisk)
+	assert.Equal(t, int64(28), restarted.GetPruningHeight(30))
+}
+
+func TestCompleteSnapshotDoesNotPersistDuplicateOrLowerHeight(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	manager := NewManager(mock.NewMockDB(ctrl), log.NewNopLogger())
+	manager.SetOptions(types.NewPruningOptions(types.PruningEverything))
+	manager.completedSnapshotHeight = 10
+
+	manager.StartSnapshot(10)
+	manager.CompleteSnapshot(10)
+	manager.StartSnapshot(5)
+	manager.CompleteSnapshot(5)
+
+	assert.Empty(t, manager.inflightSnapshotHeights)
+	assert.Equal(t, int64(10), manager.completedSnapshotHeight)
+}
+
+func TestStartSnapshotDoesNotTrackCompletedHeight(t *testing.T) {
+	manager := NewManager(db.NewMemDB(), log.NewNopLogger())
+	manager.SetOptions(types.NewPruningOptions(types.PruningEverything))
+	manager.completedSnapshotHeight = 10
+
+	manager.StartSnapshot(10)
+	manager.StartSnapshot(5)
+
+	assert.Empty(t, manager.inflightSnapshotHeights)
+}
+
+func TestCompleteSnapshotPersistenceFailureIsRetryable(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	dbMock := mock.NewMockDB(ctrl)
+	dbMock.EXPECT().SetSync(pruneSnapshotHeightsKey, int64SliceToBytes(10)).Return(errors.New(dbErr))
+	dbMock.EXPECT().SetSync(pruneSnapshotHeightsKey, int64SliceToBytes(10)).Return(nil)
+
+	manager := NewManager(dbMock, log.NewNopLogger())
+	manager.SetOptions(types.NewPruningOptions(types.PruningEverything))
+	manager.SetSnapshotInterval(10)
+	manager.completedSnapshotHeight = 5
+	manager.loadedFromDisk = true
+	manager.StartSnapshot(10)
+
+	require.Panics(t, func() {
+		manager.CompleteSnapshot(10)
+	})
+	assert.Equal(t, int64(5), manager.completedSnapshotHeight)
+	assert.True(t, manager.loadedFromDisk)
+	assert.Contains(t, manager.inflightSnapshotHeights, int64(10))
+	assert.Equal(t, int64(4), manager.GetPruningHeight(20))
+
+	manager.CompleteSnapshot(10)
+	assert.Equal(t, int64(10), manager.completedSnapshotHeight)
+	assert.False(t, manager.loadedFromDisk)
+	assert.Empty(t, manager.inflightSnapshotHeights)
+}
+
 func TestStrategies(t *testing.T) {
 	testcases := map[string]struct {
 		strategy         types.PruningOptions
@@ -113,7 +229,7 @@ func TestStrategies(t *testing.T) {
 				if tc.snapshotInterval != 0 {
 					if curHeight > int64(tc.snapshotInterval) && curHeight%int64(tc.snapshotInterval) == int64(tc.snapshotInterval)-1 {
 						snapHeight := curHeight - int64(tc.snapshotInterval) + 1
-						manager.AnnounceSnapshotHeight(snapHeight)
+						manager.StartSnapshot(snapHeight)
 						manager.HandleSnapshotHeight(snapHeight)
 						snHeight = curHeight
 					}
@@ -222,7 +338,7 @@ func TestGetPruningHeight(t *testing.T) {
 			opts:        types.PruningOptions{KeepRecent: 5, Interval: 10, Strategy: types.PruningCustom},
 			setup: func(mgr *Manager) {
 				mgr.SetSnapshotInterval(15)
-				mgr.AnnounceSnapshotHeight(15)
+				mgr.StartSnapshot(15)
 				mgr.HandleSnapshotHeight(15)
 			},
 			exp: map[int64]int64{
@@ -238,7 +354,7 @@ func TestGetPruningHeight(t *testing.T) {
 			opts:        types.PruningOptions{KeepRecent: 5, Interval: 10, Strategy: types.PruningCustom},
 			setup: func(mgr *Manager) {
 				mgr.SetSnapshotInterval(15)
-				mgr.AnnounceSnapshotHeight(15)
+				mgr.StartSnapshot(15)
 			},
 			exp: map[int64]int64{
 				10: 4, // 10 - 5 (keep) - 1
@@ -250,8 +366,8 @@ func TestGetPruningHeight(t *testing.T) {
 			opts:        types.PruningOptions{KeepRecent: 5, Interval: 10, Strategy: types.PruningCustom},
 			setup: func(mgr *Manager) {
 				mgr.SetSnapshotInterval(15)
-				mgr.AnnounceSnapshotHeight(15)
-				mgr.AnnounceSnapshotHeight(30)
+				mgr.StartSnapshot(15)
+				mgr.StartSnapshot(30)
 				mgr.HandleSnapshotHeight(30)
 			},
 			exp: map[int64]int64{

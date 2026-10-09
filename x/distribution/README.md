@@ -660,6 +660,9 @@ rewards:
 total:
 - amount: "1000000.000000000000000000"
   denom: stake
+claimable:
+- amount: "1000000"
+  denom: stake
 ```
 
 ##### slashes
@@ -973,6 +976,10 @@ Example Output:
 
 The `DelegationTotalRewards` endpoint allows users to query the total rewards accrued by each validator.
 
+`total` is the sum of every reward at full decimal precision. `claimable` is what can actually be
+withdrawn: `Msg/WithdrawDelegatorReward` truncates each delegation reward on its own, so summing the
+truncated amounts can yield less than truncating `total` would suggest.
+
 Example:
 
 ```shell
@@ -992,7 +999,7 @@ Example Output:
       "reward": [
         {
           "denom": "stake",
-          "amount": "1000000000000000"
+          "amount": "1500000000000000000"
         }
       ]
     }
@@ -1000,7 +1007,13 @@ Example Output:
   "total": [
     {
       "denom": "stake",
-      "amount": "1000000000000000"
+      "amount": "1500000000000000000"
+    }
+  ],
+  "claimable": [
+    {
+      "denom": "stake",
+      "amount": "1"
     }
   ]
 }

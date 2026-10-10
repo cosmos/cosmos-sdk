@@ -82,6 +82,12 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 	}
 }
 
+// GetQueryCmd returns the root query command for the auth module. AutoCLI adds
+// the generated query commands to it.
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.NewQueryCmd()
+}
+
 // GetTxCmd returns the root tx command for the auth module. Autocli adds the
 // generated msg commands to it.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {

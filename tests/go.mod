@@ -28,6 +28,7 @@ require (
 )
 
 require (
+	cosmossdk.io/collections v1.4.0
 	github.com/cosmos/cosmos-sdk/enterprise/group v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0
 )
@@ -42,7 +43,6 @@ require (
 	cloud.google.com/go/monitoring v1.29.0 // indirect
 	cloud.google.com/go/storage v1.61.3 // indirect
 	cosmossdk.io/client/v2 v2.11.0 // indirect
-	cosmossdk.io/collections v1.4.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	filippo.io/bigmod v0.1.1-0.20260103110540-f8a47775ebe5 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect

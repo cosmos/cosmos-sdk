@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa65"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -153,11 +154,19 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 // simSigTxSize estimates the bytes a missing signature for pubkey adds to a
 // tx, for simulation only.
 func simSigTxSize(pubkey cryptotypes.PubKey, txSigLimit uint64) storetypes.Gas {
+	// Legacy Amino does not register secp256r1. Its compressed pubkey and
+	// signature have the same encoded lengths as secp256k1, so use the
+	// registered placeholder when estimating only the transaction size.
+	encodingPubKey := pubkey
+	if _, ok := pubkey.(*secp256r1.PubKey); ok {
+		encodingPubKey = simSecp256k1Pubkey
+	}
+
 	// use stdsignature to mock the size of a full signature
 	stdSigSize := func(sigSize int) storetypes.Gas {
 		simSig := legacytx.StdSignature{ //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated
 			Signature: make([]byte, sigSize),
-			PubKey:    pubkey,
+			PubKey:    encodingPubKey,
 		}
 		return storetypes.Gas(len(legacy.Cdc.MustMarshal(simSig)) + 6)
 	}

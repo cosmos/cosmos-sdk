@@ -340,8 +340,6 @@ require (
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
-	// TODO: remove once a cosmossdk.io/api release includes the account rekeying protos
-	cosmossdk.io/api => ./api
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// replace broken goleveldb

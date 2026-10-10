@@ -13,9 +13,10 @@ import (
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
-	return &autocliv1.ModuleOptions{
+	options := &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: authv1beta1.Query_ServiceDesc.ServiceName,
+			Service:              authv1beta1.Query_ServiceDesc.ServiceName,
+			EnhanceCustomCommand: true, // custom rekeyed-accounts and pubkey-history commands
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Accounts",
@@ -74,19 +75,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "params",
 					Short:     "Query the current auth parameters",
 				},
-				{
-					RpcMethod:      "RekeyedAccounts",
-					Use:            "rekeyed-accounts [address]",
-					Short:          "Query the accounts whose current public key has the given natural address",
-					Long:           "Query the accounts whose current public key has the given natural address. Use it to find the account a key controls after a pubkey change.",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
-				},
-				{
-					RpcMethod:      "PubKeyHistory",
-					Use:            "pubkey-history [address]",
-					Short:          "Query the public key rotation history of an account",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
-				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
@@ -101,11 +89,30 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
 					GovProposal:    true,
 				},
-				{
-					RpcMethod: "ChangePubKey",
-					Skip:      true, // custom command in x/auth/client/cli
-				},
 			},
 		},
 	}
+
+	// Keep the custom rekeying commands when the API module eventually
+	// publishes these methods, without naming methods that older releases do
+	// not contain (AutoCLI rejects options for unknown methods).
+	for _, method := range authv1beta1.Query_ServiceDesc.Methods {
+		switch method.MethodName {
+		case "RekeyedAccounts", "PubKeyHistory":
+			options.Query.RpcCommandOptions = append(options.Query.RpcCommandOptions, &autocliv1.RpcCommandOptions{
+				RpcMethod: method.MethodName,
+				Skip:      true,
+			})
+		}
+	}
+	for _, method := range authv1beta1.Msg_ServiceDesc.Methods {
+		if method.MethodName == "ChangePubKey" {
+			options.Tx.RpcCommandOptions = append(options.Tx.RpcCommandOptions, &autocliv1.RpcCommandOptions{
+				RpcMethod: method.MethodName,
+				Skip:      true,
+			})
+		}
+	}
+
+	return options
 }

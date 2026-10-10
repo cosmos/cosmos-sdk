@@ -613,15 +613,15 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 		testTxs[i].size = int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{bz}))
 	}
 
-	s.Require().Equal(testTxs[0].size, 111)
-	s.Require().Equal(testTxs[1].size, 121)
-	s.Require().Equal(testTxs[2].size, 112)
-	s.Require().Equal(testTxs[3].size, 112)
-	s.Require().Equal(testTxs[4].size, 195)
-	s.Require().Equal(testTxs[5].size, 205)
-	s.Require().Equal(testTxs[6].size, 196)
-	s.Require().Equal(testTxs[7].size, 196)
-	s.Require().Equal(testTxs[8].size, 196)
+	s.Require().Equal(testTxs[0].size, 159)
+	s.Require().Equal(testTxs[1].size, 169)
+	s.Require().Equal(testTxs[2].size, 160)
+	s.Require().Equal(testTxs[3].size, 160)
+	s.Require().Equal(testTxs[4].size, 311)
+	s.Require().Equal(testTxs[5].size, 331)
+	s.Require().Equal(testTxs[6].size, 313)
+	s.Require().Equal(testTxs[7].size, 313)
+	s.Require().Equal(testTxs[8].size, 313)
 
 	testCases := map[string]struct {
 		ctx         sdk.Context
@@ -634,7 +634,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[0], testTxs[1], testTxs[2], testTxs[3]},
 			req: &abci.RequestPrepareProposal{
-				MaxTxBytes: 111 + 112,
+				MaxTxBytes: int64(testTxs[0].size + testTxs[3].size),
 			},
 			expectedTxs: []int{0, 3},
 		},
@@ -642,7 +642,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[4], testTxs[5], testTxs[6], testTxs[7], testTxs[8]},
 			req: &abci.RequestPrepareProposal{
-				MaxTxBytes: 195 + 196,
+				MaxTxBytes: int64(testTxs[4].size + testTxs[8].size),
 			},
 			expectedTxs: []int{4, 8},
 		},
@@ -651,7 +651,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[9], testTxs[10], testTxs[11]},
 			req: &abci.RequestPrepareProposal{
-				MaxTxBytes: 195 + 196,
+				MaxTxBytes: int64(testTxs[9].size + testTxs[11].size),
 			},
 			expectedTxs: []int{9},
 		},
@@ -661,7 +661,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[12], testTxs[13], testTxs[14]},
 			req: &abci.RequestPrepareProposal{
-				MaxTxBytes: 112,
+				MaxTxBytes: int64(testTxs[13].size),
 			},
 			expectedTxs: []int{},
 		},
@@ -710,10 +710,13 @@ func (s *ABCIUtilsTestSuite) buildSignedTx(declaredGas uint64) (sdk.Tx, []byte) 
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 
 	secret := []byte(s.T().Name())
-	builder := txConfig.NewTxBuilder()
-	s.Require().NoError(builder.SetMsgs(&baseapptestutil.MsgKeyValue{Value: secret}))
-	builder.SetGasLimit(declaredGas)
 	privKey := secp256k1.GenPrivKeyFromSecret(secret)
+	builder := txConfig.NewTxBuilder()
+	s.Require().NoError(builder.SetMsgs(&baseapptestutil.MsgKeyValue{
+		Value:  secret,
+		Signer: sdk.AccAddress(privKey.PubKey().Address()).String(),
+	}))
+	builder.SetGasLimit(declaredGas)
 	setTxSignatureWithSecret(s.T(), builder, signingtypes.SignatureV2{
 		PubKey:   privKey.PubKey(),
 		Sequence: 1,
@@ -784,21 +787,26 @@ func marshalDelimitedFn(msg proto.Message) ([]byte, error) {
 func buildMsg(t *testing.T, txConfig client.TxConfig, value []byte, secrets [][]byte, nonces []uint64) sdk.Tx {
 	t.Helper()
 	builder := txConfig.NewTxBuilder()
-	_ = builder.SetMsgs(
-		&baseapptestutil.MsgKeyValue{Value: value},
-	)
 	require.Equal(t, len(secrets), len(nonces))
+	// one msg per signer, in signature order, so the tx's signers line up
+	// index-wise with its signatures
+	msgs := make([]sdk.Msg, 0, len(secrets))
 	signatures := make([]signingtypes.SignatureV2, 0)
 	for index, secret := range secrets {
 		nonce := nonces[index]
 		privKey := secp256k1.GenPrivKeyFromSecret(secret)
 		pubKey := privKey.PubKey()
+		msgs = append(msgs, &baseapptestutil.MsgKeyValue{
+			Value:  value,
+			Signer: sdk.AccAddress(pubKey.Address()).String(),
+		})
 		signatures = append(signatures, signingtypes.SignatureV2{
 			PubKey:   pubKey,
 			Sequence: nonce,
 			Data:     &signingtypes.SingleSignatureData{},
 		})
 	}
+	_ = builder.SetMsgs(msgs...)
 	setTxSignatureWithSecret(t, builder, signatures...)
 	return builder.GetTx()
 }

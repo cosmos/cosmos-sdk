@@ -22,6 +22,7 @@ import (
 	bankapi "cosmossdk.io/api/cosmos/bank/v1beta1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/ed25519"
+	mldsa65api "cosmossdk.io/api/cosmos/crypto/mldsa65"
 	multisigapi "cosmossdk.io/api/cosmos/crypto/multisig"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
@@ -36,6 +37,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	mldsa65types "github.com/cosmos/cosmos-sdk/crypto/keys/mldsa65"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	secp256k1types "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	groupmodule "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/module"
@@ -210,6 +212,22 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	genericAuthPulsar := newAny(t, &authzapi.GenericAuthorization{Msg: "foo"})
 	pubkeyAny, _ := codectypes.NewAnyWithValue(&secp256k1types.PubKey{Key: []byte("foo")})
 	pubkeyAnyPulsar := newAny(t, &secp256k1.PubKey{Key: []byte("foo")})
+	// 2-of-3 multisig over distinct secp256k1 keys, for MsgChangePubKey rotation to a multisig.
+	var msigSubKeys []*codectypes.Any
+	var msigSubKeysPulsar []*anypb.Any
+	for _, k := range []string{"key1", "key2", "key3"} {
+		sub, err := codectypes.NewAnyWithValue(&secp256k1types.PubKey{Key: []byte(k)})
+		require.NoError(t, err)
+		msigSubKeys = append(msigSubKeys, sub)
+		msigSubKeysPulsar = append(msigSubKeysPulsar, newAny(t, &secp256k1.PubKey{Key: []byte(k)}))
+	}
+	multisigPubkeyAny, err := codectypes.NewAnyWithValue(&multisig.LegacyAminoPubKey{Threshold: 2, PubKeys: msigSubKeys})
+	require.NoError(t, err)
+	multisigPubkeyAnyPulsar := newAny(t, &multisigapi.LegacyAminoPubKey{Threshold: 2, PublicKeys: msigSubKeysPulsar})
+	// ML-DSA-65, the main MsgChangePubKey rotation target.
+	mldsaPubkeyAny, err := codectypes.NewAnyWithValue(&mldsa65types.PubKey{Key: []byte("mldsa65-key")})
+	require.NoError(t, err)
+	mldsaPubkeyAnyPulsar := newAny(t, &mldsa65api.PubKey{Key: []byte("mldsa65-key")})
 	dec10bz, _ := math.LegacyNewDec(10).Marshal()
 	int123bz, _ := math.NewInt(123).Marshal()
 
@@ -253,6 +271,54 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"authz/msg_update_params": {
 			gogo:   &authtypes.MsgUpdateParams{Params: authtypes.Params{TxSigLimit: 10}},
 			pulsar: &authapi.MsgUpdateParams{Params: &authapi.Params{TxSigLimit: 10}},
+		},
+		"auth/msg_change_pub_key": {
+			gogo:   &authtypes.MsgChangePubKey{Address: addr1.String(), NewPubKey: pubkeyAny, Proof: []byte("proof")},
+			pulsar: &authapi.MsgChangePubKey{Address: addr1.String(), NewPubKey: pubkeyAnyPulsar, Proof: []byte("proof")},
+		},
+		"auth/msg_change_pub_key/multisig": {
+			gogo: &authtypes.MsgChangePubKey{
+				Address: addr1.String(), NewPubKey: multisigPubkeyAny, Proof: []byte("proof"),
+			},
+			pulsar: &authapi.MsgChangePubKey{
+				Address: addr1.String(), NewPubKey: multisigPubkeyAnyPulsar, Proof: []byte("proof"),
+			},
+			// x/tx always emits LegacyAminoPubKey fields sorted, and the gogo
+			// round trip does not (see crypto/legacy_amino_pubkey/filled).
+			// MsgChangePubKey is not a LegacyMsg, so the signer equivalence
+			// check below is skipped for it either way.
+			sortJSON:         true,
+			roundTripUnequal: true,
+		},
+		"auth/msg_change_pub_key/mldsa65": {
+			gogo: &authtypes.MsgChangePubKey{
+				Address: addr1.String(), NewPubKey: mldsaPubkeyAny, Proof: []byte("proof"),
+			},
+			pulsar: &authapi.MsgChangePubKey{
+				Address: addr1.String(), NewPubKey: mldsaPubkeyAnyPulsar, Proof: []byte("proof"),
+			},
+		},
+		"auth/change_pub_key_proof_doc": {
+			gogo: &authtypes.ChangePubKeyProofDoc{
+				ChainId: "test-chain", AccountNumber: 7, Address: addr1.String(), NewPubKey: pubkeyAny,
+			},
+			pulsar: &authapi.ChangePubKeyProofDoc{
+				ChainId: "test-chain", AccountNumber: 7, Address: addr1.String(), NewPubKey: pubkeyAnyPulsar,
+			},
+		},
+		"auth/genesis_pub_key_history": {
+			gogo: &authtypes.GenesisPubKeyHistory{
+				Address: addr1.String(),
+				Entries: []authtypes.PubKeyHistoryEntry{{
+					PubKey: pubkeyAny, ReplacedAtHeight: 5, ReplacedAtTime: now, NewKeyAddress: addr1.String(),
+				}},
+			},
+			pulsar: &authapi.GenesisPubKeyHistory{
+				Address: addr1.String(),
+				Entries: []*authapi.PubKeyHistoryEntry{{
+					PubKey: pubkeyAnyPulsar, ReplacedAtHeight: 5, ReplacedAtTime: timestamppb.New(now), NewKeyAddress: addr1.String(),
+				}},
+			},
 		},
 		"authz/msg_exec/empty_msgs": {
 			gogo:   &authztypes.MsgExec{Msgs: []*codectypes.Any{}},

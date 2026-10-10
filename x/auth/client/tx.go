@@ -47,7 +47,11 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 	if err != nil {
 		return err
 	}
+	// A rekeyed account's address is not derived from its pubkey.
 	addr := sdk.AccAddress(pubKey.Address())
+	if signerAddr := txFactory.SignerAddress(); len(signerAddr) > 0 {
+		addr = signerAddr
+	}
 	signers, err := txBuilder.GetTx().GetSigners()
 	if err != nil {
 		return err

@@ -29,6 +29,8 @@ const (
 	Query_AddressBytesToString_FullMethodName = "/cosmos.auth.v1beta1.Query/AddressBytesToString"
 	Query_AddressStringToBytes_FullMethodName = "/cosmos.auth.v1beta1.Query/AddressStringToBytes"
 	Query_AccountInfo_FullMethodName          = "/cosmos.auth.v1beta1.Query/AccountInfo"
+	Query_RekeyedAccounts_FullMethodName      = "/cosmos.auth.v1beta1.Query/RekeyedAccounts"
+	Query_PubKeyHistory_FullMethodName        = "/cosmos.auth.v1beta1.Query/PubKeyHistory"
 )
 
 // QueryClient is the client API for Query service.
@@ -60,6 +62,12 @@ type QueryClient interface {
 	AddressStringToBytes(ctx context.Context, in *AddressStringToBytesRequest, opts ...grpc.CallOption) (*AddressStringToBytesResponse, error)
 	// AccountInfo queries account info which is common to all account types.
 	AccountInfo(ctx context.Context, in *QueryAccountInfoRequest, opts ...grpc.CallOption) (*QueryAccountInfoResponse, error)
+	// RekeyedAccounts returns the accounts whose current public key has the
+	// given natural address. Wallets use it to find the account that a key
+	// controls after a MsgChangePubKey.
+	RekeyedAccounts(ctx context.Context, in *QueryRekeyedAccountsRequest, opts ...grpc.CallOption) (*QueryRekeyedAccountsResponse, error)
+	// PubKeyHistory returns the public key rotation history of an account.
+	PubKeyHistory(ctx context.Context, in *QueryPubKeyHistoryRequest, opts ...grpc.CallOption) (*QueryPubKeyHistoryResponse, error)
 }
 
 type queryClient struct {
@@ -170,6 +178,26 @@ func (c *queryClient) AccountInfo(ctx context.Context, in *QueryAccountInfoReque
 	return out, nil
 }
 
+func (c *queryClient) RekeyedAccounts(ctx context.Context, in *QueryRekeyedAccountsRequest, opts ...grpc.CallOption) (*QueryRekeyedAccountsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryRekeyedAccountsResponse)
+	err := c.cc.Invoke(ctx, Query_RekeyedAccounts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) PubKeyHistory(ctx context.Context, in *QueryPubKeyHistoryRequest, opts ...grpc.CallOption) (*QueryPubKeyHistoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryPubKeyHistoryResponse)
+	err := c.cc.Invoke(ctx, Query_PubKeyHistory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility.
@@ -199,6 +227,12 @@ type QueryServer interface {
 	AddressStringToBytes(context.Context, *AddressStringToBytesRequest) (*AddressStringToBytesResponse, error)
 	// AccountInfo queries account info which is common to all account types.
 	AccountInfo(context.Context, *QueryAccountInfoRequest) (*QueryAccountInfoResponse, error)
+	// RekeyedAccounts returns the accounts whose current public key has the
+	// given natural address. Wallets use it to find the account that a key
+	// controls after a MsgChangePubKey.
+	RekeyedAccounts(context.Context, *QueryRekeyedAccountsRequest) (*QueryRekeyedAccountsResponse, error)
+	// PubKeyHistory returns the public key rotation history of an account.
+	PubKeyHistory(context.Context, *QueryPubKeyHistoryRequest) (*QueryPubKeyHistoryResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -238,6 +272,12 @@ func (UnimplementedQueryServer) AddressStringToBytes(context.Context, *AddressSt
 }
 func (UnimplementedQueryServer) AccountInfo(context.Context, *QueryAccountInfoRequest) (*QueryAccountInfoResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AccountInfo not implemented")
+}
+func (UnimplementedQueryServer) RekeyedAccounts(context.Context, *QueryRekeyedAccountsRequest) (*QueryRekeyedAccountsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RekeyedAccounts not implemented")
+}
+func (UnimplementedQueryServer) PubKeyHistory(context.Context, *QueryPubKeyHistoryRequest) (*QueryPubKeyHistoryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PubKeyHistory not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 func (UnimplementedQueryServer) testEmbeddedByValue()               {}
@@ -440,6 +480,42 @@ func _Query_AccountInfo_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_RekeyedAccounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRekeyedAccountsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RekeyedAccounts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_RekeyedAccounts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RekeyedAccounts(ctx, req.(*QueryRekeyedAccountsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_PubKeyHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPubKeyHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PubKeyHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_PubKeyHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PubKeyHistory(ctx, req.(*QueryPubKeyHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -486,6 +562,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AccountInfo",
 			Handler:    _Query_AccountInfo_Handler,
+		},
+		{
+			MethodName: "RekeyedAccounts",
+			Handler:    _Query_RekeyedAccounts_Handler,
+		},
+		{
+			MethodName: "PubKeyHistory",
+			Handler:    _Query_PubKeyHistory_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

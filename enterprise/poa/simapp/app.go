@@ -209,6 +209,7 @@ func NewSimApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 	)
+	app.AccountKeeper.SetPubKeyChangeHooks(app.POAKeeper.NewAuthHooks())
 
 	govConfig := govtypes.DefaultConfig()
 	app.GovKeeper = govkeeper.NewKeeper(

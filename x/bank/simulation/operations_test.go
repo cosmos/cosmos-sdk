@@ -126,6 +126,29 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	suite.Require().Len(futureOperations, 0)
 }
 
+func (suite *SimTestSuite) TestSimulateMsgSendDistinguishesAccountsSharingPubKey() {
+	r := rand.New(rand.NewSource(5))
+	accounts := suite.getTestingAccounts(r, 3)
+	// Rekeying permits two distinct account addresses to use the same current
+	// pubkey. Account identity must therefore be determined by Address.
+	accounts[1].PubKey = accounts[0].PubKey
+
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: suite.app.LastBlockHeight() + 1,
+		Hash:   suite.app.LastCommitID().Hash,
+	})
+	suite.Require().NoError(err)
+
+	op := simulation.SimulateMsgSend(suite.txConfig, suite.accountKeeper, suite.bankKeeper)
+	operationMsg, _, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
+
+	var msg types.MsgSend
+	suite.Require().NoError(proto.Unmarshal(operationMsg.Msg, &msg))
+	suite.Require().Equal(accounts[0].Address.String(), msg.FromAddress)
+	suite.Require().Equal(accounts[1].Address.String(), msg.ToAddress)
+}
+
 // TestSimulateMsgSend tests the normal scenario of a valid message of type TypeMsgMultiSend.
 // Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgMultiSend() {

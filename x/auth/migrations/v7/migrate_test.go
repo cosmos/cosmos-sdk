@@ -19,9 +19,15 @@ func TestMigrate(t *testing.T) {
 	// First test with invalid params i.e. none
 	require.ErrorIs(t, Migrate(ctx, params), collections.ErrNotFound)
 
-	// Now set default params expected before migration
-	paramsUnderTest := types.DefaultParams()
-	paramsUnderTest.SigVerifyCostMlDsa65 = 0
+	// Params as stored by a v6 chain: only fields 1-5 exist. Fields added in
+	// later versions are zero, so do not seed from DefaultParams().
+	paramsUnderTest := types.Params{
+		MaxMemoCharacters:      types.DefaultMaxMemoCharacters,
+		TxSigLimit:             types.DefaultTxSigLimit,
+		TxSizeCostPerByte:      types.DefaultTxSizeCostPerByte,
+		SigVerifyCostED25519:   types.DefaultSigVerifyCostED25519,
+		SigVerifyCostSecp256k1: types.DefaultSigVerifyCostSecp256k1,
+	}
 	err := params.Set(ctx, paramsUnderTest)
 	require.NoError(t, err)
 
@@ -32,4 +38,9 @@ func TestMigrate(t *testing.T) {
 	seenParams, err := params.Get(ctx)
 	require.NoError(t, err)
 	require.Equal(t, types.DefaultSigVerifyCostMlDsa65, seenParams.SigVerifyCostMlDsa65)
+
+	// The other fields are unchanged.
+	want := paramsUnderTest
+	want.SigVerifyCostMlDsa65 = types.DefaultSigVerifyCostMlDsa65
+	require.Equal(t, want, seenParams)
 }

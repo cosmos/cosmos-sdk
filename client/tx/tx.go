@@ -273,12 +273,19 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuil
 		return err
 	}
 
+	// A rekeyed account's address is not derived from its pubkey, so use the
+	// signer address when one is set.
+	signerAddr := sdk.AccAddress(pubKey.Address())
+	if len(txf.signerAddress) > 0 {
+		signerAddr = txf.signerAddress
+	}
+
 	signerData := authsigning.SignerData{
 		ChainID:       txf.chainID,
 		AccountNumber: txf.accountNumber,
 		Sequence:      txf.sequence,
 		PubKey:        pubKey,
-		Address:       sdk.AccAddress(pubKey.Address()).String(),
+		Address:       signerAddr.String(),
 	}
 
 	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on
@@ -375,6 +382,11 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 	fromAddress, name, _, err := client.GetFromFields(clientCtx, clientCtx.Keyring, clientCtx.From)
 	if err != nil {
 		return tx.AuxSignerData{}, err
+	}
+	// A rekeyed account's address is not derived from its pubkey, so use the
+	// signer address when one is set, as Sign and Prepare do.
+	if len(f.signerAddress) > 0 {
+		fromAddress = f.signerAddress
 	}
 
 	b.SetAddress(fromAddress.String())

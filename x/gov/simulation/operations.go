@@ -414,6 +414,11 @@ func operationSimulateMsgVote(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		if simAccount.Equals(simtypes.Account{}) {
 			simAccount, _ = simtypes.RandomAcc(r, accs)
+		} else if current, ok := simtypes.FindAccount(accs, simAccount.Address); ok {
+			// A scheduled vote captured the account when the proposal was
+			// submitted. Use its current keys, which MsgChangePubKey may have
+			// rotated since.
+			simAccount = current
 		}
 
 		var proposalID uint64

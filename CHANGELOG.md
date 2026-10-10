@@ -47,15 +47,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) Account rekeying (ADR-034). `x/auth` consensus version goes from 7 to 8: `Migrate7to8` adds the params `pub_key_change_enabled` (default `false`) and `pub_key_change_cost` (default `50000` gas), and new store prefixes `91` (pubkey history) and `92` (rekey index). Auth genesis gains `pub_key_history`.
 * (x/auth/ante) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) `SetPubKeyDecorator` checks a signer that already has a stored pubkey against that pubkey: a pubkey in the tx must equal the stored one, and it no longer has to hash to the signer address. A signer with no stored pubkey still needs a tx pubkey that hashes to its address. The signer account is now read before the address check, so a tx whose signer account does not exist and whose pubkey does not hash to the signer now fails with `ErrUnknownAddress` (code 9) instead of `ErrInvalidPubKey` (code 8), which changes the tx result. A tx from an existing account whose tx pubkey neither hashes to the signer nor equals the stored pubkey still fails with `ErrInvalidPubKey`, but now pays the account-read gas first, which changes `GasUsed` in the tx result.
 * (x/authz) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) `MsgGrant` and `MsgExec` reject `/cosmos.auth.v1beta1.MsgChangePubKey` with the new `ErrMsgNotAuthorizable`. This includes grants that already exist.
+* (enterprise/poa) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) Reject creating or updating a validator when its consensus pubkey equals the operator account's current authentication pubkey, and reject an operator rekey to its validator's consensus pubkey.
 
 ### API Breaking
 
 * (x/auth) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) `BaseAccount.Validate` no longer requires `pubkey.Address() == address`. `types.ValidateGenesis` now accepts a mismatched pubkey only when `pub_key_history` has an entry for that address, and requires each history to belong to a genesis account with a non-nil, non-`ModuleCredential` pubkey, to start with a pubkey that hashes to the account address, and to chain through `new_key_address` to the account's current pubkey.
+* (enterprise/poa) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) `Keeper.ValidateOperatorAndConsensusPubKeyDifferent` now takes a context, and the PoA `AccountKeeper` interface now requires `GetAccount` so validation can use the operator account's current pubkey.
 * (types/mempool) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) The default `SignerExtractionAdapter` and `SenderNonceMempool` key senders by `GetSigners()` instead of the address of the signature pubkey. They return an error, instead of panicking, for a tx that does not implement `SigVerifiableTx` or whose signer count differs from its signature count.
 
 ### Features
 
 * (x/auth) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) Add `MsgChangePubKey`, which replaces an account's pubkey while keeping its address, with a proof of possession from the new key. It also adds the `RekeyedAccounts` and `PubKeyHistory` queries and the `tx auth change-pubkey` and `tx auth sign-rekey-proof` CLI commands. The feature is off until `pub_key_change_enabled` is set by governance. `x/auth` simulation gains a `MsgChangePubKey` operation.
+* (x/auth) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) Add `types.PubKeyChangeHooks` and `AccountKeeper.SetPubKeyChangeHooks`, allowing modules to reject account pubkey changes that would violate their invariants.
 * (client) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) Add the `--signer-address` tx flag and `Factory.WithSignerAddress`, so the `--from` key can sign for an account whose address is not the key's own address (a rekeyed account). `tx sign --multisig`, `tx sign-batch --multisig`, `tx multisign` and `tx multisign-batch` honour it, so an account rekeyed to a multisig can spend, and `tx validate-signatures` accepts a signature made by the signer's stored pubkey.
 * (x/distribution) [#26749](https://github.com/cosmos/cosmos-sdk/pull/26749) Add a `claimable` field to `QueryDelegationTotalRewardsResponse`, reporting the withdrawable amount as `sdk.Coins` by truncating each delegation reward the way `Msg/WithdrawDelegatorReward` does. `total` keeps its documented meaning as the raw `DecCoins` sum ([#24406](https://github.com/cosmos/cosmos-sdk/issues/24406)).
 
@@ -75,6 +78,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [#26772](https://github.com/cosmos/cosmos-sdk/pull/26772) Panic with a descriptive error when accessing an unregistered store instead of silently using store index zero.
 * (x/genutil) [#26741](https://github.com/cosmos/cosmos-sdk/issues/26741) Preserve vote extension enable height when exporting genesis state.
 * (baseapp) [#26738](https://github.com/cosmos/cosmos-sdk/pull/26738) Return genesis transaction events in the first block's `FinalizeBlock` response so block indexers can observe them.
+* (x/genutil) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) Make `gentx --signer-address` validate genesis funds and build the validator transaction for the specified account address instead of the signing key's natural address.
+* (simulation) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) Compare account addresses instead of pubkeys when excluding self-sends and current group administrators, so distinct rekeyed accounts may share a pubkey.
 
 ### Deprecated
 

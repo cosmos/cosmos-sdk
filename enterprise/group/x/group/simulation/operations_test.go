@@ -491,6 +491,9 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAdmin() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 2)
 	acc := accounts[0]
+	// Rekeying permits distinct account addresses to use the same current
+	// pubkey. Admin selection must compare addresses.
+	accounts[1].PubKey = accounts[0].PubKey
 
 	// setup a group
 	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
@@ -522,6 +525,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAdmin() {
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(acc.Address.String(), msg.Admin)
+	suite.Require().Equal(accounts[1].Address.String(), msg.NewAdmin)
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -611,6 +615,9 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 2)
 	acc := accounts[0]
+	// Rekeying permits distinct account addresses to use the same current
+	// pubkey. Admin selection must compare addresses.
+	accounts[1].PubKey = accounts[0].PubKey
 
 	// setup a group
 	ctx := suite.ctx
@@ -653,6 +660,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(groupPolicyRes.Address, msg.GroupPolicyAddress)
+	suite.Require().Equal(accounts[1].Address.String(), msg.NewAdmin)
 	suite.Require().Len(futureOperations, 0)
 }
 

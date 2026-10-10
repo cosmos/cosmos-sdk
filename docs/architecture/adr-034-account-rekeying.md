@@ -173,7 +173,7 @@ An account that has rekeyed cannot be pruned automatically, because recreating i
 ctx.GasMeter().ConsumeGas(params.PubKeyChangeCost, "change pubkey")
 ```
 
-The handler checks, in order: the param is enabled (`ErrPubKeyChangeDisabled`); the account exists and may rekey under decision 4 (`ErrAccountNotRekeyable`); the new key is acceptable (`ErrInvalidNewPubKey`). It then consumes `PubKeyChangeCost` gas, before the proof is decoded, so a tx whose proof fails still pays for the signature verification it caused. Next it checks that the proof is valid for the doc `{ctx.ChainID(), acc.GetAccountNumber(), msg.Address, msg.NewPubKey}` (`ErrInvalidPubKeyProof`). Finally it appends the old key to `PubKeyHistory`, updates `RekeyIndex`, sets the new pubkey and saves the account. It emits a `change_pubkey` event with attributes `address`, `old_pubkey_address` and `new_pubkey_address`.
+The handler checks, in order: the param is enabled (`ErrPubKeyChangeDisabled`); the account exists and may rekey under decision 4 (`ErrAccountNotRekeyable`); the new key is acceptable (`ErrInvalidNewPubKey`). It then consumes `PubKeyChangeCost` gas, before the proof is decoded, so a tx whose proof fails still pays for the signature verification it caused. Next it checks that the proof is valid for the doc `{ctx.ChainID(), acc.GetAccountNumber(), msg.Address, msg.NewPubKey}` (`ErrInvalidPubKeyProof`) and runs the registered `PubKeyChangeHooks`. Hooks let modules reject a change that would violate an invariant involving the account's current authentication key. Only after every hook succeeds does the handler append the old key to `PubKeyHistory`, update `RekeyIndex`, set the new pubkey and save the account. It emits a `change_pubkey` event with attributes `address`, `old_pubkey_address` and `new_pubkey_address`.
 
 ### 8. Queries
 
@@ -195,11 +195,13 @@ Every place that derives an account address from a pubkey must stop doing so:
 * `BaseAccount.Validate` drops its `pubkey.Address() == address` check. `types.ValidateGenesis` takes over that role: an account whose stored pubkey is not a `ModuleCredential` and whose `pk.Address() != address` is valid only if `GenesisState.PubKeyHistory` has an entry for that address.
 * The default mempool (`types/mempool/signer_extraction_adapter.go`, `types/mempool/sender_nonce.go`) keys senders by `GetSigners()` instead of `sig.PubKey.Address()`. Otherwise a rekeyed account's nonces split across two "senders", and a tx that omits its pubkey dereferences nil.
 * Client signing in `client/tx/tx.go` stops deriving `SignerData.Address` from the pubkey (decision 10).
-* `client/v2/autocli/flag/address.go`, which accepts a pubkey in place of an address, is a client follow-up. `server/start.go` and `enterprise/poa` derive addresses from consensus keys, which this ADR does not affect.
+* `x/bank` and `enterprise/group` simulations compare account addresses, rather than pubkeys, when selecting a different account.
+* `enterprise/poa` still derives consensus addresses from consensus keys. When enforcing that operator and consensus keys differ, however, it compares the proposed consensus key with both the operator address and the operator account's stored current pubkey. Its auth rekey hook preserves that invariant when an operator changes its authentication key.
+* `client/v2/autocli/flag/address.go`, which accepts a pubkey in place of an address, is a client follow-up. `server/start.go` derives validator consensus addresses from consensus keys, which this ADR does not affect.
 
 ### 10. Client
 
-A new `--signer-address` flag lets the keyring key named by `--from` sign for a different account address. When it is set, the tx factory uses it for `SignerData.Address` and for the account lookup instead of `pubKey.Address()`. Without the flag, `--from` behaves as before.
+A new `--signer-address` flag lets the keyring key named by `--from` sign for a different account address. When it is set, the tx factory uses it for `SignerData.Address` and for the account lookup instead of `pubKey.Address()`. `gentx` also validates the specified account's genesis balance and uses it as the validator operator address. Without the flag, `--from` behaves as before.
 
 An account rekeyed to a multisig spends with the usual multisig flow, passing `--signer-address` to each step: `sign` or `sign-batch` with `--multisig`, then `multisign` or `multisign-batch`. The members' signatures and the combined signature are then made and checked for the rekeyed account, not for the multisig key's own address. `tx validate-signatures` accepts a signature whose pubkey does not hash to its signer when the signer's stored pubkey is that key; in `--offline` mode, where it cannot check, it prints a warning instead. As for any multisig, this flow supports only `SIGN_MODE_LEGACY_AMINO_JSON`: a `SIGN_MODE_DIRECT` sign doc commits to the `AuthInfo`, which differs between what each member signs and the combined tx.
 
@@ -254,6 +256,8 @@ Breaks the current assumed relationship between address and pubkey as H(pubkey) 
 * Simulating a tx for a rekeyed account that omits its pubkey succeeds and returns a gas estimate.
 * A proof made for account A on chain X is rejected for account B or chain Y.
 * In the simulator, the `MsgChangePubKey` operation rotates accounts to secp256k1 or ML-DSA-65 keys, and later operations, including `x/gov` votes scheduled before the rotation, sign with the new key.
+* A PoA validator cannot use the same current key for operator authentication and consensus, whether it proposes that key during validator creation or rotation or changes its account key afterward.
+* Simulations treat two account addresses using the same current pubkey as distinct accounts.
 
 ## References
 

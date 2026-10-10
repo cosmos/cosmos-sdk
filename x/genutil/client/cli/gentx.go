@@ -120,25 +120,28 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			if err != nil {
 				return errors.Wrap(err, "failed to parse coins")
 			}
-			addr, err := key.GetAddress()
+			keyAddr, err := key.GetAddress()
 			if err != nil {
 				return err
 			}
-			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, addr, coins, cdc)
+			signerAddr := keyAddr
+			if len(clientCtx.SignerAddress) > 0 {
+				signerAddr = clientCtx.SignerAddress
+			}
+			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, signerAddr, coins, cdc)
 			if err != nil {
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}
 
+			clientCtx = clientCtx.
+				WithInput(inBuf).
+				WithFrom(name).
+				WithFromName(name).
+				WithFromAddress(signerAddr)
 			txFactory, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
-
-			pub, err := key.GetAddress()
-			if err != nil {
-				return err
-			}
-			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(pub)
 
 			// The following line comes from a discrepancy between the `gentx`
 			// and `create-validator` commands:

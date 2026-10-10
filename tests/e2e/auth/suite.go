@@ -1312,6 +1312,95 @@ func (s *E2ETestSuite) TestMultisignBatchOnline() {
 	s.Require().Equal(startSeq+2, endSeq)
 }
 
+// TestMultisignBatchOnlineUnordered checks that unordered txs in an online
+// multisig batch are signed with sequence 0 and do not consume a sequence
+// number, so ordered txs in the same batch still get consecutive sequences.
+func (s *E2ETestSuite) TestMultisignBatchOnlineUnordered() {
+	val := s.network.Validators[0]
+
+	account1, err := val.ClientCtx.Keyring.Key("newAccount1")
+	s.Require().NoError(err)
+	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
+	s.Require().NoError(err)
+	multisigRecord, err := val.ClientCtx.Keyring.Key("multi")
+	s.Require().NoError(err)
+
+	addr, err := multisigRecord.GetAddress()
+	s.Require().NoError(err)
+	_, err = s.createBankMsg(val, addr, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1000)))
+	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	genSend := func(extra ...string) string {
+		args := append([]string{
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
+			fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+		}, extra...)
+		out, err := clitestutil.MsgSendExec(val.ClientCtx, addr, val.Address,
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(1))),
+			addresscodec.NewBech32Codec("cosmos"), args...)
+		s.Require().NoError(err)
+		return out.String()
+	}
+	unordered := func(timeout string) string {
+		return genSend(fmt.Sprintf("--%s=true", flags.FlagUnordered), fmt.Sprintf("--%s=%s", flags.TimeoutDuration, timeout))
+	}
+	ordered := genSend()
+	// Distinct timeouts keep the two unordered txs distinct.
+	batch := unordered("60s") + ordered + unordered("90s") + ordered
+
+	filename := testutil.WriteToNewTempFile(s.T(), batch)
+	defer filename.Close()
+	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
+
+	_, startSeq, err := val.ClientCtx.AccountRetriever.GetAccountNumberSequence(val.ClientCtx, addr)
+	s.Require().NoError(err)
+	wantSeqs := []uint64{0, startSeq, 0, startSeq + 1}
+
+	sigFiles := make([]string, 0, 2)
+	for _, member := range []*keyring.Record{account1, account2} {
+		memberAddr, err := member.GetAddress()
+		s.Require().NoError(err)
+		res, err := authclitestutil.TxSignBatchExec(val.ClientCtx, memberAddr, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
+		s.Require().NoError(err)
+		sigLines := strings.Split(strings.Trim(res.String(), "\n"), "\n")
+		s.Require().Len(sigLines, len(wantSeqs))
+		for i, line := range sigLines {
+			sigs, err := s.cfg.TxConfig.UnmarshalSignatureJSON([]byte(line))
+			s.Require().NoError(err)
+			s.Require().Len(sigs, 1)
+			s.Require().Equal(wantSeqs[i], sigs[0].Sequence, "tx %d", i)
+		}
+		sigFile := testutil.WriteToNewTempFile(s.T(), res.String())
+		s.T().Cleanup(func() { _ = sigFile.Close() })
+		sigFiles = append(sigFiles, sigFile.Name())
+	}
+
+	res, err := authclitestutil.TxMultiSignBatchExec(val.ClientCtx, filename.Name(), multisigRecord.Name, sigFiles[0], sigFiles[1])
+	s.Require().NoError(err)
+	signedTxs := strings.Split(strings.Trim(res.String(), "\n"), "\n")
+	s.Require().Len(signedTxs, len(wantSeqs))
+
+	for i, signedTx := range signedTxs {
+		func() {
+			signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx)
+			defer signedTxFile.Close()
+			val.ClientCtx.BroadcastMode = flags.BroadcastSync
+			out, err := authclitestutil.TxBroadcastExec(val.ClientCtx, signedTxFile.Name())
+			s.Require().NoError(err)
+			var txRes sdk.TxResponse
+			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+			s.Require().Equal(uint32(0), txRes.Code, "tx %d: %s", i, txRes.RawLog)
+			s.Require().NoError(s.network.WaitForNextBlock())
+		}()
+	}
+
+	_, endSeq, err := val.ClientCtx.AccountRetriever.GetAccountNumberSequence(val.ClientCtx, addr)
+	s.Require().NoError(err)
+	s.Require().Equal(startSeq+2, endSeq, "only the ordered txs consume sequence numbers")
+}
+
 func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
 	cmd := authcli.GetBroadcastCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)

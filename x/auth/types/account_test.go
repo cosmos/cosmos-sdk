@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 func TestBaseAddressPubKey(t *testing.T) {
@@ -77,9 +78,11 @@ func TestGenesisAccountValidate(t *testing.T) {
 			false,
 		},
 		{
-			"invalid base valid account",
+			// A rekeyed account's pubkey does not hash to its address.
+			// types.ValidateGenesis checks that case against the pubkey history.
+			"base account with rotated pubkey",
 			types.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0),
-			true,
+			false,
 		},
 	}
 
@@ -88,6 +91,21 @@ func TestGenesisAccountValidate(t *testing.T) {
 			require.Equal(t, tt.expErr, tt.acc.Validate() != nil)
 		})
 	}
+}
+
+func TestBaseAccountValidate_AllowsRekeyed(t *testing.T) {
+	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	rotated := secp256k1.GenPrivKey().PubKey()
+
+	baseAcc := types.NewBaseAccount(addr, rotated, 3, 4)
+	require.NoError(t, baseAcc.Validate())
+
+	cva, err := vestingtypes.NewContinuousVestingAccount(
+		types.NewBaseAccount(addr, rotated, 3, 4),
+		sdk.NewCoins(sdk.NewInt64Coin("stake", 100)), 100, 200,
+	)
+	require.NoError(t, err)
+	require.NoError(t, cva.Validate())
 }
 
 func TestModuleAccountString(t *testing.T) {

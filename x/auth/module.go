@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/core/address"
@@ -21,6 +22,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -28,7 +30,7 @@ import (
 
 // ConsensusVersion defines the current x/auth module consensus version.
 const (
-	ConsensusVersion = 7
+	ConsensusVersion = 8
 	GovModuleName    = "gov"
 )
 
@@ -78,6 +80,12 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
+}
+
+// GetTxCmd returns the root tx command for the auth module. Autocli adds the
+// generated msg commands to it.
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
+	return cli.NewTxCmd()
 }
 
 // RegisterInterfaces registers interfaces and implementations of the auth module.
@@ -135,6 +143,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 6, m.Migrate6to7); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 6 to 7: %v", types.ModuleName, err))
 	}
+	if err := cfg.RegisterMigration(types.ModuleName, 7, m.Migrate7to8); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 7 to 8: %v", types.ModuleName, err))
+	}
 }
 
 // InitGenesis performs genesis initialization for the auth module. It returns
@@ -178,9 +189,11 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.accountKeeper.Schema)
 }
 
-// WeightedOperations doesn't return any auth module operation.
-func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
-	return nil
+// WeightedOperations returns the auth module operations with their respective
+// weights. Auth deliberately has no WeightedOperationsX: MsgChangePubKey must
+// update the simulation's account keys, which only legacy operations can reach.
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(simState.AppParams, simState.TxConfig, am.accountKeeper)
 }
 
 //

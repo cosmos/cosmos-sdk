@@ -8,9 +8,14 @@ import (
 	"sort"
 
 	"github.com/cosmos/gogoproto/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -534,4 +539,204 @@ func (suite *KeeperTestSuite) TestQueryAccountInfoWithoutPubKey() {
 	suite.Require().NotNil(res.Info)
 	suite.Require().Equal(addr.String(), res.Info.Address)
 	suite.Require().Nil(res.Info.PubKey)
+}
+
+func (suite *KeeperTestSuite) TestGRPCQueryRekeyedAccounts() {
+	_, pk0, accAddr := testdata.KeyTestPubAddr()
+	_, pk1, k1Addr := testdata.KeyTestPubAddr()
+	_, pk2, k2Addr := testdata.KeyTestPubAddr()
+
+	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, accAddr)
+	suite.Require().NoError(acc.SetPubKey(pk0))
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
+
+	query := func(a sdk.AccAddress) []string {
+		res, err := suite.queryClient.RekeyedAccounts(context.Background(), &types.QueryRekeyedAccountsRequest{Address: a.String()})
+		suite.Require().NoError(err)
+		return res.Addresses
+	}
+
+	// before any rotation, no key points at a rekeyed account
+	suite.Require().Empty(query(accAddr))
+	suite.Require().Empty(query(k1Addr))
+
+	// rotate A to k1
+	suite.Require().NoError(suite.accountKeeper.ApplyRekey(suite.ctx, suite.accountKeeper.GetAccount(suite.ctx, accAddr), pk1))
+	suite.Require().Equal([]string{accAddr.String()}, query(k1Addr))
+	suite.Require().Empty(query(accAddr))
+
+	// rotate A to k2: the k1 entry goes away
+	suite.Require().NoError(suite.accountKeeper.ApplyRekey(suite.ctx, suite.accountKeeper.GetAccount(suite.ctx, accAddr), pk2))
+	suite.Require().Empty(query(k1Addr))
+	suite.Require().Equal([]string{accAddr.String()}, query(k2Addr))
+
+	// rotate A back to its natural key: no index entry remains
+	suite.Require().NoError(suite.accountKeeper.ApplyRekey(suite.ctx, suite.accountKeeper.GetAccount(suite.ctx, accAddr), pk0))
+	suite.Require().Empty(query(k2Addr))
+	suite.Require().Empty(query(accAddr))
+}
+
+func (suite *KeeperTestSuite) TestGRPCQueryRekeyedAccountsMultiple() {
+	_, pkA, addrA := testdata.KeyTestPubAddr()
+	_, pkB, addrB := testdata.KeyTestPubAddr()
+	_, pk1, k1Addr := testdata.KeyTestPubAddr()
+
+	for _, kv := range []struct {
+		addr sdk.AccAddress
+		pk   cryptotypes.PubKey
+	}{{addrA, pkA}, {addrB, pkB}} {
+		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, kv.addr)
+		suite.Require().NoError(acc.SetPubKey(kv.pk))
+		suite.accountKeeper.SetAccount(suite.ctx, acc)
+		suite.Require().NoError(suite.accountKeeper.ApplyRekey(suite.ctx, suite.accountKeeper.GetAccount(suite.ctx, kv.addr), pk1))
+	}
+
+	res, err := suite.queryClient.RekeyedAccounts(context.Background(), &types.QueryRekeyedAccountsRequest{Address: k1Addr.String()})
+	suite.Require().NoError(err)
+	expected := []string{addrA.String(), addrB.String()}
+	if bytes.Compare(addrA, addrB) > 0 {
+		expected = []string{addrB.String(), addrA.String()}
+	}
+	suite.Require().Equal(expected, res.Addresses)
+}
+
+func (suite *KeeperTestSuite) TestGRPCQueryRekeyedAccountsPagination() {
+	_, pk1, k1Addr := testdata.KeyTestPubAddr()
+
+	var expected []string
+	for range 3 {
+		_, pk, addr := testdata.KeyTestPubAddr()
+		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+		suite.Require().NoError(acc.SetPubKey(pk))
+		suite.accountKeeper.SetAccount(suite.ctx, acc)
+		suite.Require().NoError(suite.accountKeeper.ApplyRekey(suite.ctx, suite.accountKeeper.GetAccount(suite.ctx, addr), pk1))
+		expected = append(expected, addr.String())
+	}
+	sort.Slice(expected, func(i, j int) bool {
+		a, _ := sdk.AccAddressFromBech32(expected[i])
+		b, _ := sdk.AccAddressFromBech32(expected[j])
+		return bytes.Compare(a, b) < 0
+	})
+
+	res, err := suite.queryClient.RekeyedAccounts(context.Background(), &types.QueryRekeyedAccountsRequest{
+		Address:    k1Addr.String(),
+		Pagination: &query.PageRequest{Limit: 2, CountTotal: true},
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(expected[:2], res.Addresses)
+	suite.Require().NotNil(res.Pagination)
+	suite.Require().NotEmpty(res.Pagination.NextKey)
+	suite.Require().Equal(uint64(3), res.Pagination.Total)
+
+	res, err = suite.queryClient.RekeyedAccounts(context.Background(), &types.QueryRekeyedAccountsRequest{
+		Address:    k1Addr.String(),
+		Pagination: &query.PageRequest{Key: res.Pagination.NextKey, Limit: 2},
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(expected[2:], res.Addresses)
+	suite.Require().Empty(res.Pagination.NextKey)
+}
+
+func (suite *KeeperTestSuite) TestGRPCQueryPubKeyHistoryPagination() {
+	_, pk0, accAddr := testdata.KeyTestPubAddr()
+	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, accAddr)
+	suite.Require().NoError(acc.SetPubKey(pk0))
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
+
+	for h := int64(1); h <= 3; h++ {
+		_, pk, _ := testdata.KeyTestPubAddr()
+		ctx := suite.ctx.WithBlockHeight(h)
+		suite.Require().NoError(suite.accountKeeper.ApplyRekey(ctx, suite.accountKeeper.GetAccount(ctx, accAddr), pk))
+	}
+
+	res, err := suite.queryClient.PubKeyHistory(context.Background(), &types.QueryPubKeyHistoryRequest{
+		Address:    accAddr.String(),
+		Pagination: &query.PageRequest{Limit: 2, CountTotal: true},
+	})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Entries, 2)
+	suite.Require().Equal(int64(1), res.Entries[0].ReplacedAtHeight)
+	suite.Require().Equal(int64(2), res.Entries[1].ReplacedAtHeight)
+	suite.Require().NotNil(res.Pagination)
+	suite.Require().NotEmpty(res.Pagination.NextKey)
+	suite.Require().Equal(uint64(3), res.Pagination.Total)
+
+	res, err = suite.queryClient.PubKeyHistory(context.Background(), &types.QueryPubKeyHistoryRequest{
+		Address:    accAddr.String(),
+		Pagination: &query.PageRequest{Key: res.Pagination.NextKey, Limit: 2},
+	})
+	suite.Require().NoError(err)
+	suite.Require().Len(res.Entries, 1)
+	suite.Require().Equal(int64(3), res.Entries[0].ReplacedAtHeight)
+	suite.Require().Empty(res.Pagination.NextKey)
+}
+
+func (suite *KeeperTestSuite) TestGRPCQueryPubKeyHistory() {
+	_, pk0, accAddr := testdata.KeyTestPubAddr()
+	_, pk1, k1Addr := testdata.KeyTestPubAddr()
+	_, pk2, k2Addr := testdata.KeyTestPubAddr()
+
+	acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, accAddr)
+	suite.Require().NoError(acc.SetPubKey(pk0))
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
+
+	query := func(a sdk.AccAddress) []types.PubKeyHistoryEntry {
+		res, err := suite.queryClient.PubKeyHistory(context.Background(), &types.QueryPubKeyHistoryRequest{Address: a.String()})
+		suite.Require().NoError(err)
+		return res.Entries
+	}
+
+	suite.Require().Empty(query(accAddr))
+
+	ctx := suite.ctx.WithBlockHeight(7)
+	suite.Require().NoError(suite.accountKeeper.ApplyRekey(ctx, suite.accountKeeper.GetAccount(ctx, accAddr), pk1))
+
+	entries := query(accAddr)
+	suite.Require().Len(entries, 1)
+	suite.Require().Equal(int64(7), entries[0].ReplacedAtHeight)
+	suite.Require().Equal(k1Addr.String(), entries[0].NewKeyAddress)
+	suite.Require().Equal("/"+proto.MessageName(pk0), entries[0].PubKey.TypeUrl)
+	pkBz, err := proto.Marshal(pk0)
+	suite.Require().NoError(err)
+	suite.Require().Equal(pkBz, entries[0].PubKey.Value)
+
+	// the key's natural address has no history of its own
+	suite.Require().Empty(query(k1Addr))
+
+	ctx = suite.ctx.WithBlockHeight(9)
+	suite.Require().NoError(suite.accountKeeper.ApplyRekey(ctx, suite.accountKeeper.GetAccount(ctx, accAddr), pk2))
+
+	entries = query(accAddr)
+	suite.Require().Len(entries, 2)
+	suite.Require().Equal(int64(7), entries[0].ReplacedAtHeight)
+	suite.Require().Equal(int64(9), entries[1].ReplacedAtHeight)
+	suite.Require().Equal(k2Addr.String(), entries[1].NewKeyAddress)
+	pkBz, err = proto.Marshal(pk1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(pkBz, entries[1].PubKey.Value)
+}
+
+func (suite *KeeperTestSuite) TestGRPCQueryRekeyInvalidRequests() {
+	for _, tc := range []struct {
+		msg  string
+		addr string
+	}{
+		{"empty address", ""},
+		{"invalid bech32", "cosmos1invalid"},
+		{"wrong prefix", "osmo13c3d4wq2t22dl0dstraf8jc3f902e3fsy9n3wv"},
+	} {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			_, err := suite.queryClient.RekeyedAccounts(context.Background(), &types.QueryRekeyedAccountsRequest{Address: tc.addr})
+			suite.Require().Equal(codes.InvalidArgument, status.Code(err), err)
+
+			_, err = suite.queryClient.PubKeyHistory(context.Background(), &types.QueryPubKeyHistoryRequest{Address: tc.addr})
+			suite.Require().Equal(codes.InvalidArgument, status.Code(err), err)
+		})
+	}
+
+	qs := keeper.NewQueryServer(suite.accountKeeper)
+	_, err := qs.RekeyedAccounts(suite.ctx, nil)
+	suite.Require().Equal(codes.InvalidArgument, status.Code(err))
+	_, err = qs.PubKeyHistory(suite.ctx, nil)
+	suite.Require().Equal(codes.InvalidArgument, status.Code(err))
 }

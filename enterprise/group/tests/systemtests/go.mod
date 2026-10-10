@@ -281,3 +281,5 @@ replace (
 	github.com/cosmos/cosmos-sdk/enterprise/group => ../../
 	github.com/cosmos/cosmos-sdk/tools/systemtests => ../../../../tools/systemtests
 )
+
+replace cosmossdk.io/api => ../../../../api

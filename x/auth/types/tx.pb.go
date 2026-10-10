@@ -12,6 +12,7 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -126,38 +127,233 @@ func (m *MsgUpdateParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
+// MsgChangePubKey is the Msg/ChangePubKey request type.
+type MsgChangePubKey struct {
+	// address is the account whose public key is replaced.
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// new_pub_key is the public key that replaces the account's current key.
+	NewPubKey *any.Any `protobuf:"bytes,2,opt,name=new_pub_key,json=newPubKey,proto3" json:"new_pub_key,omitempty"`
+	// proof is the proto encoding of a cosmos.tx.signing.v1beta1.SignatureDescriptor.Data
+	// produced by new_pub_key over the ADR-036 sign doc of a ChangePubKeyProofDoc.
+	Proof []byte `protobuf:"bytes,3,opt,name=proof,proto3" json:"proof,omitempty"`
+}
+
+func (m *MsgChangePubKey) Reset()         { *m = MsgChangePubKey{} }
+func (m *MsgChangePubKey) String() string { return proto.CompactTextString(m) }
+func (*MsgChangePubKey) ProtoMessage()    {}
+func (*MsgChangePubKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c2d62bd9c4c212e5, []int{2}
+}
+func (m *MsgChangePubKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgChangePubKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgChangePubKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgChangePubKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgChangePubKey.Merge(m, src)
+}
+func (m *MsgChangePubKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgChangePubKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgChangePubKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgChangePubKey proto.InternalMessageInfo
+
+func (m *MsgChangePubKey) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *MsgChangePubKey) GetNewPubKey() *any.Any {
+	if m != nil {
+		return m.NewPubKey
+	}
+	return nil
+}
+
+func (m *MsgChangePubKey) GetProof() []byte {
+	if m != nil {
+		return m.Proof
+	}
+	return nil
+}
+
+// MsgChangePubKeyResponse defines the response structure for executing a
+// MsgChangePubKey message.
+type MsgChangePubKeyResponse struct {
+}
+
+func (m *MsgChangePubKeyResponse) Reset()         { *m = MsgChangePubKeyResponse{} }
+func (m *MsgChangePubKeyResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgChangePubKeyResponse) ProtoMessage()    {}
+func (*MsgChangePubKeyResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c2d62bd9c4c212e5, []int{3}
+}
+func (m *MsgChangePubKeyResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgChangePubKeyResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgChangePubKeyResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgChangePubKeyResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgChangePubKeyResponse.Merge(m, src)
+}
+func (m *MsgChangePubKeyResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgChangePubKeyResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgChangePubKeyResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgChangePubKeyResponse proto.InternalMessageInfo
+
+// ChangePubKeyProofDoc is the document signed by the new public key to prove
+// possession. Its deterministic proto encoding is the data of an ADR-036
+// MsgSignData whose signer is the natural address of new_pub_key.
+type ChangePubKeyProofDoc struct {
+	// chain_id is the chain on which the key change is valid.
+	ChainId string `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	// account_number is the account number of the account being rekeyed.
+	AccountNumber uint64 `protobuf:"varint,2,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
+	// address is the address of the account being rekeyed.
+	Address string `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`
+	// new_pub_key is the public key being installed.
+	NewPubKey *any.Any `protobuf:"bytes,4,opt,name=new_pub_key,json=newPubKey,proto3" json:"new_pub_key,omitempty"`
+}
+
+func (m *ChangePubKeyProofDoc) Reset()         { *m = ChangePubKeyProofDoc{} }
+func (m *ChangePubKeyProofDoc) String() string { return proto.CompactTextString(m) }
+func (*ChangePubKeyProofDoc) ProtoMessage()    {}
+func (*ChangePubKeyProofDoc) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c2d62bd9c4c212e5, []int{4}
+}
+func (m *ChangePubKeyProofDoc) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ChangePubKeyProofDoc) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ChangePubKeyProofDoc.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ChangePubKeyProofDoc) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ChangePubKeyProofDoc.Merge(m, src)
+}
+func (m *ChangePubKeyProofDoc) XXX_Size() int {
+	return m.Size()
+}
+func (m *ChangePubKeyProofDoc) XXX_DiscardUnknown() {
+	xxx_messageInfo_ChangePubKeyProofDoc.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ChangePubKeyProofDoc proto.InternalMessageInfo
+
+func (m *ChangePubKeyProofDoc) GetChainId() string {
+	if m != nil {
+		return m.ChainId
+	}
+	return ""
+}
+
+func (m *ChangePubKeyProofDoc) GetAccountNumber() uint64 {
+	if m != nil {
+		return m.AccountNumber
+	}
+	return 0
+}
+
+func (m *ChangePubKeyProofDoc) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *ChangePubKeyProofDoc) GetNewPubKey() *any.Any {
+	if m != nil {
+		return m.NewPubKey
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*MsgUpdateParams)(nil), "cosmos.auth.v1beta1.MsgUpdateParams")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "cosmos.auth.v1beta1.MsgUpdateParamsResponse")
+	proto.RegisterType((*MsgChangePubKey)(nil), "cosmos.auth.v1beta1.MsgChangePubKey")
+	proto.RegisterType((*MsgChangePubKeyResponse)(nil), "cosmos.auth.v1beta1.MsgChangePubKeyResponse")
+	proto.RegisterType((*ChangePubKeyProofDoc)(nil), "cosmos.auth.v1beta1.ChangePubKeyProofDoc")
 }
 
 func init() { proto.RegisterFile("cosmos/auth/v1beta1/tx.proto", fileDescriptor_c2d62bd9c4c212e5) }
 
 var fileDescriptor_c2d62bd9c4c212e5 = []byte{
-	// 365 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x49, 0xce, 0x2f, 0xce,
-	0xcd, 0x2f, 0xd6, 0x4f, 0x2c, 0x2d, 0xc9, 0xd0, 0x2f, 0x33, 0x4c, 0x4a, 0x2d, 0x49, 0x34, 0xd4,
-	0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x86, 0xc8, 0xea, 0x81, 0x64, 0xf5,
-	0xa0, 0xb2, 0x52, 0x22, 0xe9, 0xf9, 0xe9, 0xf9, 0x60, 0x79, 0x7d, 0x10, 0x0b, 0xa2, 0x54, 0x4a,
-	0x12, 0xa2, 0x34, 0x1e, 0x22, 0x01, 0xd5, 0x07, 0x91, 0x12, 0x87, 0xda, 0x91, 0x5b, 0x9c, 0xae,
-	0x5f, 0x66, 0x08, 0xa2, 0xa0, 0x12, 0x82, 0x89, 0xb9, 0x99, 0x79, 0xf9, 0xfa, 0x60, 0x12, 0x2a,
-	0x24, 0x87, 0xcd, 0x3d, 0x60, 0xeb, 0xc1, 0xf2, 0x4a, 0x97, 0x18, 0xb9, 0xf8, 0x7d, 0x8b, 0xd3,
-	0x43, 0x0b, 0x52, 0x12, 0x4b, 0x52, 0x03, 0x12, 0x8b, 0x12, 0x73, 0x8b, 0x85, 0xcc, 0xb8, 0x38,
-	0x41, 0x2a, 0xf2, 0x8b, 0x32, 0x4b, 0x2a, 0x25, 0x18, 0x15, 0x18, 0x35, 0x38, 0x9d, 0x24, 0x2e,
-	0x6d, 0xd1, 0x15, 0x81, 0x3a, 0xc2, 0x31, 0x25, 0xa5, 0x28, 0xb5, 0xb8, 0x38, 0xb8, 0xa4, 0x28,
-	0x33, 0x2f, 0x3d, 0x08, 0xa1, 0x54, 0xc8, 0x8e, 0x8b, 0xad, 0x00, 0x6c, 0x82, 0x04, 0x93, 0x02,
-	0xa3, 0x06, 0xb7, 0x91, 0xb4, 0x1e, 0x16, 0xef, 0xea, 0x41, 0x2c, 0x71, 0xe2, 0x3c, 0x71, 0x4f,
-	0x9e, 0x61, 0xc5, 0xf3, 0x0d, 0x5a, 0x8c, 0x41, 0x50, 0x5d, 0x56, 0xee, 0x97, 0xb6, 0xe8, 0xf2,
-	0x43, 0xb4, 0xe8, 0x16, 0xa7, 0x64, 0x2b, 0x18, 0xe8, 0x99, 0x98, 0x37, 0x3d, 0xdf, 0xa0, 0x85,
-	0xb0, 0xa2, 0xeb, 0xf9, 0x06, 0x2d, 0x45, 0x84, 0x0a, 0xfd, 0x0a, 0x88, 0xbf, 0xd0, 0x3c, 0xa0,
-	0xa4, 0xc7, 0x25, 0x8e, 0x26, 0x14, 0x94, 0x5a, 0x5c, 0x90, 0x9f, 0x57, 0x9c, 0x6a, 0x25, 0x8c,
-	0xc5, 0x0e, 0xa3, 0x56, 0x46, 0x2e, 0x66, 0xdf, 0xe2, 0x74, 0xa1, 0x72, 0x2e, 0x1e, 0x94, 0x80,
-	0x50, 0xc1, 0xea, 0x01, 0x34, 0xa3, 0xa5, 0x74, 0x88, 0x51, 0x05, 0x73, 0x80, 0x92, 0xf0, 0x29,
-	0x4c, 0x07, 0x48, 0xb1, 0x36, 0x80, 0x02, 0xc2, 0xc9, 0xf9, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f,
-	0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x9c, 0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b,
-	0x8f, 0xe5, 0x18, 0xa2, 0x34, 0xd3, 0x33, 0x4b, 0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xa1,
-	0x69, 0x41, 0x1f, 0x33, 0x18, 0x4a, 0x2a, 0x0b, 0x52, 0x8b, 0x93, 0xd8, 0xc0, 0x11, 0x6b, 0x0c,
-	0x08, 0x00, 0x00, 0xff, 0xff, 0x81, 0xf5, 0xf7, 0x21, 0x8a, 0x02, 0x00, 0x00,
+	// 581 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x94, 0x4f, 0x6f, 0x12, 0x4f,
+	0x18, 0xc7, 0xd9, 0x1f, 0xfd, 0xf3, 0x63, 0x8a, 0x36, 0x2e, 0x24, 0x05, 0x34, 0x2b, 0x12, 0x4d,
+	0x10, 0x65, 0x56, 0xd0, 0x68, 0xc2, 0xc1, 0xa4, 0xd4, 0xc4, 0x18, 0xd3, 0x86, 0xac, 0xf1, 0xe2,
+	0x85, 0xcc, 0xee, 0x4e, 0x97, 0x4d, 0xdd, 0x99, 0xcd, 0xce, 0x6c, 0xe9, 0xde, 0x8c, 0x47, 0x4f,
+	0xbe, 0x0c, 0x8f, 0x1c, 0xfa, 0x22, 0x9a, 0x9e, 0x1a, 0x4e, 0x3d, 0x18, 0x63, 0xe0, 0x40, 0x7c,
+	0x17, 0x66, 0x77, 0x06, 0xa1, 0x94, 0x46, 0xa3, 0x17, 0xd8, 0x79, 0xbe, 0xcf, 0x33, 0xdf, 0x79,
+	0x3e, 0xfb, 0xcc, 0x82, 0x5b, 0x16, 0x65, 0x1e, 0x65, 0x3a, 0x0a, 0x79, 0x4f, 0x3f, 0x6c, 0x98,
+	0x98, 0xa3, 0x86, 0xce, 0x8f, 0xa0, 0x1f, 0x50, 0x4e, 0xd5, 0x9c, 0x50, 0x61, 0xac, 0x42, 0xa9,
+	0x96, 0xf2, 0x0e, 0x75, 0x68, 0xa2, 0xeb, 0xf1, 0x93, 0x48, 0x2d, 0x15, 0x45, 0x6a, 0x57, 0x08,
+	0xb2, 0x4e, 0x48, 0x5b, 0xd2, 0xc3, 0x63, 0x8e, 0x7e, 0xd8, 0x88, 0xff, 0xa4, 0x70, 0x03, 0x79,
+	0x2e, 0xa1, 0x7a, 0xf2, 0x2b, 0x43, 0xda, 0xb2, 0xf3, 0x24, 0xf6, 0xd2, 0xc6, 0xa1, 0xd4, 0x79,
+	0x8f, 0xf5, 0x64, 0x65, 0x86, 0xfb, 0x3a, 0x22, 0x91, 0x90, 0x2a, 0x43, 0x05, 0x6c, 0xee, 0x32,
+	0xe7, 0xad, 0x6f, 0x23, 0x8e, 0x3b, 0x28, 0x40, 0x1e, 0x53, 0x9f, 0x82, 0x4c, 0x5c, 0x4c, 0x03,
+	0x97, 0x47, 0x05, 0xa5, 0xac, 0x54, 0x33, 0xed, 0xc2, 0xf0, 0xb8, 0x9e, 0x97, 0xe7, 0xdb, 0xb6,
+	0xed, 0x00, 0x33, 0xf6, 0x86, 0x07, 0x2e, 0x71, 0x8c, 0x59, 0xaa, 0xfa, 0x1c, 0xac, 0xf9, 0xc9,
+	0x0e, 0x85, 0xff, 0xca, 0x4a, 0x75, 0xa3, 0x79, 0x13, 0x2e, 0x21, 0x01, 0x85, 0x49, 0x3b, 0x73,
+	0xf2, 0xed, 0x76, 0xea, 0xcb, 0x64, 0x50, 0x53, 0x0c, 0x59, 0xd5, 0x7a, 0x39, 0x3c, 0xae, 0x6f,
+	0x8a, 0x92, 0x3a, 0xb3, 0x0f, 0xca, 0x8f, 0xe0, 0x93, 0x67, 0x1f, 0x27, 0x83, 0xda, 0xcc, 0xe2,
+	0xd3, 0x64, 0x50, 0xbb, 0x33, 0xcb, 0xd0, 0x8f, 0x44, 0xcb, 0x0b, 0x0d, 0x54, 0x20, 0xd8, 0x5a,
+	0x08, 0x19, 0x98, 0xf9, 0x94, 0x30, 0xdc, 0xca, 0x2d, 0xf1, 0xa8, 0x9c, 0x0b, 0x08, 0x3b, 0x3d,
+	0x44, 0x1c, 0xdc, 0x09, 0xcd, 0xd7, 0x38, 0x52, 0x9b, 0x60, 0x1d, 0x89, 0x46, 0x7f, 0x8b, 0x60,
+	0x9a, 0xa8, 0xee, 0x81, 0x0d, 0x82, 0xfb, 0x5d, 0x3f, 0x34, 0xbb, 0x07, 0x38, 0x92, 0x14, 0xf2,
+	0x50, 0xd0, 0x87, 0x53, 0xfa, 0x70, 0x9b, 0x44, 0xed, 0xc2, 0xe9, 0x6c, 0x37, 0x2b, 0x88, 0x7c,
+	0x4e, 0xa1, 0x30, 0x36, 0x32, 0x04, 0xf7, 0xe5, 0x19, 0xf2, 0x60, 0xd5, 0x0f, 0x28, 0xdd, 0x2f,
+	0xa4, 0xcb, 0x4a, 0x35, 0x6b, 0x88, 0x45, 0xeb, 0x41, 0xcc, 0x64, 0xea, 0x19, 0x13, 0x29, 0xcd,
+	0x11, 0x59, 0x68, 0xa3, 0x52, 0x4c, 0x50, 0xcc, 0x87, 0xa6, 0x28, 0x2a, 0x5f, 0x15, 0x90, 0x9f,
+	0x17, 0x3a, 0xf1, 0xee, 0x2f, 0xa8, 0xa5, 0x16, 0xc1, 0xff, 0x56, 0x0f, 0xb9, 0xa4, 0xeb, 0xda,
+	0xa2, 0x77, 0x63, 0x3d, 0x59, 0xbf, 0xb2, 0xd5, 0x7b, 0xe0, 0x3a, 0xb2, 0x2c, 0x1a, 0x12, 0xde,
+	0x25, 0xa1, 0x67, 0xe2, 0x20, 0x69, 0x72, 0xc5, 0xb8, 0x26, 0xa3, 0x7b, 0x49, 0x70, 0x1e, 0x5e,
+	0xfa, 0x2f, 0xe1, 0xad, 0xfc, 0x23, 0xbc, 0xe6, 0x0f, 0x05, 0xa4, 0x77, 0x99, 0xa3, 0xf6, 0x41,
+	0xf6, 0xc2, 0x74, 0xdf, 0x5d, 0x3a, 0x95, 0x0b, 0xf3, 0x52, 0x7a, 0xf8, 0x27, 0x59, 0xbf, 0x50,
+	0xe6, 0x4e, 0x2f, 0x4f, 0x95, 0x6a, 0x82, 0xec, 0x85, 0x89, 0xba, 0xd2, 0x78, 0x3e, 0xeb, 0x6a,
+	0xe3, 0x65, 0xef, 0xb0, 0xb4, 0xfa, 0x21, 0xbe, 0x41, 0xed, 0x9d, 0x93, 0x91, 0xa6, 0x9c, 0x8d,
+	0x34, 0xe5, 0xfb, 0x48, 0x53, 0x3e, 0x8f, 0xb5, 0xd4, 0xd9, 0x58, 0x4b, 0x9d, 0x8f, 0xb5, 0xd4,
+	0xbb, 0xfb, 0x8e, 0xcb, 0x7b, 0xa1, 0x09, 0x2d, 0xea, 0xc9, 0xef, 0x8b, 0x7e, 0xf9, 0xfe, 0xf0,
+	0xc8, 0xc7, 0xcc, 0x5c, 0x4b, 0x18, 0x3f, 0xfe, 0x19, 0x00, 0x00, 0xff, 0xff, 0xa2, 0x70, 0x4b,
+	0x50, 0xde, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -175,6 +371,10 @@ type MsgClient interface {
 	// UpdateParams defines a (governance) operation for updating the x/auth module
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// ChangePubKey replaces the public key of an account while keeping its
+	// address. It must be signed by the account's current key and carry a
+	// proof of possession from the new key.
+	ChangePubKey(ctx context.Context, in *MsgChangePubKey, opts ...grpc.CallOption) (*MsgChangePubKeyResponse, error)
 }
 
 type msgClient struct {
@@ -194,11 +394,24 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
+func (c *msgClient) ChangePubKey(ctx context.Context, in *MsgChangePubKey, opts ...grpc.CallOption) (*MsgChangePubKeyResponse, error) {
+	out := new(MsgChangePubKeyResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.auth.v1beta1.Msg/ChangePubKey", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// UpdateParams defines a (governance) operation for updating the x/auth module
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// ChangePubKey replaces the public key of an account while keeping its
+	// address. It must be signed by the account's current key and carry a
+	// proof of possession from the new key.
+	ChangePubKey(context.Context, *MsgChangePubKey) (*MsgChangePubKeyResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -207,6 +420,9 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (*UnimplementedMsgServer) ChangePubKey(ctx context.Context, req *MsgChangePubKey) (*MsgChangePubKeyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangePubKey not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -231,6 +447,24 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_ChangePubKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgChangePubKey)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ChangePubKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.auth.v1beta1.Msg/ChangePubKey",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ChangePubKey(ctx, req.(*MsgChangePubKey))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.auth.v1beta1.Msg",
@@ -239,6 +473,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateParams",
 			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "ChangePubKey",
+			Handler:    _Msg_ChangePubKey_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -308,6 +546,132 @@ func (m *MsgUpdateParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgChangePubKey) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgChangePubKey) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgChangePubKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Proof) > 0 {
+		i -= len(m.Proof)
+		copy(dAtA[i:], m.Proof)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Proof)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.NewPubKey != nil {
+		{
+			size, err := m.NewPubKey.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgChangePubKeyResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgChangePubKeyResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgChangePubKeyResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *ChangePubKeyProofDoc) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ChangePubKeyProofDoc) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ChangePubKeyProofDoc) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.NewPubKey != nil {
+		{
+			size, err := m.NewPubKey.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.AccountNumber != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.AccountNumber))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.ChainId) > 0 {
+		i -= len(m.ChainId)
+		copy(dAtA[i:], m.ChainId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ChainId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -340,6 +704,60 @@ func (m *MsgUpdateParamsResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
+	return n
+}
+
+func (m *MsgChangePubKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.NewPubKey != nil {
+		l = m.NewPubKey.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Proof)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgChangePubKeyResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *ChangePubKeyProofDoc) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ChainId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.AccountNumber != 0 {
+		n += 1 + sovTx(uint64(m.AccountNumber))
+	}
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.NewPubKey != nil {
+		l = m.NewPubKey.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
 	return n
 }
 
@@ -493,6 +911,377 @@ func (m *MsgUpdateParamsResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgUpdateParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgChangePubKey) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgChangePubKey: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgChangePubKey: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewPubKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.NewPubKey == nil {
+				m.NewPubKey = &any.Any{}
+			}
+			if err := m.NewPubKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Proof", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Proof = append(m.Proof[:0], dAtA[iNdEx:postIndex]...)
+			if m.Proof == nil {
+				m.Proof = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgChangePubKeyResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgChangePubKeyResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgChangePubKeyResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ChangePubKeyProofDoc) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ChangePubKeyProofDoc: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ChangePubKeyProofDoc: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccountNumber", wireType)
+			}
+			m.AccountNumber = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AccountNumber |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewPubKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.NewPubKey == nil {
+				m.NewPubKey = &any.Any{}
+			}
+			if err := m.NewPubKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

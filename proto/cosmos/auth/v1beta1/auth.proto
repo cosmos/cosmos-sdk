@@ -5,6 +5,7 @@ import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
@@ -60,4 +61,25 @@ message Params {
   uint64 sig_verify_cost_ed25519   = 4 [(gogoproto.customname) = "SigVerifyCostED25519"];
   uint64 sig_verify_cost_secp256k1 = 5 [(gogoproto.customname) = "SigVerifyCostSecp256k1"];
   uint64 sig_verify_cost_mldsa65   = 6 [(gogoproto.customname) = "SigVerifyCostMlDsa65"];
+  // pub_key_change_enabled controls whether accounts may replace their public
+  // key with MsgChangePubKey.
+  bool pub_key_change_enabled = 7;
+  // pub_key_change_cost is the gas charged by MsgChangePubKey on top of the
+  // normal transaction gas.
+  uint64 pub_key_change_cost = 8;
+}
+
+// PubKeyHistoryEntry records a public key that an account replaced with
+// MsgChangePubKey.
+message PubKeyHistoryEntry {
+  // pub_key is the public key that was replaced.
+  google.protobuf.Any pub_key = 1 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
+  // replaced_at_height is the block height at which the key was replaced.
+  int64 replaced_at_height = 2;
+  // replaced_at_time is the block time at which the key was replaced.
+  google.protobuf.Timestamp replaced_at_time = 3
+      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (amino.dont_omitempty) = true];
+  // new_key_address is the natural address (hash) of the public key that
+  // replaced pub_key.
+  string new_key_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

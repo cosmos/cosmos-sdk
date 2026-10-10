@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v6 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v6"
 	v7 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v7"
+	v8 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v8"
 )
 
 // Migrator is a struct for handling in-place store migrations.
@@ -29,4 +30,10 @@ func (m Migrator) Migrate5to6(ctx sdk.Context) error {
 // version 7. Specifically, it updates the Params object.
 func (m Migrator) Migrate6to7(ctx sdk.Context) error {
 	return v7.Migrate(ctx, m.keeper.Params)
+}
+
+// Migrate7to8 migrates the x/auth module state from the consensus version 7 to
+// version 8. Specifically, it adds the pubkey change params to the Params object.
+func (m Migrator) Migrate7to8(ctx sdk.Context) error {
+	return v8.Migrate(ctx, m.keeper.Params)
 }

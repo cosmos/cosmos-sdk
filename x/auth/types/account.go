@@ -1,7 +1,6 @@
 package types
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -116,22 +115,18 @@ func (acc *BaseAccount) SetSequence(seq uint64) error {
 	return nil
 }
 
-// Validate checks for errors on the account fields
+// Validate checks for errors on the account fields.
+//
+// It does not require the pubkey to hash to the address: a rekeyed account
+// keeps its address after changing its pubkey. ValidateGenesis checks that
+// case against the genesis pubkey history.
 func (acc BaseAccount) Validate() error {
 	if acc.Address == "" || acc.PubKey == nil {
 		return nil
 	}
 
-	accAddr, err := sdk.AccAddressFromBech32(acc.Address)
-	if err != nil {
-		return err
-	}
-
-	if !bytes.Equal(acc.GetPubKey().Address().Bytes(), accAddr.Bytes()) {
-		return errors.New("account address and pubkey address do not match")
-	}
-
-	return nil
+	_, err := sdk.AccAddressFromBech32(acc.Address)
+	return err
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

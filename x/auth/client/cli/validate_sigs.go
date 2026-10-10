@@ -28,6 +28,10 @@ The command would check whether all required signers have signed the transaction
 the signatures were collected in the right order, and if the signature is valid over the
 given transaction. If the --offline flag is also set, signature validation over the
 transaction will not be performed as that will require RPC communication with a full node.
+
+A signature whose pubkey does not hash to its signer is accepted if the signer is a rekeyed
+account whose stored pubkey is that key. In --offline mode this cannot be checked, so such a
+signature is reported with a warning instead.
 `,
 		PreRun: preSignCmd,
 		RunE:   makeValidateSignaturesCmd(),
@@ -103,22 +107,43 @@ func printAndValidateSigs(
 			sigSanity      = "OK"
 		)
 
-		if i >= len(signers) || !bytes.Equal(sigAddr, signers[i]) {
-			sigSanity = "ERROR: signature does not match its respective signer"
+		if i >= len(signers) {
+			cmd.Printf("  %d: %s\t\t\t[ERROR: signature has no respective signer]\n", i, sigAddr.String())
 			success = false
+			continue
+		}
+
+		// The signer is the account address. For a rekeyed account it differs
+		// from the address of the signing pubkey, so the pubkey must instead
+		// be the account's stored pubkey.
+		signerAddr := sdk.AccAddress(signers[i])
+		if !bytes.Equal(sigAddr, signerAddr) {
+			if offline {
+				sigSanity = "WARNING: signature pubkey does not hash to its signer; the signer may be a rekeyed account, which offline mode cannot check"
+			} else {
+				acc, err := clientCtx.AccountRetriever.GetAccount(clientCtx, signerAddr)
+				switch {
+				case err != nil:
+					cmd.PrintErrf("failed to get account: %s\n", signerAddr)
+					return false
+				case acc == nil || acc.GetPubKey() == nil || !acc.GetPubKey().Equals(pubKey):
+					sigSanity = "ERROR: signature does not match its respective signer"
+					success = false
+				}
+			}
 		}
 
 		// validate the actual signature over the transaction bytes since we can
 		// reach out to a full node to query accounts.
 		if !offline && success {
-			accNum, accSeq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, sigAddr)
+			accNum, accSeq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, signerAddr)
 			if err != nil {
-				cmd.PrintErrf("failed to get account: %s\n", sigAddr)
+				cmd.PrintErrf("failed to get account: %s\n", signerAddr)
 				return false
 			}
 
 			signingData := authsigning.SignerData{
-				Address:       sigAddr.String(),
+				Address:       signerAddr.String(),
 				ChainID:       chainID,
 				AccountNumber: accNum,
 				Sequence:      accSeq,
@@ -154,7 +179,7 @@ func printAndValidateSigs(
 			}
 		}
 
-		cmd.Printf("  %d: %s\t\t\t[%s]%s%s\n", i, sigAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
+		cmd.Printf("  %d: %s\t\t\t[%s]%s%s\n", i, signerAddr.String(), sigSanity, multiSigHeader, multiSigMsg)
 	}
 
 	cmd.Println("")

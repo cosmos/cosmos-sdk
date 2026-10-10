@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -27,6 +29,7 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 func newTestTxConfig() (client.TxConfig, codec.Codec) {
@@ -485,4 +488,147 @@ func testSigners(require *require.Assertions, tr signing.Tx, pks ...cryptotypes.
 		require.True(sigs[i].PubKey.Equals(pks[i]), "Signature is signed with a wrong pubkey. Got: %s, expected: %s", sigs[i].PubKey, pks[i])
 	}
 	return sigs
+}
+
+// addressEchoSignModeHandler is a sign mode handler whose sign bytes are the
+// signer address, so a test can tell which address Sign put in SignerData.
+// It takes the DIRECT_AUX slot because the client only maps the built-in
+// modes, and neither DIRECT nor LEGACY_AMINO_JSON signs over the address.
+type addressEchoSignModeHandler struct{}
+
+func (addressEchoSignModeHandler) Mode() apisigning.SignMode {
+	return apisigning.SignMode_SIGN_MODE_DIRECT_AUX
+}
+
+func (addressEchoSignModeHandler) GetSignBytes(_ context.Context, signerData txsigning.SignerData, _ txsigning.TxData) ([]byte, error) {
+	return []byte(signerData.Address), nil
+}
+
+func TestSign_WithSignerAddress(t *testing.T) {
+	encCfg := moduletestutil.MakeTestEncodingConfig()
+	cdc := codec.NewProtoCodec(encCfg.InterfaceRegistry)
+	txConfig, err := authtx.NewTxConfigWithOptions(cdc, authtx.ConfigOptions{
+		EnabledSignModes: []signingtypes.SignMode{signingtypes.SignMode_SIGN_MODE_DIRECT},
+		CustomSignModes:  []txsigning.SignModeHandler{addressEchoSignModeHandler{}},
+	})
+	require.NoError(t, err)
+
+	kb := keyring.NewInMemory(encCfg.Codec)
+	path := hd.CreateHDPath(118, 0, 0).String()
+	k1, _, err := kb.NewMnemonic("k1", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(t, err)
+	pk1, err := k1.GetPubKey()
+	require.NoError(t, err)
+	keyAddr := sdk.AccAddress(pk1.Address())
+
+	// A is a rekeyed account whose stored pubkey is k1, so addr(k1) != A.
+	accountAddr := sdk.AccAddress("rekeyed_account_addr")
+	require.NotEqual(t, keyAddr, accountAddr)
+
+	// SignerData is not exposed by Sign, so SignerData.Address == expAddr is
+	// asserted through the sign bytes: addressEchoSignModeHandler signs over
+	// SignerData.Address, which DIRECT and amino JSON sign bytes do not include.
+	testCases := []struct {
+		name    string
+		txf     Factory
+		expAddr sdk.AccAddress
+	}{
+		{"no signer address", mockTxFactory(txConfig), keyAddr},
+		{"signer address", mockTxFactory(txConfig).WithSignerAddress(accountAddr), accountAddr},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			txf := tc.txf.WithKeybase(kb).WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
+			msg := banktypes.NewMsgSend(tc.expAddr, keyAddr, sdk.NewCoins(sdk.NewInt64Coin("stake", 1)))
+			txb, err := txf.BuildUnsignedTx(msg)
+			require.NoError(t, err)
+
+			require.NoError(t, Sign(context.TODO(), txf, "k1", txb, true))
+
+			sigs, err := txb.GetTx().GetSignaturesV2()
+			require.NoError(t, err)
+			require.Len(t, sigs, 1)
+			require.True(t, sigs[0].PubKey.Equals(pk1))
+			single, ok := sigs[0].Data.(*signingtypes.SingleSignatureData)
+			require.True(t, ok)
+			require.True(t, pk1.VerifySignature([]byte(tc.expAddr.String()), single.Signature),
+				"signature is not over SignerData.Address %s", tc.expAddr)
+		})
+	}
+}
+
+func TestMakeAuxSignerData_WithSignerAddress(t *testing.T) {
+	encCfg := moduletestutil.MakeTestEncodingConfig()
+	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
+	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(encCfg.InterfaceRegistry), authtx.DefaultSignModes)
+
+	kb := keyring.NewInMemory(encCfg.Codec)
+	path := hd.CreateHDPath(118, 0, 0).String()
+	k1, _, err := kb.NewMnemonic("k1", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(t, err)
+	pk1, err := k1.GetPubKey()
+	require.NoError(t, err)
+	keyAddr := sdk.AccAddress(pk1.Address())
+
+	// A is a rekeyed account whose stored pubkey is k1, so addr(k1) != A.
+	accountAddr := sdk.AccAddress("rekeyed_account_addr")
+	require.NotEqual(t, keyAddr, accountAddr)
+
+	ar := client.TestAccountRetriever{Accounts: map[string]client.TestAccount{
+		keyAddr.String():     {Address: keyAddr, Num: 1, Seq: 2},
+		accountAddr.String(): {Address: accountAddr, Num: 7, Seq: 3},
+	}}
+	baseCtx := client.Context{}.
+		WithKeyring(kb).
+		WithFrom("k1").
+		WithChainID("test-chain").
+		WithAccountRetriever(ar).
+		WithTxConfig(txConfig)
+	txf := Factory{}.
+		WithTxConfig(txConfig).
+		WithChainID("test-chain").
+		WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT_AUX)
+
+	testCases := []struct {
+		name      string
+		clientCtx client.Context
+		txf       Factory
+		expAddr   sdk.AccAddress
+		expNum    uint64
+		expSeq    uint64
+	}{
+		{"no signer address", baseCtx, txf, keyAddr, 1, 2},
+		// --signer-address sets both the context and, via NewFactoryCLI, the factory.
+		{"signer address in context", baseCtx.WithSignerAddress(accountAddr), txf, accountAddr, 7, 3},
+		{"signer address in factory", baseCtx, txf.WithSignerAddress(accountAddr), accountAddr, 7, 3},
+		// Offline, the account number and sequence come from the factory, not
+		// from the retriever, which would give 7 and 3.
+		{
+			"offline signer address in factory",
+			baseCtx.WithOffline(true),
+			txf.WithSignerAddress(accountAddr).WithAccountNumber(9).WithSequence(4),
+			accountAddr, 9, 4,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := banktypes.NewMsgSend(tc.expAddr, keyAddr, sdk.NewCoins(sdk.NewInt64Coin("stake", 1)))
+			data, err := makeAuxSignerData(tc.clientCtx, tc.txf, msg)
+			require.NoError(t, err)
+
+			require.Equal(t, tc.expAddr.String(), data.Address)
+			require.Equal(t, tc.expNum, data.SignDoc.AccountNumber)
+			require.Equal(t, tc.expSeq, data.SignDoc.Sequence)
+			require.Equal(t, signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, data.Mode)
+			var pk cryptotypes.PubKey
+			require.NoError(t, encCfg.InterfaceRegistry.UnpackAny(data.SignDoc.PublicKey, &pk))
+			require.True(t, pk1.Equals(pk))
+
+			// The DIRECT_AUX sign doc is signed by k1. It does not commit to the
+			// address; the network test checks the tx passes the ante handler.
+			signBz, err := data.SignDoc.Marshal()
+			require.NoError(t, err)
+			require.True(t, pk1.VerifySignature(signBz, data.Sig))
+		})
+	}
 }

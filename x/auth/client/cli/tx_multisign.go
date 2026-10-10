@@ -107,7 +107,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
-		addr, err := k.GetAddress()
+		addr, err := multisigSignerAddress(clientCtx, k)
 		if err != nil {
 			return err
 		}
@@ -143,11 +143,13 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				if err != nil {
 					return err
 				}
+				// Members sign for the tx signer, i.e. the multisig account
+				// or the rekeyed account, not for their own addresses.
 				txSignerData := txsigning.SignerData{
 					ChainID:       txFactory.ChainID(),
 					AccountNumber: txFactory.AccountNumber(),
 					Sequence:      txFactory.Sequence(),
-					Address:       sdk.AccAddress(sig.PubKey.Address()).String(),
+					Address:       addr.String(),
 					PubKey: &anypb.Any{
 						TypeUrl: anyPk.TypeUrl,
 						Value:   anyPk.Value,
@@ -281,7 +283,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			signatureBatch = append(signatureBatch, sigs)
 		}
 
-		addr, err := k.GetAddress()
+		addr, err := multisigSignerAddress(clientCtx, k)
 		if err != nil {
 			return err
 		}
@@ -324,7 +326,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 				ChainID:       txFactory.ChainID(),
 				AccountNumber: txFactory.AccountNumber(),
 				Sequence:      txFactory.Sequence(),
-				Address:       sdk.AccAddress(pubKey.Address()).String(),
+				Address:       addr.String(),
 				PubKey: &anypb.Any{
 					TypeUrl: anyPk.TypeUrl,
 					Value:   anyPk.Value,
@@ -410,6 +412,16 @@ func readSignaturesFromFile(ctx client.Context, filename string) (sigs []signing
 		sigs = append(sigs, sig...)
 	}
 	return sigs, nil
+}
+
+// multisigSignerAddress returns the account the multisig signs for: the
+// --signer-address of a rekeyed account the multisig controls, whose address
+// is not derived from the multisig pubkey, else the multisig key's address.
+func multisigSignerAddress(clientCtx client.Context, k *keyring.Record) (sdk.AccAddress, error) {
+	if len(clientCtx.SignerAddress) > 0 {
+		return clientCtx.SignerAddress, nil
+	}
+	return k.GetAddress()
 }
 
 func getMultisigRecord(clientCtx client.Context, name string) (*keyring.Record, error) {

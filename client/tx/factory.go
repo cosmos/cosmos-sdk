@@ -45,6 +45,7 @@ type Factory struct {
 	fees               sdk.Coins
 	feeGranter         sdk.AccAddress
 	feePayer           sdk.AccAddress
+	signerAddress      sdk.AccAddress
 	gasPrices          sdk.DecCoins
 	extOptions         []*codectypes.Any
 	signMode           signing.SignMode
@@ -117,6 +118,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) (Factory, e
 		signMode:           signMode,
 		feeGranter:         clientCtx.FeeGranter,
 		feePayer:           clientCtx.FeePayer,
+		signerAddress:      clientCtx.SignerAddress,
 	}
 
 	feesStr := clientCtx.Viper.GetString(flags.FlagFees)
@@ -144,6 +146,7 @@ func (f Factory) TimeoutHeight() uint64                     { return f.timeoutHe
 func (f Factory) TimeoutTimestamp() time.Time               { return f.timeoutTimestamp }
 func (f Factory) Unordered() bool                           { return f.unordered }
 func (f Factory) FromName() string                          { return f.fromName }
+func (f Factory) SignerAddress() sdk.AccAddress             { return f.signerAddress }
 
 // SimulateAndExecute returns the option to simulate and then execute the transaction
 // using the gas from the simulation results
@@ -277,6 +280,15 @@ func (f Factory) WithFeeGranter(fg sdk.AccAddress) Factory {
 // WithFeePayer returns a copy of the Factory with an updated fee granter.
 func (f Factory) WithFeePayer(fp sdk.AccAddress) Factory {
 	f.feePayer = fp
+	return f
+}
+
+// WithSignerAddress returns a copy of the Factory with an updated signer
+// address. When set, Sign and Prepare use it as the signing account's address
+// instead of the address derived from the signing key's pubkey. Use it to sign
+// for an account whose pubkey was changed with MsgChangePubKey.
+func (f Factory) WithSignerAddress(addr sdk.AccAddress) Factory {
+	f.signerAddress = addr
 	return f
 }
 
@@ -527,7 +539,8 @@ func (f Factory) getSimSignatureData(pk cryptotypes.PubKey) (signing.SignatureDa
 	}, nil
 }
 
-// Prepare ensures the account defined by ctx.GetFromAddress() exists and
+// Prepare ensures the account defined by the Factory's signer address, or
+// ctx.GetFromAddress() if that is unset, exists and
 // if the account number and/or the account sequence number are zero (not set),
 // they will be queried for and set on the provided Factory.
 // A new Factory with the updated fields will be returned.
@@ -542,6 +555,9 @@ func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
 
 	fc := f
 	from := clientCtx.FromAddress
+	if len(f.signerAddress) > 0 {
+		from = f.signerAddress
+	}
 
 	if err := fc.accountRetriever.EnsureExists(clientCtx, from); err != nil {
 		return fc, err

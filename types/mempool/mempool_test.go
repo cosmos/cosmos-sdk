@@ -55,6 +55,12 @@ type testTx struct {
 	strAddress string
 	unordered  bool
 	timeout    *time.Time
+	// pubKeyAddress, when set, is the natural address of the signing pubkey and
+	// may differ from address (the signer), as for a rekeyed account.
+	pubKeyAddress sdk.AccAddress
+	// nilPubKey omits the pubkey from the signature, as a tx may do once the
+	// account's pubkey is stored on chain.
+	nilPubKey bool
 }
 
 // GetTimeoutTimeStamp implements types.TxWithUnordered.
@@ -70,13 +76,21 @@ func (tx testTx) GetUnordered() bool {
 	return tx.unordered
 }
 
-func (tx testTx) GetSigners() ([][]byte, error) { panic("not implemented") }
+func (tx testTx) GetSigners() ([][]byte, error) { return [][]byte{tx.address}, nil }
 
 func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("not implemented") }
 
 func (tx testTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error) {
+	var pk cryptotypes.PubKey
+	switch {
+	case tx.nilPubKey:
+	case tx.pubKeyAddress != nil:
+		pk = testPubKey{address: tx.pubKeyAddress}
+	default:
+		pk = testPubKey{address: tx.address}
+	}
 	res = append(res, txsigning.SignatureV2{
-		PubKey:   testPubKey{address: tx.address},
+		PubKey:   pk,
 		Data:     nil,
 		Sequence: tx.nonce,
 	})

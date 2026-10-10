@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -132,7 +133,9 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		tb.Helper()
 		app := ti.App
 		tb.Log("exporting genesis...\n")
-		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
+		// export for zero height as the second run restarts the chain at height 1. This resets
+		// block heights in the state (e.g. signing info start heights) but keeps index offsets.
+		exported, err := app.ExportAppStateAndValidators(true, exportWithValidatorSet, exportAllModules)
 		require.NoError(tb, err)
 
 		tb.Log("importing genesis...\n")
@@ -148,12 +151,21 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		}
 		require.NoError(tb, err)
 		newStateFactory := setupStateFactory(newApp)
+		// SimulateFromSeedX initializes the chain itself, so hand it the exported state and the
+		// accounts of the first run instead of a freshly randomized genesis.
+		// Note: consensus params are not imported, x/simulation still randomizes them on InitChain.
+		lastBlockTime := app.GetContextForCheckTx(nil).BlockTime()
+		var importedAppStateUsed bool
+		importedAppStateFn := func(_ *rand.Rand, _ []simtypes.Account, config simtypes.Config) (json.RawMessage, []simtypes.Account, string, time.Time) {
+			importedAppStateUsed = true
+			return exported.AppState, accs, config.ChainID, lastBlockTime
+		}
 		_, _, err = simulation.SimulateFromSeedX(
 			tb,
 			newTestInstance.AppLogger,
 			sims.WriteToDebugLog(newTestInstance.AppLogger),
 			newApp.BaseApp,
-			newStateFactory.AppStateFn,
+			importedAppStateFn,
 			simtypes.RandomAccounts,
 			simtestutil.BuildSimulationOperations(newApp, newApp.AppCodec(), newTestInstance.Cfg, newApp.TxConfig()),
 			newStateFactory.BlockedAddr,
@@ -162,6 +174,30 @@ func TestAppSimulationAfterImport(t *testing.T) {
 			ti.ExecLogWriter,
 		)
 		require.NoError(tb, err)
+		require.True(tb, importedAppStateUsed, "second simulation was not initialized with the imported state")
+
+		if newTestInstance.Cfg.Commit {
+			// The first block of the second run must build on the imported state, which
+			// carries the signing history of the blocks produced by the first run.
+			var genesisState GenesisState
+			require.NoError(tb, json.Unmarshal(exported.AppState, &genesisState))
+			var slashingGenesis slashingtypes.GenesisState
+			newApp.AppCodec().MustUnmarshalJSON(genesisState[slashingtypes.ModuleName], &slashingGenesis)
+			var exportedMaxOffset int64
+			for _, info := range slashingGenesis.SigningInfos {
+				exportedMaxOffset = max(exportedMaxOffset, info.ValidatorSigningInfo.IndexOffset)
+			}
+
+			firstBlockStore, err := newApp.CommitMultiStore().CacheMultiStoreWithVersion(1)
+			require.NoError(tb, err)
+			ctx := newApp.NewContextLegacy(true, cmtproto.Header{Height: 1}).WithMultiStore(firstBlockStore)
+			var firstBlockMaxOffset int64
+			require.NoError(tb, newApp.SlashingKeeper.IterateValidatorSigningInfos(ctx, func(_ sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) bool {
+				firstBlockMaxOffset = max(firstBlockMaxOffset, info.IndexOffset)
+				return false
+			}))
+			require.GreaterOrEqual(tb, firstBlockMaxOffset, exportedMaxOffset, "second simulation did not start from the imported state")
+		}
 	})
 }
 

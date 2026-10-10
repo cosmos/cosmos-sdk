@@ -262,6 +262,11 @@ func MsgCancelUnbondingDelegationFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn
 				break
 			}
 		}
+		if unbondingDelegationEntry.CreationHeight <= 0 {
+			// entries imported from a zero-height genesis have no creation height and cannot be canceled
+			reporter.Skip("unbonding delegation entry has no creation height")
+			return nil, nil
+		}
 		if unbondingDelegationEntry.CompletionTime.Before(simsx.BlockTime(ctx)) {
 			reporter.Skip("unbonding delegation is already processed")
 			return nil, nil

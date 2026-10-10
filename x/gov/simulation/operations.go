@@ -298,11 +298,19 @@ func simulateMsgSubmitProposal(
 		// didntVote := whoVotes[numVotes:]
 		whoVotes = whoVotes[:numVotes]
 		params, _ := k.Params.Get(ctx)
-		votingPeriod := params.VotingPeriod
+		votingPeriod := *params.VotingPeriod
+		if expedited {
+			votingPeriod = *params.ExpeditedVotingPeriod
+		}
+		// A proposal whose initial deposit already activated voting closes at
+		// its voting end time; schedule votes before then.
+		if proposal, err := k.Proposals.Get(ctx, proposalID); err == nil && proposal.VotingEndTime != nil {
+			votingPeriod = proposal.VotingEndTime.Sub(ctx.BlockHeader().Time)
+		}
 		s := NewSharedState()
 		fops := make([]simtypes.FutureOperation, numVotes)
 		for i := range numVotes {
-			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
+			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(max(int64(votingPeriod.Seconds()), 1))) * time.Second)
 			fops[i] = simtypes.FutureOperation{
 				BlockTime: whenVote,
 				Op:        operationSimulateMsgVote(txGen, ak, bk, k, accs[whoVotes[i]], int64(proposalID), s),

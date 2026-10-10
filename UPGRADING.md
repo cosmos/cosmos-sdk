@@ -25,6 +25,8 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [secp256k1eth Validator Consensus Keys](#secp256k1eth-validator-consensus-keys)
     * [Block-STM Configuration](#block-stm-configuration)
 * [Behavior Changes Affecting Dapps and Indexers](#behavior-changes-affecting-dapps-and-indexers)
+* [Unreleased](#unreleased)
+    * [Account Rekeying](#account-rekeying)
 
 ## Breaking Changes
 
@@ -285,3 +287,52 @@ Observable changes between v0.54.x and v0.55.x that don't require code changes b
 * **`x/authz` prunes at most 200 expired grants per begin block** ([#26588](https://github.com/cosmos/cosmos-sdk/pull/26588)); mass-expiry cleanup now spreads across blocks.
 * **`x/distribution` reward withdrawals to blocked addresses** during begin/end block fall back to the delegator/validator owner and then the community pool instead of failing ([#26406](https://github.com/cosmos/cosmos-sdk/pull/26406)). User-initiated withdrawals to blocked addresses still return `ErrUnauthorized`.
 * **`x/feegrant` `Allowances` and `AllowancesByGranter` queries** now honor `PageRequest.offset` and `count_total` correctly ([#26596](https://github.com/cosmos/cosmos-sdk/pull/26596)); clients that compensated for the old off-by-page results should re-check.
+
+## Unreleased
+
+These changes are not part of v0.55.x. They ship in the next release.
+
+### Account Rekeying
+
+[#TBD](https://github.com/cosmos/cosmos-sdk/pull/TBD) implements [ADR-034](docs/architecture/adr-034-account-rekeying.md). With the new `x/auth` message `MsgChangePubKey`, an account can replace its public key and keep its address, account number, sequence, balances, delegations and any validator it operates. Use it to change the members or threshold of a multisig, or to move a secp256k1 account to ML-DSA-65 (alone, or inside a multisig) without moving funds or unbonding.
+
+**Store migration.** `x/auth` goes from consensus version 7 to 8. `Migrate7to8` runs through `RunMigrations` in your upgrade handler. It adds two params:
+
+* `pub_key_change_enabled`, set to `false`, so the feature stays off until governance turns it on.
+* `pub_key_change_cost`, set to `50000`, the gas `MsgChangePubKey` charges on top of normal tx gas.
+
+The rotation history and the rekey index live in the existing `acc` store under prefixes `91` and `92`. There are no new store keys and no `app.go` wiring changes.
+
+**Enabling.** Submit a governance proposal with an `x/auth` `MsgUpdateParams` that sets `pub_key_change_enabled: true`. `MsgUpdateParams` replaces every param, so copy the other values from the current `Params` query.
+
+**Indexers, explorers and wallets.** An account's address can no longer be derived from its public key.
+
+* To find the accounts a key controls after a rotation, call `RekeyedAccounts` (`/cosmos/auth/v1beta1/rekeyed_accounts/{address}`) with the key's natural address, `hash(pubkey)`. Wallets that recover from a mnemonic should run this query and offer the returned accounts.
+* To verify a historical signature, use `PubKeyHistory` (`/cosmos/auth/v1beta1/pub_key_history/{address}`). It lists every replaced key with the height and time it was replaced.
+* Each rotation emits a `change_pubkey` event with the attributes `address`, `old_pubkey_address` and `new_pubkey_address`.
+* Auth genesis has a new `pub_key_history` field. `ValidateGenesis` accepts an account whose pubkey does not hash to its address only if that address has a history entry. Each history must be non-empty, belong to an account in genesis whose pubkey is neither nil nor a `ModuleCredential`, hold no `ModuleCredential` pubkeys, and form a chain: each entry's `new_key_address` is the natural address of the next entry's pubkey, and the last one is the natural address of the account's current pubkey. Tools that edit genesis must keep these rules.
+
+**Ante handler.** If a signer already has a stored pubkey, a pubkey included in the tx must equal the stored one. It no longer has to hash to the signer address. A signer with no stored pubkey still needs a pubkey that hashes to its address. After a rotation, a tx signed with the old key fails in `FinalizeBlock` and changes no state. This applies to ordered txs with a later sequence and to unordered txs. A tx that includes the old pubkey also fails on `RecheckTx` and is evicted from the mempool. A tx that omits its pubkey passes `RecheckTx`, which skips signature verification, so it can stay in the mempool until it expires or is included and fails.
+
+The signer account is now read before the pubkey is checked against the signer address. A tx whose signer account does not exist and whose pubkey does not hash to the signer now fails with `ErrUnknownAddress` (code 9) instead of `ErrInvalidPubKey` (code 8). The tx result code is part of consensus, so all nodes must upgrade together.
+
+**Custom signature gas consumers.** `MsgChangePubKey` accepts the key types `DefaultSigVerificationGasConsumer` accepts (`secp256k1`, `secp256r1`, `ed25519`, `mldsa65` and `LegacyAminoPubKey` multisigs of them). If your app sets `HandlerOptions.SigGasConsumer` to a consumer that rejects any of these (for example `ed25519`), an account could rotate to a key your ante handler never accepts and lock itself out. Make sure your consumer accepts every one of these types before enabling `pub_key_change_enabled`.
+
+**Authorization.** `x/authz` refuses to grant or execute `MsgChangePubKey` (`ErrMsgNotAuthorizable`), and that includes grants created before the upgrade. Module accounts and accounts whose pubkey is a `ModuleCredential` (gov, group policies and other module-derived accounts) cannot rekey. Neither can an account with no stored pubkey, such as a CosmWasm contract or an ibc-go interchain account: those can dispatch messages as themselves, and without this rule such a dispatch could bind the account to an attacker's key. A user's own signature stores its pubkey earlier in the same tx, so users are not affected.
+
+`MsgChangePubKey` trusts that the account's own key approved it. Any module that dispatches messages on behalf of user accounts holding a key (authz-like delegation, smart accounts and similar) must refuse to dispatch `/cosmos.auth.v1beta1.MsgChangePubKey`, as `x/authz` does. Otherwise a delegate can take over the account.
+
+**Mempool.** The default `SignerExtractionAdapter` and `SenderNonceMempool` now key senders by `GetSigners()` instead of the address of the signature pubkey. Otherwise a rekeyed account's txs would split across two senders. Custom tx types used with these mempools must return signers that line up one-to-one with their signatures. A tx whose signer count differs from its signature count, or that does not implement `SigVerifiableTx`, is now rejected with an error.
+
+**Clients.** The new `--signer-address` tx flag, and `Factory.WithSignerAddress` in Go, let the `--from` key sign for an account whose address is not the key's own address. Without the flag, `--from` works as before. `--signer-address` is added to every tx command by `flags.AddTxFlagsToCmd`, so a module whose autocli-generated tx command has a msg field named `signer_address` will panic with `flag redefined: signer-address`; rename such a field or give it a custom flag name. An account rekeyed to a multisig signs with the usual multisig flow, passing `--signer-address` to each step: `tx sign` or `tx sign-batch` with `--multisig`, then `tx multisign` or `tx multisign-batch` (`SIGN_MODE_LEGACY_AMINO_JSON` only, as for any multisig). In simulate mode the ante handler sizes a missing signature from the signer's stored pubkey, so `--gas auto` covers accounts rekeyed to ML-DSA-65. `tx validate-signatures` accepts a signature whose pubkey does not hash to its signer when the signer's stored pubkey is that key (online), and prints a warning for it in `--offline` mode.
+
+**Migrating an account or validator operator to ML-DSA-65.**
+
+1. Create the ML-DSA-65 key: `simd keys add pq-key --algo ml_dsa_65`.
+2. Sign the proof of possession with the new key: `simd tx auth sign-rekey-proof <account-address> "$(simd keys show pq-key --pubkey)" --from pq-key > proof.json`. The proof is signed in `SIGN_MODE_LEGACY_AMINO_JSON` and is bound to the chain id, account number and address, so it cannot be replayed elsewhere. For a multisig new key, each member signs its own proof file.
+3. Send the change with the current key: `simd tx auth change-pubkey <account-address> "$(simd keys show pq-key --pubkey)" --proof proof.json --from old-key`. For a multisig new key, pass the member proofs comma separated.
+4. After that, sign with `--from pq-key --signer-address <account-address>`. For commands that take the sender as an argument, such as `simd tx bank send pq-key <to-address> <amount> --signer-address <account-address>`, pass the key name there.
+
+A validator operator keeps its operator address. Only the key that signs for it changes. The consensus key is separate and is rotated with `x/staking` `MsgRotateConsPubKey` (see [Validator Consensus Key Rotation](#validator-consensus-key-rotation)).
+
+Make sure you control the new key before you send the change. Afterwards, the account, its staked funds and any validator it operates can only be reached with the new key.

@@ -62,10 +62,21 @@ func (ak AccountKeeper) SetAccount(ctx context.Context, acc sdk.AccountI) {
 	}
 }
 
-// RemoveAccount removes an account from the account mapper store.
+// RemoveAccount removes an account from the account mapper store. It also
+// removes the account's PubKeyHistory and, for a rekeyed account, its
+// RekeyIndex pair, since ValidateGenesis rejects history that has no account.
 // NOTE: this will cause supply invariant violation if called
 func (ak AccountKeeper) RemoveAccount(ctx context.Context, acc sdk.AccountI) {
-	err := ak.Accounts.Remove(ctx, acc.GetAddress())
+	addr := acc.GetAddress()
+	if pk := acc.GetPubKey(); isRekeyed(addr, pk) {
+		if err := ak.RekeyIndex.Remove(ctx, collections.Join(sdk.AccAddress(pk.Address()), addr)); err != nil {
+			panic(err)
+		}
+	}
+	if err := ak.PubKeyHistory.Clear(ctx, collections.NewPrefixedPairRange[sdk.AccAddress, uint64](addr)); err != nil {
+		panic(err)
+	}
+	err := ak.Accounts.Remove(ctx, addr)
 	if err != nil {
 		panic(err)
 	}

@@ -74,10 +74,24 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "params",
 					Short:     "Query the current auth parameters",
 				},
+				{
+					RpcMethod:      "RekeyedAccounts",
+					Use:            "rekeyed-accounts [address]",
+					Short:          "Query the accounts whose current public key has the given natural address",
+					Long:           "Query the accounts whose current public key has the given natural address. Use it to find the account a key controls after a pubkey change.",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
+				},
+				{
+					RpcMethod:      "PubKeyHistory",
+					Use:            "pubkey-history [address]",
+					Short:          "Query the public key rotation history of an account",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: authv1beta1.Msg_ServiceDesc.ServiceName,
+			Service:              authv1beta1.Msg_ServiceDesc.ServiceName,
+			EnhanceCustomCommand: true, // custom change-pubkey and sign-rekey-proof commands
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod:      "UpdateParams",
@@ -86,6 +100,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:        fmt.Sprintf(`%s tx auth update-params-proposal '{ "max_memo_characters": 0, "tx_sig_limit": 0, "tx_size_cost_per_byte": 0, "sig_verify_cost_ed25519": 0, "sig_verify_cost_secp256k1": 0 }'`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
 					GovProposal:    true,
+				},
+				{
+					RpcMethod: "ChangePubKey",
+					Skip:      true, // custom command in x/auth/client/cli
 				},
 			},
 		},

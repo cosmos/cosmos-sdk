@@ -21,6 +21,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&ModuleCredential{}, "cosmos-sdk/GroupAccountCredential", nil)
 
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/x/auth/MsgUpdateParams")
+	legacy.RegisterAminoMsg(cdc, &MsgChangePubKey{}, "cosmos-sdk/MsgChangePubKey")
 
 	legacytx.RegisterLegacyAminoCodec(cdc)
 }
@@ -57,5 +58,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgUpdateParams{},
+		&MsgChangePubKey{},
 	)
 }

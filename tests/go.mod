@@ -22,7 +22,7 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	go.uber.org/mock v0.6.0
 	google.golang.org/grpc v1.84.0
-	google.golang.org/protobuf v1.36.11
+	google.golang.org/protobuf v1.36.12
 	gotest.tools/v3 v3.5.2
 	pgregory.net/rapid v1.3.0
 )
@@ -342,3 +342,5 @@ replace (
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.
 )
+
+replace cosmossdk.io/api => ../api

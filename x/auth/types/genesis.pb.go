@@ -5,6 +5,7 @@ package types
 
 import (
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -31,6 +32,8 @@ type GenesisState struct {
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 	// accounts are the accounts present at genesis.
 	Accounts []*any.Any `protobuf:"bytes,2,rep,name=accounts,proto3" json:"accounts,omitempty"`
+	// pub_key_history holds the public key rotation history of rekeyed accounts.
+	PubKeyHistory []GenesisPubKeyHistory `protobuf:"bytes,3,rep,name=pub_key_history,json=pubKeyHistory,proto3" json:"pub_key_history"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -80,31 +83,102 @@ func (m *GenesisState) GetAccounts() []*any.Any {
 	return nil
 }
 
+func (m *GenesisState) GetPubKeyHistory() []GenesisPubKeyHistory {
+	if m != nil {
+		return m.PubKeyHistory
+	}
+	return nil
+}
+
+// GenesisPubKeyHistory is the public key rotation history of a single account.
+type GenesisPubKeyHistory struct {
+	// address is the account address.
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// entries are the account's history entries, in the order the rotations happened.
+	Entries []PubKeyHistoryEntry `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries"`
+}
+
+func (m *GenesisPubKeyHistory) Reset()         { *m = GenesisPubKeyHistory{} }
+func (m *GenesisPubKeyHistory) String() string { return proto.CompactTextString(m) }
+func (*GenesisPubKeyHistory) ProtoMessage()    {}
+func (*GenesisPubKeyHistory) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d897ccbce9822332, []int{1}
+}
+func (m *GenesisPubKeyHistory) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GenesisPubKeyHistory) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GenesisPubKeyHistory.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GenesisPubKeyHistory) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GenesisPubKeyHistory.Merge(m, src)
+}
+func (m *GenesisPubKeyHistory) XXX_Size() int {
+	return m.Size()
+}
+func (m *GenesisPubKeyHistory) XXX_DiscardUnknown() {
+	xxx_messageInfo_GenesisPubKeyHistory.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GenesisPubKeyHistory proto.InternalMessageInfo
+
+func (m *GenesisPubKeyHistory) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *GenesisPubKeyHistory) GetEntries() []PubKeyHistoryEntry {
+	if m != nil {
+		return m.Entries
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "cosmos.auth.v1beta1.GenesisState")
+	proto.RegisterType((*GenesisPubKeyHistory)(nil), "cosmos.auth.v1beta1.GenesisPubKeyHistory")
 }
 
 func init() { proto.RegisterFile("cosmos/auth/v1beta1/genesis.proto", fileDescriptor_d897ccbce9822332) }
 
 var fileDescriptor_d897ccbce9822332 = []byte{
-	// 269 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x4c, 0xce, 0x2f, 0xce,
-	0xcd, 0x2f, 0xd6, 0x4f, 0x2c, 0x2d, 0xc9, 0xd0, 0x2f, 0x33, 0x4c, 0x4a, 0x2d, 0x49, 0x34, 0xd4,
-	0x4f, 0x4f, 0xcd, 0x4b, 0x2d, 0xce, 0x2c, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x86,
-	0x28, 0xd1, 0x03, 0x29, 0xd1, 0x83, 0x2a, 0x91, 0x92, 0x4c, 0xcf, 0xcf, 0x4f, 0xcf, 0x49, 0xd5,
-	0x07, 0x2b, 0x49, 0x2a, 0x4d, 0xd3, 0x4f, 0xcc, 0xab, 0x84, 0xa8, 0x97, 0x12, 0x49, 0xcf, 0x4f,
-	0xcf, 0x07, 0x33, 0xf5, 0x41, 0x2c, 0xa8, 0xa8, 0x1c, 0x36, 0x8b, 0xc0, 0x46, 0x42, 0xe4, 0x05,
-	0x13, 0x73, 0x33, 0xf3, 0xf2, 0xf5, 0xc1, 0x24, 0x44, 0x48, 0xa9, 0x81, 0x91, 0x8b, 0xc7, 0x1d,
-	0xe2, 0x94, 0xe0, 0x92, 0xc4, 0x92, 0x54, 0x21, 0x3b, 0x2e, 0xb6, 0x82, 0xc4, 0xa2, 0xc4, 0xdc,
-	0x62, 0x09, 0x46, 0x05, 0x46, 0x0d, 0x6e, 0x23, 0x69, 0x3d, 0x2c, 0x4e, 0xd3, 0x0b, 0x00, 0x2b,
-	0x71, 0xe2, 0x3c, 0x71, 0x4f, 0x9e, 0x61, 0xc5, 0xf3, 0x0d, 0x5a, 0x8c, 0x41, 0x50, 0x5d, 0x42,
-	0x06, 0x5c, 0x1c, 0x89, 0xc9, 0xc9, 0xf9, 0xa5, 0x79, 0x25, 0xc5, 0x12, 0x4c, 0x0a, 0xcc, 0x1a,
-	0xdc, 0x46, 0x22, 0x7a, 0x10, 0x7f, 0xe8, 0xc1, 0xfc, 0xa1, 0xe7, 0x98, 0x57, 0x19, 0x04, 0x57,
-	0xe5, 0xe4, 0x7c, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9, 0x31, 0x4e,
-	0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72, 0x0c, 0x51, 0x9a, 0xe9, 0x99,
-	0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa, 0x50, 0xaf, 0x41, 0x28, 0xdd, 0xe2, 0x94,
-	0x6c, 0xfd, 0x0a, 0x88, 0x3f, 0x4b, 0x2a, 0x0b, 0x52, 0x8b, 0x93, 0xd8, 0xc0, 0x86, 0x1b, 0x03,
-	0x02, 0x00, 0x00, 0xff, 0xff, 0xf5, 0x70, 0x8d, 0xea, 0x6c, 0x01, 0x00, 0x00,
+	// 389 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x91, 0xc1, 0x6e, 0xda, 0x30,
+	0x18, 0xc7, 0xe3, 0x21, 0xc1, 0x30, 0x9b, 0xa6, 0x65, 0x39, 0x04, 0x26, 0x65, 0x8c, 0xcb, 0x60,
+	0x12, 0xf6, 0x60, 0xf7, 0x49, 0x30, 0x4d, 0x9b, 0xb4, 0x1d, 0x10, 0xdc, 0xa6, 0x4a, 0xc8, 0x09,
+	0x6e, 0x88, 0x68, 0xec, 0x28, 0x76, 0xaa, 0xe6, 0x2d, 0x7a, 0xec, 0x23, 0xf4, 0xd8, 0x43, 0x1f,
+	0x82, 0x23, 0xea, 0xa9, 0x27, 0x54, 0xc1, 0xa1, 0xaf, 0x51, 0x61, 0x3b, 0x15, 0x95, 0x72, 0x49,
+	0x6c, 0x7f, 0xbf, 0xff, 0xf7, 0xfd, 0xff, 0x36, 0xfc, 0x1c, 0x70, 0x11, 0x73, 0x81, 0x49, 0x26,
+	0x97, 0xf8, 0x7c, 0xe0, 0x53, 0x49, 0x06, 0x38, 0xa4, 0x8c, 0x8a, 0x48, 0xa0, 0x24, 0xe5, 0x92,
+	0xdb, 0x1f, 0x34, 0x82, 0x0e, 0x08, 0x32, 0x48, 0xab, 0x19, 0x72, 0x1e, 0x9e, 0x51, 0xac, 0x10,
+	0x3f, 0x3b, 0xc5, 0x84, 0xe5, 0x9a, 0x6f, 0x39, 0x21, 0x0f, 0xb9, 0x5a, 0xe2, 0xc3, 0xca, 0x9c,
+	0x7a, 0x65, 0x83, 0x54, 0x4b, 0x5d, 0x7f, 0x4f, 0xe2, 0x88, 0x71, 0xac, 0xbe, 0xe6, 0xa8, 0xa9,
+	0x25, 0x73, 0xdd, 0xcb, 0xb8, 0x50, 0x9b, 0xce, 0x16, 0xc0, 0x37, 0xbf, 0xb5, 0xcb, 0x99, 0x24,
+	0x92, 0xda, 0x3f, 0x60, 0x35, 0x21, 0x29, 0x89, 0x85, 0x0b, 0xda, 0xa0, 0xdb, 0x18, 0x7e, 0x44,
+	0x25, 0xae, 0xd1, 0x44, 0x21, 0xe3, 0xfa, 0x7a, 0xfb, 0xc9, 0xba, 0x7e, 0xbc, 0xf9, 0x0a, 0xa6,
+	0x46, 0x65, 0x7f, 0x83, 0xaf, 0x49, 0x10, 0xf0, 0x8c, 0x49, 0xe1, 0xbe, 0x6a, 0x57, 0xba, 0x8d,
+	0xa1, 0x83, 0x74, 0x44, 0x54, 0x44, 0x44, 0x23, 0x96, 0x4f, 0x9f, 0x29, 0xfb, 0x04, 0xbe, 0x4b,
+	0x32, 0x7f, 0xbe, 0xa2, 0xf9, 0x7c, 0x19, 0x09, 0xc9, 0xd3, 0xdc, 0xad, 0x28, 0x61, 0xaf, 0x74,
+	0xb4, 0x71, 0x3b, 0xc9, 0xfc, 0xbf, 0x34, 0xff, 0xa3, 0x05, 0xc7, 0x46, 0xde, 0x26, 0xc7, 0x95,
+	0xce, 0x15, 0x80, 0x4e, 0x99, 0xc4, 0x1e, 0xc2, 0x1a, 0x59, 0x2c, 0x52, 0x2a, 0x74, 0xd2, 0xfa,
+	0xd8, 0xbd, 0xbb, 0xed, 0x3b, 0x66, 0xe2, 0x48, 0x57, 0x66, 0x32, 0x8d, 0x58, 0x38, 0x2d, 0x40,
+	0xfb, 0x1f, 0xac, 0x51, 0x26, 0xd3, 0x88, 0x16, 0xd9, 0xbe, 0x94, 0xdf, 0xce, 0xf1, 0xa0, 0x5f,
+	0x4c, 0xbe, 0x34, 0x58, 0xb4, 0x18, 0xff, 0x5c, 0xef, 0x3c, 0xb0, 0xd9, 0x79, 0xe0, 0x61, 0xe7,
+	0x81, 0xcb, 0xbd, 0x67, 0x6d, 0xf6, 0x9e, 0x75, 0xbf, 0xf7, 0xac, 0xff, 0xbd, 0x30, 0x92, 0xcb,
+	0xcc, 0x47, 0x01, 0x8f, 0xcd, 0x73, 0x99, 0x5f, 0x5f, 0x2c, 0x56, 0xf8, 0x42, 0xbf, 0xbd, 0xcc,
+	0x13, 0x2a, 0xfc, 0xaa, 0xba, 0xd5, 0xef, 0x4f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xb1, 0x07, 0xa2,
+	0xf0, 0x80, 0x02, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -127,6 +201,20 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.PubKeyHistory) > 0 {
+		for iNdEx := len(m.PubKeyHistory) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PubKeyHistory[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
 	if len(m.Accounts) > 0 {
 		for iNdEx := len(m.Accounts) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -154,6 +242,50 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *GenesisPubKeyHistory) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GenesisPubKeyHistory) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GenesisPubKeyHistory) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Entries) > 0 {
+		for iNdEx := len(m.Entries) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Entries[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintGenesis(dAtA []byte, offset int, v uint64) int {
 	offset -= sovGenesis(v)
 	base := offset
@@ -175,6 +307,31 @@ func (m *GenesisState) Size() (n int) {
 	n += 1 + l + sovGenesis(uint64(l))
 	if len(m.Accounts) > 0 {
 		for _, e := range m.Accounts {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.PubKeyHistory) > 0 {
+		for _, e := range m.PubKeyHistory {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *GenesisPubKeyHistory) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if len(m.Entries) > 0 {
+		for _, e := range m.Entries {
 			l = e.Size()
 			n += 1 + l + sovGenesis(uint64(l))
 		}
@@ -281,6 +438,156 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			}
 			m.Accounts = append(m.Accounts, &any.Any{})
 			if err := m.Accounts[len(m.Accounts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PubKeyHistory", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PubKeyHistory = append(m.PubKeyHistory, GenesisPubKeyHistory{})
+			if err := m.PubKeyHistory[len(m.PubKeyHistory)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GenesisPubKeyHistory) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GenesisPubKeyHistory: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GenesisPubKeyHistory: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Entries", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Entries = append(m.Entries, PubKeyHistoryEntry{})
+			if err := m.Entries[len(m.Entries)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -32,6 +32,14 @@ var (
 	// UnorderedNoncesKey prefix for the unordered sequence storage.
 	UnorderedNoncesKey = collections.NewPrefix(90)
 
+	// PubKeyHistoryPrefix prefix for the pubkey rotation history, keyed by
+	// (account address, rotation index). The first rotation is index 0.
+	PubKeyHistoryPrefix = collections.NewPrefix(91)
+
+	// RekeyIndexPrefix prefix for the rekey reverse index, keyed by
+	// (natural address of the current pubkey, account address).
+	RekeyIndexPrefix = collections.NewPrefix(92)
+
 	// LegacyGlobalAccountNumberKey is the legacy param key for global account number
 	LegacyGlobalAccountNumberKey = []byte("globalAccountNumber")
 )

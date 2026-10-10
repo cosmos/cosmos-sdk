@@ -108,6 +108,12 @@ type AccountKeeper struct {
 	AccountNumber   collections.Sequence
 	Accounts        *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
 	UnorderedNonces collections.KeySet[collections.Pair[int64, []byte]]
+	// PubKeyHistory holds the pubkeys an account has replaced, keyed by
+	// (account address, rotation index). The first rotation is index 0.
+	PubKeyHistory collections.Map[collections.Pair[sdk.AccAddress, uint64], types.PubKeyHistoryEntry]
+	// RekeyIndex holds (natural address of the current pubkey, account address)
+	// for every account whose current pubkey does not hash to its address.
+	RekeyIndex collections.KeySet[collections.Pair[sdk.AccAddress, sdk.AccAddress]]
 }
 
 type InitOption func(*AccountKeeper)
@@ -152,6 +158,8 @@ func NewAccountKeeper(
 		AccountNumber:   collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"), //nolint:staticcheck // kept in place for the migration
 		Accounts:        collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
 		UnorderedNonces: collections.NewKeySet(sb, types.UnorderedNoncesKey, "unordered_nonces", collections.PairKeyCodec(collections.Int64Key, collections.BytesKey)),
+		PubKeyHistory:   collections.NewMap(sb, types.PubKeyHistoryPrefix, "pub_key_history", collections.PairKeyCodec(sdk.AccAddressKey, collections.Uint64Key), codec.CollValue[types.PubKeyHistoryEntry](cdc)),
+		RekeyIndex:      collections.NewKeySet(sb, types.RekeyIndexPrefix, "rekey_index", collections.PairKeyCodec(sdk.AccAddressKey, sdk.AccAddressKey)),
 	}
 	schema, err := sb.Build()
 	if err != nil {

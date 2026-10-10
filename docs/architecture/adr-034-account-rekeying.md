@@ -197,11 +197,11 @@ Every place that derives an account address from a pubkey must stop doing so:
 * Client signing in `client/tx/tx.go` stops deriving `SignerData.Address` from the pubkey (decision 10).
 * `x/bank` and `enterprise/group` simulations compare account addresses, rather than pubkeys, when selecting a different account.
 * `enterprise/poa` still derives consensus addresses from consensus keys. When enforcing that operator and consensus keys differ, however, it compares the proposed consensus key with both the operator address and the operator account's stored current pubkey. Its auth rekey hook preserves that invariant when an operator changes its authentication key.
-* `client/v2/autocli/flag/address.go`, which accepts a pubkey in place of an address, is a client follow-up. `server/start.go` derives validator consensus addresses from consensus keys, which this ADR does not affect.
+* `client/v2/autocli/flag/address.go` accepts a pubkey in place of an address only for consensus addresses, which are not accounts and are not affected. Account address flags accept an address or a key name, and a key name resolves to the key's own address. To name a rekeyed account in an address field other than the signer, pass the account's address. The signer field follows `--signer-address` (decision 10). `server/start.go` derives validator consensus addresses from consensus keys, which this ADR does not affect.
 
 ### 10. Client
 
-A new `--signer-address` flag lets the keyring key named by `--from` sign for a different account address. When it is set, the tx factory uses it for `SignerData.Address` and for the account lookup instead of `pubKey.Address()`. `gentx` also validates the specified account's genesis balance and uses it as the validator operator address. Without the flag, `--from` behaves as before.
+A new `--signer-address` flag lets the keyring key named by `--from` sign for a different account address. When it is set, the tx factory uses it for `SignerData.Address` and for the account lookup instead of `pubKey.Address()`. `gentx` also validates the specified account's genesis balance and uses it as the validator operator address. Without the flag, `--from` behaves as before. `client/v2` autocli tx commands register the flag too, and also set it as the msg signer, including when the signer is given as a positional argument or custom flag.
 
 An account rekeyed to a multisig spends with the usual multisig flow, passing `--signer-address` to each step: `sign` or `sign-batch` with `--multisig`, then `multisign` or `multisign-batch`. The members' signatures and the combined signature are then made and checked for the rekeyed account, not for the multisig key's own address. `tx validate-signatures` accepts a signature whose pubkey does not hash to its signer when the signer's stored pubkey is that key; in `--offline` mode, where it cannot check, it prints a warning instead. As for any multisig, this flow supports only `SIGN_MODE_LEGACY_AMINO_JSON`: a `SIGN_MODE_DIRECT` sign doc commits to the `AuthInfo`, which differs between what each member signs and the combined tx.
 
@@ -215,7 +215,6 @@ The CLI adds:
 These are separate tracks:
 
 * A "quantum emergency" migration path for accounts whose secp256k1 key is already compromised.
-* `client/v2` autocli signing for rekeyed accounts.
 * Changing a validator's operator address. It is not needed: the operator address stays fixed and its key becomes rotatable.
 
 ## Consequences

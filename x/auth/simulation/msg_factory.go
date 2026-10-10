@@ -16,6 +16,8 @@ func MsgUpdateParamsFactory() simsx.SimMsgFactoryFn[*types.MsgUpdateParams] {
 		params.TxSizeCostPerByte = r.Uint64InRange(1, 1000)
 		params.SigVerifyCostED25519 = r.Uint64InRange(1, 1000)
 		params.SigVerifyCostSecp256k1 = r.Uint64InRange(1, 1000)
+		params.PubKeyChangeEnabled = r.Intn(2) == 0
+		params.PubKeyChangeCost = r.Uint64InRange(1000, 40000)
 
 		return nil, &types.MsgUpdateParams{
 			Authority: testData.ModuleAccountAddress(reporter, "gov"),

@@ -296,6 +296,58 @@ func TestSimulateMsgSubmitProposalFutureVotesInactive(t *testing.T) {
 	}
 }
 
+// TestSimulateMsgSubmitProposalFutureVotesWithinVotingPeriod checks that votes
+// scheduled for an expedited proposal fall within the expedited voting period,
+// which is shorter than the regular one, and those for a regular proposal
+// within the regular voting period.
+func TestSimulateMsgSubmitProposalFutureVotesWithinVotingPeriod(t *testing.T) {
+	suite, ctx := createTestSuite(t, false)
+	app := suite.App
+
+	r := rand.New(rand.NewSource(1))
+	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
+
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: app.LastBlockHeight() + 1,
+		Hash:   app.LastCommitID().Hash,
+	})
+	require.NoError(t, err)
+
+	params, err := suite.GovKeeper.Params.Get(ctx)
+	require.NoError(t, err)
+	require.Less(t, *params.ExpeditedVotingPeriod, *params.VotingPeriod)
+
+	op := simulation.SimulateMsgSubmitProposal(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
+	expeditedSeen := 0
+	for seed := int64(1); seed <= 20; seed++ {
+		r := rand.New(rand.NewSource(seed))
+		submittedID, err := suite.GovKeeper.ProposalID.Peek(ctx)
+		require.NoError(t, err)
+
+		opMsg, futureOps, err := op(r, app.BaseApp, ctx, accounts, "")
+		require.NoError(t, err)
+		if !opMsg.OK {
+			continue
+		}
+		proposal, err := suite.GovKeeper.Proposals.Get(ctx, submittedID)
+		require.NoError(t, err)
+
+		deadline := ctx.BlockTime().Add(*params.VotingPeriod)
+		if proposal.Expedited {
+			expeditedSeen++
+			deadline = ctx.BlockTime().Add(*params.ExpeditedVotingPeriod)
+		}
+		if proposal.VotingEndTime != nil {
+			deadline = *proposal.VotingEndTime
+		}
+		for _, fop := range futureOps {
+			require.False(t, fop.BlockTime.After(deadline),
+				"seed %d: vote at %s is after %s (expedited=%v)", seed, fop.BlockTime, deadline, proposal.Expedited)
+		}
+	}
+	require.Positive(t, expeditedSeen, "no expedited proposal was exercised")
+}
+
 // TestSimulateMsgCancelProposal tests the normal scenario of a valid message of type TypeMsgCancelProposal.
 // Abnormal scenarios, where errors occur, are not tested here.
 func TestSimulateMsgCancelProposal(t *testing.T) {

@@ -30,6 +30,20 @@ import (
 // https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(20)
 
+// msgChangePubKeyTypeURL is the type URL of x/auth's MsgChangePubKey. It is a
+// string constant so that x/authz does not import x/auth/types.
+const msgChangePubKeyTypeURL = "/cosmos.auth.v1beta1.MsgChangePubKey"
+
+// checkMsgAuthorizable returns ErrMsgNotAuthorizable for message types that
+// must never be granted or executed through authz. A grant of MsgChangePubKey
+// would let the grantee replace the granter's key and take over the account.
+func checkMsgAuthorizable(typeURL string) error {
+	if typeURL == msgChangePubKeyTypeURL {
+		return authz.ErrMsgNotAuthorizable.Wrapf("%s cannot be granted or executed via authz", typeURL)
+	}
+	return nil
+}
+
 type Keeper struct {
 	storeService corestoretypes.KVStoreService
 	cdc          codec.Codec
@@ -108,6 +122,12 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 	now := sdkCtx.BlockTime()
 
 	for i, msg := range msgs {
+		// Checked before any grant lookup so that grants created before this
+		// rule existed (e.g. a GenericAuthorization) cannot be used.
+		if err := checkMsgAuthorizable(sdk.MsgTypeURL(msg)); err != nil {
+			return nil, err
+		}
+
 		signers, _, err := k.cdc.GetMsgV1Signers(msg)
 		if err != nil {
 			return nil, err

@@ -20,4 +20,6 @@ var (
 	ErrAuthorizationNumOfSigners = errors.Register(ModuleName, 9, "authorization can be given to msg with only one signer")
 	// ErrNegativeMaxTokens error if the max tokens is negative
 	ErrNegativeMaxTokens = errors.Register(ModuleName, 12, "max tokens should be positive")
+	// ErrMsgNotAuthorizable error if a message type may not be granted or executed through authz
+	ErrMsgNotAuthorizable = errors.Register(ModuleName, 13, "message type cannot be authorized")
 )

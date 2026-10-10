@@ -127,6 +127,7 @@ func setupTest(t *testing.T) *testFixture {
 	poaStoreService := runtime.NewKVStoreService(storeKey)
 	poaTransientStoreService := runtime.NewTransientStoreService(tkey)
 	poaKeeper := NewKeeper(cdc, poaStoreService, poaTransientStoreService, authKeeper, bankKeeper)
+	authKeeper.SetPubKeyChangeHooks(poaKeeper.NewAuthHooks())
 
 	// Create the POA tally function
 	tallyFn := NewPOACalculateVoteResultsAndVotingPowerFn(*poaKeeper)

@@ -105,7 +105,7 @@ func (s *MsgServer) CreateValidator(
 	consAddress := sdk.GetConsAddress(pubKey)
 
 	// Prevent using the same key for both operator and consensus
-	if err := s.keeper.ValidateOperatorAndConsensusPubKeyDifferent(req.OperatorAddress, req.PubKey); err != nil {
+	if err := s.keeper.ValidateOperatorAndConsensusPubKeyDifferent(sdkCtx, req.OperatorAddress, req.PubKey); err != nil {
 		return nil, err
 	}
 

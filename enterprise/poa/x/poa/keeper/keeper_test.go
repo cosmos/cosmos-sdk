@@ -421,7 +421,7 @@ func TestValidateOperatorAndConsensusPubKeyDifferent(t *testing.T) {
 		pubKeyAny, err := codectypes.NewAnyWithValue(consensusKey.PubKey())
 		require.NoError(t, err)
 
-		err = f.poaKeeper.ValidateOperatorAndConsensusPubKeyDifferent(operatorAddr, pubKeyAny)
+		err = f.poaKeeper.ValidateOperatorAndConsensusPubKeyDifferent(f.ctx, operatorAddr, pubKeyAny)
 		require.NoError(t, err)
 	})
 
@@ -433,7 +433,7 @@ func TestValidateOperatorAndConsensusPubKeyDifferent(t *testing.T) {
 		pubKeyAny, err := codectypes.NewAnyWithValue(consensusKey.PubKey())
 		require.NoError(t, err)
 
-		err = f.poaKeeper.ValidateOperatorAndConsensusPubKeyDifferent(operatorAddr, pubKeyAny)
+		err = f.poaKeeper.ValidateOperatorAndConsensusPubKeyDifferent(f.ctx, operatorAddr, pubKeyAny)
 		require.NoError(t, err)
 	})
 
@@ -444,7 +444,7 @@ func TestValidateOperatorAndConsensusPubKeyDifferent(t *testing.T) {
 		pubKeyAny, err := codectypes.NewAnyWithValue(sameKey.PubKey())
 		require.NoError(t, err)
 
-		err = f.poaKeeper.ValidateOperatorAndConsensusPubKeyDifferent(operatorAddr, pubKeyAny)
+		err = f.poaKeeper.ValidateOperatorAndConsensusPubKeyDifferent(f.ctx, operatorAddr, pubKeyAny)
 		require.Error(t, err)
 		require.ErrorIs(t, err, poatypes.ErrSameKeyForOperatorAndConsensus)
 		require.Contains(t, err.Error(), "operator address and consensus pubkey must use different keys")
@@ -457,7 +457,7 @@ func TestValidateOperatorAndConsensusPubKeyDifferent(t *testing.T) {
 		pubKeyAny, err := codectypes.NewAnyWithValue(sameKey.PubKey())
 		require.NoError(t, err)
 
-		err = f.poaKeeper.ValidateOperatorAndConsensusPubKeyDifferent(operatorAddr, pubKeyAny)
+		err = f.poaKeeper.ValidateOperatorAndConsensusPubKeyDifferent(f.ctx, operatorAddr, pubKeyAny)
 		require.Error(t, err)
 		require.ErrorIs(t, err, poatypes.ErrSameKeyForOperatorAndConsensus)
 		require.Contains(t, err.Error(), "operator address and consensus pubkey must use different keys")
@@ -468,7 +468,7 @@ func TestValidateOperatorAndConsensusPubKeyDifferent(t *testing.T) {
 		pubKeyAny, err := codectypes.NewAnyWithValue(consensusKey.PubKey())
 		require.NoError(t, err)
 
-		err = f.poaKeeper.ValidateOperatorAndConsensusPubKeyDifferent("invalid-address", pubKeyAny)
+		err = f.poaKeeper.ValidateOperatorAndConsensusPubKeyDifferent(f.ctx, "invalid-address", pubKeyAny)
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "invalid operator address")
 	})

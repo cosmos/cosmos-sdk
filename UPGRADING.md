@@ -301,7 +301,18 @@ These changes are not part of v0.55.x. They ship in the next release.
 * `pub_key_change_enabled`, set to `false`, so the feature stays off until governance turns it on.
 * `pub_key_change_cost`, set to `50000`, the gas `MsgChangePubKey` charges on top of normal tx gas.
 
-The rotation history and the rekey index live in the existing `acc` store under prefixes `91` and `92`. There are no new store keys and no `app.go` wiring changes.
+The rotation history and the rekey index live in the existing `acc` store under prefixes `91` and `92`. There are no new store keys.
+
+**App wiring.** Modules whose invariants depend on an account's current authentication key must register `types.PubKeyChangeHooks` with `AccountKeeper.SetPubKeyChangeHooks` before rekeying is enabled. Hooks run after the new-key proof is verified and before the account or rekey indexes are changed. Combine multiple hooks with `types.NewMultiPubKeyChangeHooks`.
+
+PoA apps must register the PoA hook after constructing both keepers:
+
+```go
+app.POAKeeper = poakeeper.NewKeeper(/* ... */)
+app.AccountKeeper.SetPubKeyChangeHooks(app.POAKeeper.NewAuthHooks())
+```
+
+The bundled PoA simapp and migration example include this wiring. The hook prevents a validator operator from rekeying its account to the validator's consensus key.
 
 **Enabling.** Submit a governance proposal with an `x/auth` `MsgUpdateParams` that sets `pub_key_change_enabled: true`. `MsgUpdateParams` replaces every param, so copy the other values from the current `Params` query.
 
@@ -324,7 +335,7 @@ The signer account is now read before the pubkey is checked against the signer a
 
 **Mempool.** The default `SignerExtractionAdapter` and `SenderNonceMempool` now key senders by `GetSigners()` instead of the address of the signature pubkey. Otherwise a rekeyed account's txs would split across two senders. Custom tx types used with these mempools must return signers that line up one-to-one with their signatures. A tx whose signer count differs from its signature count, or that does not implement `SigVerifiableTx`, is now rejected with an error.
 
-**Clients.** The new `--signer-address` tx flag, and `Factory.WithSignerAddress` in Go, let the `--from` key sign for an account whose address is not the key's own address. Without the flag, `--from` works as before. `--signer-address` is added to every tx command by `flags.AddTxFlagsToCmd`, so a module whose autocli-generated tx command has a msg field named `signer_address` will panic with `flag redefined: signer-address`; rename such a field or give it a custom flag name. An account rekeyed to a multisig signs with the usual multisig flow, passing `--signer-address` to each step: `tx sign` or `tx sign-batch` with `--multisig`, then `tx multisign` or `tx multisign-batch` (`SIGN_MODE_LEGACY_AMINO_JSON` only, as for any multisig). In simulate mode the ante handler sizes a missing signature from the signer's stored pubkey, so `--gas auto` covers accounts rekeyed to ML-DSA-65. `tx validate-signatures` accepts a signature whose pubkey does not hash to its signer when the signer's stored pubkey is that key (online), and prints a warning for it in `--offline` mode.
+**Clients.** The new `--signer-address` tx flag, and `Factory.WithSignerAddress` in Go, let the `--from` key sign for an account whose address is not the key's own address. Without the flag, `--from` works as before. `gentx` also uses this address to validate genesis funds and set the validator operator address. `--signer-address` is added to every tx command by `flags.AddTxFlagsToCmd`, so a module whose autocli-generated tx command has a msg field named `signer_address` will panic with `flag redefined: signer-address`; rename such a field or give it a custom flag name. An account rekeyed to a multisig signs with the usual multisig flow, passing `--signer-address` to each step: `tx sign` or `tx sign-batch` with `--multisig`, then `tx multisign` or `tx multisign-batch` (`SIGN_MODE_LEGACY_AMINO_JSON` only, as for any multisig). In simulate mode the ante handler sizes a missing signature from the signer's stored pubkey, so `--gas auto` covers accounts rekeyed to ML-DSA-65. `tx validate-signatures` accepts a signature whose pubkey does not hash to its signer when the signer's stored pubkey is that key (online), and prints a warning for it in `--offline` mode.
 
 **Migrating an account or validator operator to ML-DSA-65.**
 
@@ -333,6 +344,6 @@ The signer account is now read before the pubkey is checked against the signer a
 3. Send the change with the current key: `simd tx auth change-pubkey <account-address> "$(simd keys show pq-key --pubkey)" --proof proof.json --from old-key`. For a multisig new key, pass the member proofs comma separated.
 4. After that, sign with `--from pq-key --signer-address <account-address>`. For commands that take the sender as an argument, such as `simd tx bank send pq-key <to-address> <amount> --signer-address <account-address>`, pass the key name there.
 
-A validator operator keeps its operator address. Only the key that signs for it changes. The consensus key is separate and is rotated with `x/staking` `MsgRotateConsPubKey` (see [Validator Consensus Key Rotation](#validator-consensus-key-rotation)).
+A validator operator keeps its operator address. Only the key that signs for it changes. The consensus key is separate and is rotated with `x/staking` `MsgRotateConsPubKey` (see [Validator Consensus Key Rotation](#validator-consensus-key-rotation)). PoA validates separation against both the operator address and its current authentication pubkey, and its auth hook rejects rekeying an operator account to the validator's consensus pubkey.
 
 Make sure you control the new key before you send the change. Afterwards, the account, its staked funds and any validator it operates can only be reached with the new key.

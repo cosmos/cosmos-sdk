@@ -102,6 +102,10 @@ type AccountKeeper struct {
 	// should be the x/gov module account.
 	authority string
 
+	// pubKeyChangeHooks is shared by AccountKeeper copies so hooks registered
+	// during app wiring are visible to the AppModule and msg server.
+	pubKeyChangeHooks *pubKeyChangeHooks
+
 	// State
 	Schema          collections.Schema
 	Params          collections.Item[types.Params]
@@ -114,6 +118,10 @@ type AccountKeeper struct {
 	// RekeyIndex holds (natural address of the current pubkey, account address)
 	// for every account whose current pubkey does not hash to its address.
 	RekeyIndex collections.KeySet[collections.Pair[sdk.AccAddress, sdk.AccAddress]]
+}
+
+type pubKeyChangeHooks struct {
+	hooks types.PubKeyChangeHooks
 }
 
 type InitOption func(*AccountKeeper)
@@ -147,19 +155,20 @@ func NewAccountKeeper(
 	sb := collections.NewSchemaBuilder(storeService)
 
 	ak := AccountKeeper{
-		addressCodec:    ac,
-		bech32Prefix:    bech32Prefix,
-		storeService:    storeService,
-		proto:           proto,
-		cdc:             cdc,
-		permAddrs:       permAddrs,
-		authority:       authority,
-		Params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		AccountNumber:   collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"), //nolint:staticcheck // kept in place for the migration
-		Accounts:        collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
-		UnorderedNonces: collections.NewKeySet(sb, types.UnorderedNoncesKey, "unordered_nonces", collections.PairKeyCodec(collections.Int64Key, collections.BytesKey)),
-		PubKeyHistory:   collections.NewMap(sb, types.PubKeyHistoryPrefix, "pub_key_history", collections.PairKeyCodec(sdk.AccAddressKey, collections.Uint64Key), codec.CollValue[types.PubKeyHistoryEntry](cdc)),
-		RekeyIndex:      collections.NewKeySet(sb, types.RekeyIndexPrefix, "rekey_index", collections.PairKeyCodec(sdk.AccAddressKey, sdk.AccAddressKey)),
+		addressCodec:      ac,
+		bech32Prefix:      bech32Prefix,
+		storeService:      storeService,
+		proto:             proto,
+		cdc:               cdc,
+		permAddrs:         permAddrs,
+		authority:         authority,
+		pubKeyChangeHooks: &pubKeyChangeHooks{},
+		Params:            collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		AccountNumber:     collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"), //nolint:staticcheck // kept in place for the migration
+		Accounts:          collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
+		UnorderedNonces:   collections.NewKeySet(sb, types.UnorderedNoncesKey, "unordered_nonces", collections.PairKeyCodec(collections.Int64Key, collections.BytesKey)),
+		PubKeyHistory:     collections.NewMap(sb, types.PubKeyHistoryPrefix, "pub_key_history", collections.PairKeyCodec(sdk.AccAddressKey, collections.Uint64Key), codec.CollValue[types.PubKeyHistoryEntry](cdc)),
+		RekeyIndex:        collections.NewKeySet(sb, types.RekeyIndexPrefix, "rekey_index", collections.PairKeyCodec(sdk.AccAddressKey, sdk.AccAddressKey)),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -170,6 +179,27 @@ func NewAccountKeeper(
 	for _, opt := range opts {
 		opt(&ak)
 	}
+	return ak
+}
+
+// PubKeyChangeHooks returns the registered pubkey change hooks, or a no-op set.
+func (ak AccountKeeper) PubKeyChangeHooks() types.PubKeyChangeHooks {
+	if ak.pubKeyChangeHooks == nil || ak.pubKeyChangeHooks.hooks == nil {
+		return types.MultiPubKeyChangeHooks{}
+	}
+	return ak.pubKeyChangeHooks.hooks
+}
+
+// SetPubKeyChangeHooks registers pubkey change hooks. It panics if called more
+// than once.
+func (ak *AccountKeeper) SetPubKeyChangeHooks(hooks types.PubKeyChangeHooks) *AccountKeeper {
+	if ak.pubKeyChangeHooks == nil {
+		ak.pubKeyChangeHooks = &pubKeyChangeHooks{}
+	}
+	if ak.pubKeyChangeHooks.hooks != nil {
+		panic("cannot set pubkey change hooks twice")
+	}
+	ak.pubKeyChangeHooks.hooks = hooks
 	return ak
 }
 

@@ -15,6 +15,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"strings"
@@ -309,7 +310,7 @@ func (k *Keeper) UpdateParams(ctx sdk.Context, params types.Params) error {
 // - The operator address is invalid
 // - The pubkey cannot be unpacked
 // - The operator address derives from the same key as the consensus pubkey
-func (k *Keeper) ValidateOperatorAndConsensusPubKeyDifferent(operatorAddress string, pubKeyAny *codectypes.Any) error {
+func (k *Keeper) ValidateOperatorAndConsensusPubKeyDifferent(ctx context.Context, operatorAddress string, pubKeyAny *codectypes.Any) error {
 	operatorAddr, err := sdk.AccAddressFromBech32(operatorAddress)
 	if err != nil {
 		return errors.Wrap(err, "invalid operator address")
@@ -328,6 +329,15 @@ func (k *Keeper) ValidateOperatorAndConsensusPubKeyDifferent(operatorAddress str
 			"operator address %s derives from the consensus pubkey - these must be different keys",
 			operatorAddress,
 		)
+	}
+	if operator := k.authKeeper.GetAccount(ctx, operatorAddr); operator != nil {
+		if operatorPubKey := operator.GetPubKey(); operatorPubKey != nil && operatorPubKey.Equals(pubKey) {
+			return errors.Wrapf(
+				types.ErrSameKeyForOperatorAndConsensus,
+				"operator account %s currently uses the consensus pubkey - these must be different keys",
+				operatorAddress,
+			)
+		}
 	}
 
 	return nil

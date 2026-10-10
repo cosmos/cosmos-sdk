@@ -116,6 +116,9 @@ func (ms msgServer) ChangePubKey(goCtx context.Context, msg *types.MsgChangePubK
 	if err := types.VerifyChangePubKeyProof(newPk, signBytes, proof); err != nil {
 		return nil, err
 	}
+	if err := ms.ak.PubKeyChangeHooks().BeforePubKeyChange(ctx, sdk.AccAddress(addr), oldPk, newPk); err != nil {
+		return nil, err
+	}
 
 	oldKeyAddr, err := ms.ak.addressCodec.BytesToString(oldPk.Address())
 	if err != nil {

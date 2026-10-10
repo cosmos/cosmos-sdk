@@ -56,3 +56,36 @@ func TestDefaultSignerExtractor(t *testing.T) {
 		})
 	}
 }
+
+func TestDefaultAdapter_UsesSigners(t *testing.T) {
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
+	signer := accounts[0].Address
+	keyAddr := accounts[1].Address
+	ext := mempool.NewDefaultSignerExtractionAdapter()
+
+	t.Run("pubkey of a rekeyed account hashes to a different address", func(t *testing.T) {
+		tx := testTx{nonce: 7, address: signer, pubKeyAddress: keyAddr}
+		sigs, err := ext.GetSigners(tx)
+		require.NoError(t, err)
+		require.Equal(t, []mempool.SignerData{mempool.NewSignerData(signer, 7)}, sigs)
+	})
+
+	t.Run("nil pubkey", func(t *testing.T) {
+		tx := testTx{nonce: 3, address: signer, nilPubKey: true}
+		require.NotPanics(t, func() {
+			sigs, err := ext.GetSigners(tx)
+			require.NoError(t, err)
+			require.Equal(t, []mempool.SignerData{mempool.NewSignerData(signer, 3)}, sigs)
+		})
+	})
+
+	t.Run("signers and signatures length mismatch", func(t *testing.T) {
+		tx := &sigErrTx{getSigs: func() ([]txsigning.SignatureV2, error) {
+			return []txsigning.SignatureV2{{Sequence: 1}}, nil
+		}}
+		require.NotPanics(t, func() {
+			_, err := ext.GetSigners(tx)
+			require.ErrorContains(t, err, "signers")
+		})
+	})
+}

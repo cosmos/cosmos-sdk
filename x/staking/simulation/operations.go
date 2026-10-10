@@ -524,6 +524,11 @@ func SimulateMsgCancelUnbondingDelegate(
 			}
 		}
 
+		if unbondingDelegationEntry.CreationHeight <= 0 {
+			// entries imported from a zero-height genesis have no creation height and cannot be canceled
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unbonding delegation entry has no creation height"), nil, nil
+		}
+
 		if unbondingDelegationEntry.CompletionTime.Before(ctx.BlockTime()) {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "unbonding delegation is already processed"), nil, nil
 		}

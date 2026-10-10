@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -227,6 +228,64 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	require.Equal(delegator.Address.String(), msg.DelegatorAddress)
 	require.Equal(validator0.GetOperator(), msg.ValidatorAddress)
 	require.Len(futureOperations, 0)
+}
+
+// TestSimulateMsgCancelUnbondingDelegationZeroCreationHeight tests that unbonding entries without a
+// creation height, as left by a zero-height genesis export, are skipped since they cannot be canceled.
+func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegationZeroCreationHeight() {
+	require := s.Require()
+	blockTime := time.Now().UTC()
+	ctx := s.ctx.WithBlockTime(blockTime)
+
+	validator0 := s.getTestingValidator0(ctx)
+	delTokens := s.stakingKeeper.TokensFromConsensusPower(ctx, 2)
+	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
+	delegator := s.accounts[2]
+	delegation := types.NewDelegation(delegator.Address.String(), validator0.GetOperator(), issuedShares)
+	require.NoError(s.stakingKeeper.SetDelegation(ctx, delegation))
+	val0bz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator0.GetOperator())
+	require.NoError(err)
+	require.NoError(s.distrKeeper.SetDelegatorStartingInfo(ctx, val0bz, delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
+	s.setupValidatorRewards(ctx, val0bz)
+
+	udb := types.NewUnbondingDelegation(delegator.Address, val0bz, 0, blockTime.Add(2*time.Minute), delTokens, 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
+	require.NoError(s.stakingKeeper.SetUnbondingDelegation(ctx, udb))
+
+	op := simulation.SimulateMsgCancelUnbondingDelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
+	operationMsg, futureOperations, err := op(s.r, s.app.BaseApp, ctx, []simtypes.Account{delegator}, "")
+	require.NoError(err)
+	require.False(operationMsg.OK)
+	require.Len(futureOperations, 0)
+}
+
+// TestMsgCancelUnbondingDelegationFactoryZeroCreationHeight tests that the simsx factory skips unbonding
+// entries without a creation height, as left by a zero-height genesis export, since they cannot be canceled.
+func (s *SimTestSuite) TestMsgCancelUnbondingDelegationFactoryZeroCreationHeight() {
+	require := s.Require()
+	blockTime := time.Now().UTC()
+	ctx := s.ctx.WithBlockTime(blockTime)
+
+	// the factory cancels an unbonding delegation of a random validator's operator,
+	// so give every validator operator an unbonding entry without a creation height
+	s.getTestingValidator0(ctx)
+	vals, err := s.stakingKeeper.GetAllValidators(ctx)
+	require.NoError(err)
+	require.Len(vals, 2)
+	delTokens := s.stakingKeeper.TokensFromConsensusPower(ctx, 2)
+	for _, val := range vals {
+		valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
+		require.NoError(err)
+		udb := types.NewUnbondingDelegation(valBz, valBz, 0, blockTime.Add(2*time.Minute), delTokens, 0, address.NewBech32Codec("cosmosvaloper"), address.NewBech32Codec("cosmos"))
+		require.NoError(s.stakingKeeper.SetUnbondingDelegation(ctx, udb))
+	}
+
+	testData := simsx.NewChainDataSource(ctx, s.r, s.accountKeeper, s.bankKeeper, address.NewBech32Codec("cosmos"), s.accounts...)
+	reporter := simsx.NewBasicSimulationReporter()
+	signers, msg := simulation.MsgCancelUnbondingDelegationFactory(s.stakingKeeper)(ctx, testData, reporter)
+	require.Nil(signers)
+	require.Nil(msg)
+	require.True(reporter.IsSkipped())
+	require.Equal("unbonding delegation entry has no creation height", reporter.Comment())
 }
 
 // TestSimulateMsgEditValidator tests the normal scenario of a valid message of type TypeMsgEditValidator.

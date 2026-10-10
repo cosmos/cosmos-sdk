@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log/v2"
 
@@ -206,6 +207,145 @@ func TestSimulateMsgSubmitLegacyProposal(t *testing.T) {
 	require.Equal(t, "description-3: NJWzHdBNpAXKJPHWQdrGYcAHSctgVlqwqHoLfHsXUdStwfefwzqLuKEhmMyYLdbZrcPgYqjNHxPexsruwEGStAneKbWkQDDIlCWBLSiAASNhZqNFlPtfqPJoxKsgMdzjWqLWdqKQuJqWPMvwPQWZUtVMOTMYKJbfdlZsjdsomuScvDmbDkgRualsxDvRJuCAmPOXitIbcyWsKGSdrEunFAOdmXnsuyFVgJqEjbklvmwrUlsxjRSfKZxGcpayDdgoFcnVSutxjRgOSFzPwidAjubMncNweqpbxhXGchpZUxuFDOtpnhNUycJICRYqsPhPSCjPTWZFLkstHWJxvdPEAyEIxXgLwbNOjrgzmaujiBABBIXvcXpLrbcEWNNQsbjvgJFgJkflpRohHUutvnaUqoopuKjTDaemDeSdqbnOzcfJpcTuAQtZoiLZOoAIlboFDAeGmSNwkvObPRvRWQgWkGkxwtPauYgdkmypLjbqhlHJIQTntgWjXwZdOyYEdQRRLfMSdnxqppqUofqLbLQDUjwKVKfZJUJQPsWIPwIVaSTrmKskoAhvmZyJgeRpkaTfGgrJzAigcxtfshmiDCFkuiluqtMOkidknnTBtumyJYlIsWLnCQclqdVmikUoMOPdPWwYbJxXyqUVicNxFxyqJTenNblyyKSdlCbiXxUiYUiMwXZASYfvMDPFgxniSjWaZTjHkqlJvtBsXqwPpyVxnJVGFWhfSxgOcduoxkiopJvFjMmFabrGYeVtTXLhxVUEiGwYUvndjFGzDVntUvibiyZhfMQdMhgsiuysLMiePBNXifRLMsSmXPkwlPloUbJveCvUlaalhZHuvdkCnkSHbMbmOnrfEGPwQiACiPlnihiaOdbjPqPiTXaHDoJXjSlZmltGqNHHNrcKdlFSCdmVOuvDcBLdSklyGJmcLTbSFtALdGlPkqqecJrpLCXNPWefoTJNgEJlyMEPneVaxxduAAEqQpHWZodWyRkDAxzyMnFMcjSVqeRXLqsNyNtQBbuRvunZflWSbbvXXdkyLikYqutQhLPONXbvhcQZJPSWnOulqQaXmbfFxAkqfYeseSHOQidHwbcsOaMnSrrmGjjRmEMQNuknupMxJiIeVjmgZvbmjPIQTEhQFULQLBMPrxcFPvBinaOPYWGvYGRKxLZdwamfRQQFngcdSlvwjfaPbURasIsGJVHtcEAxnIIrhSriiXLOlbEBLXFElXJFGxHJczRBIxAuPKtBisjKBwfzZFagdNmjdwIRvwzLkFKWRTDPxJCmpzHUcrPiiXXHnOIlqNVoGSXZewdnCRhuxeYGPVTfrNTQNOxZmxInOazUYNTNDgzsxlgiVEHPKMfbesvPHUqpNkUqbzeuzfdrsuLDpKHMUbBMKczKKWOdYoIXoPYtEjfOnlQLoGnbQUCuERdEFaptwnsHzTJDsuZkKtzMpFaZobynZdzNydEeJJHDYaQcwUxcqvwfWwNUsCiLvkZQiSfzAHftYgAmVsXgtmcYgTqJIawstRYJrZdSxlfRiqTufgEQVambeZZmaAyRQbcmdjVUZZCgqDrSeltJGXPMgZnGDZqISrGDOClxXCxMjmKqEPwKHoOfOeyGmqWqihqjINXLqnyTesZePQRqaWDQNqpLgNrAUKulklmckTijUltQKuWQDwpLmDyxLppPVMwsmBIpOwQttYFMjgJQZLYFPmxWFLIeZihkRNnkzoypBICIxgEuYsVWGIGRbbxqVasYnstWomJnHwmtOhAFSpttRYYzBmyEtZXiCthvKvWszTXDbiJbGXMcrYpKAgvUVFtdKUfvdMfhAryctklUCEdjetjuGNfJjajZtvzdYaqInKtFPPLYmRaXPdQzxdSQfmZDEVHlHGEGNSPRFJuIfKLLfUmnHxHnRjmzQPNlqrXgifUdzAGKVabYqvcDeYoTYgPsBUqehrBhmQUgTvDnsdpuhUoxskDdppTsYMcnDIPSwKIqhXDCIxOuXrywahvVavvHkPuaenjLmEbMgrkrQLHEAwrhHkPRNvonNQKqprqOFVZKAtpRSpvQUxMoXCMZLSSbnLEFsjVfANdQNQVwTmGxqVjVqRuxREAhuaDrFgEZpYKhwWPEKBevBfsOIcaZKyykQafzmGPLRAKDtTcJxJVgiiuUkmyMYuDUNEUhBEdoBLJnamtLmMJQgmLiUELIhLpiEvpOXOvXCPUeldLFqkKOwfacqIaRcnnZvERKRMCKUkMABbDHytQqQblrvoxOZkwzosQfDKGtIdfcXRJNqlBNwOCWoQBcEWyqrMlYZIAXYJmLfnjoJepgSFvrgajaBAIksoyeHqgqbGvpAstMIGmIhRYGGNPRIfOQKsGoKgxtsidhTaAePRCBFqZgPDWCIkqOJezGVkjfYUCZTlInbxBXwUAVRsxHTQtJFnnpmMvXDYCVlEmnZBKhmmxQOIQzxFWpJQkQoSAYzTEiDWEOsVLNrbfzeHFRyeYATakQQWmFDLPbVMCJcWjFGJjfqCoVzlbNNEsqxdSmNPjTjHYOkuEMFLkXYGaoJlraLqayMeCsTjWNRDPBywBJLAPVkGQqTwApVVwYAetlwSbzsdHWsTwSIcctkyKDuRWYDQikRqsKTMJchrliONJeaZIzwPQrNbTwxsGdwuduvibtYndRwpdsvyCktRHFalvUuEKMqXbItfGcNGWsGzubdPMYayOUOINjpcFBeESdwpdlTYmrPsLsVDhpTzoMegKrytNVZkfJRPuDCUXxSlSthOohmsuxmIZUedzxKmowKOdXTMcEtdpHaPWgIsIjrViKrQOCONlSuazmLuCUjLltOGXeNgJKedTVrrVCpWYWHyVrdXpKgNaMJVjbXxnVMSChdWKuZdqpisvrkBJPoURDYxWOtpjzZoOpWzyUuYNhCzRoHsMjmmWDcXzQiHIyjwdhPNwiPqFxeUfMVFQGImhykFgMIlQEoZCaRoqSBXTSWAeDumdbsOGtATwEdZlLfoBKiTvodQBGOEcuATWXfiinSjPmJKcWgQrTVYVrwlyMWhxqNbCMpIQNoSMGTiWfPTCezUjYcdWppnsYJihLQCqbNLRGgqrwHuIvsazapTpoPZIyZyeeSueJuTIhpHMEJfJpScshJubJGfkusuVBgfTWQoywSSliQQSfbvaHKiLnyjdSbpMkdBgXepoSsHnCQaYuHQqZsoEOmJCiuQUpJkmfyfbIShzlZpHFmLCsbknEAkKXKfRTRnuwdBeuOGgFbJLbDksHVapaRayWzwoYBEpmrlAxrUxYMUekKbpjPNfjUCjhbdMAnJmYQVZBQZkFVweHDAlaqJjRqoQPoOMLhyvYCzqEuQsAFoxWrzRnTVjStPadhsESlERnKhpEPsfDxNvxqcOyIulaCkmPdambLHvGhTZzysvqFauEgkFRItPfvisehFmoBhQqmkfbHVsgfHXDPJVyhwPllQpuYLRYvGodxKjkarnSNgsXoKEMlaSKxKdcVgvOkuLcfLFfdtXGTclqfPOfeoVLbqcjcXCUEBgAGplrkgsmIEhWRZLlGPGCwKWRaCKMkBHTAcypUrYjWwCLtOPVygMwMANGoQwFnCqFrUGMCRZUGJKTZIGPyldsifauoMnJPLTcDHmilcmahlqOELaAUYDBuzsVywnDQfwRLGIWozYaOAilMBcObErwgTDNGWnwQMUgFFSKtPDMEoEQCTKVREqrXZSGLqwTMcxHfWotDllNkIJPMbXzjDVjPOOjCFuIvTyhXKLyhUScOXvYthRXpPfKwMhptXaxIxgqBoUqzrWbaoLTVpQoottZyPFfNOoMioXHRuFwMRYUiKvcWPkrayyTLOCFJlAyslDameIuqVAuxErqFPEWIScKpBORIuZqoXlZuTvAjEdlEWDODFRregDTqGNoFBIHxvimmIZwLfFyKUfEWAnNBdtdzDmTPXtpHRGdIbuucfTjOygZsTxPjfweXhSUkMhPjMaxKlMIJMOXcnQfyzeOcbWwNbeH",
 		textProposal.GetDescription())
 	require.Equal(t, simulation.TypeMsgSubmitProposal, sdk.MsgTypeURL(&msg))
+}
+
+// TestSimulateMsgSubmitProposalFutureVotes checks that the votes scheduled by the
+// submit proposal operation target the proposal that was just submitted.
+func TestSimulateMsgSubmitProposalFutureVotes(t *testing.T) {
+	suite, ctx := createTestSuite(t, false)
+	app := suite.App
+
+	// setup 3 accounts
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
+
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: app.LastBlockHeight() + 1,
+		Hash:   app.LastCommitID().Hash,
+	})
+	require.NoError(t, err)
+
+	submittedID, err := suite.GovKeeper.ProposalID.Peek(ctx)
+	require.NoError(t, err)
+
+	// execute operation
+	op := simulation.SimulateMsgSubmitProposal(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
+	operationMsg, futureOps, err := op(r, app.BaseApp, ctx, accounts, "")
+	require.NoError(t, err)
+	require.True(t, operationMsg.OK)
+
+	proposal, err := suite.GovKeeper.Proposals.Get(ctx, submittedID)
+	require.NoError(t, err)
+	if proposal.Status == v1.StatusDepositPeriod {
+		require.NoError(t, suite.GovKeeper.ActivateVotingPeriod(ctx, proposal))
+	}
+
+	require.NotEmpty(t, futureOps)
+	for _, fop := range futureOps {
+		require.NotNil(t, fop.Op)
+		voteOpMsg, _, err := fop.Op(r, app.BaseApp, ctx, accounts, "")
+		require.NoError(t, err)
+		require.True(t, voteOpMsg.OK)
+
+		var msg v1.MsgVote
+		require.NoError(t, proto.Unmarshal(voteOpMsg.Msg, &msg))
+		require.Equal(t, submittedID, msg.ProposalId)
+
+		voter, err := suite.AccountKeeper.AddressCodec().StringToBytes(msg.Voter)
+		require.NoError(t, err)
+		_, err = suite.GovKeeper.Votes.Get(ctx, collections.Join(submittedID, sdk.AccAddress(voter)))
+		require.NoError(t, err)
+	}
+}
+
+// TestSimulateMsgSubmitProposalFutureVotesInactive checks that a scheduled vote
+// whose proposal is not in its voting period (still in deposit, or already
+// ended) is a no-op rather than an error that aborts the simulation.
+func TestSimulateMsgSubmitProposalFutureVotesInactive(t *testing.T) {
+	suite, ctx := createTestSuite(t, false)
+	app := suite.App
+
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
+
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: app.LastBlockHeight() + 1,
+		Hash:   app.LastCommitID().Hash,
+	})
+	require.NoError(t, err)
+
+	submittedID, err := suite.GovKeeper.ProposalID.Peek(ctx)
+	require.NoError(t, err)
+
+	op := simulation.SimulateMsgSubmitProposal(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
+	_, futureOps, err := op(r, app.BaseApp, ctx, accounts, "")
+	require.NoError(t, err)
+	require.NotEmpty(t, futureOps)
+
+	proposal, err := suite.GovKeeper.Proposals.Get(ctx, submittedID)
+	require.NoError(t, err)
+	proposal.Status = v1.StatusPassed
+	require.NoError(t, suite.GovKeeper.Proposals.Set(ctx, submittedID, proposal))
+
+	for _, fop := range futureOps {
+		voteOpMsg, _, err := fop.Op(r, app.BaseApp, ctx, accounts, "")
+		require.NoError(t, err)
+		require.False(t, voteOpMsg.OK)
+	}
+}
+
+// TestSimulateMsgSubmitProposalFutureVotesWithinVotingPeriod checks that votes
+// scheduled for an expedited proposal fall within the expedited voting period,
+// which is shorter than the regular one, and those for a regular proposal
+// within the regular voting period.
+func TestSimulateMsgSubmitProposalFutureVotesWithinVotingPeriod(t *testing.T) {
+	suite, ctx := createTestSuite(t, false)
+	app := suite.App
+
+	r := rand.New(rand.NewSource(1))
+	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
+
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: app.LastBlockHeight() + 1,
+		Hash:   app.LastCommitID().Hash,
+	})
+	require.NoError(t, err)
+
+	params, err := suite.GovKeeper.Params.Get(ctx)
+	require.NoError(t, err)
+	require.Less(t, *params.ExpeditedVotingPeriod, *params.VotingPeriod)
+
+	op := simulation.SimulateMsgSubmitProposal(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
+	expeditedSeen := 0
+	for seed := int64(1); seed <= 20; seed++ {
+		r := rand.New(rand.NewSource(seed))
+		submittedID, err := suite.GovKeeper.ProposalID.Peek(ctx)
+		require.NoError(t, err)
+
+		opMsg, futureOps, err := op(r, app.BaseApp, ctx, accounts, "")
+		require.NoError(t, err)
+		if !opMsg.OK {
+			continue
+		}
+		proposal, err := suite.GovKeeper.Proposals.Get(ctx, submittedID)
+		require.NoError(t, err)
+
+		deadline := ctx.BlockTime().Add(*params.VotingPeriod)
+		if proposal.Expedited {
+			expeditedSeen++
+			deadline = ctx.BlockTime().Add(*params.ExpeditedVotingPeriod)
+		}
+		if proposal.VotingEndTime != nil {
+			deadline = *proposal.VotingEndTime
+		}
+		for _, fop := range futureOps {
+			require.False(t, fop.BlockTime.After(deadline),
+				"seed %d: vote at %s is after %s (expedited=%v)", seed, fop.BlockTime, deadline, proposal.Expedited)
+		}
+	}
+	require.Positive(t, expeditedSeen, "no expedited proposal was exercised")
 }
 
 // TestSimulateMsgCancelProposal tests the normal scenario of a valid message of type TypeMsgCancelProposal.

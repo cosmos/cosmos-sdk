@@ -1,9 +1,12 @@
 package simulation
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"time"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -267,18 +270,22 @@ func simulateMsgSubmitProposal(
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+		_, res, err := app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
 		opMsg := simtypes.NewOperationMsg(msg, true, "")
 
-		// get the submitted proposal ID
-		proposalID, err := k.ProposalID.Peek(ctx)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate proposalID"), nil, err
+		// get the submitted proposal ID from the msg response
+		if len(res.MsgResponses) != 1 {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unexpected number of msg responses"), nil, fmt.Errorf("expected 1 msg response, got %d", len(res.MsgResponses))
 		}
+		var submitRes v1.MsgSubmitProposalResponse
+		if err := proto.Unmarshal(res.MsgResponses[0].Value, &submitRes); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to decode submit proposal response"), nil, err
+		}
+		proposalID := submitRes.ProposalId
 
 		// 2) Schedule operations for votes
 		// 2.1) first pick a number of people to vote.
@@ -291,11 +298,19 @@ func simulateMsgSubmitProposal(
 		// didntVote := whoVotes[numVotes:]
 		whoVotes = whoVotes[:numVotes]
 		params, _ := k.Params.Get(ctx)
-		votingPeriod := params.VotingPeriod
+		votingPeriod := *params.VotingPeriod
+		if expedited {
+			votingPeriod = *params.ExpeditedVotingPeriod
+		}
+		// A proposal whose initial deposit already activated voting closes at
+		// its voting end time; schedule votes before then.
+		if proposal, err := k.Proposals.Get(ctx, proposalID); err == nil && proposal.VotingEndTime != nil {
+			votingPeriod = proposal.VotingEndTime.Sub(ctx.BlockHeader().Time)
+		}
 		s := NewSharedState()
-		fops := make([]simtypes.FutureOperation, numVotes+1)
+		fops := make([]simtypes.FutureOperation, numVotes)
 		for i := range numVotes {
-			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
+			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(max(int64(votingPeriod.Seconds()), 1))) * time.Second)
 			fops[i] = simtypes.FutureOperation{
 				BlockTime: whenVote,
 				Op:        operationSimulateMsgVote(txGen, ak, bk, k, accs[whoVotes[i]], int64(proposalID), s),
@@ -427,6 +442,12 @@ func operationSimulateMsgVote(
 			}
 		default:
 			proposalID = uint64(proposalIDInt)
+			// A scheduled vote can fire before the proposal reaches its voting
+			// period or after it ended; skip it instead of failing the simulation.
+			proposal, err := k.Proposals.Get(ctx, proposalID)
+			if err != nil || proposal.Status != v1.StatusVotingPeriod {
+				return simtypes.NoOpMsg(types.ModuleName, TypeMsgVote, "proposal not in voting period"), nil, nil
+			}
 		}
 
 		option := randomVotingOption(r)
@@ -502,6 +523,12 @@ func operationSimulateMsgVoteWeighted(
 			}
 		default:
 			proposalID = uint64(proposalIDInt)
+			// A scheduled vote can fire before the proposal reaches its voting
+			// period or after it ended; skip it instead of failing the simulation.
+			proposal, err := k.Proposals.Get(ctx, proposalID)
+			if err != nil || proposal.Status != v1.StatusVotingPeriod {
+				return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteWeighted, "proposal not in voting period"), nil, nil
+			}
 		}
 
 		options := randomWeightedVotingOptions(r)

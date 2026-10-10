@@ -294,7 +294,7 @@ These changes are not part of v0.55.x. They ship in the next release.
 
 ### Account Rekeying
 
-[#TBD](https://github.com/cosmos/cosmos-sdk/pull/TBD) implements [ADR-034](docs/architecture/adr-034-account-rekeying.md). With the new `x/auth` message `MsgChangePubKey`, an account can replace its public key and keep its address, account number, sequence, balances, delegations and any validator it operates. Use it to change the members or threshold of a multisig, or to move a secp256k1 account to ML-DSA-65 (alone, or inside a multisig) without moving funds or unbonding.
+[#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) implements [ADR-034](docs/architecture/adr-034-account-rekeying.md). With the new `x/auth` message `MsgChangePubKey`, an account can replace its public key and keep its address, account number, sequence, balances, delegations and any validator it operates. Use it to change the members or threshold of a multisig, or to move a secp256k1 account to ML-DSA-65 (alone, or inside a multisig) without moving funds or unbonding.
 
 **Store migration.** `x/auth` goes from consensus version 7 to 8. `Migrate7to8` runs through `RunMigrations` in your upgrade handler. It adds two params:
 

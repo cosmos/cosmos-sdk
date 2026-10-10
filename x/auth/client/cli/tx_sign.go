@@ -183,9 +183,17 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			cmd.Printf("%s\n", json)
 		} else {
 			// It will generate signed tx for each tx
-			for sequence := txFactory.Sequence(); scanner.Scan(); sequence++ {
+			sequence := txFactory.Sequence()
+			for scanner.Scan() {
 				unsignedStdTx := scanner.Tx()
-				txFactory = txFactory.WithSequence(sequence)
+				// Unordered txs are signed with sequence 0 and do not consume a
+				// sequence number, so later ordered txs keep consecutive sequences.
+				if utx, ok := unsignedStdTx.(sdk.TxWithUnordered); ok && utx.GetUnordered() {
+					txFactory = txFactory.WithSequence(0)
+				} else {
+					txFactory = txFactory.WithSequence(sequence)
+					sequence++
+				}
 				txBuilder, err := txCfg.WrapTxBuilder(unsignedStdTx)
 				if err != nil {
 					return err

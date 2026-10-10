@@ -37,6 +37,7 @@ const (
 	flagMultisig     = "multisig"
 	flagNoSort       = "nosort"
 	flagHDPath       = "hd-path"
+	flagBIP85        = "bip85"
 	flagPubKeyBase64 = "pubkey-base64"
 	flagMnemonicSrc  = "source"
 
@@ -58,6 +59,10 @@ If run with -i, it will prompt the user for BIP44 path, BIP39 mnemonic, and pass
 The flag --recover allows one to recover a key from a seed passphrase.
 If run with --dry-run, a key would be generated (or recovered) but not stored to the
 local keystore.
+Use --key-type ml_dsa_65 --bip85 for post-quantum keys derived from a 24-word
+mnemonic using BIP85. Its default path is m/83696968'/118'/65'/account'/index'.
+Recovery requires --bip85 and the same account, index, and BIP39 passphrase.
+Without --bip85, existing BIP32/BIP44 derivation is unchanged.
 Use the --pubkey flag to add arbitrary public keys to the keystore for constructing
 multisig transactions.
 
@@ -88,11 +93,16 @@ Example:
 	f.Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	f.Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
 	f.String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
+	f.Bool(flagBIP85, false, "Derive ML-DSA-65 keys using BIP85 entropy (requires a 24-word mnemonic)")
 	f.Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
 	f.Uint32(flagAccount, 0, "Account number for HD derivation (less than equal 2147483647)")
 	f.Uint32(flagIndex, 0, "Address index number for HD derivation (less than equal 2147483647)")
 	f.String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 	f.String(flagMnemonicSrc, "", "Import mnemonic from a file (only usable when recover or interactive is passed)")
+
+	for _, incompatible := range []string{flags.FlagUseLedger, flagCoinType, FlagPublicKey, flagPubKeyBase64, flagMultisig} {
+		cmd.MarkFlagsMutuallyExclusive(flagBIP85, incompatible)
+	}
 
 	// support old flags name for backwards compatibility
 	f.SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
@@ -152,6 +162,13 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	algo, err := keyring.NewSigningAlgoFromString(algoStr, keyringAlgos)
 	if err != nil {
 		return err
+	}
+	bip85, _ := cmd.Flags().GetBool(flagBIP85)
+	if bip85 {
+		if algo.Name() != hd.MlDsa65Type {
+			return errors.New("--bip85 requires --key-type ml_dsa_65")
+		}
+		algo = hd.MlDsa65BIP85
 	}
 
 	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); dryRun {
@@ -280,7 +297,14 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	useLedger, _ := cmd.Flags().GetBool(flags.FlagUseLedger)
 
 	if len(hdPath) == 0 {
-		hdPath = hd.CreateHDPath(coinType, account, index).String()
+		if bip85 {
+			hdPath, err = hd.CreateMlDsa65BIP85Path(account, index)
+			if err != nil {
+				return err
+			}
+		} else {
+			hdPath = hd.CreateHDPath(coinType, account, index).String()
+		}
 	} else if useLedger {
 		return errors.New("cannot set custom bip32 path with ledger")
 	}
@@ -314,7 +338,9 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			}
 		}
 
-		if !bip39.IsMnemonicValid(mnemonic) {
+		// BIP85 validates in Derive after NFKD normalization. An empty recovery
+		// must still fail here, rather than generate a new mnemonic below.
+		if mnemonic == "" || (!bip85 && !bip39.IsMnemonicValid(mnemonic)) {
 			return errors.New("invalid mnemonic")
 		}
 	} else if interactive {
@@ -330,7 +356,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			}
 		}
 
-		if !bip39.IsMnemonicValid(mnemonic) && mnemonic != "" {
+		if !bip85 && !bip39.IsMnemonicValid(mnemonic) && mnemonic != "" {
 			return errors.New("invalid mnemonic")
 		}
 	}

@@ -3,8 +3,11 @@ package keys
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
+	"strings"
 	"testing"
 
 	"github.com/cosmos/go-bip39"
@@ -370,4 +373,59 @@ func TestAddRecoverFileBackend(t *testing.T) {
 	k, err := kb.Key("keyname1")
 	require.NoError(t, err)
 	require.Equal(t, "keyname1", k.Name)
+}
+
+func TestAddBIP85(t *testing.T) {
+	const defaultHash = "52ba137931c9027dab4ae828ecb89d346d5b8330c4901b3087a885cf3b60b83a"
+	const accountHash = "a7249027b2956307c88c22827f280ce9c268ab386b1261b2d8dccc30b18172e7"
+	mnemonic := strings.Repeat("abandon ", 23) + "art"
+	for _, tc := range []struct {
+		name, input, pubHash, err string
+		args                      []string
+	}{
+		{name: "recover default", input: mnemonic + "\n", pubHash: defaultHash, args: []string{"--recover"}},
+		{name: "normalized mnemonic", input: strings.ReplaceAll(mnemonic, "a", "\uff41") + "\n", pubHash: defaultHash, args: []string{"--recover"}},
+		{name: "normalized interactive mnemonic", input: strings.ReplaceAll(mnemonic, "a", "\uff41") + "\n\n", pubHash: defaultHash, args: []string{"--interactive"}},
+		{name: "empty recovery", input: "\n", err: "invalid mnemonic", args: []string{"--recover"}},
+		{name: "invalid checksum", input: strings.Repeat("abandon ", 24) + "\n", err: "Invalid byte", args: []string{"--recover"}},
+		{name: "account and index", input: mnemonic + "\nTREZOR\nTREZOR\n", pubHash: accountHash, args: []string{"--interactive", "--account=7", "--index=9"}},
+		{name: "explicit path recovery", input: mnemonic + "\nTREZOR\nTREZOR\n", pubHash: accountHash, args: []string{"--recover", "--interactive", "--hd-path=m/83696968'/118'/65'/7'/9'"}},
+		{name: "legacy mnemonic too short", input: strings.Repeat("abandon ", 11) + "about\n", err: "24-word", args: []string{"--recover"}},
+		{name: "wrong algorithm", err: "requires --key-type", args: []string{"--key-type=secp256k1"}},
+		{name: "unhardened path", input: mnemonic + "\n", err: "must be hardened", args: []string{"--recover", "--hd-path=m/83696968'/118'/65'/0'/1"}},
+		{name: "wrong namespace", input: mnemonic + "\n", err: "path must be", args: []string{"--recover", "--hd-path=m/83696968'/503131'/0'"}},
+		{name: "account overflow", err: "must be less than", args: []string{"--account=2147483648"}},
+		{name: "index overflow", err: "must be less than", args: []string{"--index=2147483648"}},
+		{name: "ledger", err: "none of the others", args: []string{"--ledger"}},
+		{name: "coin type", err: "none of the others", args: []string{"--coin-type=118"}},
+		{name: "public key", err: "none of the others", args: []string{"--pubkey={}"}},
+		{name: "multisig", err: "none of the others", args: []string{"--multisig=other"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := AddKeyCommand()
+			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+			mockIn.Reset(tc.input)
+			cdc := moduletestutil.MakeTestEncodingConfig().Codec
+			kb := keyring.NewInMemory(cdc)
+			clientCtx := client.Context{}.WithKeyring(kb).WithCodec(cdc).WithInput(mockIn)
+			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+			cmd.SetArgs(append([]string{"pq", "--key-type=ml_dsa_65", "--bip85", "--no-backup"}, tc.args...))
+			err := cmd.ExecuteContext(ctx)
+			if tc.err != "" {
+				require.ErrorContains(t, err, tc.err)
+				_, err = kb.Key("pq")
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			record, err := kb.Key("pq")
+			require.NoError(t, err)
+			pub, err := record.GetPubKey()
+			require.NoError(t, err)
+			require.Equal(t, "ml_dsa_65", pub.Type())
+			hash := sha256.Sum256(pub.Bytes())
+			require.Equal(t, tc.pubHash, hex.EncodeToString(hash[:]))
+		})
+	}
 }

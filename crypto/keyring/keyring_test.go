@@ -2128,6 +2128,48 @@ func TestMlDsa65SignVerifyThroughKeyring(t *testing.T) {
 	require.True(t, pub.Equals(recPub))
 }
 
+func TestMlDsa65BIP85Recovery(t *testing.T) {
+	cdc := getCodec()
+	dir := t.TempDir()
+	kb, err := New("bip85", BackendTest, dir, nil, cdc)
+	require.NoError(t, err)
+	path, err := hd.CreateMlDsa65BIP85Path(7, 9)
+	require.NoError(t, err)
+	rec, mnemonic, err := kb.NewMnemonic("pq", English, path, "passphrase", hd.MlDsa65BIP85)
+	require.NoError(t, err)
+	require.Len(t, strings.Fields(mnemonic), 24)
+	pub, err := rec.GetPubKey()
+	require.NoError(t, err)
+
+	// Reopen the persisted keyring; signing needs no derivation metadata.
+	kb, err = New("bip85", BackendTest, dir, nil, cdc)
+	require.NoError(t, err)
+	msg := []byte("BIP85 post-quantum signing")
+	sig, persistedPub, err := kb.Sign("pq", msg, signing.SignMode_SIGN_MODE_DIRECT)
+	require.NoError(t, err)
+	require.True(t, pub.Equals(persistedPub))
+	require.True(t, pub.VerifySignature(msg, sig))
+	require.False(t, pub.VerifySignature([]byte("different message"), sig))
+
+	recovered := NewInMemory(cdc)
+	rec, err = recovered.NewAccount("recovered", mnemonic, "passphrase", path, hd.MlDsa65BIP85)
+	require.NoError(t, err)
+	recoveredPub, err := rec.GetPubKey()
+	require.NoError(t, err)
+	require.True(t, pub.Equals(recoveredPub))
+	for _, other := range []struct{ passphrase, path string }{
+		{"different passphrase", path},
+		{"passphrase", "m/83696968'/118'/65'/8'/9'"},
+		{"passphrase", "m/83696968'/118'/65'/7'/10'"},
+	} {
+		rec, err := NewInMemory(cdc).NewAccount("other", mnemonic, other.passphrase, other.path, hd.MlDsa65BIP85)
+		require.NoError(t, err)
+		otherPub, err := rec.GetPubKey()
+		require.NoError(t, err)
+		require.False(t, pub.Equals(otherPub))
+	}
+}
+
 func TestImportPrivKeyHexMlDsa65WrongLength(t *testing.T) {
 	kb := NewInMemory(getCodec())
 	// 31 bytes -> 62 hex chars; not a valid 32-byte ML-DSA-65 seed.

@@ -143,3 +143,72 @@ MY_VALIDATOR_ADDRESS=$(simd keys show my_validator -a --keyring-backend test)
 This command generates a new 24-word mnemonic phrase, persists it to the relevant backend, and outputs information about the keypair. If this keypair will be used to hold value-bearing tokens, be sure to write down the mnemonic phrase somewhere safe!
 
 By default, the keyring generates a `secp256k1` keypair. The keyring also supports `ed25519` keys, which may be created by passing the `--algo ed25519` flag. A keyring can of course hold both types of keys simultaneously, and the Cosmos SDK's `x/auth` module supports natively these two public key algorithms.
+
+### Post-quantum keys from a 24-word mnemonic
+
+ML-DSA-65 software account keys can opt into the
+[Project Eleven seed-derivation approach](https://www.projecteleven.com/blog/generating-post-quantum-keypairs-from-a-single-24word-seed-phrase):
+BIP39 mnemonic → BIP32 master → fully hardened child → BIP85 entropy → post-quantum key generation.
+
+```bash
+# Generate a fresh 24-word mnemonic and store an ML-DSA-65 key.
+simd keys add pq --key-type ml_dsa_65 --bip85 --keyring-backend file
+
+# Restore it in a new keyring using the same mnemonic.
+simd keys add pq --key-type ml_dsa_65 --bip85 --recover --keyring-backend file
+
+# Derive another account from that SAME mnemonic (not a newly generated one).
+simd keys add pq-next --key-type ml_dsa_65 --bip85 --recover \
+  --account 7 --index 9 --keyring-backend file
+```
+
+The SDK-local path convention is `m/83696968'/118'/65'/account'/index'`:
+
+* `83696968'` is the BIP85 purpose.
+* `118'` is the Cosmos application namespace; `65'` identifies ML-DSA-65.
+  These are SDK-local conventions, **not registered BIP85 assignments**.
+* Account and index default to zero and must each be less than 2³¹. Every component is hardened.
+* `--hd-path` may override account/index, but must use this exact five-component namespace.
+  `--coin-type`, Ledger, public-key import, and multisig construction cannot be combined with `--bip85`.
+
+The child private scalar is processed with
+`HMAC-SHA512(key="bip-entropy-from-k", message=childPrivateKey)`.
+The first 32 bytes become the ML-DSA-65 key-generation seed. No new signature implementation,
+wire format, address scheme, or consensus rule is introduced.
+
+**Recovery:** Back up the mnemonic, derivation mode (`--bip85`), account/index or full path,
+and any BIP39 passphrase. To set or recover a nonempty BIP39 passphrase, also pass `--interactive`.
+This passphrase is different from the keyring encryption password. The BIP85 mode uses BIP39 NFKD
+Unicode normalization; the existing derivation mode is unchanged. Software keyring records store
+the resulting private key, not the mnemonic or derivation metadata. Once stored, signing does not
+need `--bip85`.
+
+**Compatibility:** Without `--bip85`, both `secp256k1` and `ml_dsa_65` retain their existing
+BIP32/BIP44 derivation, including recovery from shorter mnemonics. Enabling BIP85 derives a
+different key and address; it does not migrate funds or replace an existing account's public key.
+
+Go applications can use the same flow through the existing keyring API:
+
+```go
+path, err := hd.CreateMlDsa65BIP85Path(7, 9)
+if err != nil {
+    return err
+}
+record, err := kr.NewAccount("pq", mnemonic, bip39Passphrase, path, hd.MlDsa65BIP85)
+```
+
+For other applications, `hd.DeriveBIP85Entropy(masterPrivateKey, chainCode, path, numBytes)`
+accepts BIP32 master material from `hd.ComputeMastersFromSeed` and returns 1–64 secret bytes.
+It supports the article's exact paths `m/83696968'/503131'/0'` (32 bytes for ML-DSA-44)
+and `m/83696968'/503131'/2'` (48 bytes for SLH-DSA-SHA2-128s). However, **this integration
+generates SDK account keys only for ML-DSA-65**; it does not add ML-DSA-44 or SLH-DSA signing,
+key codecs, or transaction acceptance. Never reuse an entropy path for different algorithms.
+
+:::warning
+This custom derivation integration needs independent security review before production use.
+It does not make an entire chain quantum-safe or strengthen a previously exposed mnemonic.
+Keep the mnemonic, master/ancestor extended keys, and intermediate BIP32 keys secret: BIP32
+still uses secp256k1, and an exposed ancestor extended public key is vulnerable to a future
+quantum attacker. Prefer a fresh mnemonic if an existing wallet's exposure is uncertain.
+Buffers are cleared where practical, but Go does not guarantee complete erasure of secret copies.
+:::

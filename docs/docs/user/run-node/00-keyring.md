@@ -162,21 +162,28 @@ simd keys add pq-next --key-type ml_dsa_65 --bip85 --recover \
   --account 7 --index 9 --keyring-backend file
 ```
 
-The SDK-local path convention is `m/83696968'/118'/65'/account'/index'`:
+The path follows the scoped `pqseed` proposal in
+[iqlusioninc/crates#1404](https://github.com/iqlusioninc/crates/pull/1404):
+`m/83696968'/505153'/coin_type'/3'/account'/index'`.
+This matches `KeyDeriver::ml_dsa65_for` with `Scope::new(coin_type, account, index)`
+in that Rust crate. The default `simd` path is `m/83696968'/505153'/118'/3'/0'/0'`.
 
 * `83696968'` is the BIP85 purpose.
-* `118'` is the Cosmos application namespace; `65'` identifies ML-DSA-65.
-  These are SDK-local conventions, **not registered BIP85 assignments**.
-* Account and index default to zero and must each be less than 2³¹. Every component is hardened.
-* `--hd-path` may override account/index, but must use this exact five-component namespace.
-  `--coin-type`, Ledger, public-key import, and multisig construction cannot be combined with `--bip85`.
+* `505153'` is pqseed's scoped application namespace ("PQS"); algorithm ID `3'` identifies ML-DSA-65.
+  These are pqseed conventions, **not registered BIP85 or Project Eleven assignments**.
+* `--coin-type` selects the SLIP-44 coin type and defaults to the application's configured value
+  (`118` for Cosmos Hub). Different coin types derive different keys from the same mnemonic.
+* Account and index default to zero. Coin type, account, and index must each be less than 2³¹.
+  Every component is hardened; there is no BIP44 change level.
+* `--hd-path` may override coin type/account/index, but must use this exact six-component namespace.
+  Ledger, public-key import, and multisig construction cannot be combined with `--bip85`.
 
 The child private scalar is processed with
 `HMAC-SHA512(key="bip-entropy-from-k", message=childPrivateKey)`.
 The first 32 bytes become the ML-DSA-65 key-generation seed. No new signature implementation,
 wire format, address scheme, or consensus rule is introduced.
 
-**Recovery:** Back up the mnemonic, derivation mode (`--bip85`), account/index or full path,
+**Recovery:** Back up the mnemonic, derivation mode (`--bip85`), coin type/account/index or full path,
 and any BIP39 passphrase. To set or recover a nonempty BIP39 passphrase, also pass `--interactive`.
 This passphrase is different from the keyring encryption password. The BIP85 mode uses BIP39 NFKD
 Unicode normalization; the existing derivation mode is unchanged. Software keyring records store
@@ -190,12 +197,16 @@ different key and address; it does not migrate funds or replace an existing acco
 Go applications can use the same flow through the existing keyring API:
 
 ```go
-path, err := hd.CreateMlDsa65BIP85Path(7, 9)
+path, err := hd.CreateMlDsa65BIP85Path(118, 7, 9)
 if err != nil {
     return err
 }
 record, err := kr.NewAccount("pq", mnemonic, bip39Passphrase, path, hd.MlDsa65BIP85)
 ```
+
+Use the same coin type, account, index, mnemonic, and passphrase to reproduce a scoped
+pqseed ML-DSA-65 key. These keys intentionally differ from pqseed's unscoped Project Eleven
+namespace (`503131'`). The scoped proposal is not yet a finalized interoperability standard.
 
 For other applications, `hd.DeriveBIP85Entropy(masterPrivateKey, chainCode, path, numBytes)`
 accepts BIP32 master material from `hd.ComputeMastersFromSeed` and returns 1–64 secret bytes.

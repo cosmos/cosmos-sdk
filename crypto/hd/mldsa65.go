@@ -19,24 +19,26 @@ var MlDsa65 = mldsa65Algo{}
 // Recovery requires the original derivation mode, path, and BIP39 passphrase.
 var MlDsa65BIP85 = mldsa65BIP85Algo{}
 
-// This is an SDK-local convention, not a registered BIP85 application number
-// or a Project Eleven algorithm ID: 118 identifies Cosmos, 65 ML-DSA-65.
-const mlDsa65BIP85Prefix = "m/83696968'/118'/65'"
+// This follows pqseed's scoped derivation proposal (iqlusioninc/crates#1404).
+// Application 505153 ("PQS") and ML-DSA-65 algorithm ID 3 are pqseed conventions,
+// not registered BIP85 assignments or Project Eleven algorithm IDs.
+const mlDsa65BIP85Prefix = "m/83696968'/505153'"
 
-// CreateMlDsa65BIP85Path returns the fully hardened Cosmos ML-DSA-65 entropy
-// path. Account and address indices must both be below 2^31.
-func CreateMlDsa65BIP85Path(account, index uint32) (string, error) {
-	if account >= 1<<31 || index >= 1<<31 {
-		return "", fmt.Errorf("BIP85 account and index must be less than 2147483648")
+// CreateMlDsa65BIP85Path returns the fully hardened pqseed ML-DSA-65 entropy
+// path. The SLIP-44 coin type, account, and address index must be below 2^31.
+func CreateMlDsa65BIP85Path(coinType, account, index uint32) (string, error) {
+	if coinType >= 1<<31 || account >= 1<<31 || index >= 1<<31 {
+		return "", fmt.Errorf("BIP85 coin type, account, and index must be less than 2147483648")
 	}
-	return fmt.Sprintf("%s/%d'/%d'", mlDsa65BIP85Prefix, account, index), nil
+	return fmt.Sprintf("%s/%d'/3'/%d'/%d'", mlDsa65BIP85Prefix, coinType, account, index), nil
 }
 
 type mldsa65BIP85Algo struct{ mldsa65Algo }
 
 // Derive implements BIP39 -> hardened BIP32 -> BIP85 -> 32-byte keygen seed.
 // Only valid 24-word English mnemonics are accepted. An empty path selects
-// account 0, index 0; explicit paths must stay in the Cosmos ML-DSA-65 subtree.
+// coin type 118, account 0, index 0; explicit paths must use pqseed's scoped
+// ML-DSA-65 namespace.
 func (mldsa65BIP85Algo) Derive() DeriveFn {
 	return func(mnemonic, bip39Passphrase, hdPath string) ([]byte, error) {
 		mnemonic = strings.Join(strings.Fields(norm.NFKD.String(mnemonic)), " ")
@@ -44,10 +46,11 @@ func (mldsa65BIP85Algo) Derive() DeriveFn {
 			return nil, fmt.Errorf("BIP85 ML-DSA-65 requires a 24-word mnemonic")
 		}
 		if hdPath == "" {
-			hdPath, _ = CreateMlDsa65BIP85Path(0, 0)
+			hdPath, _ = CreateMlDsa65BIP85Path(118, 0, 0)
 		}
-		if !strings.HasPrefix(hdPath, mlDsa65BIP85Prefix+"/") || len(strings.Split(hdPath, "/")) != 6 {
-			return nil, fmt.Errorf("ML-DSA-65 BIP85 path must be %s/account'/index'", mlDsa65BIP85Prefix)
+		parts := strings.Split(hdPath, "/")
+		if !strings.HasPrefix(hdPath, mlDsa65BIP85Prefix+"/") || len(parts) != 7 || parts[4] != "3'" {
+			return nil, fmt.Errorf("ML-DSA-65 BIP85 path must be %s/coin_type'/3'/account'/index'", mlDsa65BIP85Prefix)
 		}
 		seed, err := bip39.NewSeedWithErrorChecking(mnemonic, norm.NFKD.String(bip39Passphrase))
 		if err != nil {

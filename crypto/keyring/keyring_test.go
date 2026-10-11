@@ -2133,7 +2133,7 @@ func TestMlDsa65BIP85Recovery(t *testing.T) {
 	dir := t.TempDir()
 	kb, err := New("bip85", BackendTest, dir, nil, cdc)
 	require.NoError(t, err)
-	path, err := hd.CreateMlDsa65BIP85Path(7, 9)
+	path, err := hd.CreateMlDsa65BIP85Path(118, 7, 9)
 	require.NoError(t, err)
 	rec, mnemonic, err := kb.NewMnemonic("pq", English, path, "passphrase", hd.MlDsa65BIP85)
 	require.NoError(t, err)
@@ -2159,8 +2159,9 @@ func TestMlDsa65BIP85Recovery(t *testing.T) {
 	require.True(t, pub.Equals(recoveredPub))
 	for _, other := range []struct{ passphrase, path string }{
 		{"different passphrase", path},
-		{"passphrase", "m/83696968'/118'/65'/8'/9'"},
-		{"passphrase", "m/83696968'/118'/65'/7'/10'"},
+		{"passphrase", "m/83696968'/505153'/60'/3'/7'/9'"},
+		{"passphrase", "m/83696968'/505153'/118'/3'/8'/9'"},
+		{"passphrase", "m/83696968'/505153'/118'/3'/7'/10'"},
 	} {
 		rec, err := NewInMemory(cdc).NewAccount("other", mnemonic, other.passphrase, other.path, hd.MlDsa65BIP85)
 		require.NoError(t, err)

@@ -60,8 +60,8 @@ The flag --recover allows one to recover a key from a seed passphrase.
 If run with --dry-run, a key would be generated (or recovered) but not stored to the
 local keystore.
 Use --key-type ml_dsa_65 --bip85 for post-quantum keys derived from a 24-word
-mnemonic using BIP85. Its default path is m/83696968'/118'/65'/account'/index'.
-Recovery requires --bip85 and the same account, index, and BIP39 passphrase.
+mnemonic using pqseed's scoped BIP85 path: m/83696968'/505153'/coin_type'/3'/account'/index'.
+Recovery requires --bip85 and the same coin type, account, index, and BIP39 passphrase.
 Without --bip85, existing BIP32/BIP44 derivation is unchanged.
 Use the --pubkey flag to add arbitrary public keys to the keystore for constructing
 multisig transactions.
@@ -92,7 +92,7 @@ Example:
 	f.Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
 	f.Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	f.Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
-	f.String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
+	f.String(flagHDPath, "", "Manual HD Path derivation (overrides coin type, account, and index)")
 	f.Bool(flagBIP85, false, "Derive ML-DSA-65 keys using BIP85 entropy (requires a 24-word mnemonic)")
 	f.Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
 	f.Uint32(flagAccount, 0, "Account number for HD derivation (less than equal 2147483647)")
@@ -100,7 +100,7 @@ Example:
 	f.String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 	f.String(flagMnemonicSrc, "", "Import mnemonic from a file (only usable when recover or interactive is passed)")
 
-	for _, incompatible := range []string{flags.FlagUseLedger, flagCoinType, FlagPublicKey, flagPubKeyBase64, flagMultisig} {
+	for _, incompatible := range []string{flags.FlagUseLedger, FlagPublicKey, flagPubKeyBase64, flagMultisig} {
 		cmd.MarkFlagsMutuallyExclusive(flagBIP85, incompatible)
 	}
 
@@ -298,7 +298,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 	if len(hdPath) == 0 {
 		if bip85 {
-			hdPath, err = hd.CreateMlDsa65BIP85Path(account, index)
+			hdPath, err = hd.CreateMlDsa65BIP85Path(coinType, account, index)
 			if err != nil {
 				return err
 			}

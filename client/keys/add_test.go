@@ -376,8 +376,9 @@ func TestAddRecoverFileBackend(t *testing.T) {
 }
 
 func TestAddBIP85(t *testing.T) {
-	const defaultHash = "52ba137931c9027dab4ae828ecb89d346d5b8330c4901b3087a885cf3b60b83a"
-	const accountHash = "a7249027b2956307c88c22827f280ce9c268ab386b1261b2d8dccc30b18172e7"
+	const defaultHash = "91834016126aaf90cc683bab0f24dec823c19bf96580787b24dc2f66110a6e90"
+	const accountHash = "2d29e6c1b900d9b9c70b9484424c3d4a8947c90545912583b3234f2f0b7fffdf"
+	const coinHash = "b5b626b6856ff3e2a314008102c5457bdb18cb64a3c6110bf13acd13499a862d"
 	mnemonic := strings.Repeat("abandon ", 23) + "art"
 	for _, tc := range []struct {
 		name, input, pubHash, err string
@@ -389,15 +390,17 @@ func TestAddBIP85(t *testing.T) {
 		{name: "empty recovery", input: "\n", err: "invalid mnemonic", args: []string{"--recover"}},
 		{name: "invalid checksum", input: strings.Repeat("abandon ", 24) + "\n", err: "Invalid byte", args: []string{"--recover"}},
 		{name: "account and index", input: mnemonic + "\nTREZOR\nTREZOR\n", pubHash: accountHash, args: []string{"--interactive", "--account=7", "--index=9"}},
-		{name: "explicit path recovery", input: mnemonic + "\nTREZOR\nTREZOR\n", pubHash: accountHash, args: []string{"--recover", "--interactive", "--hd-path=m/83696968'/118'/65'/7'/9'"}},
+		{name: "explicit path recovery", input: mnemonic + "\nTREZOR\nTREZOR\n", pubHash: accountHash, args: []string{"--recover", "--interactive", "--hd-path=m/83696968'/505153'/118'/3'/7'/9'"}},
+		{name: "coin type scope", input: mnemonic + "\n", pubHash: coinHash, args: []string{"--recover", "--coin-type=60", "--account=1", "--index=7"}},
+		{name: "path overrides scope", input: mnemonic + "\n", pubHash: coinHash, args: []string{"--recover", "--coin-type=118", "--account=7", "--index=9", "--hd-path=m/83696968'/505153'/60'/3'/1'/7'"}},
 		{name: "legacy mnemonic too short", input: strings.Repeat("abandon ", 11) + "about\n", err: "24-word", args: []string{"--recover"}},
 		{name: "wrong algorithm", err: "requires --key-type", args: []string{"--key-type=secp256k1"}},
-		{name: "unhardened path", input: mnemonic + "\n", err: "must be hardened", args: []string{"--recover", "--hd-path=m/83696968'/118'/65'/0'/1"}},
+		{name: "unhardened path", input: mnemonic + "\n", err: "must be hardened", args: []string{"--recover", "--hd-path=m/83696968'/505153'/118'/3'/0'/1"}},
 		{name: "wrong namespace", input: mnemonic + "\n", err: "path must be", args: []string{"--recover", "--hd-path=m/83696968'/503131'/0'"}},
+		{name: "coin type overflow", err: "must be less than", args: []string{"--coin-type=2147483648"}},
 		{name: "account overflow", err: "must be less than", args: []string{"--account=2147483648"}},
 		{name: "index overflow", err: "must be less than", args: []string{"--index=2147483648"}},
 		{name: "ledger", err: "none of the others", args: []string{"--ledger"}},
-		{name: "coin type", err: "none of the others", args: []string{"--coin-type=118"}},
 		{name: "public key", err: "none of the others", args: []string{"--pubkey={}"}},
 		{name: "multisig", err: "none of the others", args: []string{"--multisig=other"}},
 	} {

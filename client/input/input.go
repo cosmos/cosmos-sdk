@@ -22,6 +22,7 @@ func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 		pass, err = speakeasy.FAsk(os.Stderr, prompt)
 	} else {
 		pass, err = readLineFromBuf(buf)
+		pass = strings.TrimSpace(pass)
 	}
 
 	if err != nil {
@@ -65,16 +66,18 @@ func GetConfirmation(prompt string, r *bufio.Reader, w io.Writer) (bool, error) 
 
 // GetString simply returns the trimmed string output of a given reader.
 func GetString(prompt string, buf *bufio.Reader) (string, error) {
+	out, err := GetStringRaw(prompt, buf)
+	return strings.TrimSpace(out), err
+}
+
+// GetStringRaw reads a line, removing only its LF or CRLF terminator.
+// Unlike GetString, it preserves whitespace that may be significant in a passphrase.
+func GetStringRaw(prompt string, buf *bufio.Reader) (string, error) {
 	if inputIsTty() && prompt != "" {
 		fmt.Fprintf(os.Stderr, "> %s\n", prompt)
 	}
 
-	out, err := readLineFromBuf(buf)
-	if err != nil {
-		return "", err
-	}
-
-	return strings.TrimSpace(out), nil
+	return readLineFromBuf(buf)
 }
 
 // inputIsTty returns true iff we have an interactive prompt,
@@ -106,5 +109,8 @@ func readLineFromBuf(buf *bufio.Reader) (string, error) {
 		return "", err
 	}
 
-	return strings.TrimSpace(pass), nil
+	if line, ok := strings.CutSuffix(pass, "\n"); ok {
+		return strings.TrimSuffix(line, "\r"), nil
+	}
+	return pass, nil
 }

@@ -376,9 +376,9 @@ func TestAddRecoverFileBackend(t *testing.T) {
 }
 
 func TestAddBIP85(t *testing.T) {
-	const defaultHash = "91834016126aaf90cc683bab0f24dec823c19bf96580787b24dc2f66110a6e90"
-	const accountHash = "2d29e6c1b900d9b9c70b9484424c3d4a8947c90545912583b3234f2f0b7fffdf"
-	const coinHash = "b5b626b6856ff3e2a314008102c5457bdb18cb64a3c6110bf13acd13499a862d"
+	const defaultHash = "35d464b10e832cce796da2b2759476363e502576c992a44f621f6b8a367b856a"
+	const accountHash = "f2419a2b2a1f6cd4a35117e40a039ad549ef7f6086d1a1651c82ba6d547e0730"
+	const coinHash = "e18897fc498f18b9ceb794f2a7a3b973a15c11875cb1f302defc8ad21b1fe2ca"
 	mnemonic := strings.Repeat("abandon ", 23) + "art"
 	for _, tc := range []struct {
 		name, input, pubHash, err string
@@ -386,16 +386,22 @@ func TestAddBIP85(t *testing.T) {
 	}{
 		{name: "recover default", input: mnemonic + "\n", pubHash: defaultHash, args: []string{"--recover"}},
 		{name: "normalized mnemonic", input: strings.ReplaceAll(mnemonic, "a", "\uff41") + "\n", pubHash: defaultHash, args: []string{"--recover"}},
+		{name: "mnemonic whitespace", input: "\u2003" + strings.ReplaceAll(mnemonic, " ", "\t\u00a0 ") + " \n", pubHash: defaultHash, args: []string{"--recover"}},
 		{name: "normalized interactive mnemonic", input: strings.ReplaceAll(mnemonic, "a", "\uff41") + "\n\n", pubHash: defaultHash, args: []string{"--interactive"}},
+		{name: "passphrase whitespace", input: mnemonic + "\n \tcafé\u00a0 \n \tcafé\u00a0 \n", pubHash: "68f42cfb1c24865f52be3b3a49b964cd850c702b5a6d7ee0924363e55e55c3ac", args: []string{"--recover", "--interactive"}},
+		{name: "whitespace only passphrase", input: mnemonic + "\n \n \n", pubHash: "1c96be005bca83dc53d635f1d5790b38d4afe5a77b866f9fc29f5de963db92f4", args: []string{"--recover", "--interactive"}},
+		{name: "passphrase whitespace mismatch", input: mnemonic + "\n secret\nsecret\n", err: "passphrases don't match", args: []string{"--recover", "--interactive"}},
 		{name: "empty recovery", input: "\n", err: "invalid mnemonic", args: []string{"--recover"}},
 		{name: "invalid checksum", input: strings.Repeat("abandon ", 24) + "\n", err: "Invalid byte", args: []string{"--recover"}},
 		{name: "account and index", input: mnemonic + "\nTREZOR\nTREZOR\n", pubHash: accountHash, args: []string{"--interactive", "--account=7", "--index=9"}},
-		{name: "explicit path recovery", input: mnemonic + "\nTREZOR\nTREZOR\n", pubHash: accountHash, args: []string{"--recover", "--interactive", "--hd-path=m/83696968'/505153'/118'/3'/7'/9'"}},
+		{name: "explicit path recovery", input: mnemonic + "\nTREZOR\nTREZOR\n", pubHash: accountHash, args: []string{"--recover", "--interactive", "--hd-path=m/83696968'/505153'/118'/201'/7'/9'"}},
 		{name: "coin type scope", input: mnemonic + "\n", pubHash: coinHash, args: []string{"--recover", "--coin-type=60", "--account=1", "--index=7"}},
-		{name: "path overrides scope", input: mnemonic + "\n", pubHash: coinHash, args: []string{"--recover", "--coin-type=118", "--account=7", "--index=9", "--hd-path=m/83696968'/505153'/60'/3'/1'/7'"}},
+		{name: "path overrides scope", input: mnemonic + "\n", pubHash: coinHash, args: []string{"--recover", "--coin-type=118", "--account=7", "--index=9", "--hd-path=m/83696968'/505153'/60'/201'/1'/7'"}},
 		{name: "legacy mnemonic too short", input: strings.Repeat("abandon ", 11) + "about\n", err: "24-word", args: []string{"--recover"}},
 		{name: "wrong algorithm", err: "requires --key-type", args: []string{"--key-type=secp256k1"}},
-		{name: "unhardened path", input: mnemonic + "\n", err: "must be hardened", args: []string{"--recover", "--hd-path=m/83696968'/505153'/118'/3'/0'/1"}},
+		{name: "unhardened path", input: mnemonic + "\n", err: "must be hardened", args: []string{"--recover", "--hd-path=m/83696968'/505153'/118'/201'/0'/1"}},
+		{name: "obsolete scheme", input: mnemonic + "\n", err: "path must be", args: []string{"--recover", "--hd-path=m/83696968'/505153'/118'/3'/0'/0'"}},
+		{name: "reserved scheme", input: mnemonic + "\n", err: "path must be", args: []string{"--recover", "--hd-path=m/83696968'/505153'/118'/400'/0'/0'"}},
 		{name: "wrong namespace", input: mnemonic + "\n", err: "path must be", args: []string{"--recover", "--hd-path=m/83696968'/503131'/0'"}},
 		{name: "coin type overflow", err: "must be less than", args: []string{"--coin-type=2147483648"}},
 		{name: "account overflow", err: "must be less than", args: []string{"--account=2147483648"}},

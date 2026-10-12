@@ -60,8 +60,12 @@ The flag --recover allows one to recover a key from a seed passphrase.
 If run with --dry-run, a key would be generated (or recovered) but not stored to the
 local keystore.
 Use --key-type ml_dsa_65 --bip85 for post-quantum keys derived from a 24-word
-mnemonic using pqseed's scoped BIP85 path: m/83696968'/505153'/coin_type'/3'/account'/index'.
+mnemonic using draft PQHD: m/83696968'/505153'/coin_type'/201'/account'/index'.
+The full 64-byte BIP85 entropy is expanded with SHAKE256 to a 32-byte ML-DSA-65 seed.
+This pre-v1 proposal must not protect real assets and differs from earlier --bip85 keys,
+including the obsolete scheme-3 draft. There is no fallback to those derivations.
 Recovery requires --bip85 and the same coin type, account, index, and BIP39 passphrase.
+In this mode passphrases are NFKD-normalized but whitespace is not trimmed.
 Without --bip85, existing BIP32/BIP44 derivation is unchanged.
 Use the --pubkey flag to add arbitrary public keys to the keystore for constructing
 multisig transactions.
@@ -93,7 +97,7 @@ Example:
 	f.Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	f.Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
 	f.String(flagHDPath, "", "Manual HD Path derivation (overrides coin type, account, and index)")
-	f.Bool(flagBIP85, false, "Derive ML-DSA-65 keys using BIP85 entropy (requires a 24-word mnemonic)")
+	f.Bool(flagBIP85, false, "Derive experimental PQHD ML-DSA-65 keys using BIP85 and SHAKE256 (requires a 24-word mnemonic)")
 	f.Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
 	f.Uint32(flagAccount, 0, "Account number for HD derivation (less than equal 2147483647)")
 	f.Uint32(flagIndex, 0, "Address index number for HD derivation (less than equal 2147483647)")
@@ -376,7 +380,12 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 	// override bip39 passphrase
 	if interactive {
-		bip39Passphrase, err = input.GetString(
+		getPassphrase := input.GetString
+		if bip85 {
+			// PQHD passphrases are NFKD-normalized, never whitespace-trimmed.
+			getPassphrase = input.GetStringRaw
+		}
+		bip39Passphrase, err = getPassphrase(
 			"Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed. "+
 				"Most users should just hit enter to use the default, \"\"", inBuf)
 		if err != nil {
@@ -385,7 +394,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 		// if they use one, make them re-enter it
 		if len(bip39Passphrase) != 0 {
-			p2, err := input.GetString("Repeat the passphrase:", inBuf)
+			p2, err := getPassphrase("Repeat the passphrase:", inBuf)
 			if err != nil {
 				return err
 			}

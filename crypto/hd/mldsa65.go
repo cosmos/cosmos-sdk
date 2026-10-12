@@ -1,6 +1,7 @@
 package hd
 
 import (
+	"crypto/sha3"
 	"fmt"
 	"strings"
 
@@ -14,30 +15,32 @@ import (
 // MlDsa65 is the ML-DSA-65 (FIPS 204) account key algorithm.
 var MlDsa65 = mldsa65Algo{}
 
-// MlDsa65BIP85 uses BIP85 entropy for ML-DSA-65 key generation. It has the same
-// signing algorithm and wire format as MlDsa65, but derives different keys.
+// MlDsa65BIP85 uses the draft PQHD BIP85/SHAKE256 derivation for ML-DSA-65.
+// It has the same signing algorithm and wire format as MlDsa65, but derives different keys.
 // Recovery requires the original derivation mode, path, and BIP39 passphrase.
+// The pre-v1 proposal must not be used to protect real assets.
 var MlDsa65BIP85 = mldsa65BIP85Algo{}
 
-// This follows pqseed's scoped derivation proposal (iqlusioninc/crates#1404).
-// Application 505153 ("PQS") and ML-DSA-65 algorithm ID 3 are pqseed conventions,
-// not registered BIP85 assignments or Project Eleven algorithm IDs.
+// PQHD draft framework, family-block registry, and vectors:
+// https://github.com/pqdh/pqhd/tree/befdce14cecbb5d485d3239982bfa5b207cdb922
+// Application 505153 ("PQS") is not a registered BIP85 assignment. Scheme 201
+// is active ML-DSA-65 in family block 2; no other PQHD scheme is supported here.
 const mlDsa65BIP85Prefix = "m/83696968'/505153'"
 
-// CreateMlDsa65BIP85Path returns the fully hardened pqseed ML-DSA-65 entropy
+// CreateMlDsa65BIP85Path returns the fully hardened PQHD ML-DSA-65 entropy
 // path. The SLIP-44 coin type, account, and address index must be below 2^31.
 func CreateMlDsa65BIP85Path(coinType, account, index uint32) (string, error) {
 	if coinType >= 1<<31 || account >= 1<<31 || index >= 1<<31 {
 		return "", fmt.Errorf("BIP85 coin type, account, and index must be less than 2147483648")
 	}
-	return fmt.Sprintf("%s/%d'/3'/%d'/%d'", mlDsa65BIP85Prefix, coinType, account, index), nil
+	return fmt.Sprintf("%s/%d'/201'/%d'/%d'", mlDsa65BIP85Prefix, coinType, account, index), nil
 }
 
 type mldsa65BIP85Algo struct{ mldsa65Algo }
 
-// Derive implements BIP39 -> hardened BIP32 -> BIP85 -> 32-byte keygen seed.
+// Derive implements BIP39 -> hardened BIP32 -> BIP85 -> SHAKE256 -> 32-byte xi.
 // Only valid 24-word English mnemonics are accepted. An empty path selects
-// coin type 118, account 0, index 0; explicit paths must use pqseed's scoped
+// coin type 118, account 0, index 0; explicit paths must use PQHD's scoped
 // ML-DSA-65 namespace.
 func (mldsa65BIP85Algo) Derive() DeriveFn {
 	return func(mnemonic, bip39Passphrase, hdPath string) ([]byte, error) {
@@ -49,8 +52,8 @@ func (mldsa65BIP85Algo) Derive() DeriveFn {
 			hdPath, _ = CreateMlDsa65BIP85Path(118, 0, 0)
 		}
 		parts := strings.Split(hdPath, "/")
-		if !strings.HasPrefix(hdPath, mlDsa65BIP85Prefix+"/") || len(parts) != 7 || parts[4] != "3'" {
-			return nil, fmt.Errorf("ML-DSA-65 BIP85 path must be %s/coin_type'/3'/account'/index'", mlDsa65BIP85Prefix)
+		if !strings.HasPrefix(hdPath, mlDsa65BIP85Prefix+"/") || len(parts) != 7 || parts[4] != "201'" {
+			return nil, fmt.Errorf("ML-DSA-65 BIP85 path must be %s/coin_type'/201'/account'/index'", mlDsa65BIP85Prefix)
 		}
 		seed, err := bip39.NewSeedWithErrorChecking(mnemonic, norm.NFKD.String(bip39Passphrase))
 		if err != nil {
@@ -60,7 +63,13 @@ func (mldsa65BIP85Algo) Derive() DeriveFn {
 		master, chainCode := ComputeMastersFromSeed(seed)
 		defer clear(master[:])
 		defer clear(chainCode[:])
-		return DeriveBIP85Entropy(master, chainCode, hdPath, 32)
+		entropy, err := DeriveBIP85Entropy(master, chainCode, hdPath, 64)
+		if err != nil {
+			return nil, err
+		}
+		defer clear(entropy)
+		// PQHD expands the full HMAC output, even when xi is shorter than it.
+		return sha3.SumSHAKE256(entropy, 32), nil
 	}
 }
 

@@ -2159,9 +2159,9 @@ func TestMlDsa65BIP85Recovery(t *testing.T) {
 	require.True(t, pub.Equals(recoveredPub))
 	for _, other := range []struct{ passphrase, path string }{
 		{"different passphrase", path},
-		{"passphrase", "m/83696968'/505153'/60'/3'/7'/9'"},
-		{"passphrase", "m/83696968'/505153'/118'/3'/8'/9'"},
-		{"passphrase", "m/83696968'/505153'/118'/3'/7'/10'"},
+		{"passphrase", "m/83696968'/505153'/60'/201'/7'/9'"},
+		{"passphrase", "m/83696968'/505153'/118'/201'/8'/9'"},
+		{"passphrase", "m/83696968'/505153'/118'/201'/7'/10'"},
 	} {
 		rec, err := NewInMemory(cdc).NewAccount("other", mnemonic, other.passphrase, other.path, hd.MlDsa65BIP85)
 		require.NoError(t, err)

@@ -1,5 +1,27 @@
 # Upgrade Reference
 
+## Unreleased: experimental PQHD recovery
+
+The opt-in `keys add --key-type ml_dsa_65 --bip85` mode now follows the draft PQHD
+framework and family-block ML-DSA-65 registry assignment, not the earlier SDK-local path,
+direct BIP85-HMAC truncation, or scheme-3 SHAKE256 draft.
+It derives `m/83696968'/505153'/coin_type'/201'/account'/index'`,
+then applies SHAKE256 to all 64 entropy bytes to obtain the 32-byte key-generation seed.
+CLI BIP39 passphrase whitespace is now preserved in this mode, as required by PQHD.
+
+**Earlier unreleased opt-in keys cannot be recovered by this new derivation.** There is
+no automatic fallback. Explicit scheme-3 paths are rejected: block 0 is unassigned in
+the current registry, not a deprecated recovery namespace. Keep existing keyring/private-key backups and the original
+implementation plus derivation settings if you need to recover those draft keys.
+Stored private keys continue to sign unchanged; no funds or accounts are migrated.
+Without `--bip85`, legacy BIP32/BIP44 recovery is unchanged. This is not a consensus change.
+
+PQHD is pre-v1: do not protect real assets with draft-derived keys. See the
+[keyring guide](docs/docs/user/run-node/00-keyring.md#post-quantum-keys-from-a-24-word-mnemonic)
+for the pinned upstream revision, recovery inputs, and security limitations.
+
+## Upgrading from v0.54.x
+
 This document provides a reference for upgrading from `v0.54.x` to `v0.55.x` of Cosmos SDK. If you are upgrading directly from `v0.53.x`, see [Upgrading from v0.53.x](#upgrading-from-v053x) after reading the breaking changes below.
 
 For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.55.x/CHANGELOG.md).

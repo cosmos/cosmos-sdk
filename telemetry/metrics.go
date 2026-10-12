@@ -122,7 +122,7 @@ type Metrics struct {
 
 // GatherResponse is the response type of registered metrics
 //
-// Depreacated: users should switch to OpenTelemetry.
+// Deprecated: users should switch to OpenTelemetry.
 type GatherResponse struct {
 	Metrics     []byte
 	ContentType string

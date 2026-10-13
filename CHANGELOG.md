@@ -44,7 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* (crypto/hd) Add experimental PQHD BIP85/SHAKE256 derivation for ML-DSA-65 account keys from a 24-word mnemonic (`keys add --key-type ml_dsa_65 --bip85`), pinned to the pre-v1 family-block registry (scheme 201). Coin-type/account/index separation and NFKD passphrases (without whitespace trimming) match PQHD; legacy BIP32/BIP44 recovery is unchanged. Earlier unreleased `--bip85` keys, including scheme-3 draft keys, are incompatible; see `UPGRADING.md`.
+* (crypto/hd) [#26872](https://github.com/cosmos/cosmos-sdk/pull/26872) Add experimental PQHD BIP85/SHAKE256 derivation for ML-DSA-65 account keys from a 24-word mnemonic (`keys add --key-type ml_dsa_65 --bip85`), pinned to the pre-v1 family-block registry (scheme 201). Coin-type/account/index separation and NFKD passphrases (without whitespace trimming) match PQHD; legacy BIP32/BIP44 recovery is unchanged. Earlier unreleased `--bip85` keys, including scheme-3 draft keys, are incompatible; see `UPGRADING.md`.
 * (x/distribution) [#26749](https://github.com/cosmos/cosmos-sdk/pull/26749) Add a `claimable` field to `QueryDelegationTotalRewardsResponse`, reporting the withdrawable amount as `sdk.Coins` by truncating each delegation reward the way `Msg/WithdrawDelegatorReward` does. `total` keeps its documented meaning as the raw `DecCoins` sum ([#24406](https://github.com/cosmos/cosmos-sdk/issues/24406)).
 
 ### Improvements

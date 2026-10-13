@@ -405,6 +405,12 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		}
 	}
 
+	if algo.Name() == hd.MlDsa65Type && !bip85 {
+		cmd.PrintErrln("WARNING: ml_dsa_65 key derived on the BIP44 path " + hdPath + ", which shares its index space with secp256k1 keys.\n" +
+			"Recovering it from the mnemonic requires remembering that this index was used for ml_dsa_65.\n" +
+			"Use --bip85 to derive post-quantum keys in the separate PQHD namespace. See the keyring documentation.")
+	}
+
 	k, err := kb.NewAccount(name, mnemonic, bip39Passphrase, hdPath, algo)
 	if err != nil {
 		return err

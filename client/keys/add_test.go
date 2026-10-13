@@ -438,3 +438,37 @@ func TestAddBIP85(t *testing.T) {
 		})
 	}
 }
+
+func TestAddMlDsa65DerivationWarning(t *testing.T) {
+	mnemonic := strings.Repeat("abandon ", 23) + "art"
+	for _, tc := range []struct {
+		name string
+		args []string
+		warn bool
+	}{
+		{name: "legacy ml_dsa_65", args: []string{"--key-type=ml_dsa_65"}, warn: true},
+		{name: "bip85 ml_dsa_65", args: []string{"--key-type=ml_dsa_65", "--bip85"}},
+		{name: "secp256k1", args: []string{"--key-type=secp256k1"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := AddKeyCommand()
+			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+			stderr := new(bytes.Buffer)
+			cmd.SetErr(stderr)
+			mockIn.Reset(mnemonic + "\n")
+			cdc := moduletestutil.MakeTestEncodingConfig().Codec
+			kb := keyring.NewInMemory(cdc)
+			clientCtx := client.Context{}.WithKeyring(kb).WithCodec(cdc).WithInput(mockIn)
+			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+			cmd.SetArgs(append([]string{"k", "--recover", "--no-backup"}, tc.args...))
+			require.NoError(t, cmd.ExecuteContext(ctx))
+			if tc.warn {
+				require.Contains(t, stderr.String(), "WARNING: ml_dsa_65 key derived on the BIP44 path")
+				require.Contains(t, stderr.String(), "--bip85")
+			} else {
+				require.NotContains(t, stderr.String(), "WARNING")
+			}
+		})
+	}
+}

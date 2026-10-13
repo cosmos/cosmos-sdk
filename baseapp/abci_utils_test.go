@@ -888,7 +888,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultTxSelector_SelectTxForProposalRejectsOve
 	s.Require().Equal(bz1, got[0])
 }
 
-// A smaller maxBlockGas on a later call must not underflow the remaining budget and admit any tx.
+// gasWithinBudget subtracts, so a total already past a smaller later maxBlockGas must not wrap and admit any tx.
 func (s *ABCIUtilsTestSuite) TestDefaultTxSelector_SelectTxForProposalRejectsWhenBudgetShrinks() {
 	tx1, bz1 := s.buildSignedTx(100)
 	tx2, bz2 := s.buildSignedTx(1)

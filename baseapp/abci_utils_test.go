@@ -888,6 +888,27 @@ func (s *ABCIUtilsTestSuite) TestDefaultTxSelector_SelectTxForProposalRejectsOve
 	s.Require().Equal(bz1, got[0])
 }
 
+// A smaller maxBlockGas on a later call must not underflow the remaining budget and admit any tx.
+func (s *ABCIUtilsTestSuite) TestDefaultTxSelector_SelectTxForProposalRejectsWhenBudgetShrinks() {
+	tx1, bz1 := s.buildSignedTx(100)
+	tx2, bz2 := s.buildSignedTx(1)
+	maxTxBytes := uint64(len(bz1)+len(bz2)) * 2
+
+	ts := baseapp.NewDefaultTxSelector()
+	ts.SelectTxForProposal(context.Background(), maxTxBytes, 200, tx1, bz1, 100)
+	ts.SelectTxForProposal(context.Background(), maxTxBytes, 50, tx2, bz2, 1)
+
+	got := ts.SelectedTxs(context.Background())
+	s.Require().Len(got, 1)
+	s.Require().Equal(bz1, got[0])
+}
+
+func (s *ABCIUtilsTestSuite) TestNoOpProcessProposalAlwaysAccepts() {
+	resp, err := baseapp.NoOpProcessProposal()(s.ctx, &abci.RequestProcessProposal{Txs: [][]byte{[]byte("garbage")}})
+	s.Require().NoError(err)
+	s.Require().Equal(abci.ResponseProcessProposal_ACCEPT, resp.Status)
+}
+
 func marshalDelimitedFn(msg proto.Message) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {

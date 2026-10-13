@@ -242,7 +242,7 @@ func txGasForBlockAccounting(tx sdk.Tx, gasWanted uint64) uint64 {
 
 // gasWithinBudget checks before adding, since add-then-check on attacker-controlled gas can overflow uint64.
 func gasWithinBudget(txGas, totalTxGas, maxGas uint64) bool {
-	return txGas <= maxGas-totalTxGas
+	return totalTxGas <= maxGas && txGas <= maxGas-totalTxGas
 }
 
 // validateMaxGas panics if maxGas is an invalid CometBFT MaxGas value.
@@ -442,8 +442,14 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 // DefaultPrepareProposal. It is very important that the same validation logic
 // is used in both steps, and applications must ensure that this is the case in
 // non-default handlers.
+//
+// If no mempool is set or if the mempool is a no-op mempool, step (2) is
+// skipped and only decoding and MaxBlockGas (using each tx's declared gas) are
+// checked.
 func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHandler {
-	// Skip ante-handler verification (PrepareProposal may include txs that fail ante checks), but still enforce MaxBlockGas so a byzantine proposer can't exploit the no-op FinalizeBlock gas meter.
+	// With a nil or NoOp mempool, skip ante verification (PrepareProposal may
+	// include txs that fail it) but still enforce MaxBlockGas, since the block
+	// gas meter is disabled by default and won't stop an over-gas block.
 	verifyTx := h.txVerifier.ProcessProposalVerifyTx
 	if _, isNoOp := h.mempool.(mempool.NoOpMempool); h.mempool == nil || isNoOp {
 		verifyTx = func(txBytes []byte) (sdk.Tx, uint64, error) {
@@ -480,6 +486,15 @@ func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHan
 func NoOpPrepareProposal() sdk.PrepareProposalHandler {
 	return func(_ sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 		return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
+	}
+}
+
+// NoOpProcessProposal defines a no-op ProcessProposal Handler. It will always
+// return ACCEPT. It does not enforce MaxBlockGas, so pair it with an enabled
+// block gas meter or a trusted proposer.
+func NoOpProcessProposal() sdk.ProcessProposalHandler {
+	return func(_ sdk.Context, _ *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
 	}
 }
 

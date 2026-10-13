@@ -146,7 +146,7 @@ By default, the keyring generates a `secp256k1` keypair. The keyring also suppor
 
 ### Post-quantum keys from a 24-word mnemonic
 
-ML-DSA-65 software account keys can opt into the
+`simd keys add --key-type ml_dsa_65` derives ML-DSA-65 software account keys with the
 draft PQHD derivation, inspired by the
 [Project Eleven approach](https://www.projecteleven.com/blog/generating-post-quantum-keypairs-from-a-single-24word-seed-phrase):
 BIP39 mnemonic → BIP32 master → fully hardened child → 64-byte BIP85 entropy → SHAKE256 → ML-DSA-65 key generation.
@@ -156,13 +156,13 @@ Do not protect real assets with keys derived under this draft.
 
 ```bash
 # Generate a fresh 24-word mnemonic and store an ML-DSA-65 key.
-simd keys add pq --key-type ml_dsa_65 --bip85 --keyring-backend file
+simd keys add pq --key-type ml_dsa_65 --keyring-backend file
 
 # Restore it in a new keyring using the same mnemonic.
-simd keys add pq --key-type ml_dsa_65 --bip85 --recover --keyring-backend file
+simd keys add pq --key-type ml_dsa_65 --recover --keyring-backend file
 
 # Derive another account from that SAME mnemonic (not a newly generated one).
-simd keys add pq-next --key-type ml_dsa_65 --bip85 --recover \
+simd keys add pq-next --key-type ml_dsa_65 --recover \
   --account 7 --index 9 --keyring-backend file
 ```
 
@@ -186,7 +186,7 @@ The default `simd` path is `m/83696968'/505153'/118'/201'/0'/0'`.
   Every component is hardened; there is no BIP44 change level.
   An invalid BIP32 master or child causes an error, never a silent retry at the next index.
 * `--hd-path` may override coin type/account/index, but must use this exact six-component namespace.
-  Ledger, public-key import, and multisig construction cannot be combined with `--bip85`.
+  Ledger devices do not support `ml_dsa_65` keys.
 
 Only active scheme `201` is implemented here. Other schemes, including reserved FN-DSA
 indices `400` and `401`, are rejected. PQHD requires deprecated entries to remain derivable
@@ -200,21 +200,28 @@ The 32-byte big-endian child private scalar is processed with
 The HMAC is not truncated before expansion. No new signature implementation, wire format,
 address scheme, or consensus rule is introduced.
 
-**Recovery:** Back up the mnemonic, implementation revision, derivation mode (`--bip85`), coin type/account/index or full path,
+**Recovery:** Back up the mnemonic, implementation revision, derivation mode (PQHD, or `--legacy-bip44`), coin type/account/index or full path,
 and any BIP39 passphrase. To set or recover a nonempty BIP39 passphrase, also pass `--interactive`.
 This passphrase is different from the keyring encryption password. The mnemonic must be a
 checksum-valid 24-word English BIP39 sentence: it is NFKD-normalized, split on Unicode whitespace,
 and rejoined with single ASCII spaces. The passphrase is NFKD-normalized **without trimming**;
 leading/trailing spaces and tabs matter, including in the CLI. A wrong passphrase silently derives
-a different valid key. The existing derivation mode is unchanged. Software keyring records store
-the resulting private key, not the mnemonic or derivation metadata. Once stored, signing does not
-need `--bip85`.
+a different valid key. Software keyring records store the resulting private key, not the mnemonic
+or derivation metadata. Signing with a stored key does not depend on how it was derived.
 
-**Compatibility:** Without `--bip85`, both `secp256k1` and `ml_dsa_65` retain their existing
-BIP32/BIP44 derivation, including recovery from shorter mnemonics. Enabling BIP85 derives a
-different key and address; it does not migrate funds or replace an existing account's public key.
-`simd keys add --key-type ml_dsa_65` without `--bip85` prints a warning, because the resulting key
-shares the BIP44 index space with `secp256k1` keys.
+**Opting out with `--legacy-bip44`:** Earlier releases derived `ml_dsa_65` keys on the BIP44
+path `m/44'/coin_type'/account'/0/index`, shared with `secp256k1` keys. To recover such a key,
+pass `--legacy-bip44`; without it, the same mnemonic derives a different key and address.
+`--legacy-bip44` accepts shorter mnemonics and prints a warning, because the resulting key shares
+the BIP44 index space with `secp256k1` keys. `secp256k1` derivation is unchanged. Switching
+derivations does not migrate funds or replace an existing account's public key.
+
+```bash
+simd keys add old-pq --key-type ml_dsa_65 --legacy-bip44 --recover --keyring-backend file
+```
+
+Go code calling `keyring.NewAccount` with `hd.MlDsa65` keeps the BIP44 derivation. Use
+`hd.MlDsa65BIP85` with a path from `hd.CreateMlDsa65BIP85Path` for PQHD.
 
 **Restoring every account from a mnemonic:** A stored key does not record which derivation produced
 it, and an address does not reveal it either: both derivation modes produce the same `ml_dsa_65`
@@ -239,7 +246,7 @@ Go wallets can get the candidate list for one coin type, account, and index from
 type, path, and the algorithm to pass to `keyring.NewAccount`. The list grows when a new scheme
 is supported, so wallets that iterate over it pick up new schemes without code changes.
 
-**Earlier unreleased `--bip85` keys are incompatible.** The initial SDK-local path
+**Keys from earlier unreleased PQHD drafts are incompatible.** The initial SDK-local path
 (`m/83696968'/118'/65'/account'/index'`), the scoped derivation that used the first 32 HMAC
 bytes directly, and the subsequent SHAKE256 draft using scheme `3` all produce different keys.
 The old scoped path `m/83696968'/505153'/coin_type'/3'/account'/index'` is rejected;

@@ -1,22 +1,35 @@
 # Upgrade Reference
 
-## Unreleased: experimental PQHD recovery
+## Unreleased: ml_dsa_65 keys use PQHD derivation by default
 
-The opt-in `keys add --key-type ml_dsa_65 --bip85` mode now follows the draft PQHD
-framework and family-block ML-DSA-65 registry assignment, not the earlier SDK-local path,
-direct BIP85-HMAC truncation, or scheme-3 SHAKE256 draft.
-It derives `m/83696968'/505153'/coin_type'/201'/account'/index'`,
-then applies SHAKE256 to all 64 entropy bytes to obtain the 32-byte key-generation seed.
-CLI BIP39 passphrase whitespace is now preserved in this mode, as required by PQHD.
+`keys add --key-type ml_dsa_65` now derives keys with the draft PQHD scheme instead of the
+BIP44 path shared with `secp256k1` keys. It derives
+`m/83696968'/505153'/coin_type'/201'/account'/index'`, then applies SHAKE256 to all
+64 bytes of BIP85 entropy to obtain the 32-byte key-generation seed. PQHD requires a
+24-word mnemonic, and its BIP39 passphrase whitespace is preserved.
 
-**Earlier unreleased opt-in keys cannot be recovered by this new derivation.** There is
-no automatic fallback. Explicit scheme-3 paths are rejected: block 0 is unassigned in
-the current registry, not a deprecated recovery namespace. Keep existing keyring/private-key backups and the original
-implementation plus derivation settings if you need to recover those draft keys.
-Stored private keys continue to sign unchanged; no funds or accounts are migrated.
-Without `--bip85`, legacy BIP32/BIP44 recovery is unchanged. This is not a consensus change.
+**Recovering `ml_dsa_65` keys created by v0.55 requires `--legacy-bip44`.** Without it, the
+same mnemonic derives a different key and address:
 
-PQHD is pre-v1: do not protect real assets with draft-derived keys. See the
+```bash
+simd keys add mykey --key-type ml_dsa_65 --legacy-bip44 --recover
+```
+
+`--legacy-bip44` prints a warning, because such keys share the BIP44 index space with
+`secp256k1` keys. Create new post-quantum keys without it. Stored private keys continue to
+sign unchanged; no funds or accounts are migrated. `secp256k1` derivation is unchanged.
+This is not a consensus change.
+
+The unreleased `--bip85` flag is removed; PQHD is now the default. Keys from earlier
+unreleased drafts (the SDK-local path, direct BIP85-HMAC truncation, and the scheme-3
+SHAKE256 draft) cannot be recovered by this derivation, and there is no automatic fallback.
+
+Go code that calls `keyring.NewAccount` or `NewMnemonic` with `hd.MlDsa65` keeps the BIP44
+derivation; pass `hd.MlDsa65BIP85` with a path from `hd.CreateMlDsa65BIP85Path` for PQHD.
+Wallets restoring accounts from a mnemonic should try every entry of
+`hd.AccountKeyDerivations`.
+
+PQHD is pre-v1. See the
 [keyring guide](docs/docs/user/run-node/00-keyring.md#post-quantum-keys-from-a-24-word-mnemonic)
 for the pinned upstream revision, recovery inputs, and security limitations.
 

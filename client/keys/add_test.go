@@ -375,7 +375,7 @@ func TestAddRecoverFileBackend(t *testing.T) {
 	require.Equal(t, "keyname1", k.Name)
 }
 
-func TestAddBIP85(t *testing.T) {
+func TestAddMlDsa65PQHD(t *testing.T) {
 	const defaultHash = "35d464b10e832cce796da2b2759476363e502576c992a44f621f6b8a367b856a"
 	const accountHash = "f2419a2b2a1f6cd4a35117e40a039ad549ef7f6086d1a1651c82ba6d547e0730"
 	const coinHash = "e18897fc498f18b9ceb794f2a7a3b973a15c11875cb1f302defc8ad21b1fe2ca"
@@ -397,8 +397,9 @@ func TestAddBIP85(t *testing.T) {
 		{name: "explicit path recovery", input: mnemonic + "\nTREZOR\nTREZOR\n", pubHash: accountHash, args: []string{"--recover", "--interactive", "--hd-path=m/83696968'/505153'/118'/201'/7'/9'"}},
 		{name: "coin type scope", input: mnemonic + "\n", pubHash: coinHash, args: []string{"--recover", "--coin-type=60", "--account=1", "--index=7"}},
 		{name: "path overrides scope", input: mnemonic + "\n", pubHash: coinHash, args: []string{"--recover", "--coin-type=118", "--account=7", "--index=9", "--hd-path=m/83696968'/505153'/60'/201'/1'/7'"}},
-		{name: "legacy mnemonic too short", input: strings.Repeat("abandon ", 11) + "about\n", err: "24-word", args: []string{"--recover"}},
-		{name: "wrong algorithm", err: "requires --key-type", args: []string{"--key-type=secp256k1"}},
+		{name: "legacy mnemonic too short", input: strings.Repeat("abandon ", 11) + "about\n", err: "24-word mnemonic; to recover an ml_dsa_65 key created before PQHD, pass --legacy-bip44", args: []string{"--recover"}},
+		{name: "bip44 path", input: mnemonic + "\n", err: "pass --legacy-bip44", args: []string{"--recover", "--hd-path=m/44'/118'/0'/0/0"}},
+		{name: "legacy with wrong algorithm", err: "--legacy-bip44 requires --key-type ml_dsa_65", args: []string{"--key-type=secp256k1", "--legacy-bip44"}},
 		{name: "unhardened path", input: mnemonic + "\n", err: "must be hardened", args: []string{"--recover", "--hd-path=m/83696968'/505153'/118'/201'/0'/1"}},
 		{name: "obsolete scheme", input: mnemonic + "\n", err: "path must be", args: []string{"--recover", "--hd-path=m/83696968'/505153'/118'/3'/0'/0'"}},
 		{name: "reserved scheme", input: mnemonic + "\n", err: "path must be", args: []string{"--recover", "--hd-path=m/83696968'/505153'/118'/400'/0'/0'"}},
@@ -406,9 +407,7 @@ func TestAddBIP85(t *testing.T) {
 		{name: "coin type overflow", err: "must be less than", args: []string{"--coin-type=2147483648"}},
 		{name: "account overflow", err: "must be less than", args: []string{"--account=2147483648"}},
 		{name: "index overflow", err: "must be less than", args: []string{"--index=2147483648"}},
-		{name: "ledger", err: "none of the others", args: []string{"--ledger"}},
-		{name: "public key", err: "none of the others", args: []string{"--pubkey={}"}},
-		{name: "multisig", err: "none of the others", args: []string{"--multisig=other"}},
+		{name: "ledger", err: "ledger devices do not support ml_dsa_65", args: []string{"--ledger"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := AddKeyCommand()
@@ -419,7 +418,7 @@ func TestAddBIP85(t *testing.T) {
 			kb := keyring.NewInMemory(cdc)
 			clientCtx := client.Context{}.WithKeyring(kb).WithCodec(cdc).WithInput(mockIn)
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
-			cmd.SetArgs(append([]string{"pq", "--key-type=ml_dsa_65", "--bip85", "--no-backup"}, tc.args...))
+			cmd.SetArgs(append([]string{"pq", "--key-type=ml_dsa_65", "--no-backup"}, tc.args...))
 			err := cmd.ExecuteContext(ctx)
 			if tc.err != "" {
 				require.ErrorContains(t, err, tc.err)
@@ -439,16 +438,20 @@ func TestAddBIP85(t *testing.T) {
 	}
 }
 
-func TestAddMlDsa65DerivationWarning(t *testing.T) {
-	mnemonic := strings.Repeat("abandon ", 23) + "art"
+func TestAddMlDsa65LegacyBIP44(t *testing.T) {
+	mnemonic24 := strings.Repeat("abandon ", 23) + "art"
+	mnemonic12 := strings.Repeat("abandon ", 11) + "about"
 	for _, tc := range []struct {
-		name string
-		args []string
-		warn bool
+		name, mnemonic, path string
+		args                 []string
+		algo                 keyring.SignatureAlgo
+		warn                 bool
 	}{
-		{name: "legacy ml_dsa_65", args: []string{"--key-type=ml_dsa_65"}, warn: true},
-		{name: "bip85 ml_dsa_65", args: []string{"--key-type=ml_dsa_65", "--bip85"}},
-		{name: "secp256k1", args: []string{"--key-type=secp256k1"}},
+		{name: "legacy ml_dsa_65", mnemonic: mnemonic24, path: "m/44'/118'/0'/0/0", algo: hd.MlDsa65, args: []string{"--key-type=ml_dsa_65", "--legacy-bip44"}, warn: true},
+		{name: "legacy ml_dsa_65 12 words", mnemonic: mnemonic12, path: "m/44'/118'/0'/0/0", algo: hd.MlDsa65, args: []string{"--key-type=ml_dsa_65", "--legacy-bip44"}, warn: true},
+		{name: "legacy ml_dsa_65 hd path", mnemonic: mnemonic12, path: "m/44'/118'/3'/0/5", algo: hd.MlDsa65, args: []string{"--key-type=ml_dsa_65", "--legacy-bip44", "--hd-path=m/44'/118'/3'/0/5"}, warn: true},
+		{name: "pqhd ml_dsa_65", mnemonic: mnemonic24, path: "m/83696968'/505153'/118'/201'/0'/0'", algo: hd.MlDsa65BIP85, args: []string{"--key-type=ml_dsa_65"}},
+		{name: "secp256k1", mnemonic: mnemonic24, path: "m/44'/118'/0'/0/0", algo: hd.Secp256k1, args: []string{"--key-type=secp256k1"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := AddKeyCommand()
@@ -456,16 +459,23 @@ func TestAddMlDsa65DerivationWarning(t *testing.T) {
 			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 			stderr := new(bytes.Buffer)
 			cmd.SetErr(stderr)
-			mockIn.Reset(mnemonic + "\n")
+			mockIn.Reset(tc.mnemonic + "\n")
 			cdc := moduletestutil.MakeTestEncodingConfig().Codec
 			kb := keyring.NewInMemory(cdc)
 			clientCtx := client.Context{}.WithKeyring(kb).WithCodec(cdc).WithInput(mockIn)
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 			cmd.SetArgs(append([]string{"k", "--recover", "--no-backup"}, tc.args...))
 			require.NoError(t, cmd.ExecuteContext(ctx))
+			bz, err := tc.algo.Derive()(tc.mnemonic, "", tc.path)
+			require.NoError(t, err)
+			record, err := kb.Key("k")
+			require.NoError(t, err)
+			pub, err := record.GetPubKey()
+			require.NoError(t, err)
+			require.True(t, tc.algo.Generate()(bz).PubKey().Equals(pub))
 			if tc.warn {
 				require.Contains(t, stderr.String(), "WARNING: ml_dsa_65 key derived on the BIP44 path")
-				require.Contains(t, stderr.String(), "--bip85")
+				require.Contains(t, stderr.String(), "without --legacy-bip44")
 			} else {
 				require.NotContains(t, stderr.String(), "WARNING")
 			}

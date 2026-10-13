@@ -2,6 +2,7 @@ package hd
 
 import (
 	"crypto/sha3"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -27,6 +28,15 @@ var MlDsa65BIP85 = mldsa65BIP85Algo{}
 // is active ML-DSA-65 in family block 2; no other PQHD scheme is supported here.
 const mlDsa65BIP85Prefix = "m/83696968'/505153'"
 
+var (
+	// ErrMlDsa65BIP85Mnemonic is returned when a PQHD ML-DSA-65 key is derived
+	// from a mnemonic that is not 24 words long.
+	ErrMlDsa65BIP85Mnemonic = errors.New("BIP85 ML-DSA-65 requires a 24-word mnemonic")
+	// ErrMlDsa65BIP85Path is returned when a PQHD ML-DSA-65 key is derived on a
+	// path outside the PQHD ML-DSA-65 namespace.
+	ErrMlDsa65BIP85Path = errors.New("ML-DSA-65 BIP85 path must be " + mlDsa65BIP85Prefix + "/coin_type'/201'/account'/index'")
+)
+
 // CreateMlDsa65BIP85Path returns the fully hardened PQHD ML-DSA-65 entropy
 // path. The SLIP-44 coin type, account, and address index must be below 2^31.
 func CreateMlDsa65BIP85Path(coinType, account, index uint32) (string, error) {
@@ -46,14 +56,14 @@ func (mldsa65BIP85Algo) Derive() DeriveFn {
 	return func(mnemonic, bip39Passphrase, hdPath string) ([]byte, error) {
 		mnemonic = strings.Join(strings.Fields(norm.NFKD.String(mnemonic)), " ")
 		if len(strings.Fields(mnemonic)) != 24 {
-			return nil, fmt.Errorf("BIP85 ML-DSA-65 requires a 24-word mnemonic")
+			return nil, ErrMlDsa65BIP85Mnemonic
 		}
 		if hdPath == "" {
 			hdPath, _ = CreateMlDsa65BIP85Path(118, 0, 0)
 		}
 		parts := strings.Split(hdPath, "/")
 		if !strings.HasPrefix(hdPath, mlDsa65BIP85Prefix+"/") || len(parts) != 7 || parts[4] != "201'" {
-			return nil, fmt.Errorf("ML-DSA-65 BIP85 path must be %s/coin_type'/201'/account'/index'", mlDsa65BIP85Prefix)
+			return nil, ErrMlDsa65BIP85Path
 		}
 		seed, err := bip39.NewSeedWithErrorChecking(mnemonic, norm.NFKD.String(bip39Passphrase))
 		if err != nil {

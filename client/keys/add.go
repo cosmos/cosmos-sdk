@@ -434,5 +434,10 @@ func readMnemonicFromFile(filePath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSpace(string(bz)), nil
+
+	rv := strings.TrimSpace(string(bz))
+	if len(rv) == 0 {
+		return "", fmt.Errorf("mnemonic source file is empty")
+	}
+	return rv, nil
 }

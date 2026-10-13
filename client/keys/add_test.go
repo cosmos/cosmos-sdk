@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/cosmos/go-bip39"
@@ -370,4 +372,227 @@ func TestAddRecoverFileBackend(t *testing.T) {
 	k, err := kb.Key("keyname1")
 	require.NoError(t, err)
 	require.Equal(t, "keyname1", k.Name)
+}
+
+func Test_readMnemonicFromFile(t *testing.T) {
+	const mnemonic = "equip will roof matter pink blind book anxiety banner elbow sun young"
+
+	tests := []struct {
+		name     string
+		noFile   bool
+		content  string
+		expected string
+		expErr   string
+	}{
+		{
+			name:   "file does not exist",
+			noFile: true,
+			expErr: "no such file or directory",
+		},
+		{
+			name:    "empty file",
+			content: "",
+			expErr:  "mnemonic source file is empty",
+		},
+		{
+			name:    "only spaces",
+			content: "   ",
+			expErr:  "mnemonic source file is empty",
+		},
+		{
+			name:    "only newlines",
+			content: "\n\n",
+			expErr:  "mnemonic source file is empty",
+		},
+		{
+			name:    "mixed whitespace only",
+			content: " \t\r\n \n\t ",
+			expErr:  "mnemonic source file is empty",
+		},
+		{
+			name:     "no surrounding whitespace",
+			content:  mnemonic,
+			expected: mnemonic,
+		},
+		{
+			name:     "trailing newline",
+			content:  mnemonic + "\n",
+			expected: mnemonic,
+		},
+		{
+			name:     "trailing CRLF",
+			content:  mnemonic + "\r\n",
+			expected: mnemonic,
+		},
+		{
+			name:     "leading whitespace",
+			content:  " \t\n" + mnemonic,
+			expected: mnemonic,
+		},
+		{
+			name:     "leading and trailing whitespace",
+			content:  "\n  \t" + mnemonic + " \t\n\n",
+			expected: mnemonic,
+		},
+		{
+			name:     "inner whitespace is preserved",
+			content:  "\n" + "equip  will\troof" + "\n",
+			expected: "equip  will\troof",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			filePath := filepath.Join(t.TempDir(), "mnemonic.txt")
+			if !tc.noFile {
+				require.NoError(t, os.WriteFile(filePath, []byte(tc.content), 0o600), "os.WriteFile")
+			}
+
+			var actual string
+			var err error
+			testFunc := func() {
+				actual, err = readMnemonicFromFile(filePath)
+			}
+			require.NotPanics(t, testFunc, "readMnemonicFromFile")
+			if len(tc.expErr) > 0 {
+				require.ErrorContains(t, err, tc.expErr, "readMnemonicFromFile error")
+			} else {
+				require.NoError(t, err, "readMnemonicFromFile error")
+			}
+			require.Equal(t, tc.expected, actual, "readMnemonicFromFile result")
+		})
+	}
+}
+
+func Test_runAddCmdMnemonicSource(t *testing.T) {
+	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	paddedMnemonic := "\n  " + testdata.TestMnemonic + " \t\n\n"
+
+	// Derive the address we expect from the test mnemonic so we know the file content was used.
+	expKb := keyring.NewInMemory(cdc)
+	expRec, err := expKb.NewAccount("expected", testdata.TestMnemonic, "", sdk.GetConfig().GetFullBIP44Path(), hd.Secp256k1)
+	require.NoError(t, err, "NewAccount for expected key")
+	expAddr, err := expRec.GetAddress()
+	require.NoError(t, err, "GetAddress for expected key")
+
+	tests := []struct {
+		name    string
+		mode    string // either flagRecover or flagInteractive.
+		noFile  bool
+		content string
+		stdin   string
+		expErr  string
+	}{
+		{
+			name:    "recover: padded mnemonic",
+			mode:    flagRecover,
+			content: paddedMnemonic,
+		},
+		{
+			name:    "recover: empty file",
+			mode:    flagRecover,
+			content: "",
+			expErr:  "mnemonic source file is empty",
+		},
+		{
+			name:    "recover: whitespace only",
+			mode:    flagRecover,
+			content: " \t\n\r\n ",
+			expErr:  "mnemonic source file is empty",
+		},
+		{
+			name:   "recover: file does not exist",
+			mode:   flagRecover,
+			noFile: true,
+			expErr: "no such file or directory",
+		},
+		{
+			name:    "recover: invalid mnemonic",
+			mode:    flagRecover,
+			content: "invalid mnemonic\n",
+			expErr:  "invalid mnemonic",
+		},
+		{
+			name:    "interactive: padded mnemonic",
+			mode:    flagInteractive,
+			content: paddedMnemonic,
+			stdin:   "\n", // empty bip39 passphrase
+		},
+		{
+			name:    "interactive: empty file",
+			mode:    flagInteractive,
+			content: "",
+			stdin:   "\n",
+			expErr:  "mnemonic source file is empty",
+		},
+		{
+			name:    "interactive: whitespace only",
+			mode:    flagInteractive,
+			content: " \t\n\r\n ",
+			stdin:   "\n",
+			expErr:  "mnemonic source file is empty",
+		},
+		{
+			name:   "interactive: file does not exist",
+			mode:   flagInteractive,
+			noFile: true,
+			stdin:  "\n",
+			expErr: "no such file or directory",
+		},
+		{
+			name:    "interactive: invalid mnemonic",
+			mode:    flagInteractive,
+			content: "invalid mnemonic\n",
+			stdin:   "\n",
+			expErr:  "invalid mnemonic",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := AddKeyCommand()
+			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+
+			kbHome := t.TempDir()
+			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+
+			kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
+			require.NoError(t, err, "keyring.New")
+
+			clientCtx := client.Context{}.
+				WithCodec(cdc).
+				WithKeyringDir(kbHome).
+				WithKeyring(kb).
+				WithInput(mockIn)
+			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+
+			srcFile := filepath.Join(t.TempDir(), "mnemonic.txt")
+			if !tc.noFile {
+				require.NoError(t, os.WriteFile(srcFile, []byte(tc.content), 0o600), "os.WriteFile")
+			}
+
+			cmd.SetArgs([]string{
+				"testkey",
+				fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
+				fmt.Sprintf("--%s", tc.mode),
+				fmt.Sprintf("--%s=%s", flagMnemonicSrc, srcFile),
+			})
+			mockIn.Reset(tc.stdin)
+
+			err = cmd.ExecuteContext(ctx)
+			if len(tc.expErr) > 0 {
+				require.ErrorContains(t, err, tc.expErr, "ExecuteContext error")
+				_, err = kb.Key("testkey")
+				require.Error(t, err, "key should not have been added")
+				return
+			}
+
+			require.NoError(t, err, "ExecuteContext error")
+			rec, err := kb.Key("testkey")
+			require.NoError(t, err, "kb.Key")
+			addr, err := rec.GetAddress()
+			require.NoError(t, err, "GetAddress")
+			require.Equal(t, expAddr.String(), addr.String(), "key address")
+		})
+	}
 }

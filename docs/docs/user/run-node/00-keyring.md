@@ -213,6 +213,31 @@ need `--bip85`.
 **Compatibility:** Without `--bip85`, both `secp256k1` and `ml_dsa_65` retain their existing
 BIP32/BIP44 derivation, including recovery from shorter mnemonics. Enabling BIP85 derives a
 different key and address; it does not migrate funds or replace an existing account's public key.
+`simd keys add --key-type ml_dsa_65` without `--bip85` prints a warning, because the resulting key
+shares the BIP44 index space with `secp256k1` keys.
+
+**Restoring every account from a mnemonic:** A stored key does not record which derivation produced
+it, and an address does not reveal it either: both derivation modes produce the same `ml_dsa_65`
+public key type. Under PQHD, the scheme is part of the path, so a wallet can find a user's accounts
+from the mnemonic alone by scanning a finite set of candidates:
+
+1. For each PQHD scheme the wallet supports (currently only `201'`, ML-DSA-65), derive
+   `m/83696968'/505153'/coin_type'/scheme'/account'/index'` for increasing account and index
+   values, and stop each scan after a run of unused addresses (a gap limit, conventionally 20).
+   A later registry version may add schemes under new IDs. Deprecated schemes stay derivable,
+   so a wallet should keep scanning them for recovery.
+2. For keys created before PQHD, also derive the BIP44 path `m/44'/coin_type'/account'/0/index`
+   **twice**, once as `secp256k1` and once as legacy `ml_dsa_65`. On this path the mnemonic alone
+   cannot tell the two apart.
+3. Treat a candidate as an account in use if its address has an on-chain account or history.
+
+Each PQHD candidate belongs to exactly one scheme, so step 1 never confuses algorithms.
+Step 2 is the ambiguity that PQHD removes for new keys.
+
+Go wallets can get the candidate list for one coin type, account, and index from
+`hd.AccountKeyDerivations(coinType, account, index)`. Each entry names its scheme, public key
+type, path, and the algorithm to pass to `keyring.NewAccount`. The list grows when a new scheme
+is supported, so wallets that iterate over it pick up new schemes without code changes.
 
 **Earlier unreleased `--bip85` keys are incompatible.** The initial SDK-local path
 (`m/83696968'/118'/65'/account'/index'`), the scoped derivation that used the first 32 HMAC

@@ -2195,3 +2195,17 @@ func TestImportPrivKeyHexMlDsa65Valid(t *testing.T) {
 }
 
 func accAddr(k *Record) (sdk.AccAddress, error) { return k.GetAddress() }
+
+func TestNewAccountFromAccountKeyDerivations(t *testing.T) {
+	kr := NewInMemory(getCodec())
+	mnemonic := strings.Repeat("abandon ", 23) + "art"
+	derivations, err := hd.AccountKeyDerivations(118, 0, 0)
+	require.NoError(t, err)
+	for i, d := range derivations {
+		record, err := kr.NewAccount(fmt.Sprintf("k%d", i), mnemonic, "", d.Path, d.Algo)
+		require.NoError(t, err)
+		pub, err := record.GetPubKey()
+		require.NoError(t, err)
+		require.Equal(t, string(d.PubKeyType), pub.Type())
+	}
+}

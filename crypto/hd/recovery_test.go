@@ -1,12 +1,14 @@
 package hd_test
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 func TestAccountKeyDerivations(t *testing.T) {
@@ -44,4 +46,47 @@ func TestAccountKeyDerivations(t *testing.T) {
 
 	_, err = hd.AccountKeyDerivations(118, 1<<31, 0)
 	require.ErrorContains(t, err, "must be less than")
+}
+
+// restoreCandidates is the restore loop documented in the keyring guide.
+func restoreCandidates(mnemonic string) ([]types.PubKey, error) {
+	derivations, err := hd.AccountKeyDerivations(118, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+	var pubKeys []types.PubKey
+	for _, d := range derivations {
+		bz, err := d.Algo.Derive()(mnemonic, "", d.Path)
+		if errors.Is(err, hd.ErrMlDsa65BIP85Mnemonic) {
+			continue // PQHD needs 24 words; shorter backups only have BIP44 keys.
+		}
+		if err != nil {
+			return nil, err
+		}
+		pubKeys = append(pubKeys, d.Algo.Generate()(bz).PubKey())
+	}
+	return pubKeys, nil
+}
+
+func TestAccountKeyDerivationsRestoreLoop(t *testing.T) {
+	short := strings.Repeat("abandon ", 11) + "about"
+	pubKeys, err := restoreCandidates(short)
+	require.NoError(t, err)
+	require.Len(t, pubKeys, 2)
+	for i, algo := range []hd.AccountKeyAlgo{hd.Secp256k1, hd.MlDsa65} {
+		bz, err := algo.Derive()(short, "", "m/44'/118'/0'/0/0")
+		require.NoError(t, err)
+		require.True(t, algo.Generate()(bz).PubKey().Equals(pubKeys[i]))
+	}
+
+	pubKeys, err = restoreCandidates(strings.Repeat("abandon ", 23) + "art")
+	require.NoError(t, err)
+	require.Len(t, pubKeys, 3)
+
+	_, err = restoreCandidates(strings.Repeat("abandon ", 12))
+	require.Error(t, err)
+	require.NotErrorIs(t, err, hd.ErrMlDsa65BIP85Mnemonic)
+	_, err = restoreCandidates(strings.Repeat("abandon ", 24))
+	require.Error(t, err)
+	require.NotErrorIs(t, err, hd.ErrMlDsa65BIP85Mnemonic)
 }

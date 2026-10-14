@@ -26,6 +26,10 @@ type AccountKeyDerivation struct {
 // PQHD derivations come first: each scheme has its own path, so a PQHD
 // candidate is unambiguous. The BIP44 path is shared by secp256k1 and legacy
 // ML-DSA-65 keys, so it appears once for each algorithm.
+//
+// PQHD derivations require a 24-word mnemonic and return
+// ErrMlDsa65BIP85Mnemonic for shorter ones. Wallets should skip only that
+// error and continue, so shorter backups still find their BIP44 keys.
 func AccountKeyDerivations(coinType, account, index uint32) ([]AccountKeyDerivation, error) {
 	pqhdPath, err := CreateMlDsa65BIP85Path(coinType, account, index)
 	if err != nil {

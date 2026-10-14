@@ -246,6 +246,29 @@ Go wallets can get the candidate list for one coin type, account, and index from
 type, path, and the algorithm to pass to `keyring.NewAccount`. The list grows when a new scheme
 is supported, so wallets that iterate over it pick up new schemes without code changes.
 
+PQHD candidates require a 24-word mnemonic and return `hd.ErrMlDsa65BIP85Mnemonic` for a valid
+shorter backup, such as a 12-word mnemonic from an earlier release. Skip only that error and keep
+going, so the BIP44 candidates are still tried. Report any other error, such as a bad checksum:
+
+```go
+derivations, err := hd.AccountKeyDerivations(coinType, account, index)
+if err != nil {
+    return err
+}
+for _, d := range derivations {
+    bz, err := d.Algo.Derive()(mnemonic, bip39Passphrase, d.Path)
+    if errors.Is(err, hd.ErrMlDsa65BIP85Mnemonic) {
+        continue // PQHD needs 24 words; shorter backups only have BIP44 keys.
+    }
+    if err != nil {
+        return err
+    }
+    pubKey := d.Algo.Generate()(bz).PubKey()
+    // Look up pubKey.Address() on chain; if it is in use, restore it with
+    // kr.NewAccount(name, mnemonic, bip39Passphrase, d.Path, d.Algo).
+}
+```
+
 **Keys from earlier unreleased PQHD drafts are incompatible.** The initial SDK-local path
 (`m/83696968'/118'/65'/account'/index'`), the scoped derivation that used the first 32 HMAC
 bytes directly, and the subsequent SHAKE256 draft using scheme `3` all produce different keys.

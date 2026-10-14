@@ -147,7 +147,7 @@ func ExportGenesisFileWithTime(genFile string, appGenesis *types.AppGenesis, gen
 
 ### enterprise/poa: Fee Allocation Migration
 
-The PoA module now truncates each validator's fee share instead of rounding it to nearest, so allocated fees can no longer exceed the module balance ([#XXXXX](https://github.com/cosmos/cosmos-sdk/pull/XXXXX)). This changes fee allocation on every checkpoint, so all nodes must switch at the same height through a coordinated upgrade.
+The PoA module now truncates each validator's fee share instead of rounding it to nearest, so allocated fees can no longer exceed the module balance ([#26875](https://github.com/cosmos/cosmos-sdk/pull/26875)). This changes fee allocation on every checkpoint, so all nodes must switch at the same height through a coordinated upgrade.
 
 The module's consensus version goes from 2 to 3. `Migrate2to3` runs through `RunMigrations` in your upgrade handler and, for each denom where allocated fees exceed the module balance, trims the excess (rounding dust) from the per-validator entries and recomputes the total.
 

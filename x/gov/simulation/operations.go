@@ -155,6 +155,23 @@ func SimulateMsgSubmitProposal(
 	k *keeper.Keeper,
 	msgSim simtypes.MsgSimulatorFn,
 ) simtypes.Operation {
+	return simulateMsgSubmitProposalFromMsgSim(txGen, ak, bk, k, msgSim, voteSchedulingPercent)
+}
+
+// voteSchedulingPercent is the percentage of submitted proposals for which
+// votes are scheduled as future operations. Each proposal schedules up to one
+// vote per account, so scheduling them for every proposal floods the
+// time-based operation queue. The simsx factory uses the same 1% gate.
+const voteSchedulingPercent = 1
+
+func simulateMsgSubmitProposalFromMsgSim(
+	txGen client.TxConfig,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	k *keeper.Keeper,
+	msgSim simtypes.MsgSimulatorFn,
+	votePercent int,
+) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msgs := []sdk.Msg{}
@@ -163,7 +180,7 @@ func SimulateMsgSubmitProposal(
 			msgs = append(msgs, proposalMsg)
 		}
 
-		return simulateMsgSubmitProposal(txGen, ak, bk, k, msgs)(r, app, ctx, accs, chainID)
+		return simulateMsgSubmitProposal(txGen, ak, bk, k, msgs, votePercent)(r, app, ctx, accs, chainID)
 	}
 }
 
@@ -192,7 +209,7 @@ func SimulateMsgSubmitLegacyProposal(
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "error converting legacy content into proposal message"), nil, err
 		}
 
-		return simulateMsgSubmitProposal(txGen, ak, bk, k, []sdk.Msg{contentMsg})(r, app, ctx, accs, chainID)
+		return simulateMsgSubmitProposal(txGen, ak, bk, k, []sdk.Msg{contentMsg}, voteSchedulingPercent)(r, app, ctx, accs, chainID)
 	}
 }
 
@@ -202,6 +219,7 @@ func simulateMsgSubmitProposal(
 	bk types.BankKeeper,
 	k *keeper.Keeper,
 	proposalMsgs []sdk.Msg,
+	votePercent int,
 ) simtypes.Operation {
 	// The states are:
 	// column 1: All validators vote
@@ -297,6 +315,9 @@ func simulateMsgSubmitProposal(
 
 		// didntVote := whoVotes[numVotes:]
 		whoVotes = whoVotes[:numVotes]
+		if r.Intn(100) >= votePercent {
+			return opMsg, nil, nil
+		}
 		params, _ := k.Params.Get(ctx)
 		votingPeriod := *params.VotingPeriod
 		if expedited {
@@ -523,12 +544,6 @@ func operationSimulateMsgVoteWeighted(
 			}
 		default:
 			proposalID = uint64(proposalIDInt)
-			// A scheduled vote can fire before the proposal reaches its voting
-			// period or after it ended; skip it instead of failing the simulation.
-			proposal, err := k.Proposals.Get(ctx, proposalID)
-			if err != nil || proposal.Status != v1.StatusVotingPeriod {
-				return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteWeighted, "proposal not in voting period"), nil, nil
-			}
 		}
 
 		options := randomWeightedVotingOptions(r)

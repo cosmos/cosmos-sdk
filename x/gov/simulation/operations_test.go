@@ -230,7 +230,7 @@ func TestSimulateMsgSubmitProposalFutureVotes(t *testing.T) {
 	require.NoError(t, err)
 
 	// execute operation
-	op := simulation.SimulateMsgSubmitProposal(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
+	op := simulation.SimulateMsgSubmitProposalWithVotes(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
 	operationMsg, futureOps, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 	require.True(t, operationMsg.OK)
@@ -279,7 +279,7 @@ func TestSimulateMsgSubmitProposalFutureVotesInactive(t *testing.T) {
 	submittedID, err := suite.GovKeeper.ProposalID.Peek(ctx)
 	require.NoError(t, err)
 
-	op := simulation.SimulateMsgSubmitProposal(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
+	op := simulation.SimulateMsgSubmitProposalWithVotes(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
 	_, futureOps, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 	require.NotEmpty(t, futureOps)
@@ -317,7 +317,7 @@ func TestSimulateMsgSubmitProposalFutureVotesWithinVotingPeriod(t *testing.T) {
 	require.NoError(t, err)
 	require.Less(t, *params.ExpeditedVotingPeriod, *params.VotingPeriod)
 
-	op := simulation.SimulateMsgSubmitProposal(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
+	op := simulation.SimulateMsgSubmitProposalWithVotes(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
 	expeditedSeen := 0
 	for seed := int64(1); seed <= 20; seed++ {
 		r := rand.New(rand.NewSource(seed))
@@ -346,6 +346,39 @@ func TestSimulateMsgSubmitProposalFutureVotesWithinVotingPeriod(t *testing.T) {
 		}
 	}
 	require.Positive(t, expeditedSeen, "no expedited proposal was exercised")
+}
+
+// TestSimulateMsgSubmitProposalSchedulesVotesRarely checks that, like the simsx
+// factory, the legacy operation schedules votes for only about 1% of submitted
+// proposals, so scheduled votes do not flood the time-based operation queue.
+func TestSimulateMsgSubmitProposalSchedulesVotesRarely(t *testing.T) {
+	suite, ctx := createTestSuite(t, false)
+	app := suite.App
+
+	r := rand.New(rand.NewSource(1))
+	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
+
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: app.LastBlockHeight() + 1,
+		Hash:   app.LastCommitID().Hash,
+	})
+	require.NoError(t, err)
+
+	op := simulation.SimulateMsgSubmitProposal(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
+	submitted, scheduled := 0, 0
+	for seed := int64(1); seed <= 200; seed++ {
+		opMsg, futureOps, err := op(rand.New(rand.NewSource(seed)), app.BaseApp, ctx, accounts, "")
+		require.NoError(t, err)
+		if !opMsg.OK {
+			continue
+		}
+		submitted++
+		if len(futureOps) > 0 {
+			scheduled++
+		}
+	}
+	require.GreaterOrEqual(t, submitted, 40)
+	require.LessOrEqual(t, scheduled*20, submitted, "%d of %d proposals scheduled votes", scheduled, submitted)
 }
 
 // TestSimulateMsgCancelProposal tests the normal scenario of a valid message of type TypeMsgCancelProposal.

@@ -72,7 +72,6 @@ func NewOperationQueue() OperationQueue {
 	return make(OperationQueue)
 }
 
-// queueOperations adds all future operations into the operation queue.
 // queueOperations adds futureOps to the height-based queue queuedOps or, for
 // time-based operations, to *queuedTimeOps kept sorted by BlockTime.
 func queueOperations(queuedOps OperationQueue, queuedTimeOps *[]simulation.FutureOperation, futureOps []simulation.FutureOperation) {

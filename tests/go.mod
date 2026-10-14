@@ -22,12 +22,13 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	go.uber.org/mock v0.6.0
 	google.golang.org/grpc v1.84.0
-	google.golang.org/protobuf v1.36.11
+	google.golang.org/protobuf v1.36.12
 	gotest.tools/v3 v3.5.2
 	pgregory.net/rapid v1.3.0
 )
 
 require (
+	cosmossdk.io/collections v1.4.0
 	github.com/cosmos/cosmos-sdk/enterprise/group v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0
 )
@@ -42,7 +43,6 @@ require (
 	cloud.google.com/go/monitoring v1.29.0 // indirect
 	cloud.google.com/go/storage v1.61.3 // indirect
 	cosmossdk.io/client/v2 v2.11.0 // indirect
-	cosmossdk.io/collections v1.4.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	filippo.io/bigmod v0.1.1-0.20260103110540-f8a47775ebe5 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
@@ -342,3 +342,5 @@ replace (
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.
 )
+
+replace cosmossdk.io/api => ../api

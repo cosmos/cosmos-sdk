@@ -206,6 +206,26 @@ func (suite *TestSuite) TestGrant() {
 	}
 }
 
+func (suite *TestSuite) TestGrant_RejectsChangePubKey() {
+	addrs := suite.createAccounts(2)
+	grantee, granter := addrs[0], addrs[1]
+	oneYear := suite.ctx.BlockTime().AddDate(1, 0, 0)
+
+	grant, err := authz.NewGrant(suite.ctx.BlockTime(), authz.NewGenericAuthorization(changePubKeyTypeURL), &oneYear)
+	suite.Require().NoError(err)
+
+	_, err = suite.msgSrvr.Grant(suite.ctx, &authz.MsgGrant{
+		Granter: granter.String(),
+		Grantee: grantee.String(),
+		Grant:   grant,
+	})
+	suite.Require().ErrorIs(err, authz.ErrMsgNotAuthorizable)
+
+	auths, err := suite.authzKeeper.GetAuthorizations(suite.ctx, grantee, granter)
+	suite.Require().NoError(err)
+	suite.Require().Empty(auths)
+}
+
 func (suite *TestSuite) TestRevoke() {
 	addrs := suite.createAccounts(2)
 

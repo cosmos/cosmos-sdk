@@ -86,6 +86,9 @@ var (
 	SignableTypes = []GeneratedType{
 		// auth
 		GenType(&authtypes.MsgUpdateParams{}, &authapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
+		GenType(&authtypes.MsgChangePubKey{}, &authapi.MsgChangePubKey{},
+			GenOpts.WithAnyTypes(&ed25519.PubKey{}).
+				WithInterfaceHint("cosmos.crypto.PubKey", &ed25519.PubKey{})),
 
 		// authz
 		GenType(&authztypes.MsgGrant{}, &authzapi.MsgGrant{},
@@ -192,6 +195,17 @@ var (
 		GenType(&authtypes.Params{}, &authapi.Params{}, GenOpts),
 		GenType(&authtypes.BaseAccount{}, &authapi.BaseAccount{}, GenOpts.WithAnyTypes(&ed25519.PubKey{})),
 		GenType(&authtypes.ModuleCredential{}, &authapi.ModuleCredential{}, GenOpts),
+		GenType(&authtypes.ChangePubKeyProofDoc{}, &authapi.ChangePubKeyProofDoc{},
+			GenOpts.WithAnyTypes(&ed25519.PubKey{}).
+				WithInterfaceHint("cosmos.crypto.PubKey", &ed25519.PubKey{})),
+		GenType(&authtypes.PubKeyHistoryEntry{}, &authapi.PubKeyHistoryEntry{},
+			GenOpts.WithAnyTypes(&ed25519.PubKey{}).
+				WithDisallowNil().
+				WithInterfaceHint("cosmos.crypto.PubKey", &ed25519.PubKey{})),
+		GenType(&authtypes.GenesisPubKeyHistory{}, &authapi.GenesisPubKeyHistory{},
+			GenOpts.WithAnyTypes(&ed25519.PubKey{}).
+				WithDisallowNil().
+				WithInterfaceHint("cosmos.crypto.PubKey", &ed25519.PubKey{})),
 
 		GenType(&authztypes.GenericAuthorization{}, &authzapi.GenericAuthorization{}, GenOpts),
 		GenType(&authztypes.Grant{}, &authzapi.Grant{},

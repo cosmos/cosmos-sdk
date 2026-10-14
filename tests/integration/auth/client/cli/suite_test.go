@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -30,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -139,6 +141,80 @@ func (s *CLITestSuite) TestCLIValidateSignatures() {
 
 	_, err = authtestutil.TxValidateSignaturesExec(s.clientCtx, modifiedTxFile.Name())
 	s.Require().EqualError(err, "signatures validation failed")
+}
+
+// storedAccountRetriever returns acc from GetAccount, standing in for an
+// account whose stored pubkey does not hash to its address.
+type storedAccountRetriever struct {
+	client.MockAccountRetriever
+	acc client.Account
+}
+
+func (r storedAccountRetriever) GetAccount(_ client.Context, _ sdk.AccAddress) (client.Account, error) {
+	return r.acc, nil
+}
+
+// TestCLIValidateSignaturesRekeyed checks validate-signatures on a tx signed
+// for a rekeyed account, whose signing pubkey does not hash to the signer.
+func (s *CLITestSuite) TestCLIValidateSignaturesRekeyed() {
+	account1, err := s.clientCtx.Keyring.Key("newAccount1")
+	s.Require().NoError(err)
+	addr1, err := account1.GetAddress()
+	s.Require().NoError(err)
+	pk1, err := account1.GetPubKey()
+	s.Require().NoError(err)
+
+	accountAddr := sdk.AccAddress("rekeyed_account_addr")
+	s.Require().NotEqual(addr1, accountAddr)
+
+	generated, err := clitestutil.MsgSendExec(s.clientCtx, accountAddr, s.val,
+		sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1))), s.ac,
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+	unsignedFile := testutil.WriteToNewTempFile(s.T(), generated.String())
+	defer unsignedFile.Close()
+
+	signed, err := authtestutil.TxSignExec(s.clientCtx, addr1, unsignedFile.Name(),
+		fmt.Sprintf("--%s=%s", flags.FlagSignerAddress, accountAddr.String()))
+	s.Require().NoError(err)
+	signedFile := testutil.WriteToNewTempFile(s.T(), signed.String())
+	defer signedFile.Close()
+
+	validate := func(clientCtx client.Context, extraArgs ...string) (string, error) {
+		out, err := clitestutil.ExecTestCLICmd(clientCtx, authcli.GetValidateSignaturesCommand(), append([]string{
+			fmt.Sprintf("--%s=%s", flags.FlagChainID, clientCtx.ChainID),
+			signedFile.Name(),
+		}, extraArgs...))
+		return out.String(), err
+	}
+
+	// Online, with the account's stored pubkey being the signing key.
+	out, err := validate(s.clientCtx.WithAccountRetriever(storedAccountRetriever{
+		acc: authtypes.NewBaseAccount(accountAddr, pk1, 0, 0),
+	}))
+	s.Require().NoError(err, out)
+	s.Require().NotContains(out, "ERROR")
+	s.Require().Contains(out, accountAddr.String())
+
+	// Online, with a different stored pubkey: the signing key is not the
+	// account's key.
+	other := secp256k1.GenPrivKey().PubKey()
+	out, err = validate(s.clientCtx.WithAccountRetriever(storedAccountRetriever{
+		acc: authtypes.NewBaseAccount(accountAddr, other, 0, 0),
+	}))
+	s.Require().EqualError(err, "signatures validation failed", out)
+
+	// Offline, the stored pubkey cannot be checked, so only warn.
+	out, err = validate(s.clientCtx,
+		fmt.Sprintf("--%s=true", flags.FlagOffline),
+		fmt.Sprintf("--%s=0", flags.FlagAccountNumber),
+		fmt.Sprintf("--%s=0", flags.FlagSequence),
+	)
+	s.Require().NoError(err, out)
+	s.Require().Contains(out, "WARNING")
+	s.Require().NotContains(out, "ERROR")
 }
 
 func (s *CLITestSuite) TestCLISignBatch() {
@@ -831,6 +907,70 @@ func (s *CLITestSuite) TestSignBatchMultisig() {
 	defer file2.Close()
 	_, err = authtestutil.TxMultiSignExec(s.clientCtx, multisigRecord.Name, filename.Name(), file1.Name(), file2.Name())
 	s.Require().NoError(err)
+}
+
+// recordingAccountRetriever records the address whose account number and
+// sequence are looked up.
+type recordingAccountRetriever struct {
+	client.MockAccountRetriever
+	queried *sdk.AccAddress
+}
+
+func (r recordingAccountRetriever) GetAccountNumberSequence(_ client.Context, addr sdk.AccAddress) (uint64, uint64, error) {
+	*r.queried = addr
+	return 0, 0, nil
+}
+
+func (s *CLITestSuite) TestMultiSignBatchWithSignerAddress() {
+	account1, err := s.clientCtx.Keyring.Key("newAccount1")
+	s.Require().NoError(err)
+	account2, err := s.clientCtx.Keyring.Key("newAccount2")
+	s.Require().NoError(err)
+	multisigRecord, err := s.clientCtx.Keyring.Key("multi")
+	s.Require().NoError(err)
+	multisigAddr, err := multisigRecord.GetAddress()
+	s.Require().NoError(err)
+
+	// A is a rekeyed account whose stored pubkey is the multisig, so
+	// addr(multisig) != A.
+	accountAddr := sdk.AccAddress("rekeyed_account_addr")
+	s.Require().NotEqual(multisigAddr, accountAddr)
+
+	generatedStd, err := clitestutil.MsgSendExec(
+		s.clientCtx,
+		accountAddr,
+		s.val,
+		sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1))),
+		s.ac,
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+	filename := testutil.WriteToNewTempFile(s.T(), generatedStd.String())
+	defer filename.Close()
+
+	sigFiles := make([]string, 0, 2)
+	for _, account := range []*keyring.Record{account1, account2} {
+		addr, err := account.GetAddress()
+		s.Require().NoError(err)
+		res, err := authtestutil.TxSignBatchExec(s.clientCtx, addr, filename.Name(),
+			fmt.Sprintf("--%s=%s", flags.FlagChainID, s.clientCtx.ChainID),
+			"--multisig", multisigAddr.String(), "--signature-only")
+		s.Require().NoError(err)
+		sigFile := testutil.WriteToNewTempFile(s.T(), res.String())
+		defer sigFile.Close()
+		sigFiles = append(sigFiles, sigFile.Name())
+	}
+
+	var queried sdk.AccAddress
+	clientCtx := s.clientCtx.WithAccountRetriever(recordingAccountRetriever{queried: &queried})
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, authcli.GetMultiSignBatchCmd(), []string{
+		filename.Name(), multisigRecord.Name, sigFiles[0], sigFiles[1],
+		fmt.Sprintf("--%s=%s", flags.FlagChainID, s.clientCtx.ChainID),
+		fmt.Sprintf("--%s=%s", flags.FlagSignerAddress, accountAddr.String()),
+	})
+	s.Require().NoError(err)
+	s.Require().Equal(accountAddr, queried, "account number and sequence must be looked up for --signer-address")
 }
 
 func (s *CLITestSuite) TestGetBroadcastCommandOfflineFlag() {

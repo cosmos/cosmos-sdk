@@ -814,9 +814,11 @@ func TestGenesisAccountValidate(t *testing.T) {
 			false,
 		},
 		{
-			"invalid base valid account",
+			// A rekeyed account's pubkey does not hash to its address.
+			// authtypes.ValidateGenesis checks that case against the pubkey history.
+			"base account with rotated pubkey",
 			authtypes.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0),
-			true,
+			false,
 		},
 		{
 			"valid base vesting account",

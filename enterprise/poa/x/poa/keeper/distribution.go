@@ -87,12 +87,6 @@ func (k *Keeper) getUnallocatedFees(ctx sdk.Context) (unallocated sdk.DecCoins, 
 	// Get fee collector balance
 	feeCollector := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 	feeCollectorBalance := k.bankKeeper.GetAllBalances(ctx, feeCollector.GetAddress())
-
-	// If no fees in collector, return zero
-	if feeCollectorBalance.IsZero() {
-		return sdk.DecCoins{}, nil
-	}
-
 	feeCollectorBalanceDec := sdk.NewDecCoinsFromCoins(feeCollectorBalance...)
 
 	// Get total allocated
@@ -101,11 +95,19 @@ func (k *Keeper) getUnallocatedFees(ctx sdk.Context) (unallocated sdk.DecCoins, 
 		return nil, err
 	}
 
-	// Calculate unallocated fees = fee_collector - total_allocated
-	unallocated = feeCollectorBalanceDec.Sub(totalAllocated)
+	// Calculate unallocated fees = fee_collector - total_allocated.
+	// Allocations are truncated, so total_allocated never exceeds the balance
+	// in a consistent state.
+	unallocated, hasNeg := feeCollectorBalanceDec.SafeSub(totalAllocated)
+	if hasNeg {
+		return nil, sdkerrors.Wrapf(
+			types.ErrInvalidAllocatedFees,
+			"total allocated fees %s exceed module balance %s", totalAllocated, feeCollectorBalanceDec,
+		)
+	}
 
 	// If no unallocated fees, return zero
-	if unallocated.IsZero() || !unallocated.IsAllPositive() {
+	if unallocated.IsZero() {
 		return sdk.DecCoins{}, nil
 	}
 
@@ -113,7 +115,9 @@ func (k *Keeper) getUnallocatedFees(ctx sdk.Context) (unallocated sdk.DecCoins, 
 }
 
 // calculateValidatorPendingFees calculates a validator's share of unallocated fees.
-// Formula: unallocated * validator_power / total_power.
+// Formula: unallocated * validator_power / total_power, truncated so the shares
+// never sum to more than unallocated. The truncated remainder stays unallocated
+// and is split again at the next checkpoint.
 // This is a helper function used by both checkpointAllValidators and WithdrawableFees query.
 // Panics if totalPower == 0, as this indicates an invalid state.
 func calculateValidatorPendingFees(validatorPower, totalPower int64, unallocated sdk.DecCoins) sdk.DecCoins {
@@ -127,7 +131,7 @@ func calculateValidatorPendingFees(validatorPower, totalPower int64, unallocated
 
 	totalPowerDec := math.LegacyNewDec(totalPower)
 	validatorPowerDec := math.LegacyNewDec(validatorPower)
-	return unallocated.MulDec(validatorPowerDec).QuoDec(totalPowerDec)
+	return unallocated.MulDec(validatorPowerDec).QuoDecTruncate(totalPowerDec)
 }
 
 // WithdrawValidatorFees withdraws accumulated fees for a validator

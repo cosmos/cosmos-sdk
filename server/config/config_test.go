@@ -539,3 +539,21 @@ func Test_rangesOverlap(t *testing.T) {
 		require.Equal(t, tt.expect, rangesOverlap(tt.a, tt.b))
 	}
 }
+
+func TestBlockLogsConfig(t *testing.T) {
+	cfg := DefaultConfig()
+	require.Equal(t, uint64(0), cfg.BlockLogs.RetainBlocks, "capture is off by default")
+
+	tmpFile := filepath.Join(t.TempDir(), "app.toml")
+	cfg.BlockLogs.RetainBlocks = 42
+	WriteConfigFile(tmpFile, cfg)
+
+	v := viper.New()
+	v.SetConfigFile(tmpFile)
+	require.NoError(t, v.ReadInConfig())
+	require.Equal(t, uint64(42), v.GetUint64("block-logs.retain-blocks"), "rendered under [block-logs]")
+
+	otherCfg, err := GetConfig(v)
+	require.NoError(t, err)
+	require.Equal(t, uint64(42), otherCfg.BlockLogs.RetainBlocks)
+}

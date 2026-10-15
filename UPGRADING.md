@@ -208,6 +208,10 @@ Test the full jump on a mainnet-state export before scheduling it: the two-versi
 
 These changes are optional to adopt during the upgrade; they are not required for a successful migration. The exception is key rotation, which is active on every v0.55 chain once the required wiring above is in place.
 
+### Per-Block Application Log Capture
+
+Nodes can keep the application log of the last N blocks and serve it with the new `cosmos.base.node.v1beta1.LogsService/Logs` gRPC method (`GET /cosmos/base/node/v1beta1/logs`). It is off by default and needs no app wiring: set `retain-blocks` in the new `[block-logs]` section of `app.toml` (existing files are not rewritten, add the section or run `confix migrate`). `server.Context` gained a `BlockLogs` field holding the store while capture is enabled. See the [Per-Block Application Logs](docs/docs/user/run-node/07-block-logs.md) page.
+
 ### Validator Consensus Key Rotation
 
 v0.55 adds consensus key rotation to `x/staking` ([#26440](https://github.com/cosmos/cosmos-sdk/pull/26440)): a validator operator can submit `MsgRotateConsPubKey` (wired into the CLI, [#26461](https://github.com/cosmos/cosmos-sdk/pull/26461)) to replace their consensus key without unbonding. Key properties:

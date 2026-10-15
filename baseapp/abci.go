@@ -628,6 +628,9 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	if resp.Status == abci.ResponseProcessProposal_ACCEPT &&
 		app.optimisticExec.Enabled() &&
 		req.Height > app.initialHeight {
+		if app.blockLog != nil {
+			app.blockLog.BeginBlockLog(req.Height)
+		}
 		app.optimisticExec.Execute(req)
 	}
 
@@ -981,6 +984,10 @@ func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, ms storetypes.Mu
 // extensions into the proposal, which should not themselves be executed in cases
 // where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.ResponseFinalizeBlock, err error) {
+	// With optimistic execution the height was already opened in ProcessProposal.
+	if app.blockLog != nil && !app.optimisticExec.Initialized() {
+		app.blockLog.BeginBlockLog(req.Height)
+	}
 	fbStart := time.Now()
 	defer func() {
 		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.FinalizeBlockTime }, fbStart)
@@ -1029,6 +1036,9 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 		// if it was aborted, we need to reset the state
 		app.stateManager.ClearState(execModeFinalize)
 		app.optimisticExec.Reset()
+		if app.blockLog != nil {
+			app.blockLog.BeginBlockLog(req.Height) // discard the optimistic run's lines
+		}
 	}
 
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
@@ -1075,6 +1085,9 @@ func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
+	if app.blockLog != nil {
+		defer app.blockLog.CommitBlockLog()
+	}
 	finalizeState := app.stateManager.GetState(execModeFinalize)
 	ctx := finalizeState.Context()
 	ctx, span := ctx.StartSpan(tracer, "Commit")

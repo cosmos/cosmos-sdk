@@ -37,6 +37,7 @@ const (
 	flagMultisig     = "multisig"
 	flagNoSort       = "nosort"
 	flagHDPath       = "hd-path"
+	flagLegacyBIP44  = "legacy-bip44"
 	flagPubKeyBase64 = "pubkey-base64"
 	flagMnemonicSrc  = "source"
 
@@ -58,6 +59,14 @@ If run with -i, it will prompt the user for BIP44 path, BIP39 mnemonic, and pass
 The flag --recover allows one to recover a key from a seed passphrase.
 If run with --dry-run, a key would be generated (or recovered) but not stored to the
 local keystore.
+--key-type ml_dsa_65 derives post-quantum keys from a 24-word mnemonic using draft PQHD:
+m/83696968'/505153'/coin_type'/201'/account'/index'. The full 64-byte BIP85 entropy is
+expanded with SHAKE256 to a 32-byte ML-DSA-65 seed. PQHD is a pre-v1 proposal.
+Recovery requires the same coin type, account, index, and BIP39 passphrase.
+PQHD passphrases are NFKD-normalized but whitespace is not trimmed.
+Pass --legacy-bip44 to opt out of PQHD and derive ml_dsa_65 keys on the BIP44 path
+shared with secp256k1 keys. This is required to recover ml_dsa_65 keys created by
+earlier releases.
 Use the --pubkey flag to add arbitrary public keys to the keystore for constructing
 multisig transactions.
 
@@ -87,12 +96,17 @@ Example:
 	f.Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
 	f.Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	f.Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
-	f.String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
+	f.String(flagHDPath, "", "Manual HD Path derivation (overrides coin type, account, and index)")
+	f.Bool(flagLegacyBIP44, false, "Derive ml_dsa_65 keys on the BIP44 path shared with secp256k1 keys instead of PQHD (needed to recover ml_dsa_65 keys created by earlier releases)")
 	f.Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
 	f.Uint32(flagAccount, 0, "Account number for HD derivation (less than equal 2147483647)")
 	f.Uint32(flagIndex, 0, "Address index number for HD derivation (less than equal 2147483647)")
 	f.String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 	f.String(flagMnemonicSrc, "", "Import mnemonic from a file (only usable when recover or interactive is passed)")
+
+	for _, incompatible := range []string{flags.FlagUseLedger, FlagPublicKey, flagPubKeyBase64, flagMultisig} {
+		cmd.MarkFlagsMutuallyExclusive(flagLegacyBIP44, incompatible)
+	}
 
 	// support old flags name for backwards compatibility
 	f.SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
@@ -152,6 +166,15 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	algo, err := keyring.NewSigningAlgoFromString(algoStr, keyringAlgos)
 	if err != nil {
 		return err
+	}
+	// ml_dsa_65 keys use PQHD unless the user explicitly opts out.
+	legacyBIP44, _ := cmd.Flags().GetBool(flagLegacyBIP44)
+	if legacyBIP44 && algo.Name() != hd.MlDsa65Type {
+		return errors.New("--legacy-bip44 requires --key-type ml_dsa_65")
+	}
+	pqhd := algo.Name() == hd.MlDsa65Type && !legacyBIP44
+	if pqhd {
+		algo = hd.MlDsa65BIP85
 	}
 
 	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); dryRun {
@@ -280,13 +303,23 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	useLedger, _ := cmd.Flags().GetBool(flags.FlagUseLedger)
 
 	if len(hdPath) == 0 {
-		hdPath = hd.CreateHDPath(coinType, account, index).String()
+		if pqhd {
+			hdPath, err = hd.CreateMlDsa65BIP85Path(coinType, account, index)
+			if err != nil {
+				return err
+			}
+		} else {
+			hdPath = hd.CreateHDPath(coinType, account, index).String()
+		}
 	} else if useLedger {
 		return errors.New("cannot set custom bip32 path with ledger")
 	}
 
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
 	if useLedger {
+		if algo.Name() == hd.MlDsa65Type {
+			return errors.New("ledger devices do not support ml_dsa_65 keys")
+		}
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 		k, err := kb.SaveLedgerKey(name, hd.Secp256k1, bech32PrefixAccAddr, coinType, account, index)
 		if err != nil {
@@ -314,7 +347,9 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			}
 		}
 
-		if !bip39.IsMnemonicValid(mnemonic) {
+		// BIP85 validates in Derive after NFKD normalization. An empty recovery
+		// must still fail here, rather than generate a new mnemonic below.
+		if mnemonic == "" || (!pqhd && !bip39.IsMnemonicValid(mnemonic)) {
 			return errors.New("invalid mnemonic")
 		}
 	} else if interactive {
@@ -330,7 +365,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			}
 		}
 
-		if !bip39.IsMnemonicValid(mnemonic) && mnemonic != "" {
+		if !pqhd && !bip39.IsMnemonicValid(mnemonic) && mnemonic != "" {
 			return errors.New("invalid mnemonic")
 		}
 	}
@@ -350,7 +385,12 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 	// override bip39 passphrase
 	if interactive {
-		bip39Passphrase, err = input.GetString(
+		getPassphrase := input.GetString
+		if pqhd {
+			// PQHD passphrases are NFKD-normalized, never whitespace-trimmed.
+			getPassphrase = input.GetStringRaw
+		}
+		bip39Passphrase, err = getPassphrase(
 			"Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed. "+
 				"Most users should just hit enter to use the default, \"\"", inBuf)
 		if err != nil {
@@ -359,7 +399,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 		// if they use one, make them re-enter it
 		if len(bip39Passphrase) != 0 {
-			p2, err := input.GetString("Repeat the passphrase:", inBuf)
+			p2, err := getPassphrase("Repeat the passphrase:", inBuf)
 			if err != nil {
 				return err
 			}
@@ -370,7 +410,16 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		}
 	}
 
+	if legacyBIP44 {
+		cmd.PrintErrln("WARNING: ml_dsa_65 key derived on the BIP44 path " + hdPath + ", which shares its index space with secp256k1 keys.\n" +
+			"Recovering it from the mnemonic requires remembering that this index was used for ml_dsa_65.\n" +
+			"Create new post-quantum keys without --legacy-bip44 to use the separate PQHD namespace. See the keyring documentation.")
+	}
+
 	k, err := kb.NewAccount(name, mnemonic, bip39Passphrase, hdPath, algo)
+	if errors.Is(err, hd.ErrMlDsa65BIP85Mnemonic) || errors.Is(err, hd.ErrMlDsa65BIP85Path) {
+		return fmt.Errorf("%w; to recover an ml_dsa_65 key created before PQHD, pass --legacy-bip44", err)
+	}
 	if err != nil {
 		return err
 	}

@@ -40,10 +40,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+* (client/keys) [#26872](https://github.com/cosmos/cosmos-sdk/pull/26872) `keys add --key-type ml_dsa_65` now derives keys with PQHD by default and requires a 24-word mnemonic. Pass `--legacy-bip44` to opt out, which is required to recover `ml_dsa_65` keys created by v0.55; it prints a warning that the key shares the BIP44 index space with secp256k1 keys. The unreleased `--bip85` flag is removed. See `UPGRADING.md`.
 * (x/auth) [#26672](https://github.com/cosmos/cosmos-sdk/pull/26672) An unordered transaction whose `timeout_timestamp` equals the block time is now rejected
 
 ### Features
 
+* (crypto/hd) [#26872](https://github.com/cosmos/cosmos-sdk/pull/26872) Add experimental PQHD BIP85/SHAKE256 derivation for ML-DSA-65 account keys from a 24-word mnemonic, pinned to the pre-v1 family-block registry (scheme 201). Coin-type/account/index separation and NFKD passphrases (without whitespace trimming) match PQHD. Earlier unreleased `--bip85` keys, including scheme-3 draft keys, are incompatible; see `UPGRADING.md`.
+* (crypto/hd) [#26872](https://github.com/cosmos/cosmos-sdk/pull/26872) Add `hd.AccountKeyDerivations`, which lists every derivation (PQHD scheme 201, BIP44 secp256k1, BIP44 ML-DSA-65) a wallet must try when restoring an account from a mnemonic, and document the restore procedure.
 * (x/distribution) [#26749](https://github.com/cosmos/cosmos-sdk/pull/26749) Add a `claimable` field to `QueryDelegationTotalRewardsResponse`, reporting the withdrawable amount as `sdk.Coins` by truncating each delegation reward the way `Msg/WithdrawDelegatorReward` does. `total` keeps its documented meaning as the raw `DecCoins` sum ([#24406](https://github.com/cosmos/cosmos-sdk/issues/24406)).
 
 ### Improvements

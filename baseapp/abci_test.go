@@ -2755,3 +2755,40 @@ func TestABCI_Race_Commit_Query(t *testing.T) {
 
 	require.Equal(t, int64(1001), app.GetContextForCheckTx(nil).BlockHeight())
 }
+
+func TestABCI_InternalMsgRejectedAtTxBoundary(t *testing.T) {
+	setup := func(internal bool) *BaseAppSuite {
+		suite := NewBaseAppSuite(t)
+		baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
+		if internal {
+			suite.baseApp.MsgServiceRouter().MarkInternalForTest(sdk.MsgTypeURL(&baseapptestutil.MsgCounter{}))
+		}
+		_, err := suite.baseApp.InitChain(&abci.RequestInitChain{ConsensusParams: &cmtproto.ConsensusParams{}})
+		require.NoError(t, err)
+		return suite
+	}
+
+	t.Run("internal is rejected in CheckTx and Simulate", func(t *testing.T) {
+		suite := setup(true)
+		txBytes, err := suite.txConfig.TxEncoder()(newTxCounter(t, suite.txConfig, 0, 0))
+		require.NoError(t, err)
+
+		r, err := suite.baseApp.CheckTx(&abci.RequestCheckTx{Tx: txBytes})
+		require.NoError(t, err)
+		require.NotZero(t, r.Code)
+		require.Contains(t, r.Log, "internal-only")
+
+		_, _, err = suite.baseApp.Simulate(txBytes)
+		require.ErrorContains(t, err, "internal-only")
+	})
+
+	t.Run("control: external msg passes", func(t *testing.T) {
+		suite := setup(false)
+		txBytes, err := suite.txConfig.TxEncoder()(newTxCounter(t, suite.txConfig, 0, 0))
+		require.NoError(t, err)
+
+		r, err := suite.baseApp.CheckTx(&abci.RequestCheckTx{Tx: txBytes})
+		require.NoError(t, err)
+		require.Zero(t, r.Code, r.Log)
+	})
+}

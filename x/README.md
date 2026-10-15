@@ -39,9 +39,8 @@ capabilities of your blockchain or further specialize it.
 The following modules are deprecated.  They will no longer be maintained actively.
 
 * [Crisis](../contrib/x/crisis/README.md) - _Deprecated_ halting the blockchain under certain circumstances (e.g. if an invariant is broken).
-* [Params](./params/README.md) - _Deprecated_ Globally available parameter store.
+* [Params](./params/README.md) - _Removed in v0.55_ Globally available parameter store. Only a tombstone README remains.
 * [NFT](../contrib/x/nft/README.md) - _Deprecated_ NFT module implemented based on [ADR43](https://docs.cosmos.network/main/build/architecture/adr-043-nft-module).
-* [Group](../enterprise/group/README.md) - Allows for the creation and management of on-chain multisig accounts (enterprise module).  
 * [Circuit](../contrib/x/circuit/README.md) _Deprecated_ - Circuit breaker module for pausing messages.
 
 To learn more about the process of building modules, visit the [building modules reference documentation](https://docs.cosmos.network/main/building-modules/intro).
@@ -68,6 +67,7 @@ In addition to these core and supplementary modules, the Cosmos SDK maintains en
 
 ### Available Enterprise Modules
 
+* [Group](../enterprise/group/README.md) - Allows for the creation and management of on-chain multisig accounts.
 * [PoA (Proof of Authority)](../enterprise/poa/README.md) - Admin-controlled validator set for permissioned networks with governance integration.
 
 For complete information about enterprise modules, licensing, and documentation, see the [Enterprise Modules documentation](../enterprise/README.md).

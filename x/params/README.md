@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # `x/params`
 
-NOTE: `x/params` is deprecated as of Cosmos SDK v0.53 and will be removed in the next release.
+NOTE: `x/params` was removed in Cosmos SDK v0.55 ([#25546](https://github.com/cosmos/cosmos-sdk/pull/25546)). The v0.54.x line still ships it. This README is kept for reference.
 
 ## Abstract
 

@@ -6,8 +6,8 @@ sidebar_position: 1
 
 :::note Pre-requisite Readings
 
-* [Transactions](https://docs.cosmos.network/main/core/transactions#transaction-generation)
-* [Encoding](https://docs.cosmos.network/main/core/encoding#transaction-encoding)
+* [Transactions](https://docs.cosmos.network/sdk/latest/learn/concepts/transactions#transaction-generation)
+* [Encoding](https://docs.cosmos.network/sdk/latest/learn/concepts/encoding#transaction-encoding)
 
 :::
 
@@ -50,12 +50,12 @@ https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/x/auth/tx/config.go#L2
 https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/client/tx_config.go#L33-L50
 ```
 
-The [`client.TxBuilder`](https://docs.cosmos.network/main/core/transactions#transaction-generation) interface is as well implemented by `x/auth/tx`.
+The [`client.TxBuilder`](https://docs.cosmos.network/sdk/latest/learn/concepts/transactions#transaction-generation) interface is as well implemented by `x/auth/tx`.
 A `client.TxBuilder` can be accessed with `TxConfig.NewTxBuilder()`.  
 
 ### `TxEncoder`/ `TxDecoder`
 
-More information about `TxEncoder` and `TxDecoder` can be found [here](https://docs.cosmos.network/main/core/encoding#transaction-encoding).
+More information about `TxEncoder` and `TxDecoder` can be found [here](https://docs.cosmos.network/sdk/latest/learn/concepts/encoding#transaction-encoding).
 
 ## Client
 

@@ -18,7 +18,7 @@ the proposal. Cosmovisor interprets that data to perform an update: switch the c
 and restart the App.
 
 Configuration of Cosmovisor is done through environment variables, which are
-documented in: https://docs.cosmos.network/main/build/tooling/cosmovisor`,
+documented in: https://docs.cosmos.network/sdk/latest/guides/upgrades/cosmovisor`,
 		cosmovisor.EnvName, cosmovisor.EnvHome,
 	)
 }

@@ -20,6 +20,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -346,6 +348,10 @@ func TestInitGenesis(t *testing.T) {
 			AllocatedFees: allocatedFeesEntries,
 		}
 
+		// bank genesis runs first and funds the poa module with the allocated fees
+		err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("stake", 300)))
+		require.NoError(t, err)
+
 		updates, err := f.poaKeeper.InitGenesis(f.ctx, f.cdc, genesis)
 		require.NoError(t, err)
 		require.Len(t, updates, numValidators)
@@ -372,6 +378,47 @@ func TestInitGenesis(t *testing.T) {
 		totalPower, err := f.poaKeeper.GetTotalPower(f.ctx)
 		require.NoError(t, err)
 		require.Equal(t, expectedTotalPower, totalPower)
+	})
+
+	t.Run("trims rounding dust above the module balance", func(t *testing.T) {
+		f := setupTest(t)
+
+		// a poa v1.x export where rounding allocated 1.000000000000000002stake
+		// of a 1stake balance
+		share, err := math.LegacyNewDecFromStr("0.500000000000000001")
+		require.NoError(t, err)
+		genesis := genesisWithAllocatedFees(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", share)})
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("stake", 1))))
+
+		_, err = f.poaKeeper.InitGenesis(f.ctx, f.cdc, genesis)
+		require.NoError(t, err)
+
+		totalAllocated, err := f.poaKeeper.getTotalAllocated(f.ctx)
+		require.NoError(t, err)
+		require.Equal(t, sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 1)), totalAllocated)
+
+		entrySum := sdk.DecCoins{}
+		for _, entry := range genesis.AllocatedFees {
+			fees, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, entry.ConsensusAddress)
+			require.NoError(t, err)
+			entrySum = entrySum.Add(fees.Fees...)
+		}
+		require.Equal(t, totalAllocated, entrySum)
+
+		require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("stake", 1))))
+		require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
+	})
+
+	t.Run("rejects allocated fees a whole unit above the module balance", func(t *testing.T) {
+		f := setupTest(t)
+
+		// what a v1.x export looks like when bank's genesis has not run before
+		// poa's: the module balance reads as empty
+		genesis := genesisWithAllocatedFees(t, sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 100)))
+
+		_, err := f.poaKeeper.InitGenesis(f.ctx, f.cdc, genesis)
+		require.ErrorIs(t, err, poatypes.ErrInvalidAllocatedFees)
 	})
 
 	t.Run("export and import round trip", func(t *testing.T) {
@@ -511,10 +558,11 @@ func TestInitGenesis(t *testing.T) {
 		// Create a new keeper instance (simulating a new chain state)
 		f = setupTest(t)
 
-		// Set up poa module with balances (simulating bank module state restoration)
+		// Set up poa module with balances (simulating bank module state restoration).
+		// The balances cover the allocated fees: 750atom and 1500stake.
 		poaModuleFees := sdk.NewCoins(
-			sdk.NewInt64Coin("stake", 1000),
-			sdk.NewInt64Coin("atom", 500),
+			sdk.NewInt64Coin("stake", 1500),
+			sdk.NewInt64Coin("atom", 750),
 		)
 		err = f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, poaModuleFees)
 		require.NoError(t, err)
@@ -580,8 +628,10 @@ func TestGenesisRoundTripAfterRotation(t *testing.T) {
 	exportedGenesis, err := f.poaKeeper.ExportGenesis(f.ctx)
 	require.NoError(t, err)
 
-	// Fresh keeper, then import the exported state.
+	// Fresh keeper, then import the exported state. Bank genesis runs first and
+	// restores the module balance.
 	f = setupTest(t)
+	require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
 	_, err = f.poaKeeper.InitGenesis(f.ctx, f.cdc, exportedGenesis)
 	require.NoError(t, err)
 
@@ -619,4 +669,33 @@ func TestGenesisRoundTripAfterRotation(t *testing.T) {
 	totalPowerAfter, err := f.poaKeeper.GetTotalPower(f.ctx)
 	require.NoError(t, err)
 	require.Equal(t, totalPowerBefore, totalPowerAfter)
+}
+
+// genesisWithAllocatedFees returns a genesis with two validators of power 1,
+// each holding fees as allocated fees.
+func genesisWithAllocatedFees(t *testing.T, fees sdk.DecCoins) *poatypes.GenesisState {
+	t.Helper()
+
+	genesis := &poatypes.GenesisState{
+		Params: poatypes.Params{Admin: sdk.AccAddress("admin-dust").String()},
+	}
+	for i := 0; i < 2; i++ {
+		pubKey := ed25519.GenPrivKey().PubKey()
+		pubKeyAny, err := codectypes.NewAnyWithValue(pubKey)
+		require.NoError(t, err)
+
+		genesis.Validators = append(genesis.Validators, poatypes.Validator{
+			PubKey: pubKeyAny,
+			Power:  1,
+			Metadata: &poatypes.ValidatorMetadata{
+				Moniker:         fmt.Sprintf("validator-dust-%d", i),
+				OperatorAddress: sdk.AccAddress(fmt.Sprintf("operator-dust-%d", i)).String(),
+			},
+		})
+		genesis.AllocatedFees = append(genesis.AllocatedFees, poatypes.GenesisAllocatedFees{
+			ConsensusAddress: sdk.GetConsAddress(pubKey).String(),
+			Fees:             fees,
+		})
+	}
+	return genesis
 }

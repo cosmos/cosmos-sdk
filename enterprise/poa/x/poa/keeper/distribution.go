@@ -81,8 +81,8 @@ func (k *Keeper) checkpointAllValidators(ctx sdk.Context) error {
 	return nil
 }
 
-// getUnallocatedFees returns the unallocated fees
-// Returns zero values if there are no unallocated fees or no validators.
+// getUnallocatedFees returns the module balance not yet allocated to validators.
+// Returns ErrInvalidAllocatedFees if allocated fees exceed the module balance.
 func (k *Keeper) getUnallocatedFees(ctx sdk.Context) (unallocated sdk.DecCoins, err error) {
 	// Get fee collector balance
 	feeCollector := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)

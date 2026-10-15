@@ -30,6 +30,9 @@ import (
 // For each denom where the per-validator entries sum to more than the balance,
 // the excess is taken from the entries in key order until it is gone, and
 // totalAllocatedFees is set to the new sum of the entries.
+//
+// InitGenesis also applies it to imported state, so exports from poa v1.x
+// load without the excess.
 func Migrate(
 	ctx context.Context,
 	balance sdk.DecCoins,
@@ -50,12 +53,12 @@ func Migrate(
 		return err
 	}
 
+	newTotal := allocated.Intersect(balance)
 	// excess holds, per denom, how far the entries exceed the balance
-	excess := allocated.Sub(allocated.Intersect(balance))
+	excess := allocated.Sub(newTotal)
 	if excess.IsZero() {
 		return nil
 	}
-	newTotal := allocated.Sub(excess)
 
 	for _, e := range entries {
 		if excess.IsZero() {

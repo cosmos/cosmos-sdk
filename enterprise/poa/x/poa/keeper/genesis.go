@@ -17,8 +17,12 @@ package keeper
 import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
+	sdkerrors "cosmossdk.io/errors"
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	v3 "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/migrations/v3"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -91,6 +95,28 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, cdc codec.BinaryCodec, genesis *ty
 	}
 	if !totalAllocated.IsZero() {
 		if err := k.totalAllocatedFees.Set(ctx, types.ValidatorFees{Fees: totalAllocated}); err != nil {
+			return nil, err
+		}
+	}
+
+	// Exports from poa v1.x can carry rounding dust above the module balance;
+	// trim it the way the v3 migration does. An excess of a whole unit or more
+	// is not rounding: the genesis is inconsistent, or bank's genesis has not
+	// run before poa's, so the balance reads as empty.
+	moduleAddr := k.authKeeper.GetModuleAddress(types.ModuleName)
+	balance := sdk.NewDecCoinsFromCoins(k.bankKeeper.GetAllBalances(ctx, moduleAddr)...)
+	excess := totalAllocated.Sub(totalAllocated.Intersect(balance))
+	for _, coin := range excess {
+		if coin.Amount.GTE(math.LegacyOneDec()) {
+			return nil, sdkerrors.Wrapf(
+				types.ErrInvalidAllocatedFees,
+				"genesis allocated fees %s exceed module balance %s by %s; bank genesis must run before poa",
+				totalAllocated, balance, excess,
+			)
+		}
+	}
+	if !excess.IsZero() {
+		if err := v3.Migrate(ctx, balance, k.validatorAllocatedFees, k.totalAllocatedFees); err != nil {
 			return nil, err
 		}
 	}

@@ -1003,7 +1003,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	if app.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
 		ainStart := time.Now()
-		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
+		aborted := app.optimisticExec.AbortIfNeeded(req.Hash, req.Height)
 		measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.OEAbortIfNeededTime }, ainStart)
 		if aborted {
 			if inst != nil {
@@ -1023,6 +1023,9 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 				measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.WorkingHashTime }, whStart)
 			}
 
+			// Clear OE after a successful consume so a skipped ProcessProposal for
+			// the next height cannot compare a leftover OE against FinalizeBlock.
+			app.optimisticExec.Reset()
 			return res, err
 		}
 

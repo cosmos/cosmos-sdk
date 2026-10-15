@@ -1,0 +1,43 @@
+name: BlockSTM Fuzz
+
+on:
+  pull_request:
+    paths:
+      - "internal/blockstm/**"
+      - ".github/workflows/blockstm-fuzz.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "internal/blockstm/**"
+      - ".github/workflows/blockstm-fuzz.yml"
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}-blockstm-fuzz
+  cancel-in-progress: true
+
+jobs:
+  blockstm-fuzz:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: "go.mod"
+          cache: true
+          cache-dependency-path: go.sum
+      - name: Run tagged BlockSTM tests
+        run: go test -mod=readonly -tags=blockstm_fuzz ./internal/blockstm -count=1 -timeout=10m
+      - name: Fuzz BlockSTM
+        env:
+          FUZZ_TIME: ${{ github.event_name == 'schedule' && '10m' || '1m' }}
+        run: go test -mod=readonly -tags=blockstm_fuzz ./internal/blockstm -run '^$' -fuzz '^FuzzBlockSTM$' -fuzztime="${FUZZ_TIME}" -timeout=15m

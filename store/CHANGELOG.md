@@ -35,6 +35,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (store) [#26551](https://github.com/cosmos/cosmos-sdk/issues/26551) Prune stale rootmulti commit-info records when pruning stores.
+
 ## v2.0.0 (April 10, 2026)
 
 ### API Breaking

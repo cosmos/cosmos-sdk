@@ -99,5 +99,5 @@ Here is the process:
 2. `runMsgCtx` - the context with branched store, is used in `runMsgs` to return a result.
 3. If the process is running in [`checkTxMode`](./00-baseapp.md#checktx), there is no need to write the
    changes - the result is returned immediately.
-4. If the process is running in [`deliverTxMode`](./00-baseapp.md#delivertx) and the result indicates
+4. If the process is running in [`deliverTxMode`](./00-baseapp.md#transaction-execution) and the result indicates
    a successful run over all the messages, the branched multistore is written back to the original.

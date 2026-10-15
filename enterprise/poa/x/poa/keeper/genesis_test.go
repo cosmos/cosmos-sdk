@@ -410,7 +410,7 @@ func TestInitGenesis(t *testing.T) {
 		require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
 	})
 
-	t.Run("rejects allocated fees a whole unit above the module balance", func(t *testing.T) {
+	t.Run("rejects allocated fees beyond rounding dust above the module balance", func(t *testing.T) {
 		f := setupTest(t)
 
 		// what a v1.x export looks like when bank's genesis has not run before
@@ -418,6 +418,19 @@ func TestInitGenesis(t *testing.T) {
 		genesis := genesisWithAllocatedFees(t, sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 100)))
 
 		_, err := f.poaKeeper.InitGenesis(f.ctx, f.cdc, genesis)
+		require.ErrorIs(t, err, poatypes.ErrInvalidAllocatedFees)
+	})
+
+	t.Run("rejects sub-unit allocated fees when bank genesis has not run", func(t *testing.T) {
+		f := setupTest(t)
+
+		// remainders left after withdrawals are below one unit, but far above
+		// rounding dust, so a wrong genesis order still fails
+		share, err := math.LegacyNewDecFromStr("0.2")
+		require.NoError(t, err)
+		genesis := genesisWithAllocatedFees(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", share)})
+
+		_, err = f.poaKeeper.InitGenesis(f.ctx, f.cdc, genesis)
 		require.ErrorIs(t, err, poatypes.ErrInvalidAllocatedFees)
 	})
 

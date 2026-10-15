@@ -305,4 +305,4 @@ fromVM[poatypes.ModuleName] = 1
 return app.ModuleManager.RunMigrations(ctx, app.configurator, fromVM)
 ```
 
-Genesis import applies the same trim. `InitGenesis` now compares the imported allocated fees with the poa module balance, so bank's genesis must run before poa's (`SetOrderInitGenesis`). Excess below one whole unit of a denom, which is what rounding in v1.x leaves, is trimmed. Excess of a whole unit or more fails `InitGenesis` with `ErrInvalidAllocatedFees`.
+Genesis import applies the same trim. `InitGenesis` now compares the imported allocated fees with the poa module balance, so bank's genesis must run before poa's (`SetOrderInitGenesis`). Rounding in v1.x leaves at most `1e-18` per validator per denom above the balance. An excess within that limit (the number of exported validators × `1e-18`, per denom) is trimmed; anything larger, including allocations imported before bank has funded the module, fails `InitGenesis` with `ErrInvalidAllocatedFees`.

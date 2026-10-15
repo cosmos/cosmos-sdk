@@ -106,11 +106,6 @@ func (k *Keeper) getUnallocatedFees(ctx sdk.Context) (unallocated sdk.DecCoins, 
 		)
 	}
 
-	// If no unallocated fees, return zero
-	if unallocated.IsZero() {
-		return sdk.DecCoins{}, nil
-	}
-
 	return unallocated, nil
 }
 

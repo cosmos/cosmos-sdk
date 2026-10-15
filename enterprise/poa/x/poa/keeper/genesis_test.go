@@ -410,14 +410,20 @@ func TestInitGenesis(t *testing.T) {
 		require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
 	})
 
-	t.Run("rejects allocated fees beyond rounding dust above the module balance", func(t *testing.T) {
+	t.Run("rejects an excess one step above the rounding dust limit", func(t *testing.T) {
 		f := setupTest(t)
 
-		// what a v1.x export looks like when bank's genesis has not run before
-		// poa's: the module balance reads as empty
-		genesis := genesisWithAllocatedFees(t, sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 100)))
+		// entries sum to 1.000000000000000003stake against a 1stake balance: an
+		// excess of 3e-18, above the 2e-18 limit for two validators
+		share, err := math.LegacyNewDecFromStr("0.500000000000000001")
+		require.NoError(t, err)
+		genesis := genesisWithAllocatedFees(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", share)})
+		larger, err := math.LegacyNewDecFromStr("0.500000000000000002")
+		require.NoError(t, err)
+		genesis.AllocatedFees[1].Fees = sdk.DecCoins{sdk.NewDecCoinFromDec("stake", larger)}
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("stake", 1))))
 
-		_, err := f.poaKeeper.InitGenesis(f.ctx, f.cdc, genesis)
+		_, err = f.poaKeeper.InitGenesis(f.ctx, f.cdc, genesis)
 		require.ErrorIs(t, err, poatypes.ErrInvalidAllocatedFees)
 	})
 

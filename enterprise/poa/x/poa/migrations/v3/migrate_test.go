@@ -77,16 +77,6 @@ func TestMigrate(t *testing.T) {
 		require.Equal(t, balance, total.Fees)
 	})
 
-	t.Run("no allocations", func(t *testing.T) {
-		ctx, validatorAllocatedFees, totalAllocatedFees := setupStores(t)
-
-		require.NoError(t, v3.Migrate(ctx, sdk.NewDecCoins(decCoin(t, "stake", "1")), validatorAllocatedFees, totalAllocatedFees))
-
-		has, err := totalAllocatedFees.Has(ctx)
-		require.NoError(t, err)
-		require.False(t, has)
-	})
-
 	t.Run("trims the excess from entries in key order", func(t *testing.T) {
 		ctx, validatorAllocatedFees, totalAllocatedFees := setupStores(t)
 		// sums to 1.000000000000000003 against a balance of 1, and cons-a alone

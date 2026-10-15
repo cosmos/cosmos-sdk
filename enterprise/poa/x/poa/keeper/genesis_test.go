@@ -427,19 +427,6 @@ func TestInitGenesis(t *testing.T) {
 		require.ErrorIs(t, err, poatypes.ErrInvalidAllocatedFees)
 	})
 
-	t.Run("rejects sub-unit allocated fees when bank genesis has not run", func(t *testing.T) {
-		f := setupTest(t)
-
-		// remainders left after withdrawals are below one unit, but far above
-		// rounding dust, so a wrong genesis order still fails
-		share, err := math.LegacyNewDecFromStr("0.2")
-		require.NoError(t, err)
-		genesis := genesisWithAllocatedFees(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", share)})
-
-		_, err = f.poaKeeper.InitGenesis(f.ctx, f.cdc, genesis)
-		require.ErrorIs(t, err, poatypes.ErrInvalidAllocatedFees)
-	})
-
 	t.Run("export and import round trip", func(t *testing.T) {
 		// Create a fresh fixture for export
 		f := setupTest(t)

@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"hash/adler32"
 	"io"
+	"slices"
+	"strings"
 	"testing"
 
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
@@ -206,6 +209,191 @@ func TestArmor(t *testing.T) {
 	assert.Equal(t, blockType, blockType2)
 	assert.Equal(t, data, data2)
 }
+
+// errArmor is the error a malformed armored block is rejected with.
+const errArmor = "openpgp: invalid data: armor invalid"
+
+// TestArmorChecksum checks that a block whose contents disagree with its
+// CRC-24 footer is rejected. A public key has no authentication tag to fail
+// later, so a flipped byte in the key material would otherwise be imported
+// silently as a different key.
+func TestArmorChecksum(t *testing.T) {
+	algo := string(hd.Secp256k1Type)
+	pubBytes := legacy.Cdc.MustMarshal(secp256k1.GenPrivKey().PubKey())
+
+	// Flip a bit in the last byte of the key material. The result is still a
+	// well-formed public key of the right length, so only the footer can
+	// reveal that it is not the key that was exported.
+	corrupt := slices.Clone(pubBytes)
+	corrupt[len(corrupt)-1] ^= 1
+
+	split := func(s string) []string { return strings.Split(strings.TrimRight(s, "\n"), "\n") }
+	join := func(lines []string) string { return strings.Join(lines, "\n") + "\n" }
+	withFooter := func(lines []string, footer string) string {
+		out := slices.Clone(lines)
+		out[len(out)-2] = footer
+		return join(out)
+	}
+
+	good := split(crypto.ArmorPubKeyBytes(pubBytes, algo))
+	bad := split(crypto.ArmorPubKeyBytes(corrupt, algo))
+	footer := good[len(good)-2]
+	require.True(t, strings.HasPrefix(footer, "="), "expected a CRC-24 footer")
+
+	// Either block decodes on its own, which is what makes the footer
+	// necessary in the first place.
+	for _, lines := range [][]string{good, bad} {
+		bz, gotAlgo, err := crypto.UnarmorPubKeyBytes(join(lines))
+		require.NoError(t, err)
+		require.Equal(t, algo, gotAlgo)
+		require.Len(t, bz, len(pubBytes))
+	}
+
+	// The corrupted body carrying the original footer, which is what a damaged
+	// export looks like.
+	tampered := withFooter(bad, footer)
+	_, _, err := crypto.UnarmorPubKeyBytes(tampered)
+	require.EqualError(t, err, "couldn't unarmor bytes: "+errArmor)
+	_, _, err = crypto.UnarmorPubKeyBytes(withFooter(good, "=AAAA"))
+	require.EqualError(t, err, "couldn't unarmor bytes: "+errArmor)
+
+	// Footers that cannot be read are rejected rather than skipped: one that is
+	// not base64, and one padded with whitespace, as copy-pasting through chat
+	// or email often does.
+	for _, f := range []string{"=!!!!", footer + " ", " " + footer} {
+		_, _, err := crypto.UnarmorPubKeyBytes(withFooter(bad, f))
+		require.Error(t, err, "%q", f)
+	}
+
+	// A block with no footer stays acceptable: RFC 9580 deprecated it, so
+	// third-party tooling may legitimately omit it.
+	footerless := join(slices.Delete(slices.Clone(good), len(good)-2, len(good)-1))
+	_, gotAlgo, err := crypto.UnarmorPubKeyBytes(footerless)
+	require.NoError(t, err)
+	require.Equal(t, algo, gotAlgo)
+
+	// Whichever block the decoder returns from input holding several, its own
+	// footer is the one checked. Each prefix ends in a block the decoder
+	// skips, ahead of the tampered one.
+	for name, prefix := range map[string]string{
+		"block with no type":       "-----BEGIN -----\n=AAAA\n-----END -----\n",
+		"headers that don't parse": good[0] + "\nnocolon\n" + strings.Replace(good[0], "-----BEGIN ", "-----END ", 1) + "\n",
+		// The decoder reads the nested BEGIN line as a header that does not
+		// parse, and resumes after it.
+		"nested BEGIN line": good[0] + "\n" + footerless,
+		// The decoder skips a line longer than its 100-byte buffer.
+		"overlong BEGIN line": good[0] + strings.Repeat(" ", 120) + "\n" + strings.Join(split(footerless)[1:], "\n") + "\n",
+	} {
+		_, _, _, err := crypto.DecodeArmor(prefix + tampered)
+		require.EqualError(t, err, errArmor, name)
+	}
+}
+
+// The armor tests below cover the code copied from
+// golang.org/x/crypto/openpgp/armor into armor.go. TestDecodeEncodeArmor,
+// TestDecodeArmorLongHeader and their test vectors are upstream's, covered by
+// the license reproduced in armor.go; the rest pin upstream's checksum
+// handling, which must not change.
+
+func TestDecodeEncodeArmor(t *testing.T) {
+	blockType, headers, data, err := crypto.DecodeArmor(armorExample1)
+	require.NoError(t, err)
+	require.Equal(t, "PGP SIGNATURE", blockType)
+	require.Equal(t, map[string]string{"Version": "GnuPG v1.4.10 (GNU/Linux)"}, headers)
+	require.Equal(t, uint32(0x27b144be), adler32.Checksum(data))
+
+	require.Equal(t, armorExample1, crypto.EncodeArmor(blockType, headers, data))
+}
+
+func TestDecodeArmorLongHeader(t *testing.T) {
+	_, headers, _, err := crypto.DecodeArmor(armorLongLine)
+	require.NoError(t, err)
+	require.Equal(t, longValueExpected, headers["Version"])
+}
+
+// TestDecodeArmorChecksum checks that the body is checked against the checksum
+// line, and that a block without one is still accepted, as RFC 9580 deprecated
+// it.
+func TestDecodeArmorChecksum(t *testing.T) {
+	const footer = "=/teI"
+	require.Contains(t, armorExample1, "\n"+footer+"\n")
+
+	for _, in := range []string{
+		armorExample1,
+		strings.Replace(armorExample1, footer+"\n", "", 1),
+	} {
+		_, _, _, err := crypto.DecodeArmor(in)
+		require.NoError(t, err)
+	}
+
+	for name, in := range map[string]string{
+		// Same body with the last data byte changed, keeping the original
+		// checksum line.
+		"corrupted body": strings.Replace(armorExample1, "b1g=", "b1k=", 1),
+		"other checksum": strings.Replace(armorExample1, footer, "=AAAA", 1),
+	} {
+		_, _, _, err := crypto.DecodeArmor(in)
+		require.EqualError(t, err, errArmor, name)
+	}
+}
+
+// TestDecodeArmorMalformedChecksumLine checks how a checksum line that cannot
+// be read is handled.
+func TestDecodeArmorMalformedChecksumLine(t *testing.T) {
+	for _, line := range []string{
+		// Not base64.
+		"=!!!!",
+		// Padded with whitespace, as copy-pasting through chat or email
+		// often does: read as body, which is not valid base64.
+		"=/teI ",
+		"=/teI\t",
+	} {
+		_, _, _, err := crypto.DecodeArmor(strings.Replace(armorExample1, "=/teI", line, 1))
+		require.Error(t, err, "%q", line)
+	}
+
+	// A line that decodes to fewer than three bytes is not treated as a
+	// checksum line, so the block is accepted unchecked. This is upstream's
+	// behavior, kept as is.
+	_, _, _, err := crypto.DecodeArmor(strings.Replace(armorExample1, "=/teI", "=E3J=", 1))
+	require.NoError(t, err)
+}
+
+// TestDecodeArmorChecksumLineMustEndBlock checks that the armor trailer has to
+// follow the checksum line directly.
+func TestDecodeArmorChecksumLineMustEndBlock(t *testing.T) {
+	for name, in := range map[string]string{
+		"line after checksum": strings.Replace(armorExample1, "=/teI\n", "=/teI\nAAAA\n", 1),
+		"no trailer":          strings.TrimSuffix(armorExample1, "-----END PGP SIGNATURE-----"),
+	} {
+		_, _, _, err := crypto.DecodeArmor(in)
+		require.EqualError(t, err, errArmor, name)
+	}
+}
+
+const armorExample1 = `-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iJwEAAECAAYFAk1Fv/0ACgkQo01+GMIMMbsYTwQAiAw+QAaNfY6WBdplZ/uMAccm
+4g+81QPmTSGHnetSb6WBiY13kVzK4HQiZH8JSkmmroMLuGeJwsRTEL4wbjRyUKEt
+p1xwUZDECs234F1xiG5enc5SGlRtP7foLBz9lOsjx+LEcA4sTl5/2eZR9zyFZqWW
+TxRjs+fJCIFuo71xb1g=
+=/teI
+-----END PGP SIGNATURE-----`
+
+const armorLongLine = `-----BEGIN PGP SIGNATURE-----
+Version: 0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz
+
+iQEcBAABAgAGBQJMtFESAAoJEKsQXJGvOPsVj40H/1WW6jaMXv4BW+1ueDSMDwM8
+kx1fLOXbVM5/Kn5LStZNt1jWWnpxdz7eq3uiqeCQjmqUoRde3YbB2EMnnwRbAhpp
+cacnAvy9ZQ78OTxUdNW1mhX5bS6q1MTEJnl+DcyigD70HG/yNNQD7sOPMdYQw0TA
+byQBwmLwmTsuZsrYqB68QyLHI+DUugn+kX6Hd2WDB62DKa2suoIUIHQQCd/ofwB3
+WfCYInXQKKOSxu2YOg2Eb4kLNhSMc1i9uKUWAH+sdgJh7NBgdoE4MaNtBFkHXRvv
+okWuf3+xA9ksp1npSY/mDvgHijmjvtpRDe6iUeqfCn8N9u9CBg8geANgaG8+QA4=
+=wfQG
+-----END PGP SIGNATURE-----`
+
+const longValueExpected = "0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz"
 
 func TestBcryptLegacyEncryption(t *testing.T) {
 	privKey := secp256k1.GenPrivKey()

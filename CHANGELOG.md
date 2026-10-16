@@ -48,6 +48,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (crypto) [#26826](https://github.com/cosmos/cosmos-sdk/pull/26826) Vendor the deprecated `golang.org/x/crypto/openpgp/armor` package ([GO-2026-5932](https://pkg.go.dev/vuln/GO-2026-5932)) into `crypto/armor.go`, with no change in behavior.
+* (deps) [#26826](https://github.com/cosmos/cosmos-sdk/pull/26826) Bump Go to 1.26.9 in all modules, which now require Go 1.26.9 or later, and `golang.org/x/net` to v0.60.0 in all modules, to fix standard library and `x/net` vulnerabilities reported by `govulncheck`.
 * (types) [#26729](https://github.com/cosmos/cosmos-sdk/pull/26729) Memoize `GetConfig`'s "hostname|binary|pid" registry-key fallback, which derived the executable path, hostname, and PID on every call.
 * (store) [#26782](https://github.com/cosmos/cosmos-sdk/pull/26782) Fix a data race in the root multi-store pruning test.
 * (blockstm) [#26779](https://github.com/cosmos/cosmos-sdk/pull/26779) perf(blockstm): memoize merge iterator source.

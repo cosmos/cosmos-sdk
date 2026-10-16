@@ -1,15 +1,14 @@
 package crypto
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
-	"strings"
 
-	"github.com/ProtonMail/go-crypto/openpgp/armor"
 	"github.com/cometbft/cometbft/crypto"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/chacha20poly1305"
@@ -262,7 +261,7 @@ func decryptPrivKey(saltBytes, encBytes []byte, passphrase, kdf string) (privKey
 
 func EncodeArmor(blockType string, headers map[string]string, data []byte) string {
 	buf := new(bytes.Buffer)
-	w, err := armor.Encode(buf, blockType, headers)
+	w, err := encodeArmorBlock(buf, blockType, headers)
 	if err != nil {
 		panic(fmt.Errorf("could not encode ascii armor: %w", err))
 	}
@@ -279,7 +278,7 @@ func EncodeArmor(blockType string, headers map[string]string, data []byte) strin
 
 func DecodeArmor(armorStr string) (blockType string, headers map[string]string, data []byte, err error) {
 	buf := bytes.NewBufferString(armorStr)
-	block, err := armor.Decode(buf)
+	block, err := decodeArmorBlock(buf)
 	if err != nil {
 		return "", nil, nil, err
 	}
@@ -287,33 +286,87 @@ func DecodeArmor(armorStr string) (blockType string, headers map[string]string, 
 	if err != nil {
 		return "", nil, nil, err
 	}
-
-	// The decoder no longer checks the CRC-24 footer, which RFC 9580
-	// deprecated, so check it here. Without this a corrupted export could
-	// decode into a different but structurally valid key, and a public key has
-	// no authentication tag to fail later.
-	if err := verifyArmorChecksum(armorStr, block.Type, data); err != nil {
-		return "", nil, nil, err
-	}
-
 	return block.Type, block.Header, data, nil
 }
 
-// ErrArmorChecksum is returned when an armored block's contents do not match
-// its CRC-24 footer, meaning the block was corrupted in transit or storage.
-var ErrArmorChecksum = errors.New("armor invalid: checksum mismatch")
+//-----------------------------------------------------------------
+// OpenPGP ASCII armor, see RFC 4880. OpenPGP armor is very similar to PEM
+// except that it has an additional CRC checksum.
+//
+// MODIFIED BY COSMOS SDK: copied from golang.org/x/crypto/openpgp/armor
+// (v0.57.0), which is deprecated and flagged as GO-2026-5932. Behavior is
+// unchanged. Changes:
+//   - identifiers are unexported, and errArmorCorrupt replaces ArmorCorrupt
+//     with the same message, so that golang.org/x/crypto/openpgp/errors is not
+//     imported;
+//   - naked returns are made explicit and the deprecation notice is dropped.
+//
+// The code below is covered by the following license:
+//
+// Copyright 2009 The Go Authors.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//    * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//    * Neither the name of Google LLC nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// CRC-24 parameters, from RFC 4880, section 6.1.
+// armorBlock represents an OpenPGP armored structure.
+//
+// The encoded form is:
+//
+//	-----BEGIN Type-----
+//	Headers
+//
+//	base64-encoded Bytes
+//	'=' base64 encoded checksum
+//	-----END Type-----
+//
+// where Headers is a possibly empty sequence of Key: Value lines.
+//
+// Since the armored data can be very large, this package presents a streaming
+// interface.
+type armorBlock struct {
+	Type    string            // The type, taken from the preamble (i.e. "PGP SIGNATURE").
+	Header  map[string]string // Optional headers.
+	Body    io.Reader         // A Reader from which the contents can be read
+	lReader lineReader
+	oReader openpgpReader
+}
+
+// errArmorCorrupt is returned when an armored block is malformed or its contents do
+// not match its CRC-24 checksum.
+var errArmorCorrupt = errors.New("openpgp: invalid data: armor invalid")
+
 const (
 	crc24Init = 0xb704ce
 	crc24Poly = 0x1864cfb
 	crc24Mask = 0xffffff
 )
 
-// crc24 computes the CRC-24 checksum of data.
-func crc24(data []byte) uint32 {
-	crc := uint32(crc24Init)
-	for _, b := range data {
+// crc24 calculates the OpenPGP checksum as specified in RFC 4880, section 6.1
+func crc24(crc uint32, d []byte) uint32 {
+	for _, b := range d {
 		crc ^= uint32(b) << 16
 		for range 8 {
 			crc <<= 1
@@ -322,94 +375,318 @@ func crc24(data []byte) uint32 {
 			}
 		}
 	}
-	return crc & crc24Mask
+	return crc
 }
 
-// Lines that delimit an armored block, from RFC 4880, section 6.2.
-const (
-	armorBegin     = "-----BEGIN "
-	armorEnd       = "-----END "
-	armorEndOfLine = "-----"
+var (
+	armorStart     = []byte("-----BEGIN ")
+	armorEnd       = []byte("-----END ")
+	armorEndOfLine = []byte("-----")
 )
 
-// verifyArmorChecksum checks data against the CRC-24 footer of the block it was
-// decoded from. The decoder neither checks the footer nor reports it, so we
-// locate it ourselves. A block with no footer is accepted, as RFC 9580
-// deprecated it.
-func verifyArmorChecksum(armorStr, blockType string, data []byte) error {
-	footer, ok := findArmorFooter(strings.Split(armorStr, "\n"), blockType)
-	if !ok {
-		return nil
+// lineReader wraps a line based reader. It watches for the end of an armor
+// block and records the expected CRC value.
+type lineReader struct {
+	in     *bufio.Reader
+	buf    []byte
+	eof    bool
+	crc    uint32
+	crcSet bool
+}
+
+func (l *lineReader) Read(p []byte) (int, error) {
+	if l.eof {
+		return 0, io.EOF
 	}
 
-	var sum [3]byte
-	crc := crc24(data)
-	sum[0], sum[1], sum[2] = byte(crc>>16), byte(crc>>8), byte(crc)
-	if want := "=" + base64.StdEncoding.EncodeToString(sum[:]); footer != want {
-		return fmt.Errorf("%w: contents do not match footer %q", ErrArmorChecksum, footer)
+	if len(l.buf) > 0 {
+		n := copy(p, l.buf)
+		l.buf = l.buf[n:]
+		return n, nil
+	}
+
+	line, isPrefix, err := l.in.ReadLine()
+	if err != nil {
+		return 0, err
+	}
+	if isPrefix {
+		return 0, errArmorCorrupt
+	}
+
+	if bytes.HasPrefix(line, armorEnd) {
+		l.eof = true
+		return 0, io.EOF
+	}
+
+	if len(line) == 5 && line[0] == '=' {
+		// This is the checksum line
+		var expectedBytes [3]byte
+		m, err := base64.StdEncoding.Decode(expectedBytes[0:], line[1:])
+		if m != 3 || err != nil {
+			return 0, err
+		}
+		l.crc = uint32(expectedBytes[0])<<16 |
+			uint32(expectedBytes[1])<<8 |
+			uint32(expectedBytes[2])
+
+		line, _, err = l.in.ReadLine()
+		if err != nil && !errors.Is(err, io.EOF) {
+			return 0, err
+		}
+		if !bytes.HasPrefix(line, armorEnd) {
+			return 0, errArmorCorrupt
+		}
+
+		l.eof = true
+		l.crcSet = true
+		return 0, io.EOF
+	}
+
+	if len(line) > 96 {
+		return 0, errArmorCorrupt
+	}
+
+	n := copy(p, line)
+	bytesToSave := len(line) - n
+	if bytesToSave > 0 {
+		if cap(l.buf) < bytesToSave {
+			l.buf = make([]byte, 0, bytesToSave)
+		}
+		l.buf = l.buf[0:bytesToSave]
+		copy(l.buf, line[n:])
+	}
+
+	return n, nil
+}
+
+// openpgpReader passes Read calls to the underlying base64 decoder, but keeps
+// a running CRC of the resulting data and checks the CRC against the value
+// found by the lineReader at EOF.
+type openpgpReader struct {
+	lReader    *lineReader
+	b64Reader  io.Reader
+	currentCRC uint32
+}
+
+func (r *openpgpReader) Read(p []byte) (int, error) {
+	n, err := r.b64Reader.Read(p)
+	r.currentCRC = crc24(r.currentCRC, p[:n])
+
+	if errors.Is(err, io.EOF) && r.lReader.crcSet && r.lReader.crc != r.currentCRC&crc24Mask {
+		return 0, errArmorCorrupt
+	}
+
+	return n, err
+}
+
+// decodeArmorBlock reads a PGP armored block from the given Reader. It will ignore
+// leading garbage. If it doesn't find a block, it will return nil, io.EOF. The
+// given Reader is not usable after calling this function: an arbitrary amount
+// of data may have been read past the end of the block.
+func decodeArmorBlock(in io.Reader) (*armorBlock, error) {
+	r := bufio.NewReaderSize(in, 100)
+	var line []byte
+	var err error
+	ignoreNext := false
+
+TryNextBlock:
+	// Skip leading garbage
+	for {
+		ignoreThis := ignoreNext
+		line, ignoreNext, err = r.ReadLine()
+		if err != nil {
+			return nil, err
+		}
+		if ignoreNext || ignoreThis {
+			continue
+		}
+		line = bytes.TrimSpace(line)
+		if len(line) > len(armorStart)+len(armorEndOfLine) && bytes.HasPrefix(line, armorStart) {
+			break
+		}
+	}
+
+	p := new(armorBlock)
+	p.Type = string(line[len(armorStart) : len(line)-len(armorEndOfLine)])
+	p.Header = make(map[string]string)
+	nextIsContinuation := false
+	var lastKey string
+
+	// Read headers
+	for {
+		isContinuation := nextIsContinuation
+		line, nextIsContinuation, err = r.ReadLine()
+		if err != nil {
+			return nil, err
+		}
+		if isContinuation {
+			p.Header[lastKey] += string(line)
+			continue
+		}
+		line = bytes.TrimSpace(line)
+		if len(line) == 0 {
+			break
+		}
+
+		i := bytes.Index(line, []byte(": "))
+		if i == -1 {
+			goto TryNextBlock
+		}
+		lastKey = string(line[:i])
+		p.Header[lastKey] = string(line[i+2:])
+	}
+
+	p.lReader.in = r
+	p.oReader.currentCRC = crc24Init
+	p.oReader.lReader = &p.lReader
+	p.oReader.b64Reader = base64.NewDecoder(base64.StdEncoding, &p.lReader)
+	p.Body = &p.oReader
+
+	return p, nil
+}
+
+var (
+	armorHeaderSep    = []byte(": ")
+	blockEnd          = []byte("\n=")
+	newline           = []byte("\n")
+	armorEndOfLineOut = []byte("-----\n")
+)
+
+// writeSlices writes its arguments to the given Writer.
+func writeSlices(out io.Writer, slices ...[]byte) error {
+	for _, s := range slices {
+		if _, err := out.Write(s); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-// findArmorFooter returns the CRC-24 footer of the block the decoder decoded,
-// if that block carries one. The input may hold several blocks, and the decoder
-// returns the first one it can parse, so we have to skip the candidates it
-// skips: a block whose header line carries another type, and one whose headers
-// do not parse. Reading a skipped block's footer would check the wrong bytes,
-// or, when that block has no footer, skip the check altogether.
+// lineBreaker breaks data across several lines, all of the same byte length
+// (except possibly the last). Lines are broken with a single '\n'.
+type lineBreaker struct {
+	lineLength  int
+	line        []byte
+	used        int
+	out         io.Writer
+	haveWritten bool
+}
+
+func newLineBreaker(out io.Writer, lineLength int) *lineBreaker {
+	return &lineBreaker{
+		lineLength: lineLength,
+		line:       make([]byte, lineLength),
+		used:       0,
+		out:        out,
+	}
+}
+
+func (l *lineBreaker) Write(b []byte) (int, error) {
+	n := len(b)
+
+	if n == 0 {
+		return 0, nil
+	}
+
+	if l.used == 0 && l.haveWritten {
+		if _, err := l.out.Write([]byte{'\n'}); err != nil {
+			return n, err
+		}
+	}
+
+	if l.used+len(b) < l.lineLength {
+		l.used += copy(l.line[l.used:], b)
+		return n, nil
+	}
+
+	l.haveWritten = true
+	if _, err := l.out.Write(l.line[0:l.used]); err != nil {
+		return n, err
+	}
+	excess := l.lineLength - l.used
+	l.used = 0
+
+	if _, err := l.out.Write(b[0:excess]); err != nil {
+		return n, err
+	}
+
+	_, err := l.Write(b[excess:])
+	return n, err
+}
+
+func (l *lineBreaker) Close() error {
+	if l.used > 0 {
+		if _, err := l.out.Write(l.line[0:l.used]); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// armorEncoding keeps track of a running CRC24 over the data which has been written
+// to it and outputs a OpenPGP checksum when closed, followed by an armor
+// trailer.
 //
-// Within the block, the footer sits where the decoder stops reading the body:
-// at the first line that is a lone base64 group prefixed with '=', or at the
-// trailer. A base64 body line never looks like a footer, because lines break on
-// a multiple of four characters and so never split a group.
-func findArmorFooter(lines []string, blockType string) (string, bool) {
-	for i := range lines {
-		if !isArmorBegin(lines[i], blockType) {
-			continue
-		}
-		body, ok := armorBodyStart(lines, i+1)
-		if !ok {
-			continue
-		}
-		for _, line := range lines[body:] {
-			// The decoder matches these against the raw line, so strip only
-			// the carriage return that reading the line would have dropped.
-			line = strings.TrimSuffix(line, "\r")
-			if strings.HasPrefix(line, armorEnd) {
-				return "", false
-			}
-			if len(line) == 5 && line[0] == '=' {
-				return line, true
-			}
-		}
-		return "", false
-	}
-	return "", false
+// It's built into a stack of io.Writers:
+//
+//	armorEncoding -> base64 encoder -> lineBreaker -> out
+type armorEncoding struct {
+	out       io.Writer
+	breaker   *lineBreaker
+	b64       io.WriteCloser
+	crc       uint32
+	blockType []byte
 }
 
-// isArmorBegin reports whether line is the header line of a block of blockType,
-// by the same reading the decoder gives it: the type is taken from a fixed
-// offset, so the line has to be long enough to hold a non-empty one.
-func isArmorBegin(line, blockType string) bool {
-	line = strings.TrimSpace(line)
-	if len(line) <= len(armorBegin)+len(armorEndOfLine) || !strings.HasPrefix(line, armorBegin) {
-		return false
-	}
-	return line[len(armorBegin):len(line)-len(armorEndOfLine)] == blockType
+func (e *armorEncoding) Write(data []byte) (int, error) {
+	e.crc = crc24(e.crc, data)
+	return e.b64.Write(data)
 }
 
-// armorBodyStart returns the index of the first body line of a block whose
-// headers start at lines[i], and whether those headers are ones the decoder
-// accepts: "Key: Value" lines terminated by a blank line.
-func armorBodyStart(lines []string, i int) (int, bool) {
-	for ; i < len(lines); i++ {
-		line := strings.TrimSpace(lines[i])
-		if len(line) == 0 {
-			return i + 1, true
-		}
-		if !strings.Contains(line, ":") {
-			return 0, false
+func (e *armorEncoding) Close() error {
+	if err := e.b64.Close(); err != nil {
+		return err
+	}
+	if err := e.breaker.Close(); err != nil {
+		return err
+	}
+
+	var checksumBytes [3]byte
+	checksumBytes[0] = byte(e.crc >> 16)
+	checksumBytes[1] = byte(e.crc >> 8)
+	checksumBytes[2] = byte(e.crc)
+
+	var b64ChecksumBytes [4]byte
+	base64.StdEncoding.Encode(b64ChecksumBytes[:], checksumBytes[:])
+
+	return writeSlices(e.out, blockEnd, b64ChecksumBytes[:], newline, armorEnd, e.blockType, armorEndOfLine)
+}
+
+// encodeArmorBlock returns a WriteCloser which will encode the data written to it in
+// OpenPGP armor.
+func encodeArmorBlock(out io.Writer, blockType string, headers map[string]string) (io.WriteCloser, error) {
+	bType := []byte(blockType)
+	if err := writeSlices(out, armorStart, bType, armorEndOfLineOut); err != nil {
+		return nil, err
+	}
+
+	for k, v := range headers {
+		if err := writeSlices(out, []byte(k), armorHeaderSep, []byte(v), newline); err != nil {
+			return nil, err
 		}
 	}
-	return 0, false
+
+	if _, err := out.Write(newline); err != nil {
+		return nil, err
+	}
+
+	e := &armorEncoding{
+		out:       out,
+		breaker:   newLineBreaker(out, 64),
+		crc:       crc24Init,
+		blockType: bType,
+	}
+	e.b64 = base64.NewEncoder(base64.StdEncoding, e.breaker)
+	return e, nil
 }

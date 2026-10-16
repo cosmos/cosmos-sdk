@@ -51,14 +51,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [#26729](https://github.com/cosmos/cosmos-sdk/pull/26729) Memoize `GetConfig`'s "hostname|binary|pid" registry-key fallback, which derived the executable path, hostname, and PID on every call.
 * (store) [#26782](https://github.com/cosmos/cosmos-sdk/pull/26782) Fix a data race in the root multi-store pruning test.
 * (blockstm) [#26779](https://github.com/cosmos/cosmos-sdk/pull/26779) perf(blockstm): memoize merge iterator source.
+* (deps) [#26850](https://github.com/cosmos/cosmos-sdk/pull/26850) Bump google.golang.org/grpc to v1.84.0 in all modules except `api` and `depinject`.
 
 
 ### Bug Fixes
 
+* (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.
 * (client/tx) [#26759](https://github.com/cosmos/cosmos-sdk/issues/26759) Populate the multisig bit array in simulation txs so `--gas auto` works for multisig senders.
 * (blockstm) [#26772](https://github.com/cosmos/cosmos-sdk/pull/26772) Panic with a descriptive error when accessing an unregistered store instead of silently using store index zero.
 * (x/genutil) [#26741](https://github.com/cosmos/cosmos-sdk/issues/26741) Preserve vote extension enable height when exporting genesis state.
 * (baseapp) [#26738](https://github.com/cosmos/cosmos-sdk/pull/26738) Return genesis transaction events in the first block's `FinalizeBlock` response so block indexers can observe them.
+* (x/gov) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Schedule legacy simulation votes on the proposal just submitted instead of the next unused proposal ID, drop the trailing nil future operation, skip scheduled votes whose proposal is not in its voting period, and schedule votes on expedited proposals within the expedited voting period (or before the voting end time when the proposal is already in voting).
+* (x/simulation) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Time-scheduled future operations were silently dropped by `queueOperations` (the appended queue was never returned to the caller), and executed time operations were never removed from the queue. Both now update the caller's queue.
 * (baseapp) [#26558](https://github.com/cosmos/cosmos-sdk/issues/26558) Make `BaseApp.Close` idempotent so the two deferred cleanups in `server/start.go` no longer close the application database twice, which panicked on pebble-backed nodes at the end of an otherwise clean shutdown.
 
 ### Deprecated

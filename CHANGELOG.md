@@ -53,6 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [#26779](https://github.com/cosmos/cosmos-sdk/pull/26779) perf(blockstm): memoize merge iterator source.
 * (deps) [#26850](https://github.com/cosmos/cosmos-sdk/pull/26850) Bump google.golang.org/grpc to v1.84.0 in all modules except `api` and `depinject`.
 
+* (store) [#26818](https://github.com/cosmos/cosmos-sdk/pull/26818) Fix a data race in the snapshot manager test helper (`hungSnapshotter`) that fails `TestManager_Take` under `-race`.
 
 ### Bug Fixes
 

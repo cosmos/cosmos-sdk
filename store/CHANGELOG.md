@@ -35,8 +35,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* [#26877](https://github.com/cosmos/cosmos-sdk/issues/26877) Reset inter-block cache on snapshot restore to prevent stale cache entries from causing AppHash mismatches after state sync.
-
 ## v2.0.0 (April 10, 2026)
 
 ### API Breaking

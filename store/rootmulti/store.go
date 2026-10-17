@@ -1024,6 +1024,15 @@ loop:
 	}
 
 	rs.flushMetadata(rs.db, int64(height), rs.buildCommitInfo(int64(height)))
+
+	// Entries cached against the pre-restore (empty) stores, including misses
+	// cached by CheckTx during state sync, must not survive the restore.
+	// Reset the cache before reloading stores to ensure stale wrappers and
+	// entries do not persist across the restore.
+	if rs.interBlockCache != nil {
+		rs.interBlockCache.Reset()
+	}
+
 	return snapshotItem, rs.LoadLatestVersion()
 }
 

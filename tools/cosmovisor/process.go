@@ -200,7 +200,10 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 	cmd.Stdin = stdin
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGTERM)
 	if err := cmd.Start(); err != nil {
+		signal.Stop(sigs)
 		return false, fmt.Errorf("launching process %s %s failed: %w", bin, strings.Join(args, " "), err)
 	}
 
@@ -212,16 +215,27 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 		BatchUpgradeWatcher(ctx, l.cfg, l.logger)
 	}()
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGTERM)
+	sigDone := make(chan struct{})
 	go func() {
-		sig := <-sigs
+		defer close(sigDone)
+		sig, ok := <-sigs
+		if !ok {
+			return
+		}
 		cancel()
 		wg.Wait()
 		if err := cmd.Process.Signal(sig); err != nil {
 			l.logger.Error("terminated", "error", err, "bin", bin)
 			os.Exit(1)
 		}
+	}()
+
+	defer func() {
+		signal.Stop(sigs)
+		close(sigs)
+		<-sigDone
+		cancel()
+		wg.Wait()
 	}()
 
 	if needsUpdate, err := l.WaitForUpgradeOrExit(cmd); err != nil || !needsUpdate {
@@ -249,9 +263,6 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 
 		return true, nil
 	}
-
-	cancel()
-	wg.Wait()
 
 	return false, nil
 }

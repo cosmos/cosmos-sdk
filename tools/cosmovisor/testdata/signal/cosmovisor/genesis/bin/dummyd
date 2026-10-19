@@ -1,0 +1,9 @@
+#!/bin/sh
+
+echo Genesis $@
+sleep 1
+test -z $4 && exit 1001
+echo 'UPGRADE "chain2" NEEDED at height: 49: {}'
+echo '{"name":"chain2","height":49,"info":""}' > $4
+sleep 2
+echo Never should be printed!!!

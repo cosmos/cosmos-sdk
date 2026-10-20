@@ -1,4 +1,4 @@
-go 1.26.6
+go 1.26.9
 
 module github.com/cosmos/cosmos-sdk/tools/systemtests
 

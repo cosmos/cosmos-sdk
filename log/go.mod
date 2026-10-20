@@ -1,6 +1,6 @@
 module cosmossdk.io/log/v2
 
-go 1.26.9
+go 1.26.10
 
 require (
 	github.com/bytedance/sonic v1.15.3

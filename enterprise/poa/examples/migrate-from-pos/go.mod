@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/enterprise/poa/examples/migrate-from-pos
 
-go 1.26.9
+go 1.26.10
 
 require (
 	cosmossdk.io/api v1.1.0

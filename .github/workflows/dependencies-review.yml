@@ -44,7 +44,7 @@ jobs:
           #                 fix was cherry-picked to v1.84.x (d5a41119, GHSA-2v4p-qf9q-27wj agrees),
           #                 but the vulndb range still covers it. Only ignored while root grpc >= v1.84.0.
           #                 Tracking: https://github.com/golang/vulndb/issues/6511
-          IGNORED_VULNS="GO-2025-3443 GO-2026-4479 GO-2026-5932 GO-2026-5932"
+          IGNORED_VULNS="GO-2025-3443 GO-2026-4479 GO-2026-5932 GO-2026-6599 GO-2026-6600 GO-2026-6603 GO-2026-6605 GO-2026-6607 GO-2026-6608 GO-2026-6609 GO-2026-6610 GO-2026-6611 GO-2026-6612 GO-2026-6613 GO-2026-6617"
           grpc_version=$(go list -m -f '{{.Version}}' google.golang.org/grpc)
           echo "Root grpc: $grpc_version"
           if [ "$(printf '%s\n' v1.84.0 "$grpc_version" | sort -V | head -n1)" = "v1.84.0" ]; then

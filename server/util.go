@@ -354,6 +354,7 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		version.NewVersionCommand(),
 		NewRollbackCmd(appCreator, defaultNodeHome),
 		ModuleHashByHeightQuery(appCreator),
+		ValidateAppConfigCmd(),
 	)
 }
 
@@ -383,6 +384,7 @@ func AddCommandsWithStartCmdOptions(rootCmd *cobra.Command, defaultNodeHome stri
 		ExportCmd(appExport, defaultNodeHome),
 		version.NewVersionCommand(),
 		NewRollbackCmd(appCreator, defaultNodeHome),
+		ValidateAppConfigCmd(),
 	)
 }
 

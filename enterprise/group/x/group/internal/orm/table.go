@@ -58,7 +58,7 @@ func newTable(prefix [2]byte, model proto.Message, cdc codec.Codec) (*table, err
 		return nil, errors.ErrORMInvalidArgument.Wrap("Model must not be nil")
 	}
 	tp := reflect.TypeOf(model)
-	if tp.Kind() == reflect.Ptr {
+	if tp.Kind() == reflect.Pointer {
 		tp = tp.Elem()
 	}
 	return &table{

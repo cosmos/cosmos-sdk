@@ -238,7 +238,8 @@ func DefaultConfigWithAppConfigWithQueryGasLimit(appConfig depinject.Config, que
 				appConfig,
 				depinject.Supply(val.GetCtx().Logger),
 			),
-			&appBuilder); err != nil {
+			&appBuilder,
+		); err != nil {
 			panic(err)
 		}
 		app := appBuilder.Build(

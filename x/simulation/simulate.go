@@ -396,7 +396,7 @@ func runQueuedOperations(
 		opMsg.LogEvent(event)
 
 		if !lean || opMsg.OK {
-			logWriter.AddEntry((QueuedMsgEntry(int64(height), opMsg)))
+			logWriter.AddEntry(QueuedMsgEntry(int64(height), opMsg))
 		}
 
 		if err != nil {

@@ -108,7 +108,8 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 		ctx,
 		"update_consensus_params",
 		event.Attribute{Key: "authority", Value: msg.Authority},
-		event.Attribute{Key: "parameters", Value: consensusParams.String()}); err != nil {
+		event.Attribute{Key: "parameters", Value: consensusParams.String()},
+	); err != nil {
 		return nil, err
 	}
 

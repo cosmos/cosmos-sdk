@@ -70,7 +70,8 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 
 		signBytes, err := authsign.GetSignBytesAdapter(
 			context.Background(), txConfig.SignModeHandler(), signMode, signerData,
-			tx.GetTx())
+			tx.GetTx(),
+		)
 		if err != nil {
 			panic(err)
 		}

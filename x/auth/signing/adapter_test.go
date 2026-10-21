@@ -28,6 +28,7 @@ func TestGetSignBytesAdapterNoPublicKey(t *testing.T) {
 		txConfig.SignModeHandler(),
 		signing.SignMode_SIGN_MODE_DIRECT,
 		signerData,
-		w.GetTx())
+		w.GetTx(),
+	)
 	require.NoError(t, err)
 }

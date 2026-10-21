@@ -449,7 +449,8 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx 
 		}
 
 		err = authclient.SignTxWithSignerAddress(
-			txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
+			txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite,
+		)
 		if err != nil {
 			return err
 		}

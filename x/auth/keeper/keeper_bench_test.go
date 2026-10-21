@@ -50,7 +50,8 @@ func BenchmarkAccountMapperSetAccount(b *testing.B) {
 		depinject.Configs(
 			depinject.Supply(log.NewNopLogger()),
 			testutil.AppConfig,
-		), &accountKeeper)
+		), &accountKeeper,
+	)
 	require.NoError(b, err)
 
 	ctx := app.NewContext(false)

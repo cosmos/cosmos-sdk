@@ -25,7 +25,8 @@ func CreateKeyringAccounts(t *testing.T, kr keyring.Keyring, num int) []TestAcco
 			keyring.English,
 			types.FullFundraiserPath,
 			keyring.DefaultBIP39Passphrase,
-			hd.Secp256k1)
+			hd.Secp256k1,
+		)
 		assert.NoError(t, err)
 
 		addr, err := record.GetAddress()

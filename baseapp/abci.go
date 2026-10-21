@@ -906,7 +906,8 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	finalizeState.SetContext(
 		finalizeState.Context().
 			WithBlockGasMeter(gasMeter).
-			WithTxCount(len(req.Txs)))
+			WithTxCount(len(req.Txs)),
+	)
 
 	// Iterate over all raw transactions in the proposal and attempt to execute
 	// them, gathering the execution results.
@@ -1200,7 +1201,8 @@ func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.R
 		errorsmod.Wrap(
 			sdkerrors.ErrUnknownRequest,
 			"expected second parameter to be either 'simulate' or 'version', neither was present",
-		), app.trace)
+		), app.trace,
+	)
 }
 
 func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) *abci.ResponseQuery {
@@ -1217,7 +1219,8 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) *abci.
 			errorsmod.Wrap(
 				sdkerrors.ErrInvalidRequest,
 				"cannot query with proof when height <= 1; please provide a valid height",
-			), app.trace)
+			), app.trace,
+		)
 	}
 
 	sdkReq := storetypes.RequestQuery(req)

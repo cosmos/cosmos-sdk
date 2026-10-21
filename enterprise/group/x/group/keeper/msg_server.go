@@ -869,7 +869,8 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, proposal *group.Proposal, grou
 			&group.EventTallyError{
 				ProposalId:   proposal.Id,
 				ErrorMessage: err.Error(),
-			})
+			},
+		)
 	}
 
 	// If the result was final (i.e. enough votes to pass) or if the voting
@@ -972,7 +973,8 @@ func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecR
 				ProposalId:  proposal.Id,
 				Status:      proposal.Status,
 				TallyResult: &proposal.FinalTallyResult,
-			}); err != nil {
+			},
+		); err != nil {
 			return nil, err
 		}
 	} else {

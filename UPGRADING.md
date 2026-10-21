@@ -16,6 +16,7 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [Mempool Interface Changes](#mempool-interface-changes)
     * [Staking: Key Rotation Wiring and Interface Changes](#staking-key-rotation-wiring-and-interface-changes)
     * [genutil: ExportGenesisFileWithTime Signature](#genutil-exportgenesisfilewithtime-signature)
+    * [x/safety](#xsafety)
     * [Upgrade Handler and Store Migrations](#upgrade-handler-and-store-migrations)
 * [Upgrading from v0.53.x](#upgrading-from-v053x)
 * [New Features and Non-Breaking Changes](#new-features-and-non-breaking-changes)
@@ -144,6 +145,10 @@ func ExportGenesisFileWithTime(genFile, chainID string, validators []cmttypes.Ge
 func ExportGenesisFileWithTime(genFile string, appGenesis *types.AppGenesis, genTime time.Time) error
 ```
 
+### x/safety
+
+`x/safety` replaces `contrib/x/circuit`. To wire it, follow [Wiring](x/safety/README.md#wiring) in its README: build the keeper, call `app.SetCircuitBreaker(app.SafetyKeeper)` before `ModuleManager.RegisterServices` so hybrid handlers are wrapped too, register the module, order `safety` after `genutil` in `InitGenesis`, and add `safetyante.SafetyDecorator` to the ante chain. A live chain adds `safetytypes.StoreKey` to `StoreUpgrades.Added` in the upgrade that introduces it (see the [Reference Upgrade Handler](#reference-upgrade-handler)). A chain moving off `contrib/x/circuit` removes that module's wiring and adds `"circuit"` to `StoreUpgrades.Deleted`. x/safety does not read `contrib/x/circuit` state, so trip again through x/safety any msg that must stay disabled after the upgrade.
+
 ### Upgrade Handler and Store Migrations
 
 #### Module Migrations
@@ -175,7 +180,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 
     if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
         storeUpgrades := storetypes.StoreUpgrades{
-            Added:   []string{},
+            Added:   []string{safetytypes.StoreKey},
             Deleted: []string{"protocolpool"},
         }
         app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
@@ -183,7 +188,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 }
 ```
 
-Add `"params"` to `Deleted` as well if your app still had the `x/params` store mounted.
+Add `"params"` to `Deleted` as well if your app still had the `x/params` store mounted. Leave `safetytypes.StoreKey` out of `Added` if your app does not wire `x/safety`, and add `"circuit"` to `Deleted` if it removes `contrib/x/circuit`.
 
 ## Upgrading from v0.53.x
 

@@ -13,12 +13,14 @@ type MsgRouter interface {
 	Handler(msg sdk.Msg) func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error)
 }
 
-// Dispatch runs msg through the handler router registered for it and returns
-// the msg server's response as R. The router handler runs ValidateBasic, the
+// Dispatch runs msg through router's handler for it and returns the msg
+// server's response as R. The router handler runs ValidateBasic, the
 // app's circuit breaker check and the msg server method on a branch of ctx.
 // Dispatch writes the branch and emits the handler's events on ctx only when
 // the handler succeeds and its response is an R, so a failed Dispatch leaves
-// ctx unchanged.
+// ctx unchanged. Dispatch emits only the msg server's events: the "message"
+// event with action, sender and module, and the msg_index attribute, come
+// from baseapp's tx path and are absent, as they are for msgs authz runs.
 //
 // Code outside a module that would call the module's msg server directly,
 // such as an EVM precompile or another module's keeper, calls Dispatch

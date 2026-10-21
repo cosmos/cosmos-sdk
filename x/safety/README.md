@@ -203,16 +203,20 @@ such as an EVM precompile or another module's keeper, runs the msg with
 resp, err := msgservice.Dispatch[*banktypes.MsgSendResponse](ctx, app.MsgServiceRouter(), msg)
 ```
 
-`Dispatch` calls the router handler for the msg: it runs `ValidateBasic`, the
-circuit breaker check and the msg server, emits the msg server's events on
-`ctx`, and returns the typed response. It uses the same gas as a routed msg,
+`Dispatch` calls the router handler for the msg on a branch of `ctx`: it runs
+`ValidateBasic`, the circuit breaker check and the msg server, and returns the
+typed response. It writes the branch and emits the msg server's events on
+`ctx` only when the msg succeeds, so a failed `Dispatch` leaves `ctx`
+unchanged. It does not emit the `message` event (`action`, `sender`, `module`)
+or the `msg_index` attribute that a msg in a tx gets, so an indexer keyed on
+`message.action` does not see it. It uses the same gas as a routed msg,
 and a tripped msg fails with `ErrMsgDisabled`. The router checks on every call
 whatever the exec mode, so `Dispatch` is checked from a tx in `CheckTx`,
 simulation or `FinalizeBlock`, from `PreBlock`, `BeginBlock` and `EndBlock`,
 from vote extensions, and from query contexts such as the one `eth_call` runs
 in. `Dispatch` does not check the msg's signers: the caller authorizes them,
 as it would before a direct call. A msg with no registered handler fails with
-`ErrUnknownRequest`.
+`ErrUnknownRequest`, and a nil router returns an error instead of panicking.
 
 Upgrade handlers and a module's calls to its own msg server stay direct on
 purpose, so a trip cannot stop an upgrade or a module's own logic.

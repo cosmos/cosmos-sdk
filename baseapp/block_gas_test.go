@@ -96,7 +96,8 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			&interfaceRegistry,
 			&txConfig,
 			&cdc,
-			&appBuilder)
+			&appBuilder,
+		)
 		require.NoError(t, err)
 
 		bapp := appBuilder.Build(dbm.NewMemDB())
@@ -225,7 +226,8 @@ func createTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []
 		}
 		sigV2, err := tx.SignWithPrivKey(
 			context.TODO(), defaultSignMode, signerData,
-			txBuilder, priv, txConfig, accSeqs[i])
+			txBuilder, priv, txConfig, accSeqs[i],
+		)
 		if err != nil {
 			return nil, nil, err
 		}

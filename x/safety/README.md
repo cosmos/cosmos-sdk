@@ -550,9 +550,17 @@ source refunds it.
 
 The router refuses a routed `MsgTransfer` that a trip covers.
 packet-forward-middleware and the cosmos/evm ICS20 precompile call the ibc-go
-transfer keeper directly and skip the trip: under an exact `MsgTransfer` trip
-the precompile still escrows and sends the packet. See
+transfer msg server's `Transfer` directly. ibc-go v11 does not call the guard
+there, so both skip the trip: under an exact `MsgTransfer` trip the precompile
+still escrows and sends the packet. See
 [Direct keeper calls](#direct-keeper-calls).
+
+Once `Transfer` calls the guard, a packet-forward-middleware forward under the
+trip fails with an error ack,
+`ABCI code: 3: error handling packet: see events for details`, which refunds
+the sender on the source chain. Neither the ack nor the events name x/safety;
+only the node log does. Code that calls the transfer keeper's `SendTransfer`
+and the channel keeper's `SendPacket` itself still skips the trip.
 
 ### Interchain account hosts
 
@@ -586,8 +594,16 @@ estimates at 21000 gas and a gov precompile vote simulates as a success, and
 both txs then fail in `FinalizeBlock`.
 
 An EVM value transfer moves the native denom without a bank msg, so a trip of
-`/cosmos.bank.v1beta1.MsgSend` does not stop it. Precompiles call SDK keepers
-and msg servers directly and skip a selective trip; see
+`/cosmos.bank.v1beta1.MsgSend` does not stop it.
+
+A precompile that calls an SDK msg server stops under a trip of that msg
+through the [msg server guard](#msg-server-guard). Under such a trip the
+staking `delegate`, ERC20 `transfer` and distribution
+`withdrawDelegatorRewards` precompiles return status 0 and charge only the
+fee, and `eth_call` and `eth_estimateGas` revert with the x/safety error.
+CheckTx admits the tx, and recheck keeps one queued behind a nonce gap when
+the trip lands; it fails when it lands. The distribution `claimRewards`, werc20
+`deposit` and ICS20 precompiles skip the trip; see
 [Direct keeper calls](#direct-keeper-calls).
 
 ### CosmWasm contracts
@@ -614,6 +630,10 @@ receives the failure in its reply and continues. wasmd redacts the error to
 `codespace: safety, code: 10`, so the reply names neither the type URL nor the
 pattern.
 
+The x/wasm msg server does not call the guard, so Go code that calls it
+directly runs contracts under `*`. The router still checks the msgs those
+contracts route, but `BankMsg::Burn` and `IbcMsg::SendPacket` go through.
+
 ## Known gaps
 
 ### Direct keeper calls
@@ -625,7 +645,11 @@ method skips a selective trip. Known paths:
 * wasmd `BankMsg::Burn` and `IbcMsg::SendPacket`,
 * EVM native value transfers, such as `UncheckedSetBalance`,
 * the cosmos/evm distribution precompile's `claimRewards`, which calls the
-  distribution keeper.
+  distribution keeper,
+* the cosmos/evm werc20 precompile's `deposit`, which calls the bank keeper's
+  `SendCoins`,
+* the ibc-go transfer keeper's `SendTransfer` followed by the channel keeper's
+  `SendPacket`.
 
 Msg servers of modules outside this repo, and of `contrib/x/nft` and
 `contrib/x/crisis`, do not call the guard until they adopt it; see

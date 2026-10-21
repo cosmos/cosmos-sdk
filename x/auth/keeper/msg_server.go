@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -21,6 +22,10 @@ func NewMsgServerImpl(ak AccountKeeper) types.MsgServer {
 }
 
 func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if err := msgservice.CheckMsgAllowed(goCtx, msg); err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if err := sdk.ValidateAuthority(ctx, ms.ak.authority, msg.Authority); err != nil {

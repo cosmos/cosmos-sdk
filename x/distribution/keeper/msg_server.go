@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -27,6 +28,10 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 }
 
 func (k msgServer) SetWithdrawAddress(ctx context.Context, msg *types.MsgSetWithdrawAddress) (*types.MsgSetWithdrawAddressResponse, error) {
+	if err := msgservice.CheckMsgAllowed(ctx, msg); err != nil {
+		return nil, err
+	}
+
 	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(msg.DelegatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
@@ -46,6 +51,10 @@ func (k msgServer) SetWithdrawAddress(ctx context.Context, msg *types.MsgSetWith
 }
 
 func (k msgServer) WithdrawDelegatorReward(ctx context.Context, msg *types.MsgWithdrawDelegatorReward) (*types.MsgWithdrawDelegatorRewardResponse, error) {
+	if err := msgservice.CheckMsgAllowed(ctx, msg); err != nil {
+		return nil, err
+	}
+
 	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
@@ -77,6 +86,10 @@ func (k msgServer) WithdrawDelegatorReward(ctx context.Context, msg *types.MsgWi
 }
 
 func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.MsgWithdrawValidatorCommission) (*types.MsgWithdrawValidatorCommissionResponse, error) {
+	if err := msgservice.CheckMsgAllowed(ctx, msg); err != nil {
+		return nil, err
+	}
+
 	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
@@ -103,6 +116,10 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 }
 
 func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
+	if err := msgservice.CheckMsgAllowed(ctx, msg); err != nil {
+		return nil, err
+	}
+
 	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
@@ -120,6 +137,10 @@ func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 }
 
 func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if err := msgservice.CheckMsgAllowed(goCtx, msg); err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := sdk.ValidateAuthority(ctx, k.authority, msg.Authority); err != nil {
 		return nil, err
@@ -142,6 +163,10 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 }
 
 func (k msgServer) CommunityPoolSpend(goCtx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
+	if err := msgservice.CheckMsgAllowed(goCtx, msg); err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := sdk.ValidateAuthority(ctx, k.authority, msg.Authority); err != nil {
 		return nil, err
@@ -171,6 +196,10 @@ func (k msgServer) CommunityPoolSpend(goCtx context.Context, msg *types.MsgCommu
 }
 
 func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.MsgDepositValidatorRewardsPool) (*types.MsgDepositValidatorRewardsPoolResponse, error) {
+	if err := msgservice.CheckMsgAllowed(ctx, msg); err != nil {
+		return nil, err
+	}
+
 	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
 	if err != nil {
 		return nil, err

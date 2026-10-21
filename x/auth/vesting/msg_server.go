@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -29,6 +30,10 @@ func NewMsgServerImpl(k keeper.AccountKeeper, bk types.BankKeeper) types.MsgServ
 var _ types.MsgServer = msgServer{}
 
 func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCreateVestingAccount) (*types.MsgCreateVestingAccountResponse, error) {
+	if err := msgservice.CheckMsgAllowed(goCtx, msg); err != nil {
+		return nil, err
+	}
+
 	from, err := s.AccountKeeper.AddressCodec().StringToBytes(msg.FromAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'from' address: %s", err)
@@ -98,6 +103,10 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 }
 
 func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *types.MsgCreatePermanentLockedAccount) (*types.MsgCreatePermanentLockedAccountResponse, error) {
+	if err := msgservice.CheckMsgAllowed(goCtx, msg); err != nil {
+		return nil, err
+	}
+
 	from, err := s.AccountKeeper.AddressCodec().StringToBytes(msg.FromAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'from' address: %s", err)
@@ -156,6 +165,10 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 }
 
 func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *types.MsgCreatePeriodicVestingAccount) (*types.MsgCreatePeriodicVestingAccountResponse, error) {
+	if err := msgservice.CheckMsgAllowed(goCtx, msg); err != nil {
+		return nil, err
+	}
+
 	from, err := s.AccountKeeper.AddressCodec().StringToBytes(msg.FromAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'from' address: %s", err)

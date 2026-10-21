@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -23,6 +24,10 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 // UpdateParams implements MsgServer.UpdateParams method.
 // It defines a method to update the x/slashing module parameters.
 func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if err := msgservice.CheckMsgAllowed(goCtx, msg); err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if err := sdk.ValidateAuthority(ctx, k.authority, msg.Authority); err != nil {
@@ -44,6 +49,10 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 // Validators must submit a transaction to unjail itself after
 // having been jailed (and thus unbonded) for downtime
 func (k msgServer) Unjail(goCtx context.Context, msg *types.MsgUnjail) (*types.MsgUnjailResponse, error) {
+	if err := msgservice.CheckMsgAllowed(goCtx, msg); err != nil {
+		return nil, err
+	}
+
 	valAddr, err := k.sk.ValidatorAddressCodec().StringToBytes(msg.ValidatorAddr)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("validator input address: %s", err)

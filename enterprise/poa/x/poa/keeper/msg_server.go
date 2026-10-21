@@ -25,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 // MsgServer implements the module's gRPC message service.
@@ -45,6 +46,10 @@ func NewMsgServer(keeper *Keeper) *MsgServer {
 func (s *MsgServer) UpdateParams(
 	ctx context.Context, req *types.MsgUpdateParams,
 ) (*types.MsgUpdateParamsResponse, error) {
+	if err := msgservice.CheckMsgAllowed(ctx, req); err != nil {
+		return nil, err
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	if err := req.Validate(s.keeper.authKeeper.AddressCodec()); err != nil {
@@ -79,6 +84,10 @@ func (s *MsgServer) UpdateParams(
 func (s *MsgServer) CreateValidator(
 	ctx context.Context, req *types.MsgCreateValidator,
 ) (*types.MsgCreateValidatorResponse, error) {
+	if err := msgservice.CheckMsgAllowed(ctx, req); err != nil {
+		return nil, err
+	}
+
 	var pubKey cryptotypes.PubKey
 	if err := s.keeper.cdc.UnpackAny(req.PubKey, &pubKey); err != nil {
 		return nil, err
@@ -142,6 +151,10 @@ func (s *MsgServer) CreateValidator(
 func (s *MsgServer) UpdateValidators(
 	ctx context.Context, req *types.MsgUpdateValidators,
 ) (*types.MsgUpdateValidatorsResponse, error) {
+	if err := msgservice.CheckMsgAllowed(ctx, req); err != nil {
+		return nil, err
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	admin, err := s.keeper.Admin(sdkCtx)
@@ -182,6 +195,10 @@ func (s *MsgServer) UpdateValidators(
 func (s *MsgServer) WithdrawFees(
 	ctx context.Context, req *types.MsgWithdrawFees,
 ) (*types.MsgWithdrawFeesResponse, error) {
+	if err := msgservice.CheckMsgAllowed(ctx, req); err != nil {
+		return nil, err
+	}
+
 	operatorAddress, err := sdk.AccAddressFromBech32(req.Operator)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "invalid validator address")
@@ -210,6 +227,10 @@ func (s *MsgServer) WithdrawFees(
 func (s *MsgServer) RotateConsPubKey(
 	ctx context.Context, req *types.MsgRotateConsPubKey,
 ) (*types.MsgRotateConsPubKeyResponse, error) {
+	if err := msgservice.CheckMsgAllowed(ctx, req); err != nil {
+		return nil, err
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	if err := req.Validate(s.keeper.authKeeper.AddressCodec()); err != nil {

@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
@@ -27,6 +28,10 @@ var _ feegrant.MsgServer = msgServer{}
 
 // GrantAllowance grants an allowance from the granter's funds to be used by the grantee.
 func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantAllowance) (*feegrant.MsgGrantAllowanceResponse, error) {
+	if err := msgservice.CheckMsgAllowed(goCtx, msg); err != nil {
+		return nil, err
+	}
+
 	if strings.EqualFold(msg.Grantee, msg.Granter) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
 	}
@@ -66,6 +71,10 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantA
 
 // RevokeAllowance revokes a fee allowance between a granter and grantee.
 func (k msgServer) RevokeAllowance(goCtx context.Context, msg *feegrant.MsgRevokeAllowance) (*feegrant.MsgRevokeAllowanceResponse, error) {
+	if err := msgservice.CheckMsgAllowed(goCtx, msg); err != nil {
+		return nil, err
+	}
+
 	if msg.Grantee == msg.Granter {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "addresses must be different")
 	}
@@ -92,6 +101,10 @@ func (k msgServer) RevokeAllowance(goCtx context.Context, msg *feegrant.MsgRevok
 
 // PruneAllowances removes expired allowances from the store.
 func (k msgServer) PruneAllowances(ctx context.Context, req *feegrant.MsgPruneAllowances) (*feegrant.MsgPruneAllowancesResponse, error) {
+	if err := msgservice.CheckMsgAllowed(ctx, req); err != nil {
+		return nil, err
+	}
+
 	// 75 is an arbitrary value, we can change it later if needed
 	err := k.RemoveExpiredAllowances(ctx, 75)
 	if err != nil {

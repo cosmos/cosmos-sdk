@@ -83,19 +83,19 @@ linters:
         text: 'SA1019:'
       - linters:
           - staticcheck
-        text: 'SA1019: codec.NewAminoCodec is deprecated'
+        text: 'SA1019: .*codec.NewAminoCodec is deprecated'
       - linters:
           - staticcheck
-        text: 'SA1019: legacybech32.MustMarshalPubKey'
+        text: 'SA1019: .*legacybech32.MustMarshalPubKey'
       - linters:
           - staticcheck
-        text: 'SA1019: legacybech32.MarshalPubKey'
+        text: 'SA1019: .*legacybech32.MarshalPubKey'
       - linters:
           - staticcheck
-        text: 'SA1019: legacybech32.UnmarshalPubKey'
+        text: 'SA1019: .*legacybech32.UnmarshalPubKey'
       - linters:
           - staticcheck
-        text: 'SA1019: params.SendEnabled is deprecated'
+        text: 'SA1019: .*types.Params\).SendEnabled is deprecated'
       - linters:
           - gosec
         text: 'G115: integer overflow conversion'
@@ -122,7 +122,10 @@ formatters:
         - prefix(github.com/cosmos/cosmos-sdk/enterprise/poa)
       custom-order: true
     gofumpt:
-      extra-rules: true
+      extra:
+        group-params: true
+        clothe-returns: true
+        balance-calls: true
   exclusions:
 
     generated: lax

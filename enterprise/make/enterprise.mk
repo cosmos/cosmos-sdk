@@ -20,7 +20,7 @@ DOCKER_IMAGE ?= $(ENTERPRISE_MODULE)-simd
 
 BUF_VERSION=1.66
 BUILDER_VERSION=0.18.0
-golangci_version=v2.10.1
+golangci_version=v2.15.0
 
 all: build lint test
 

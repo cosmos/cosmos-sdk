@@ -6,6 +6,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	safetytypes "github.com/cosmos/cosmos-sdk/x/safety/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -32,12 +33,17 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	}
 
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := storetypes.StoreUpgrades{
-			Added:   []string{},
-			Deleted: []string{"protocolpool"},
-		}
+		storeUpgrades := upgradeStoreUpgrades()
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
+}
+
+// upgradeStoreUpgrades returns the stores UpgradeName adds and deletes.
+func upgradeStoreUpgrades() storetypes.StoreUpgrades {
+	return storetypes.StoreUpgrades{
+		Added:   []string{safetytypes.StoreKey},
+		Deleted: []string{"protocolpool"},
 	}
 }

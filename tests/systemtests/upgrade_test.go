@@ -106,6 +106,14 @@ func TestChainUpgrade(t *testing.T) {
 	require.Equal(t, "1000000", keyRotationFee.Get("amount").String(), stakingParamsRaw)
 	require.Equal(t, bondDenom.String(), keyRotationFee.Get("denom").String(), stakingParamsRaw)
 
+	// x/safety is new in this version: the upgrade adds its store and runs its
+	// InitGenesis with the default params
+	safetyParamsRaw := cli.CustomQuery("q", "safety", "params")
+	require.Equal(t, govAddr, gjson.Get(safetyParamsRaw, "params.authority").String(), safetyParamsRaw)
+	require.Empty(t, gjson.Get(safetyParamsRaw, "params.operator").String(), safetyParamsRaw)
+	require.Empty(t, safetyDisabledList(t, cli))
+	require.True(t, safetyIsAllowed(t, cli, safetyMsgSend))
+
 	regex, err := regexp.Compile("DBG this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
 	require.NoError(t, err)
 	require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))

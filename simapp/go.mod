@@ -24,7 +24,10 @@ require (
 	google.golang.org/protobuf v1.36.12 // indirect
 )
 
-require github.com/cosmos/cosmos-sdk/store/v2 v2.0.0
+require (
+	cosmossdk.io/errors v1.1.0
+	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0
+)
 
 require (
 	cel.dev/expr v0.25.2 // indirect
@@ -36,7 +39,6 @@ require (
 	cloud.google.com/go/monitoring v1.29.0 // indirect
 	cloud.google.com/go/storage v1.61.3 // indirect
 	cosmossdk.io/collections v1.4.0 // indirect
-	cosmossdk.io/errors v1.1.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	filippo.io/bigmod v0.1.1-0.20260103110540-f8a47775ebe5 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
@@ -331,6 +333,7 @@ require (
 )
 
 // short-lived replaces, should be removed after tags are cut
+replace cosmossdk.io/api => ../api
 
 // long-lived replaces
 replace (

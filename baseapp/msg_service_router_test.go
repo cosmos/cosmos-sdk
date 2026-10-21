@@ -282,3 +282,19 @@ func TestHybridHandlerAfterBreakerRemoved(t *testing.T) {
 	require.NoError(t, handler(app.NewContext(true), msg, resp))
 	require.Equal(t, "Spot", resp.Name)
 }
+
+// TestHybridHandlerBreakerInstalledLater installs the circuit breaker after
+// the hybrid handler was registered without one. The handler must check the
+// breaker the app installed, as the routed handler does.
+func TestHybridHandlerBreakerInstalledLater(t *testing.T) {
+	const dogURL = "/testpb.MsgCreateDog"
+	app := newHybridTestApp(t, nil)
+	app.SetCircuitBreaker(&typeBreaker{blocked: map[string]bool{dogURL: true}})
+
+	handler := app.MsgServiceRouter().HybridHandlerByMsgName(dogURL[1:])
+	require.NotNil(t, handler)
+	resp := new(testdata_pulsar.MsgCreateDogResponse)
+	msg := &testdata_pulsar.MsgCreateDog{Dog: &testdata_pulsar.Dog{Name: "Spot"}}
+	require.ErrorContains(t, handler(app.NewContext(true), msg, resp), dogURL)
+	require.Empty(t, resp.Name, "the tripped msg server ran")
+}

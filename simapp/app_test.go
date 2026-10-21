@@ -3,6 +3,7 @@ package simapp
 import (
 	"bytes"
 	"encoding/json"
+	"reflect"
 	"testing"
 	"time"
 
@@ -443,7 +444,13 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	mockModule := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
 	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
-	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1)
+	// The Context has the x/safety keeper as its circuit breaker, and
+	// reflect.DeepEqual never matches a struct with func fields, so compare
+	// the Contexts without it.
+	sameCtx := gomock.Cond(func(c sdk.Context) bool {
+		return reflect.DeepEqual(c.WithCircuitBreaker(nil), ctx.WithCircuitBreaker(nil))
+	})
+	mockModule.EXPECT().InitGenesis(sameCtx, gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1)
 	mockModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
 
 	app.ModuleManager.Modules["mock"] = mockModule

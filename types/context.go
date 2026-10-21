@@ -79,6 +79,18 @@ type Context struct {
 	incarnationCache map[string]any // incarnationCache is shared between multiple incarnations of the same transaction, it must only cache stateless computation results that only depends on tx body and block level information that don't change during block execution, like the result of tx signature verification.
 	// sum the gas wanted by all the transactions in the current block, only accessible by end blocker
 	blockGasWanted uint64
+
+	// circuitBreaker is the BaseApp circuit breaker. It is nil when the app
+	// has none, and also on a Context that BaseApp did not build, such as one
+	// from NewContext.
+	circuitBreaker CircuitBreaker
+	// circuitBreakerBypass turns off every circuit breaker check made on this
+	// Context, by the MsgServiceRouter and by msgservice.CheckMsgAllowed.
+	// x/upgrade sets it on the Context it passes an upgrade handler.
+	circuitBreakerBypass bool
+	// checkedMsgTypeURL is the type URL of the msg the MsgServiceRouter is
+	// dispatching, already checked against circuitBreaker.
+	checkedMsgTypeURL string
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -115,6 +127,9 @@ func (c Context) TxCount() int                                  { return c.txCou
 func (c Context) BlockGasUsed() uint64                          { return c.blockGasUsed }
 func (c Context) IncarnationCache() map[string]any              { return c.incarnationCache }
 func (c Context) BlockGasWanted() uint64                        { return c.blockGasWanted }
+func (c Context) CircuitBreaker() CircuitBreaker                { return c.circuitBreaker }
+func (c Context) CheckedMsgTypeURL() string                     { return c.checkedMsgTypeURL }
+func (c Context) CircuitBreakerBypass() bool                    { return c.circuitBreakerBypass }
 
 // BlockHeader returns the header by value.
 func (c Context) BlockHeader() cmtproto.Header {
@@ -363,6 +378,31 @@ func (c Context) WithBlockGasUsed(gasUsed uint64) Context {
 
 func (c Context) WithBlockGasWanted(gasWanted uint64) Context {
 	c.blockGasWanted = gasWanted
+	return c
+}
+
+// WithCircuitBreaker returns a Context with an updated circuit breaker, which
+// msgservice.CheckMsgAllowed consults.
+func (c Context) WithCircuitBreaker(cb CircuitBreaker) Context {
+	c.circuitBreaker = cb
+	return c
+}
+
+// WithCircuitBreakerBypass returns a Context on which the MsgServiceRouter and
+// msgservice.CheckMsgAllowed allow every msg without asking the circuit
+// breaker. Only code that the chain's governance approved, such as an upgrade
+// handler, should run on such a Context.
+func (c Context) WithCircuitBreakerBypass(bypass bool) Context {
+	c.circuitBreakerBypass = bypass
+	return c
+}
+
+// WithCheckedMsgTypeURL returns a Context marked as dispatching the msg with
+// the given type URL, which the circuit breaker has already allowed. The
+// MsgServiceRouter sets it for each msg it dispatches, so
+// msgservice.CheckMsgAllowed skips a second lookup for that msg.
+func (c Context) WithCheckedMsgTypeURL(typeURL string) Context {
+	c.checkedMsgTypeURL = typeURL
 	return c
 }
 

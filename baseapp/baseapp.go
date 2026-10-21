@@ -444,7 +444,7 @@ func (app *BaseApp) Init() error {
 	emptyHeader := cmtproto.Header{ChainID: app.chainID}
 
 	// needed for the export command which inits from store but never calls initchain
-	app.stateManager.SetState(execModeCheck, app.cms, emptyHeader, app.logger, app.streamingManager)
+	app.setState(execModeCheck, emptyHeader)
 	app.Seal()
 
 	return app.cms.GetPruning().Validate()
@@ -452,6 +452,33 @@ func (app *BaseApp) Init() error {
 
 func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
 	app.gasConfig.MinGasPrices = gasPrices
+}
+
+// setState sets the state for mode on a fresh branch of the commit multi-store
+// with the given header. When the app has a circuit breaker, the state's
+// Context has it before the state is published, so every tx and block hook
+// that runs on that Context, and every msg server they call without the
+// MsgServiceRouter, can check msgs with msgservice.CheckMsgAllowed.
+func (app *BaseApp) setState(mode sdk.ExecMode, h cmtproto.Header) {
+	app.stateManager.SetState(mode, app.cms, h, app.logger, app.streamingManager, app.circuitBreaker())
+}
+
+// circuitBreaker returns the app's circuit breaker, or nil when it has none.
+func (app *BaseApp) circuitBreaker() sdk.CircuitBreaker {
+	if app.msgServiceRouter == nil {
+		return nil
+	}
+	return app.msgServiceRouter.circuitBreaker
+}
+
+// withCircuitBreaker returns ctx with the app's circuit breaker attached, or
+// ctx unchanged when the app has none.
+func (app *BaseApp) withCircuitBreaker(ctx sdk.Context) sdk.Context {
+	cb := app.circuitBreaker()
+	if cb == nil {
+		return ctx
+	}
+	return ctx.WithCircuitBreaker(cb)
 }
 
 func (app *BaseApp) setHaltHeight(haltHeight uint64) {
@@ -490,7 +517,9 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 
 // SetCircuitBreaker sets the circuit breaker for the BaseApp.
 // The circuit breaker is checked on every message execution to verify if a transaction should be executed or not.
-func (app *BaseApp) SetCircuitBreaker(cb CircuitBreaker) {
+// BaseApp also attaches it to the Context of every tx, block hook and query,
+// where msgservice.CheckMsgAllowed reads it.
+func (app *BaseApp) SetCircuitBreaker(cb sdk.CircuitBreaker) {
 	if app.msgServiceRouter == nil {
 		panic("cannot set circuit breaker with no msg service router set")
 	}

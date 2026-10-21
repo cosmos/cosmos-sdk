@@ -2,6 +2,7 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/safety/types"
 )
 
@@ -68,13 +69,8 @@ func (d SafetyDecorator) checkMsgs(ctx sdk.Context, msgs []sdk.Msg, depth int) e
 		return types.ErrMaxDepth.Wrapf("limit %d", MaxNestedMsgDepth)
 	}
 	for _, msg := range msgs {
-		typeURL := sdk.MsgTypeURL(msg)
-		allowed, err := d.breaker.IsAllowed(ctx, typeURL)
-		if err != nil {
+		if err := msgservice.CheckCircuitBreaker(ctx, d.breaker, sdk.MsgTypeURL(msg)); err != nil {
 			return err
-		}
-		if !allowed {
-			return types.ErrMsgDisabled.Wrap(typeURL)
 		}
 
 		inner, err := innerMsgs(msg)

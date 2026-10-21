@@ -16,6 +16,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 // MessageRouter ADR 031 request type routing
@@ -30,7 +31,7 @@ type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
 	hybridHandlers    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
-	circuitBreaker    CircuitBreaker
+	circuitBreaker    sdk.CircuitBreaker
 }
 
 var _ gogogrpc.Server = &MsgServiceRouter{}
@@ -43,7 +44,7 @@ func NewMsgServiceRouter() *MsgServiceRouter {
 	}
 }
 
-func (msr *MsgServiceRouter) SetCircuit(cb CircuitBreaker) {
+func (msr *MsgServiceRouter) SetCircuit(cb sdk.CircuitBreaker) {
 	msr.circuitBreaker = cb
 }
 
@@ -101,17 +102,15 @@ func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method 
 		msr.hybridHandlers[string(inputName)] = hybridHandler
 		return nil
 	}
-	// decorate the hybrid handler with the circuit breaker
+	// decorate the hybrid handler with the circuit breaker. It checks the
+	// msg type the handler runs, not the type of req: a request of another
+	// type whose bytes decode as inputName still runs inputName's handler.
+	typeURL := "/" + string(inputName)
 	circuitBreakerHybridHandler := func(ctx context.Context, req, resp protoiface.MessageV1) error {
-		messageName := codectypes.MsgTypeURL(req)
-		allowed, err := msr.circuitBreaker.IsAllowed(ctx, messageName)
-		if err != nil {
+		if err := msgservice.CheckCircuitBreaker(ctx, msr.circuitBreaker, typeURL); err != nil {
 			return err
 		}
-		if !allowed {
-			return fmt.Errorf("circuit breaker disallows execution of message %s", messageName)
-		}
-		return hybridHandler(ctx, req, resp)
+		return hybridHandler(markChecked(ctx, typeURL), req, resp)
 	}
 	msr.hybridHandlers[string(inputName)] = circuitBreakerHybridHandler
 	return nil
@@ -170,10 +169,6 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 
 	msr.routes[requestTypeName] = func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
-		interceptor := func(goCtx context.Context, _ any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
-			goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
-			return handler(goCtx, msg)
-		}
 
 		if m, ok := msg.(sdk.HasValidateBasic); ok {
 			if err := m.ValidateBasic(); err != nil {
@@ -181,16 +176,22 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 			}
 		}
 
+		// Mark the msg the router checked, so the msg server's own
+		// msgservice.CheckMsgAllowed call skips a second lookup. The mark
+		// always replaces the caller's, so a mark set for an outer msg never
+		// covers a msg dispatched from inside its handler.
+		checkedURL := ""
 		if msr.circuitBreaker != nil {
-			msgURL := sdk.MsgTypeURL(msg)
-			isAllowed, err := msr.circuitBreaker.IsAllowed(ctx, msgURL)
-			if err != nil {
+			checkedURL = sdk.MsgTypeURL(msg)
+			if err := msgservice.CheckCircuitBreaker(ctx, msr.circuitBreaker, checkedURL); err != nil {
 				return nil, err
 			}
+		}
+		ctx = ctx.WithCheckedMsgTypeURL(checkedURL)
 
-			if !isAllowed {
-				return nil, fmt.Errorf("circuit breaker disables execution of this message: %s", msgURL)
-			}
+		interceptor := func(goCtx context.Context, _ any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+			goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
+			return handler(goCtx, msg)
 		}
 
 		// Call the method handler from the service description with the handler object.
@@ -213,6 +214,20 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 // SetInterfaceRegistry sets the interface registry for the router.
 func (msr *MsgServiceRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
 	msr.interfaceRegistry = interfaceRegistry
+}
+
+// markChecked returns ctx with its sdk.Context marked as dispatching typeURL,
+// or ctx unchanged when it has no sdk.Context.
+func markChecked(ctx context.Context, typeURL string) context.Context {
+	sdkCtx, ok := ctx.Value(sdk.SdkContextKey).(sdk.Context)
+	if !ok {
+		return ctx
+	}
+	sdkCtx = sdkCtx.WithCheckedMsgTypeURL(typeURL)
+	if _, isSDKCtx := ctx.(sdk.Context); isSDKCtx {
+		return sdkCtx
+	}
+	return context.WithValue(ctx, sdk.SdkContextKey, sdkCtx)
 }
 
 func noopDecoder(_ any) error { return nil }

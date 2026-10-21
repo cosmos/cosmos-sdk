@@ -75,13 +75,16 @@ func (mgr *Manager) GetState(mode sdk.ExecMode) *State {
 
 // SetState sets the BaseApp's state for the corresponding mode with a branched
 // multi-store (i.e. a CacheMultiStore) and a new Context with the same
-// multi-store branch, and provided header.
+// multi-store branch, and provided header. The Context has cb as its circuit
+// breaker from the start, so a reader that gets the new state, such as a
+// Simulate running alongside Commit, never sees it without one.
 func (mgr *Manager) SetState(
 	mode sdk.ExecMode,
 	unbranchedStore storetypes.CommitMultiStore,
 	h cmtproto.Header,
 	logger log.Logger,
 	streamingManager storetypes.StreamingManager,
+	cb sdk.CircuitBreaker,
 ) {
 	ms := unbranchedStore.CacheMultiStore()
 	headerInfo := header.Info{
@@ -93,7 +96,8 @@ func (mgr *Manager) SetState(
 	baseState := NewState(
 		sdk.NewContext(ms, h, false, logger).
 			WithStreamingManager(streamingManager).
-			WithHeaderInfo(headerInfo),
+			WithHeaderInfo(headerInfo).
+			WithCircuitBreaker(cb),
 		ms,
 	)
 

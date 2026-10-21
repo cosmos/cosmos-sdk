@@ -77,8 +77,8 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 	app.genesisEvents = nil
 
 	// initialize states with a correct header
-	app.stateManager.SetState(execModeFinalize, app.cms, initHeader, app.logger, app.streamingManager)
-	app.stateManager.SetState(execModeCheck, app.cms, initHeader, app.logger, app.streamingManager)
+	app.setState(execModeFinalize, initHeader)
+	app.setState(execModeCheck, initHeader)
 	finalizeState := app.stateManager.GetState(execModeFinalize)
 
 	// Store the consensus params in the BaseApp's param store. Note, this must be
@@ -457,7 +457,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 		NextValidatorsHash: req.NextValidatorsHash,
 		AppHash:            app.LastCommitID().Hash,
 	}
-	app.stateManager.SetState(execModePrepareProposal, app.cms, header, app.logger, app.streamingManager)
+	app.setState(execModePrepareProposal, header)
 
 	// CometBFT must never call PrepareProposal with a height of 0.
 	//
@@ -554,7 +554,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		NextValidatorsHash: req.NextValidatorsHash,
 		AppHash:            app.LastCommitID().Hash,
 	}
-	app.stateManager.SetState(execModeProcessProposal, app.cms, header, app.logger, app.streamingManager)
+	app.setState(execModeProcessProposal, header)
 
 	// Since the application can get access to FinalizeBlock state and write to it,
 	// we must be sure to reset it in case ProcessProposal timeouts and is called
@@ -564,7 +564,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	if req.Height > app.initialHeight {
 		// abort any running OE
 		app.optimisticExec.Abort()
-		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
+		app.setState(execModeFinalize, header)
 	}
 
 	processProposalState := app.stateManager.GetState(execModeProcessProposal)
@@ -657,6 +657,9 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
 		ms := app.cms.CacheMultiStore()
 		ctx = sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
+		// the handler can call msg servers directly, so they check msgs
+		// against the breaker here as they do at the initial height
+		ctx = app.withCircuitBreaker(ctx)
 	}
 
 	if app.abciHandlers.ExtendVoteHandler == nil {
@@ -735,6 +738,9 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
 		ms := app.cms.CacheMultiStore()
 		ctx = sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
+		// the handler can call msg servers directly, so they check msgs
+		// against the breaker here as they do at the initial height
+		ctx = app.withCircuitBreaker(ctx)
 	}
 
 	ctx, span := ctx.StartSpan(tracer, "VerifyVoteExtension")
@@ -829,7 +835,7 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	gfsStart := time.Now()
 	finalizeState := app.stateManager.GetState(execModeFinalize)
 	if finalizeState == nil {
-		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
+		app.setState(execModeFinalize, header)
 		finalizeState = app.stateManager.GetState(execModeFinalize)
 	}
 	measureSince(goCtx, func() metric.Int64Histogram { return inst.GetFinalizeStateTime }, gfsStart)
@@ -1115,7 +1121,7 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	//
 	// NOTE: This is safe because CometBFT holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
-	app.stateManager.SetState(execModeCheck, app.cms, header, app.logger, app.streamingManager)
+	app.setState(execModeCheck, header)
 
 	app.stateManager.ClearState(execModeFinalize)
 
@@ -1437,6 +1443,9 @@ func (bapp *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, chec
 		WithGasMeter(storetypes.NewGasMeter(bapp.gasConfig.QueryGasLimit)).
 		WithBlockHeader(*header).
 		WithBlockHeight(height)
+	// A query can execute msg servers, as an EVM eth_call does through
+	// precompiles, so its msg servers check msgs against the breaker too.
+	ctx = bapp.withCircuitBreaker(ctx)
 
 	if !isLatest {
 		rms, ok := bapp.cms.(*rootmulti.Store)

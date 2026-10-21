@@ -60,14 +60,15 @@ func (app *BaseApp) SimWriteState() {
 	app.stateManager.GetState(execModeFinalize).MultiStore.Write()
 }
 
-// NewContextLegacy returns a new sdk.Context with the provided header
+// NewContextLegacy returns a new sdk.Context with the provided header. Like
+// the Contexts BaseApp builds for txs, it has the app's circuit breaker.
 func (app *BaseApp) NewContextLegacy(isCheckTx bool, header cmtproto.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.stateManager.GetState(execModeCheck).MultiStore, header, true, app.logger).
-			WithMinGasPrices(app.gasConfig.MinGasPrices)
+		return app.withCircuitBreaker(sdk.NewContext(app.stateManager.GetState(execModeCheck).MultiStore, header, true, app.logger).
+			WithMinGasPrices(app.gasConfig.MinGasPrices))
 	}
 
-	return sdk.NewContext(app.stateManager.GetState(execModeFinalize).MultiStore, header, false, app.logger)
+	return app.withCircuitBreaker(sdk.NewContext(app.stateManager.GetState(execModeFinalize).MultiStore, header, false, app.logger))
 }
 
 // NewContext returns a new sdk.Context with a empty header
@@ -84,14 +85,14 @@ func (app *BaseApp) NewContext(isCheckTx bool) sdk.Context {
 // changes. It is important to perform all writes against this context, then
 // commit.
 func (app *BaseApp) NewNextBlockContext(header cmtproto.Header) sdk.Context {
-	app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
+	app.setState(execModeFinalize, header)
 	return app.stateManager.GetState(execModeFinalize).Context()
 }
 
 // Deprecated: Consider using app.NewNextBlockContext(header) or app.NewContext
 // instead. This function will be removed in a future release.
 func (app *BaseApp) NewUncachedContext(isCheckTx bool, header cmtproto.Header) sdk.Context {
-	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
+	return app.withCircuitBreaker(sdk.NewContext(app.cms, header, isCheckTx, app.logger))
 }
 
 func (app *BaseApp) GetContextForFinalizeBlock(txBytes []byte) sdk.Context {

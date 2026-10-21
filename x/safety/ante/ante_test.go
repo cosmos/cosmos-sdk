@@ -9,6 +9,8 @@ import (
 	protov2 "google.golang.org/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -17,10 +19,15 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// mockBreaker refuses the msgs it maps to true the way the x/safety keeper
+// does, with ErrMsgDisabled.
 type mockBreaker map[string]bool
 
 func (m mockBreaker) IsAllowed(_ context.Context, typeURL string) (bool, error) {
-	return !m[typeURL], nil
+	if m[typeURL] {
+		return false, types.ErrMsgDisabled.Wrap(typeURL)
+	}
+	return true, nil
 }
 
 type mockTx struct{ msgs []sdk.Msg }
@@ -175,6 +182,25 @@ func TestSafetyDecoratorFailsClosedOnBreakerError(t *testing.T) {
 		require.ErrorIs(t, err, boom, "allowed=%t", allowed)
 		require.False(t, called, "allowed=%t", allowed)
 	}
+}
+
+// plainRefusal refuses every msg without an error, as a breaker other than
+// the x/safety keeper may.
+type plainRefusal struct{}
+
+func (plainRefusal) IsAllowed(context.Context, string) (bool, error) { return false, nil }
+
+// A plain refusal fails CheckTx with the error the router and the msg server
+// guard return for the same refusal, so the tx fails with one code in CheckTx
+// and FinalizeBlock.
+func TestSafetyDecoratorPlainRefusalMatchesRouter(t *testing.T) {
+	next := func(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) { return ctx, nil }
+	ctx := sdk.Context{}.WithExecMode(sdk.ExecModeCheck)
+	_, err := ante.NewSafetyDecorator(plainRefusal{}).AnteHandle(ctx, mockTx{msgs: []sdk.Msg{send}}, false, next)
+
+	want := msgservice.CheckCircuitBreaker(ctx, plainRefusal{}, sdk.MsgTypeURL(send))
+	require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+	require.EqualError(t, err, want.Error())
 }
 
 var errUnpack = errors.New("cannot unpack inner msgs")

@@ -241,6 +241,22 @@ func (f *groupFixture) requireTx(a account, blockedURL string, msgs ...sdk.Msg) 
 	return res
 }
 
+// requireExecRejected requires a tx with msgs, signed by a, to pass CheckTx
+// and fail execution on blockedURL. The decorator checks only the msgs a tx
+// lists, so a msg server that another msg server calls directly refuses the
+// tx only in FinalizeBlock.
+func (f *groupFixture) requireExecRejected(a account, blockedURL string, msgs ...sdk.Msg) {
+	f.t.Helper()
+	bz := f.sign(a, msgs...)
+	cres, err := f.app.CheckTx(&abci.RequestCheckTx{Tx: bz, Type: abci.CheckTxType_New})
+	require.NoError(f.t, err)
+	require.Zero(f.t, cres.Code, cres.Log)
+	res := f.finalize(bz)[0]
+	require.Equal(f.t, safetytypes.ErrMsgDisabled.ABCICode(), res.Code, res.Log)
+	require.Equal(f.t, safetytypes.ErrMsgDisabled.Codespace(), res.Codespace, res.Log)
+	require.Contains(f.t, res.Log, blockedURL)
+}
+
 // requireCheckTxRejected requires CheckTx to reject a tx with msgs on
 // blockedURL.
 func (f *groupFixture) requireCheckTxRejected(a account, blockedURL string, msgs ...sdk.Msg) {

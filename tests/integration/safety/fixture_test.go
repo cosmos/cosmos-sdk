@@ -60,6 +60,10 @@ type fixture struct {
 	// initialHeight is the first block height of a chain started from an
 	// export, zero otherwise.
 	initialHeight int64
+	// processFirst runs ProcessProposal before each FinalizeBlock, as
+	// CometBFT does on a validator, so FinalizeBlock reuses the block state
+	// ProcessProposal set.
+	processFirst bool
 
 	// voter is the only delegator of the only validator, so its vote alone
 	// passes a proposal.
@@ -84,6 +88,14 @@ func defaultConsensusParams() *cmtproto.ConsensusParams {
 // SimApp test defaults when cp is nil. mutate may change the genesis state
 // before InitChain.
 func newFixture(t *testing.T, cp *cmtproto.ConsensusParams, mutate func(simapp.GenesisState)) *fixture {
+	t.Helper()
+	return newFixtureWithApp(t, cp, mutate, nil)
+}
+
+// newFixtureWithApp is newFixture with a configure step: when not nil,
+// configure may change f.app before it loads its latest version and seals,
+// for example to replace a block hook or register a test msg service.
+func newFixtureWithApp(t *testing.T, cp *cmtproto.ConsensusParams, mutate func(simapp.GenesisState), configure func(f *fixture)) *fixture {
 	t.Helper()
 	if cp == nil {
 		cp = defaultConsensusParams()
@@ -118,7 +130,11 @@ func newFixture(t *testing.T, cp *cmtproto.ConsensusParams, mutate func(simapp.G
 		balances = append(balances, banktypes.Balance{Address: a.String(), Coins: funds})
 	}
 
-	f.app = simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	f.app = simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), configure == nil, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	if configure != nil {
+		configure(f)
+		require.NoError(t, f.app.LoadLatestVersion())
+	}
 	genesis := f.app.DefaultGenesis()
 	genesis, err = simtestutil.GenesisStateWithValSet(f.app.AppCodec(), genesis, valSet, genAccs, balances...)
 	require.NoError(t, err)
@@ -153,6 +169,18 @@ func (f *fixture) finalizeAt(at time.Time, txs ...[]byte) *abci.ResponseFinalize
 	height := f.app.LastBlockHeight() + 1
 	if f.initialHeight > height {
 		height = f.initialHeight
+	}
+	if f.processFirst {
+		res, err := f.app.ProcessProposal(&abci.RequestProcessProposal{
+			Height:             height,
+			Time:               at,
+			Hash:               f.app.LastCommitID().Hash,
+			NextValidatorsHash: f.valSet.Hash(),
+			ProposerAddress:    f.valSet.Validators[0].Address,
+			Txs:                txs,
+		})
+		require.NoError(f.t, err)
+		require.Equal(f.t, abci.ResponseProcessProposal_ACCEPT, res.Status)
 	}
 	res, err := f.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height:             height,

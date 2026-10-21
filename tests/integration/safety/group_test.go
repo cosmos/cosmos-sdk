@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"strings"
 	"testing"
-	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
@@ -58,10 +57,15 @@ func TestGroupWrapperTypeURLs(t *testing.T) {
 	require.ErrorIs(t, err, safetytypes.ErrMsgDisabled)
 }
 
+// disabledSet refuses the msgs it maps to true the way the x/safety keeper
+// does, with ErrMsgDisabled.
 type disabledSet map[string]bool
 
 func (d disabledSet) IsAllowed(_ context.Context, typeURL string) (bool, error) {
-	return !d[typeURL], nil
+	if d[typeURL] {
+		return false, safetytypes.ErrMsgDisabled.Wrap(typeURL)
+	}
+	return true, nil
 }
 
 type groupTx struct{ msgs []sdk.Msg }
@@ -165,7 +169,7 @@ func TestGroupWrappersBlockedByExactTrip(t *testing.T) {
 
 // An exact trip of group MsgSubmitProposal alone locks out a group policy
 // authority with no proposal pending: it cannot submit a reset, plain or with
-// Exec=TRY, and the open MsgVote and MsgExec have no proposal to act on. Once
+// EXEC_TRY, and the open MsgVote and MsgExec have no proposal to act on. Once
 // the operator resets the trip, the policy submits proposals again.
 func TestGroupPolicyLockedOutByExactSubmitTrip(t *testing.T) {
 	f := newGroupFixture(t)
@@ -188,12 +192,12 @@ func TestGroupPolicyLockedOutByExactSubmitTrip(t *testing.T) {
 	f.submit(&group.MsgUpdateGroupMetadata{Admin: f.policy.String(), GroupId: f.groupID, Metadata: "after reset"})
 }
 
-// Group MsgSubmitProposal with Exec=TRY votes and executes through the group
-// keeper, so exact trips of group MsgVote and MsgExec do not stop a proposal
-// from executing. Tripping MsgSubmitProposal as well does.
-func TestGroupTryExecRunsPastExactVoteAndExecTrips(t *testing.T) {
+// Group MsgSubmitProposal with EXEC_TRY votes and executes by calling the
+// group msg server's Vote and Exec directly. Each checks the circuit breaker,
+// so an exact trip of group MsgVote or of group MsgExec fails the submission
+// in execution, and the proposal is never created.
+func TestGroupTryExecStopsAtExactVoteAndExecTrips(t *testing.T) {
 	f := newGroupFixture(t)
-	urlSubmit := sdk.MsgTypeURL(&group.MsgSubmitProposal{})
 	urlVote := sdk.MsgTypeURL(&group.MsgVote{})
 	urlExec := sdk.MsgTypeURL(&group.MsgExec{})
 	tryProposal := func(metadata string) *group.MsgSubmitProposal {
@@ -202,20 +206,25 @@ func TestGroupTryExecRunsPastExactVoteAndExecTrips(t *testing.T) {
 		return m
 	}
 
-	f.trip(urlVote, urlExec)
+	f.trip(urlVote)
+	f.requireExecRejected(f.member, urlVote, tryProposal("blocked by vote"))
+	f.reset(urlVote)
+
+	f.trip(urlExec)
+	f.requireExecRejected(f.member, urlExec, tryProposal("blocked by exec"))
+	f.reset(urlExec)
+	require.Empty(t, f.groupMetadata())
+
 	f.requireTx(f.member, "", tryProposal("executed through try"))
 	f.proposals++
 	require.Equal(t, "executed through try", f.groupMetadata())
-
-	f.trip(urlSubmit)
-	f.requireTx(f.member, urlSubmit, tryProposal("blocked"))
-	require.Equal(t, "executed through try", f.groupMetadata())
 }
 
-// Group MsgVote with Exec=TRY executes the proposal through the group keeper,
-// so under "*" and an exact trip of group MsgExec the group policy authority
-// still resets "*".
-func TestGroupAuthorityResetsThroughVoteTryUnderExactExecTrip(t *testing.T) {
+// Group MsgVote with EXEC_TRY executes the proposal by calling the group msg
+// server's Exec directly, which checks the circuit breaker. Under "*" and an
+// exact trip of group MsgExec, the group policy authority cannot execute its
+// reset of "*" until the operator resets group MsgExec.
+func TestGroupVoteTryStopsAtExactExecTrip(t *testing.T) {
 	f := newGroupFixture(t)
 	urlExec := sdk.MsgTypeURL(&group.MsgExec{})
 	id := f.submit(safetytypes.NewMsgReset(f.policy.String(), safetytypes.Wildcard))
@@ -223,51 +232,39 @@ func TestGroupAuthorityResetsThroughVoteTryUnderExactExecTrip(t *testing.T) {
 
 	vote := f.vote(id)
 	vote.Exec = group.Exec_EXEC_TRY
+	f.requireExecRejected(f.member, urlExec, vote)
+	require.ElementsMatch(t, []string{safetytypes.Wildcard, urlExec}, f.disabled())
+
+	f.reset(urlExec)
 	f.requireTx(f.member, "", vote)
-	require.Equal(t, []string{urlExec}, f.disabled())
+	require.Empty(t, f.disabled())
 }
 
-// An exact trip of group MsgVote alone locks out a group policy authority
-// whose threshold needs a member who is not a proposer. A proposal with
-// Exec=TRY counts only its proposers' votes, the other member cannot vote, and
-// the open MsgExec has no accepted proposal to execute.
+// An exact trip of group MsgVote alone locks out a group policy authority. A
+// proposal with EXEC_TRY votes through the group msg server's Vote, which
+// checks the circuit breaker, so the submission fails. A plain proposal is
+// created, but no member can vote on it, and MsgExec has no accepted proposal
+// to execute.
 func TestGroupPolicyLockedOutByExactVoteTrip(t *testing.T) {
 	f := newGroupFixture(t)
 	urlVote := sdk.MsgTypeURL(&group.MsgVote{})
-
-	// a second group: member and operator, weight 1 each, threshold 2
-	create, err := group.NewMsgCreateGroupWithPolicy(f.member.String(),
-		[]group.MemberRequest{{Address: f.member.String(), Weight: "1"}, {Address: f.operator.String(), Weight: "1"}},
-		"", "", true, group.NewThresholdDecisionPolicy("2", time.Hour, 0))
-	require.NoError(t, err)
-	f.requireTx(f.member, "", create)
-	res, err := f.groupKeeper.GroupPoliciesByGroup(f.ctx(), &group.QueryGroupPoliciesByGroupRequest{GroupId: f.groupID + 1})
-	require.NoError(t, err)
-	require.Len(t, res.GroupPolicies, 1)
-	policy2 := res.GroupPolicies[0].Address
-
-	id := f.submit(&safetytypes.MsgUpdateParams{
-		Authority: f.policy.String(),
-		Params:    safetytypes.Params{Authority: policy2, Operator: f.operator.String(), Scope: []string{safetytypes.Wildcard}},
-	})
-	f.requireTx(f.member, "", f.vote(id))
-	f.requireTx(f.member, "", f.exec(id))
-	require.Equal(t, policy2, f.params().Authority)
-
+	reset := safetytypes.NewMsgReset(f.policy.String(), urlVote)
 	f.trip(urlVote)
-	try, err := group.NewMsgSubmitProposal(policy2, []string{f.member.String()},
-		[]sdk.Msg{safetytypes.NewMsgReset(policy2, urlVote)}, "", group.Exec_EXEC_TRY, "", "")
-	require.NoError(t, err)
-	f.requireTx(f.member, "", try)
-	props, err := f.groupKeeper.ProposalsByGroupPolicy(f.ctx(), &group.QueryProposalsByGroupPolicyRequest{Address: policy2})
-	require.NoError(t, err)
-	require.Len(t, props.Proposals, 1)
-	pid := props.Proposals[0].Id
-	require.Equal(t, group.PROPOSAL_STATUS_SUBMITTED, props.Proposals[0].Status)
 
-	f.requireTx(f.operator, urlVote, &group.MsgVote{ProposalId: pid, Voter: f.operator.String(), Option: group.VOTE_OPTION_YES})
-	f.requireTx(f.member, "", &group.MsgExec{ProposalId: pid, Executor: f.member.String()})
+	try := f.proposal(reset)
+	try.Exec = group.Exec_EXEC_TRY
+	f.requireExecRejected(f.member, urlVote, try)
+
+	id := f.submit(reset)
+	f.requireTx(f.member, urlVote, f.vote(id))
+	f.requireTx(f.member, "", f.exec(id))
+	res, err := f.groupKeeper.Proposal(f.ctx(), &group.QueryProposalRequest{ProposalId: id})
+	require.NoError(t, err)
+	require.Equal(t, group.PROPOSAL_STATUS_SUBMITTED, res.Proposal.Status)
 	require.Equal(t, []string{urlVote}, f.disabled())
+
+	f.reset(urlVote)
+	f.requireTx(f.member, "", f.vote(id))
 }
 
 // Under "*", authz MsgExec dispatches group MsgVote, which is a wrapper and

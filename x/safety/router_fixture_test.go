@@ -96,6 +96,12 @@ type routerFixture struct {
 	gov       string
 	blockTime time.Time
 	rng       *rand.Rand
+
+	// guardBreakerOff makes the ante handler of a withAnte fixture remove the
+	// circuit breaker from the tx Context. The router still checks every msg
+	// with its own breaker, but msg servers then run their guard as a no-op,
+	// as they did before the guard existed. Gas tests use it as the baseline.
+	guardBreakerOff bool
 }
 
 // txModuleSkipAnte wires x/auth/tx without its default ante handler, so the
@@ -162,7 +168,14 @@ func newRouterFixture(t *testing.T, withAnte bool) *routerFixture {
 		txModule = txModuleSkipAnte()
 		startupCfg.BaseAppOption = func(app *baseapp.BaseApp) {
 			// keepers are populated by depinject before Build runs this option
-			app.SetAnteHandler(safetyAnteHandler(f.accountKeeper, f.bankKeeper, f.safetyKeeper, f.txConfig))
+			ante := safetyAnteHandler(f.accountKeeper, f.bankKeeper, f.safetyKeeper, f.txConfig)
+			app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
+				newCtx, err := ante(ctx, tx, simulate)
+				if err == nil && f.guardBreakerOff {
+					newCtx = newCtx.WithCircuitBreaker(nil)
+				}
+				return newCtx, err
+			})
 		}
 	}
 

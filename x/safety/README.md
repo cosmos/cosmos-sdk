@@ -484,8 +484,8 @@ anteDecorators := []sdk.AnteDecorator{
 ```
 
 `simapp/ante.go` shows the full chain. An app with more than one ante chain,
-such as cosmos/evm with its separate chain for Ethereum txs, needs the
-decorator in each, or CheckTx admits the txs that chain handles.
+such as cosmos/evm with its separate chain for Ethereum txs, must add the
+decorator to each, or CheckTx admits the txs that chain handles.
 
 ## Client
 
@@ -513,28 +513,28 @@ when the authority is an account that signs directly.
 ### IBC relaying
 
 A relayer delivers packets, acks, timeouts and client updates as ordinary
-msgs, and the router checks each one. An exact trip of one of them has these
-effects on the tripped chain:
+msgs, and the router checks each one. Effects of an exact trip on the tripped
+chain:
 
 | Trip | Effect |
 | --- | --- |
-| `/ibc.core.channel.v1.MsgRecvPacket` | Inbound packets wait. A packet that times out refunds on its source chain. A packet relayed after the reset and before its timeout lands. |
-| `/ibc.core.channel.v1.MsgAcknowledgement` | Acks for outbound packets fail, so refunds that error acks owe wait for the reset. A timeout cannot refund a packet the counterparty already received. |
-| `/ibc.core.client.v1.MsgUpdateClient` | No light client on the chain updates, so recv and ack fail proof verification. Misbehavior submission stops too: ibc-go v11 takes misbehavior in `MsgUpdateClient`. |
+| `/ibc.core.channel.v1.MsgRecvPacket` | Inbound packets wait. A packet that times out refunds on its source chain. A relayer can still deliver a packet after the reset and before its timeout. |
+| `/ibc.core.channel.v1.MsgAcknowledgement` | Acks for outbound packets fail, so the chain refunds an error-acked packet only after the reset. A timeout cannot refund a packet the counterparty already received. |
+| `/ibc.core.client.v1.MsgUpdateClient` | No light client on the chain updates, so recv and ack fail proof verification. Misbehavior submissions fail too, since ibc-go v11 takes misbehavior in `MsgUpdateClient`. |
 
-`/ibc.core.channel.v1.*` blocks recv, ack and timeout but not
-`/ibc.applications.transfer.v1.MsgTransfer`, which lives in another package.
-The chain then keeps escrowing new sends that it can neither ack nor time out
-until the reset. Add the `MsgTransfer` URL, or trip `/ibc.*`, to stop ICS20
-too.
+Under `/ibc.core.channel.v1.*` the router refuses recv, ack and timeout but
+not `/ibc.applications.transfer.v1.MsgTransfer`, which lives in another
+package, so the chain keeps escrowing new sends that it can neither ack nor
+time out until the reset. To stop ICS20 too, add the `MsgTransfer` URL or trip
+`/ibc.*`.
 
 End any trip that covers `MsgUpdateClient`, such as `/ibc.core.client.v1.*`,
 `/ibc.*` or `*`, within the trusting period of the chain's clients. A client
-that expires during the trip stays expired after the reset and needs gov
-`MsgRecoverClient`. `MsgRecoverClient` is not protected, so the same trip
-blocks it: the ante decorator refuses a gov proposal that wraps it, and a
-proposal that reaches a block passes the vote and fails at execution. Reset
-the trip before submitting the recovery proposal.
+that expires during the trip stays expired after the reset, and only gov
+`MsgRecoverClient` revives it. x/safety does not protect `MsgRecoverClient`, so
+the ante decorator refuses a gov proposal that wraps it, and a proposal that
+reaches a block passes the vote and fails at execution. Reset the trip before
+submitting the recovery proposal.
 
 To stop transfers without freezing clients, trip
 `/ibc.applications.transfer.v1.MsgTransfer` and `MsgRecvPacket` by exact URL,
@@ -543,8 +543,8 @@ settle.
 
 Under `*` every IBC msg fails, and gov resets the trip as usual. After the
 reset, packets still inside their timeout relay and ack. The destination
-refuses a packet whose timeout passed during the trip, and a timeout on the
-source refunds it.
+refuses a packet whose timeout passed during the trip, and the source chain
+refunds it on timeout.
 
 ### ICS20 transfers
 
@@ -564,10 +564,10 @@ and the channel keeper's `SendPacket` itself still skips the trip.
 
 ### Interchain account hosts
 
-The ICA host routes the msgs in a packet through the router. A tripped msg
-fails the packet with an error ack,
+The ICA host routes the msgs in a packet through the router. When the router
+refuses a tripped msg, the host fails the packet with an error ack,
 `ABCI code: 10: error handling packet: see events for details`, and moves no
-funds. Only the host chain's events name the x/safety reason. The ante
+funds. The x/safety reason appears only in the host chain's events. The ante
 decorator cannot see msgs inside packet data, so CheckTx admits the
 `MsgRecvPacket`, which succeeds and pays its fee. Protected msgs still run:
 under `/cosmos.*` a gov `MsgVote` sent through an interchain account executes.
@@ -577,24 +577,24 @@ Under `*` the host chain refuses the `MsgRecvPacket` itself; see
 ### EVM chains
 
 cosmos/evm sends every EVM tx as `/cosmos.evm.vm.v1.MsgEthereumTx`, and the
-router checks it like any msg. An exact trip of it, or `*`, stops every EVM tx,
-precompile calls included, so during a `*` trip validators vote with a Cosmos
-gov `MsgVote` tx, not the gov precompile.
+router checks it like any msg. Under an exact trip of it, or `*`, the router
+refuses every EVM tx, precompile calls included, so during a `*` trip
+validators vote with a Cosmos gov `MsgVote` tx, not the gov precompile.
 
 cosmos/evm runs Ethereum txs through a separate ante chain without
 `SafetyDecorator`. Under a `MsgEthereumTx` or `*` trip, `eth_sendRawTransaction`
-accepts EVM txs and recheck keeps queued ones. They land in a block, fail with
-code 10, pay their fee, use their nonce and return no receipt. Add the
-decorator to that ante chain to refuse them in CheckTx; see
-[Ante handler](#ante-handler).
+accepts EVM txs and recheck keeps queued ones. The proposer includes them in a
+block, where they fail with code 10, pay their fee, use their nonce and return
+no receipt. Add the decorator to that ante chain to refuse them in CheckTx;
+see [Ante handler](#ante-handler).
 
 `eth_call` and `eth_estimateGas` route no msg, so they never check
 `MsgEthereumTx` itself. Under a `MsgEthereumTx` or `*` trip a value transfer
 estimates at 21000 gas and a gov precompile vote simulates as a success, and
 both txs then fail in `FinalizeBlock`.
 
-An EVM value transfer moves the native denom without a bank msg, so a trip of
-`/cosmos.bank.v1beta1.MsgSend` does not stop it.
+An EVM value transfer moves the native denom without a bank msg, so the router
+never checks it against a `/cosmos.bank.v1beta1.MsgSend` trip.
 
 A precompile that calls an SDK msg server stops under a trip of that msg
 through the [msg server guard](#msg-server-guard). Under such a trip the
@@ -610,25 +610,26 @@ the trip lands; it fails when it lands. The distribution `claimRewards`, werc20
 
 wasmd turns `BankMsg::Send`, staking, gov, `CosmosMsg::Any`, Stargate and
 `IbcMsg::Transfer` msgs into SDK msgs and routes them through the
-`MsgServiceRouter`, so a trip of the SDK msg fails the contract execution and
-moves no funds. CheckTx admits the outer `MsgExecuteContract`, since the
-decorator cannot see the msgs a contract emits. Gov msgs stay protected: under
-`/cosmos.*` a contract's gov vote executes and its bank send fails.
+`MsgServiceRouter`, so when the router refuses a tripped SDK msg, the contract
+execution fails and moves no funds. CheckTx admits the outer
+`MsgExecuteContract`, since the decorator cannot see the msgs a contract emits.
+Gov msgs stay protected: under `/cosmos.*` a contract's gov vote executes and
+its bank send fails.
 
 Two wasmd paths call keepers directly and skip a selective trip:
 
-* `BankMsg::Burn` calls the bank keeper. The bank module has no `MsgBurn`, so
-  `MsgTrip` of `/cosmos.bank.v1beta1.MsgBurn` fails with code 7.
-* `IbcMsg::SendPacket` calls the IBC channel keeper, so `/ibc.*` does not stop
-  it.
+* `BankMsg::Burn` calls the bank keeper. The bank module defines no `MsgBurn`,
+  so `MsgTrip` of `/cosmos.bank.v1beta1.MsgBurn` fails with code 7.
+* `IbcMsg::SendPacket` calls the IBC channel keeper and goes through under
+  `/ibc.*`.
 
-Only a trip that blocks `MsgExecuteContract`, by exact URL, `/cosmwasm.wasm.*`
-or `*`, stops those two, and it stops every contract execution with them.
+To stop those two, trip `MsgExecuteContract` by exact URL, `/cosmwasm.wasm.*`
+or `*`; the router then refuses every contract execution.
 
 A contract that sends a tripped msg as a submessage with `ReplyOn::Error`
 receives the failure in its reply and continues. wasmd redacts the error to
-`codespace: safety, code: 10`, so the reply names neither the type URL nor the
-pattern.
+`codespace: safety, code: 10`, so the contract sees neither the type URL nor
+the pattern.
 
 The x/wasm msg server does not call the guard, so Go code that calls it
 directly runs contracts under `*`. The router still checks the msgs those

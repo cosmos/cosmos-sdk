@@ -69,7 +69,8 @@ func TestSlashRedelegation(t *testing.T) {
 	evilValAddr := sdk.ValAddress(evilValPubKey.Address())
 	require.NoError(t, banktestutil.FundAccount(ctx, bankKeeper, sdk.AccAddress(evilValAddr), testCoins))
 	createValMsg1, _ := stakingtypes.NewMsgCreateValidator(
-		evilValAddr.String(), evilValPubKey, testCoins[0], stakingtypes.Description{Details: "test"}, stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)), math.OneInt())
+		evilValAddr.String(), evilValPubKey, testCoins[0], stakingtypes.Description{Details: "test"}, stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)), math.OneInt(),
+	)
 	_, err = stakingMsgServer.CreateValidator(ctx, createValMsg1)
 	require.NoError(t, err)
 
@@ -77,7 +78,8 @@ func TestSlashRedelegation(t *testing.T) {
 	goodValAddr := sdk.ValAddress(goodValPubKey.Address())
 	require.NoError(t, banktestutil.FundAccount(ctx, bankKeeper, sdk.AccAddress(goodValAddr), testCoins))
 	createValMsg2, _ := stakingtypes.NewMsgCreateValidator(
-		goodValAddr.String(), goodValPubKey, testCoins[0], stakingtypes.Description{Details: "test"}, stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)), math.OneInt())
+		goodValAddr.String(), goodValPubKey, testCoins[0], stakingtypes.Description{Details: "test"}, stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)), math.OneInt(),
+	)
 	_, err = stakingMsgServer.CreateValidator(ctx, createValMsg2)
 	require.NoError(t, err)
 

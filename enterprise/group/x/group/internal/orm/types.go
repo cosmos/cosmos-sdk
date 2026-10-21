@@ -142,7 +142,7 @@ func NewTypeSafeRowGetter(prefixKey [2]byte, model reflect.Type, cdc codec.Codec
 
 func assertCorrectType(model reflect.Type, obj proto.Message) error {
 	tp := reflect.TypeOf(obj)
-	if tp.Kind() != reflect.Ptr {
+	if tp.Kind() != reflect.Pointer {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidType, "model destination must be a pointer")
 	}
 	if model != tp.Elem() {

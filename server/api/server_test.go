@@ -73,7 +73,8 @@ func (s *GRPCWebTestSuite) Test_Latest_Validators() {
 		headers, trailers, responses, err := s.makeGrpcRequest(
 			"/cosmos.base.tendermint.v1beta1.Service/GetLatestValidatorSet",
 			headerWithFlag(),
-			serializeProtoMessages([]proto.Message{&cmtservice.GetLatestValidatorSetRequest{}}), false)
+			serializeProtoMessages([]proto.Message{&cmtservice.GetLatestValidatorSetRequest{}}), false,
+		)
 
 		s.Require().NoError(err)
 		s.Require().Equal(1, len(responses))
@@ -93,7 +94,8 @@ func (s *GRPCWebTestSuite) Test_Total_Supply() {
 		headers, trailers, responses, err := s.makeGrpcRequest(
 			"/cosmos.bank.v1beta1.Query/TotalSupply",
 			headerWithFlag(),
-			serializeProtoMessages([]proto.Message{&banktypes.QueryTotalSupplyRequest{}}), false)
+			serializeProtoMessages([]proto.Message{&banktypes.QueryTotalSupplyRequest{}}), false,
+		)
 
 		s.Require().NoError(err)
 		s.Require().Equal(1, len(responses))

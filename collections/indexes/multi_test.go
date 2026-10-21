@@ -77,7 +77,8 @@ func TestMultiUnchecked(t *testing.T) {
 	rawKey, err := collections.EncodeKeyWithPrefix(
 		collections.NewPrefix("prefix"),
 		uncheckedMi.KeyCodec(),
-		collections.Join("milan", uint64(2)))
+		collections.Join("milan", uint64(2)),
+	)
 	require.NoError(t, err)
 
 	// set value to be something different from []byte{}

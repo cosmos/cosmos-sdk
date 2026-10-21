@@ -528,7 +528,8 @@ func TestAddressCodecFactory(t *testing.T) {
 			network.MinimumAppConfig(),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		&addrCodec, &valAddressCodec, &consAddressCodec)
+		&addrCodec, &valAddressCodec, &consAddressCodec,
+	)
 	require.NoError(t, err)
 	require.NotNil(t, addrCodec)
 	_, ok := addrCodec.(customAddressCodec)
@@ -551,7 +552,8 @@ func TestAddressCodecFactory(t *testing.T) {
 				func() runtime.ConsensusAddressCodec { return customAddressCodec{} },
 			),
 		),
-		&addrCodec, &valAddressCodec, &consAddressCodec)
+		&addrCodec, &valAddressCodec, &consAddressCodec,
+	)
 	require.NoError(t, err)
 	require.NotNil(t, addrCodec)
 	_, ok = addrCodec.(customAddressCodec)

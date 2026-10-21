@@ -85,6 +85,13 @@ func defaultConsensusParams() *cmtproto.ConsensusParams {
 // before InitChain.
 func newFixture(t *testing.T, cp *cmtproto.ConsensusParams, mutate func(simapp.GenesisState)) *fixture {
 	t.Helper()
+	return newFixtureWithSetup(t, cp, mutate, nil)
+}
+
+// newFixtureWithSetup is newFixture with setup run on the SimApp before it
+// loads and seals, so a test can wrap its block hooks or ante handler.
+func newFixtureWithSetup(t *testing.T, cp *cmtproto.ConsensusParams, mutate func(simapp.GenesisState), setup func(*simapp.SimApp)) *fixture {
+	t.Helper()
 	if cp == nil {
 		cp = defaultConsensusParams()
 	}
@@ -118,7 +125,11 @@ func newFixture(t *testing.T, cp *cmtproto.ConsensusParams, mutate func(simapp.G
 		balances = append(balances, banktypes.Balance{Address: a.String(), Coins: funds})
 	}
 
-	f.app = simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	f.app = simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), setup == nil, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	if setup != nil {
+		setup(f.app)
+		require.NoError(t, f.app.LoadLatestVersion())
+	}
 	genesis := f.app.DefaultGenesis()
 	genesis, err = simtestutil.GenesisStateWithValSet(f.app.AppCodec(), genesis, valSet, genAccs, balances...)
 	require.NoError(t, err)

@@ -44,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (types/msgservice) Add `msgservice.Dispatch`, which runs an `sdk.Msg` through the app's `MsgServiceRouter` handler and returns the typed response, so code that would call another module's msg server directly, such as an EVM precompile, gets the router's circuit breaker check, `ValidateBasic` and events.
 * (x/safety) Add `x/safety`, the replacement for `contrib/x/circuit`: one operator trips and resets msgs by exact type URL, proto package prefix or `*` within a scope set by the authority, and a hardcoded protected set keeps gov, upgrade and the module's own msgs executable. SimApp wires the module and its ante decorator.
 * (x/distribution) [#26749](https://github.com/cosmos/cosmos-sdk/pull/26749) Add a `claimable` field to `QueryDelegationTotalRewardsResponse`, reporting the withdrawable amount as `sdk.Coins` by truncating each delegation reward the way `Msg/WithdrawDelegatorReward` does. `total` keeps its documented meaning as the raw `DecCoins` sum ([#24406](https://github.com/cosmos/cosmos-sdk/issues/24406)).
 

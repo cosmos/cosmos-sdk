@@ -16,6 +16,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 // MessageRouter ADR 031 request type routing
@@ -33,7 +34,10 @@ type MsgServiceRouter struct {
 	circuitBreaker    CircuitBreaker
 }
 
-var _ gogogrpc.Server = &MsgServiceRouter{}
+var (
+	_ gogogrpc.Server      = &MsgServiceRouter{}
+	_ msgservice.MsgRouter = &MsgServiceRouter{}
+)
 
 // NewMsgServiceRouter creates a new MsgServiceRouter.
 func NewMsgServiceRouter() *MsgServiceRouter {

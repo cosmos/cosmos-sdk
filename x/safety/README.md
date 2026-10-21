@@ -25,6 +25,7 @@ never block its own reset.
     * [Protected set](#protected-set)
     * [Wrapper set](#wrapper-set)
     * [Enforcement](#enforcement)
+    * [Direct callers](#direct-callers)
 * [State](#state)
 * [Messages](#messages)
 * [Events](#events)
@@ -158,8 +159,8 @@ disabled list. Each lookup charges KV read gas.
 The check runs in two places:
 
 * The `MsgServiceRouter` calls it for every msg it routes, including msgs that
-  authz `MsgExec`, gov proposals and other modules dispatch through the router.
-  This is the authoritative gate.
+  authz `MsgExec`, gov proposals and other modules dispatch through the router,
+  and msgs run with `msgservice.Dispatch`. This is the authoritative gate.
 * The optional `x/safety/ante.SafetyDecorator` calls it for every top-level msg
   and, recursively, every msg returned by `GetMessages() ([]sdk.Msg, error)`
   (authz `MsgExec`) or `GetMsgs() ([]sdk.Msg, error)` (gov v1 and group
@@ -189,6 +190,32 @@ The check runs in two places:
   decorator checks every msg in a tx against the disabled list as it stands
   before the tx runs, so a tx that resets a pattern and then sends a msg the
   pattern blocked fails in `CheckTx`. Send that msg in a later tx.
+
+### Direct callers
+
+The router checks only the msgs it routes. A direct call to a msg server
+method, such as `bankkeeper.NewMsgServerImpl(k).Send(ctx, msg)`, skips the
+check, so a trip does not stop it. Code outside the module that owns a msg,
+such as an EVM precompile or another module's keeper, runs the msg with
+`msgservice.Dispatch` instead:
+
+```go
+resp, err := msgservice.Dispatch[*banktypes.MsgSendResponse](ctx, app.MsgServiceRouter(), msg)
+```
+
+`Dispatch` calls the router handler for the msg: it runs `ValidateBasic`, the
+circuit breaker check and the msg server, emits the msg server's events on
+`ctx`, and returns the typed response. It uses the same gas as a routed msg,
+and a tripped msg fails with `ErrMsgDisabled`. The router checks on every call
+whatever the exec mode, so `Dispatch` is checked from a tx in `CheckTx`,
+simulation or `FinalizeBlock`, from `PreBlock`, `BeginBlock` and `EndBlock`,
+from vote extensions, and from query contexts such as the one `eth_call` runs
+in. `Dispatch` does not check the msg's signers: the caller authorizes them,
+as it would before a direct call. A msg with no registered handler fails with
+`ErrUnknownRequest`.
+
+Upgrade handlers and a module's calls to its own msg server stay direct on
+purpose, so a trip cannot stop an upgrade or a module's own logic.
 
 ## State
 
@@ -485,8 +512,9 @@ estimates at 21000 gas and a gov precompile vote simulates as a success, and
 both txs then fail in `FinalizeBlock`.
 
 An EVM value transfer moves the native denom without a bank msg, so the router
-never checks it against a `/cosmos.bank.v1beta1.MsgSend` trip. Precompiles
-call SDK keepers and msg servers directly and skip a selective trip; see
+never checks it against a `/cosmos.bank.v1beta1.MsgSend` trip. A precompile
+that calls an SDK keeper, or a msg server without `msgservice.Dispatch`, skips
+a selective trip; see [Direct callers](#direct-callers) and
 [Direct keeper calls](#direct-keeper-calls).
 
 ### CosmWasm contracts
@@ -519,10 +547,12 @@ the pattern.
 ### Direct keeper calls
 
 The router check only sees msgs that pass through the `MsgServiceRouter`. Code
-that calls a keeper or a msg server directly skips a selective trip. Known
-paths:
+that calls a keeper directly skips a selective trip, and so does code that
+calls another module's msg server without `msgservice.Dispatch`; see
+[Direct callers](#direct-callers). Known paths:
 
-* cosmos/evm precompiles that call SDK keepers or msg servers,
+* cosmos/evm precompiles that call SDK keepers, or msg servers without
+  `msgservice.Dispatch`,
 * EVM native value transfers,
 * the ibc-go transfer keeper, which packet-forward-middleware and the
   cosmos/evm ICS20 precompile call,

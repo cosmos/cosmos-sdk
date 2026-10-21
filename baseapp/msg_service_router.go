@@ -101,10 +101,18 @@ func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method 
 		msr.hybridHandlers[string(inputName)] = hybridHandler
 		return nil
 	}
-	// decorate the hybrid handler with the circuit breaker
+	// decorate the hybrid handler with the circuit breaker. It checks the
+	// msg type the handler runs, not the type of req: a request of another
+	// type whose bytes decode as inputName still runs inputName's handler.
+	// It reads the breaker on each call, since the app may remove it after
+	// registration.
+	messageName := "/" + string(inputName)
 	circuitBreakerHybridHandler := func(ctx context.Context, req, resp protoiface.MessageV1) error {
-		messageName := codectypes.MsgTypeURL(req)
-		allowed, err := msr.circuitBreaker.IsAllowed(ctx, messageName)
+		cb := msr.circuitBreaker
+		if cb == nil {
+			return hybridHandler(ctx, req, resp)
+		}
+		allowed, err := cb.IsAllowed(ctx, messageName)
 		if err != nil {
 			return err
 		}

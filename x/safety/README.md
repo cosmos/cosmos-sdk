@@ -557,9 +557,9 @@ still escrows and sends the packet. See
 
 Once `Transfer` calls the guard, a packet-forward-middleware forward under the
 trip fails with an error ack,
-`ABCI code: 3: error handling packet: see events for details`, which refunds
-the sender on the source chain. Neither the ack nor the events name x/safety;
-only the node log does. Code that calls the transfer keeper's `SendTransfer`
+`ABCI code: 3: error handling packet: see events for details`, and the source
+chain refunds the sender. x/safety appears only in the node log, not in the
+ack or the events. Code that calls the transfer keeper's `SendTransfer`
 and the channel keeper's `SendPacket` itself still skips the trip.
 
 ### Interchain account hosts
@@ -596,14 +596,15 @@ both txs then fail in `FinalizeBlock`.
 An EVM value transfer moves the native denom without a bank msg, so the router
 never checks it against a `/cosmos.bank.v1beta1.MsgSend` trip.
 
-A precompile that calls an SDK msg server stops under a trip of that msg
-through the [msg server guard](#msg-server-guard). Under such a trip the
+The [msg server guard](#msg-server-guard) stops a precompile that calls an SDK
+msg server when a trip covers that msg. Under such a trip the
 staking `delegate`, ERC20 `transfer` and distribution
 `withdrawDelegatorRewards` precompiles return status 0 and charge only the
 fee, and `eth_call` and `eth_estimateGas` revert with the x/safety error.
-CheckTx admits the tx, and recheck keeps one queued behind a nonce gap when
-the trip lands; it fails when it lands. The distribution `claimRewards`, werc20
-`deposit` and ICS20 precompiles skip the trip; see
+CheckTx admits the tx. A tx queued behind a nonce gap when the trip takes
+effect stays in the mempool through recheck and fails once a block includes it.
+The distribution `claimRewards`, werc20 `deposit` and ICS20 precompiles skip
+the trip; see
 [Direct keeper calls](#direct-keeper-calls).
 
 ### CosmWasm contracts

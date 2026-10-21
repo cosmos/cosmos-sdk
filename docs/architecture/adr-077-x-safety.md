@@ -99,6 +99,10 @@ Chains remove `x/circuit` and add `x/safety` in the same upgrade: delete the cir
 
 * Keeper calls that bypass msg servers stay outside the breaker: ibc-go transfer, packet-forward-middleware, wasmd raw IBC and burn, and EVM native value transfers. In cosmos/evm, distribution `claimRewards`, werc20 `deposit`, and the ics02 and ics20 precompiles fall in this group.
 * Msg servers outside this repository need the same one-line `CheckMsgAllowed` call. `contrib/x/nft`, `contrib/x/crisis` and `contrib/x/circuit` do not call it.
+* IBC relayer msgs are ordinary msgs. A trip that covers `MsgUpdateClient` stops every light client update and misbehavior submission on the chain, and a client that expires during the trip needs gov `MsgRecoverClient`, which the trip also blocks until reset. `/ibc.core.channel.v1.*` leaves `MsgTransfer` open, so the chain keeps escrowing sends it cannot ack or time out. Inbound packets under a recv trip time out and refund on their source.
+* The ICA host routes packet msgs, so a tripped msg returns an error ack and moves no funds, but CheckTx cannot see it and the `MsgRecvPacket` pays its fee.
+* cosmos/evm runs Ethereum txs through an ante chain without `SafetyDecorator`, so under a `MsgEthereumTx` or `*` trip EVM txs enter the mempool, fail in `FinalizeBlock`, pay fees and use nonces. `eth_call` and `eth_estimateGas` do not check `MsgEthereumTx` itself and report success for those txs.
+* wasmd routes contract bank sends, staking, gov, `Any`, Stargate and ICS20 msgs, so selective trips block them. `BankMsg::Burn` and `IbcMsg::SendPacket` call keepers directly, and a contract's `ReplyOn::Error` reply sees only `codespace: safety, code: 10`.
 
 ## Further Discussions
 
@@ -112,7 +116,10 @@ Chains remove `x/circuit` and add `x/safety` in the same upgrade: delete the cir
 * `baseapp` guard tests for proposal handlers, block hooks, vote extensions, the restarted node's check state, and Simulate running concurrently with Commit.
 * `tests/integration/safety`: direct msg server calls from inside `FinalizeBlock`, upgrade handlers under a trip, and group `EXEC_TRY`.
 * System tests: `TestSafety*` and `TestChainUpgrade`, which upgrades a running v0.54 chain into x/safety.
-* cosmos/evm: precompile tests in evmd against the real module.
+* cosmos/evm: precompile tests in evmd against the real module, and a node-level script on a 4-validator testnet covering precompiles, `MsgEthereumTx` and `*` trips, native transfers and queued txs.
+* ibc-go: relayed transfers, recv, ack, timeout and client update trips, client expiry and recovery, misbehavior, ICA host and packet-forward-middleware, all through real `MsgTrip` and `MsgReset` txs.
+* wasmd: contract bank, staking, gov, `Any`, Stargate, burn, ICS20 and raw packet msgs, and submessage replies under trips.
+* In each external repo, removing `SetCircuitBreaker`, the ante decorator or `CheckMsgAllowed` fails the tests that depend on it.
 
 ## References
 

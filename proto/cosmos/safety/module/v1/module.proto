@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package cosmos.safety.module.v1;
+
+import "cosmos/app/v1alpha1/module.proto";
+
+// Module is the config object of the safety module.
+message Module {
+  option (cosmos.app.v1alpha1.module) = {
+    go_import: "github.com/cosmos/cosmos-sdk/x/safety"
+  };
+
+  // authority defines the authority written into the default genesis params.
+  // It accepts a bech32 address or a module name. If not set, defaults to the
+  // governance module. After genesis the authority lives in params and changes
+  // through MsgUpdateParams.
+  string authority = 1;
+}

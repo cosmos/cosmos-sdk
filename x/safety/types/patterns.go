@@ -30,12 +30,14 @@ var protectedExact = []string{
 	"/cosmos.consensus.v1.MsgUpdateParams",
 }
 
-// wrappers are the msg type URLs that only dispatch other msgs through the
-// router, which checks each inner msg. An authority, operator or validator
-// acting through authz or a group policy needs them to reach MsgReset and
-// votes during an incident, so only an exact disabled entry blocks a
-// wrapper; "*" and prefix entries do not. They are not protected: an exact
-// trip still halts their handlers.
+// wrappers are the msg type URLs that dispatch other msgs through the
+// router, which checks each inner msg. Group MsgSubmitProposal and MsgVote
+// also record a proposal or a vote, and with EXEC_TRY they call the group
+// msg server's Vote and Exec directly, which the msg server guard checks.
+// An authority, operator or validator acting through authz or a group
+// policy needs them to reach MsgReset and votes during an incident, so only
+// an exact disabled entry blocks a wrapper; "*" and prefix entries do not.
+// They are not protected: an exact trip still halts their handlers.
 var wrappers = []string{
 	"/cosmos.authz.v1beta1.MsgExec",
 	"/cosmos.group.v1.MsgSubmitProposal",

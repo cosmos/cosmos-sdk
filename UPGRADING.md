@@ -16,7 +16,7 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [Mempool Interface Changes](#mempool-interface-changes)
     * [Staking: Key Rotation Wiring and Interface Changes](#staking-key-rotation-wiring-and-interface-changes)
     * [genutil: ExportGenesisFileWithTime Signature](#genutil-exportgenesisfilewithtime-signature)
-    * [x/safety](#xsafety)
+    * [Circuit Breaker: Msg Server Guard and x/safety](#circuit-breaker-msg-server-guard-and-xsafety)
     * [Upgrade Handler and Store Migrations](#upgrade-handler-and-store-migrations)
 * [Upgrading from v0.53.x](#upgrading-from-v053x)
 * [New Features and Non-Breaking Changes](#new-features-and-non-breaking-changes)
@@ -145,9 +145,37 @@ func ExportGenesisFileWithTime(genFile, chainID string, validators []cmttypes.Ge
 func ExportGenesisFileWithTime(genFile string, appGenesis *types.AppGenesis, genTime time.Time) error
 ```
 
-### x/safety
+### Circuit Breaker: Msg Server Guard and x/safety
 
-`x/safety` replaces `contrib/x/circuit`. To wire it, follow [Wiring](x/safety/README.md#wiring) in its README: build the keeper, call `app.SetCircuitBreaker(app.SafetyKeeper)` before `ModuleManager.RegisterServices` so hybrid handlers are wrapped too, register the module, order `safety` after `genutil` in `InitGenesis`, and add `safetyante.SafetyDecorator` to the ante chain. A live chain adds `safetytypes.StoreKey` to `StoreUpgrades.Added` in the upgrade that introduces it (see the [Reference Upgrade Handler](#reference-upgrade-handler)). A chain moving off `contrib/x/circuit` removes that module's wiring and adds `"circuit"` to `StoreUpgrades.Deleted`. x/safety does not read `contrib/x/circuit` state, so trip again through x/safety any msg that must stay disabled after the upgrade.
+BaseApp now attaches its circuit breaker to the `sdk.Context` of every tx, block hook, ABCI handler and query, and every msg server in `x/` and `enterprise/`, except gov, upgrade, consensus and x/safety, calls `msgservice.CheckMsgAllowed(ctx, msg)` first. A chain without a circuit breaker sees no change.
+
+**Behavior change** for chains with a circuit breaker (`contrib/x/circuit` or `x/safety`): a msg server called directly, without the `MsgServiceRouter`, now refuses a msg type the breaker blocks. This covers EVM precompiles and any module that calls `NewMsgServerImpl(k).Method(ctx, msg)`. Code that called a msg server directly while its msg was tripped now gets an error, and group `MsgCreateGroupWithPolicy` and `EXEC_TRY` submissions and votes fail when one of the msgs their handler calls is tripped. A breaker that refuses a msg without an error now fails it with the registered `ErrUnauthorized`. See the `x/safety` README, [Msg server guard](x/safety/README.md#msg-server-guard).
+
+**API change:** `state.Manager.SetState` takes the circuit breaker the new state's `sdk.Context` starts with. Pass `nil` when the app has none:
+
+```go
+// Before
+mgr.SetState(mode, cms, header, logger, streamingManager)
+// After
+mgr.SetState(mode, cms, header, logger, streamingManager, nil)
+```
+
+**Test helpers:** `BaseApp.NewContext`, `NewContextLegacy`, `NewUncachedContext`, `NewNextBlockContext`, `GetContextForCheckTx` and `GetContextForFinalizeBlock` now return a Context with the app's circuit breaker, so tests that call a msg server on one run the guard. A test that matches such a Context with `reflect.DeepEqual` or `gomock.Eq` fails once the breaker is a keeper with func fields, such as the x/safety keeper; compare `ctx.WithCircuitBreaker(nil)` instead.
+
+**Modules outside the SDK** get the same coverage by calling the guard first in each msg server method:
+
+```go
+func (k msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
+    if err := msgservice.CheckMsgAllowed(ctx, msg); err != nil {
+        return nil, err
+    }
+    // ...
+}
+```
+
+**Upgrade handlers** run on a Context with the circuit breaker bypass set (`sdk.Context.WithCircuitBreakerBypass(true)`), so a trip refuses no msg a handler sends, whether it calls a msg server directly or routes the msg.
+
+**Adopting x/safety.** `x/safety` replaces `contrib/x/circuit`. To wire it, follow [Wiring](x/safety/README.md#wiring) in its README: build the keeper, call `app.SetCircuitBreaker(app.SafetyKeeper)` before `ModuleManager.RegisterServices` so hybrid handlers are wrapped too, register the module, order `safety` after `genutil` in `InitGenesis`, and add `safetyante.SafetyDecorator` to the ante chain. A live chain adds `safetytypes.StoreKey` to `StoreUpgrades.Added` in the upgrade that introduces it (see the [Reference Upgrade Handler](#reference-upgrade-handler)). A chain moving off `contrib/x/circuit` removes that module's wiring and adds `"circuit"` to `StoreUpgrades.Deleted`. x/safety does not read `contrib/x/circuit` state, so trip again through x/safety any msg that must stay disabled after the upgrade.
 
 ### Upgrade Handler and Store Migrations
 

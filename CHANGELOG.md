@@ -41,10 +41,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Breaking Changes
 
 * (x/auth) [#26672](https://github.com/cosmos/cosmos-sdk/pull/26672) An unordered transaction whose `timeout_timestamp` equals the block time is now rejected
+* (baseapp) With a circuit breaker set, a msg server called directly, without the `MsgServiceRouter`, now fails when the breaker blocks its msg type. This includes the group msg server's own `Vote` and `Exec` calls for `exec` set to `EXEC_TRY`, so an exact trip of group `MsgVote` or `MsgExec` now fails those submissions and votes, and its `CreateGroup` and `CreateGroupPolicy` calls for `MsgCreateGroupWithPolicy`, plus `UpdateGroupAdmin` and `UpdateGroupPolicyAdmin` when `group_policy_as_admin` is set, so an exact trip of `MsgCreateGroup` or `MsgCreateGroupPolicy` now fails every `MsgCreateGroupWithPolicy`, and an exact trip of `MsgUpdateGroupAdmin` or `MsgUpdateGroupPolicyAdmin` fails one with `group_policy_as_admin` set. The gov, upgrade, consensus and x/safety msg servers do not call the guard, so under `contrib/x/circuit`, which has no protected set, a trip of one of their msgs stops it in the router but not in a direct call. A breaker that refuses a msg without an error now fails it with the registered `ErrUnauthorized` instead of an unregistered error.
+* (baseapp) `state.Manager.SetState` takes the circuit breaker the new state's `sdk.Context` starts with.
+* (baseapp) The `NewContext`, `NewContextLegacy`, `NewUncachedContext`, `NewNextBlockContext`, `GetContextForCheckTx` and `GetContextForFinalizeBlock` test helpers return a Context with the app's circuit breaker, as the Contexts BaseApp builds for txs have, so a test that calls a msg server on one runs the guard. A test that compares such a Context with `reflect.DeepEqual` or `gomock.Eq` no longer matches when the breaker is a keeper with func fields, such as the x/safety keeper; compare `ctx.WithCircuitBreaker(nil)` instead.
 
 ### Features
 
 * (x/safety) Add `x/safety`, the replacement for `contrib/x/circuit`: one operator trips and resets msgs by exact type URL, proto package prefix or `*` within a scope set by the authority, and a hardcoded protected set keeps gov, upgrade and the module's own msgs executable. SimApp wires the module and its ante decorator.
+* (baseapp) BaseApp attaches its circuit breaker to the `sdk.Context` of every tx, block hook and query, and `msgservice.CheckMsgAllowed(ctx, msg)` checks a msg against it. Every msg server in `x/` and `enterprise/` outside the x/safety protected set calls it first, so a trip also stops a msg server called directly, such as by an EVM precompile. The router marks the msg it dispatches as checked, so a routed msg pays for no extra breaker check for itself; each msg server it calls directly, such as those that group `MsgCreateGroupWithPolicy` calls, pays for one more check and its KV reads. Modules outside the repo adopt the same one-line guard. `sdk.Context.WithCircuitBreakerBypass` turns off every breaker check, router and guard alike, on a Context. x/upgrade sets it on the Context it passes an upgrade handler, so no breaker check refuses a msg the handler sends, whether it calls a msg server directly or routes the msg, and a trip does not fail a governance-approved upgrade.
 * (x/distribution) [#26749](https://github.com/cosmos/cosmos-sdk/pull/26749) Add a `claimable` field to `QueryDelegationTotalRewardsResponse`, reporting the withdrawable amount as `sdk.Coins` by truncating each delegation reward the way `Msg/WithdrawDelegatorReward` does. `total` keeps its documented meaning as the raw `DecCoins` sum ([#24406](https://github.com/cosmos/cosmos-sdk/issues/24406)).
 
 ### Improvements
@@ -57,6 +61,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (baseapp) A hybrid handler from `MsgServiceRouter.HybridHandlerByMsgName` checks the circuit breaker against the msg type it handles, not the type of the request it is given, so a request of an allowed type whose bytes decode as a tripped msg no longer runs that msg.
 * (types/query) `CollectionPaginate` and `CollectionFilteredPaginate` report the real total, not the offset, when `count_total` is set and the offset runs past the last item.
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.
 * (client/tx) [#26759](https://github.com/cosmos/cosmos-sdk/issues/26759) Populate the multisig bit array in simulation txs so `--gas auto` works for multisig senders.

@@ -25,6 +25,7 @@ never block its own reset.
     * [Protected set](#protected-set)
     * [Wrapper set](#wrapper-set)
     * [Enforcement](#enforcement)
+    * [Msg server guard](#msg-server-guard)
 * [State](#state)
 * [Messages](#messages)
 * [Events](#events)
@@ -93,15 +94,24 @@ signed directly or run by x/gov, so no trip and no genesis file can lock gov,
 a directly signing authority, or the operator out of recovery. A trip of `*`
 still leaves this set running.
 
+An upgrade handler runs on a Context with the circuit breaker bypass set, so
+a governance-approved upgrade applies under any trip, whether its handler
+calls a msg server directly, such as bank `UpdateParams`, or sends msgs
+through the router. See [Msg server guard](#msg-server-guard).
+
 ### Wrapper set
 
-These msg type URLs are hardcoded. Each one only dispatches other msgs through
-the router, which checks every msg it dispatches:
+These msg type URLs are hardcoded:
 
 * `/cosmos.authz.v1beta1.MsgExec`
 * `/cosmos.group.v1.MsgSubmitProposal`
 * `/cosmos.group.v1.MsgVote`
 * `/cosmos.group.v1.MsgExec`
+
+Each one dispatches other msgs through the router, which checks every msg it
+dispatches. Group `MsgSubmitProposal` and `MsgVote` also record a proposal or a
+vote, and with `EXEC_TRY` they call other group handlers directly, outside the
+router. The msg server guard checks those calls.
 
 Only an exact disabled entry for its own URL blocks a wrapper. `*` and prefix
 entries such as `/cosmos.authz.*` or `/cosmos.group.*` do not, in `IsAllowed`,
@@ -119,10 +129,15 @@ scope covers that URL; a scope of `*` or `/cosmos.authz.*` covers
 and `MsgTrip` accepts it while `*` or a prefix entry stands.
 
 The group wrappers do not each stand alone. Group `MsgSubmitProposal` and
-`MsgVote` with `exec` set to `EXEC_TRY` call the group keeper's vote and exec
-directly, without a group `MsgVote` or `MsgExec` reaching the router. To halt
-group proposal execution, trip all three group wrappers. The router still
-checks every msg in a proposal, whichever path executes it.
+`MsgVote` with `exec` set to `EXEC_TRY` call the group msg server's `Vote` and
+`Exec` directly, without the router. The [msg server guard](#msg-server-guard)
+checks those calls, so an exact trip of group `MsgVote` fails every
+`MsgSubmitProposal` with `EXEC_TRY`, and an exact trip of group `MsgExec` fails
+every `MsgSubmitProposal` and `MsgVote` with `EXEC_TRY`. CheckTx admits those
+txs, since the ante decorator checks only the msgs a tx lists; they fail in
+`FinalizeBlock` and pay their fees. An exact trip of group `MsgExec` alone halts
+group proposal execution. The router still checks every msg in a proposal,
+whichever path executes it.
 
 To cut off a compromised grantee that trips with the operator's grant:
 
@@ -154,11 +169,15 @@ two point lookups plus one per package segment, and one for a wrapper; it
 stops at the first disabled entry that blocks the msg, and never walks the
 disabled list. Each lookup charges KV read gas.
 
-The check runs in two places:
+The check runs in three places:
 
 * The `MsgServiceRouter` calls it for every msg it routes, including msgs that
   authz `MsgExec`, gov proposals and other modules dispatch through the router.
   This is the authoritative gate.
+* Every msg server method of the SDK modules in `x/` and `enterprise/`, except
+  the gov, upgrade, consensus and x/safety msg servers, calls
+  `msgservice.CheckMsgAllowed(ctx, msg)` first. The protected set always
+  allows the msgs of those four. See [Msg server guard](#msg-server-guard).
 * The optional `x/safety/ante.SafetyDecorator` calls it for every top-level msg
   and, recursively, every msg returned by `GetMessages() ([]sdk.Msg, error)`
   (authz `MsgExec`) or `GetMsgs() ([]sdk.Msg, error)` (gov v1 and group
@@ -188,6 +207,88 @@ The check runs in two places:
   decorator checks every msg in a tx against the disabled list as it stands
   before the tx runs, so a tx that resets a pattern and then sends a msg the
   pattern blocked fails in `CheckTx`. Send that msg in a later tx.
+
+### Msg server guard
+
+BaseApp attaches its circuit breaker to the `sdk.Context` of every state it
+creates: CheckTx, simulation, the `PrepareProposal` and `ProcessProposal`
+handlers, `FinalizeBlock` txs, and the `PreBlock`, `BeginBlock` and `EndBlock`
+hooks. It also attaches it to the Context of the `ExtendVote` and
+`VerifyVoteExtension` handlers at every height, and of every ABCI and gRPC
+query, because cosmos/evm runs `eth_call` and `eth_estimateGas`, precompiles
+included, on a query Context. A query checks msgs against the
+disabled list at the queried height. `msgservice.CheckMsgAllowed(ctx, msg)`
+reads the breaker from the Context and returns its error when it blocks the
+msg, so a msg server called as a Go method, without the router, refuses a
+tripped msg with `ErrMsgDisabled`. That covers cosmos/evm precompiles, which
+call `bankkeeper.NewMsgServerImpl(k).Send`,
+`stakingkeeper.NewMsgServerImpl(k).Delegate` and the other SDK msg servers
+directly, and any module or block hook that calls an SDK msg server, with no
+change in those modules. Modules never import x/safety: the guard depends only
+on the `sdk.CircuitBreaker` interface.
+
+x/upgrade sets the circuit breaker bypass
+(`sdk.Context.WithCircuitBreakerBypass(true)`) on the Context it passes an
+upgrade handler. Neither the router nor the guard asks the breaker about a msg
+sent on that Context, so every msg the handler sends runs whatever is tripped:
+a direct msg server call, a msg it routes through the `MsgServiceRouter` or a
+hybrid handler, and the inner msgs of a wrapper such as authz `MsgExec` that
+it calls. So a trip cannot fail the upgrade and halt the chain at the
+upgrade height. The `PreBlock` hook that applies the upgrade keeps the breaker
+for every other call it makes, and txs in the upgrade block and later blocks
+stay checked.
+
+`CheckMsgAllowed` returns nil when the Context has no breaker, so chains
+without x/safety or `contrib/x/circuit` see no change. An error from the
+breaker, such as a store failure, fails the msg.
+
+The router marks the Context it hands a msg server with the type URL it just
+checked, and the guard skips its check when the msg's own type URL matches,
+so a routed msg pays for one check. The router replaces the mark for every
+msg it dispatches, including one dispatched from inside another handler, so an
+inner msg never runs under its outer msg's mark. A msg server that calls a
+different msg server directly does not match the mark, so the inner call pays
+for its own check.
+
+The guard checks every such direct call, even inside a routed msg, so a routed
+msg whose msg server makes one pays for more than one check, and a trip of the
+inner msg fails the outer one. In this repo, group `MsgCreateGroupWithPolicy`
+calls the group `CreateGroup` and `CreateGroupPolicy` msg servers, and with
+`group_policy_as_admin` set also `UpdateGroupAdmin` and
+`UpdateGroupPolicyAdmin`. It pays for up to five checks, its own and one per
+call. None of those five type URLs is in the wrapper set, so each check runs
+five point lookups and the msg pays for up to 25. An exact trip of
+`MsgCreateGroup` or `MsgCreateGroupPolicy` fails every
+`MsgCreateGroupWithPolicy`, and an exact trip of `MsgUpdateGroupAdmin` or
+`MsgUpdateGroupPolicyAdmin` fails one with `group_policy_as_admin` set.
+Group `MsgSubmitProposal` and `MsgVote` with `EXEC_TRY` call `Vote` and `Exec`
+the same way, and since those are wrappers each of their checks runs one point
+lookup; see [Wrapper set](#wrapper-set).
+
+The gov, upgrade, consensus and x/safety msg servers do not call the guard:
+the protected set always allows their msgs. Other breakers have no protected
+set. `contrib/x/circuit` can disable `/cosmos.gov.v1.MsgVote`, and the router
+then refuses a routed vote, but a direct call such as the cosmos/evm gov
+precompile's `Vote` still runs.
+
+#### Adopting the guard in other modules
+
+A module outside this repo gets the same coverage by calling the guard first
+in each msg server method:
+
+```go
+import "github.com/cosmos/cosmos-sdk/types/msgservice"
+
+func (k msgServer) Transfer(ctx context.Context, msg *types.MsgTransfer) (*types.MsgTransferResponse, error) {
+	if err := msgservice.CheckMsgAllowed(ctx, msg); err != nil {
+		return nil, err
+	}
+	// ...
+}
+```
+
+The call takes no x/safety dependency and does nothing on a chain without a
+circuit breaker.
 
 ## State
 
@@ -408,20 +509,39 @@ when the authority is an account that signs directly.
 
 ### Direct keeper calls
 
-The router check only sees msgs that pass through the `MsgServiceRouter`. Code
-that calls a keeper or a msg server directly skips a selective trip. Known
-paths:
+The router and the [msg server guard](#msg-server-guard) see only msgs that
+reach a msg server. Code that calls a keeper method that is not a msg server
+method skips a selective trip. Known paths:
 
-* cosmos/evm precompiles that call SDK keepers or msg servers,
-* EVM native value transfers,
-* the ibc-go transfer keeper and packet-forward-middleware,
-* wasmd raw IBC sends and burns.
+* wasmd raw IBC sends and burns,
+* EVM native value transfers, such as `UncheckedSetBalance`,
+* the cosmos/evm distribution precompile's `claimRewards`, which calls the
+  distribution keeper.
+
+Msg servers of modules outside this repo, and of `contrib/x/nft` and
+`contrib/x/crisis`, do not call the guard until they adopt it; see
+[Adopting the guard in other modules](#adopting-the-guard-in-other-modules).
+ICS20 transfers belong here: the ibc-go transfer keeper's `Transfer` method is
+the transfer msg server method, and packet-forward-middleware and the
+cosmos/evm ICS20 precompile call it directly. An ibc-go release that calls the
+guard in `Transfer` covers both of those paths.
+The `contrib/x/circuit` msg server does not call it either. x/safety replaces
+that module, so a chain should not wire both.
 
 A `*` trip still blocks every msg outside the protected and wrapper sets that
 enters through a tx, directly or inside a wrapper, so it stops those paths at
 the tx msg that starts them. A selective trip of, for example, `/cosmos.bank.*`
-does not stop a contract or precompile from moving funds through the bank
-keeper.
+stops a precompile's bank `Send`, but not a contract that moves funds through
+the bank keeper.
+
+CheckTx does not see direct calls. The ante decorator checks the msgs a tx
+lists, so a tx whose msg calls a tripped msg server directly, such as an EVM
+tx that calls the staking precompile, enters the mempool, fails in
+`FinalizeBlock`, and pays its fee.
+
+A msg server that calls the msg server of its own msg type directly, inside a
+routed msg of that type, skips the check, since the router has already
+allowed that type URL in the same tx.
 
 ### Exact wrapper trips
 
@@ -431,12 +551,12 @@ through an authz grantee loses it to a trip of `/cosmos.authz.v1beta1.MsgExec`.
 A group policy resets through a group proposal, and group `MsgVote` and
 `MsgExec` act only on proposals that already exist, so an exact trip of group
 `MsgSubmitProposal` alone locks out a group policy with no reset proposal
-pending. An exact trip of group `MsgVote` alone locks out a group whose
-decision policy needs votes from members who are not proposers: group
-`MsgSubmitProposal` with `exec` set to `EXEC_TRY` counts only the proposers'
-votes, and the other members cannot vote. An exact trip of group `MsgExec`
-alone leaves group `MsgVote` with `exec` set to `EXEC_TRY`, which executes the
-proposal. The path returns when the operator resets those trips. Otherwise
+pending. An exact trip of group `MsgVote` alone locks out a group policy:
+group `MsgSubmitProposal` with `exec` set to `EXEC_TRY` votes through the group
+`Vote` msg server, which the guard refuses, and no member can vote on a plain
+proposal. An exact trip of group `MsgExec` alone locks out a group policy too,
+since every execution path, `MsgExec` or `EXEC_TRY`, goes through the group
+`Exec` msg server. The path returns when the operator resets those trips. Otherwise
 recovery needs a chain-wide authority change, such as a gov proposal that sets
 the consensus `AuthorityParams` override, or a software upgrade. Neither works
 when the locked-out authority is the override itself: consensus

@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/enterprise/group/tests/systemtests
 
-go 1.26.6
+go 1.26.10
 
 require (
 	github.com/cosmos/cosmos-sdk/tools/systemtests v0.0.0-00010101000000-000000000000
@@ -28,7 +28,7 @@ require (
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.2.0 // indirect
-	github.com/bits-and-blooms/bitset v1.24.5 // indirect
+	github.com/bits-and-blooms/bitset v1.26.0 // indirect
 	github.com/bytedance/gopkg v0.1.4 // indirect
 	github.com/bytedance/sonic v1.15.1 // indirect
 	github.com/bytedance/sonic/loader v0.5.1 // indirect
@@ -225,9 +225,9 @@ require (
 	go.opentelemetry.io/contrib/propagators/autoprop v0.70.0 // indirect
 	go.opentelemetry.io/contrib/propagators/aws v1.45.0 // indirect
 	go.opentelemetry.io/contrib/propagators/b3 v1.45.0 // indirect
-	go.opentelemetry.io/contrib/propagators/jaeger v1.45.0 // indirect
+	go.opentelemetry.io/contrib/propagators/jaeger v1.47.0 // indirect
 	go.opentelemetry.io/contrib/propagators/ot v1.45.0 // indirect
-	go.opentelemetry.io/otel v1.46.0 // indirect
+	go.opentelemetry.io/otel v1.47.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.21.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.21.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.45.0 // indirect
@@ -238,12 +238,12 @@ require (
 	go.opentelemetry.io/otel/exporters/stdout/stdoutlog v0.21.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.45.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.45.0 // indirect
-	go.opentelemetry.io/otel/log v0.22.0 // indirect
-	go.opentelemetry.io/otel/metric v1.46.0 // indirect
+	go.opentelemetry.io/otel/log v1.47.0 // indirect
+	go.opentelemetry.io/otel/metric v1.47.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.46.0 // indirect
 	go.opentelemetry.io/otel/sdk/log v0.21.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.46.0 // indirect
-	go.opentelemetry.io/otel/trace v1.46.0 // indirect
+	go.opentelemetry.io/otel/trace v1.47.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.11.0 // indirect
 	go.uber.org/dig v1.19.0 // indirect
 	go.uber.org/fx v1.24.0 // indirect
@@ -253,17 +253,17 @@ require (
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/arch v0.26.0 // indirect
-	golang.org/x/crypto v0.55.0 // indirect
+	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/exp v0.0.0-20260727155853-b88d891fe743 // indirect
-	golang.org/x/mod v0.38.0 // indirect
-	golang.org/x/net v0.58.0 // indirect
+	golang.org/x/mod v0.41.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/telemetry v0.0.0-20260708182218-49f421fb7959 // indirect
-	golang.org/x/term v0.45.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/telemetry v0.0.0-20260811182544-a038080d80e5 // indirect
+	golang.org/x/term v0.46.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.48.0 // indirect
+	golang.org/x/tools v0.49.0 // indirect
 	google.golang.org/genproto v0.0.0-20260511170946-3700d4141b60 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260803160001-6ac0973c030d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260803160001-6ac0973c030d // indirect

@@ -146,3 +146,16 @@ func TestDispatchWrongResponseTypeLeavesCtxUnchanged(t *testing.T) {
 	require.Nil(t, ctx.KVStore(key).Get([]byte("k")))
 	require.Empty(t, ctx.EventManager().Events())
 }
+
+func TestDispatchNilRouter(t *testing.T) {
+	msg := &testdata.MsgCreateDog{Dog: &testdata.Dog{Name: "Spot"}}
+
+	resp, err := msgservice.Dispatch[*testdata.MsgCreateDogResponse](newCtx(t), nil, msg)
+	require.ErrorIs(t, err, sdkerrors.ErrLogic)
+	require.Nil(t, resp)
+
+	var router *baseapp.MsgServiceRouter
+	resp, err = msgservice.Dispatch[*testdata.MsgCreateDogResponse](newCtx(t), router, msg)
+	require.ErrorIs(t, err, sdkerrors.ErrUnknownRequest)
+	require.Nil(t, resp)
+}

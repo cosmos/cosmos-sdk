@@ -27,6 +27,9 @@ type MsgRouter interface {
 // direct call.
 func Dispatch[R proto.Message](ctx sdk.Context, router MsgRouter, msg sdk.Msg) (R, error) {
 	var resp R
+	if router == nil {
+		return resp, sdkerrors.ErrLogic.Wrap("nil msg router")
+	}
 	handler := router.Handler(msg)
 	if handler == nil {
 		return resp, sdkerrors.ErrUnknownRequest.Wrapf("no msg service handler for %s", sdk.MsgTypeURL(msg))

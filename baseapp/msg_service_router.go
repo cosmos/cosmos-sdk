@@ -56,6 +56,9 @@ type MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
 
 // Handler returns the MsgServiceHandler for a given msg or nil if not found.
 func (msr *MsgServiceRouter) Handler(msg sdk.Msg) MsgServiceHandler {
+	if msr == nil {
+		return nil
+	}
 	return msr.routes[sdk.MsgTypeURL(msg)]
 }
 

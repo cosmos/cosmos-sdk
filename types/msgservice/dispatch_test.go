@@ -11,6 +11,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -79,6 +80,19 @@ func TestDispatchUnknownMsg(t *testing.T) {
 	resp, err := msgservice.Dispatch[*testdata.TestMsg](newCtx(t), router, &testdata.TestMsg{})
 	require.ErrorIs(t, err, sdkerrors.ErrUnknownRequest)
 	require.ErrorContains(t, err, "/testpb.TestMsg")
+	require.Nil(t, resp)
+}
+
+// TestDispatchPulsarMsg dispatches the pulsar type of a msg. The router
+// handler for its type URL takes the gogo type, so Dispatch must return an
+// error instead of letting the handler panic.
+func TestDispatchPulsarMsg(t *testing.T) {
+	router := newRouter(t, blockBreaker{})
+	msg := &testpb.MsgCreateDog{Dog: &testpb.Dog{Name: "Spot"}}
+
+	resp, err := msgservice.Dispatch[*testdata.MsgCreateDogResponse](newCtx(t), router, msg)
+	require.ErrorIs(t, err, sdkerrors.ErrInvalidType)
+	require.ErrorContains(t, err, createDogURL)
 	require.Nil(t, resp)
 }
 

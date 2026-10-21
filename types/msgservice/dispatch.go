@@ -1,6 +1,8 @@
 package msgservice
 
 import (
+	"reflect"
+
 	"github.com/cosmos/gogoproto/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +16,8 @@ type MsgRouter interface {
 }
 
 // Dispatch runs msg through router's handler for it and returns the msg
-// server's response as R. The router handler runs ValidateBasic, the
+// server's response as R. msg must be the gogoproto type registered for its
+// type URL, not the pulsar type from cosmossdk.io/api. The router handler runs ValidateBasic, the
 // app's circuit breaker check and the msg server method on a branch of ctx.
 // Dispatch writes the branch and emits the handler's events on ctx only when
 // the handler succeeds and its response is an R, so a failed Dispatch leaves
@@ -35,6 +38,11 @@ func Dispatch[R proto.Message](ctx sdk.Context, router MsgRouter, msg sdk.Msg) (
 	handler := router.Handler(msg)
 	if handler == nil {
 		return resp, sdkerrors.ErrUnknownRequest.Wrapf("no msg service handler for %s", sdk.MsgTypeURL(msg))
+	}
+	// A pulsar msg has the type URL of its gogo type, but the handler for
+	// that URL takes only the gogo type.
+	if want := proto.MessageType(proto.MessageName(msg)); reflect.TypeOf(msg) != want {
+		return resp, sdkerrors.ErrInvalidType.Wrapf("expected %v for %s, got %T", want, sdk.MsgTypeURL(msg), msg)
 	}
 
 	cacheCtx, write := ctx.CacheContext()

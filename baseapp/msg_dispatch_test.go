@@ -30,6 +30,7 @@ func (s relayServer) IncrementCounter(ctx context.Context, msg *baseapptestutil.
 func TestDispatchChecksCircuitBreakerInEveryMode(t *testing.T) {
 	counter2URL := sdk.MsgTypeURL(&baseapptestutil.MsgCounter2{})
 	breaker := &typeBreaker{blocked: map[string]bool{counter2URL: true}}
+	tripped := "circuit breaker disables execution of this message: " + counter2URL
 
 	var app *baseapp.BaseApp
 	errs := map[string]error{}
@@ -82,12 +83,12 @@ func TestDispatchChecksCircuitBreakerInEveryMode(t *testing.T) {
 	require.Zero(t, checkRes.Code, checkRes.Log)
 
 	_, _, err = app.Simulate(txBytes)
-	require.ErrorContains(t, err, counter2URL)
+	require.ErrorContains(t, err, tripped)
 
 	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
 	require.NotZero(t, res.TxResults[0].Code)
-	require.Contains(t, res.TxResults[0].Log, counter2URL)
+	require.Contains(t, res.TxResults[0].Log, tripped)
 	_, err = app.Commit()
 	require.NoError(t, err)
 
@@ -102,6 +103,6 @@ func TestDispatchChecksCircuitBreakerInEveryMode(t *testing.T) {
 		"ante/check", "ante/simulate", "ante/finalize",
 		"preblock", "beginblock", "endblock", "extendvote", "query",
 	} {
-		require.ErrorContains(t, errs[caller], counter2URL, caller)
+		require.ErrorContains(t, errs[caller], tripped, caller)
 	}
 }

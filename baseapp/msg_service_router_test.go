@@ -231,7 +231,8 @@ func newHybridTestApp(t *testing.T, cb sdk.CircuitBreaker) *baseapp.BaseApp {
 		depinject.Configs(
 			makeMinimalConfig(),
 			depinject.Supply(log.NewTestLogger(t)),
-		), &appBuilder, &registry)
+		), &appBuilder, &registry,
+	)
 	require.NoError(t, err)
 	app := appBuilder.Build(dbm.NewMemDB())
 	testdata.RegisterInterfaces(registry)

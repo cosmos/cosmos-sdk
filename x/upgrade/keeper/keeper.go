@@ -453,6 +453,12 @@ func (k Keeper) HasHandler(name string) bool {
 }
 
 // ApplyUpgrade will execute the handler associated with the Plan and mark the plan as done.
+//
+// The handler runs on a Context with the circuit breaker bypass set, so every
+// msg it sends, to a msg server directly or through the MsgServiceRouter,
+// runs even when a breaker such as x/safety blocks its msg. Governance
+// approved the upgrade, and a refusal there would halt the chain at the
+// upgrade height.
 func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 	handler := k.upgradeHandlers[plan.Name]
 	if handler == nil {
@@ -473,7 +479,7 @@ func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 
 	logger.Info("Starting upgrade", "name", plan.Name, "height", plan.Height)
 
-	updatedVM, err := handler(ctx, plan, vm)
+	updatedVM, err := handler(sdkCtx.WithCircuitBreakerBypass(true), plan, vm)
 	if err != nil {
 		return err
 	}

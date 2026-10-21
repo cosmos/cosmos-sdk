@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
@@ -277,6 +278,36 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 	upgradedProtocolVersion := s.baseApp.AppVersion()
 
 	s.Require().Equal(oldProtocolVersion+1, upgradedProtocolVersion)
+}
+
+// blockAllBreaker is a circuit breaker that blocks every msg.
+type blockAllBreaker struct{}
+
+func (blockAllBreaker) IsAllowed(context.Context, string) (bool, error) { return false, nil }
+
+// TestApplyUpgradeHandlerBypassesCircuitBreaker shows that an upgrade handler
+// runs on a Context with the circuit breaker bypass set, so neither a msg
+// server it calls directly nor the MsgServiceRouter check refuses its msgs,
+// and that the caller's Context keeps the breaker in force.
+func (s *KeeperTestSuite) TestApplyUpgradeHandlerBypassesCircuitBreaker() {
+	ctx := s.ctx.WithCircuitBreaker(blockAllBreaker{})
+	msg := &types.MsgSoftwareUpgrade{}
+	s.Require().Error(msgservice.CheckMsgAllowed(ctx, msg))
+
+	var guardErr, routerErr error
+	bypass := false
+	s.upgradeKeeper.SetUpgradeHandler("guarded", func(ctx context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		bypass = sdk.UnwrapSDKContext(ctx).CircuitBreakerBypass()
+		guardErr = msgservice.CheckMsgAllowed(ctx, msg)
+		routerErr = msgservice.CheckCircuitBreaker(ctx, blockAllBreaker{}, sdk.MsgTypeURL(msg))
+		return vm, nil
+	})
+	s.Require().NoError(s.upgradeKeeper.ApplyUpgrade(ctx, types.Plan{Name: "guarded", Height: 10}))
+	s.Require().True(bypass)
+	s.Require().NoError(guardErr)
+	s.Require().NoError(routerErr)
+	s.Require().False(ctx.CircuitBreakerBypass())
+	s.Require().Error(msgservice.CheckMsgAllowed(ctx, msg))
 }
 
 // Tests that the underlying state of x/upgrade is set correctly after

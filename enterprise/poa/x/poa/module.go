@@ -224,7 +224,7 @@ func (AppModule) IsOnePerModuleType() {}
 
 // RegisterServices registers module services with the configurator.
 func (m AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(m.keeper))
+	keeper.RegisterMsgServer(cfg.MsgServer(), m.keeper)
 	types.RegisterQueryServer(cfg.QueryServer(), m.keeper)
 
 	migrator := keeper.NewMigrator(m.keeper)

@@ -147,7 +147,7 @@ func ExportGenesisFileWithTime(genFile string, appGenesis *types.AppGenesis, gen
 
 ### x/safety
 
-`x/safety` replaces `contrib/x/circuit`. To wire it, follow [Wiring](x/safety/README.md#wiring) in its README: build the keeper, call `app.SetCircuitBreaker(app.SafetyKeeper)` before `ModuleManager.RegisterServices` so hybrid handlers are wrapped too, register the module, order `safety` after `genutil` in `InitGenesis`, and add `safetyante.SafetyDecorator` to the ante chain. A live chain adds `safetytypes.StoreKey` to `StoreUpgrades.Added` in the upgrade that introduces it (see the [Reference Upgrade Handler](#reference-upgrade-handler)). A chain moving off `contrib/x/circuit` removes that module's wiring and adds `"circuit"` to `StoreUpgrades.Deleted`. x/safety does not read `contrib/x/circuit` state, so trip again through x/safety any msg that must stay disabled after the upgrade.
+`x/safety` replaces `contrib/x/circuit`. To wire it, follow [Wiring](x/safety/README.md#wiring) in its README: build the keeper, call `app.SetCircuitBreaker(app.SafetyKeeper)`, register the module, order `safety` after `genutil` in `InitGenesis`, and add `safetyante.SafetyDecorator` to every ante chain, including a separate chain for Ethereum txs. A live chain adds `safetytypes.StoreKey` to `StoreUpgrades.Added` in the upgrade that introduces it (see the [Reference Upgrade Handler](#reference-upgrade-handler)). A chain moving off `contrib/x/circuit` removes that module's wiring and adds `"circuit"` to `StoreUpgrades.Deleted`. x/safety does not read `contrib/x/circuit` state, so trip again through x/safety any msg that must stay disabled after the upgrade.
 
 The circuit breaker only sees msgs that go through the `MsgServiceRouter`. Code that calls another module's msg server directly, such as an EVM precompile calling `bankkeeper.NewMsgServerImpl(k).Send`, skips it, so a trip does not stop that call. Replace such calls with `msgservice.Dispatch`, which runs the msg through the router handler and returns the typed response:
 
@@ -155,7 +155,7 @@ The circuit breaker only sees msgs that go through the `MsgServiceRouter`. Code 
 resp, err := msgservice.Dispatch[*banktypes.MsgSendResponse](ctx, app.MsgServiceRouter(), msg)
 ```
 
-`Dispatch` does not check signers, so authorize them before the call as before. Upgrade handlers and a module's calls to its own msg server can stay direct. See [Direct callers](x/safety/README.md#direct-callers).
+`Dispatch` does not check signers, so authorize them before the call as before. It writes its branch of `ctx` only on success, so the multistore under `ctx` must return a branch from `CacheMultiStore`, not itself. Upgrade handlers and a module's calls to its own msg server can stay direct. See [Direct callers](x/safety/README.md#direct-callers).
 
 ### Upgrade Handler and Store Migrations
 

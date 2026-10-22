@@ -205,18 +205,25 @@ resp, err := msgservice.Dispatch[*banktypes.MsgSendResponse](ctx, app.MsgService
 
 `Dispatch` calls the router handler for the msg on a branch of `ctx`: it runs
 `ValidateBasic`, the circuit breaker check and the msg server, and returns the
-typed response. It writes the branch and emits the msg server's events on
-`ctx` only when the msg succeeds, so a failed `Dispatch` leaves `ctx`
-unchanged. It does not emit the `message` event (`action`, `sender`, `module`)
-or the `msg_index` attribute that a msg in a tx gets, so an indexer keyed on
-`message.action` does not see it. It uses the same gas as a routed msg,
-and a tripped msg fails with `ErrMsgDisabled`. The router checks on every call
-whatever the exec mode, so `Dispatch` is checked from a tx in `CheckTx`,
-simulation or `FinalizeBlock`, from `PreBlock`, `BeginBlock` and `EndBlock`,
-from vote extensions, and from query contexts such as the one `eth_call` runs
-in. `Dispatch` does not check the msg's signers: the caller authorizes them,
-as it would before a direct call. A msg with no registered handler fails with
-`ErrUnknownRequest`, and a nil router returns an error instead of panicking.
+typed response. It uses the same gas as a routed msg, and a tripped msg fails
+with `ErrMsgDisabled`. The router checks on every call whatever the exec mode,
+so the check applies to `Dispatch` from a tx in `CheckTx`, simulation or
+`FinalizeBlock`, from `PreBlock`, `BeginBlock` and `EndBlock`, from vote
+extensions, and from query contexts such as the one `eth_call` runs in.
+
+`Dispatch` writes the branch and emits the msg server's events on `ctx` only
+when the msg succeeds, so a failed `Dispatch` leaves `ctx` unchanged. This
+needs a multistore whose `CacheMultiStore` returns a branch. The cosmos/evm
+snapshot multistore returns itself, so fix that store before a precompile
+switches to `Dispatch`, or a reverted EVM call keeps the msg's writes.
+`Dispatch` does not emit the `message` event (`action`, `sender`, `module`) or
+the `msg_index` attribute that a msg in a tx gets, so an indexer keyed on
+`message.action` does not see it.
+
+`Dispatch` does not check the msg's signers: the caller authorizes them, as it
+would before a direct call. The msg must be the gogoproto type, not the
+pulsar type from `cosmossdk.io/api`. A msg with no registered handler fails
+with `ErrUnknownRequest`, and a nil router returns an error.
 
 Upgrade handlers and a module's calls to its own msg server stay direct on
 purpose, so a trip cannot stop an upgrade or a module's own logic.
@@ -375,8 +382,8 @@ app.SafetyKeeper = safetykeeper.NewKeeper(
 app.SetCircuitBreaker(app.SafetyKeeper)
 ```
 
-Call `SetCircuitBreaker` before `ModuleManager.RegisterServices`. The router
-wraps hybrid handlers at registration time, so a breaker set later misses them.
+The router reads the breaker on every call, so `SetCircuitBreaker` can run
+before or after `ModuleManager.RegisterServices`.
 
 Register `safety.NewAppModule(app.SafetyKeeper)` with the module manager, add
 the store key, and add `safetytypes.ModuleName` to the init and export genesis
@@ -415,7 +422,8 @@ anteDecorators := []sdk.AnteDecorator{
 
 `simapp/ante.go` shows the full chain. An app with more than one ante chain,
 such as cosmos/evm with its separate chain for Ethereum txs, must add the
-decorator to each, or CheckTx admits the txs that chain handles.
+decorator to each, or the txs that chain handles reach a block and pay fees;
+see [EVM chains](#evm-chains).
 
 ## Client
 
@@ -479,10 +487,12 @@ refunds it on timeout.
 ### ICS20 transfers
 
 The router refuses a routed `MsgTransfer` that a trip covers.
-packet-forward-middleware and the cosmos/evm ICS20 precompile call the ibc-go
-transfer keeper directly and skip the trip: under an exact `MsgTransfer` trip
-the precompile still escrows and sends the packet. See
-[Direct keeper calls](#direct-keeper-calls).
+packet-forward-middleware calls the transfer keeper's `Transfer` msg server
+method directly, so a forward still escrows and sends under a `MsgTransfer`
+trip; see [Direct keeper calls](#direct-keeper-calls). The cosmos/evm ICS20
+precompile calls the same method. Once it runs the msg with
+`msgservice.Dispatch`, the router refuses the tripped msg and the precompile
+call reverts with nothing escrowed; see [Direct callers](#direct-callers).
 
 ### Interchain account hosts
 
@@ -503,22 +513,31 @@ router checks it like any msg. Under an exact trip of it, or `*`, the router
 refuses every EVM tx, precompile calls included, so during a `*` trip
 validators vote with a Cosmos gov `MsgVote` tx, not the gov precompile.
 
-cosmos/evm runs Ethereum txs through a separate ante chain without
-`SafetyDecorator`. Under a `MsgEthereumTx` or `*` trip, `eth_sendRawTransaction`
-accepts EVM txs and recheck keeps queued ones. The proposer includes them in a
-block, where they fail with code 10, pay their fee, use their nonce and return
-no receipt. Add the decorator to that ante chain to refuse them in CheckTx;
-see [Ante handler](#ante-handler).
+cosmos/evm runs Ethereum txs through a separate ante chain. Without
+`SafetyDecorator` in it, under a `MsgEthereumTx` or `*` trip the proposer
+includes EVM txs in a block, where they fail with code 10, pay their fee, use
+their nonce and return no receipt. Add the decorator to that chain; see
+[Ante handler](#ante-handler).
 
-`eth_call` and `eth_estimateGas` route no msg, so they never check
-`MsgEthereumTx` itself. Under a `MsgEthereumTx` or `*` trip a value transfer
-estimates at 21000 gas and a gov precompile vote simulates as a success, and
-both txs then fail in `FinalizeBlock`.
+With the decorator, the EVM mempool still answers `CheckTx` with code 0 and
+`eth_sendRawTransaction` with a tx hash, because it queues the tx before the
+ante chain runs. The decorator refuses the tx when the pool tries to promote
+it, so the tx never becomes pending, never reaches a block, and uses no nonce
+and pays no fee. The sender gets no error and no receipt. The tx stays queued and
+becomes pending after the reset.
+
+`eth_call` and `eth_estimateGas` route no `MsgEthereumTx`, so they never check
+it. Under a `MsgEthereumTx` or `*` trip a value transfer estimates at 21000
+gas, `eth_call` of it succeeds, and a gov precompile vote simulates as a
+success, though neither tx executes. A precompile that runs a tripped msg with
+`msgservice.Dispatch` fails in `eth_call` and `eth_estimateGas` too, because
+the router checks the msg in the query context.
 
 An EVM value transfer moves the native denom without a bank msg, so the router
 never checks it against a `/cosmos.bank.v1beta1.MsgSend` trip. A precompile
-that calls an SDK keeper, or a msg server without `msgservice.Dispatch`, skips
-a selective trip; see [Direct callers](#direct-callers) and
+that runs its SDK msg with `msgservice.Dispatch` reverts under a selective
+trip of that msg. A precompile that calls a msg server directly, or calls a
+keeper, skips the trip; see [Direct callers](#direct-callers) and
 [Direct keeper calls](#direct-keeper-calls).
 
 ### CosmWasm contracts
@@ -555,11 +574,11 @@ that calls a keeper directly skips a selective trip, and so does code that
 calls another module's msg server without `msgservice.Dispatch`; see
 [Direct callers](#direct-callers). Known paths:
 
-* cosmos/evm precompiles that call SDK keepers, or msg servers without
-  `msgservice.Dispatch`,
+* cosmos/evm precompile methods that call SDK keepers, such as distribution
+  `claimRewards` and WERC20 `deposit`,
 * EVM native value transfers,
-* the ibc-go transfer keeper, which packet-forward-middleware and the
-  cosmos/evm ICS20 precompile call,
+* the ibc-go transfer keeper's `Transfer` method, which
+  packet-forward-middleware calls,
 * wasmd `BankMsg::Burn` and `IbcMsg::SendPacket`. wasmd routes the other
   contract msgs; see [CosmWasm contracts](#cosmwasm-contracts).
 

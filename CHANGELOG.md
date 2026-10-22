@@ -58,7 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (baseapp) A hybrid handler from `MsgServiceRouter.HybridHandlerByMsgName` checks the circuit breaker against the msg type it handles, not the type of the request it is given, so a request of an allowed type whose bytes decode as a tripped msg no longer runs that msg. It also no longer panics when the app removes the circuit breaker after registration.
+* (baseapp) A hybrid handler from `MsgServiceRouter.HybridHandlerByMsgName` checks the circuit breaker against the msg type it handles, not the type of the request it is given, so a request of an allowed type whose bytes decode as a tripped msg no longer runs that msg. It reads the breaker on each call, so it checks a breaker the app sets after registration and no longer panics when the app removes one.
 * (types/query) `CollectionPaginate` and `CollectionFilteredPaginate` report the real total, not the offset, when `count_total` is set and the offset runs past the last item.
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.
 * (client/tx) [#26759](https://github.com/cosmos/cosmos-sdk/issues/26759) Populate the multisig bit array in simulation txs so `--gas auto` works for multisig senders.

@@ -46,7 +46,7 @@ Lastly, Events are returned to the underlying consensus engine in the response o
 * [`BeginBlock`](./00-baseapp.md#beginblock)
 * [`EndBlock`](./00-baseapp.md#endblock)
 * [`CheckTx`](./00-baseapp.md#checktx)
-* [`Transaction Execution`](./00-baseapp.md#transactionexecution)
+* [`Transaction Execution`](./00-baseapp.md#transaction-execution)
 
 ### Examples
 

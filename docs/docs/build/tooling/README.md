@@ -9,8 +9,8 @@ This includes tools for development, operating a node, and ease of use of a Cosm
 
 ## CLI Tools
 
-* [Cosmovisor](../../../tools/cosmovisor/README.md)
-* [Confix](../../../tools/confix/README.md)
+* [Cosmovisor](../../../../tools/cosmovisor/README.md)
+* [Confix](../../../../tools/confix/README.md)
 
 ## Other Tools
 

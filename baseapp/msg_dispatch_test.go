@@ -30,7 +30,7 @@ func (s relayServer) IncrementCounter(ctx context.Context, msg *baseapptestutil.
 func TestDispatchChecksCircuitBreakerInEveryMode(t *testing.T) {
 	counter2URL := sdk.MsgTypeURL(&baseapptestutil.MsgCounter2{})
 	breaker := &typeBreaker{blocked: map[string]bool{counter2URL: true}}
-	tripped := "circuit breaker disables execution of this message: " + counter2URL
+	tripped := counter2URL + ": circuit breaker disables execution of this message"
 
 	var app *baseapp.BaseApp
 	errs := map[string]error{}

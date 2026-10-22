@@ -2,13 +2,10 @@ package ante
 
 import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
-
-// MaxNestedMsgDepth bounds how deep CircuitBreakerDecorator descends into msgs
-// that wrap other msgs. A top-level msg is depth 0.
-const MaxNestedMsgDepth = 6
 
 // msgsWithGetMessages is implemented by wrappers such as authz MsgExec.
 type msgsWithGetMessages interface {
@@ -45,6 +42,11 @@ type msgsWithGetMsgs interface {
 // A breaker error rejects the tx with that error, so x/safety's refusal keeps
 // its codespace and names the blocking pattern. A refusal without an error
 // returns sdkerrors.ErrCircuitBreakerTripped, as the router does.
+//
+// The decorator descends as deep as the tx decoder unpacks Any values,
+// codectypes.MaxUnpackAnyRecursionDepth, so it checks every msg of a decoded
+// tx and adds no nesting rule of its own. A tx built in process that nests
+// deeper fails with sdkerrors.ErrInvalidRequest rather than pass unchecked.
 type CircuitBreakerDecorator struct {
 	breaker baseapp.CircuitBreaker
 }
@@ -67,8 +69,8 @@ func (d CircuitBreakerDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 }
 
 func (d CircuitBreakerDecorator) checkMsgs(ctx sdk.Context, msgs []sdk.Msg, depth int) error {
-	if depth > MaxNestedMsgDepth {
-		return sdkerrors.ErrInvalidRequest.Wrapf("nested msg depth exceeds limit %d", MaxNestedMsgDepth)
+	if depth > codectypes.MaxUnpackAnyRecursionDepth {
+		return sdkerrors.ErrInvalidRequest.Wrapf("nested msg depth exceeds limit %d", codectypes.MaxUnpackAnyRecursionDepth)
 	}
 	for _, msg := range msgs {
 		typeURL := sdk.MsgTypeURL(msg)

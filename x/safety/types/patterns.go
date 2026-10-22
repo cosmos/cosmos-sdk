@@ -30,12 +30,15 @@ var protectedExact = []string{
 	"/cosmos.consensus.v1.MsgUpdateParams",
 }
 
-// wrappers are the msg type URLs that only dispatch other msgs through the
-// router, which checks each inner msg. An authority, operator or validator
-// acting through authz or a group policy needs them to reach MsgReset and
-// votes during an incident, so only an exact disabled entry blocks a
-// wrapper; "*" and prefix entries do not. They are not protected: an exact
-// trip still halts their handlers.
+// wrappers are the msg type URLs that run other msgs: authz MsgExec, and the
+// group msgs that submit, vote on and execute proposals. Only an exact
+// disabled entry blocks a wrapper; "*" and prefix entries do not. An
+// authority or validator acting through an authz grant or a group policy
+// needs them to reach MsgReset and gov votes under a global halt, and the
+// router still checks every msg a wrapper dispatches. A wrapper is not
+// harmless under "*", though: group MsgSubmitProposal and MsgVote still
+// record proposals and votes, and with EXEC_TRY execute the proposal. An
+// exact trip of each wrapper stops authz or group execution as a whole.
 var wrappers = []string{
 	"/cosmos.authz.v1beta1.MsgExec",
 	"/cosmos.group.v1.MsgSubmitProposal",
@@ -177,8 +180,12 @@ func CoveredByAny(scope []string, p string) bool {
 
 // Blocks reports whether the disabled entry d blocks what the well-formed
 // pattern p matches: d covers p, and when p is a wrapper type URL, d is p
-// itself. Scope checks use Covers, so a scope of "*" or "/cosmos.authz.*"
-// still lets the operator trip and reset a wrapper by its exact URL.
+// itself.
+//
+// Blocks differs from Covers only for wrappers. Covers decides what an
+// operator with scope entry s may trip or reset, so a scope of "*" covers a
+// wrapper's exact URL and the operator can trip it. Blocks decides what a
+// disabled entry stops, and only the wrapper's own exact entry stops it.
 func Blocks(d, p string) bool {
 	return d == p || (!IsWrapper(p) && Covers(d, p))
 }

@@ -60,6 +60,8 @@ func (a account) String() string { return a.addr.String() }
 type fixture struct {
 	t      *testing.T
 	app    *simapp.SimApp
+	db     dbm.DB
+	home   string
 	valSet *cmttypes.ValidatorSet
 	now    time.Time
 	// initialHeight is the first block height of a chain started from an
@@ -130,7 +132,8 @@ func newFixtureWithSetup(t *testing.T, cp *cmtproto.ConsensusParams, mutate func
 		balances = append(balances, banktypes.Balance{Address: a.String(), Coins: funds})
 	}
 
-	f.app = simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), setup == nil, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	f.db, f.home = dbm.NewMemDB(), t.TempDir()
+	f.app = simapp.NewSimApp(log.NewNopLogger(), f.db, setup == nil, simtestutil.NewAppOptionsWithFlagHome(f.home))
 	if setup != nil {
 		setup(f.app)
 		require.NoError(t, f.app.LoadLatestVersion())

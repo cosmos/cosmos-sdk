@@ -150,9 +150,9 @@ func ExportGenesisFileWithTime(genFile string, appGenesis *types.AppGenesis, gen
 
 ### x/safety
 
-`x/safety` replaces `contrib/x/circuit`. To wire it, follow [Wiring](x/safety/README.md#wiring) in its README: build the keeper, call `app.SetCircuitBreaker(app.SafetyKeeper)`, register the module, order `safety` after `genutil` in `InitGenesis`, and set `CircuitBreaker: app.SafetyKeeper` in `ante.HandlerOptions`. An ante chain the app builds itself, such as a separate chain for Ethereum txs, adds `ante.NewCircuitBreakerDecorator(app.SafetyKeeper)` right after `SetUpContextDecorator`. A live chain adds `safetytypes.StoreKey` to `StoreUpgrades.Added` in the upgrade that introduces it (see the [Reference Upgrade Handler](#reference-upgrade-handler)). A chain moving off `contrib/x/circuit` removes that module's wiring and adds `"circuit"` to `StoreUpgrades.Deleted`. The default genesis has no operator, so call `app.SafetyKeeper.SetParams` right after `RunMigrations` in the upgrade handler to name one; see [Upgrade handler](x/safety/README.md#upgrade-handler). x/safety does not read `contrib/x/circuit` state, so trip again through x/safety any msg that must stay disabled after the upgrade.
+`x/safety` replaces `contrib/x/circuit`. To wire it, follow [Wiring](x/safety/README.md#wiring) in its README: build the keeper, call `app.SetCircuitBreaker(app.SafetyKeeper)`, register the module, order `safety` after `genutil` in `InitGenesis`, and set `CircuitBreaker: app.SafetyKeeper` in `ante.HandlerOptions`. An ante chain the app builds itself, such as a separate chain for Ethereum txs, adds `ante.NewCircuitBreakerDecorator(app.SafetyKeeper)` right after `SetUpContextDecorator`. A live chain adds `safetytypes.StoreKey` to `StoreUpgrades.Added` in the upgrade that introduces it (see the [Reference Upgrade Handler](#reference-upgrade-handler)). A chain moving off `contrib/x/circuit` removes that module's wiring and store key in the same upgrade; see [From contrib/x/circuit](x/safety/README.md#from-contribxcircuit). The default genesis has no operator, so call `app.SafetyKeeper.SetParams` right after `RunMigrations` in the upgrade handler to name one; see [Upgrade handler](x/safety/README.md#upgrade-handler). x/safety does not read `contrib/x/circuit` state, so trip again through x/safety any msg that must stay disabled after the upgrade. `contrib/x/circuit` is deprecated, so staticcheck reports SA1019 on each import of the package until the chain moves off it.
 
-x/safety supports manual wiring only: it has no depinject module config, no autocli options and no types in `cosmossdk.io/api`. Operators use the generic `tx safety` and `q safety` commands that autocli derives from the module's services; see [Operating](x/safety/README.md#operating).
+x/safety supports manual wiring only: it has no depinject module config, no autocli options and no types in `cosmossdk.io/api`. A `runtime.App` registers it with `RegisterStores` and `RegisterModules` before `Load`; see [Apps built with depinject](x/safety/README.md#apps-built-with-depinject). Operators use the generic `tx safety` and `q safety` commands that autocli derives from the module's services; see [Operating](x/safety/README.md#operating).
 
 The circuit breaker only sees msgs that go through the `MsgServiceRouter`. See [Running msgs from code](#running-msgs-from-code) and [Direct callers](x/safety/README.md#direct-callers).
 
@@ -250,8 +250,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
         storeUpgrades := storetypes.StoreUpgrades{
             // Leave safetytypes.StoreKey out if the app does not wire x/safety.
             Added: []string{safetytypes.StoreKey},
-            // Add "circuit" if the app removes contrib/x/circuit, and "params"
-            // if it still had the x/params store mounted.
+            // Add "params" if the app still had the x/params store mounted.
             Deleted: []string{"protocolpool"},
         }
         app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))

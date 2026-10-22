@@ -31,6 +31,8 @@ by default) or the operator re-enables ("resets") them. It replaces
 * [Wiring](#wiring)
 * [Operating](#operating)
     * [Incident runbook](#incident-runbook)
+    * [Gov resets](#gov-resets)
+    * [Compromised operator](#compromised-operator)
     * [Before an incident](#before-an-incident)
     * [Commands](#commands)
 * [IBC, EVM and wasm](#ibc-evm-and-wasm)
@@ -87,8 +89,7 @@ The set is hardcoded. A `*` trip leaves it running.
 
 ### Wrapper set
 
-These msgs only dispatch other msgs through the router, which checks each
-dispatched msg:
+These msgs run other msgs, and the router checks each msg they dispatch:
 
 * `/cosmos.authz.v1beta1.MsgExec`
 * `/cosmos.group.v1.MsgSubmitProposal`
@@ -147,8 +148,10 @@ call, so `SetCircuitBreaker` can run before or after `RegisterServices`.
 
 * checks every top-level msg and, recursively, every msg returned by
   `GetMessages() ([]sdk.Msg, error)` (authz `MsgExec`) or
-  `GetMsgs() ([]sdk.Msg, error)` (gov v1 and group `MsgSubmitProposal`), up to
-  `MaxNestedMsgDepth` levels, including inside protected and wrapper msgs.
+  `GetMsgs() ([]sdk.Msg, error)` (gov v1 and group `MsgSubmitProposal`),
+  including inside protected and wrapper msgs. It descends as deep as the tx
+  decoder unpacks `Any` values, `codectypes.MaxUnpackAnyRecursionDepth`, so it
+  adds no nesting limit of its own.
 * runs in `CheckTx`, `ReCheckTx` and simulation, and passes every tx through
   in `FinalizeBlock`.
 * runs in `PrepareProposal` and `ProcessProposal` only with an app-side
@@ -323,6 +326,32 @@ Register `safety.NewAppModule(app.SafetyKeeper)` with the module manager, add
 the store key, and add `safetytypes.ModuleName` to the init and export genesis
 orders.
 
+### Apps built with depinject
+
+x/safety has no app config module. A `runtime.App` adds it after
+`appBuilder.Build` and before `app.Load`:
+
+```go
+key := storetypes.NewKVStoreKey(safetytypes.StoreKey)
+if err := app.RegisterStores(key); err != nil {
+	return err
+}
+app.SafetyKeeper = safetykeeper.NewKeeper(appCodec, runtime.NewKVStoreService(key),
+	app.AccountKeeper.AddressCodec(), interfaceRegistry, authority)
+app.SetCircuitBreaker(app.SafetyKeeper)
+if err := app.RegisterModules(safety.NewAppModule(app.SafetyKeeper)); err != nil {
+	return err
+}
+app.ModuleManager.SetOrderInitGenesis(initGenesisOrder...) // genutil, then safety
+app.ModuleManager.SetOrderExportGenesis(initGenesisOrder...)
+app.SetInitChainer(app.InitChainer)
+```
+
+`Load` replaces the genesis orders with the app config's when the config sets
+them, so leave `init_genesis` and `export_genesis` out of the runtime config
+and set them here. `wireSafety` in `tests/integration/safety` wires a depinject
+app this way.
+
 ### Genesis order
 
 Order `safety` after `genutil` in `InitGenesis`. Genutil delivers gentxs
@@ -375,6 +404,22 @@ app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
 `SetParams` validates the params first. The operator can trip from the
 upgrade block on.
 
+#### From contrib/x/circuit
+
+In the same upgrade, remove the circuit module, its store key and its keeper,
+and pass the safety keeper to `SetCircuitBreaker` and the ante handler
+options.
+
+* The circuit store leaves the app hash once the binary stops mounting it.
+  `StoreUpgrades.Deleted` deletes nothing from a store key the app does not
+  mount, so the old circuit data stays in the database.
+* `RunMigrations` skips circuit's entry in the module version map, and the
+  upgrade keeper keeps it.
+* x/safety does not read the circuit disabled list or permissions. The
+  operator trips again anything that must stay blocked.
+
+`TestUpgradeFromCircuit` in `tests/integration/safety` runs this upgrade.
+
 ## Operating
 
 ### Incident runbook
@@ -383,9 +428,14 @@ upgrade block on.
 2. Trip with the operator key.
 3. Confirm: `q safety disabled-list`, and `q safety is-allowed` for the
    exploit's msg, which names the blocking entry in `blocked_by`.
-4. Patch first, then reset. Ship the fix, by software upgrade if needed (gov
-   and upgrade msgs run under any trip), and reset only after it is live.
-   Refused txs keep their sequence and execute if rebroadcast after the reset.
+4. Patch first. A software upgrade goes through under any trip, since gov and
+   upgrade msgs are protected. A fix that is an ordinary msg, such as a
+   module's `MsgUpdateParams`, fails `CheckTx` in a gov proposal while a trip
+   covers it, because the ante decorator checks the proposal's msgs at
+   submission. Narrow the trip first: trip the exploit's exact URLs,
+   then reset the broad entry.
+5. Reset once the fix is live. Refused txs keep their sequence and execute if
+   rebroadcast after the reset.
 
 | Exploit path | Trip | Stays open | Watch |
 | --- | --- | --- | --- |
@@ -403,6 +453,29 @@ Any trip that covers `MsgUpdateClient` (`/ibc.core.client.v1.*`, `/ibc.*` or
 `*`) has a deadline: the shortest trusting period of the chain's clients. A
 client that expires during the trip needs gov `MsgRecoverClient`, which the
 router refuses until the reset.
+
+### Gov resets
+
+`MsgReset` fails if any pattern it names is not in the disabled list, and gov
+runs a proposal's msgs together, so one failed msg fails them all. If the
+operator resets or trips during the voting period, a gov reset that names the
+old entries fails, along with anything in the same proposal. Agree the list
+with the operator before submitting, ask the operator to make no changes
+until the vote ends, and send `MsgUpdateParams` in a proposal of its own.
+
+### Compromised operator
+
+Only the authority removes the operator, with `MsgUpdateParams`, which takes a
+gov vote when gov is the authority. Until it executes, the operator can trip
+anything in its scope, re-trip after each reset, and change the list to fail a
+gov reset.
+
+1. Submit `MsgUpdateParams` that clears or replaces the operator, alone, as
+   an expedited proposal.
+2. After it executes, reset the old operator's trips.
+
+A scope of `*` lets one key stop every unprotected msg, IBC client updates
+included, until that vote ends. Grant the narrowest scope the operator needs.
 
 ### Before an incident
 
@@ -479,6 +552,9 @@ A reset uses `"@type": "/cosmos.safety.v1.MsgReset"` and `"sender"` in place
 of `"operator"`.
 
 ## IBC, EVM and wasm
+
+No test in this repo runs ibc-go, cosmos/evm or wasmd. ADR 077 lists the tests
+in those repos behind this section.
 
 ### IBC relaying
 

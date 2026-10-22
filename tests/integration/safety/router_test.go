@@ -12,10 +12,10 @@ import (
 	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
@@ -639,8 +639,9 @@ func TestAnteFinalizeBlockAdmitsGovProposalOfTrippedMsg(t *testing.T) {
 	require.True(t, taxBefore.Equal(f.communityTax()), "tripped proposal changed distribution params")
 }
 
-// TestAnteNestingDepthLimit sends authz MsgExec chains through CheckTx: a
-// chain at the depth limit passes, one level deeper is rejected.
+// TestAnteNestingDepthLimit sends authz MsgExec chains through CheckTx: every
+// chain the tx decoder accepts passes the decorator, and the first one deeper
+// fails to decode before any decorator runs.
 func TestAnteNestingDepthLimit(t *testing.T) {
 	f := newGateFixture(t, true)
 
@@ -653,13 +654,14 @@ func TestAnteNestingDepthLimit(t *testing.T) {
 		return msg
 	}
 
-	res := f.checkTx(f.encode(f.voter, nest(authante.MaxNestedMsgDepth)))
+	// the tx body's Any is one unpack level, and each MsgExec adds one
+	deepest := codectypes.MaxUnpackAnyRecursionDepth - 1
+	res := f.checkTx(f.encode(f.voter, nest(deepest)))
 	require.Zero(t, res.Code, res.Log)
 
-	res = f.checkTx(f.encode(f.other, nest(authante.MaxNestedMsgDepth+1)))
-	require.Equal(t, sdkerrors.ErrInvalidRequest.ABCICode(), res.Code, res.Log)
-	require.Equal(t, sdkerrors.ErrInvalidRequest.Codespace(), res.Codespace)
-	require.Contains(t, res.Log, "nested msg depth")
+	res = f.checkTx(f.encode(f.other, nest(deepest+1)))
+	require.Equal(t, sdkerrors.ErrTxDecode.ABCICode(), res.Code, res.Log)
+	require.Equal(t, sdkerrors.ErrTxDecode.Codespace(), res.Codespace)
 }
 
 // TestAntePassesProtectedMsgsUnderWildcard trips "*" with the decorator wired

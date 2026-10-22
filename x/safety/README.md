@@ -214,11 +214,8 @@ Keeper methods, such as authz `DispatchActions` or a bank keeper send, skip
 the check. Upgrade handlers call keepers, not `Dispatch`, so a trip cannot
 halt an upgrade.
 
-Go cannot stop a caller that registers a fake `grpc.ServiceRegistrar` with
-`RegisterMsgServer` from capturing the msg server it receives. That is
-deliberate abuse, not an API. A module outside the SDK that still exports its
-msg server is a direct path the router does not see, as is any keeper method
-that runs a msg's logic.
+A caller that passes a fake `grpc.ServiceRegistrar` to `RegisterMsgServer`
+can capture the msg server it receives, and skips the check.
 
 ## State
 

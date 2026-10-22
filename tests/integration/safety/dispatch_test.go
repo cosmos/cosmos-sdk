@@ -74,8 +74,9 @@ func (p *dispatchProbe) run(f *fixture) map[string]error {
 
 // TestDispatchInSimApp trips MsgSend on a SimApp chain and dispatches one
 // from the block hooks, a FinalizeBlock tx and a query context. Every
-// dispatch fails with the x/safety error while the trip stands, a bank
-// keeper send does not, and every dispatch succeeds after the reset.
+// dispatch fails with the x/safety error while the trip stands and succeeds
+// after the reset. x/safety's own tests cover the trip patterns and keeper
+// calls on a depinject app.
 func TestDispatchInSimApp(t *testing.T) {
 	p := &dispatchProbe{}
 	f := newFixtureWithSetup(t, nil, nil, p.setup)
@@ -90,10 +91,6 @@ func TestDispatchInSimApp(t *testing.T) {
 	for caller, err := range p.run(f) {
 		require.ErrorIs(t, err, safetytypes.ErrMsgDisabled, caller)
 	}
-
-	ctx, _ := f.ctx().CacheContext()
-	err := f.app.BankKeeper.SendCoins(ctx, f.user.addr, f.other.addr, p.msg.Amount)
-	require.NoError(t, err, "a keeper call is module logic, which a trip does not cover")
 
 	f.mustDeliver(f.operator, safetytypes.NewMsgReset(f.operator.String(), msgSendURL))
 	for caller, err := range p.run(f) {

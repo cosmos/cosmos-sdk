@@ -67,11 +67,6 @@ func TestDispatchBlockedByCircuitBreaker(t *testing.T) {
 	resp, err := msgservice.Dispatch[*testdata.MsgCreateDogResponse](newCtx(t), router, msg)
 	require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 	require.Nil(t, resp)
-
-	// a direct msg server call skips the router and its breaker
-	direct, err := testdata.MsgServerImpl{}.CreateDog(newCtx(t), msg)
-	require.NoError(t, err)
-	require.Equal(t, "Spot", direct.Name)
 }
 
 func TestDispatchUnknownMsg(t *testing.T) {

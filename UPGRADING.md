@@ -198,6 +198,14 @@ resp, err := msgservice.Dispatch[*authz.MsgExecResponse](ctx, app.MsgServiceRout
 
 Logic that does not need a msg, such as a send in an upgrade handler, calls the keeper: `app.BankKeeper.SendCoins(ctx, from, to, amt)`. Upgrade handlers call keepers rather than `Dispatch`, so a trip cannot halt an upgrade.
 
+Upgrade handlers that ran a msg on a keeper or msg server move to these keeper paths, each with the msg's validation and no authority check:
+
+| Msg | Keeper path |
+| --- | --- |
+| consensus `MsgUpdateParams` | `app.ConsensusParamsKeeper.SetParams(ctx, cmtproto.ConsensusParams{...})`, new in this release. A nil section stays unchanged. |
+| gov `MsgUpdateParams` | `params.ValidateBasic()`, then `app.GovKeeper.Params.Set(ctx, params)` |
+| vesting `MsgCreateVestingAccount` | none; see below |
+
 Once the deprecated constructors are gone, tests in a module's `keeper_test` package reach the unexported constructor through an `export_test.go` in the `keeper` package: `var NewMsgServerImpl = newMsgServerImpl`. A module outside the SDK follows the same pattern: keep the msg server type and constructor unexported and export only `RegisterMsgServer`.
 
 `x/auth/vesting` has no keeper method that creates a vesting account. A test that calls `vesting.NewMsgServerImpl` either registers vesting in its router and runs `MsgCreateVestingAccount` with `Dispatch`, or builds the account with `AccountKeeper.NewAccount` and `SetAccount` and funds it.

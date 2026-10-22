@@ -32,8 +32,13 @@ import (
 )
 
 const (
-	msgSendURL     = "/cosmos.bank.v1beta1.MsgSend"
-	msgDelegateURL = "/cosmos.staking.v1beta1.MsgDelegate"
+	msgSendURL      = "/cosmos.bank.v1beta1.MsgSend"
+	msgMultiSendURL = "/cosmos.bank.v1beta1.MsgMultiSend"
+	msgDelegateURL  = "/cosmos.staking.v1beta1.MsgDelegate"
+	distrParamsURL  = "/cosmos.distribution.v1beta1.MsgUpdateParams"
+	authzGrantURL   = "/cosmos.authz.v1beta1.MsgGrant"
+	authzExecURL    = "/cosmos.authz.v1beta1.MsgExec"
+	authzRevokeURL  = "/cosmos.authz.v1beta1.MsgRevoke"
 )
 
 var (
@@ -179,20 +184,41 @@ func (f *fixture) finalizeAt(at time.Time, txs ...[]byte) *abci.ResponseFinalize
 	return res
 }
 
-// ctx returns a query context on the last committed state.
+// ctx returns a read-only context on the last committed state.
 func (f *fixture) ctx() sdk.Context {
-	return f.app.NewContext(true)
+	return sdk.NewContext(
+		f.app.CommitMultiStore().CacheMultiStore(),
+		cmtproto.Header{Height: f.app.LastBlockHeight(), Time: f.now},
+		false, log.NewNopLogger(),
+	)
+}
+
+// checkCtx returns the CheckTx state, which reflects every tx CheckTx admitted
+// since the last commit, including the fees their ante handlers deducted.
+func (f *fixture) checkCtx() sdk.Context { return f.app.NewContext(true) }
+
+// seq returns the account's committed sequence.
+func (f *fixture) seq(a account) uint64 {
+	acc := f.app.AccountKeeper.GetAccount(f.ctx(), a.addr)
+	require.NotNil(f.t, acc)
+	return acc.GetSequence()
 }
 
 // encode signs msgs as a tx from signer at its committed account number and
 // sequence.
 func (f *fixture) encode(signer account, msgs ...sdk.Msg) []byte {
 	f.t.Helper()
+	return f.encodeAt(signer, f.seq(signer), msgs...)
+}
+
+// encodeAt signs msgs as a tx from signer at sequence seq.
+func (f *fixture) encodeAt(signer account, seq uint64, msgs ...sdk.Msg) []byte {
+	f.t.Helper()
 	acc := f.app.AccountKeeper.GetAccount(f.ctx(), signer.addr)
 	require.NotNil(f.t, acc)
 	txConfig := f.app.TxConfig()
 	tx, err := simtestutil.GenSignedMockTx(rand.New(rand.NewSource(1)), txConfig, msgs, txFee,
-		simtestutil.DefaultGenTxGas, "", []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}, signer.priv)
+		simtestutil.DefaultGenTxGas, "", []uint64{acc.GetAccountNumber()}, []uint64{seq}, signer.priv)
 	require.NoError(f.t, err)
 	bz, err := txConfig.TxEncoder()(tx)
 	require.NoError(f.t, err)
@@ -210,6 +236,12 @@ func (f *fixture) checkTx(bz []byte) *abci.ResponseCheckTx {
 func (f *fixture) deliver(signer account, msgs ...sdk.Msg) *abci.ExecTxResult {
 	f.t.Helper()
 	return f.finalize(f.encode(signer, msgs...)).TxResults[0]
+}
+
+// deliverTxs runs txs in one block and returns their results.
+func (f *fixture) deliverTxs(txs ...[]byte) []*abci.ExecTxResult {
+	f.t.Helper()
+	return f.finalize(txs...).TxResults
 }
 
 // mustDeliver delivers msgs and requires success.
@@ -313,11 +345,10 @@ func (f *fixture) query(path string, req, resp proto.Message) {
 	require.NoError(f.t, proto.Unmarshal(res.Value, resp))
 }
 
-// propose submits msgs as a gov proposal from the voter with the full
-// deposit, votes yes, advances the chain past the voting period, and returns
-// the proposal after the gov EndBlocker has tallied and executed it, along
-// with that block's response.
-func (f *fixture) propose(msgs ...sdk.Msg) (govv1.Proposal, *abci.ResponseFinalizeBlock) {
+// submitProposal submits msgs as a gov proposal from the voter with the full
+// deposit and votes yes, and returns its id. The proposal stays in voting
+// until endVoting.
+func (f *fixture) submitProposal(msgs ...sdk.Msg) uint64 {
 	f.t.Helper()
 	govParams, err := f.app.GovKeeper.Params.Get(f.ctx())
 	require.NoError(f.t, err)
@@ -328,15 +359,41 @@ func (f *fixture) propose(msgs ...sdk.Msg) (govv1.Proposal, *abci.ResponseFinali
 	require.NoError(f.t, err)
 	f.mustDeliver(f.voter, submit)
 	f.mustDeliver(f.voter, govv1.NewMsgVote(f.voter.addr, id, govv1.OptionYes, ""))
+	f.requireProposalStatus(id, govv1.StatusVotingPeriod)
+	return id
+}
 
-	proposal, err := f.app.GovKeeper.Proposals.Get(f.ctx(), id)
+// endVoting runs an empty block past the voting period, so the gov
+// EndBlocker tallies and executes every proposal in voting.
+func (f *fixture) endVoting() *abci.ResponseFinalizeBlock {
+	f.t.Helper()
+	govParams, err := f.app.GovKeeper.Params.Get(f.ctx())
 	require.NoError(f.t, err)
-	require.Equal(f.t, govv1.StatusVotingPeriod, proposal.Status)
-	res := f.finalizeAt(proposal.VotingEndTime.Add(time.Second))
+	return f.finalizeAt(f.now.Add(*govParams.VotingPeriod + time.Second))
+}
 
-	proposal, err = f.app.GovKeeper.Proposals.Get(f.ctx(), id)
+func (f *fixture) proposal(id uint64) govv1.Proposal {
+	f.t.Helper()
+	p, err := f.app.GovKeeper.Proposals.Get(f.ctx(), id)
 	require.NoError(f.t, err)
-	return proposal, res
+	return p
+}
+
+func (f *fixture) requireProposalStatus(id uint64, status govv1.ProposalStatus) govv1.Proposal {
+	f.t.Helper()
+	p := f.proposal(id)
+	require.Equal(f.t, status, p.Status, "proposal %d failed reason: %q", id, p.FailedReason)
+	return p
+}
+
+// propose runs msgs as a gov proposal through voting and returns the
+// proposal after the gov EndBlocker has tallied and executed it, along with
+// that block's response.
+func (f *fixture) propose(msgs ...sdk.Msg) (govv1.Proposal, *abci.ResponseFinalizeBlock) {
+	f.t.Helper()
+	id := f.submitProposal(msgs...)
+	res := f.endVoting()
+	return f.proposal(id), res
 }
 
 // mustPass runs a proposal and requires it to pass and execute.
@@ -364,6 +421,32 @@ func (f *fixture) setParams(operator string, scope ...string) {
 	p.Scope = scope
 	f.mustPass(&safetytypes.MsgUpdateParams{Authority: govAddr, Params: p})
 	require.Equal(f.t, p, f.params())
+}
+
+// accountOf returns the fixture account with address addr.
+func (f *fixture) accountOf(addr string) account {
+	f.t.Helper()
+	for _, a := range []account{f.voter, f.user, f.operator, f.other} {
+		if a.String() == addr {
+			return a
+		}
+	}
+	require.FailNow(f.t, "no fixture account", addr)
+	return account{}
+}
+
+// trip trips patterns as the current operator and requires success.
+func (f *fixture) trip(patterns ...string) {
+	f.t.Helper()
+	op := f.accountOf(f.params().Operator)
+	f.mustDeliver(op, safetytypes.NewMsgTrip(op.String(), patterns...))
+}
+
+// reset resets patterns as the current operator and requires success.
+func (f *fixture) reset(patterns ...string) {
+	f.t.Helper()
+	op := f.accountOf(f.params().Operator)
+	f.mustDeliver(op, safetytypes.NewMsgReset(op.String(), patterns...))
 }
 
 // send is a 1stake bank send from one account to another.

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"maps"
-	"math/rand/v2"
 	"regexp"
 	"slices"
 	"strings"
@@ -40,7 +39,9 @@ import (
 // This file runs a model-based fuzz of the keeper: random sequences of
 // UpdateParams, Trip and Reset from random senders run against both the
 // keeper and a small reference model, with the module invariants asserted
-// after every step.
+// after every step. The default test run replays only the seed corpus. To
+// fuzz, run go test -run '^$' -fuzz FuzzKeeperModel; the random walk in
+// model_walk_test.go runs with -tags sims.
 
 type modelEnv struct {
 	cdc      codec.Codec
@@ -426,28 +427,6 @@ func FuzzKeeperModel(f *testing.F) {
 	f.Fuzz(func(t *testing.T, data []byte) {
 		runKeeperModel(t, getModelEnv(), data)
 	})
-}
-
-// TestKeeperModelRandomWalk runs the model over deterministic random inputs
-// and checks that every msg kind succeeds often enough for the fuzz target to
-// be meaningful rather than rejecting everything.
-func TestKeeperModelRandomWalk(t *testing.T) {
-	env := getModelEnv()
-	rng := rand.New(rand.NewPCG(1, 2))
-	total := map[string]int{}
-	for range 500 {
-		data := make([]byte, 160)
-		for i := range data {
-			data[i] = byte(rng.Uint32())
-		}
-		for k, v := range runKeeperModel(t, env, data) {
-			total[k] += v
-		}
-	}
-	t.Logf("successful msgs: %v", total)
-	for _, kind := range []string{"UpdateParams", "Trip", "Reset"} {
-		require.Greater(t, total[kind], 50, "%s rarely succeeds; the model fuzz is too weak", kind)
-	}
 }
 
 // runKeeperModel runs one random genesis and msg sequence decoded from data

@@ -278,6 +278,95 @@ func TestSafetyAuthzAuthorityResetsUnderWildcard(t *testing.T) {
 	require.Equal(t, int64(100), cli.QueryBalance(recipientAddr, "stake"))
 }
 
+func TestSafetyGenericCLI(t *testing.T) {
+	// Scenario:
+	// given a running chain whose x/safety authority is a test key
+	// when the authority and operator use the generic `tx safety` and
+	// `q safety` commands derived from the module's gRPC services
+	// then update-params names the operator, trip takes several patterns as a
+	// comma list or a repeated flag, a tripped bank send is refused, and reset
+	// lets it through again.
+
+	// the authority address goes into genesis, so derive it from a fixed seed
+	// and add the key again after ModifyGenesisJSON resets the keyring
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	authorityAddr := cli.AddKeyFromSeed("safety-authority", testSeed)
+	systest.Sut.ModifyGenesisJSON(t, func(genesis []byte) []byte {
+		genesis, err := sjson.SetBytes(genesis, "app_state.safety.params.authority", authorityAddr)
+		require.NoError(t, err)
+		return genesis
+	})
+	require.Equal(t, authorityAddr, cli.AddKeyFromSeed("safety-authority", testSeed))
+	operatorAddr := cli.AddKey("safety-operator")
+	strangerAddr := cli.AddKey("safety-stranger")
+	recipientAddr := cli.AddKey("safety-recipient")
+	systest.Sut.ModifyGenesisCLI(t,
+		[]string{"genesis", "add-genesis-account", authorityAddr, "10000000stake"},
+		[]string{"genesis", "add-genesis-account", operatorAddr, "10000000stake"},
+		[]string{"genesis", "add-genesis-account", strangerAddr, "10000000stake"},
+	)
+	systest.Sut.StartChain(t)
+
+	params := cli.CustomQuery("q", "safety", "params")
+	require.Equal(t, authorityAddr, gjson.Get(params, "params.authority").String(), params)
+	require.Empty(t, gjson.Get(params, "params.operator").String(), params)
+
+	// the authority names the operator; --from fills the authority field
+	newParams := fmt.Sprintf(`{"authority":%q,"operator":%q,"scope":["/cosmos.bank.*","/cosmos.staking.*"]}`,
+		authorityAddr, operatorAddr)
+	safetyRequireCommittedOK(t, cli.Run("tx", "safety", "update-params", "--params", newParams, "--from", authorityAddr))
+	params = cli.CustomQuery("q", "safety", "params")
+	require.Equal(t, operatorAddr, gjson.Get(params, "params.operator").String(), params)
+	require.Equal(t, []string{"/cosmos.bank.*", "/cosmos.staking.*"}, safetyStrings(gjson.Get(params, "params.scope")), params)
+
+	// a key that is not the operator cannot trip
+	out, _ := cli.WithRunErrorsIgnored().RunOnly("tx", "safety", "trip", "--patterns", safetyMsgSend, "--from", strangerAddr, safetyFees)
+	safetyRequireRejected(t, cli, out, "unauthorized")
+	require.Empty(t, safetyCLIDisabledList(t, cli))
+
+	// --patterns takes a comma-separated list and can repeat; both forms mix
+	safetyRequireCommittedOK(t, cli.Run("tx", "safety", "trip",
+		"--patterns", safetyMsgSend+","+safetyMsgMultiSend, "--patterns", "/cosmos.staking.*",
+		"--from", operatorAddr))
+	require.Equal(t, []string{safetyMsgMultiSend, safetyMsgSend, "/cosmos.staking.*"}, safetyCLIDisabledList(t, cli))
+	require.False(t, safetyCLIIsAllowed(t, cli, safetyMsgSend))
+	require.False(t, safetyCLIIsAllowed(t, cli, "/cosmos.staking.v1beta1.MsgDelegate"))
+	require.True(t, safetyCLIIsAllowed(t, cli, "/cosmos.gov.v1.MsgVote"))
+
+	out, _ = cli.WithRunErrorsIgnored().RunOnly("tx", "bank", "send", operatorAddr, recipientAddr, "100stake", safetyFees)
+	safetyRequireCheckTxRejected(t, out, safetyDisabledErr)
+	require.Zero(t, cli.QueryBalance(recipientAddr, "stake"))
+
+	// the operator resets one pattern, then the authority resets the rest
+	safetyRequireCommittedOK(t, cli.Run("tx", "safety", "reset", "--patterns", "/cosmos.staking.*", "--from", operatorAddr))
+	require.Equal(t, []string{safetyMsgMultiSend, safetyMsgSend}, safetyCLIDisabledList(t, cli))
+	safetyRequireCommittedOK(t, cli.Run("tx", "safety", "reset",
+		"--patterns", safetyMsgSend, "--patterns", safetyMsgMultiSend, "--from", authorityAddr))
+	require.Empty(t, safetyCLIDisabledList(t, cli))
+	require.True(t, safetyCLIIsAllowed(t, cli, safetyMsgSend))
+
+	safetyRequireCommittedOK(t, cli.Run("tx", "bank", "send", operatorAddr, recipientAddr, "100stake"))
+	require.Equal(t, int64(100), cli.QueryBalance(recipientAddr, "stake"))
+}
+
+// safetyCLIDisabledList returns the disabled patterns from `q safety disabled-list`.
+func safetyCLIDisabledList(t *testing.T, cli *systest.CLIWrapper) []string {
+	t.Helper()
+	list := cli.CustomQuery("q", "safety", "disabled-list")
+	require.True(t, gjson.Valid(list), list)
+	return safetyStrings(gjson.Get(list, "disabled_patterns"))
+}
+
+// safetyCLIIsAllowed asks `q safety is-allowed` whether typeURL may execute.
+// The command prints {} for false, since JSON output omits default values.
+func safetyCLIIsAllowed(t *testing.T, cli *systest.CLIWrapper, typeURL string) bool {
+	t.Helper()
+	res := cli.CustomQuery("q", "safety", "is-allowed", "--msg-type-url", typeURL)
+	require.True(t, gjson.Valid(res), res)
+	return gjson.Get(res, "allowed").Bool()
+}
+
 // The default genesis scope is empty, so the operator can do nothing
 // until the authority grants scope.
 func TestSafetyDefaultGenesisQueries(t *testing.T) {
@@ -524,7 +613,15 @@ func safetyRequireCheckTxRejected(t *testing.T, out, errMsg string) {
 // output must contain it.
 func safetyRequireTxRejected(t *testing.T, cli *systest.CLIWrapper, errMsg, from string, msgs ...string) {
 	t.Helper()
-	out := safetyTrimJSON(safetyBroadcast(t, cli, from, msgs...))
+	safetyRequireRejected(t, cli, safetyBroadcast(t, cli, from, msgs...), errMsg)
+}
+
+// safetyRequireRejected requires the broadcast output out to show a tx that
+// failed in CheckTx or execution. When errMsg is set, the failure output must
+// contain it.
+func safetyRequireRejected(t *testing.T, cli *systest.CLIWrapper, out, errMsg string) {
+	t.Helper()
+	out = safetyTrimJSON(out)
 	if gjson.Valid(out) && gjson.Get(out, "code").Int() == 0 && gjson.Get(out, "txhash").Exists() {
 		// accepted into the mempool: execution must fail
 		res, found := cli.AwaitTxCommitted(out)

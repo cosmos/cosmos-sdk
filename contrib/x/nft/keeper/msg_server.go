@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 
+	"google.golang.org/grpc"
+
 	errorsmod "cosmossdk.io/errors"
 
 	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
@@ -11,10 +13,27 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ nft.MsgServer = Keeper{}
+type msgServer struct {
+	Keeper
+}
+
+var _ nft.MsgServer = msgServer{}
+
+// newMsgServerImpl returns an implementation of the x/nft MsgServer
+// interface for the provided Keeper.
+func newMsgServerImpl(k Keeper) nft.MsgServer {
+	return msgServer{Keeper: k}
+}
+
+// RegisterMsgServer registers the x/nft Msg service on r. The msg server
+// is unexported: code outside the module runs a msg through the
+// MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) {
+	nft.RegisterMsgServer(r, newMsgServerImpl(k))
+}
 
 // Send implements Send method of the types.MsgServer.
-func (k Keeper) Send(goCtx context.Context, msg *nft.MsgSend) (*nft.MsgSendResponse, error) {
+func (k msgServer) Send(goCtx context.Context, msg *nft.MsgSend) (*nft.MsgSendResponse, error) {
 	if len(msg.ClassId) == 0 {
 		return nil, nft.ErrEmptyClassID
 	}

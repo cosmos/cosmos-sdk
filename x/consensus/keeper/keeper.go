@@ -5,6 +5,7 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -56,7 +57,24 @@ func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types
 
 // MsgServer
 
-var _ types.MsgServer = Keeper{}
+type msgServer struct {
+	Keeper
+}
+
+var _ types.MsgServer = msgServer{}
+
+// newMsgServerImpl returns an implementation of the x/consensus MsgServer
+// interface for the provided Keeper.
+func newMsgServerImpl(k Keeper) types.MsgServer {
+	return msgServer{Keeper: k}
+}
+
+// RegisterMsgServer registers the x/consensus Msg service on r. The msg server
+// is unexported: code outside the module runs a msg through the
+// MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) {
+	types.RegisterMsgServer(r, newMsgServerImpl(k))
+}
 
 func (k *Keeper) GetAuthority() string {
 	return k.authority
@@ -66,7 +84,7 @@ func (k *Keeper) GetAuthority() string {
 // takes effect at the start of the next block, when BeginBlock loads fresh
 // consensus params from the store. Within the same block as this update,
 // ValidateAuthority still checks against the old authority.
-func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	if err := sdk.ValidateAuthority(sdkCtx, k.authority, msg.Authority); err != nil {

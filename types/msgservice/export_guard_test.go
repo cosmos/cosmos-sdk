@@ -26,11 +26,12 @@ var exportGuardAllowed = []string{
 
 // TestNoExportedMsgServer scans every hand-written Go file in the repo and
 // fails if a package exports a way to call a msg server outside the
-// MsgServiceRouter: an exported func, var or struct field whose type or
-// value names a msg server (MsgServer, msgServer, legacyMsgServer,
+// MsgServiceRouter: an exported type, func, var or struct field whose type
+// or value names a msg server (MsgServer, msgServer, legacyMsgServer,
 // newMsgServerImpl), a compile-time MsgServer assertion on an exported
-// type, or an exported method shaped like a Msg handler on an exported
-// type. Code outside a module runs a msg with msgservice.Dispatch.
+// type, an exported func or var that hands out a Msg handler func, or an
+// exported method shaped like a Msg handler on an exported type. Code
+// outside a module runs a msg with msgservice.Dispatch.
 func TestNoExportedMsgServer(t *testing.T) {
 	root, err := filepath.Abs(filepath.Join("..", ".."))
 	require.NoError(t, err)
@@ -104,6 +105,9 @@ func exportedMsgServer(decl ast.Decl) []string {
 				if namesMsgServer(typeName(res.Type)) {
 					reasons = append(reasons, "func "+d.Name.Name+" returns a msg server")
 				}
+				if ft, ok := res.Type.(*ast.FuncType); ok && isMsgHandler(ft) {
+					reasons = append(reasons, "func "+d.Name.Name+" returns a Msg handler")
+				}
 			}
 		}
 		if recv != "" && isMsgHandler(d.Type) {
@@ -117,7 +121,7 @@ func exportedMsgServer(decl ast.Decl) []string {
 					reasons = append(reasons, exportedMsgServerVar(s)...)
 				}
 			case *ast.TypeSpec:
-				reasons = append(reasons, exportedMsgServerField(s)...)
+				reasons = append(reasons, exportedMsgServerType(s)...)
 			}
 		}
 	}
@@ -128,16 +132,20 @@ func exportedMsgServer(decl ast.Decl) []string {
 func exportedMsgServerVar(vs *ast.ValueSpec) []string {
 	var reasons []string
 	hasType := vs.Type != nil && namesMsgServer(typeName(vs.Type))
+	if ft, ok := vs.Type.(*ast.FuncType); ok && isMsgHandler(ft) {
+		hasType = true
+	}
 	for i, name := range vs.Names {
-		value := ""
+		value, mentions := "", false
 		if i < len(vs.Values) {
 			value = typeName(vs.Values[i])
+			mentions = mentionsMsgServer(vs.Values[i])
 		}
 		switch {
 		case name.IsExported() && hasType:
 			reasons = append(reasons, "var "+name.Name+" has a msg server type")
-		case name.IsExported() && namesMsgServer(value):
-			reasons = append(reasons, "var "+name.Name+" holds "+value)
+		case name.IsExported() && mentions:
+			reasons = append(reasons, "var "+name.Name+" holds a msg server or one of its methods")
 		case name.Name == "_" && hasType && ast.IsExported(value):
 			reasons = append(reasons, "exported type "+value+" implements "+typeName(vs.Type))
 		}
@@ -145,11 +153,18 @@ func exportedMsgServerVar(vs *ast.ValueSpec) []string {
 	return reasons
 }
 
-// exportedMsgServerField returns why ts, if it is an exported struct, has an
-// exported or embedded msg server field.
-func exportedMsgServerField(ts *ast.TypeSpec) []string {
+// exportedMsgServerType returns why ts exports a msg server, if it does: it
+// is an exported alias or definition of a msg server type, or an exported
+// struct with an exported or embedded msg server field.
+func exportedMsgServerType(ts *ast.TypeSpec) []string {
+	if !ts.Name.IsExported() {
+		return nil
+	}
+	if namesMsgServer(typeName(ts.Type)) {
+		return []string{"type " + ts.Name.Name + " is " + typeName(ts.Type)}
+	}
 	st, ok := ts.Type.(*ast.StructType)
-	if !ok || !ts.Name.IsExported() {
+	if !ok {
 		return nil
 	}
 	var reasons []string
@@ -173,6 +188,19 @@ func exportedMsgServerField(ts *ast.TypeSpec) []string {
 // server: MsgServer, msgServer, legacyMsgServer or newMsgServerImpl.
 func namesMsgServer(name string) bool {
 	return strings.Contains(strings.ToLower(name), "msgserver")
+}
+
+// mentionsMsgServer reports whether any identifier in e names a msg server,
+// as in newMsgServerImpl(k).Send.
+func mentionsMsgServer(e ast.Expr) bool {
+	found := false
+	ast.Inspect(e, func(n ast.Node) bool {
+		if id, ok := n.(*ast.Ident); ok && namesMsgServer(id.Name) {
+			found = true
+		}
+		return !found
+	})
+	return found
 }
 
 // isMsgHandler reports whether ft has the shape of a Msg service method:
@@ -240,6 +268,12 @@ func TestExportedMsgServerShapes(t *testing.T) {
 		{"exported type asserts MsgServer", `var _ types.MsgServer = Keeper{}`, true},
 		{"handler with a matching response name", `func (k Keeper) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) { return nil, nil }`, true},
 		{"handler with a different response name", `func (k *Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter) (*types.MsgIncreaseCountResponse, error) { return nil, nil }`, true},
+		{"exported alias of the unexported type", `type Server = msgServer`, true},
+		{"exported type defined from the unexported type", `type Server msgServer`, true},
+		{"method returns a Msg handler", `func (k BaseKeeper) SendHandler() func(context.Context, *types.MsgSend) (*types.MsgSendResponse, error) { return newMsgServerImpl(k).Send }`, true},
+		{"func returns a Msg handler", `func SendHandler(k Keeper) func(context.Context, *types.MsgSend) (*types.MsgSendResponse, error) { return newMsgServerImpl(k).Send }`, true},
+		{"var holds a msg server method", `var Send = newMsgServerImpl(Keeper{}).Send`, true},
+		{"var has a Msg handler type", `var Send func(context.Context, *types.MsgSend) (*types.MsgSendResponse, error)`, true},
 		{"unexported constructor", `func newMsgServerImpl(k Keeper) *msgServer { return &msgServer{k} }`, false},
 		{"registration", `func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) { types.RegisterMsgServer(r, newMsgServerImpl(k)) }`, false},
 		{"unexported field", `type App struct { bank types.MsgServer }`, false},

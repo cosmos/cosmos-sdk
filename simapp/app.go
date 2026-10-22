@@ -453,9 +453,9 @@ func NewSimApp(
 		interfaceRegistry,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	// The circuit breaker must be set before the module services are
-	// registered so that every msg handler, including hybrid handlers, is
-	// wrapped with the x/safety check.
+	// The MsgServiceRouter checks every msg handler, including hybrid
+	// handlers, against x/safety. It reads the breaker on each call, so this
+	// can run before or after the module services are registered.
 	app.SetCircuitBreaker(app.SafetyKeeper)
 
 	/****  Module Options ****/

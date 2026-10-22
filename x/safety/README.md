@@ -12,8 +12,8 @@ by exact type URL or by proto package prefix in a single tx, and the authority
 (governance by default) or the operator can re-enable ("reset") them.
 
 The module replaces `contrib/x/circuit`. It keeps what circuit got right:
-collections state, the BaseApp `CircuitBreaker` hook, depinject wiring and
-autocli. It replaces the permission levels table with a single operator,
+collections state and the BaseApp `CircuitBreaker` hook. It replaces the
+permission levels table with a single operator,
 moves the authority into params, and adds a protected set so that a trip can
 never block its own reset.
 
@@ -33,7 +33,7 @@ never block its own reset.
 * [Queries](#queries)
 * [Genesis](#genesis)
 * [Wiring](#wiring)
-* [Client](#client)
+* [Operating](#operating)
 * [IBC, EVM and wasm](#ibc-evm-and-wasm)
 * [Known gaps](#known-gaps)
 * [Changes from x/circuit](#changes-from-xcircuit)
@@ -355,9 +355,8 @@ message GenesisState {
 }
 ```
 
-The default genesis sets the authority to the gov module account (or the
-`authority` field of the module config), no operator, an empty scope, and an
-empty disabled list. An operator the authority appoints can trip and reset
+The default genesis sets the authority to the one passed to `NewKeeper`, no
+operator, an empty scope, and an empty disabled list. An operator the authority appoints can trip and reset
 nothing until the authority also grants it scope. `ValidateGenesis` and
 `InitGenesis` check the params and that every disabled pattern is well-formed
 and unique; `InitGenesis` fails on an invalid state. `ExportGenesis` output
@@ -366,46 +365,9 @@ ignores it.
 
 ## Wiring
 
-### depinject
-
-Import the module and add its config:
-
-```go
-import (
-	safetymodulev1 "cosmossdk.io/api/cosmos/safety/module/v1"
-	"cosmossdk.io/core/appconfig"
-
-	_ "github.com/cosmos/cosmos-sdk/x/safety"
-	safetytypes "github.com/cosmos/cosmos-sdk/x/safety/types"
-)
-
-{
-	Name:   safetytypes.ModuleName,
-	Config: appconfig.WrapAny(&safetymodulev1.Module{}),
-},
-```
-
-`ProvideModule` outputs the keeper and a `runtime.BaseAppOption` that calls
-`app.SetCircuitBreaker(keeper)`. Add `safety` to the init and export genesis
-orders, after `genutil` in the init order (see [Genesis order](#genesis-order)).
-
-The `x/auth/tx` module installs a default ante handler without the decorator.
-Set `SkipAnteHandler` in its config, then build a chain with the decorator as
-in [Ante handler](#ante-handler) and install it with `app.SetAnteHandler`:
-
-```go
-import txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
-
-{
-	Name:   "tx",
-	Config: appconfig.WrapAny(&txconfigv1.Config{SkipAnteHandler: true}),
-},
-```
-
-Without this step the router still blocks tripped msgs in `FinalizeBlock`, but
-`CheckTx` admits them and they pay fees.
-
-### Manual
+x/safety supports manual wiring only. It has no depinject module config and
+no autocli options, and its proto types are gogoproto only, with no pulsar
+types in `cosmossdk.io/api`.
 
 ```go
 app.SafetyKeeper = safetykeeper.NewKeeper(
@@ -461,26 +423,55 @@ such as cosmos/evm with its separate chain for Ethereum txs, must add the
 decorator to each, or the txs that chain handles reach a block and pay fees;
 see [EVM chains](#evm-chains).
 
-## Client
+## Operating
 
-```shell
-simd query safety params
-simd query safety disabled-list
-simd query safety is-allowed /cosmos.bank.v1beta1.MsgSend
+x/safety has no module CLI. To trip, put a `MsgTrip` in an unsigned tx, sign
+it with the operator key, and broadcast it. Save as `trip.json`:
 
-simd tx safety trip /cosmos.bank.v1beta1.MsgSend /cosmos.bank.v1beta1.MsgMultiSend --from operator
-simd tx safety trip '/cosmos.staking.*' --from operator
-simd tx safety reset /cosmos.bank.v1beta1.MsgSend --from operator
-
-simd tx safety update-params-proposal '{"authority":"cosmos1...","operator":"cosmos1...","scope":["/cosmos.bank.*"]}' \
-  --title "Name the safety operator" --summary "Grant the operator /cosmos.bank.* scope" \
-  --deposit 10000000stake --from proposer
+```json
+{
+  "body": {
+    "messages": [
+      {
+        "@type": "/cosmos.safety.v1.MsgTrip",
+        "operator": "cosmos1...",
+        "patterns": ["/cosmos.bank.v1beta1.MsgSend", "/cosmos.staking.*"]
+      }
+    ]
+  },
+  "auth_info": {
+    "fee": {"amount": [{"denom": "stake", "amount": "2000"}], "gas_limit": "200000"}
+  },
+  "signatures": []
+}
 ```
 
-Pass each pattern as its own argument. Quote prefix patterns so the shell does
-not expand `*`. `update-params-proposal` wraps the msg in a gov proposal, and
-gov rejects a proposal without `--title` and `--summary`; pass `--no-proposal`
-when the authority is an account that signs directly.
+```shell
+simd tx sign trip.json --from operator --chain-id <chain-id> --node <rpc> > trip.signed.json
+simd tx broadcast trip.signed.json --node <rpc>
+```
+
+To reset, use the same steps with this msg, signed by the operator or the
+authority:
+
+```json
+{
+  "@type": "/cosmos.safety.v1.MsgReset",
+  "sender": "cosmos1...",
+  "patterns": ["/cosmos.bank.v1beta1.MsgSend"]
+}
+```
+
+Give each pattern its own array entry. A gov authority sends `MsgUpdateParams`
+or `MsgReset` in a proposal file for `simd tx gov submit-proposal`.
+
+Query the module through the REST gateway:
+
+```shell
+curl <api>/cosmos/safety/v1/params
+curl <api>/cosmos/safety/v1/disabled_list
+curl '<api>/cosmos/safety/v1/is_allowed?msg_type_url=/cosmos.bank.v1beta1.MsgSend'
+```
 
 ## IBC, EVM and wasm
 
@@ -680,5 +671,5 @@ is the consensus override.
 | Unregistered errors | Registered errors: codespace `safety`, or the shared SDK `ErrUnauthorized` and `ErrInvalidAddress` |
 | Unpaginated disabled list query | Paginated |
 | Ante decorator checked top-level msgs only | Recurses into nested msgs |
-| CLI examples quoted several type URLs as one argument | One pattern per argument |
+| CLI examples quoted several type URLs as one argument | No module CLI; operators sign tx JSON with one pattern per array entry |
 | Exact type URLs only | Exact, prefix and `*` patterns |

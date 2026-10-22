@@ -150,6 +150,8 @@ func ExportGenesisFileWithTime(genFile string, appGenesis *types.AppGenesis, gen
 
 `x/safety` replaces `contrib/x/circuit`. To wire it, follow [Wiring](x/safety/README.md#wiring) in its README: build the keeper, call `app.SetCircuitBreaker(app.SafetyKeeper)`, register the module, order `safety` after `genutil` in `InitGenesis`, and add `safetyante.SafetyDecorator` to every ante chain, including a separate chain for Ethereum txs. A live chain adds `safetytypes.StoreKey` to `StoreUpgrades.Added` in the upgrade that introduces it (see the [Reference Upgrade Handler](#reference-upgrade-handler)). A chain moving off `contrib/x/circuit` removes that module's wiring and adds `"circuit"` to `StoreUpgrades.Deleted`. x/safety does not read `contrib/x/circuit` state, so trip again through x/safety any msg that must stay disabled after the upgrade.
 
+x/safety supports manual wiring only. It has no depinject module config, no autocli options and no types in `cosmossdk.io/api`, so a depinject app registers it with `app.RegisterModules` and `app.RegisterStores`. Operators trip and reset by signing tx JSON and query through the REST gateway; see [Operating](x/safety/README.md#operating).
+
 The circuit breaker only sees msgs that go through the `MsgServiceRouter`, which is now the only way to run an SDK module's msg. See [Running msgs from code](#running-msgs-from-code) and [Direct callers](x/safety/README.md#direct-callers).
 
 Wiring x/safety leaves gas unchanged. The circuit breaker check charges no gas in the router, the ante decorator or `msgservice.Dispatch`, so delivered and simulated gas match a chain with no circuit breaker set, and clients that hard-code gas limits need no change. See [Gas](x/safety/README.md#gas).

@@ -14,6 +14,7 @@ import (
 
 	"cosmossdk.io/simapp"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -26,6 +27,26 @@ type allowAll struct{}
 
 func (allowAll) IsAllowed(context.Context, string) (bool, error) { return true, nil }
 
+// anteWithBreaker is SimApp's ante chain with breaker as the
+// CircuitBreakerDecorator's breaker.
+func anteWithBreaker(t *testing.T, app *simapp.SimApp, breaker baseapp.CircuitBreaker) sdk.AnteHandler {
+	t.Helper()
+	anteHandler, err := ante.NewAnteHandler(ante.HandlerOptions{
+		AccountKeeper:   app.AccountKeeper,
+		BankKeeper:      app.BankKeeper,
+		SignModeHandler: app.TxConfig().SignModeHandler(),
+		FeegrantKeeper:  app.FeeGrantKeeper,
+		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+		SigVerifyOptions: []ante.SigVerificationDecoratorOption{
+			ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
+			ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
+		},
+		CircuitBreaker: breaker,
+	})
+	require.NoError(t, err)
+	return anteHandler
+}
+
 // newBaselineFixture starts a SimApp with no circuit breaker on the router
 // and a CircuitBreakerDecorator that reads nothing, so its gas is what the same txs
 // cost without x/safety.
@@ -33,20 +54,7 @@ func newBaselineFixture(t *testing.T) *fixture {
 	t.Helper()
 	return newFixtureWithSetup(t, nil, nil, func(app *simapp.SimApp) {
 		app.SetCircuitBreaker(nil)
-		anteHandler, err := ante.NewAnteHandler(ante.HandlerOptions{
-			AccountKeeper:   app.AccountKeeper,
-			BankKeeper:      app.BankKeeper,
-			SignModeHandler: app.TxConfig().SignModeHandler(),
-			FeegrantKeeper:  app.FeeGrantKeeper,
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			SigVerifyOptions: []ante.SigVerificationDecoratorOption{
-				ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
-				ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
-			},
-			CircuitBreaker: allowAll{},
-		})
-		require.NoError(t, err)
-		app.SetAnteHandler(anteHandler)
+		app.SetAnteHandler(anteWithBreaker(t, app, allowAll{}))
 	})
 }
 

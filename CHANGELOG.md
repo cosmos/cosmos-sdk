@@ -41,6 +41,25 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Breaking Changes
 
 * (x/auth) [#26672](https://github.com/cosmos/cosmos-sdk/pull/26672) An unordered transaction whose `timeout_timestamp` equals the block time is now rejected
+* (x/auth) `keeper.NewMsgServerImpl` is unexported; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
+* (x/auth/vesting) `vesting.NewMsgServerImpl` is unexported; register the service with `vesting.RegisterMsgServer(r, accountKeeper, bankKeeper)` and run msgs from outside the module with `msgservice.Dispatch`.
+* (x/authz) `Keeper` no longer implements `authz.MsgServer`: `Grant`, `Revoke` and `Exec` moved to an unexported msg server; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`. `DispatchActions`, `SaveGrant`, `DeleteGrant` and `GetAuthorization` stay on `Keeper`.
+* (x/bank) `keeper.NewMsgServerImpl` is unexported; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
+* (x/consensus) `Keeper` no longer implements the consensus `MsgServer`: `UpdateParams` moved to an unexported msg server; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
+* (x/distribution) `keeper.NewMsgServerImpl` is unexported; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
+* (x/evidence) `keeper.NewMsgServerImpl` is unexported; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
+* (x/feegrant) `keeper.NewMsgServerImpl` is unexported; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
+* (x/gov) `keeper.NewMsgServerImpl` and `keeper.NewLegacyMsgServerImpl` are unexported; `keeper.RegisterMsgServer` registers both the v1 and the v1beta1 Msg service. Run msgs from outside the module with `msgservice.Dispatch`.
+* (x/mint) `keeper.NewMsgServerImpl` is unexported; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
+* (x/slashing) `keeper.NewMsgServerImpl` is unexported; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
+* (x/staking) `keeper.NewMsgServerImpl` is unexported; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`. `testutil.NewHelper` takes the `msgservice.MsgRouter` that runs its msgs.
+* (x/upgrade) `keeper.NewMsgServerImpl` is unexported; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
+* (contrib/x/circuit) `keeper.NewMsgServerImpl` is unexported; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
+* (contrib/x/crisis) `Keeper` no longer implements the crisis `MsgServer`: `VerifyInvariant` and `UpdateParams` moved to an unexported msg server; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
+* (contrib/x/nft) `Keeper` no longer implements `nft.MsgServer`: `Send` moved to an unexported msg server; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`. `Transfer` stays on `Keeper`.
+* (enterprise/group) `Keeper` no longer implements `group.MsgServer`: its Msg methods moved to an unexported msg server; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
+* (enterprise/poa) `keeper.NewMsgServer` and the `keeper.MsgServer` type are unexported; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
+* (testutil/x/counter) `Keeper` no longer implements the counter `MsgServer`: `IncreaseCount` moved to an unexported msg server; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
 
 ### Features
 

@@ -17,6 +17,7 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [Staking: Key Rotation Wiring and Interface Changes](#staking-key-rotation-wiring-and-interface-changes)
     * [genutil: ExportGenesisFileWithTime Signature](#genutil-exportgenesisfilewithtime-signature)
     * [x/safety](#xsafety)
+    * [Running msgs from code](#running-msgs-from-code)
     * [Upgrade Handler and Store Migrations](#upgrade-handler-and-store-migrations)
 * [Upgrading from v0.53.x](#upgrading-from-v053x)
 * [New Features and Non-Breaking Changes](#new-features-and-non-breaking-changes)
@@ -149,13 +150,46 @@ func ExportGenesisFileWithTime(genFile string, appGenesis *types.AppGenesis, gen
 
 `x/safety` replaces `contrib/x/circuit`. To wire it, follow [Wiring](x/safety/README.md#wiring) in its README: build the keeper, call `app.SetCircuitBreaker(app.SafetyKeeper)`, register the module, order `safety` after `genutil` in `InitGenesis`, and add `safetyante.SafetyDecorator` to every ante chain, including a separate chain for Ethereum txs. A live chain adds `safetytypes.StoreKey` to `StoreUpgrades.Added` in the upgrade that introduces it (see the [Reference Upgrade Handler](#reference-upgrade-handler)). A chain moving off `contrib/x/circuit` removes that module's wiring and adds `"circuit"` to `StoreUpgrades.Deleted`. x/safety does not read `contrib/x/circuit` state, so trip again through x/safety any msg that must stay disabled after the upgrade.
 
-The circuit breaker only sees msgs that go through the `MsgServiceRouter`. Code that calls another module's msg server directly, such as an EVM precompile calling `bankkeeper.NewMsgServerImpl(k).Send`, skips it, so a trip does not stop that call. Replace such calls with `msgservice.Dispatch`, which runs the msg through the router handler and returns the typed response:
+The circuit breaker only sees msgs that go through the `MsgServiceRouter`, which is now the only way to run an SDK module's msg. See [Running msgs from code](#running-msgs-from-code) and [Direct callers](x/safety/README.md#direct-callers).
+
+### Running msgs from code
+
+An `sdk.Msg` runs only through the `MsgServiceRouter`. No SDK module exports its msg server any more, so a trip of the circuit breaker stops every msg the SDK runs:
+
+* `NewMsgServerImpl` is unexported in `x/auth`, `x/auth/vesting`, `x/bank`, `x/distribution`, `x/evidence`, `x/feegrant`, `x/gov` (with `NewLegacyMsgServerImpl`), `x/mint`, `x/slashing`, `x/staking`, `x/upgrade` and `contrib/x/circuit`, and `keeper.NewMsgServer` and the `keeper.MsgServer` type are unexported in `enterprise/poa`.
+* The keepers of `x/authz`, `x/consensus`, `contrib/x/crisis`, `contrib/x/nft`, `enterprise/group` and `testutil/x/counter` no longer implement their Msg service: the Msg methods, such as authz `Keeper.Exec` and consensus `Keeper.UpdateParams`, moved to an unexported type. Exported keeper methods for module logic, such as authz `DispatchActions`, `SaveGrant` and `GetAuthorization`, stay.
+* Each keeper package exports `RegisterMsgServer`, which the module's `RegisterServices` calls. `x/auth/vesting` takes the account and bank keepers, and `x/gov` registers both the v1 and the v1beta1 service.
+* `x/staking/testutil.NewHelper` takes the `msgservice.MsgRouter` that runs its msgs, such as `app.MsgServiceRouter()`.
+
+An app or test that registers a module's msg server by hand calls the keeper package's `RegisterMsgServer`:
 
 ```go
-resp, err := msgservice.Dispatch[*banktypes.MsgSendResponse](ctx, app.MsgServiceRouter(), msg)
+// Before
+banktypes.RegisterMsgServer(router, bankkeeper.NewMsgServerImpl(bankKeeper))
+authz.RegisterMsgServer(router, authzKeeper)
+
+// After
+bankkeeper.RegisterMsgServer(router, bankKeeper)
+authzkeeper.RegisterMsgServer(router, authzKeeper)
 ```
 
-`Dispatch` does not check signers, so authorize them before the call as before. It writes its branch of `ctx` only on success, so the multistore under `ctx` must return a branch from `CacheMultiStore`, not itself. Upgrade handlers and a module's calls to its own msg server can stay direct. See [Direct callers](x/safety/README.md#direct-callers).
+Code outside a module that ran one of its msgs, such as an EVM precompile or another module's keeper, runs it with `msgservice.Dispatch`, which runs the msg through its router handler and returns the typed response:
+
+```go
+// Before
+resp, err := bankkeeper.NewMsgServerImpl(app.BankKeeper).Send(ctx, msg)
+resp, err := app.AuthzKeeper.Exec(ctx, execMsg)
+
+// After
+resp, err := msgservice.Dispatch[*banktypes.MsgSendResponse](ctx, app.MsgServiceRouter(), msg)
+resp, err := msgservice.Dispatch[*authz.MsgExecResponse](ctx, app.MsgServiceRouter(), execMsg)
+```
+
+`Dispatch` does not check signers, so authorize them before the call as before. It writes its branch of `ctx` only on success, so the multistore under `ctx` must return a branch from `CacheMultiStore`, not itself.
+
+Logic that does not need a msg, such as a send in an upgrade handler, calls the keeper: `app.BankKeeper.SendCoins(ctx, from, to, amt)`. Upgrade handlers call keepers rather than `Dispatch`, so a trip cannot halt an upgrade.
+
+Tests in a module's `keeper_test` package reach the unexported constructor through an `export_test.go` in the `keeper` package, `var NewMsgServerImpl = newMsgServerImpl`, as the in-repo modules do. A module outside the SDK follows the same pattern: keep the msg server type and constructor unexported and export only `RegisterMsgServer`.
 
 ### Upgrade Handler and Store Migrations
 

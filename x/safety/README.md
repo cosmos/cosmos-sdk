@@ -193,11 +193,12 @@ The check runs in two places:
 
 ### Direct callers
 
-The router checks only the msgs it routes. A direct call to a msg server
-method, such as `bankkeeper.NewMsgServerImpl(k).Send(ctx, msg)`, skips the
-check, so a trip does not stop it. Code outside the module that owns a msg,
-such as an EVM precompile or another module's keeper, runs the msg with
-`msgservice.Dispatch` instead:
+The router checks only the msgs it routes, so the SDK makes the router the
+one way to run a msg. No SDK module exports its msg server: the msg server
+type and its constructor are unexported, and the keeper package exports only
+`RegisterMsgServer`, which the module's `RegisterServices` calls. Code
+outside the module that owns a msg, such as an EVM precompile or another
+module's keeper, runs the msg with `msgservice.Dispatch`:
 
 ```go
 resp, err := msgservice.Dispatch[*banktypes.MsgSendResponse](ctx, app.MsgServiceRouter(), msg)
@@ -220,13 +221,21 @@ switches to `Dispatch`, or a reverted EVM call keeps the msg's writes.
 the `msg_index` attribute that a msg in a tx gets, so an indexer keyed on
 `message.action` does not see it.
 
-`Dispatch` does not check the msg's signers: the caller authorizes them, as it
-would before a direct call. The msg must be the gogoproto type, not the
+`Dispatch` does not check the msg's signers: the caller authorizes them. The msg must be the gogoproto type, not the
 pulsar type from `cosmossdk.io/api`. A msg with no registered handler fails
 with `ErrUnknownRequest`, and a nil router returns an error.
 
-Upgrade handlers and a module's calls to its own msg server stay direct on
-purpose, so a trip cannot stop an upgrade or a module's own logic.
+Module logic that another module needs, such as authz `DispatchActions` or a
+bank keeper send, is a keeper method, and a trip does not cover it. Upgrade
+handlers call keepers, not `Dispatch`, so a trip cannot halt an upgrade. A
+module's calls to its own handlers, such as group running `Exec` after a vote
+or the gov v1beta1 server wrapping the v1 server, stay internal to the module.
+
+Go cannot stop a caller that registers a fake `grpc.ServiceRegistrar` with
+`RegisterMsgServer` from capturing the msg server it receives. That is
+deliberate abuse, not an API. A module outside the SDK that still exports its
+msg server is a direct path the router does not see, as is any keeper method
+that runs a msg's logic.
 
 ## State
 

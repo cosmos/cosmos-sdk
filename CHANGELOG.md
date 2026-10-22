@@ -76,6 +76,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Deprecated
 
+* (contrib/x/circuit) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) `contrib/x/circuit` is deprecated in favor of `x/safety` and will be removed in v0.57.0.
+
 ## [v0.55.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.55.0) - 2026-07-27
 
 ### Breaking Changes

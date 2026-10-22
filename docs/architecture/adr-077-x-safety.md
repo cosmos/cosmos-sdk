@@ -73,6 +73,7 @@ When gov narrows the scope, existing trips stay in place, and gov resets them in
 * **Keepers for module logic.** Logic another module needs, such as authz `DispatchActions` or a bank send, stays an exported keeper method, and the breaker does not see it. Upgrade handlers call keepers, not `Dispatch`, so a trip cannot halt an upgrade. A module's calls to its own handlers, such as group running `Exec` after a vote, stay internal calls on the unexported type.
 * A caller that registers a fake `grpc.ServiceRegistrar` can still capture the msg server it receives. That is deliberate abuse, not an API.
 * A breaker that returns an error blocks the msg.
+* **Gas.** The breaker check charges no gas. The keeper runs its disabled-list lookups on an infinite gas meter in place of the context's meter, so the router, the ante decorator and `Dispatch` cost a tx the same gas as with no breaker set, and `Simulate` stays as close to `FinalizeBlock` gas as without one. Charging would add 5000 gas to a bank send at the router, and, because the decorator checks in `Simulate` but not in `FinalizeBlock`, another 5000 to its gas estimate that users pay fees for and never use. The work stays bounded without gas: per msg, at most two point lookups plus one per package segment of a type URL of at most 256 bytes.
 
 ### Migrating from x/circuit
 
@@ -124,6 +125,7 @@ Chains remove `x/circuit` and add `x/safety` in the same upgrade: delete the cir
 * `x/safety` keeper, ante decorator and pattern tests, including fuzzing of pattern matching against the router.
 * `types/msgservice` tests of `Dispatch`: the typed response, a tripped msg, an unknown msg, a pulsar msg, a wrong response type, a nil router, and a failed msg leaving `ctx` unchanged.
 * `baseapp` tests that the router checks `Dispatch` in `CheckTx`, `Simulate`, `FinalizeBlock`, block hooks, vote extensions and a query context, and hybrid handler tests for the registered msg type and a breaker set or removed after registration.
+* `tests/integration/safety`: delivered and simulated gas of a bank send, a delegation, an authz exec and a gov proposal match SimApp with no breaker set, with an empty disabled list and with 1000 entries.
 * `tests/integration/safety`: `Dispatch` from block hooks, a `FinalizeBlock` tx and a query context in SimApp under a trip and after the reset.
 * `types/msgservice`: a guard test that fails when any SDK package exports a msg server type, constructor, alias or Msg handler func.
 * System tests: `TestSafety*` and `TestChainUpgrade`, which upgrades a running v0.54 chain into x/safety.

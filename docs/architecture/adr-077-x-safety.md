@@ -3,7 +3,7 @@
 ## Changelog
 
 * 2026-10-21: Initial draft
-* 2026-10-21: Generated msg server guard and startup check replace the per-method guard
+* 2026-10-21: Direct msg server callers use `msgservice.Dispatch`
 
 ## Status
 
@@ -11,7 +11,7 @@ DRAFT Not Implemented
 
 ## Abstract
 
-`x/safety` replaces `contrib/x/circuit`. It lets one operator address stop a msg type in a single tx during an incident, and lets governance decide who that operator is and what it may stop. The authority, gov by default, sets the operator and its scope and can reset any block, but cannot block anything itself. Gov, upgrade, safety and consensus parameter msgs stay outside the operator's reach, so the operator can never lock governance out of the reset. BaseApp checks the breaker at the router, in the ante handler, and at the entry of every in-repo msg server, so code that calls a msg server directly, such as a cosmos/evm precompile, stops under the same trip as a tx.
+`x/safety` replaces `contrib/x/circuit`. It lets one operator address stop a msg type in a single tx during an incident, and lets governance decide who that operator is and what it may stop. The authority, gov by default, sets the operator and its scope and can reset any block, but cannot block anything itself. Gov, upgrade, safety and consensus parameter msgs stay outside the operator's reach, so the operator can never lock governance out of the reset. BaseApp checks the breaker at the router and in the ante handler. Code outside a module that would call the module's msg server directly, such as a cosmos/evm precompile, runs the msg with `msgservice.Dispatch` instead, so the router checks it as it checks a tx.
 
 ## Context
 
@@ -33,9 +33,10 @@ Chains need a key that stops a msg type within one block of someone finding an e
 * **Let gov trip.** A gov trip waits at least an expedited voting period, too slow to matter during an exploit, and lets an attacker who controls a proposal block recovery msgs.
 * **Expire trips after a fixed time.** An incident outlasts any preset timer, and an automatic unblock mid-exploit does more harm than a manual one.
 * **Protect wrapper msgs outright.** Exempting authz `MsgExec` and group execution from trips keeps recovery paths through them open, but removes the only way to stop authz or group execution as a whole.
-* **Make every module depend on an x/safety keeper.** Every module would import x/safety. Setting the breaker on `sdk.Context` covers the same calls with no new dependency.
-* **Guard each external repo separately.** cosmos/evm, ibc-go and wasmd could each check the breaker before calling into the SDK, but all of them reach SDK msg servers, so one check at msg server entry covers them all.
-* **Call the guard on the first line of every msg server method.** Module authors have to remember it in every method, and a module that forgets it leaves direct calls unchecked with no error. A generated wrapper needs no per-method code, and a startup check stops an app that registers a msg server without it.
+* **Make every module depend on an x/safety keeper.** Every module would import x/safety, and every module author would still have to call it in every method.
+* **Call the guard on the first line of every msg server method.** BaseApp would set the breaker on `sdk.Context`, and each method would call `msgservice.CheckMsgAllowed`. A method that forgets the line fails open with no error, and every module author pays for a check that only direct callers need.
+* **Generate a guarded wrapper for every Msg service and check it at startup.** A protoc plugin removes the per-method line, but each module still wraps its msg server, modules outside the SDK must add the plugin, and the authz, group, consensus, crisis and nft keepers, which are their own msg servers, still need guards written by hand.
+* **Wrap msg servers with reflection at registration.** Go cannot add methods to a type at run time, so the router cannot hand a direct caller a checked msg server that satisfies the module's `MsgServer` interface.
 
 ## Decision
 
@@ -63,11 +64,9 @@ When gov narrows the scope, existing trips stay in place, and gov resets them in
 
 ### Enforcement
 
-* **Router.** The keeper implements `sdk.CircuitBreaker`, and the module wires it with `BaseApp.SetCircuitBreaker`. The router checks every msg it dispatches in `FinalizeBlock` and `Simulate`.
+* **Router.** The keeper implements `sdk.CircuitBreaker`, and the module wires it with `BaseApp.SetCircuitBreaker`. The router checks every msg it routes, on every call and in every exec mode, including `CheckTx`, `Simulate`, `FinalizeBlock`, block hooks, vote extensions and query contexts. A hybrid handler checks the msg type it runs, not the type of the request, and reads the breaker on each call, so a breaker set after `RegisterServices` still covers it.
 * **Ante.** `SafetyDecorator` checks every msg in a tx and recurses into any msg that exposes `GetMessages` or `GetMsgs`, up to a depth limit. It runs in `CheckTx`, `ReCheckTx`, `Simulate` and the proposal handlers, and passes txs through in `FinalizeBlock`. A tx included after a trip then spends its sequence and fails at the router, so nobody can replay it once the operator resets. A proposal containing a tripped msg fails at submission.
-* **Msg server entry.** BaseApp sets the breaker on the `sdk.Context` of every tx, block hook, proposal handler, vote extension and query. `protoc-gen-go-msgguard`, run by `make proto-gen`, generates `NewGuardedMsgServer` for every Msg service; each of its methods calls `msgservice.CheckMsgAllowed(ctx, msg)` and then the wrapped msg server. Every in-repo `NewMsgServerImpl` returns it, protected modules included. The authz, group, consensus, crisis and nft keepers, which are their own msg servers and which other modules or the app can call directly, call `msgservice.CheckMsgAllowed` in each msg method and implement the guard marker, so a direct call on the keeper, and group's calls to its own methods, are checked once. The router marks the msg it already checked, and the gov v1beta1 msg server marks the v1 msg it translates each msg to, so the breaker checks a routed msg once, not twice, and checks a direct call, such as from a precompile, at msg server entry. `msgservice.Dispatch` runs a msg through the router for callers, such as precompiles, that want the router's handling.
-* **Startup check.** With a breaker set, `MsgServiceRouter.RegisterService` panics on a msg server that does not implement `msgservice.GuardedMsgServer`, and `SetCircuitBreaker` panics when a msg service was registered before it. The `baseapp.SetUnguardedMsgServices` option lets named services of modules that have not adopted the guard register unguarded, each with a logged warning. There is no global off switch, and a chain without a breaker skips the check.
-* **Upgrade handlers** run without the breaker in the context, because gov already approved the code and the breaker must not halt the chain at the upgrade height.
+* **Direct callers.** A direct call to a msg server method skips the router. Code outside the module that owns a msg, such as a cosmos/evm precompile or another module's keeper, runs it with `msgservice.Dispatch[R](ctx, router, msg)`. `Dispatch` calls the router handler on a branch of `ctx`, so `ValidateBasic`, the breaker check and the msg server's events apply, writes the branch only on success, and returns the typed response. It does not check signers; the caller authorizes them as before. Module authors change nothing. Upgrade handlers and a module's calls to its own msg server stay direct, so a trip cannot stop an upgrade or a module's own logic.
 * A breaker that returns an error blocks the msg.
 
 ### Migrating from x/circuit
@@ -79,56 +78,54 @@ Chains remove `x/circuit` and add `x/safety` in the same upgrade: delete the cir
 ### Backwards Compatibility
 
 * Existing chains need a store upgrade that adds the safety store key, and `x/circuit` chains also delete the circuit store.
-* `state.Manager.SetState` gains a circuit breaker argument.
-* On a chain with a breaker, every msg server must be wrapped in its generated guard or named in `SetUnguardedMsgServices`, or `RegisterServices` panics at startup. `SetCircuitBreaker` must run before `RegisterServices`.
-* A plain refusal from a breaker returns `ErrUnauthorized`.
 * `baseapp.CircuitBreaker` becomes a deprecated alias of `sdk.CircuitBreaker`.
-* Group `MsgSubmitProposal` and `MsgVote` with `EXEC_TRY`, and `MsgCreateGroupWithPolicy`, fail when a msg they call internally is tripped, even though the outer msg passes `CheckTx`.
+* `msgservice.Dispatch` is new API. No module, msg server or BaseApp signature changes.
+* A caller that switches to `Dispatch` needs the app's `MsgServiceRouter`, so its constructor gains a router argument, and a multistore whose `CacheMultiStore` returns itself instead of a branch must be fixed first. The cosmos/evm snapshot multistore is one; without the fix a reverted EVM call keeps the msg's writes.
 
 ### Positive
 
-* Under a selective trip, the breaker stops cosmos/evm precompile calls into SDK msg servers with no change to cosmos/evm. End-to-end tests in evmd show staking `delegate`, ERC20 `transfer` and distribution `withdrawDelegatorRewards` reverting under a trip, and `eth_call` and `eth_estimateGas` returning an error.
+* Under a selective trip, precompiles that run their SDK msgs with `Dispatch` revert. In evmd with the precompiles switched to `Dispatch`, staking `delegate`, ERC20 and WERC20 `transfer`, distribution `withdrawDelegatorRewards`, slashing `unjail` and ICS20 `transfer` revert under a trip, and `eth_call` and `eth_estimateGas` return an error. Reverting the precompiles to direct msg server calls fails every one of those tests.
+* Module authors write no breaker code, and a new msg server needs nothing.
 * Typos, empty lists and protected msgs fail at trip time instead of succeeding silently.
 * No sequence of trips can block the reset or governance.
 * Gov controls the operator and its scope through ordinary proposals, and can replace itself as authority.
 
 ### Negative
 
+* A direct caller outside the owning module that does not switch to `Dispatch` skips the breaker with no error.
 * Under a `*` trip the breaker blocks `MsgEthereumTx`, so during a global halt validators on an EVM chain vote with a Cosmos `MsgVote` tx, not through the gov precompile.
 * Recheck evicts txs already in the mempool at trip time, and their senders rebroadcast after the reset.
 * An authority set through the consensus `AuthorityParams` override that can act only through a wrapper the operator tripped by exact URL cannot recover on chain.
-* `MsgCreateGroupWithPolicy` checks five inner msgs, up to 25 point lookups.
 
 ### Neutral
 
-* Keeper calls that bypass msg servers stay outside the breaker: ibc-go transfer, packet-forward-middleware, wasmd raw IBC and burn, and EVM native value transfers. In cosmos/evm, distribution `claimRewards`, werc20 `deposit`, and the ics02 and ics20 precompiles fall in this group.
-* Modules outside this repository adopt the guard by adding the plugin to their buf template and wrapping their msg servers. Until they do, chains with a breaker name their services in `SetUnguardedMsgServices`, and direct calls to them skip the breaker.
+* Keeper calls stay outside the breaker: packet-forward-middleware's call to the transfer keeper's `Transfer` method, wasmd raw IBC and burn, EVM native value transfers, and the cosmos/evm distribution `claimRewards` and WERC20 `deposit` precompile methods.
 * The router checks IBC relayer msgs like any other msg. Under a trip that covers `MsgUpdateClient`, no light client on the chain updates and misbehavior submissions fail, and a client that expires during the trip needs gov `MsgRecoverClient`, which the router also refuses until reset. `/ibc.core.channel.v1.*` does not match `MsgTransfer`, so the chain keeps escrowing sends it cannot ack or time out. Inbound packets under a recv trip time out and refund on their source.
 * The ICA host routes packet msgs, so it returns an error ack for a tripped msg and moves no funds, but CheckTx cannot see the msg and the `MsgRecvPacket` pays its fee.
-* cosmos/evm runs Ethereum txs through an ante chain without `SafetyDecorator`, so under a `MsgEthereumTx` or `*` trip EVM txs enter the mempool, fail in `FinalizeBlock`, pay fees and use nonces. `eth_call` and `eth_estimateGas` do not check `MsgEthereumTx` itself and report success for those txs.
+* cosmos/evm runs Ethereum txs through a separate ante chain. Without `SafetyDecorator` in it, under a `MsgEthereumTx` or `*` trip EVM txs fail in `FinalizeBlock`, pay fees and use nonces. With it, `CheckTx` and `eth_sendRawTransaction` still answer success, because the EVM mempool queues the tx before the ante chain runs, but the tx never becomes pending and pays no fee. `eth_call` and `eth_estimateGas` do not check `MsgEthereumTx` itself and report success for a value transfer.
 * wasmd routes contract bank sends, staking, gov, `Any`, Stargate and ICS20 msgs, so the router refuses them under a selective trip. `BankMsg::Burn` and `IbcMsg::SendPacket` call keepers directly, and a contract reading its `ReplyOn::Error` reply sees only `codespace: safety, code: 10`.
 
 ## Further Discussions
 
-* Adoption of the generated guard in ibc-go, wasmd and cosmos/evm msg servers.
+* Switching cosmos/evm precompiles and packet-forward-middleware to `Dispatch`.
 * A bank `SendRestriction` backed by the breaker, which would cover keeper-level transfers.
 * A backport to v0.54.x for chains on that line, including cosmos/evm.
 
 ## Test Cases
 
 * `x/safety` keeper, ante decorator and pattern tests, including fuzzing of pattern matching against the router.
-* `baseapp` guard tests for proposal handlers, block hooks, vote extensions, the restarted node's check state, and Simulate running concurrently with Commit, and router tests for the startup check, the allowlist, a breaker set after registration, and the lookups each path into a guarded msg server makes.
-* A golden test of `protoc-gen-go-msgguard`, a source scan that every in-repo Msg service has a generated guard and every registration uses it, and SimApp and both enterprise SimApps starting with a breaker and no allowlist.
-* `tests/integration/safety`: direct msg server calls from inside `FinalizeBlock`, upgrade handlers under a trip, and group `EXEC_TRY`.
+* `types/msgservice` tests of `Dispatch`: the typed response, a tripped msg, an unknown msg, a pulsar msg, a wrong response type, a nil router, and a failed msg leaving `ctx` unchanged.
+* `baseapp` tests that the router checks `Dispatch` in `CheckTx`, `Simulate`, `FinalizeBlock`, block hooks, vote extensions and a query context, and hybrid handler tests for the registered msg type and a breaker set or removed after registration.
+* `tests/integration/safety`: `Dispatch` from block hooks, a `FinalizeBlock` tx and a query context in SimApp under a trip and after the reset, beside a direct msg server call that the trip does not stop.
 * System tests: `TestSafety*` and `TestChainUpgrade`, which upgrades a running v0.54 chain into x/safety.
-* cosmos/evm: precompile tests in evmd against the real module, and a node-level script on a 4-validator testnet covering precompiles, `MsgEthereumTx` and `*` trips, native transfers and queued txs.
+* cosmos/evm: precompile tests in evmd with the precompiles switched to `Dispatch`, ante tests of `SafetyDecorator` under `MsgEthereumTx` and `*` trips, and a node-level script on a 4-validator testnet covering precompiles, `MsgEthereumTx` and `*` trips, native transfers and queued txs.
 * ibc-go: relayed transfers, recv, ack, timeout and client update trips, client expiry and recovery, misbehavior, ICA host and packet-forward-middleware, all through real `MsgTrip` and `MsgReset` txs.
 * wasmd: contract bank, staking, gov, `Any`, Stargate, burn, ICS20 and raw packet msgs, and submessage replies under trips.
-* In each external repo, removing `SetCircuitBreaker`, the ante decorator or the msg server guard fails the tests that depend on it.
+* In each external repo, removing `SetCircuitBreaker` or the ante decorator fails the tests that depend on it, and in cosmos/evm so does reverting the precompiles to direct msg server calls.
 
 ## References
 
 * [#26894: x/safety module](https://github.com/cosmos/cosmos-sdk/pull/26894)
-* [#26895: msg server guard](https://github.com/cosmos/cosmos-sdk/pull/26895)
+* msgservice.Dispatch PR
 * [`contrib/x/circuit`](../../contrib/x/circuit)
 * [ADR 068: Preblock](./adr-068-preblock.md)

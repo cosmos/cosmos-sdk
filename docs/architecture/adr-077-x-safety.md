@@ -4,6 +4,7 @@
 
 * 2026-10-21: Initial draft
 * 2026-10-21: Direct msg server callers use `msgservice.Dispatch`
+* 2026-10-22: Msgs run only through the router; SDK modules stop exporting their msg servers
 
 ## Status
 
@@ -11,7 +12,7 @@ DRAFT Not Implemented
 
 ## Abstract
 
-`x/safety` replaces `contrib/x/circuit`. It lets one operator address stop a msg type in a single tx during an incident, and lets governance decide who that operator is and what it may stop. The authority, gov by default, sets the operator and its scope and can reset any block, but cannot block anything itself. Gov, upgrade, safety and consensus parameter msgs stay outside the operator's reach, so the operator can never lock governance out of the reset. BaseApp checks the breaker at the router and in the ante handler. Code outside a module that would call the module's msg server directly, such as a cosmos/evm precompile, runs the msg with `msgservice.Dispatch` instead, so the router checks it as it checks a tx.
+`x/safety` replaces `contrib/x/circuit`. It lets one operator address stop a msg type in a single tx during an incident, and lets governance decide who that operator is and what it may stop. The authority, gov by default, sets the operator and its scope and can reset any block, but cannot block anything itself. Gov, upgrade, safety and consensus parameter msgs stay outside the operator's reach, so the operator can never lock governance out of the reset. BaseApp checks the breaker at the router and in the ante handler. The router becomes the only way to run an `sdk.Msg`: SDK modules stop exporting their msg servers, and code outside a module, such as a cosmos/evm precompile, runs a msg with `msgservice.Dispatch`, which the router checks as it checks a tx.
 
 ## Context
 
@@ -36,6 +37,7 @@ Chains need a key that stops a msg type within one block of someone finding an e
 * **Make every module depend on an x/safety keeper.** Every module would import x/safety, and every module author would still have to call it in every method.
 * **Call the guard on the first line of every msg server method.** BaseApp would set the breaker on `sdk.Context`, and each method would call `msgservice.CheckMsgAllowed`. A method that forgets the line fails open with no error, and every module author pays for a check that only direct callers need.
 * **Generate a guarded wrapper for every Msg service and check it at startup.** A protoc plugin removes the per-method line, but each module still wraps its msg server, modules outside the SDK must add the plugin, and the authz, group, consensus, crisis and nft keepers, which are their own msg servers, still need guards written by hand.
+* **Dispatch by convention without unexporting msg servers.** Add `Dispatch` and tell outside callers to use it, but keep `NewMsgServerImpl` exported. A direct call still compiles and silently skips the breaker, and the chain finds out during the incident.
 * **Wrap msg servers with reflection at registration.** Go cannot add methods to a type at run time, so the router cannot hand a direct caller a checked msg server that satisfies the module's `MsgServer` interface.
 
 ## Decision
@@ -64,9 +66,12 @@ When gov narrows the scope, existing trips stay in place, and gov resets them in
 
 ### Enforcement
 
-* **Router.** The keeper implements `sdk.CircuitBreaker`, and the module wires it with `BaseApp.SetCircuitBreaker`. The router checks every msg it routes, on every call and in every exec mode, including `CheckTx`, `Simulate`, `FinalizeBlock`, block hooks, vote extensions and query contexts. A hybrid handler checks the msg type it runs, not the type of the request, and reads the breaker on each call, so a breaker set after `RegisterServices` still covers it.
+* **Router.** The keeper implements `baseapp.CircuitBreaker`, and the module wires it with `BaseApp.SetCircuitBreaker`. The router checks every msg it routes, on every call and in every exec mode, including `CheckTx`, `Simulate`, `FinalizeBlock`, block hooks, vote extensions and query contexts. It reads the breaker on each call, so a breaker set after `RegisterServices` still covers every handler.
 * **Ante.** `SafetyDecorator` checks every msg in a tx and recurses into any msg that exposes `GetMessages` or `GetMsgs`, up to a depth limit. It runs in `CheckTx`, `ReCheckTx`, `Simulate` and the proposal handlers, and passes txs through in `FinalizeBlock`. A tx included after a trip then spends its sequence and fails at the router, so nobody can replay it once the operator resets. A proposal containing a tripped msg fails at submission.
-* **Direct callers.** A direct call to a msg server method skips the router. Code outside the module that owns a msg, such as a cosmos/evm precompile or another module's keeper, runs it with `msgservice.Dispatch[R](ctx, router, msg)`. `Dispatch` calls the router handler on a branch of `ctx`, so `ValidateBasic`, the breaker check and the msg server's events apply, writes the branch only on success, and returns the typed response. It does not check signers; the caller authorizes them as before. Module authors change nothing. Upgrade handlers and a module's calls to its own msg server stay direct, so a trip cannot stop an upgrade or a module's own logic.
+* **One way to run a msg.** An `sdk.Msg` runs only through the `MsgServiceRouter`. In every SDK module the msg server type and its constructor are unexported, and the keeper package exports only `RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper)`, which `RegisterServices` calls. The authz, group, consensus, crisis, nft and counter keepers stop implementing their Msg service; their Msg methods move to an unexported type. `MsgServiceRouter.HybridHandlerByMsgName`, which ran a handler by name without `ValidateBasic`, is removed. A test in `keeper_test` reaches the constructor through `export_test.go`.
+* **Dispatch.** Code outside the module that owns a msg, such as a cosmos/evm precompile or another module's keeper, runs it with `msgservice.Dispatch[R](ctx, router, msg)`. `Dispatch` calls the router handler on a branch of `ctx`, so `ValidateBasic`, the breaker check and the msg server's events apply, writes the branch only on success, and returns the typed response. It does not check signers; the caller authorizes them as before.
+* **Keepers for module logic.** Logic another module needs, such as authz `DispatchActions` or a bank send, stays an exported keeper method, and the breaker does not see it. Upgrade handlers call keepers, not `Dispatch`, so a trip cannot halt an upgrade. A module's calls to its own handlers, such as group running `Exec` after a vote, stay internal calls on the unexported type.
+* A caller that registers a fake `grpc.ServiceRegistrar` can still capture the msg server it receives. That is deliberate abuse, not an API.
 * A breaker that returns an error blocks the msg.
 
 ### Migrating from x/circuit
@@ -78,21 +83,24 @@ Chains remove `x/circuit` and add `x/safety` in the same upgrade: delete the cir
 ### Backwards Compatibility
 
 * Existing chains need a store upgrade that adds the safety store key, and `x/circuit` chains also delete the circuit store.
-* `baseapp.CircuitBreaker` becomes a deprecated alias of `sdk.CircuitBreaker`.
-* `msgservice.Dispatch` is new API. No module, msg server or BaseApp signature changes.
+* API break in every SDK module with a Msg service: `NewMsgServerImpl` is unexported, keepers that were their own msg server lose their Msg methods, each keeper package gains `RegisterMsgServer`, and `MsgServiceRouter.HybridHandlerByMsgName` is removed. `x/staking/testutil.NewHelper` takes a `msgservice.MsgRouter`.
+* `msgservice.Dispatch` is new API.
 * A caller that switches to `Dispatch` needs the app's `MsgServiceRouter`, so its constructor gains a router argument, and a multistore whose `CacheMultiStore` returns itself instead of a branch must be fixed first. The cosmos/evm snapshot multistore is one; without the fix a reverted EVM call keeps the msg's writes.
 
 ### Positive
 
 * Under a selective trip, precompiles that run their SDK msgs with `Dispatch` revert. In evmd with the precompiles switched to `Dispatch`, staking `delegate`, ERC20 and WERC20 `transfer`, distribution `withdrawDelegatorRewards`, slashing `unjail` and ICS20 `transfer` revert under a trip, and `eth_call` and `eth_estimateGas` return an error. Reverting the precompiles to direct msg server calls fails every one of those tests.
-* Module authors write no breaker code, and a new msg server needs nothing.
+* Module authors write no breaker code, and a new msg server needs nothing beyond `RegisterMsgServer`.
+* A direct call to another module's msg server no longer compiles, so no in-repo or downstream caller can skip the breaker by accident.
+* Downstream migration is small. cosmos/evm deleted a deprecated `erc20.NewMsgServerImpl` wrapper around the bank msg server and moved 2 test calls to `Dispatch`; its precompiles already used `Dispatch`. ibc-go needed no change. wasmd moved 5 test calls and no production code.
 * Typos, empty lists and protected msgs fail at trip time instead of succeeding silently.
 * No sequence of trips can block the reset or governance.
 * Gov controls the operator and its scope through ordinary proposals, and can replace itself as authority.
 
 ### Negative
 
-* A direct caller outside the owning module that does not switch to `Dispatch` skips the breaker with no error.
+* Every chain and module that called an SDK msg server from code must move to `Dispatch` or a keeper call before it builds against this release.
+* A module outside the SDK that still exports its msg server, and any keeper method that runs a msg's logic, remain direct paths the breaker does not see.
 * Under a `*` trip the breaker blocks `MsgEthereumTx`, so during a global halt validators on an EVM chain vote with a Cosmos `MsgVote` tx, not through the gov precompile.
 * Recheck evicts txs already in the mempool at trip time, and their senders rebroadcast after the reset.
 * An authority set through the consensus `AuthorityParams` override that can act only through a wrapper the operator tripped by exact URL cannot recover on chain.
@@ -116,7 +124,8 @@ Chains remove `x/circuit` and add `x/safety` in the same upgrade: delete the cir
 * `x/safety` keeper, ante decorator and pattern tests, including fuzzing of pattern matching against the router.
 * `types/msgservice` tests of `Dispatch`: the typed response, a tripped msg, an unknown msg, a pulsar msg, a wrong response type, a nil router, and a failed msg leaving `ctx` unchanged.
 * `baseapp` tests that the router checks `Dispatch` in `CheckTx`, `Simulate`, `FinalizeBlock`, block hooks, vote extensions and a query context, and hybrid handler tests for the registered msg type and a breaker set or removed after registration.
-* `tests/integration/safety`: `Dispatch` from block hooks, a `FinalizeBlock` tx and a query context in SimApp under a trip and after the reset, beside a direct msg server call that the trip does not stop.
+* `tests/integration/safety`: `Dispatch` from block hooks, a `FinalizeBlock` tx and a query context in SimApp under a trip and after the reset.
+* `types/msgservice`: a guard test that fails when any SDK package exports a msg server type, constructor, alias or Msg handler func.
 * System tests: `TestSafety*` and `TestChainUpgrade`, which upgrades a running v0.54 chain into x/safety.
 * cosmos/evm: precompile tests in evmd with the precompiles switched to `Dispatch`, ante tests of `SafetyDecorator` under `MsgEthereumTx` and `*` trips, and a node-level script on a 4-validator testnet covering precompiles, `MsgEthereumTx` and `*` trips, native transfers and queued txs.
 * ibc-go: relayed transfers, recv, ack, timeout and client update trips, client expiry and recovery, misbehavior, ICA host and packet-forward-middleware, all through real `MsgTrip` and `MsgReset` txs.
@@ -125,7 +134,6 @@ Chains remove `x/circuit` and add `x/safety` in the same upgrade: delete the cir
 
 ## References
 
-* [#26894: x/safety module](https://github.com/cosmos/cosmos-sdk/pull/26894)
-* [#26898: msgservice.Dispatch](https://github.com/cosmos/cosmos-sdk/pull/26898)
+* [#26894: x/safety, `msgservice.Dispatch` and unexported msg servers](https://github.com/cosmos/cosmos-sdk/pull/26894), which folds in #26892 and #26898
 * [`contrib/x/circuit`](../../contrib/x/circuit)
 * [ADR 068: Preblock](./adr-068-preblock.md)

@@ -336,9 +336,14 @@ the disabled list exactly as given: resetting `/cosmos.bank.*` does not remove
 | `Params` | `GET /cosmos/safety/v1/params` | the params |
 | `DisabledList` | `GET /cosmos/safety/v1/disabled_list` | a page of disabled patterns |
 | `IsAllowed` | `GET /cosmos/safety/v1/is_allowed?msg_type_url=...` | whether the type URL may execute and, if not, the disabled entry that blocks it in `blocked_by` |
+| `MatchingMsgs` | `GET /cosmos/safety/v1/matching_msgs?pattern=...` | a page of the registered msg type URLs a trip of the pattern would block, sorted |
 
 `IsAllowed` returns `InvalidArgument` for anything other than an exact msg type
 URL, such as a URL without the leading `/`, a prefix pattern or `*`.
+
+`MatchingMsgs` answers before a trip: it applies the protected and wrapper
+rules, so it leaves out protected msgs and, for `*` or a prefix, wrappers. It
+ignores the operator scope and the disabled list.
 
 ## Genesis
 
@@ -475,6 +480,7 @@ Query:
 simd q safety params --node <rpc>
 simd q safety disabled-list --node <rpc>
 simd q safety is-allowed --msg-type-url /cosmos.bank.v1beta1.MsgSend --node <rpc>
+simd q safety matching-msgs --pattern '/cosmos.bank.*' --node <rpc>
 ```
 
 For a blocked msg, `is-allowed` prints the disabled entry that blocks it in

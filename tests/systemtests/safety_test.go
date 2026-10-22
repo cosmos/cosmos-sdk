@@ -377,7 +377,8 @@ func TestSafetyDefaultGenesisQueries(t *testing.T) {
 	// given a running chain with the default x/safety genesis
 	// when the safety queries run
 	// then params show gov as authority, no operator and an empty scope,
-	// the disabled list is empty and every msg is allowed.
+	// the disabled list is empty, every msg is allowed, and the REST
+	// gateway previews what a trip would block.
 	systest.Sut.ResetChain(t)
 	govAddr := sdk.AccAddress(address.Module("gov")).String()
 	systest.Sut.StartChain(t)
@@ -394,6 +395,9 @@ func TestSafetyDefaultGenesisQueries(t *testing.T) {
 	list := safetyREST(t, "/cosmos/safety/v1/disabled_list?pagination.count_total=true")
 	require.Empty(t, safetyStrings(gjson.Get(list, "disabled_patterns")), list)
 	require.Equal(t, int64(0), gjson.Get(list, "pagination.total").Int(), list)
+
+	preview := safetyREST(t, "/cosmos/safety/v1/matching_msgs?pattern="+url.QueryEscape("/cosmos.bank.*"))
+	require.Contains(t, safetyStrings(gjson.Get(preview, "msg_type_urls")), safetyMsgSend, preview)
 
 	// a type URL without its leading slash is rejected, not answered
 	systest.GetRequestWithHeaders(t,

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	goruntime "runtime"
+	"slices"
 	"strings"
 	"testing"
 
@@ -1075,4 +1076,108 @@ func (s *KeeperTestSuite) TestQueryIsAllowedBlockedBy() {
 	s.Require().NoError(err)
 	s.Require().True(res.Allowed)
 	s.Require().Empty(res.BlockedBy)
+}
+
+func (s *KeeperTestSuite) matching(pattern string, page *querytypes.PageRequest) (*types.QueryMatchingMsgsResponse, error) {
+	return s.queryClient.MatchingMsgs(s.ctx, &types.QueryMatchingMsgsRequest{Pattern: pattern, Pagination: page})
+}
+
+// MatchingMsgs lists what a trip of a pattern would block: the registered
+// msgs IsAllowed would refuse, with protected msgs left out and wrappers only
+// for an exact pattern.
+func (s *KeeperTestSuite) TestQueryMatchingMsgs() {
+	all := s.registry.ListImplementations(sdk.MsgInterfaceProtoName)
+	for _, pattern := range []string{types.Wildcard, "/cosmos.*", "/cosmos.bank.*", "/cosmos.authz.v1beta1.*", uSend, uExec, uVote, "/cosmos.gov.*", "/other.*"} {
+		s.Run(pattern, func() {
+			res, err := s.matching(pattern, nil)
+			s.Require().NoError(err)
+
+			// the list is exactly what IsAllowed refuses once the pattern
+			// is tripped
+			s.state(s.operator, []string{types.Wildcard}, pattern)
+			var want []string
+			for _, u := range all {
+				if !s.allowed(u) {
+					want = append(want, u)
+				}
+			}
+			slices.Sort(want)
+			s.Require().Equal(want, res.MsgTypeUrls)
+		})
+	}
+
+	res, err := s.matching("/cosmos.bank.*", nil)
+	s.Require().NoError(err)
+	s.Require().Contains(res.MsgTypeUrls, uSend)
+	s.Require().Contains(res.MsgTypeUrls, uMultiSend)
+	s.Require().NotContains(res.MsgTypeUrls, uDelegate)
+
+	res, err = s.matching(types.Wildcard, nil)
+	s.Require().NoError(err)
+	s.Require().Contains(res.MsgTypeUrls, uSend)
+	for _, u := range []string{uExec, uVote, uSubmitProp, uSafetyReset, uUpgrade, uConsensus} {
+		s.Require().NotContains(res.MsgTypeUrls, u)
+	}
+
+	res, err = s.matching(uExec, nil)
+	s.Require().NoError(err)
+	s.Require().Equal([]string{uExec}, res.MsgTypeUrls)
+
+	res, err = s.matching(uVote, nil)
+	s.Require().NoError(err)
+	s.Require().Empty(res.MsgTypeUrls)
+
+	for _, bad := range []string{"", "cosmos.bank", "/cosmos.bank.**", "/cosmos.*.MsgSend"} {
+		_, err := s.matching(bad, nil)
+		s.Require().Equal(codes.InvalidArgument, status.Code(err), bad)
+	}
+	_, err = s.queryServer.MatchingMsgs(s.ctx, nil)
+	s.Require().Equal(codes.InvalidArgument, status.Code(err))
+}
+
+// MatchingMsgs pages through the sorted list by offset or by key.
+func (s *KeeperTestSuite) TestQueryMatchingMsgsPagination() {
+	full, err := s.matching(types.Wildcard, nil)
+	s.Require().NoError(err)
+	want := full.MsgTypeUrls
+	s.Require().Greater(len(want), 4)
+	s.Require().True(slices.IsSorted(want))
+
+	// by key, two at a time
+	var got []string
+	var key []byte
+	for {
+		res, err := s.matching(types.Wildcard, &querytypes.PageRequest{Key: key, Limit: 2})
+		s.Require().NoError(err)
+		s.Require().LessOrEqual(len(res.MsgTypeUrls), 2)
+		got = append(got, res.MsgTypeUrls...)
+		key = res.Pagination.NextKey
+		if key == nil {
+			break
+		}
+	}
+	s.Require().Equal(want, got)
+
+	// by offset, with the total
+	res, err := s.matching(types.Wildcard, &querytypes.PageRequest{Offset: 1, Limit: 2, CountTotal: true})
+	s.Require().NoError(err)
+	s.Require().Equal(want[1:3], res.MsgTypeUrls)
+	s.Require().Equal(uint64(len(want)), res.Pagination.Total)
+	s.Require().Equal([]byte(want[3]), res.Pagination.NextKey)
+
+	// an offset past the end returns nothing and the real total
+	res, err = s.matching(types.Wildcard, &querytypes.PageRequest{Offset: uint64(len(want) + 5), CountTotal: true})
+	s.Require().NoError(err)
+	s.Require().Empty(res.MsgTypeUrls)
+	s.Require().Nil(res.Pagination.NextKey)
+	s.Require().Equal(uint64(len(want)), res.Pagination.Total)
+
+	// reverse
+	res, err = s.matching(types.Wildcard, &querytypes.PageRequest{Limit: 2, Reverse: true})
+	s.Require().NoError(err)
+	s.Require().Equal([]string{want[len(want)-1], want[len(want)-2]}, res.MsgTypeUrls)
+
+	// key and offset together are refused
+	_, err = s.matching(types.Wildcard, &querytypes.PageRequest{Key: []byte(want[1]), Offset: 1})
+	s.Require().Equal(codes.InvalidArgument, status.Code(err))
 }

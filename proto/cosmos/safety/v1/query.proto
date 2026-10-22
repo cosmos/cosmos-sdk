@@ -29,6 +29,14 @@ service Query {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/safety/v1/is_allowed";
   }
+
+  // MatchingMsgs lists the registered msg type URLs that a trip of a pattern
+  // would block. It leaves out protected msgs and, for "*" or a prefix
+  // pattern, wrappers.
+  rpc MatchingMsgs(QueryMatchingMsgsRequest) returns (QueryMatchingMsgsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/safety/v1/matching_msgs";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -70,4 +78,23 @@ message QueryIsAllowedResponse {
   // blocked_by is the disabled entry that blocks the msg type URL, or empty
   // when it is allowed.
   string blocked_by = 2;
+}
+
+// QueryMatchingMsgsRequest is the request type for the Query/MatchingMsgs RPC method.
+message QueryMatchingMsgsRequest {
+  // pattern is "*", a prefix pattern such as "/cosmos.bank.*", or an exact
+  // msg type URL.
+  string pattern = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryMatchingMsgsResponse is the response type for the Query/MatchingMsgs RPC method.
+message QueryMatchingMsgsResponse {
+  // msg_type_urls are the msg type URLs in this page, sorted.
+  repeated string msg_type_urls = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

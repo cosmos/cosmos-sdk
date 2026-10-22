@@ -383,6 +383,32 @@ orders, after `genutiltypes.ModuleName` in the init order. A chain that adds
 the module in an upgrade adds `safetytypes.StoreKey` to
 `StoreUpgrades.Added`; `RunMigrations` then runs the default genesis.
 
+### Upgrade handler
+
+The default genesis has no operator, so until the authority names one, a trip
+needs a gov proposal. To leave no gap, for example when moving off
+`contrib/x/circuit`, set the params in the upgrade handler right after
+`RunMigrations`:
+
+```go
+app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
+	func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		vm, err := app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+		if err != nil {
+			return nil, err
+		}
+		return vm, app.SafetyKeeper.SetParams(ctx, safetytypes.Params{
+			Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			Operator:  "cosmos1...", // the operator account
+			Scope:     []string{safetytypes.Wildcard},
+		})
+	},
+)
+```
+
+`SetParams` validates the params first. The operator can trip from the
+upgrade block on.
+
 ### Genesis order
 
 Order `safety` after `genutil` in `InitGenesis`. Genutil delivers gentxs

@@ -35,7 +35,7 @@ func (s msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 		return nil, s.notCanonical(msg.Authority, err)
 	}
 
-	if err := s.Params.Set(ctx, msg.Params); err != nil {
+	if err := s.SetParams(ctx, msg.Params); err != nil {
 		return nil, err
 	}
 

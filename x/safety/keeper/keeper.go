@@ -71,6 +71,17 @@ func (k Keeper) AddressCodec() address.Codec { return k.addressCodec }
 // DefaultAuthority returns the authority written into the default genesis.
 func (k Keeper) DefaultAuthority() string { return k.defaultAuthority }
 
+// SetParams validates params and writes them. An upgrade handler that adds
+// the module calls it right after RunMigrations to name the operator and its
+// scope, so the operator can trip from the upgrade block on. At runtime the
+// authority changes params with MsgUpdateParams.
+func (k Keeper) SetParams(ctx context.Context, params types.Params) error {
+	if err := params.Validate(k.addressCodec); err != nil {
+		return err
+	}
+	return k.Params.Set(ctx, params)
+}
+
 // IsAllowed reports whether a msg type URL may execute. It implements
 // baseapp.CircuitBreaker. Protected msg types are always allowed. Otherwise
 // the msg is blocked when the disabled list contains its exact type URL, or,

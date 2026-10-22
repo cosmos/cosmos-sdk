@@ -1028,3 +1028,25 @@ func (s *KeeperTestSuite) TestIsAllowedFailsClosedOnStoreError() {
 	s.Require().NoError(err)
 	s.Require().True(ok)
 }
+
+// SetParams writes valid params and refuses invalid ones, leaving the stored
+// params as they were.
+func (s *KeeperTestSuite) TestSetParams() {
+	want := types.Params{Authority: s.authority, Operator: s.other, Scope: []string{"/cosmos.bank.*"}}
+	s.Require().NoError(s.keeper.SetParams(s.ctx, want))
+	got, err := s.keeper.Params.Get(s.ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(want, got)
+
+	for _, bad := range []types.Params{
+		{Authority: ""},
+		{Authority: s.authority, Operator: "not-an-address"},
+		{Authority: s.authority, Scope: []string{"/cosmos.bank.*", "/cosmos.bank.*"}},
+		{Authority: s.authority, Scope: []string{"cosmos.bank"}},
+	} {
+		s.Require().Error(s.keeper.SetParams(s.ctx, bad), "%+v", bad)
+		got, err := s.keeper.Params.Get(s.ctx)
+		s.Require().NoError(err)
+		s.Require().Equal(want, got)
+	}
+}

@@ -25,6 +25,7 @@ never block its own reset.
     * [Protected set](#protected-set)
     * [Wrapper set](#wrapper-set)
     * [Enforcement](#enforcement)
+    * [Gas](#gas)
     * [Direct callers](#direct-callers)
 * [State](#state)
 * [Messages](#messages)
@@ -154,14 +155,7 @@ decorator returns.
 A check of a protected type URL runs no lookup. Any other check runs at most
 two point lookups plus one per package segment, and one for a wrapper; it
 stops at the first disabled entry that blocks the msg, and never walks the
-disabled list. Each lookup charges KV read gas: with the default gas config, a
-lookup that finds nothing costs 1000 gas (`ReadCostFlat`). An allowed
-`/cosmos.bank.v1beta1.MsgSend` costs 5000 gas (the exact URL, `*` and three
-prefixes), a wrapper such as authz `MsgExec` 1000, and a protected msg 0. The
-router charges this for every msg it routes, nested msgs included, so an authz
-`MsgExec` of one `MsgSend` pays 6000. In simulation the ante decorator charges
-the same again, while in `FinalizeBlock` it charges nothing, so simulated gas
-runs above what the tx uses by the decorator's share.
+disabled list.
 
 The check runs in two places:
 
@@ -205,6 +199,23 @@ The check runs in two places:
   before the tx runs, so a tx that resets a pattern and then sends a msg the
   pattern blocked fails in `CheckTx`. Send that msg in a later tx.
 
+### Gas
+
+The check charges no gas. The keeper runs its lookups on an infinite gas
+meter that replaces the context's meter for the check only, so neither the tx
+nor the block gas meter pays for them. A msg uses the same gas with x/safety
+wired as with no circuit breaker set, both in `FinalizeBlock` and in
+simulation, so `--gas auto` estimates do not rise. The same holds for
+`msgservice.Dispatch` and for EVM precompiles that call it.
+
+Charging for the check would make every msg pay for the breaker whether or
+not anything is tripped. It would also inflate simulated gas: the ante
+decorator checks in `CheckTx` and simulation but not in `FinalizeBlock`, so
+users would pay fees for gas that never runs. The work stays bounded without
+gas: per msg, at most two lookups plus one per package segment, on a type URL
+that the interface registry knows or, through the `IsAllowed` query, one of
+at most 256 bytes.
+
 ### Direct callers
 
 The router checks only the msgs it routes, so the SDK makes the router the
@@ -220,7 +231,8 @@ resp, err := msgservice.Dispatch[*banktypes.MsgSendResponse](ctx, app.MsgService
 
 `Dispatch` calls the router handler for the msg on a branch of `ctx`: it runs
 `ValidateBasic`, the circuit breaker check and the msg server, and returns the
-typed response. It uses the same gas as a routed msg, and a tripped msg fails
+typed response. It uses the same gas as a routed msg, which is the same gas
+as with no circuit breaker set, and a tripped msg fails
 with `ErrMsgDisabled`. The router checks on every call whatever the exec mode,
 so the check applies to `Dispatch` from a tx in `CheckTx`, simulation or
 `FinalizeBlock`, from `PreBlock`, `BeginBlock` and `EndBlock`, from vote

@@ -152,7 +152,7 @@ func ExportGenesisFileWithTime(genFile string, appGenesis *types.AppGenesis, gen
 
 The circuit breaker only sees msgs that go through the `MsgServiceRouter`, which is now the only way to run an SDK module's msg. See [Running msgs from code](#running-msgs-from-code) and [Direct callers](x/safety/README.md#direct-callers).
 
-With x/safety wired, the router check adds gas to every msg it routes, nested msgs included. Each disabled-list lookup that finds nothing costs 1000 gas with the default gas config: 5000 for a `MsgSend` (the exact URL, `*` and three prefixes), 1000 for a wrapper such as authz `MsgExec`, and none for a msg in the [protected set](x/safety/README.md#protected-set). Clients and relayers that hard-code gas limits instead of simulating need to raise them. Simulation also pays for the ante decorator's check, which `FinalizeBlock` skips, so simulated gas runs above what the tx uses. See [Enforcement](x/safety/README.md#enforcement).
+Wiring x/safety leaves gas unchanged. The circuit breaker check charges no gas in the router, the ante decorator or `msgservice.Dispatch`, so delivered and simulated gas match a chain with no circuit breaker set, and clients that hard-code gas limits need no change. See [Gas](x/safety/README.md#gas).
 
 ### Running msgs from code
 

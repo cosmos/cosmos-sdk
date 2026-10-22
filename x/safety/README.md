@@ -577,8 +577,10 @@ calls another module's msg server without `msgservice.Dispatch`; see
 * cosmos/evm precompile methods that call SDK keepers, such as distribution
   `claimRewards` and WERC20 `deposit`,
 * EVM native value transfers,
-* the ibc-go transfer keeper's `Transfer` method, which
-  packet-forward-middleware calls,
+* the ibc-go transfer keeper's `Transfer` and `SendTransfer` methods, which
+  packet-forward-middleware and other modules call,
+* the ibc-go channel keeper's `SendPacket`, which any module or middleware can
+  call to send a packet,
 * wasmd `BankMsg::Burn` and `IbcMsg::SendPacket`. wasmd routes the other
   contract msgs; see [CosmWasm contracts](#cosmwasm-contracts).
 

@@ -16,10 +16,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/v2/wrapper"
 )
 
-// park is how long the test holds the reader inside the race window before
-// letting it continue. It only needs to be long enough for a concurrent Set to
-// be attempted.
-const park = 250 * time.Millisecond
+// park is how long the test waits, with the reader still gated, to observe
+// whether a concurrent Set is blocked behind the in-flight read-through. It
+// only needs to be long enough for the writer to actually reach the lock.
+const park = 500 * time.Millisecond
+
+// settle is the bounded wait used for the writer handshakes, so a broken
+// implementation fails the test instead of hanging it.
+const settle = 5 * time.Second
 
 // gatedCommitKVStore wraps a CommitKVStore so a test can pin a reader inside
 // the window between CommitKVStoreCache.Get's read of the underlying store and
@@ -92,30 +96,46 @@ func TestCommitKVStoreCacheSetDuringReadThrough(t *testing.T) {
 	// its result into the cache.
 	<-gated.entered
 
-	// The writer runs on its own goroutine: a correct implementation serializes it
-	// behind the in-flight read-through, so blocking here would deadlock.
+	// The writer runs on its own goroutine. It signals setStarted before calling
+	// Set so the check below cannot pass vacuously: without the handshake, a
+	// writer that never ran would look identical to a correctly blocked one.
+	setStarted := make(chan struct{})
 	set := make(chan struct{})
 	go func() {
+		close(setStarted)
 		ckv.Set(key, []byte("v2"))
 		close(set)
 	}()
+	<-setStarted
+
+	// With the reader still gated inside its read-modify-write, a correct
+	// implementation must not let the writer finish. If the write lock is not
+	// held across the read-through, Set completes here and the test fails.
+	select {
+	case <-set:
+		t.Fatal("Set completed while a read-through was in flight: cache is not serialized against concurrent writers")
+	case <-time.After(park):
+	}
+
+	// Release the reader and require that both goroutines actually finish, so a
+	// broken lock shows up as a failure rather than a hang.
+	close(gated.released)
+
+	select {
+	case v := <-read:
+		require.Equal(t, []byte("v1"), v, "reader should observe the value committed before it started")
+	case <-time.After(settle):
+		t.Fatal("reader did not return after the gate was released")
+	}
 
 	select {
 	case <-set:
-		// The writer was not serialized against the in-flight read-through, so it
-		// published v2 into the cache first. The reader is about to write its
-		// stale v1 back over the top of it.
-	case <-time.After(park):
-		// The writer is correctly blocked behind the reader's read-modify-write.
+	case <-time.After(settle):
+		t.Fatal("writer did not return after the read-through completed")
 	}
 
-	close(gated.released)
-
-	require.Equal(t, []byte("v1"), <-read, "reader should observe the value committed before it started")
-	<-set
-
-	// Whichever order the two ran in, the last committed value must win. The
-	// in-flight read-through may not overwrite the newer v2 with its stale v1.
+	// The newer committed value must win. The in-flight read-through may not
+	// overwrite v2 with the stale v1 it read before the writer published.
 	require.Equal(t, []byte("v2"), ckv.Get(key), "cache must not serve a value clobbered by a stale read-through")
 	require.Equal(t, []byte("v2"), underlying.Get(key))
 }

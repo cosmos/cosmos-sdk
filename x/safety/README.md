@@ -87,8 +87,7 @@ The set is hardcoded. A `*` trip leaves it running.
 
 ### Wrapper set
 
-These msgs only dispatch other msgs through the router, which checks each
-dispatched msg:
+These msgs run other msgs, and the router checks each msg they dispatch:
 
 * `/cosmos.authz.v1beta1.MsgExec`
 * `/cosmos.group.v1.MsgSubmitProposal`

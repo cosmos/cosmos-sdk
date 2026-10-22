@@ -26,7 +26,124 @@ func TestChainUpgrade(t *testing.T) {
 	// Scenario:
 	// start a legacy chain with some state
 	// when a chain upgrade proposal is executed
-	// then the chain upgrades successfully
+	// then the chain upgrades successfully, and x/safety, which the upgrade
+	// adds, trips and resets msgs
+	cli := upgradeLegacyChain(t)
+	govAddr := sdk.AccAddress(address.Module("gov")).String()
+
+	mintParamsRaw := cli.CustomQuery("q", "mint", "params")
+	require.True(t,
+		gjson.Get(mintParamsRaw, "params.max_supply").Exists() || gjson.Get(mintParamsRaw, "params.maxSupply").Exists(),
+		mintParamsRaw,
+	)
+
+	stakingParamsRaw := cli.CustomQuery("q", "staking", "params")
+	bondDenom := gjson.Get(stakingParamsRaw, "params.bond_denom")
+	require.True(t, bondDenom.Exists(), stakingParamsRaw)
+
+	keyRotationFee := gjson.Get(stakingParamsRaw, "params.key_rotation_fee")
+	require.True(t, keyRotationFee.Exists(), stakingParamsRaw)
+	require.Equal(t, "1000000", keyRotationFee.Get("amount").String(), stakingParamsRaw)
+	require.Equal(t, bondDenom.String(), keyRotationFee.Get("denom").String(), stakingParamsRaw)
+
+	// x/safety is new in this version: the upgrade adds its store and runs its
+	// InitGenesis with the default params
+	safetyParamsRaw := safetyParams(t)
+	require.Equal(t, govAddr, gjson.Get(safetyParamsRaw, "params.authority").String(), safetyParamsRaw)
+	require.Empty(t, gjson.Get(safetyParamsRaw, "params.operator").String(), safetyParamsRaw)
+	require.Empty(t, safetyDisabledList(t))
+	require.True(t, safetyIsAllowed(t, safetyMsgSend))
+
+	regex, err := regexp.Compile("DBG this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
+	require.NoError(t, err)
+	require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
+
+	// smoke test that new version runs
+	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	got := cli.Run("tx", "distribution", "fund-community-pool", "100stake", "--from=node0")
+	systest.RequireTxSuccess(t, got)
+
+	safetyAfterUpgrade(t, cli, govAddr)
+}
+
+// safetyAfterUpgrade has gov name an x/safety operator on the upgraded chain
+// and the operator trip and reset msgs. The trips block those msgs in CheckTx
+// and survive a restart, gov still submits and votes, and the operator and
+// gov resets reopen them.
+func safetyAfterUpgrade(t *testing.T, cli *systest.CLIWrapper, govAddr string) {
+	t.Helper()
+	// keys added after the upgrade, funded by bank sends that x/safety allows
+	operatorAddr := cli.AddKey("safety-operator")
+	recipientAddr := cli.AddKey("safety-recipient")
+	cli.FundAddress(operatorAddr, "10000000stake")
+	require.Equal(t, int64(10000000), cli.QueryBalance(operatorAddr, "stake"))
+
+	// gov names the operator with scope /cosmos.bank.*
+	newParams := fmt.Sprintf(`{"authority":%q,"operator":%q,"scope":["/cosmos.bank.*"]}`, govAddr, operatorAddr)
+	safetySubmitAndPassProposal(t, cli, "tx", "gov", "submit-proposal",
+		safetyProposalFile(t, safetyUpdateParams(govAddr, newParams), "name safety operator", "grant /cosmos.bank.* scope"),
+		"--from", "node0")
+	params := safetyParams(t)
+	require.Equal(t, operatorAddr, gjson.Get(params, "params.operator").String(), params)
+	require.Equal(t, []string{"/cosmos.bank.*"}, safetyStrings(gjson.Get(params, "params.scope")), params)
+
+	safetyRequireTxRejected(t, cli, "not covered by operator scope",
+		operatorAddr, safetyTrip(operatorAddr, "/cosmos.distribution.v1beta1.MsgFundCommunityPool"))
+
+	// the operator trips MsgSend
+	safetyTx(t, cli, operatorAddr, safetyTrip(operatorAddr, safetyMsgSend))
+	require.Equal(t, []string{safetyMsgSend}, safetyDisabledList(t))
+	require.False(t, safetyIsAllowed(t, safetyMsgSend))
+
+	out, _ := cli.WithRunErrorsIgnored().RunOnly("tx", "bank", "send", "node0", recipientAddr, "100stake", safetyFees)
+	upgradeRequireSafetyRejected(t, out, safetyMsgSend+" by "+safetyMsgSend)
+	require.Zero(t, cli.QueryBalance(recipientAddr, "stake"))
+
+	// other msgs still run, and gov still submits and votes: gov widens the
+	// operator scope to *
+	safetyRequireCommittedOK(t, cli.Run("tx", "distribution", "fund-community-pool", "100stake", "--from", "node0"))
+	newParams = fmt.Sprintf(`{"authority":%q,"operator":%q,"scope":["*"]}`, govAddr, operatorAddr)
+	safetySubmitAndPassProposal(t, cli, "tx", "gov", "submit-proposal",
+		safetyProposalFile(t, safetyUpdateParams(govAddr, newParams), "widen safety scope", "grant * scope"),
+		"--from", "node0")
+	params = safetyParams(t)
+	require.Equal(t, []string{"*"}, safetyStrings(gjson.Get(params, "params.scope")), params)
+
+	// the operator resets MsgSend and the send goes through
+	safetyTx(t, cli, operatorAddr, safetyReset(operatorAddr, safetyMsgSend))
+	require.Empty(t, safetyDisabledList(t))
+	require.True(t, safetyIsAllowed(t, safetyMsgSend))
+	safetyRequireCommittedOK(t, cli.Run("tx", "bank", "send", "node0", recipientAddr, "100stake"))
+	require.Equal(t, int64(100), cli.QueryBalance(recipientAddr, "stake"))
+
+	// the operator trips *, which now blocks the community pool fund too
+	safetyTx(t, cli, operatorAddr, safetyTrip(operatorAddr, "*"))
+	out, _ = cli.WithRunErrorsIgnored().RunOnly("tx", "distribution", "fund-community-pool", "100stake", "--from", "node0", safetyFees)
+	upgradeRequireSafetyRejected(t, out, "/cosmos.distribution.v1beta1.MsgFundCommunityPool by *")
+
+	// the trip survives a restart
+	systest.Sut.StopChain()
+	systest.Sut.StartChain(t)
+	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	require.Equal(t, []string{"*"}, safetyDisabledList(t))
+	out, _ = cli.WithRunErrorsIgnored().RunOnly("tx", "bank", "send", "node0", recipientAddr, "100stake", safetyFees)
+	upgradeRequireSafetyRejected(t, out, safetyMsgSend+" by *")
+
+	// gov submits, votes on and executes a reset of * while * is tripped
+	safetySubmitAndPassProposal(t, cli, "tx", "gov", "submit-proposal",
+		safetyProposalFile(t, safetyReset(govAddr, "*"), "reset safety", "clear the * trip"), "--from", "node0")
+
+	require.Empty(t, safetyDisabledList(t))
+	safetyRequireCommittedOK(t, cli.Run("tx", "bank", "send", "node0", recipientAddr, "100stake"))
+	require.Equal(t, int64(200), cli.QueryBalance(recipientAddr, "stake"))
+	safetyRequireCommittedOK(t, cli.Run("tx", "distribution", "fund-community-pool", "100stake", "--from", "node0"))
+}
+
+// upgradeLegacyChain starts a chain on the v0.54 binary, passes a gov
+// software upgrade, and restarts the chain on the current binary past the
+// upgrade height.
+func upgradeLegacyChain(t *testing.T) *systest.CLIWrapper {
+	t.Helper()
 	systest.Sut.StopChain()
 
 	currentBranchBinary := systest.Sut.ExecBinary()
@@ -90,28 +207,18 @@ func TestChainUpgrade(t *testing.T) {
 	systest.Sut.StartChain(t)
 
 	require.True(t, upgradeHeight+1 <= systest.Sut.CurrentHeight())
-	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
-	mintParamsRaw := cli.CustomQuery("q", "mint", "params")
-	require.True(t,
-		gjson.Get(mintParamsRaw, "params.max_supply").Exists() || gjson.Get(mintParamsRaw, "params.maxSupply").Exists(),
-		mintParamsRaw,
-	)
+	return systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+}
 
-	stakingParamsRaw := cli.CustomQuery("q", "staking", "params")
-	bondDenom := gjson.Get(stakingParamsRaw, "params.bond_denom")
-	require.True(t, bondDenom.Exists(), stakingParamsRaw)
-
-	keyRotationFee := gjson.Get(stakingParamsRaw, "params.key_rotation_fee")
-	require.True(t, keyRotationFee.Exists(), stakingParamsRaw)
-	require.Equal(t, "1000000", keyRotationFee.Get("amount").String(), stakingParamsRaw)
-	require.Equal(t, bondDenom.String(), keyRotationFee.Get("denom").String(), stakingParamsRaw)
-
-	regex, err := regexp.Compile("DBG this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
-	require.NoError(t, err)
-	require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
-
-	// smoke test that new version runs
-	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
-	got := cli.Run("tx", "distribution", "fund-community-pool", "100stake", "--from=node0")
-	systest.RequireTxSuccess(t, got)
+// upgradeRequireSafetyRejected requires a broadcast to have failed in CheckTx
+// with the x/safety ErrMsgDisabled code, and its log to name the blocked msg
+// type URL and the disabled pattern as "<type URL> by <pattern>".
+func upgradeRequireSafetyRejected(t *testing.T, out, blockedBy string) {
+	t.Helper()
+	safetyRequireCheckTxRejected(t, out, safetyDisabledErr)
+	js := safetyTrimJSON(out)
+	require.True(t, gjson.Valid(js), out)
+	require.Equal(t, "safety", gjson.Get(js, "codespace").String(), out)
+	require.Equal(t, int64(10), gjson.Get(js, "code").Int(), out)
+	require.Contains(t, gjson.Get(js, "raw_log").String(), blockedBy, out)
 }

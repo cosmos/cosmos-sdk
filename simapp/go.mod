@@ -332,7 +332,6 @@ require (
 )
 
 // short-lived replaces, should be removed after tags are cut
-replace cosmossdk.io/api => ../api
 
 // long-lived replaces
 replace (

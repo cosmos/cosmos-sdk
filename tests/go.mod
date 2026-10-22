@@ -332,8 +332,6 @@ require (
 // Replace here are pending PRs, or version to be tagged
 replace github.com/cosmos/cosmos-sdk/enterprise/group => ../enterprise/group
 
-replace cosmossdk.io/api => ../api
-
 // Below are the long-lived replace for tests.
 replace (
 	// We always want to test against the latest version of the simapp.

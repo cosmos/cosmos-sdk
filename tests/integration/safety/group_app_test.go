@@ -13,13 +13,13 @@ import (
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log/v2"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -28,6 +28,7 @@ import (
 	groupkeeper "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/keeper"
 	_ "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/module" // import as blank for app wiring
 	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,13 +37,13 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/safety"
 	safetykeeper "github.com/cosmos/cosmos-sdk/x/safety/keeper"
-	safetytestutil "github.com/cosmos/cosmos-sdk/x/safety/testutil"
 	safetytypes "github.com/cosmos/cosmos-sdk/x/safety/types"
 )
 
-// groupFixture is a depinject app with auth, bank, staking, consensus, group,
-// authz and safety, and the SimApp ante chain, which runs SafetyDecorator
+// groupFixture is a depinject app with auth, bank, staking, consensus, group
+// and authz, x/safety wired by hand on top, and the SimApp ante chain, which runs SafetyDecorator
 // before fee deduction. SimApp does not wire enterprise/group, so the group
 // paths run here. The chain starts without the consensus AuthorityParams
 // override, so the x/safety params authority is the authority.
@@ -89,6 +90,26 @@ func txModuleSkipAnte() configurator.ModuleOption {
 	}
 }
 
+// wireSafety adds x/safety to an app built through depinject, before it
+// loads: it mounts the store, builds the keeper with the given authority,
+// installs the keeper as the circuit breaker, registers the module and its
+// services, and sets the init and export genesis order to initGenesis followed
+// by x/safety. The app config must omit the init genesis order.
+func wireSafety(t *testing.T, app *runtime.App, cdc codec.Codec, ac address.Codec, authority string, initGenesis ...string) safetykeeper.Keeper {
+	t.Helper()
+	key := storetypes.NewKVStoreKey(safetytypes.StoreKey)
+	require.NoError(t, app.RegisterStores(key))
+	k := safetykeeper.NewKeeper(cdc, runtime.NewKVStoreService(key), ac, cdc.InterfaceRegistry(), authority)
+	app.SetCircuitBreaker(k)
+	require.NoError(t, app.RegisterModules(safety.NewAppModule(k)))
+
+	order := append(initGenesis, safetytypes.ModuleName)
+	app.ModuleManager.SetOrderInitGenesis(order...)
+	app.ModuleManager.SetOrderExportGenesis(order...)
+	app.SetInitChainer(app.InitChainer)
+	return k
+}
+
 func newGroupFixture(t *testing.T) *groupFixture {
 	t.Helper()
 	newAccount := func() account {
@@ -111,12 +132,16 @@ func newGroupFixture(t *testing.T) *groupFixture {
 				txModuleSkipAnte(),
 				groupModule(),
 				configurator.AuthzModule(),
-				safetytestutil.SafetyModule(f.member.String()),
+				// x/safety is wired by hand below and has no app config
+				configurator.OmitInitGenesis(),
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		&appBuilder, &cdc, &f.txConfig, &f.accountKeeper, &f.bankKeeper, &f.groupKeeper, &f.safetyKeeper,
+		&appBuilder, &cdc, &f.txConfig, &f.accountKeeper, &f.bankKeeper, &f.groupKeeper,
 	))
+	app := appBuilder.Build(dbm.NewMemDB())
+	f.safetyKeeper = wireSafety(t, app, cdc, f.accountKeeper.AddressCodec(), f.member.String(),
+		"auth", "bank", "staking", "authz", "consensus", "group")
 
 	anteHandler, err := simapp.NewAnteHandler(simapp.HandlerOptions{
 		HandlerOptions: authante.HandlerOptions{
@@ -128,10 +153,9 @@ func newGroupFixture(t *testing.T) *groupFixture {
 		SafetyKeeper: f.safetyKeeper,
 	})
 	require.NoError(t, err)
-	f.app = appBuilder.Build(dbm.NewMemDB(), func(app *baseapp.BaseApp) {
-		app.SetAnteHandler(anteHandler)
-	})
-	require.NoError(t, f.app.Load(true))
+	app.SetAnteHandler(anteHandler)
+	require.NoError(t, app.Load(true))
+	f.app = app
 
 	valSet, err := simtestutil.CreateRandomValidatorSet()
 	require.NoError(t, err)

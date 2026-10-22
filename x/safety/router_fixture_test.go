@@ -7,12 +7,15 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log/v2"
@@ -20,18 +23,25 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/x/auth" // import as blank for app wiring
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/authz/module" // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/bank"         // import as blank for app wiring
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import as blank for app wiring
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution" // import as blank for app wiring
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
@@ -39,10 +49,11 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/safety"
 	safetyante "github.com/cosmos/cosmos-sdk/x/safety/ante"
 	"github.com/cosmos/cosmos-sdk/x/safety/keeper"
-	safetytestutil "github.com/cosmos/cosmos-sdk/x/safety/testutil"
 	"github.com/cosmos/cosmos-sdk/x/safety/types"
+	_ "github.com/cosmos/cosmos-sdk/x/staking" // import as blank for app wiring
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/upgrade" // import as blank for app wiring
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
@@ -62,8 +73,9 @@ func newTestAccount() testAccount {
 func (a testAccount) String() string { return a.addr.String() }
 
 // routerFixture is a full app built through depinject with real auth, bank,
-// staking, distribution, gov, authz, consensus, upgrade and safety modules.
-// x/safety installs its keeper as the BaseApp circuit breaker, so every msg
+// staking, distribution, gov, authz, consensus and upgrade modules, with
+// x/safety wired by hand on top, as a chain wires it. x/safety installs its
+// keeper as the BaseApp circuit breaker, so every msg
 // that goes through the MsgServiceRouter, whether top level, nested in authz
 // MsgExec, or executed by a gov proposal, hits the x/safety check.
 //
@@ -118,6 +130,26 @@ func upgradeModule() configurator.ModuleOption {
 	}
 }
 
+// wireSafety adds x/safety to an app built through depinject, before it
+// loads: it mounts the store, builds the keeper with the given authority,
+// installs the keeper as the circuit breaker, registers the module and its
+// services, and sets the init and export genesis order to initGenesis followed
+// by x/safety. The app config must omit the init genesis order.
+func wireSafety(t *testing.T, app *runtime.App, cdc codec.Codec, ac address.Codec, authority string, initGenesis ...string) keeper.Keeper {
+	t.Helper()
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	require.NoError(t, app.RegisterStores(key))
+	k := keeper.NewKeeper(cdc, runtime.NewKVStoreService(key), ac, cdc.InterfaceRegistry(), authority)
+	app.SetCircuitBreaker(k)
+	require.NoError(t, app.RegisterModules(safety.NewAppModule(k)))
+
+	order := append(initGenesis, types.ModuleName)
+	app.ModuleManager.SetOrderInitGenesis(order...)
+	app.ModuleManager.SetOrderExportGenesis(order...)
+	app.SetInitChainer(app.InitChainer)
+	return k
+}
+
 // safetyAnteHandler mirrors the SimApp ante chain: SafetyDecorator right
 // after context setup, ahead of fee deduction and sequence increment.
 func safetyAnteHandler(ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, sk keeper.Keeper, txConfig client.TxConfig) sdk.AnteHandler {
@@ -151,8 +183,7 @@ func newRouterFixture(t *testing.T, withAnte bool) *routerFixture {
 	}
 
 	funds := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1_000_000_000_000)))
-	startupCfg := sims.DefaultStartUpConfig()
-	startupCfg.GenesisAccounts = []sims.GenesisAccount{
+	genesisAccounts := []sims.GenesisAccount{
 		{GenesisAccount: authtypes.NewBaseAccount(f.user.addr, nil, 0, 0), Coins: funds},
 		{GenesisAccount: authtypes.NewBaseAccount(f.grantee.addr, nil, 1, 0), Coins: funds},
 	}
@@ -160,13 +191,13 @@ func newRouterFixture(t *testing.T, withAnte bool) *routerFixture {
 	txModule := configurator.TxModule()
 	if withAnte {
 		txModule = txModuleSkipAnte()
-		startupCfg.BaseAppOption = func(app *baseapp.BaseApp) {
-			// keepers are populated by depinject before Build runs this option
-			app.SetAnteHandler(safetyAnteHandler(f.accountKeeper, f.bankKeeper, f.safetyKeeper, f.txConfig))
-		}
 	}
 
-	app, err := sims.SetupWithConfiguration(
+	var (
+		appBuilder *runtime.AppBuilder
+		cdc        codec.Codec
+	)
+	require.NoError(t, depinject.Inject(
 		depinject.Configs(
 			configurator.NewAppConfig(
 				configurator.AuthModule(),
@@ -178,18 +209,51 @@ func newRouterFixture(t *testing.T, withAnte bool) *routerFixture {
 				configurator.ConsensusModule(),
 				upgradeModule(),
 				txModule,
-				safetytestutil.SafetyModule(""),
+				// x/safety is wired by hand below and has no app config
+				configurator.OmitInitGenesis(),
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		startupCfg,
+		&appBuilder, &cdc,
 		&f.txConfig, &f.registry, &f.accountKeeper, &f.bankKeeper, &f.stakingKeeper, &f.distrKeeper,
-		&f.govKeeper, &f.upgradeKeeper, &f.consensusKeeper, &f.safetyKeeper,
-	)
-	require.NoError(t, err)
+		&f.govKeeper, &f.upgradeKeeper, &f.consensusKeeper,
+	))
+	app := appBuilder.Build(dbm.NewMemDB())
+	f.safetyKeeper = wireSafety(t, app, cdc, f.accountKeeper.AddressCodec(), f.gov,
+		"auth", "bank", "distribution", "staking", "gov", "authz", "consensus", "upgrade")
+	if withAnte {
+		app.SetAnteHandler(safetyAnteHandler(f.accountKeeper, f.bankKeeper, f.safetyKeeper, f.txConfig))
+	}
+	require.NoError(t, app.Load(true))
 	f.app = app
 
-	// SetupWithConfiguration finalizes block 1 without committing it
+	valSet, err := sims.CreateRandomValidatorSet()
+	require.NoError(t, err)
+	var (
+		genAccs  []authtypes.GenesisAccount
+		balances []banktypes.Balance
+	)
+	for _, ga := range genesisAccounts {
+		genAccs = append(genAccs, ga.GenesisAccount)
+		balances = append(balances, banktypes.Balance{Address: ga.GenesisAccount.GetAddress().String(), Coins: ga.Coins})
+	}
+	genesis, err := sims.GenesisStateWithValSet(cdc, app.DefaultGenesis(), valSet, genAccs, balances...)
+	require.NoError(t, err)
+	stateBytes, err := cmtjson.MarshalIndent(genesis, "", " ")
+	require.NoError(t, err)
+	_, err = app.InitChain(&abci.RequestInitChain{
+		Validators:      []abci.ValidatorUpdate{},
+		ConsensusParams: sims.DefaultConsensusParams,
+		AppStateBytes:   stateBytes,
+	})
+	require.NoError(t, err)
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height:             app.LastBlockHeight() + 1,
+		NextValidatorsHash: valSet.Hash(),
+	})
+	require.NoError(t, err)
+
+	// commit block 1
 	_, err = app.Commit()
 	require.NoError(t, err)
 

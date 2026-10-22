@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/safety"
 	"github.com/cosmos/cosmos-sdk/x/safety/types"
 )
 
@@ -298,62 +297,4 @@ func (s *KeeperTestSuite) TestPaginatedDisabledList() {
 		}
 	}
 	s.Require().ElementsMatch(all, got)
-}
-
-// The x/circuit CLI examples could not be run as written. Every
-// x/safety trip and reset example must parse into patterns this keeper
-// accepts, one pattern per argument.
-func (s *KeeperTestSuite) TestCLIExamplesRun() {
-	examples := map[string]string{}
-	for _, rpc := range safety.NewAppModule(s.keeper).AutoCLIOptions().Tx.RpcCommandOptions {
-		examples[rpc.RpcMethod] = rpc.Example
-	}
-	args := func(example, verb string) [][]string {
-		var out [][]string
-		for line := range strings.SplitSeq(example, "\n") {
-			fields := strings.Fields(line)
-			var patterns []string
-			on := false
-			for _, f := range fields {
-				if strings.HasPrefix(f, "--") {
-					break
-				}
-				if on {
-					patterns = append(patterns, strings.Trim(f, `'`))
-				}
-				on = on || f == verb
-			}
-			s.Require().NotEmpty(patterns, "example line %q has no patterns", line)
-			out = append(out, patterns)
-		}
-		return out
-	}
-
-	trips := args(examples["Trip"], "trip")
-	resets := args(examples["Reset"], "reset")
-	s.Require().NotEmpty(trips)
-	s.Require().NotEmpty(resets)
-
-	for _, patterns := range trips {
-		_, err := s.msgServer.Trip(s.ctx, types.NewMsgTrip(s.operator, patterns...))
-		s.Require().NoError(err, "trip example %v", patterns)
-	}
-	for _, patterns := range resets {
-		_, err := s.msgServer.Reset(s.ctx, types.NewMsgReset(s.operator, patterns...))
-		s.Require().NoError(err, "reset example %v", patterns)
-	}
-	s.Require().Empty(s.list())
-
-	// the is-allowed example must name a type URL the query accepts
-	var isAllowed string
-	for _, rpc := range safety.NewAppModule(s.keeper).AutoCLIOptions().Query.RpcCommandOptions {
-		if rpc.RpcMethod == "IsAllowed" {
-			isAllowed = rpc.Example
-		}
-	}
-	fields := strings.Fields(isAllowed)
-	s.Require().NotEmpty(fields, "is-allowed example")
-	res, err := s.queryClient.IsAllowed(s.ctx, &types.QueryIsAllowedRequest{MsgTypeUrl: fields[len(fields)-1]})
-	s.Require().NoError(err, "is-allowed example %q", isAllowed)
-	s.Require().True(res.Allowed)
 }

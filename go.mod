@@ -337,9 +337,6 @@ require (
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
 
-// TODO: remove once cosmossdk.io/api is tagged with cosmos/safety
-replace cosmossdk.io/api => ./api
-
 // Below are the long-lived replace of the Cosmos SDK
 replace (
 	// use cosmos fork of keyring

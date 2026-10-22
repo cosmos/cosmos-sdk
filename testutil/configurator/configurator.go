@@ -90,7 +90,6 @@ func defaultConfig() *Config {
 			"vesting",
 			"nft",
 			"group",
-			"safety",
 		},
 		setInitGenesis: true,
 	}

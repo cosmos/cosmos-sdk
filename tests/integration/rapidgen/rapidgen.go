@@ -23,7 +23,6 @@ import (
 	gov_v1_api "cosmossdk.io/api/cosmos/gov/v1"
 	gov_v1beta1_api "cosmossdk.io/api/cosmos/gov/v1beta1"
 	mintapi "cosmossdk.io/api/cosmos/mint/v1beta1"
-	safetyapi "cosmossdk.io/api/cosmos/safety/v1"
 	slashingapi "cosmossdk.io/api/cosmos/slashing/v1beta1"
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
 	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
@@ -40,7 +39,6 @@ import (
 	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	safetytypes "github.com/cosmos/cosmos-sdk/x/safety/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -181,11 +179,6 @@ var (
 				WithAnyTypes(&ed25519.PubKey{}).
 				WithInterfaceHint("cosmos.crypto.PubKey", &ed25519.PubKey{}),
 		),
-
-		// safety
-		GenType(&safetytypes.MsgUpdateParams{}, &safetyapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
-		GenType(&safetytypes.MsgTrip{}, &safetyapi.MsgTrip{}, GenOpts),
-		GenType(&safetytypes.MsgReset{}, &safetyapi.MsgReset{}, GenOpts),
 
 		// upgrade
 		GenType(&upgradetypes.MsgSoftwareUpgrade{}, &upgradeapi.MsgSoftwareUpgrade{}, GenOpts.WithDisallowNil()),

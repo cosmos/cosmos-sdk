@@ -526,6 +526,8 @@ paths:
 * EVM native value transfers,
 * the ibc-go transfer keeper, which packet-forward-middleware and the
   cosmos/evm ICS20 precompile call,
+* the ibc-go channel keeper's `SendPacket`, which any module or middleware can
+  call to send a packet,
 * wasmd `BankMsg::Burn` and `IbcMsg::SendPacket`. wasmd routes the other
   contract msgs; see [CosmWasm contracts](#cosmwasm-contracts).
 

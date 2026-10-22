@@ -234,6 +234,13 @@ type (
 	}
 )
 
+// BlockLogsConfig defines the per-block application log capture configuration.
+type BlockLogsConfig struct {
+	// RetainBlocks is the number of most recent heights whose application logs
+	// are kept on disk and served by the node Logs query. 0 disables capture.
+	RetainBlocks uint64 `mapstructure:"retain-blocks"`
+}
+
 // Config defines the server's top level configuration
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
@@ -246,6 +253,7 @@ type Config struct {
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 	Streaming StreamingConfig  `mapstructure:"streaming"`
 	Mempool   MempoolConfig    `mapstructure:"mempool"`
+	BlockLogs BlockLogsConfig  `mapstructure:"block-logs"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -321,6 +329,9 @@ func DefaultConfig() *Config {
 		},
 		Mempool: MempoolConfig{
 			MaxTxs: -1,
+		},
+		BlockLogs: BlockLogsConfig{
+			RetainBlocks: 0,
 		},
 	}
 }

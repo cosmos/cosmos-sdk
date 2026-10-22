@@ -99,15 +99,20 @@ func (k Keeper) SetParams(ctx context.Context, params types.Params) error {
 // registry knows or, through the IsAllowed query, at most MaxPatternLength
 // bytes.
 //
-// A blocked msg returns false with ErrMsgDisabled, so the router, which
-// passes the error on as is, rejects it under the safety codespace. A store
-// error also returns false: the breaker fails closed.
+// A blocked msg logs a debug line naming the type URL and the blocking
+// pattern, then returns false with ErrMsgDisabled, so the router, which
+// passes the error on as is, rejects it under the safety codespace. The line
+// is debug level because anyone can send refused msgs to CheckTx and
+// simulation for free. A store error also returns false: the breaker fails
+// closed.
 func (k Keeper) IsAllowed(ctx context.Context, typeURL string) (bool, error) {
 	by, err := k.blockedBy(ctx, typeURL)
 	if err != nil {
 		return false, err
 	}
 	if by != "" {
+		sdk.UnwrapSDKContext(ctx).Logger().With("module", "x/"+types.ModuleName).
+			Debug("msg refused by disabled pattern", "type_url", typeURL, "pattern", by)
 		return false, types.ErrMsgDisabled.Wrapf("%s by %s", typeURL, by)
 	}
 	return true, nil

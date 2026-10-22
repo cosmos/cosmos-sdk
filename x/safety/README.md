@@ -148,7 +148,9 @@ To cut off a compromised grantee that trips with the operator's grant:
 5. Otherwise it is allowed.
 
 A blocked msg returns `false` with `ErrMsgDisabled`, naming the disabled entry
-that blocks it. The router passes that error on unchanged, so a msg blocked at
+that blocks it, and logs `msg refused by disabled pattern` at debug level with
+`type_url` and `pattern`. Run the node with `--log_level debug` to see
+refusals; the ante check logs them too. The router passes that error on unchanged, so a msg blocked at
 execution fails with code 10 in the `safety` codespace, the same error the ante
 decorator returns.
 

@@ -1,7 +1,9 @@
 package keeper_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	goruntime "runtime"
@@ -12,12 +14,14 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -1180,4 +1184,31 @@ func (s *KeeperTestSuite) TestQueryMatchingMsgsPagination() {
 	// key and offset together are refused
 	_, err = s.matching(types.Wildcard, &querytypes.PageRequest{Key: []byte(want[1]), Offset: 1})
 	s.Require().Equal(codes.InvalidArgument, status.Code(err))
+}
+
+// A refusal logs one debug line naming the type URL and the blocking entry,
+// and charges no gas or emits no event. An allowed msg logs nothing.
+func (s *KeeperTestSuite) TestRefusalLogged() {
+	s.state(s.operator, []string{types.Wildcard}, "/cosmos.bank.*")
+	var buf bytes.Buffer
+	ctx := s.freshEvents().
+		WithLogger(log.NewLogger(&buf, log.OutputJSONOption(), log.LevelOption(zerolog.DebugLevel))).
+		WithGasMeter(storetypes.NewGasMeter(1_000_000))
+
+	_, err := s.keeper.IsAllowed(ctx, uDelegate)
+	s.Require().NoError(err)
+	s.Require().Empty(buf.String())
+
+	_, err = s.keeper.IsAllowed(ctx, uSend)
+	s.Require().ErrorIs(err, types.ErrMsgDisabled)
+	lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
+	s.Require().Len(lines, 1, buf.String())
+	var entry map[string]any
+	s.Require().NoError(json.Unmarshal([]byte(lines[0]), &entry))
+	s.Require().Equal("debug", entry["level"])
+	s.Require().Equal("x/"+types.ModuleName, entry["module"])
+	s.Require().Equal(uSend, entry["type_url"])
+	s.Require().Equal("/cosmos.bank.*", entry["pattern"])
+	s.Require().Zero(ctx.GasMeter().GasConsumed())
+	s.Require().Empty(ctx.EventManager().Events())
 }

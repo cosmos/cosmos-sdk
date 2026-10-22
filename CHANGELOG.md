@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Breaking Changes
 
 * (x/auth) [#26672](https://github.com/cosmos/cosmos-sdk/pull/26672) An unordered transaction whose `timeout_timestamp` equals the block time is now rejected
+* (baseapp) `MsgServiceRouter.HybridHandlerByMsgName` is removed. It ran a msg handler by name without `ValidateBasic`; run msgs from code with `msgservice.Dispatch`.
 * (x/auth) `keeper.NewMsgServerImpl` is unexported; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
 * (x/auth/vesting) `vesting.NewMsgServerImpl` is unexported; register the service with `vesting.RegisterMsgServer(r, accountKeeper, bankKeeper)` and run msgs from outside the module with `msgservice.Dispatch`.
 * (x/authz) `Keeper` no longer implements `authz.MsgServer`: `Grant`, `Revoke` and `Exec` moved to an unexported msg server; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`. `DispatchActions`, `SaveGrant`, `DeleteGrant` and `GetAuthorization` stay on `Keeper`.
@@ -77,7 +78,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (baseapp) A hybrid handler from `MsgServiceRouter.HybridHandlerByMsgName` checks the circuit breaker against the msg type it handles, not the type of the request it is given, so a request of an allowed type whose bytes decode as a tripped msg no longer runs that msg. It reads the breaker on each call, so it checks a breaker the app sets after registration and no longer panics when the app removes one.
 * (types/query) `CollectionPaginate` and `CollectionFilteredPaginate` report the real total, not the offset, when `count_total` is set and the offset runs past the last item.
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.
 * (client/tx) [#26759](https://github.com/cosmos/cosmos-sdk/issues/26759) Populate the multisig bit array in simulation txs so `--gas auto` works for multisig senders.

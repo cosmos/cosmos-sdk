@@ -453,9 +453,9 @@ func NewSimApp(
 		interfaceRegistry,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	// The MsgServiceRouter checks every msg handler, including hybrid
-	// handlers, against x/safety. It reads the breaker on each call, so this
-	// can run before or after the module services are registered.
+	// The MsgServiceRouter checks every msg it routes against x/safety. It
+	// reads the breaker on each call, so this can run before or after the
+	// module services are registered.
 	app.SetCircuitBreaker(app.SafetyKeeper)
 
 	/****  Module Options ****/

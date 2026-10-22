@@ -148,33 +148,6 @@ func TestNewAnteHandlerRequiresKeepers(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// TestSafetyGatesHybridHandlers pins the SimApp wiring order. The router
-// decides whether to wrap a hybrid handler with the circuit breaker when the
-// handler is registered, so SetCircuitBreaker must run before
-// RegisterServices or every hybrid handler skips x/safety.
-func TestSafetyGatesHybridHandlers(t *testing.T) {
-	app := Setup(t, false)
-	ctx := app.NewContext(false)
-	from := sdk.AccAddress("from________________")
-	to := sdk.AccAddress("to__________________")
-	send := banktypes.NewMsgSend(from, to, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)))
-
-	handler := app.MsgServiceRouter().HybridHandlerByMsgName(sdk.MsgTypeURL(send)[1:])
-	require.NotNil(t, handler)
-
-	for _, p := range []string{sdk.MsgTypeURL(send), "/cosmos.bank.*", safetytypes.Wildcard} {
-		require.NoError(t, app.SafetyKeeper.DisabledList.Set(ctx, p))
-		err := handler(ctx, send, &banktypes.MsgSendResponse{})
-		require.ErrorIs(t, err, safetytypes.ErrMsgDisabled, p)
-		require.NoError(t, app.SafetyKeeper.DisabledList.Remove(ctx, p))
-	}
-
-	// control: with nothing disabled the bank handler runs, and fails on the
-	// unfunded sender
-	err := handler(ctx, send, &banktypes.MsgSendResponse{})
-	require.ErrorIs(t, err, sdkerrors.ErrInsufficientFunds)
-}
-
 // TestRecheckEvictsPreTripTx shows what happens to a tx that entered the
 // mempool before a trip. ReCheckTx runs the decorator, so it turns the tx
 // away before it pays a fee or uses its sequence, and its signed bytes

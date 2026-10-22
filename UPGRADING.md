@@ -162,6 +162,7 @@ An `sdk.Msg` runs only through the `MsgServiceRouter`. No SDK module exports its
 * The keepers of `x/authz`, `x/consensus`, `contrib/x/crisis`, `contrib/x/nft`, `enterprise/group` and `testutil/x/counter` no longer implement their Msg service: the Msg methods, such as authz `Keeper.Exec` and consensus `Keeper.UpdateParams`, moved to an unexported type. Exported keeper methods for module logic, such as authz `DispatchActions`, `SaveGrant` and `GetAuthorization`, stay.
 * Each keeper package exports `RegisterMsgServer`, which the module's `RegisterServices` calls. `x/auth/vesting` takes the account and bank keepers, and `x/gov` registers both the v1 and the v1beta1 service.
 * `x/staking/testutil.NewHelper` takes the `msgservice.MsgRouter` that runs its msgs, such as `app.MsgServiceRouter()`.
+* `MsgServiceRouter.HybridHandlerByMsgName` is removed. It ran a registered msg handler by name and skipped `ValidateBasic`. Use `msgservice.Dispatch`.
 
 An app or test that registers a module's msg server by hand calls the keeper package's `RegisterMsgServer`:
 

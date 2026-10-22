@@ -436,22 +436,6 @@ func TestRouterTripTakesEffectInSameBlock(t *testing.T) {
 	require.Empty(t, f.disabled())
 }
 
-// TestRouterGatesHybridHandlers checks that the depinject BaseAppOption sets
-// the circuit breaker before module services register, so the router wraps
-// hybrid handlers with the x/safety check.
-func TestRouterGatesHybridHandlers(t *testing.T) {
-	f := newRouterFixture(t, false)
-	handler := f.app.MsgServiceRouter().HybridHandlerByMsgName(urlSend[1:])
-	require.NotNil(t, handler)
-
-	send := banktypes.NewMsgSend(sdk.AccAddress("from________________"), f.grantee.addr, oneStake)
-	f.trip(urlSend)
-	require.ErrorIs(t, handler(f.ctx(), send, &banktypes.MsgSendResponse{}), types.ErrMsgDisabled)
-
-	f.reset(urlSend)
-	require.ErrorIs(t, handler(f.ctx(), send, &banktypes.MsgSendResponse{}), sdkerrors.ErrInsufficientFunds)
-}
-
 // TestAnteCheckTxRejectsTrippedMsgs wires the SafetyDecorator and shows
 // CheckTx turns away a tripped top-level msg, an authz-nested one, and a
 // proposal with one, before the fee is deducted or the sequence used.

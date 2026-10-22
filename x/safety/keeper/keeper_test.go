@@ -904,7 +904,7 @@ func (s *KeeperTestSuite) TestRegisteredErrors() {
 	errs := []*errorsmod.Error{
 		types.ErrInvalidPattern, types.ErrEmptyPatterns, types.ErrDuplicatePattern,
 		types.ErrInvalidParams, types.ErrOutOfScope, types.ErrNoMatchingMsg,
-		types.ErrAlreadyDisabled, types.ErrNotDisabled, types.ErrMsgDisabled, types.ErrMaxDepth,
+		types.ErrAlreadyDisabled, types.ErrNotDisabled, types.ErrMsgDisabled,
 	}
 	seen := map[uint32]bool{}
 	for _, e := range errs {

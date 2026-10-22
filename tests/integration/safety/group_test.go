@@ -16,9 +16,9 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	safetyante "github.com/cosmos/cosmos-sdk/x/safety/ante"
 	safetytypes "github.com/cosmos/cosmos-sdk/x/safety/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -54,8 +54,8 @@ func TestGroupWrapperTypeURLs(t *testing.T) {
 	m, err := group.NewMsgSubmitProposal(policy, []string{policy}, nil, "", group.Exec_EXEC_TRY, "t", "s")
 	require.NoError(t, err)
 	next := func(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) { return ctx, nil }
-	_, err = safetyante.NewSafetyDecorator(breaker).AnteHandle(sdk.Context{}, groupTx{msgs: []sdk.Msg{m}}, false, next)
-	require.ErrorIs(t, err, safetytypes.ErrMsgDisabled)
+	_, err = authante.NewCircuitBreakerDecorator(breaker).AnteHandle(sdk.Context{}, groupTx{msgs: []sdk.Msg{m}}, false, next)
+	require.ErrorIs(t, err, sdkerrors.ErrCircuitBreakerTripped)
 }
 
 type disabledSet map[string]bool
@@ -85,13 +85,13 @@ func TestAnteOpensGroupProposal(t *testing.T) {
 		m, err := group.NewMsgSubmitProposal(policy, []string{policy}, msgs, "", group.Exec_EXEC_TRY, "t", "s")
 		require.NoError(t, err)
 		next := func(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) { return ctx, nil }
-		_, err = safetyante.NewSafetyDecorator(breaker).AnteHandle(sdk.Context{}, groupTx{msgs: []sdk.Msg{m}}, false, next)
+		_, err = authante.NewCircuitBreakerDecorator(breaker).AnteHandle(sdk.Context{}, groupTx{msgs: []sdk.Msg{m}}, false, next)
 		return err
 	}
 
 	require.NoError(t, run(deleg))
-	require.ErrorIs(t, run(send), safetytypes.ErrMsgDisabled)
-	require.ErrorIs(t, run(deleg, send), safetytypes.ErrMsgDisabled)
+	require.ErrorIs(t, run(send), sdkerrors.ErrCircuitBreakerTripped)
+	require.ErrorIs(t, run(deleg, send), sdkerrors.ErrCircuitBreakerTripped)
 }
 
 // TestGroupPolicyAuthorityUnderBroadTrips runs a group policy as the x/safety

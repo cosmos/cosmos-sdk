@@ -404,9 +404,9 @@ func safetyREST(t *testing.T, path string) string {
 	return string(systest.GetRequest(t, systest.Sut.APIAddress()+path))
 }
 
-// SafetyDecorator opens any msg exposing GetMsgs() ([]sdk.Msg, error), such as
-// gov v1 MsgSubmitProposal, and rejects a proposal with a tripped msg at
-// submission.
+// The ante circuit breaker check opens any msg exposing
+// GetMsgs() ([]sdk.Msg, error), such as gov v1 MsgSubmitProposal, and rejects
+// a proposal with a tripped msg at submission.
 func TestSafetyGovProposalWithDisabledMsgRejectedAtSubmission(t *testing.T) {
 	// Scenario:
 	// given a running chain whose genesis disables MsgSend

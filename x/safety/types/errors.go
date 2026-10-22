@@ -15,5 +15,4 @@ var (
 	ErrAlreadyDisabled  = errorsmod.Register(ModuleName, 8, "pattern already disabled")
 	ErrNotDisabled      = errorsmod.Register(ModuleName, 9, "pattern not in disabled list")
 	ErrMsgDisabled      = errorsmod.Register(ModuleName, 10, "msg type disabled by x/safety")
-	ErrMaxDepth         = errorsmod.Register(ModuleName, 11, "nested msg depth limit exceeded")
 )

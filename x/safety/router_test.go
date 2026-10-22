@@ -13,12 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	safetyante "github.com/cosmos/cosmos-sdk/x/safety/ante"
 	"github.com/cosmos/cosmos-sdk/x/safety/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -93,8 +93,9 @@ func (f *routerFixture) grantSend() {
 }
 
 // TestRouterTrippedMsgFailsInFinalizeBlock shows the router is a gate on its
-// own: with no SafetyDecorator, a tripped msg passes the ante handler and
-// fails when the router dispatches it, and a reset restores it.
+// own: with no circuit breaker in the ante chain, a tripped msg passes the
+// ante handler and fails when the router dispatches it, and a reset restores
+// it.
 func TestRouterTrippedMsgFailsInFinalizeBlock(t *testing.T) {
 	f := newRouterFixture(t, false)
 
@@ -451,7 +452,7 @@ func TestRouterGatesHybridHandlers(t *testing.T) {
 	require.ErrorIs(t, handler(f.ctx(), send, &banktypes.MsgSendResponse{}), sdkerrors.ErrInsufficientFunds)
 }
 
-// TestAnteCheckTxRejectsTrippedMsgs wires the SafetyDecorator and shows
+// TestAnteCheckTxRejectsTrippedMsgs wires the CircuitBreakerDecorator and shows
 // CheckTx turns away a tripped top-level msg, an authz-nested one, and a
 // proposal with one, before the fee is deducted or the sequence used.
 func TestAnteCheckTxRejectsTrippedMsgs(t *testing.T) {
@@ -649,12 +650,13 @@ func TestAnteNestingDepthLimit(t *testing.T) {
 		return msg
 	}
 
-	res := f.checkTx(f.signNext(f.user, nil, nest(safetyante.MaxNestedMsgDepth)))
+	res := f.checkTx(f.signNext(f.user, nil, nest(authante.MaxNestedMsgDepth)))
 	require.Zero(t, res.Code, res.Log)
 
-	res = f.checkTx(f.signNext(f.grantee, nil, nest(safetyante.MaxNestedMsgDepth+1)))
-	require.Equal(t, types.ErrMaxDepth.ABCICode(), res.Code, res.Log)
-	require.Equal(t, types.ErrMaxDepth.Codespace(), res.Codespace)
+	res = f.checkTx(f.signNext(f.grantee, nil, nest(authante.MaxNestedMsgDepth+1)))
+	require.Equal(t, sdkerrors.ErrInvalidRequest.ABCICode(), res.Code, res.Log)
+	require.Equal(t, sdkerrors.ErrInvalidRequest.Codespace(), res.Codespace)
+	require.Contains(t, res.Log, "nested msg depth")
 }
 
 // TestAntePassesProtectedMsgsUnderWildcard trips "*" with the decorator wired

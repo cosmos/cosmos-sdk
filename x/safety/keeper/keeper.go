@@ -81,7 +81,7 @@ func (k Keeper) DefaultAuthority() string { return k.defaultAuthority }
 // The check charges no gas. The lookups run on an infinite gas meter that
 // replaces ctx's meter for the check only, so the tx, the block gas meter
 // and the caller's ctx see none of them, and a msg costs the same gas as with
-// no circuit breaker set. The router, the SafetyDecorator and
+// no circuit breaker set. The router, the ante CircuitBreakerDecorator and
 // msgservice.Dispatch all reach the store through here. The work stays
 // bounded without gas: per msg, at most two lookups plus one per package
 // segment of its type URL, and a type URL is either one the interface

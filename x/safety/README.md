@@ -162,7 +162,8 @@ The check runs in two places:
 * The `MsgServiceRouter` calls it for every msg it routes, including msgs that
   authz `MsgExec`, gov proposals and other modules dispatch through the router,
   and msgs run with `msgservice.Dispatch`. This is the authoritative gate.
-* The optional `x/safety/ante.SafetyDecorator` calls it for every top-level msg
+* The optional `ante.CircuitBreakerDecorator` from `x/auth/ante`, which
+  `ante.HandlerOptions.CircuitBreaker` adds, calls it for every top-level msg
   and, recursively, every msg returned by `GetMessages() ([]sdk.Msg, error)`
   (authz `MsgExec`) or `GetMsgs() ([]sdk.Msg, error)` (gov v1 and group
   `MsgSubmitProposal`), up to `MaxNestedMsgDepth` levels. It opens protected
@@ -393,28 +394,25 @@ after `genutil`, gentxs run against an empty disabled list.
 
 ### Ante handler
 
-Put `safetyante.SafetyDecorator` after `SetUpContextDecorator` and before
-`DeductFeeDecorator`:
+Set `CircuitBreaker` in the `x/auth/ante` handler options. `NewAnteHandler`
+then puts `ante.CircuitBreakerDecorator` right after `SetUpContextDecorator`,
+ahead of fee deduction:
 
 ```go
-import (
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	safetyante "github.com/cosmos/cosmos-sdk/x/safety/ante"
-)
-
-anteDecorators := []sdk.AnteDecorator{
-	ante.NewSetUpContextDecorator(),
-	safetyante.NewSafetyDecorator(app.SafetyKeeper),
+anteHandler, err := ante.NewAnteHandler(ante.HandlerOptions{
+	AccountKeeper:   app.AccountKeeper,
+	BankKeeper:      app.BankKeeper,
 	// ...
-	ante.NewDeductFeeDecorator(...),
-	// ...
-}
+	CircuitBreaker: app.SafetyKeeper,
+})
 ```
 
-`simapp/ante.go` shows the full chain. An app with more than one ante chain,
-such as cosmos/evm with its separate chain for Ethereum txs, must add the
-decorator to each, or the txs that chain handles reach a block and pay fees;
-see [EVM chains](#evm-chains).
+An app that builds its own chain adds
+`ante.NewCircuitBreakerDecorator(app.SafetyKeeper)` after
+`SetUpContextDecorator` and before `DeductFeeDecorator`. An app with more than
+one ante chain, such as cosmos/evm with its separate chain for Ethereum txs,
+must add the decorator to each, or the txs that chain handles reach a block
+and pay fees; see [EVM chains](#evm-chains).
 
 ## Operating
 
@@ -562,7 +560,7 @@ refuses every EVM tx, precompile calls included, so during a `*` trip
 validators vote with a Cosmos gov `MsgVote` tx, not the gov precompile.
 
 cosmos/evm runs Ethereum txs through a separate ante chain. Without
-`SafetyDecorator` in it, under a `MsgEthereumTx` or `*` trip the proposer
+`CircuitBreakerDecorator` in it, under a `MsgEthereumTx` or `*` trip the proposer
 includes EVM txs in a block, where they fail with code 10, pay their fee, use
 their nonce and return no receipt. Add the decorator to that chain; see
 [Ante handler](#ante-handler).

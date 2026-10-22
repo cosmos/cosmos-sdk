@@ -16,7 +16,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -126,26 +125,6 @@ func TestSafetyWiring(t *testing.T) {
 	res = deliver(bz)
 	require.Zero(t, res.Code, res.Log)
 	require.Equal(t, int64(1), app.BankKeeper.GetBalance(app.NewContext(true), other, sdk.DefaultBondDenom).Amount.Int64())
-}
-
-func TestNewAnteHandlerRequiresKeepers(t *testing.T) {
-	_, err := NewAnteHandler(HandlerOptions{})
-	require.ErrorIs(t, err, sdkerrors.ErrLogic)
-
-	app := Setup(t, false)
-	opts := HandlerOptions{
-		HandlerOptions: ante.HandlerOptions{
-			AccountKeeper:   app.AccountKeeper,
-			BankKeeper:      app.BankKeeper,
-			SignModeHandler: app.TxConfig().SignModeHandler(),
-		},
-	}
-	_, err = NewAnteHandler(opts)
-	require.ErrorIs(t, err, sdkerrors.ErrLogic, "the safety keeper is required")
-
-	opts.SafetyKeeper = app.SafetyKeeper
-	_, err = NewAnteHandler(opts)
-	require.NoError(t, err)
 }
 
 // TestSafetyGatesHybridHandlers checks that SimApp's hybrid handlers run the

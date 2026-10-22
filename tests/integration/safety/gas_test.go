@@ -22,7 +22,7 @@ import (
 	safetytypes "github.com/cosmos/cosmos-sdk/x/safety/types"
 )
 
-// allowAll is a breaker that allows every msg without touching state.
+// allowAll is a breaker that allows every msg and reads no state.
 type allowAll struct{}
 
 func (allowAll) IsAllowed(context.Context, string) (bool, error) { return true, nil }
@@ -49,7 +49,7 @@ func anteWithBreaker(t *testing.T, app *simapp.SimApp, breaker baseapp.CircuitBr
 
 // newBaselineFixture starts a SimApp with no circuit breaker on the router
 // and a CircuitBreakerDecorator that reads nothing, so its gas is what the same txs
-// cost without x/safety.
+// use without x/safety.
 func newBaselineFixture(t *testing.T) *fixture {
 	t.Helper()
 	return newFixtureWithSetup(t, nil, nil, func(app *simapp.SimApp) {
@@ -113,7 +113,7 @@ func gasCases(t *testing.T, f *fixture) map[string]txGas {
 	return gas
 }
 
-// TestBreakerCheckChargesNoGas checks that txs cost the same gas, both
+// TestBreakerCheckChargesNoGas checks that txs use the same gas, both
 // simulated and delivered, with x/safety wired as without a circuit breaker,
 // with an empty disabled list and with 1000 entries that block none of them.
 // The gap between simulated and delivered gas is the baseline's gap.

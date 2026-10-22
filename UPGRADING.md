@@ -194,6 +194,14 @@ Logic that does not need a msg, such as a send in an upgrade handler, calls the 
 
 Tests in a module's `keeper_test` package reach the unexported constructor through an `export_test.go` in the `keeper` package, `var NewMsgServerImpl = newMsgServerImpl`, as the in-repo modules do. A module outside the SDK follows the same pattern: keep the msg server type and constructor unexported and export only `RegisterMsgServer`.
 
+`x/auth/vesting` has no keeper method that creates a vesting account. A test that called `vesting.NewMsgServerImpl` either registers vesting in its router and runs `MsgCreateVestingAccount` with `Dispatch`, or builds the account with `AccountKeeper.NewAccount` and `SetAccount` and funds it.
+
+Moving cosmos/evm, ibc-go and wasmd to this change took:
+
+* cosmos/evm: delete the deprecated `erc20.NewMsgServerImpl` wrapper around the bank msg server, pass `app.MsgServiceRouter()` to `teststaking.NewHelper`, and move 2 test calls (a staking `BeginRedelegate` and a consensus `UpdateParams`) to `Dispatch`. The precompiles already used `Dispatch` and needed no change.
+* ibc-go: nothing. No ibc-go code called an SDK module's msg server.
+* wasmd: move 5 test calls (bank, staking twice, gov, vesting) to `Dispatch` or a keeper call. No production code changed.
+
 ### Upgrade Handler and Store Migrations
 
 #### Module Migrations

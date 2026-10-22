@@ -27,6 +27,16 @@ func newMsgServerImpl(k keeper.AccountKeeper, bk types.BankKeeper) types.MsgServ
 	return &msgServer{AccountKeeper: k, BankKeeper: bk}
 }
 
+// NewMsgServerImpl returns an implementation of the vesting MsgServer interface,
+// wrapping the corresponding AccountKeeper and BankKeeper.
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. NewMsgServerImpl will be
+// removed in the next release.
+func NewMsgServerImpl(k keeper.AccountKeeper, bk types.BankKeeper) types.MsgServer {
+	return newMsgServerImpl(k, bk)
+}
+
 // RegisterMsgServer registers the x/auth/vesting Msg service on r. The msg
 // server is unexported: code outside the module runs a msg through the
 // MsgServiceRouter with msgservice.Dispatch.

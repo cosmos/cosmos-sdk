@@ -1242,3 +1242,116 @@ func validateMsgs(msgs []sdk.Msg) error {
 
 	return nil
 }
+
+// CreateGroup runs MsgCreateGroup on the module's msg server.
+//
+// Deprecated: run MsgCreateGroup with msgservice.Dispatch.
+// Keeper.CreateGroup will be removed in the next release.
+func (k Keeper) CreateGroup(ctx context.Context, msg *group.MsgCreateGroup) (*group.MsgCreateGroupResponse, error) {
+	return newMsgServerImpl(k).CreateGroup(ctx, msg)
+}
+
+// UpdateGroupMembers runs MsgUpdateGroupMembers on the module's msg server.
+//
+// Deprecated: run MsgUpdateGroupMembers with msgservice.Dispatch.
+// Keeper.UpdateGroupMembers will be removed in the next release.
+func (k Keeper) UpdateGroupMembers(ctx context.Context, msg *group.MsgUpdateGroupMembers) (*group.MsgUpdateGroupMembersResponse, error) {
+	return newMsgServerImpl(k).UpdateGroupMembers(ctx, msg)
+}
+
+// UpdateGroupAdmin runs MsgUpdateGroupAdmin on the module's msg server.
+//
+// Deprecated: run MsgUpdateGroupAdmin with msgservice.Dispatch.
+// Keeper.UpdateGroupAdmin will be removed in the next release.
+func (k Keeper) UpdateGroupAdmin(ctx context.Context, msg *group.MsgUpdateGroupAdmin) (*group.MsgUpdateGroupAdminResponse, error) {
+	return newMsgServerImpl(k).UpdateGroupAdmin(ctx, msg)
+}
+
+// UpdateGroupMetadata runs MsgUpdateGroupMetadata on the module's msg server.
+//
+// Deprecated: run MsgUpdateGroupMetadata with msgservice.Dispatch.
+// Keeper.UpdateGroupMetadata will be removed in the next release.
+func (k Keeper) UpdateGroupMetadata(ctx context.Context, msg *group.MsgUpdateGroupMetadata) (*group.MsgUpdateGroupMetadataResponse, error) {
+	return newMsgServerImpl(k).UpdateGroupMetadata(ctx, msg)
+}
+
+// CreateGroupWithPolicy runs MsgCreateGroupWithPolicy on the module's msg server.
+//
+// Deprecated: run MsgCreateGroupWithPolicy with msgservice.Dispatch.
+// Keeper.CreateGroupWithPolicy will be removed in the next release.
+func (k Keeper) CreateGroupWithPolicy(ctx context.Context, msg *group.MsgCreateGroupWithPolicy) (*group.MsgCreateGroupWithPolicyResponse, error) {
+	return newMsgServerImpl(k).CreateGroupWithPolicy(ctx, msg)
+}
+
+// CreateGroupPolicy runs MsgCreateGroupPolicy on the module's msg server.
+//
+// Deprecated: run MsgCreateGroupPolicy with msgservice.Dispatch.
+// Keeper.CreateGroupPolicy will be removed in the next release.
+func (k Keeper) CreateGroupPolicy(ctx context.Context, msg *group.MsgCreateGroupPolicy) (*group.MsgCreateGroupPolicyResponse, error) {
+	return newMsgServerImpl(k).CreateGroupPolicy(ctx, msg)
+}
+
+// UpdateGroupPolicyAdmin runs MsgUpdateGroupPolicyAdmin on the module's msg server.
+//
+// Deprecated: run MsgUpdateGroupPolicyAdmin with msgservice.Dispatch.
+// Keeper.UpdateGroupPolicyAdmin will be removed in the next release.
+func (k Keeper) UpdateGroupPolicyAdmin(ctx context.Context, msg *group.MsgUpdateGroupPolicyAdmin) (*group.MsgUpdateGroupPolicyAdminResponse, error) {
+	return newMsgServerImpl(k).UpdateGroupPolicyAdmin(ctx, msg)
+}
+
+// UpdateGroupPolicyDecisionPolicy runs MsgUpdateGroupPolicyDecisionPolicy on the module's msg server.
+//
+// Deprecated: run MsgUpdateGroupPolicyDecisionPolicy with
+// msgservice.Dispatch. Keeper.UpdateGroupPolicyDecisionPolicy will be
+// removed in the next release.
+func (k Keeper) UpdateGroupPolicyDecisionPolicy(ctx context.Context, msg *group.MsgUpdateGroupPolicyDecisionPolicy) (*group.MsgUpdateGroupPolicyDecisionPolicyResponse, error) {
+	return newMsgServerImpl(k).UpdateGroupPolicyDecisionPolicy(ctx, msg)
+}
+
+// UpdateGroupPolicyMetadata runs MsgUpdateGroupPolicyMetadata on the module's msg server.
+//
+// Deprecated: run MsgUpdateGroupPolicyMetadata with msgservice.Dispatch.
+// Keeper.UpdateGroupPolicyMetadata will be removed in the next release.
+func (k Keeper) UpdateGroupPolicyMetadata(ctx context.Context, msg *group.MsgUpdateGroupPolicyMetadata) (*group.MsgUpdateGroupPolicyMetadataResponse, error) {
+	return newMsgServerImpl(k).UpdateGroupPolicyMetadata(ctx, msg)
+}
+
+// SubmitProposal runs MsgSubmitProposal on the module's msg server.
+//
+// Deprecated: run MsgSubmitProposal with msgservice.Dispatch.
+// Keeper.SubmitProposal will be removed in the next release.
+func (k Keeper) SubmitProposal(ctx context.Context, msg *group.MsgSubmitProposal) (*group.MsgSubmitProposalResponse, error) {
+	return newMsgServerImpl(k).SubmitProposal(ctx, msg)
+}
+
+// WithdrawProposal runs MsgWithdrawProposal on the module's msg server.
+//
+// Deprecated: run MsgWithdrawProposal with msgservice.Dispatch.
+// Keeper.WithdrawProposal will be removed in the next release.
+func (k Keeper) WithdrawProposal(ctx context.Context, msg *group.MsgWithdrawProposal) (*group.MsgWithdrawProposalResponse, error) {
+	return newMsgServerImpl(k).WithdrawProposal(ctx, msg)
+}
+
+// Vote runs MsgVote on the module's msg server.
+//
+// Deprecated: run MsgVote with msgservice.Dispatch. Keeper.Vote will be
+// removed in the next release.
+func (k Keeper) Vote(ctx context.Context, msg *group.MsgVote) (*group.MsgVoteResponse, error) {
+	return newMsgServerImpl(k).Vote(ctx, msg)
+}
+
+// Exec runs MsgExec on the module's msg server.
+//
+// Deprecated: run MsgExec with msgservice.Dispatch. Keeper.Exec will be
+// removed in the next release.
+func (k Keeper) Exec(ctx context.Context, msg *group.MsgExec) (*group.MsgExecResponse, error) {
+	return newMsgServerImpl(k).Exec(ctx, msg)
+}
+
+// LeaveGroup runs MsgLeaveGroup on the module's msg server.
+//
+// Deprecated: run MsgLeaveGroup with msgservice.Dispatch. Keeper.LeaveGroup
+// will be removed in the next release.
+func (k Keeper) LeaveGroup(ctx context.Context, msg *group.MsgLeaveGroup) (*group.MsgLeaveGroupResponse, error) {
+	return newMsgServerImpl(k).LeaveGroup(ctx, msg)
+}

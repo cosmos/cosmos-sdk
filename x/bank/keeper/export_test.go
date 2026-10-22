@@ -12,7 +12,3 @@ func (k BaseSendKeeper) SetSendRestriction(restriction types.SendRestrictionFn) 
 func (k BaseSendKeeper) GetSendRestrictionFn() types.SendRestrictionFn {
 	return k.sendRestriction.fn
 }
-
-// NewMsgServerImpl exposes the unexported msg server to the keeper_test
-// package.
-var NewMsgServerImpl = newMsgServerImpl

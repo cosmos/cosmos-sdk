@@ -12,10 +12,3 @@ func (k Keeper) ValidateInitialDeposit(ctx sdk.Context, initialDeposit sdk.Coins
 
 	return k.validateInitialDeposit(ctx, params, initialDeposit, expedited)
 }
-
-// NewMsgServerImpl and NewLegacyMsgServerImpl expose the unexported msg
-// servers to the keeper_test package.
-var (
-	NewMsgServerImpl       = newMsgServerImpl
-	NewLegacyMsgServerImpl = newLegacyMsgServerImpl
-)

@@ -23,6 +23,15 @@ func newMsgServerImpl(k Keeper) types.MsgServer {
 	}
 }
 
+// NewMsgServerImpl returns an implementation of the x/mint MsgServer interface.
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. NewMsgServerImpl will be
+// removed in the next release.
+func NewMsgServerImpl(k Keeper) types.MsgServer {
+	return newMsgServerImpl(k)
+}
+
 // RegisterMsgServer registers the x/mint Msg service on r. The msg server
 // is unexported: code outside the module runs a msg through the
 // MsgServiceRouter with msgservice.Dispatch.

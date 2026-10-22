@@ -133,3 +133,11 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }
+
+// UpdateParams runs MsgUpdateParams on the module's msg server.
+//
+// Deprecated: run MsgUpdateParams with msgservice.Dispatch.
+// Keeper.UpdateParams will be removed in the next release.
+func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	return newMsgServerImpl(k).UpdateParams(ctx, msg)
+}

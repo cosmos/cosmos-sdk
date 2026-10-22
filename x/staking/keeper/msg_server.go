@@ -31,6 +31,16 @@ func newMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
+// NewMsgServerImpl returns an implementation of the staking MsgServer interface
+// for the provided Keeper.
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. NewMsgServerImpl will be
+// removed in the next release.
+func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
+	return newMsgServerImpl(keeper)
+}
+
 // RegisterMsgServer registers the x/staking Msg service on r. The msg server
 // is unexported: code outside the module runs a msg through the
 // MsgServiceRouter with msgservice.Dispatch.

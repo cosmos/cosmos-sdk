@@ -22,6 +22,15 @@ func newMsgServerImpl(ak AccountKeeper) types.MsgServer {
 	}
 }
 
+// NewMsgServerImpl returns an implementation of the x/auth MsgServer interface.
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. NewMsgServerImpl will be
+// removed in the next release.
+func NewMsgServerImpl(ak AccountKeeper) types.MsgServer {
+	return newMsgServerImpl(ak)
+}
+
 // RegisterMsgServer registers the x/auth Msg service on r. The msg server
 // is unexported: code outside the module runs a msg through the
 // MsgServiceRouter with msgservice.Dispatch.

@@ -27,6 +27,16 @@ func newMsgServerImpl(keeper *Keeper) v1.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
+// NewMsgServerImpl returns an implementation of the gov MsgServer interface
+// for the provided Keeper.
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. NewMsgServerImpl will be
+// removed in the next release.
+func NewMsgServerImpl(keeper *Keeper) v1.MsgServer {
+	return newMsgServerImpl(keeper)
+}
+
 // RegisterMsgServer registers the x/gov v1 Msg service and the v1beta1
 // legacy Msg service on r. The msg servers are unexported: code outside the
 // module runs a msg through the MsgServiceRouter with msgservice.Dispatch.
@@ -304,6 +314,16 @@ type legacyMsgServer struct {
 // the current MsgServer
 func newLegacyMsgServerImpl(govAcct string, v1Server v1.MsgServer) v1beta1.MsgServer {
 	return &legacyMsgServer{govAcct: govAcct, server: v1Server}
+}
+
+// NewLegacyMsgServerImpl returns an implementation of the v1beta1 legacy MsgServer interface. It wraps around
+// the current MsgServer
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. NewLegacyMsgServerImpl will be
+// removed in the next release.
+func NewLegacyMsgServerImpl(govAcct string, v1Server v1.MsgServer) v1beta1.MsgServer {
+	return newLegacyMsgServerImpl(govAcct, v1Server)
 }
 
 var _ v1beta1.MsgServer = legacyMsgServer{}

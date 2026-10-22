@@ -90,7 +90,7 @@ func (s *TestSuite) SetupTest() {
 
 	config := group.DefaultConfig()
 	s.groupKeeper = keeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), s.accountKeeper, config)
-	s.msgServer = keeper.NewMsgServerImpl(s.groupKeeper)
+	s.msgServer = keeper.NewMsgServerForTest(s.groupKeeper)
 	s.ctx = testCtx.Ctx.WithBlockTime(s.blockTime)
 	s.sdkCtx = sdk.UnwrapSDKContext(s.ctx)
 

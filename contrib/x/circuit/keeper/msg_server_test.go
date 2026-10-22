@@ -18,7 +18,7 @@ const msgSend = "cosmos.bank.v1beta1.MsgSend"
 func TestAuthorizeCircuitBreaker(t *testing.T) {
 	ft := initFixture(t)
 
-	srv := keeper.NewMsgServerImpl(ft.keeper)
+	srv := keeper.NewMsgServerForTest(ft.keeper)
 	authority, err := ft.ac.BytesToString(ft.mockAddr)
 	require.NoError(t, err)
 
@@ -114,7 +114,7 @@ func TestAuthorizeCircuitBreaker(t *testing.T) {
 func TestTripCircuitBreaker(t *testing.T) {
 	ft := initFixture(t)
 
-	srv := keeper.NewMsgServerImpl(ft.keeper)
+	srv := keeper.NewMsgServerForTest(ft.keeper)
 	url := msgSend
 
 	authority, err := ft.ac.BytesToString(ft.mockAddr)
@@ -205,7 +205,7 @@ func TestResetCircuitBreaker(t *testing.T) {
 	authority, err := ft.ac.BytesToString(ft.mockAddr)
 	require.NoError(t, err)
 
-	srv := keeper.NewMsgServerImpl(ft.keeper)
+	srv := keeper.NewMsgServerForTest(ft.keeper)
 
 	// admin resets circuit breaker
 	url := msgSend
@@ -322,7 +322,7 @@ func TestResetCircuitBreakerSomeMsgs(t *testing.T) {
 	authority, err := ft.ac.BytesToString(ft.mockAddr)
 	require.NoError(t, err)
 
-	srv := keeper.NewMsgServerImpl(ft.keeper)
+	srv := keeper.NewMsgServerForTest(ft.keeper)
 
 	// admin resets circuit breaker
 	url := msgSend

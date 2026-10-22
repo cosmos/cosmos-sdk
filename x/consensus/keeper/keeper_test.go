@@ -81,7 +81,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Evidence:  modifiedConsensusParams.Evidence,
 					Auth:      &cmtproto.AuthorityParams{Authority: s.ctx.ConsensusParams().Authority.Authority},
 				}
-				_, err := consensusparamkeeper.NewMsgServerImpl(*s.consensusParamsKeeper).UpdateParams(s.ctx, input)
+				_, err := consensusparamkeeper.NewMsgServerForTest(*s.consensusParamsKeeper).UpdateParams(s.ctx, input)
 				s.Require().NoError(err)
 			},
 			types.QueryParamsResponse{
@@ -114,7 +114,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					},
 					Auth: &cmtproto.AuthorityParams{Authority: s.ctx.ConsensusParams().Authority.Authority},
 				}
-				_, err := consensusparamkeeper.NewMsgServerImpl(*s.consensusParamsKeeper).UpdateParams(s.ctx, input)
+				_, err := consensusparamkeeper.NewMsgServerForTest(*s.consensusParamsKeeper).UpdateParams(s.ctx, input)
 				s.Require().NoError(err)
 			},
 			types.QueryParamsResponse{
@@ -351,7 +351,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			s.SetupTest()
-			_, err := consensusparamkeeper.NewMsgServerImpl(*s.consensusParamsKeeper).UpdateParams(s.ctx, tc.input)
+			_, err := consensusparamkeeper.NewMsgServerForTest(*s.consensusParamsKeeper).UpdateParams(s.ctx, tc.input)
 			if tc.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.expErrMsg)

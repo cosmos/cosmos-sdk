@@ -82,7 +82,7 @@ func (s *TestSuite) SetupTest() {
 	queryClient := authz.NewQueryClient(queryHelper)
 	s.queryClient = queryClient
 
-	s.msgSrvr = authzkeeper.NewMsgServerImpl(s.authzKeeper)
+	s.msgSrvr = authzkeeper.NewMsgServerForTest(s.authzKeeper)
 }
 
 func (s *TestSuite) TestKeeper() {

@@ -1,5 +1,5 @@
 package keeper
 
-// NewMsgServerImpl exposes the unexported msg server to the keeper_test
+// NewMsgServerForTest exposes the unexported msg server to the keeper_test
 // package.
-var NewMsgServerImpl = newMsgServerImpl
+var NewMsgServerForTest = newMsgServerImpl

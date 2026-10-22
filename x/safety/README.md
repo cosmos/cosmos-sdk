@@ -335,7 +335,7 @@ the disabled list exactly as given: resetting `/cosmos.bank.*` does not remove
 | --- | --- | --- |
 | `Params` | `GET /cosmos/safety/v1/params` | the params |
 | `DisabledList` | `GET /cosmos/safety/v1/disabled_list` | a page of disabled patterns |
-| `IsAllowed` | `GET /cosmos/safety/v1/is_allowed?msg_type_url=...` | whether the type URL may execute |
+| `IsAllowed` | `GET /cosmos/safety/v1/is_allowed?msg_type_url=...` | whether the type URL may execute and, if not, the disabled entry that blocks it in `blocked_by` |
 
 `IsAllowed` returns `InvalidArgument` for anything other than an exact msg type
 URL, such as a URL without the leading `/`, a prefix pattern or `*`.
@@ -477,8 +477,8 @@ simd q safety disabled-list --node <rpc>
 simd q safety is-allowed --msg-type-url /cosmos.bank.v1beta1.MsgSend --node <rpc>
 ```
 
-`is-allowed` omits `allowed` when it is false, since the output skips default
-values.
+For a blocked msg, `is-allowed` prints the disabled entry that blocks it in
+`blocked_by` and omits `allowed`, since the output skips default values.
 
 ### Without the generic commands
 

@@ -19,6 +19,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -259,6 +260,12 @@ func (s *KeeperTestSuite) TestIsAllowedTable() {
 			res, err := s.queryClient.IsAllowed(s.ctx, &types.QueryIsAllowedRequest{MsgTypeUrl: tc.url})
 			s.Require().NoError(err)
 			s.Require().Equal(tc.want, res.Allowed, "query must agree with the keeper")
+			if tc.want {
+				s.Require().Empty(res.BlockedBy)
+			} else {
+				s.Require().Contains(tc.disabled, res.BlockedBy)
+				s.Require().True(types.Blocks(res.BlockedBy, tc.url), res.BlockedBy)
+			}
 		})
 	}
 }
@@ -1049,4 +1056,23 @@ func (s *KeeperTestSuite) TestSetParams() {
 		s.Require().NoError(err)
 		s.Require().Equal(want, got)
 	}
+}
+
+// The IsAllowed query names the disabled entry that blocks a msg, so its JSON
+// output says why next to allowed: false.
+func (s *KeeperTestSuite) TestQueryIsAllowedBlockedBy() {
+	s.state(s.operator, []string{types.Wildcard}, "/cosmos.bank.*")
+
+	res, err := s.queryClient.IsAllowed(s.ctx, &types.QueryIsAllowedRequest{MsgTypeUrl: uSend})
+	s.Require().NoError(err)
+	s.Require().False(res.Allowed)
+	s.Require().Equal("/cosmos.bank.*", res.BlockedBy)
+	bz, err := codec.ProtoMarshalJSON(res, nil)
+	s.Require().NoError(err)
+	s.Require().JSONEq(`{"allowed":false,"blocked_by":"/cosmos.bank.*"}`, string(bz))
+
+	res, err = s.queryClient.IsAllowed(s.ctx, &types.QueryIsAllowedRequest{MsgTypeUrl: uDelegate})
+	s.Require().NoError(err)
+	s.Require().True(res.Allowed)
+	s.Require().Empty(res.BlockedBy)
 }

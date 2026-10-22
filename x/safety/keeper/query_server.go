@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -50,7 +49,8 @@ func (q queryServer) DisabledList(ctx context.Context, req *types.QueryDisabledL
 	return &types.QueryDisabledListResponse{DisabledPatterns: patterns, Pagination: pageRes}, nil
 }
 
-// IsAllowed reports whether a msg type URL may execute.
+// IsAllowed reports whether a msg type URL may execute and, when it may not,
+// the disabled entry that blocks it.
 func (q queryServer) IsAllowed(ctx context.Context, req *types.QueryIsAllowedRequest) (*types.QueryIsAllowedResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -58,12 +58,9 @@ func (q queryServer) IsAllowed(ctx context.Context, req *types.QueryIsAllowedReq
 	if err := types.ValidateTypeURL(req.MsgTypeUrl); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	allowed, err := q.k.IsAllowed(ctx, req.MsgTypeUrl)
-	switch {
-	case errors.Is(err, types.ErrMsgDisabled):
-		return &types.QueryIsAllowedResponse{Allowed: false}, nil
-	case err != nil:
+	by, err := q.k.blockedBy(ctx, req.MsgTypeUrl)
+	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &types.QueryIsAllowedResponse{Allowed: allowed}, nil
+	return &types.QueryIsAllowedResponse{Allowed: by == "", BlockedBy: by}, nil
 }

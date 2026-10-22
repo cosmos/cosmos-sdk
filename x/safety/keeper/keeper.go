@@ -103,12 +103,7 @@ func (k Keeper) SetParams(ctx context.Context, params types.Params) error {
 // passes the error on as is, rejects it under the safety codespace. A store
 // error also returns false: the breaker fails closed.
 func (k Keeper) IsAllowed(ctx context.Context, typeURL string) (bool, error) {
-	if types.IsProtected(typeURL) {
-		return true, nil
-	}
-
-	free := sdk.UnwrapSDKContext(ctx).WithGasMeter(storetypes.NewInfiniteGasMeter())
-	by, err := k.disabledCover(free, typeURL)
+	by, err := k.blockedBy(ctx, typeURL)
 	if err != nil {
 		return false, err
 	}
@@ -116,6 +111,16 @@ func (k Keeper) IsAllowed(ctx context.Context, typeURL string) (bool, error) {
 		return false, types.ErrMsgDisabled.Wrapf("%s by %s", typeURL, by)
 	}
 	return true, nil
+}
+
+// blockedBy returns the disabled entry that blocks the msg type URL typeURL,
+// or "" when it may execute. It charges no gas.
+func (k Keeper) blockedBy(ctx context.Context, typeURL string) (string, error) {
+	if types.IsProtected(typeURL) {
+		return "", nil
+	}
+	free := sdk.UnwrapSDKContext(ctx).WithGasMeter(storetypes.NewInfiniteGasMeter())
+	return k.disabledCover(free, typeURL)
 }
 
 // disabledCover returns the disabled entry that blocks the msg type URL

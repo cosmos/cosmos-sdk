@@ -66,4 +66,8 @@ message QueryIsAllowedRequest {
 message QueryIsAllowedResponse {
   // allowed is true when the msg type URL may execute.
   bool allowed = 1;
+
+  // blocked_by is the disabled entry that blocks the msg type URL, or empty
+  // when it is allowed.
+  string blocked_by = 2;
 }

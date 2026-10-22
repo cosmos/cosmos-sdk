@@ -359,12 +359,15 @@ func safetyCLIDisabledList(t *testing.T, cli *systest.CLIWrapper) []string {
 }
 
 // safetyCLIIsAllowed asks `q safety is-allowed` whether typeURL may execute.
-// The command prints {} for false, since JSON output omits default values.
+// For a blocked msg the command omits allowed, since JSON output omits
+// default values, and prints the entry that blocks it in blocked_by.
 func safetyCLIIsAllowed(t *testing.T, cli *systest.CLIWrapper, typeURL string) bool {
 	t.Helper()
 	res := cli.CustomQuery("q", "safety", "is-allowed", "--msg-type-url", typeURL)
 	require.True(t, gjson.Valid(res), res)
-	return gjson.Get(res, "allowed").Bool()
+	allowed := gjson.Get(res, "allowed").Bool()
+	require.Equal(t, allowed, gjson.Get(res, "blocked_by").String() == "", res)
+	return allowed
 }
 
 // The default genesis scope is empty, so the operator can do nothing
@@ -491,7 +494,9 @@ func safetyIsAllowed(t *testing.T, typeURL string) bool {
 	t.Helper()
 	res := safetyREST(t, "/cosmos/safety/v1/is_allowed?msg_type_url="+url.QueryEscape(typeURL))
 	require.True(t, gjson.Get(res, "allowed").Exists(), res)
-	return gjson.Get(res, "allowed").Bool()
+	allowed := gjson.Get(res, "allowed").Bool()
+	require.Equal(t, allowed, gjson.Get(res, "blocked_by").String() == "", res)
+	return allowed
 }
 
 // safetyTrip returns a MsgTrip as tx JSON.

@@ -40,7 +40,7 @@ The genutil commands are available under the `genesis` subcommand.
 
 #### add-genesis-account
 
-Add a genesis account to `genesis.json`. Learn more [here](https://docs.cosmos.network/main/run-node/run-node#adding-genesis-accounts).
+Add a genesis account to `genesis.json`. Learn more [here](https://docs.cosmos.network/sdk/latest/node/run-node#adding-genesis-accounts).
 
 #### collect-gentxs
 

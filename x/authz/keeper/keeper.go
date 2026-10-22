@@ -119,6 +119,11 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 
 		granter := signers[0]
 
+		if ic, ok := k.router.(internalChecker); ok && ic.IsInternal(sdk.MsgTypeURL(msg)) {
+			return nil, sdkerrors.ErrUnauthorized.Wrapf(
+				"message %s is internal-only and cannot be executed via authz", sdk.MsgTypeURL(msg))
+		}
+
 		// If granter != grantee then check authorization.Accept, otherwise we
 		// implicitly accept.
 		if !bytes.Equal(granter, grantee) {
@@ -456,4 +461,9 @@ func (k Keeper) DequeueAndDeleteExpiredGrants(ctx context.Context, limit int32) 
 	}
 
 	return nil
+}
+
+// internalChecker is implemented by routers that know which Msgs are internal-only.
+type internalChecker interface {
+	IsInternal(typeURL string) bool
 }

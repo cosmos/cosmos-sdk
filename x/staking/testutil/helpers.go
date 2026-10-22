@@ -49,7 +49,6 @@ func NewHelperWithRouter(t *testing.T, ctx sdk.Context, k *keeper.Keeper, router
 func NewHelper(t *testing.T, ctx sdk.Context, k *keeper.Keeper) *Helper {
 	t.Helper()
 
-	//nolint:staticcheck // NewHelper goes when NewMsgServerImpl does
 	return &Helper{t: t, msgSrvr: keeper.NewMsgServerImpl(k), k: k, Ctx: ctx, Commission: ZeroCommission(), Denom: sdk.DefaultBondDenom}
 }
 

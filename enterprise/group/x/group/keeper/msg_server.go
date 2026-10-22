@@ -23,6 +23,8 @@ import (
 	"slices"
 	"strings"
 
+	"google.golang.org/grpc"
+
 	errorsmod "cosmossdk.io/errors"
 
 	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
@@ -35,13 +37,30 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-var _ group.MsgServer = Keeper{}
+type msgServer struct {
+	Keeper
+}
+
+var _ group.MsgServer = msgServer{}
+
+// newMsgServerImpl returns an implementation of the x/group MsgServer
+// interface for the provided Keeper.
+func newMsgServerImpl(k Keeper) group.MsgServer {
+	return msgServer{Keeper: k}
+}
+
+// RegisterMsgServer registers the x/group Msg service on r. The msg server
+// is unexported: code outside the module runs a msg through the
+// MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) {
+	group.RegisterMsgServer(r, newMsgServerImpl(k))
+}
 
 // TODO: Revisit this once we have proper gas fee framework.
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(20)
 
-func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*group.MsgCreateGroupResponse, error) {
+func (k msgServer) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*group.MsgCreateGroupResponse, error) {
 	if _, err := k.accKeeper.AddressCodec().StringToBytes(msg.Admin); err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid admin address: %s", msg.Admin)
 	}
@@ -117,7 +136,7 @@ func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*
 	return &group.MsgCreateGroupResponse{GroupId: groupID}, nil
 }
 
-func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGroupMembers) (*group.MsgUpdateGroupMembersResponse, error) {
+func (k msgServer) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGroupMembers) (*group.MsgUpdateGroupMembersResponse, error) {
 	if msg.GroupId == 0 {
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "group id")
 	}
@@ -241,7 +260,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGr
 	return &group.MsgUpdateGroupMembersResponse{}, nil
 }
 
-func (k Keeper) UpdateGroupAdmin(goCtx context.Context, msg *group.MsgUpdateGroupAdmin) (*group.MsgUpdateGroupAdminResponse, error) {
+func (k msgServer) UpdateGroupAdmin(goCtx context.Context, msg *group.MsgUpdateGroupAdmin) (*group.MsgUpdateGroupAdminResponse, error) {
 	if msg.GroupId == 0 {
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "group id")
 	}
@@ -273,7 +292,7 @@ func (k Keeper) UpdateGroupAdmin(goCtx context.Context, msg *group.MsgUpdateGrou
 	return &group.MsgUpdateGroupAdminResponse{}, nil
 }
 
-func (k Keeper) UpdateGroupMetadata(goCtx context.Context, msg *group.MsgUpdateGroupMetadata) (*group.MsgUpdateGroupMetadataResponse, error) {
+func (k msgServer) UpdateGroupMetadata(goCtx context.Context, msg *group.MsgUpdateGroupMetadata) (*group.MsgUpdateGroupMetadataResponse, error) {
 	if msg.GroupId == 0 {
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "group id")
 	}
@@ -300,7 +319,7 @@ func (k Keeper) UpdateGroupMetadata(goCtx context.Context, msg *group.MsgUpdateG
 	return &group.MsgUpdateGroupMetadataResponse{}, nil
 }
 
-func (k Keeper) CreateGroupWithPolicy(ctx context.Context, msg *group.MsgCreateGroupWithPolicy) (*group.MsgCreateGroupWithPolicyResponse, error) {
+func (k msgServer) CreateGroupWithPolicy(ctx context.Context, msg *group.MsgCreateGroupWithPolicy) (*group.MsgCreateGroupWithPolicyResponse, error) {
 	// NOTE: admin, and group message validation is performed in the CreateGroup method
 	groupRes, err := k.CreateGroup(ctx, &group.MsgCreateGroup{
 		Admin:    msg.Admin,
@@ -348,7 +367,7 @@ func (k Keeper) CreateGroupWithPolicy(ctx context.Context, msg *group.MsgCreateG
 	return &group.MsgCreateGroupWithPolicyResponse{GroupId: groupID, GroupPolicyAddress: groupPolicyRes.Address}, nil
 }
 
-func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGroupPolicy) (*group.MsgCreateGroupPolicyResponse, error) {
+func (k msgServer) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGroupPolicy) (*group.MsgCreateGroupPolicyResponse, error) {
 	if msg.GroupId == 0 {
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "group id")
 	}
@@ -447,7 +466,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGro
 	return &group.MsgCreateGroupPolicyResponse{Address: accountAddr.String()}, nil
 }
 
-func (k Keeper) UpdateGroupPolicyAdmin(goCtx context.Context, msg *group.MsgUpdateGroupPolicyAdmin) (*group.MsgUpdateGroupPolicyAdminResponse, error) {
+func (k msgServer) UpdateGroupPolicyAdmin(goCtx context.Context, msg *group.MsgUpdateGroupPolicyAdmin) (*group.MsgUpdateGroupPolicyAdminResponse, error) {
 	if strings.EqualFold(msg.Admin, msg.NewAdmin) {
 		return nil, errorsmod.Wrap(errors.ErrInvalid, "new and old admin are same")
 	}
@@ -470,7 +489,7 @@ func (k Keeper) UpdateGroupPolicyAdmin(goCtx context.Context, msg *group.MsgUpda
 	return &group.MsgUpdateGroupPolicyAdminResponse{}, nil
 }
 
-func (k Keeper) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, msg *group.MsgUpdateGroupPolicyDecisionPolicy) (*group.MsgUpdateGroupPolicyDecisionPolicyResponse, error) {
+func (k msgServer) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, msg *group.MsgUpdateGroupPolicyDecisionPolicy) (*group.MsgUpdateGroupPolicyDecisionPolicyResponse, error) {
 	policy, err := msg.GetDecisionPolicy()
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "decision policy")
@@ -508,7 +527,7 @@ func (k Keeper) UpdateGroupPolicyDecisionPolicy(goCtx context.Context, msg *grou
 	return &group.MsgUpdateGroupPolicyDecisionPolicyResponse{}, nil
 }
 
-func (k Keeper) UpdateGroupPolicyMetadata(goCtx context.Context, msg *group.MsgUpdateGroupPolicyMetadata) (*group.MsgUpdateGroupPolicyMetadataResponse, error) {
+func (k msgServer) UpdateGroupPolicyMetadata(goCtx context.Context, msg *group.MsgUpdateGroupPolicyMetadata) (*group.MsgUpdateGroupPolicyMetadataResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	metadata := msg.GetMetadata()
 
@@ -530,7 +549,7 @@ func (k Keeper) UpdateGroupPolicyMetadata(goCtx context.Context, msg *group.MsgU
 	return &group.MsgUpdateGroupPolicyMetadataResponse{}, nil
 }
 
-func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitProposal) (*group.MsgSubmitProposalResponse, error) {
+func (k msgServer) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitProposal) (*group.MsgSubmitProposalResponse, error) {
 	if len(msg.Proposers) == 0 {
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "proposers")
 	}
@@ -674,7 +693,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 	return &group.MsgSubmitProposalResponse{ProposalId: id}, nil
 }
 
-func (k Keeper) WithdrawProposal(goCtx context.Context, msg *group.MsgWithdrawProposal) (*group.MsgWithdrawProposalResponse, error) {
+func (k msgServer) WithdrawProposal(goCtx context.Context, msg *group.MsgWithdrawProposal) (*group.MsgWithdrawProposalResponse, error) {
 	if msg.ProposalId == 0 {
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "proposal id")
 	}
@@ -716,7 +735,7 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, msg *group.MsgWithdrawPr
 	return &group.MsgWithdrawProposalResponse{}, nil
 }
 
-func (k Keeper) Vote(goCtx context.Context, msg *group.MsgVote) (*group.MsgVoteResponse, error) {
+func (k msgServer) Vote(goCtx context.Context, msg *group.MsgVote) (*group.MsgVoteResponse, error) {
 	if msg.ProposalId == 0 {
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "proposal id")
 	}
@@ -843,7 +862,7 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, proposal *group.Proposal, grou
 }
 
 // Exec executes the messages from a proposal.
-func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecResponse, error) {
+func (k msgServer) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecResponse, error) {
 	if msg.ProposalId == 0 {
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "proposal id")
 	}
@@ -945,7 +964,7 @@ func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecR
 }
 
 // LeaveGroup implements the MsgServer/LeaveGroup method.
-func (k Keeper) LeaveGroup(goCtx context.Context, msg *group.MsgLeaveGroup) (*group.MsgLeaveGroupResponse, error) {
+func (k msgServer) LeaveGroup(goCtx context.Context, msg *group.MsgLeaveGroup) (*group.MsgLeaveGroupResponse, error) {
 	if msg.GroupId == 0 {
 		return nil, errorsmod.Wrap(errors.ErrEmpty, "group-id")
 	}

@@ -5,7 +5,7 @@
 * 2026-10-21: Initial draft
 * 2026-10-21: Direct msg server callers use `msgservice.Dispatch`
 * 2026-10-22: Msgs run only through the router; SDK modules stop exporting their msg servers
-* 2026-10-22: gogoproto types only; no autocli or depinject
+* 2026-10-22: gogoproto types only; no autocli options or depinject; generic service commands for operators
 
 ## Status
 
@@ -78,7 +78,7 @@ When gov narrows the scope, existing trips stay in place, and gov resets them in
 
 ### Wiring and client
 
-* **Manual wiring, gogoproto types only.** x/safety has no pulsar types in `cosmossdk.io/api`, no autocli options and no depinject config. Apps wire it by hand, and operators trip and reset by signing tx JSON with `tx sign` and sending it with `tx broadcast`.
+* **Manual wiring, gogoproto types only.** x/safety has no pulsar types in `cosmossdk.io/api`, no autocli options and no depinject config. Apps wire it by hand. The module defines no CLI code; operators trip, reset and query with the generic `tx safety` and `q safety` commands that autocli derives from the module's Msg and Query services.
 
 ### Migrating from x/circuit
 
@@ -109,7 +109,7 @@ Chains remove `x/circuit` and add `x/safety` in the same upgrade: delete the cir
 * A module outside the SDK that still exports its msg server, and any keeper method that runs a msg's logic, remain direct paths the breaker does not see.
 * Under a `*` trip the breaker blocks `MsgEthereumTx`, so during a global halt validators on an EVM chain vote with a Cosmos `MsgVote` tx, not through the gov precompile.
 * Recheck evicts txs already in the mempool at trip time, and their senders rebroadcast after the reset.
-* x/safety has no module CLI, so operators keep tx JSON templates for `MsgTrip` and `MsgReset`, and a depinject app registers the module, its store and the breaker by hand.
+* An app that does not build autocli from `runtimeservices.ExtractAutoCLIOptions` has no `tx safety` commands, so its operators sign `MsgTrip` and `MsgReset` as tx JSON. A depinject app registers the module, its store and the breaker by hand.
 * An authority set through the consensus `AuthorityParams` override that can act only through a wrapper the operator tripped by exact URL cannot recover on chain.
 
 ### Neutral

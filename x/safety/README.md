@@ -147,8 +147,10 @@ call, so `SetCircuitBreaker` can run before or after `RegisterServices`.
 
 * checks every top-level msg and, recursively, every msg returned by
   `GetMessages() ([]sdk.Msg, error)` (authz `MsgExec`) or
-  `GetMsgs() ([]sdk.Msg, error)` (gov v1 and group `MsgSubmitProposal`), up to
-  `MaxNestedMsgDepth` levels, including inside protected and wrapper msgs.
+  `GetMsgs() ([]sdk.Msg, error)` (gov v1 and group `MsgSubmitProposal`),
+  including inside protected and wrapper msgs. It descends as deep as the tx
+  decoder unpacks `Any` values, `codectypes.MaxUnpackAnyRecursionDepth`, so it
+  adds no nesting limit of its own.
 * runs in `CheckTx`, `ReCheckTx` and simulation, and passes every tx through
   in `FinalizeBlock`.
 * runs in `PrepareProposal` and `ProcessProposal` only with an app-side

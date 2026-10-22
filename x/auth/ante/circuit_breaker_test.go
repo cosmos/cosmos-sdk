@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	protov2 "google.golang.org/protobuf/proto"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -137,7 +138,7 @@ func TestCircuitBreakerDecoratorOpensGetMsgsWrappers(t *testing.T) {
 
 func TestCircuitBreakerDecoratorDepthLimit(t *testing.T) {
 	var msg sdk.Msg = deleg
-	for range ante.MaxNestedMsgDepth {
+	for range codectypes.MaxUnpackAnyRecursionDepth {
 		msg = exec(msg)
 	}
 	require.NoError(t, run(t, mockBreaker{}, msg))
@@ -147,7 +148,7 @@ func TestCircuitBreakerDecoratorDepthLimit(t *testing.T) {
 
 	// the limit counts GetMsgs wrappers too
 	msg = deleg
-	for range ante.MaxNestedMsgDepth {
+	for range codectypes.MaxUnpackAnyRecursionDepth {
 		msg = proposal(t, msg)
 	}
 	require.NoError(t, run(t, mockBreaker{}, msg))

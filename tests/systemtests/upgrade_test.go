@@ -28,7 +28,8 @@ func TestChainUpgrade(t *testing.T) {
 	// Scenario:
 	// start a legacy chain with some state
 	// when a chain upgrade proposal is executed
-	// then the chain upgrades successfully
+	// then the chain upgrades successfully, and x/safety, which the upgrade
+	// adds, trips and resets msgs
 	cli := upgradeLegacyChain(t)
 	govAddr := sdk.AccAddress(address.Module("gov")).String()
 
@@ -63,17 +64,16 @@ func TestChainUpgrade(t *testing.T) {
 	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	got := cli.Run("tx", "distribution", "fund-community-pool", "100stake", "--from=node0")
 	systest.RequireTxSuccess(t, got)
+
+	safetyAfterUpgrade(t, cli, govAddr)
 }
 
-func TestSafetyAfterChainUpgrade(t *testing.T) {
-	// Scenario:
-	// given a legacy chain upgraded to the current binary, which adds x/safety
-	// when gov names an operator and the operator trips and resets msgs
-	// then the trips block those msgs in CheckTx and survive a restart, gov
-	// still submits and votes, and the operator and gov resets reopen them.
-	cli := upgradeLegacyChain(t)
-	govAddr := sdk.AccAddress(address.Module("gov")).String()
-
+// safetyAfterUpgrade has gov name an x/safety operator on the upgraded chain
+// and the operator trip and reset msgs. The trips block those msgs in CheckTx
+// and survive a restart, gov still submits and votes, and the operator and
+// gov resets reopen them.
+func safetyAfterUpgrade(t *testing.T, cli *systest.CLIWrapper, govAddr string) {
+	t.Helper()
 	// keys added after the upgrade, funded by bank sends that x/safety allows
 	operatorAddr := cli.AddKey("safety-operator")
 	recipientAddr := cli.AddKey("safety-recipient")

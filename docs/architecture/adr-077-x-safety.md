@@ -5,6 +5,7 @@
 * 2026-10-21: Initial draft
 * 2026-10-21: Direct msg server callers use `msgservice.Dispatch`
 * 2026-10-22: Msgs run only through the router; SDK modules stop exporting their msg servers
+* 2026-10-22: gogoproto types only; no autocli or depinject
 
 ## Status
 
@@ -75,6 +76,10 @@ When gov narrows the scope, existing trips stay in place, and gov resets them in
 * A breaker that returns an error blocks the msg.
 * **Gas.** The breaker check charges no gas. The keeper runs its disabled-list lookups on an infinite gas meter in place of the context's meter, so the router, the ante decorator and `Dispatch` cost a tx the same gas as with no breaker set, and `Simulate` stays as close to `FinalizeBlock` gas as without one. Charging would add 5000 gas to a bank send at the router, and, because the decorator checks in `Simulate` but not in `FinalizeBlock`, another 5000 to its gas estimate that users pay fees for and never use. The work stays bounded without gas: per msg, at most two point lookups plus one per package segment, on a type URL the interface registry knows or, through the `IsAllowed` query, one of at most 256 bytes.
 
+### Wiring and client
+
+* **Manual wiring, gogoproto types only.** x/safety has no pulsar types in `cosmossdk.io/api`, no autocli options and no depinject config. Apps wire it by hand, and operators trip and reset by signing tx JSON with `tx sign` and sending it with `tx broadcast`.
+
 ### Migrating from x/circuit
 
 Chains remove `x/circuit` and add `x/safety` in the same upgrade: delete the circuit store, add the safety store, and swap the circuit keeper for the safety keeper in `SetCircuitBreaker` and the ante handler. The circuit disabled list and permissions do not migrate. After the upgrade, gov sets the operator and scope, and the operator re-trips anything that must stay blocked.
@@ -104,6 +109,7 @@ Chains remove `x/circuit` and add `x/safety` in the same upgrade: delete the cir
 * A module outside the SDK that still exports its msg server, and any keeper method that runs a msg's logic, remain direct paths the breaker does not see.
 * Under a `*` trip the breaker blocks `MsgEthereumTx`, so during a global halt validators on an EVM chain vote with a Cosmos `MsgVote` tx, not through the gov precompile.
 * Recheck evicts txs already in the mempool at trip time, and their senders rebroadcast after the reset.
+* x/safety has no module CLI, so operators keep tx JSON templates for `MsgTrip` and `MsgReset`, and a depinject app registers the module, its store and the breaker by hand.
 * An authority set through the consensus `AuthorityParams` override that can act only through a wrapper the operator tripped by exact URL cannot recover on chain.
 
 ### Neutral

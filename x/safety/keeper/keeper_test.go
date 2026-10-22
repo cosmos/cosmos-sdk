@@ -263,31 +263,69 @@ func (s *KeeperTestSuite) TestIsAllowedTable() {
 	}
 }
 
+// countingStoreService opens stores that count their Has calls.
+type countingStoreService struct {
+	inner corestore.KVStoreService
+	has   *int
+}
+
+func (c countingStoreService) OpenKVStore(ctx context.Context) corestore.KVStore {
+	return countingStore{c.inner.OpenKVStore(ctx), c.has}
+}
+
+type countingStore struct {
+	corestore.KVStore
+	has *int
+}
+
+func (c countingStore) Has(key []byte) (bool, error) {
+	*c.has++
+	return c.KVStore.Has(key)
+}
+
 // IsAllowed is a bounded number of point lookups: two plus one per package
 // segment, independent of the size of the disabled list, and none for a
-// protected type URL.
+// protected type URL. It charges no gas for them: a finite gas meter on the
+// caller's context stays at zero.
+//
+// Before the check charged no gas, this test counted lookups by the gas they
+// charged (1000 each, 5000 for a MsgSend). It now counts them at the store.
 func (s *KeeperTestSuite) TestIsAllowedBoundedLookups() {
-	hasCost := s.ctx.KVGasConfig().HasCost
-	gasFor := func(url string) storetypes.Gas {
-		ctx := s.ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
-		_, err := s.keeper.IsAllowed(ctx, url)
+	var has int
+	k := keeper.NewKeeper(moduletestutil.MakeTestEncodingConfig().Codec, countingStoreService{runtime.NewKVStoreService(s.key), &has}, addresscodec.NewBech32Codec("cosmos"), s.registry, s.authority)
+	lookups := func(url string) int {
+		has = 0
+		ctx := s.ctx.WithGasMeter(storetypes.NewGasMeter(1))
+		_, err := k.IsAllowed(ctx, url)
 		s.Require().NoError(err)
-		return ctx.GasMeter().GasConsumed()
+		s.Require().Zero(ctx.GasMeter().GasConsumed(), "the check must charge no gas")
+		return has
 	}
 
 	s.state(s.operator, []string{types.Wildcard})
-	small := gasFor(uSend)
-	s.Require().Equal(5*hasCost, small, "exact + * + 3 prefixes")
-	s.Require().Equal(4*hasCost, gasFor("/a.b.MsgC"), "exact + * + 2 prefixes")
-	s.Require().Equal(storetypes.Gas(0), gasFor(uSafetyReset), "protected URL needs no lookup")
-	s.Require().Equal(hasCost, gasFor(uExec), "a wrapper needs only its exact lookup")
+	s.Require().Equal(5, lookups(uSend), "exact + * + 3 prefixes")
+	s.Require().Equal(4, lookups("/a.b.MsgC"), "exact + * + 2 prefixes")
+	s.Require().Zero(lookups(uSafetyReset), "protected URL needs no lookup")
+	s.Require().Equal(1, lookups(uExec), "a wrapper needs only its exact lookup")
 
 	var many []string
 	for i := range 500 {
 		many = append(many, fmt.Sprintf("/zz.m%03d.MsgX", i))
 	}
 	s.state(s.operator, []string{types.Wildcard}, many...)
-	s.Require().Equal(small, gasFor(uSend), "gas must not grow with the disabled list")
+	s.Require().Equal(5, lookups(uSend), "lookups must not grow with the disabled list")
+}
+
+// IsAllowed of a blocked msg also charges no gas, and leaves the caller's
+// gas meter as it was.
+func (s *KeeperTestSuite) TestIsAllowedBlockedChargesNoGas() {
+	s.state(s.operator, []string{types.Wildcard}, uSend)
+	meter := storetypes.NewGasMeter(10_000)
+	meter.ConsumeGas(7, "before")
+	ok, err := s.keeper.IsAllowed(s.ctx.WithGasMeter(meter), uSend)
+	s.Require().ErrorIs(err, types.ErrMsgDisabled)
+	s.Require().False(ok)
+	s.Require().Equal(storetypes.Gas(7), meter.GasConsumed())
 }
 
 func (s *KeeperTestSuite) TestUpdateParamsTable() {

@@ -96,3 +96,25 @@ func TestDispatchMatchesRouterPath(t *testing.T) {
 	require.Equal(t, res.Events, dispatched.EventManager().ABCIEvents())
 	require.Equal(t, f.balance(routed, f.grantee), f.balance(dispatched, f.grantee))
 }
+
+// TestDispatchGasMatchesNoBreaker dispatches an allowed MsgSend with x/safety
+// as the breaker and runs the same msg through its router handler with no
+// breaker set. The breaker check charges no gas, so both use the same gas.
+func TestDispatchGasMatchesNoBreaker(t *testing.T) {
+	f := newRouterFixture(t, false)
+	ctx := f.ctx()
+
+	dispatched := branch(ctx)
+	_, err := f.dispatchSend(dispatched)
+	require.NoError(t, err)
+
+	router := f.app.MsgServiceRouter()
+	router.SetCircuit(nil)
+	t.Cleanup(func() { router.SetCircuit(f.safetyKeeper) })
+	routed := branch(ctx)
+	_, err = router.Handler(f.msgSend())(routed, f.msgSend())
+	require.NoError(t, err)
+
+	require.NotZero(t, routed.GasMeter().GasConsumed())
+	require.Equal(t, routed.GasMeter().GasConsumed(), dispatched.GasMeter().GasConsumed())
+}

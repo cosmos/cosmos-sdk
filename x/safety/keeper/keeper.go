@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/safety/types"
 )
@@ -77,6 +78,16 @@ func (k Keeper) DefaultAuthority() string { return k.defaultAuthority }
 // segment-boundary prefix patterns. The check is a bounded number of point
 // lookups and never walks the disabled list.
 //
+// The check charges no gas. The lookups run on an infinite gas meter that
+// replaces ctx's meter for the check only, so the tx, the block gas meter
+// and the caller's ctx see none of them, and a msg costs the same gas as with
+// no circuit breaker set. The router, the SafetyDecorator and
+// msgservice.Dispatch all reach the store through here. The work stays
+// bounded without gas: per msg, at most two lookups plus one per package
+// segment of its type URL, and a type URL is either one the interface
+// registry knows or, through the IsAllowed query, at most MaxPatternLength
+// bytes.
+//
 // A blocked msg returns false with ErrMsgDisabled, so the router, which
 // passes the error on as is, rejects it under the safety codespace. A store
 // error also returns false: the breaker fails closed.
@@ -85,7 +96,8 @@ func (k Keeper) IsAllowed(ctx context.Context, typeURL string) (bool, error) {
 		return true, nil
 	}
 
-	by, err := k.disabledCover(ctx, typeURL)
+	free := sdk.UnwrapSDKContext(ctx).WithGasMeter(storetypes.NewInfiniteGasMeter())
+	by, err := k.disabledCover(free, typeURL)
 	if err != nil {
 		return false, err
 	}

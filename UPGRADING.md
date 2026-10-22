@@ -152,7 +152,7 @@ func ExportGenesisFileWithTime(genFile string, appGenesis *types.AppGenesis, gen
 
 `x/safety` replaces `contrib/x/circuit`. To wire it, follow [Wiring](x/safety/README.md#wiring) in its README: build the keeper, call `app.SetCircuitBreaker(app.SafetyKeeper)`, register the module, order `safety` after `genutil` in `InitGenesis`, and set `CircuitBreaker: app.SafetyKeeper` in `ante.HandlerOptions`. An ante chain the app builds itself, such as a separate chain for Ethereum txs, adds `ante.NewCircuitBreakerDecorator(app.SafetyKeeper)` right after `SetUpContextDecorator`. A live chain adds `safetytypes.StoreKey` to `StoreUpgrades.Added` in the upgrade that introduces it (see the [Reference Upgrade Handler](#reference-upgrade-handler)). A chain moving off `contrib/x/circuit` removes that module's wiring and adds `"circuit"` to `StoreUpgrades.Deleted`. The default genesis has no operator, so call `app.SafetyKeeper.SetParams` right after `RunMigrations` in the upgrade handler to name one; see [Upgrade handler](x/safety/README.md#upgrade-handler). x/safety does not read `contrib/x/circuit` state, so trip again through x/safety any msg that must stay disabled after the upgrade.
 
-x/safety supports manual wiring only. It has no depinject module config, no autocli options and no types in `cosmossdk.io/api`, so a depinject app registers it with `app.RegisterModules` and `app.RegisterStores`. Operators use the generic `tx safety` and `q safety` commands that autocli derives from the module's services; see [Operating](x/safety/README.md#operating).
+x/safety supports manual wiring only: it has no depinject module config, no autocli options and no types in `cosmossdk.io/api`. Operators use the generic `tx safety` and `q safety` commands that autocli derives from the module's services; see [Operating](x/safety/README.md#operating).
 
 The circuit breaker only sees msgs that go through the `MsgServiceRouter`. See [Running msgs from code](#running-msgs-from-code) and [Direct callers](x/safety/README.md#direct-callers).
 
@@ -239,15 +239,16 @@ func (app SimApp) RegisterUpgradeHandlers() {
 
     if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
         storeUpgrades := storetypes.StoreUpgrades{
-            Added:   []string{safetytypes.StoreKey},
+            // Leave safetytypes.StoreKey out if the app does not wire x/safety.
+            Added: []string{safetytypes.StoreKey},
+            // Add "circuit" if the app removes contrib/x/circuit, and "params"
+            // if it still had the x/params store mounted.
             Deleted: []string{"protocolpool"},
         }
         app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
     }
 }
 ```
-
-Add `"params"` to `Deleted` as well if your app still had the `x/params` store mounted. Leave `safetytypes.StoreKey` out of `Added` if your app does not wire `x/safety`, and add `"circuit"` to `Deleted` if it removes `contrib/x/circuit`.
 
 ## Upgrading from v0.53.x
 

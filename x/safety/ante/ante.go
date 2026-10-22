@@ -33,10 +33,11 @@ type msgsWithGetMsgs interface {
 //
 // The decorator also runs in ReCheckTx and, with an app-side mempool, in
 // PrepareProposal, so a tx that entered the mempool before a trip is evicted
-// there. Like a tx rejected in
-// CheckTx, it pays no fee and keeps its sequence, and its signed bytes
-// execute once the trip is reset unless the sender signs another tx at that
-// sequence or the tx times out.
+// there. Like a tx rejected in CheckTx, it pays no fee and keeps its
+// sequence, and its signed bytes execute once the trip is reset unless the
+// sender signs another tx at that sequence or the tx times out. With an
+// app-side mempool it runs in ProcessProposal too, where a tripped msg makes
+// the SDK's default handler reject the whole proposal.
 //
 // In FinalizeBlock the decorator passes every tx on and leaves the check to
 // the router, since a tx rejected before fee deduction would keep its

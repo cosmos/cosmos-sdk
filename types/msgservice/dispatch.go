@@ -17,8 +17,9 @@ type MsgRouter interface {
 
 // Dispatch runs msg through router's handler for it and returns the msg
 // server's response as R. msg must be the gogoproto type registered for its
-// type URL, not the pulsar type from cosmossdk.io/api. The router handler runs ValidateBasic, the
-// app's circuit breaker check and the msg server method on a branch of ctx.
+// type URL, not the pulsar type from cosmossdk.io/api. The router handler
+// runs ValidateBasic, the app's circuit breaker check and the msg server
+// method on a branch of ctx.
 // Dispatch writes the branch and emits the handler's events on ctx only when
 // the handler succeeds and its response is an R, so a failed Dispatch leaves
 // ctx unchanged. Dispatch emits only the msg server's events: the "message"

@@ -154,7 +154,14 @@ decorator returns.
 A check of a protected type URL runs no lookup. Any other check runs at most
 two point lookups plus one per package segment, and one for a wrapper; it
 stops at the first disabled entry that blocks the msg, and never walks the
-disabled list. Each lookup charges KV read gas.
+disabled list. Each lookup charges KV read gas: with the default gas config, a
+lookup that finds nothing costs 1000 gas (`ReadCostFlat`). An allowed
+`/cosmos.bank.v1beta1.MsgSend` costs 5000 gas (the exact URL, `*` and three
+prefixes), a wrapper such as authz `MsgExec` 1000, and a protected msg 0. The
+router charges this for every msg it routes, nested msgs included, so an authz
+`MsgExec` of one `MsgSend` pays 6000. In simulation the ante decorator charges
+the same again, while in `FinalizeBlock` it charges nothing, so simulated gas
+runs above what the tx uses by the decorator's share.
 
 The check runs in two places:
 
@@ -183,7 +190,14 @@ The check runs in two places:
   router. A tx that reaches `FinalizeBlock` after a trip, such as one later in
   the same block as the trip or any tx on a node with recheck off, fails at the
   router, pays its fee and uses its sequence, so its signed bytes cannot
-  execute again once the trip is reset. Gov or group still creates a proposal
+  execute again once the trip is reset. That holds with the default
+  `NoOpMempool`, where `ProcessProposal` accepts every block. With an
+  app-side mempool, `ProcessProposal` runs the ante chain on every tx in the
+  proposal, and the SDK's default handler rejects the whole proposal when one
+  tx fails, so validators reject a block that contains a tripped msg. The
+  SDK's default `PrepareProposal` runs the same decorator and leaves tripped
+  txs out; a proposer whose `PrepareProposal` skips the ante chain can have
+  its block rejected. Gov or group still creates a proposal
   submitted in such a tx, because the router admits the wrapper and checks the
   msgs only when the proposal executes; while the trip stands, the router
   blocks the tripped msg there and the proposal fails. The
@@ -221,9 +235,10 @@ switches to `Dispatch`, or a reverted EVM call keeps the msg's writes.
 the `msg_index` attribute that a msg in a tx gets, so an indexer keyed on
 `message.action` does not see it.
 
-`Dispatch` does not check the msg's signers: the caller authorizes them. The msg must be the gogoproto type, not the
-pulsar type from `cosmossdk.io/api`. A msg with no registered handler fails
-with `ErrUnknownRequest`, and a nil router returns an error.
+`Dispatch` does not check the msg's signers: the caller authorizes them. The
+msg must be the gogoproto type, not the pulsar type from `cosmossdk.io/api`.
+A msg with no registered handler fails with `ErrUnknownRequest`, and a nil
+router returns an error.
 
 Module logic that another module needs, such as authz `DispatchActions` or a
 bank keeper send, is a keeper method, and a trip does not cover it. Upgrade
@@ -396,9 +411,9 @@ before or after `ModuleManager.RegisterServices`.
 
 Register `safety.NewAppModule(app.SafetyKeeper)` with the module manager, add
 the store key, and add `safetytypes.ModuleName` to the init and export genesis
-orders, after `genutiltypes.ModuleName` in the init order. A chain that adds the module in an upgrade adds
-`safetytypes.StoreKey` to `StoreUpgrades.Added`; `RunMigrations` then runs the
-default genesis.
+orders, after `genutiltypes.ModuleName` in the init order. A chain that adds
+the module in an upgrade adds `safetytypes.StoreKey` to
+`StoreUpgrades.Added`; `RunMigrations` then runs the default genesis.
 
 ### Genesis order
 

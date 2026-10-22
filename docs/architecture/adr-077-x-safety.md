@@ -126,6 +126,6 @@ Chains remove `x/circuit` and add `x/safety` in the same upgrade: delete the cir
 ## References
 
 * [#26894: x/safety module](https://github.com/cosmos/cosmos-sdk/pull/26894)
-* msgservice.Dispatch PR
+* [#26898: msgservice.Dispatch](https://github.com/cosmos/cosmos-sdk/pull/26898)
 * [`contrib/x/circuit`](../../contrib/x/circuit)
 * [ADR 068: Preblock](./adr-068-preblock.md)

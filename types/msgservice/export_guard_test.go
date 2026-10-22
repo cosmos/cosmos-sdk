@@ -27,11 +27,13 @@ var exportGuardAllowed = []string{
 // exportGuardDeprecated lists the deprecated constructors and keeper Msg
 // methods kept so callers compile until the next release removes them. Each
 // must carry a Deprecated: doc comment, and the guard fails when one is gone
-// but still listed. A "Keeper." prefix names a keeper Msg method.
+// but still listed. A "Keeper." prefix names a keeper Msg method, and a
+// "type " prefix an alias of the unexported msgServer type.
 var exportGuardDeprecated = map[string][]string{
 	"contrib/x/circuit/keeper/msg_server.go":        {"NewMsgServerImpl"},
 	"contrib/x/crisis/keeper/msg_server.go":         {"Keeper.VerifyInvariant", "Keeper.UpdateParams"},
 	"contrib/x/nft/keeper/msg_server.go":            {"Keeper.Send"},
+	"enterprise/poa/x/poa/keeper/msg_server.go":     {"type MsgServer", "NewMsgServer"},
 	"enterprise/group/x/group/keeper/msg_server.go": {"Keeper.CreateGroup", "Keeper.UpdateGroupMembers", "Keeper.UpdateGroupAdmin", "Keeper.UpdateGroupMetadata", "Keeper.CreateGroupWithPolicy", "Keeper.CreateGroupPolicy", "Keeper.UpdateGroupPolicyAdmin", "Keeper.UpdateGroupPolicyDecisionPolicy", "Keeper.UpdateGroupPolicyMetadata", "Keeper.SubmitProposal", "Keeper.WithdrawProposal", "Keeper.Vote", "Keeper.Exec", "Keeper.LeaveGroup"},
 	"testutil/x/counter/keeper/keeper.go":           {"Keeper.IncreaseCount"},
 	"x/auth/keeper/msg_server.go":                   {"NewMsgServerImpl"},
@@ -44,6 +46,7 @@ var exportGuardDeprecated = map[string][]string{
 	"x/feegrant/keeper/msg_server.go":               {"NewMsgServerImpl"},
 	"x/gov/keeper/msg_server.go":                    {"NewMsgServerImpl", "NewLegacyMsgServerImpl"},
 	"x/mint/keeper/msg_server.go":                   {"NewMsgServerImpl"},
+	"x/safety/keeper/msg_server.go":                 {"NewMsgServerImpl"},
 	"x/slashing/keeper/msg_server.go":               {"NewMsgServerImpl"},
 	"x/staking/keeper/msg_server.go":                {"NewMsgServerImpl"},
 	"x/upgrade/keeper/msg_server.go":                {"NewMsgServerImpl"},
@@ -54,9 +57,12 @@ func deprecatedReasons() map[string]bool {
 	allowed := map[string]bool{}
 	for path, names := range exportGuardDeprecated {
 		for _, name := range names {
-			if strings.HasPrefix(name, "Keeper.") {
+			switch {
+			case strings.HasPrefix(name, "Keeper."):
 				allowed[path+": method "+name+" is a Msg handler on an exported type"] = true
-			} else {
+			case strings.HasPrefix(name, "type "):
+				allowed[path+": "+name+" is msgServer"] = true
+			default:
 				allowed[path+": func "+name+" returns a msg server"] = true
 			}
 		}
@@ -66,8 +72,14 @@ func deprecatedReasons() map[string]bool {
 
 // isDeprecated reports whether decl has a Deprecated: doc paragraph.
 func isDeprecated(decl ast.Decl) bool {
-	fd, ok := decl.(*ast.FuncDecl)
-	return ok && fd.Doc != nil && strings.Contains(fd.Doc.Text(), "\nDeprecated: ")
+	var doc *ast.CommentGroup
+	switch d := decl.(type) {
+	case *ast.FuncDecl:
+		doc = d.Doc
+	case *ast.GenDecl:
+		doc = d.Doc
+	}
+	return doc != nil && strings.Contains(doc.Text(), "\nDeprecated: ")
 }
 
 // TestNoExportedMsgServer scans every hand-written Go file in the repo and

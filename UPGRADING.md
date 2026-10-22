@@ -162,13 +162,14 @@ Wiring x/safety leaves gas unchanged. The circuit breaker check charges no gas i
 
 An `sdk.Msg` should run only through the `MsgServiceRouter`, so a trip of the circuit breaker stops it. This release deprecates the ways to call an SDK module's msg server directly. They still compile, and the next release removes them:
 
-* `NewMsgServerImpl` in `x/auth`, `x/auth/vesting`, `x/bank`, `x/distribution`, `x/evidence`, `x/feegrant`, `x/gov` (with `NewLegacyMsgServerImpl`), `x/mint`, `x/slashing`, `x/staking`, `x/upgrade` and `contrib/x/circuit`.
+* `NewMsgServerImpl` in `x/auth`, `x/auth/vesting`, `x/bank`, `x/distribution`, `x/evidence`, `x/feegrant`, `x/gov` (with `NewLegacyMsgServerImpl`), `x/mint`, `x/safety`, `x/slashing`, `x/staking`, `x/upgrade` and `contrib/x/circuit`, and `NewMsgServer` with the `MsgServer` type in `enterprise/poa`.
 * The Msg methods on the keepers of `x/authz`, `x/consensus`, `contrib/x/crisis`, `contrib/x/nft`, `enterprise/group` and `testutil/x/counter`, such as authz `Keeper.Exec` and consensus `Keeper.UpdateParams`. Exported keeper methods for module logic, such as authz `DispatchActions`, `SaveGrant` and `GetAuthorization`, stay.
 * `MsgServiceRouter.HybridHandlerByMsgName`, which runs a registered msg handler by name and skips `ValidateBasic`.
+* `x/staking/testutil.NewHelper`, which calls the staking msg server directly. `NewHelperWithRouter` takes the `msgservice.MsgRouter` that runs its msgs, such as `app.MsgServiceRouter()`.
 
 The msg server types are unexported. Each keeper package exports `RegisterMsgServer`, which the module's `RegisterServices` calls. `x/auth/vesting` takes the account and bank keepers, and `x/gov` registers both the v1 and the v1beta1 service.
 
-Two changes break now: `x/staking/testutil.NewHelper` takes the `msgservice.MsgRouter` that runs its msgs, such as `app.MsgServiceRouter()`, and `enterprise/poa` unexports `keeper.NewMsgServer` and the `keeper.MsgServer` type.
+staticcheck reports SA1019 at each call to a deprecated function, in app code and in tests. A test in a module's `keeper_test` package reaches the unexported msg server through an `export_test.go` in the keeper package, as the SDK modules do with `NewMsgServerForTest`.
 
 An app or test that registers a module's msg server by hand calls the keeper package's `RegisterMsgServer`:
 

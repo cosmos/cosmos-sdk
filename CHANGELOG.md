@@ -41,8 +41,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Breaking Changes
 
 * (x/auth) [#26672](https://github.com/cosmos/cosmos-sdk/pull/26672) An unordered transaction whose `timeout_timestamp` equals the block time is now rejected
-* (x/staking) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) `testutil.NewHelper` takes the `msgservice.MsgRouter` that runs its msgs, such as `app.MsgServiceRouter()`.
-* (enterprise/poa) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) `keeper.NewMsgServer` and the `keeper.MsgServer` type are unexported; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
 
 ### State Machine Breaking
 
@@ -92,11 +90,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/mint) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) `keeper.NewMsgServerImpl` is deprecated and will be removed in the next release; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
 * (x/slashing) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) `keeper.NewMsgServerImpl` is deprecated and will be removed in the next release; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
 * (x/staking) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) `keeper.NewMsgServerImpl` is deprecated and will be removed in the next release; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
+* (x/staking) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) `testutil.NewHelper` is deprecated and will be removed in the next release; `testutil.NewHelperWithRouter` takes the `msgservice.MsgRouter` that runs its msgs, such as `app.MsgServiceRouter()`.
+* (x/safety) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) `keeper.NewMsgServerImpl` is deprecated and will be removed in the next release; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
 * (x/upgrade) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) `keeper.NewMsgServerImpl` is deprecated and will be removed in the next release; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
 * (contrib/x/circuit) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) `contrib/x/circuit` is deprecated in favor of `x/safety` and will be removed in v0.57.0.
 * (contrib/x/circuit) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) `keeper.NewMsgServerImpl` is deprecated and will be removed in the next release; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
 * (contrib/x/crisis) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) `Keeper.VerifyInvariant` and `Keeper.UpdateParams` are deprecated and will be removed in the next release; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
 * (contrib/x/nft) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) `Keeper.Send` is deprecated and will be removed in the next release; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`. `Transfer` stays on `Keeper`.
+* (enterprise/poa) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) `keeper.NewMsgServer` and the `keeper.MsgServer` type are deprecated and will be removed in the next release; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
 * (enterprise/group) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) The `Keeper` Msg methods, such as `CreateGroup`, `SubmitProposal`, `Vote` and `Exec`, are deprecated and will be removed in the next release; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
 * (testutil/x/counter) [#26894](https://github.com/cosmos/cosmos-sdk/pull/26894) `Keeper.IncreaseCount` is deprecated and will be removed in the next release; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
 

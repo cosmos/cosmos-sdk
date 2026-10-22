@@ -183,7 +183,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	stakingParams, err := f.stakingKeeper.GetParams(ctx)
 	assert.NilError(t, err)
 	operatorAddr, valpubkey := valAddresses[0], pubkeys[0]
-	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper, f.app.MsgServiceRouter())
+	tstaking := stakingtestutil.NewHelperWithRouter(t, ctx, f.stakingKeeper, f.app.MsgServiceRouter())
 
 	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, valpubkey, power, true)
 
@@ -276,7 +276,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	assert.NilError(t, err)
 	operatorAddr, valpubkey := valAddresses[0], pubkeys[0]
 
-	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper, f.app.MsgServiceRouter())
+	tstaking := stakingtestutil.NewHelperWithRouter(t, ctx, f.stakingKeeper, f.app.MsgServiceRouter())
 
 	amt := tstaking.CreateValidatorWithValPower(operatorAddr, valpubkey, power, true)
 
@@ -330,7 +330,7 @@ func TestHandleDoubleSign_RotatedConsKey(t *testing.T) {
 
 	power := int64(100)
 	operatorAddr, oldPubKey := valAddresses[0], pubkeys[0]
-	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper, f.app.MsgServiceRouter())
+	tstaking := stakingtestutil.NewHelperWithRouter(t, ctx, f.stakingKeeper, f.app.MsgServiceRouter())
 
 	tstaking.CreateValidatorWithValPower(operatorAddr, oldPubKey, power, true)
 
@@ -427,7 +427,7 @@ func TestHandleDoubleSign_RotatedConsKeyLingersForBlockWindow(t *testing.T) {
 
 	power := int64(100)
 	operatorAddr, oldPubKey := valAddresses[0], pubkeys[0]
-	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper, f.app.MsgServiceRouter())
+	tstaking := stakingtestutil.NewHelperWithRouter(t, ctx, f.stakingKeeper, f.app.MsgServiceRouter())
 	tstaking.CreateValidatorWithValPower(operatorAddr, oldPubKey, power, true)
 
 	_, err = f.stakingKeeper.EndBlocker(f.sdkCtx.WithConsensusParams(evidenceParams))
@@ -497,7 +497,7 @@ func TestHandleDoubleSign_RotatedThenRemoved(t *testing.T) {
 
 	power := int64(100)
 	operatorAddr, oldPubKey := valAddresses[0], pubkeys[0]
-	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper, f.app.MsgServiceRouter())
+	tstaking := stakingtestutil.NewHelperWithRouter(t, ctx, f.stakingKeeper, f.app.MsgServiceRouter())
 	tstaking.CreateValidatorWithValPower(operatorAddr, oldPubKey, power, true)
 
 	_, err := f.stakingKeeper.EndBlocker(f.sdkCtx)

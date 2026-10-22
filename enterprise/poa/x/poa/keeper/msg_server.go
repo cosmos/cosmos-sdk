@@ -43,6 +43,22 @@ func newMsgServerImpl(keeper *Keeper) *msgServer {
 	}
 }
 
+// MsgServer is the x/poa msg server.
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. MsgServer will be removed in
+// the next release.
+type MsgServer = msgServer
+
+// NewMsgServer returns the x/poa msg server.
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. NewMsgServer will be removed in
+// the next release.
+func NewMsgServer(keeper *Keeper) *MsgServer {
+	return newMsgServerImpl(keeper)
+}
+
 // RegisterMsgServer registers the x/poa Msg service on r. The msg server is
 // unexported: code outside the module runs a msg through the
 // MsgServiceRouter with msgservice.Dispatch.

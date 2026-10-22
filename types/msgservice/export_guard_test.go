@@ -13,8 +13,8 @@ import (
 )
 
 // exportGuardAllowed lists the source paths, relative to the repo root, that
-// may export a msg server or a Msg handler shaped method: test fixtures that
-// hold no module state, and a test helper that runs msgs through a router.
+// may export a msg server or a Msg handler shaped method: test fixtures with
+// no module state, and a test helper that runs msgs through a router.
 var exportGuardAllowed = []string{
 	// the testpb Msg service fixture baseapp tests register
 	"testutil/testdata/",
@@ -26,7 +26,7 @@ var exportGuardAllowed = []string{
 
 // exportGuardDeprecated lists the deprecated constructors and keeper Msg
 // methods kept so callers compile until the next release removes them. Each
-// must carry a Deprecated: doc comment, and the guard fails when one is gone
+// needs a Deprecated: doc comment, and the guard fails when one is gone
 // but still listed. A "Keeper." prefix names a keeper Msg method, and a
 // "type " prefix an alias of the unexported msgServer type.
 var exportGuardDeprecated = map[string][]string{
@@ -211,7 +211,7 @@ func exportedMsgServerVar(vs *ast.ValueSpec) []string {
 		case name.IsExported() && hasType:
 			reasons = append(reasons, "var "+name.Name+" has a msg server type")
 		case name.IsExported() && mentions:
-			reasons = append(reasons, "var "+name.Name+" holds a msg server or one of its methods")
+			reasons = append(reasons, "var "+name.Name+" stores a msg server or one of its methods")
 		case name.Name == "_" && hasType && ast.IsExported(value):
 			reasons = append(reasons, "exported type "+value+" implements "+typeName(vs.Type))
 		}
@@ -327,7 +327,7 @@ func TestExportedMsgServerShapes(t *testing.T) {
 		{"constructor returns the unexported type", `func NewMsgServerImpl(k Keeper) *msgServer { return &msgServer{k} }`, true},
 		{"constructor returns an unexported legacy type", `func NewLegacy(k Keeper) legacyMsgServer { return legacyMsgServer{k} }`, true},
 		{"var aliases the unexported constructor", `var NewMsgServerImpl = newMsgServerImpl`, true},
-		{"var holds an unexported msg server", `var Server = msgServer{}`, true},
+		{"var stores an unexported msg server", `var Server = msgServer{}`, true},
 		{"var has a MsgServer type", `var Server types.MsgServer`, true},
 		{"exported field has a MsgServer type", `type App struct { Bank types.MsgServer }`, true},
 		{"exported type embeds a MsgServer", `type App struct { types.MsgServer }`, true},
@@ -338,7 +338,7 @@ func TestExportedMsgServerShapes(t *testing.T) {
 		{"exported type defined from the unexported type", `type Server msgServer`, true},
 		{"method returns a Msg handler", `func (k BaseKeeper) SendHandler() func(context.Context, *types.MsgSend) (*types.MsgSendResponse, error) { return newMsgServerImpl(k).Send }`, true},
 		{"func returns a Msg handler", `func SendHandler(k Keeper) func(context.Context, *types.MsgSend) (*types.MsgSendResponse, error) { return newMsgServerImpl(k).Send }`, true},
-		{"var holds a msg server method", `var Send = newMsgServerImpl(Keeper{}).Send`, true},
+		{"var stores a msg server method", `var Send = newMsgServerImpl(Keeper{}).Send`, true},
 		{"var has a Msg handler type", `var Send func(context.Context, *types.MsgSend) (*types.MsgSendResponse, error)`, true},
 		{"unexported constructor", `func newMsgServerImpl(k Keeper) *msgServer { return &msgServer{k} }`, false},
 		{"registration", `func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) { types.RegisterMsgServer(r, newMsgServerImpl(k)) }`, false},

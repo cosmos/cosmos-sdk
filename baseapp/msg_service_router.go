@@ -125,7 +125,7 @@ func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method 
 			return err
 		}
 		if !allowed {
-			return fmt.Errorf("circuit breaker disallows execution of message %s", messageName)
+			return sdkerrors.ErrCircuitBreakerTripped.Wrap(messageName)
 		}
 		return hybridHandler(ctx, req, resp)
 	}
@@ -205,7 +205,7 @@ func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, met
 			}
 
 			if !isAllowed {
-				return nil, fmt.Errorf("circuit breaker disables execution of this message: %s", msgURL)
+				return nil, sdkerrors.ErrCircuitBreakerTripped.Wrap(msgURL)
 			}
 		}
 

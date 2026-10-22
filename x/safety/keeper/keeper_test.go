@@ -1,24 +1,30 @@
 package keeper_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	goruntime "runtime"
+	"slices"
 	"strings"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -259,6 +265,12 @@ func (s *KeeperTestSuite) TestIsAllowedTable() {
 			res, err := s.queryClient.IsAllowed(s.ctx, &types.QueryIsAllowedRequest{MsgTypeUrl: tc.url})
 			s.Require().NoError(err)
 			s.Require().Equal(tc.want, res.Allowed, "query must agree with the keeper")
+			if tc.want {
+				s.Require().Empty(res.BlockedBy)
+			} else {
+				s.Require().Contains(tc.disabled, res.BlockedBy)
+				s.Require().True(types.Blocks(res.BlockedBy, tc.url), res.BlockedBy)
+			}
 		})
 	}
 }
@@ -904,7 +916,7 @@ func (s *KeeperTestSuite) TestRegisteredErrors() {
 	errs := []*errorsmod.Error{
 		types.ErrInvalidPattern, types.ErrEmptyPatterns, types.ErrDuplicatePattern,
 		types.ErrInvalidParams, types.ErrOutOfScope, types.ErrNoMatchingMsg,
-		types.ErrAlreadyDisabled, types.ErrNotDisabled, types.ErrMsgDisabled, types.ErrMaxDepth,
+		types.ErrAlreadyDisabled, types.ErrNotDisabled, types.ErrMsgDisabled,
 	}
 	seen := map[uint32]bool{}
 	for _, e := range errs {
@@ -1027,4 +1039,176 @@ func (s *KeeperTestSuite) TestIsAllowedFailsClosedOnStoreError() {
 	ok, err = k.IsAllowed(s.ctx, uSafetyReset)
 	s.Require().NoError(err)
 	s.Require().True(ok)
+}
+
+// SetParams writes valid params and refuses invalid ones, leaving the stored
+// params as they were.
+func (s *KeeperTestSuite) TestSetParams() {
+	want := types.Params{Authority: s.authority, Operator: s.other, Scope: []string{"/cosmos.bank.*"}}
+	s.Require().NoError(s.keeper.SetParams(s.ctx, want))
+	got, err := s.keeper.Params.Get(s.ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(want, got)
+
+	for _, bad := range []types.Params{
+		{Authority: ""},
+		{Authority: s.authority, Operator: "not-an-address"},
+		{Authority: s.authority, Scope: []string{"/cosmos.bank.*", "/cosmos.bank.*"}},
+		{Authority: s.authority, Scope: []string{"cosmos.bank"}},
+	} {
+		s.Require().Error(s.keeper.SetParams(s.ctx, bad), "%+v", bad)
+		got, err := s.keeper.Params.Get(s.ctx)
+		s.Require().NoError(err)
+		s.Require().Equal(want, got)
+	}
+}
+
+// The IsAllowed query names the disabled entry that blocks a msg, so its JSON
+// output says why next to allowed: false.
+func (s *KeeperTestSuite) TestQueryIsAllowedBlockedBy() {
+	s.state(s.operator, []string{types.Wildcard}, "/cosmos.bank.*")
+
+	res, err := s.queryClient.IsAllowed(s.ctx, &types.QueryIsAllowedRequest{MsgTypeUrl: uSend})
+	s.Require().NoError(err)
+	s.Require().False(res.Allowed)
+	s.Require().Equal("/cosmos.bank.*", res.BlockedBy)
+	bz, err := codec.ProtoMarshalJSON(res, nil)
+	s.Require().NoError(err)
+	s.Require().JSONEq(`{"allowed":false,"blocked_by":"/cosmos.bank.*"}`, string(bz))
+
+	res, err = s.queryClient.IsAllowed(s.ctx, &types.QueryIsAllowedRequest{MsgTypeUrl: uDelegate})
+	s.Require().NoError(err)
+	s.Require().True(res.Allowed)
+	s.Require().Empty(res.BlockedBy)
+}
+
+func (s *KeeperTestSuite) matching(pattern string, page *querytypes.PageRequest) (*types.QueryMatchingMsgsResponse, error) {
+	return s.queryClient.MatchingMsgs(s.ctx, &types.QueryMatchingMsgsRequest{Pattern: pattern, Pagination: page})
+}
+
+// MatchingMsgs lists what a trip of a pattern would block: the registered
+// msgs IsAllowed would refuse, with protected msgs left out and wrappers only
+// for an exact pattern.
+func (s *KeeperTestSuite) TestQueryMatchingMsgs() {
+	all := s.registry.ListImplementations(sdk.MsgInterfaceProtoName)
+	for _, pattern := range []string{types.Wildcard, "/cosmos.*", "/cosmos.bank.*", "/cosmos.authz.v1beta1.*", uSend, uExec, uVote, "/cosmos.gov.*", "/other.*"} {
+		s.Run(pattern, func() {
+			res, err := s.matching(pattern, nil)
+			s.Require().NoError(err)
+
+			// the list is exactly what IsAllowed refuses once the pattern
+			// is tripped
+			s.state(s.operator, []string{types.Wildcard}, pattern)
+			var want []string
+			for _, u := range all {
+				if !s.allowed(u) {
+					want = append(want, u)
+				}
+			}
+			slices.Sort(want)
+			s.Require().Equal(want, res.MsgTypeUrls)
+		})
+	}
+
+	res, err := s.matching("/cosmos.bank.*", nil)
+	s.Require().NoError(err)
+	s.Require().Contains(res.MsgTypeUrls, uSend)
+	s.Require().Contains(res.MsgTypeUrls, uMultiSend)
+	s.Require().NotContains(res.MsgTypeUrls, uDelegate)
+
+	res, err = s.matching(types.Wildcard, nil)
+	s.Require().NoError(err)
+	s.Require().Contains(res.MsgTypeUrls, uSend)
+	for _, u := range []string{uExec, uVote, uSubmitProp, uSafetyReset, uUpgrade, uConsensus} {
+		s.Require().NotContains(res.MsgTypeUrls, u)
+	}
+
+	res, err = s.matching(uExec, nil)
+	s.Require().NoError(err)
+	s.Require().Equal([]string{uExec}, res.MsgTypeUrls)
+
+	res, err = s.matching(uVote, nil)
+	s.Require().NoError(err)
+	s.Require().Empty(res.MsgTypeUrls)
+
+	for _, bad := range []string{"", "cosmos.bank", "/cosmos.bank.**", "/cosmos.*.MsgSend"} {
+		_, err := s.matching(bad, nil)
+		s.Require().Equal(codes.InvalidArgument, status.Code(err), bad)
+	}
+	_, err = s.queryServer.MatchingMsgs(s.ctx, nil)
+	s.Require().Equal(codes.InvalidArgument, status.Code(err))
+}
+
+// MatchingMsgs pages through the sorted list by offset or by key.
+func (s *KeeperTestSuite) TestQueryMatchingMsgsPagination() {
+	full, err := s.matching(types.Wildcard, nil)
+	s.Require().NoError(err)
+	want := full.MsgTypeUrls
+	s.Require().Greater(len(want), 4)
+	s.Require().True(slices.IsSorted(want))
+
+	// by key, two at a time
+	var got []string
+	var key []byte
+	for {
+		res, err := s.matching(types.Wildcard, &querytypes.PageRequest{Key: key, Limit: 2})
+		s.Require().NoError(err)
+		s.Require().LessOrEqual(len(res.MsgTypeUrls), 2)
+		got = append(got, res.MsgTypeUrls...)
+		key = res.Pagination.NextKey
+		if key == nil {
+			break
+		}
+	}
+	s.Require().Equal(want, got)
+
+	// by offset, with the total
+	res, err := s.matching(types.Wildcard, &querytypes.PageRequest{Offset: 1, Limit: 2, CountTotal: true})
+	s.Require().NoError(err)
+	s.Require().Equal(want[1:3], res.MsgTypeUrls)
+	s.Require().Equal(uint64(len(want)), res.Pagination.Total)
+	s.Require().Equal([]byte(want[3]), res.Pagination.NextKey)
+
+	// an offset past the end returns nothing and the real total
+	res, err = s.matching(types.Wildcard, &querytypes.PageRequest{Offset: uint64(len(want) + 5), CountTotal: true})
+	s.Require().NoError(err)
+	s.Require().Empty(res.MsgTypeUrls)
+	s.Require().Nil(res.Pagination.NextKey)
+	s.Require().Equal(uint64(len(want)), res.Pagination.Total)
+
+	// reverse
+	res, err = s.matching(types.Wildcard, &querytypes.PageRequest{Limit: 2, Reverse: true})
+	s.Require().NoError(err)
+	s.Require().Equal([]string{want[len(want)-1], want[len(want)-2]}, res.MsgTypeUrls)
+
+	// key and offset together are refused
+	_, err = s.matching(types.Wildcard, &querytypes.PageRequest{Key: []byte(want[1]), Offset: 1})
+	s.Require().Equal(codes.InvalidArgument, status.Code(err))
+}
+
+// A refusal logs one debug line naming the type URL and the blocking entry,
+// and charges no gas or emits no event. An allowed msg logs nothing.
+func (s *KeeperTestSuite) TestRefusalLogged() {
+	s.state(s.operator, []string{types.Wildcard}, "/cosmos.bank.*")
+	var buf bytes.Buffer
+	ctx := s.freshEvents().
+		WithLogger(log.NewLogger(&buf, log.OutputJSONOption(), log.LevelOption(zerolog.DebugLevel))).
+		WithGasMeter(storetypes.NewGasMeter(1_000_000))
+
+	_, err := s.keeper.IsAllowed(ctx, uDelegate)
+	s.Require().NoError(err)
+	s.Require().Empty(buf.String())
+
+	_, err = s.keeper.IsAllowed(ctx, uSend)
+	s.Require().ErrorIs(err, types.ErrMsgDisabled)
+	lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
+	s.Require().Len(lines, 1, buf.String())
+	var entry map[string]any
+	s.Require().NoError(json.Unmarshal([]byte(lines[0]), &entry))
+	s.Require().Equal("debug", entry["level"])
+	s.Require().Equal("x/"+types.ModuleName, entry["module"])
+	s.Require().Equal(uSend, entry["type_url"])
+	s.Require().Equal("/cosmos.bank.*", entry["pattern"])
+	s.Require().Zero(ctx.GasMeter().GasConsumed())
+	s.Require().Empty(ctx.EventManager().Events())
 }

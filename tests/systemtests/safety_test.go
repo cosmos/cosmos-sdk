@@ -359,12 +359,15 @@ func safetyCLIDisabledList(t *testing.T, cli *systest.CLIWrapper) []string {
 }
 
 // safetyCLIIsAllowed asks `q safety is-allowed` whether typeURL may execute.
-// The command prints {} for false, since JSON output omits default values.
+// For a blocked msg the command omits allowed, since JSON output omits
+// default values, and prints the entry that blocks it in blocked_by.
 func safetyCLIIsAllowed(t *testing.T, cli *systest.CLIWrapper, typeURL string) bool {
 	t.Helper()
 	res := cli.CustomQuery("q", "safety", "is-allowed", "--msg-type-url", typeURL)
 	require.True(t, gjson.Valid(res), res)
-	return gjson.Get(res, "allowed").Bool()
+	allowed := gjson.Get(res, "allowed").Bool()
+	require.Equal(t, allowed, gjson.Get(res, "blocked_by").String() == "", res)
+	return allowed
 }
 
 // The default genesis scope is empty, so the operator can do nothing
@@ -374,7 +377,8 @@ func TestSafetyDefaultGenesisQueries(t *testing.T) {
 	// given a running chain with the default x/safety genesis
 	// when the safety queries run
 	// then params show gov as authority, no operator and an empty scope,
-	// the disabled list is empty and every msg is allowed.
+	// the disabled list is empty, every msg is allowed, and the REST
+	// gateway previews what a trip would block.
 	systest.Sut.ResetChain(t)
 	govAddr := sdk.AccAddress(address.Module("gov")).String()
 	systest.Sut.StartChain(t)
@@ -392,6 +396,9 @@ func TestSafetyDefaultGenesisQueries(t *testing.T) {
 	require.Empty(t, safetyStrings(gjson.Get(list, "disabled_patterns")), list)
 	require.Equal(t, int64(0), gjson.Get(list, "pagination.total").Int(), list)
 
+	preview := safetyREST(t, "/cosmos/safety/v1/matching_msgs?pattern="+url.QueryEscape("/cosmos.bank.*"))
+	require.Contains(t, safetyStrings(gjson.Get(preview, "msg_type_urls")), safetyMsgSend, preview)
+
 	// a type URL without its leading slash is rejected, not answered
 	systest.GetRequestWithHeaders(t,
 		systest.Sut.APIAddress()+"/cosmos/safety/v1/is_allowed?msg_type_url="+url.QueryEscape(strings.TrimPrefix(safetyMsgSend, "/")),
@@ -404,9 +411,9 @@ func safetyREST(t *testing.T, path string) string {
 	return string(systest.GetRequest(t, systest.Sut.APIAddress()+path))
 }
 
-// SafetyDecorator opens any msg exposing GetMsgs() ([]sdk.Msg, error), such as
-// gov v1 MsgSubmitProposal, and rejects a proposal with a tripped msg at
-// submission.
+// The ante circuit breaker check opens any msg exposing
+// GetMsgs() ([]sdk.Msg, error), such as gov v1 MsgSubmitProposal, and rejects
+// a proposal with a tripped msg at submission.
 func TestSafetyGovProposalWithDisabledMsgRejectedAtSubmission(t *testing.T) {
 	// Scenario:
 	// given a running chain whose genesis disables MsgSend
@@ -491,7 +498,9 @@ func safetyIsAllowed(t *testing.T, typeURL string) bool {
 	t.Helper()
 	res := safetyREST(t, "/cosmos/safety/v1/is_allowed?msg_type_url="+url.QueryEscape(typeURL))
 	require.True(t, gjson.Get(res, "allowed").Exists(), res)
-	return gjson.Get(res, "allowed").Bool()
+	allowed := gjson.Get(res, "allowed").Bool()
+	require.Equal(t, allowed, gjson.Get(res, "blocked_by").String() == "", res)
+	return allowed
 }
 
 // safetyTrip returns a MsgTrip as tx JSON.

@@ -18,7 +18,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log/v2"
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -43,8 +42,9 @@ import (
 )
 
 // groupFixture is a depinject app with auth, bank, staking, consensus, group
-// and authz, x/safety wired by hand on top, and the SimApp ante chain, which runs SafetyDecorator
-// before fee deduction. SimApp does not wire enterprise/group, so the group
+// and authz, x/safety wired by hand on top, and the default ante chain with
+// HandlerOptions.CircuitBreaker set, which checks x/safety before fee
+// deduction. SimApp does not wire enterprise/group, so the group
 // paths run here. The chain starts without the consensus AuthorityParams
 // override, so the x/safety params authority is the authority.
 type groupFixture struct {
@@ -143,14 +143,12 @@ func newGroupFixture(t *testing.T) *groupFixture {
 	f.safetyKeeper = wireSafety(t, app, cdc, f.accountKeeper.AddressCodec(), f.member.String(),
 		"auth", "bank", "staking", "authz", "consensus", "group")
 
-	anteHandler, err := simapp.NewAnteHandler(simapp.HandlerOptions{
-		HandlerOptions: authante.HandlerOptions{
-			AccountKeeper:   f.accountKeeper,
-			BankKeeper:      f.bankKeeper,
-			SignModeHandler: f.txConfig.SignModeHandler(),
-			SigGasConsumer:  authante.DefaultSigVerificationGasConsumer,
-		},
-		SafetyKeeper: f.safetyKeeper,
+	anteHandler, err := authante.NewAnteHandler(authante.HandlerOptions{
+		AccountKeeper:   f.accountKeeper,
+		BankKeeper:      f.bankKeeper,
+		SignModeHandler: f.txConfig.SignModeHandler(),
+		SigGasConsumer:  authante.DefaultSigVerificationGasConsumer,
+		CircuitBreaker:  f.safetyKeeper,
 	})
 	require.NoError(t, err)
 	app.SetAnteHandler(anteHandler)

@@ -643,21 +643,19 @@ func NewSimApp(
 }
 
 func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
-	anteHandler, err := NewAnteHandler(
-		HandlerOptions{
-			HandlerOptions: ante.HandlerOptions{
-				AccountKeeper:   app.AccountKeeper,
-				BankKeeper:      app.BankKeeper,
-				SignModeHandler: txConfig.SignModeHandler(),
-				FeegrantKeeper:  app.FeeGrantKeeper,
-				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-				SigVerifyOptions: []ante.SigVerificationDecoratorOption{
-					// change below as needed.
-					ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
-					ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
-				},
+	anteHandler, err := ante.NewAnteHandler(
+		ante.HandlerOptions{
+			AccountKeeper:   app.AccountKeeper,
+			BankKeeper:      app.BankKeeper,
+			SignModeHandler: txConfig.SignModeHandler(),
+			FeegrantKeeper:  app.FeeGrantKeeper,
+			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			SigVerifyOptions: []ante.SigVerificationDecoratorOption{
+				// change below as needed.
+				ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
+				ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
 			},
-			SafetyKeeper: app.SafetyKeeper,
+			CircuitBreaker: app.SafetyKeeper,
 		},
 	)
 	if err != nil {

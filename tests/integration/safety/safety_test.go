@@ -1,6 +1,7 @@
 package safety_test
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -269,6 +270,22 @@ func TestPrefixTrip(t *testing.T) {
 	f.requireFails(f.operator, safetytypes.ErrNotDisabled, safetytypes.NewMsgReset(f.operator.String(), msgSendURL))
 	f.mustDeliver(f.operator, safetytypes.NewMsgReset(f.operator.String(), "/cosmos.bank.v1beta1.*"))
 	f.mustDeliver(f.user, send(f.user, f.other))
+}
+
+// TestMatchingMsgsPreviewsTrip asks MatchingMsgs what a "*" trip would block
+// on SimApp, trips it, and checks the preview against IsAllowed for every
+// registered msg.
+func TestMatchingMsgsPreviewsTrip(t *testing.T) {
+	f := newFixture(t, nil, nil)
+	var preview safetytypes.QueryMatchingMsgsResponse
+	f.query("/cosmos.safety.v1.Query/MatchingMsgs", &safetytypes.QueryMatchingMsgsRequest{Pattern: safetytypes.Wildcard}, &preview)
+	require.Contains(t, preview.MsgTypeUrls, msgSendURL)
+
+	f.setParams(f.operator.String(), safetytypes.Wildcard)
+	f.mustDeliver(f.operator, safetytypes.NewMsgTrip(f.operator.String(), safetytypes.Wildcard))
+	for _, u := range f.app.InterfaceRegistry().ListImplementations(sdk.MsgInterfaceProtoName) {
+		require.Equal(t, !slices.Contains(preview.MsgTypeUrls, u), f.isAllowed(u), u)
+	}
 }
 
 // TestProposalWithTrippedMsgRejected checks that a gov proposal with a tripped

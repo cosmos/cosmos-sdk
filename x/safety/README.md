@@ -148,7 +148,9 @@ To cut off a compromised grantee that trips with the operator's grant:
 5. Otherwise it is allowed.
 
 A blocked msg returns `false` with `ErrMsgDisabled`, naming the disabled entry
-that blocks it. The router passes that error on unchanged, so a msg blocked at
+that blocks it, and logs `msg refused by disabled pattern` at debug level with
+`type_url` and `pattern`. Run the node with `--log_level debug` to see
+refusals; the ante check logs them too. The router passes that error on unchanged, so a msg blocked at
 execution fails with code 10 in the `safety` codespace, the same error the ante
 decorator returns.
 
@@ -162,7 +164,8 @@ The check runs in two places:
 * The `MsgServiceRouter` calls it for every msg it routes, including msgs that
   authz `MsgExec`, gov proposals and other modules dispatch through the router,
   and msgs run with `msgservice.Dispatch`. This is the authoritative gate.
-* The optional `x/safety/ante.SafetyDecorator` calls it for every top-level msg
+* The optional `ante.CircuitBreakerDecorator` from `x/auth/ante`, which
+  `ante.HandlerOptions.CircuitBreaker` adds, calls it for every top-level msg
   and, recursively, every msg returned by `GetMessages() ([]sdk.Msg, error)`
   (authz `MsgExec`) or `GetMsgs() ([]sdk.Msg, error)` (gov v1 and group
   `MsgSubmitProposal`), up to `MaxNestedMsgDepth` levels. It opens protected
@@ -342,10 +345,15 @@ the disabled list exactly as given: resetting `/cosmos.bank.*` does not remove
 | --- | --- | --- |
 | `Params` | `GET /cosmos/safety/v1/params` | the params |
 | `DisabledList` | `GET /cosmos/safety/v1/disabled_list` | a page of disabled patterns |
-| `IsAllowed` | `GET /cosmos/safety/v1/is_allowed?msg_type_url=...` | whether the type URL may execute |
+| `IsAllowed` | `GET /cosmos/safety/v1/is_allowed?msg_type_url=...` | whether the type URL may execute and, if not, the disabled entry that blocks it in `blocked_by` |
+| `MatchingMsgs` | `GET /cosmos/safety/v1/matching_msgs?pattern=...` | a page of the registered msg type URLs a trip of the pattern would block, sorted |
 
 `IsAllowed` returns `InvalidArgument` for anything other than an exact msg type
 URL, such as a URL without the leading `/`, a prefix pattern or `*`.
+
+`MatchingMsgs` answers before a trip: it applies the protected and wrapper
+rules, so it leaves out protected msgs and, for `*` or a prefix, wrappers. It
+ignores the operator scope and the disabled list.
 
 ## Genesis
 
@@ -390,6 +398,32 @@ orders, after `genutiltypes.ModuleName` in the init order. A chain that adds
 the module in an upgrade adds `safetytypes.StoreKey` to
 `StoreUpgrades.Added`; `RunMigrations` then runs the default genesis.
 
+### Upgrade handler
+
+The default genesis has no operator, so until the authority names one, a trip
+needs a gov proposal. To leave no gap, for example when moving off
+`contrib/x/circuit`, set the params in the upgrade handler right after
+`RunMigrations`:
+
+```go
+app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
+	func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		vm, err := app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+		if err != nil {
+			return nil, err
+		}
+		return vm, app.SafetyKeeper.SetParams(ctx, safetytypes.Params{
+			Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			Operator:  "cosmos1...", // the operator account
+			Scope:     []string{safetytypes.Wildcard},
+		})
+	},
+)
+```
+
+`SetParams` validates the params first. The operator can trip from the
+upgrade block on.
+
 ### Genesis order
 
 Order `safety` after `genutil` in `InitGenesis`. Genutil delivers gentxs
@@ -401,28 +435,25 @@ after `genutil`, gentxs run against an empty disabled list.
 
 ### Ante handler
 
-Put `safetyante.SafetyDecorator` after `SetUpContextDecorator` and before
-`DeductFeeDecorator`:
+Set `CircuitBreaker` in the `x/auth/ante` handler options. `NewAnteHandler`
+then puts `ante.CircuitBreakerDecorator` right after `SetUpContextDecorator`,
+ahead of fee deduction:
 
 ```go
-import (
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	safetyante "github.com/cosmos/cosmos-sdk/x/safety/ante"
-)
-
-anteDecorators := []sdk.AnteDecorator{
-	ante.NewSetUpContextDecorator(),
-	safetyante.NewSafetyDecorator(app.SafetyKeeper),
+anteHandler, err := ante.NewAnteHandler(ante.HandlerOptions{
+	AccountKeeper:   app.AccountKeeper,
+	BankKeeper:      app.BankKeeper,
 	// ...
-	ante.NewDeductFeeDecorator(...),
-	// ...
-}
+	CircuitBreaker: app.SafetyKeeper,
+})
 ```
 
-`simapp/ante.go` shows the full chain. An app with more than one ante chain,
-such as cosmos/evm with its separate chain for Ethereum txs, must add the
-decorator to each, or the txs that chain handles reach a block and pay fees;
-see [EVM chains](#evm-chains).
+An app that builds its own chain adds
+`ante.NewCircuitBreakerDecorator(app.SafetyKeeper)` after
+`SetUpContextDecorator` and before `DeductFeeDecorator`. An app with more than
+one ante chain, such as cosmos/evm with its separate chain for Ethereum txs,
+must add the decorator to each, or the txs that chain handles reach a block
+and pay fees; see [EVM chains](#evm-chains).
 
 ## Operating
 
@@ -459,10 +490,11 @@ Query:
 simd q safety params --node <rpc>
 simd q safety disabled-list --node <rpc>
 simd q safety is-allowed --msg-type-url /cosmos.bank.v1beta1.MsgSend --node <rpc>
+simd q safety matching-msgs --pattern '/cosmos.bank.*' --node <rpc>
 ```
 
-`is-allowed` omits `allowed` when it is false, since the output skips default
-values.
+For a blocked msg, `is-allowed` prints the disabled entry that blocks it in
+`blocked_by` and omits `allowed`, since the output skips default values.
 
 ### Without the generic commands
 
@@ -570,7 +602,7 @@ refuses every EVM tx, precompile calls included, so during a `*` trip
 validators vote with a Cosmos gov `MsgVote` tx, not the gov precompile.
 
 cosmos/evm runs Ethereum txs through a separate ante chain. Without
-`SafetyDecorator` in it, under a `MsgEthereumTx` or `*` trip the proposer
+`CircuitBreakerDecorator` in it, under a `MsgEthereumTx` or `*` trip the proposer
 includes EVM txs in a block, where they fail with code 10, pay their fee, use
 their nonce and return no receipt. Add the decorator to that chain; see
 [Ante handler](#ante-handler).

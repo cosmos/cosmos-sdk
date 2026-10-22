@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -18,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -296,4 +298,27 @@ func TestHybridHandlerBreakerInstalledLater(t *testing.T) {
 	msg := &testdata_pulsar.MsgCreateDog{Dog: &testdata_pulsar.Dog{Name: "Spot"}}
 	require.ErrorContains(t, handler(app.NewContext(true), msg, resp), dogURL)
 	require.Empty(t, resp.Name, "the tripped msg server ran")
+}
+
+// TestRouterRefusalIsRegisteredError trips a msg on a breaker that answers
+// false with no error. Both the routed and the hybrid handler must refuse it
+// with sdkerrors.ErrCircuitBreakerTripped, so the refusal reaches the client
+// under its own codespace and code instead of as an internal error.
+func TestRouterRefusalIsRegisteredError(t *testing.T) {
+	const dogURL = "/testpb.MsgCreateDog"
+	app := newHybridTestApp(t, &typeBreaker{blocked: map[string]bool{dogURL: true}})
+	ctx := app.NewContext(true)
+
+	msg := &testdata.MsgCreateDog{Dog: &testdata.Dog{Name: "Spot"}, Owner: "owner"}
+	_, err := app.MsgServiceRouter().Handler(msg)(ctx, msg)
+	require.ErrorIs(t, err, sdkerrors.ErrCircuitBreakerTripped)
+	require.ErrorContains(t, err, dogURL)
+	codespace, code, _ := errorsmod.ABCIInfo(err, false)
+	require.Equal(t, sdkerrors.ErrCircuitBreakerTripped.Codespace(), codespace)
+	require.Equal(t, sdkerrors.ErrCircuitBreakerTripped.ABCICode(), code)
+
+	handler := app.MsgServiceRouter().HybridHandlerByMsgName(dogURL[1:])
+	err = handler(ctx, &testdata_pulsar.MsgCreateDog{Dog: &testdata_pulsar.Dog{Name: "Spot"}}, new(testdata_pulsar.MsgCreateDogResponse))
+	require.ErrorIs(t, err, sdkerrors.ErrCircuitBreakerTripped)
+	require.ErrorContains(t, err, dogURL)
 }

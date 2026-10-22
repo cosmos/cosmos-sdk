@@ -264,7 +264,6 @@ func (s *KeeperTestSuite) TestRejectionsUseRegisteredErrors() {
 	_, err = s.keeper.IsAllowed(s.ctx, uSend)
 	s.Require().ErrorIs(err, types.ErrMsgDisabled)
 	s.requireRegisteredError(err)
-	s.requireRegisteredError(types.ErrMaxDepth.Wrap("x"))
 }
 
 // The x/circuit disabled list query returned everything in one page.

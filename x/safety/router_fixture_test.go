@@ -50,7 +50,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/safety"
-	safetyante "github.com/cosmos/cosmos-sdk/x/safety/ante"
 	"github.com/cosmos/cosmos-sdk/x/safety/keeper"
 	"github.com/cosmos/cosmos-sdk/x/safety/types"
 	_ "github.com/cosmos/cosmos-sdk/x/staking" // import as blank for app wiring
@@ -81,7 +80,7 @@ func (a testAccount) String() string { return a.addr.String() }
 //
 // With withAnte false, the app runs the default x/auth ante chain and the
 // router is the only x/safety gate. With withAnte true, the ante chain is the
-// SimApp chain with SafetyDecorator placed before fee deduction.
+// default chain with x/safety set as its circuit breaker.
 type routerFixture struct {
 	t *testing.T
 
@@ -150,24 +149,19 @@ func wireSafety(t *testing.T, app *runtime.App, cdc codec.Codec, ac address.Code
 	return k
 }
 
-// safetyAnteHandler mirrors the SimApp ante chain: SafetyDecorator right
-// after context setup, ahead of fee deduction and sequence increment.
-func safetyAnteHandler(ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, sk keeper.Keeper, txConfig client.TxConfig) sdk.AnteHandler {
-	return sdk.ChainAnteDecorators(
-		authante.NewSetUpContextDecorator(),
-		safetyante.NewSafetyDecorator(sk),
-		authante.NewExtensionOptionsDecorator(nil),
-		authante.NewValidateBasicDecorator(),
-		authante.NewTxTimeoutHeightDecorator(),
-		authante.NewValidateMemoDecorator(ak),
-		authante.NewConsumeGasForTxSizeDecorator(ak),
-		authante.NewDeductFeeDecorator(ak, bk, nil, nil),
-		authante.NewSetPubKeyDecorator(ak),
-		authante.NewValidateSigCountDecorator(ak),
-		authante.NewSigGasConsumeDecorator(ak, authante.DefaultSigVerificationGasConsumer),
-		authante.NewSigVerificationDecorator(ak, txConfig.SignModeHandler()),
-		authante.NewIncrementSequenceDecorator(ak),
-	)
+// safetyAnteHandler is the default ante chain with x/safety set as its
+// circuit breaker, as SimApp wires it.
+func safetyAnteHandler(t *testing.T, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, sk keeper.Keeper, txConfig client.TxConfig) sdk.AnteHandler {
+	t.Helper()
+	handler, err := authante.NewAnteHandler(authante.HandlerOptions{
+		AccountKeeper:   ak,
+		BankKeeper:      bk,
+		SignModeHandler: txConfig.SignModeHandler(),
+		SigGasConsumer:  authante.DefaultSigVerificationGasConsumer,
+		CircuitBreaker:  sk,
+	})
+	require.NoError(t, err)
+	return handler
 }
 
 func newRouterFixture(t *testing.T, withAnte bool) *routerFixture {
@@ -222,7 +216,7 @@ func newRouterFixture(t *testing.T, withAnte bool) *routerFixture {
 	f.safetyKeeper = wireSafety(t, app, cdc, f.accountKeeper.AddressCodec(), f.gov,
 		"auth", "bank", "distribution", "staking", "gov", "authz", "consensus", "upgrade")
 	if withAnte {
-		app.SetAnteHandler(safetyAnteHandler(f.accountKeeper, f.bankKeeper, f.safetyKeeper, f.txConfig))
+		app.SetAnteHandler(safetyAnteHandler(t, f.accountKeeper, f.bankKeeper, f.safetyKeeper, f.txConfig))
 	}
 	require.NoError(t, app.Load(true))
 	f.app = app

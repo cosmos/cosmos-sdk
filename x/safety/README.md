@@ -595,7 +595,7 @@ the pattern.
 
 The router check only sees msgs that pass through the `MsgServiceRouter`. Code
 that calls a keeper directly skips a selective trip, and so does code that
-calls another module's msg server without `msgservice.Dispatch`; see
+calls the exported msg server of a module outside the SDK; see
 [Direct callers](#direct-callers). Known paths:
 
 * cosmos/evm precompile methods that call SDK keepers, such as distribution

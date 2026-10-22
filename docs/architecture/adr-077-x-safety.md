@@ -7,6 +7,7 @@
 * 2026-10-22: Msgs run only through the router; SDK modules stop exporting their msg servers
 * 2026-10-22: gogoproto types only; no autocli options or depinject; generic service commands for operators
 * 2026-10-22: Split into the x/safety PR and the msg server PR; direct msg server calls get a one-release deprecation window
+* 2026-10-22: Correct the authority, wrapper and ante depth descriptions; list the result code change and the full deprecation set
 
 ## Status
 
@@ -16,7 +17,7 @@ DRAFT Not Implemented
 
 `x/safety` replaces `contrib/x/circuit`. It lets one operator address stop a msg type in a single tx during an incident, and lets governance decide who that operator is and what it may stop. The authority, gov by default, sets the operator and its scope and can reset any block, but cannot block anything itself. Gov, upgrade, safety and consensus parameter msgs stay outside the operator's reach, so the operator can never lock governance out of the reset. BaseApp checks the breaker at the router and in the ante handler. The router becomes the only way to run an `sdk.Msg`: SDK modules stop exporting their msg servers, and code outside a module, such as a cosmos/evm precompile, runs a msg with `msgservice.Dispatch`, which the router checks as it checks a tx.
 
-The change ships in two PRs. The x/safety PR adds the module, `Dispatch` and the router fixes and breaks no API. The msg server PR unexports the msg servers, keeps the old constructors, keeper Msg methods and `HybridHandlerByMsgName` as deprecated wrappers for one release, and removes them in the next. Everything below assumes both have merged.
+The change ships in two PRs. The x/safety PR adds the module, `Dispatch` and the router fixes. It breaks no API, but a refusal by a breaker with no error of its own now returns a registered error code. The msg server PR unexports the msg servers, keeps the old constructors, keeper Msg methods and `HybridHandlerByMsgName` as deprecated wrappers for one release, and removes them in the next. Everything below assumes both have merged.
 
 ## Context
 
@@ -48,7 +49,7 @@ Chains need a key that stops a msg type within one block of someone finding an e
 
 ### Roles
 
-* **authority**: an address stored in params, the gov module account at genesis. As in `enterprise/poa`, the current authority sets a new authority with `MsgUpdateParams`, checked with `sdk.ValidateAuthority`. The authority sets the operator and scope and resets any pattern. It cannot trip.
+* **authority**: checked with `sdk.ValidateAuthority`. Without the consensus `AuthorityParams` override, it is the address in params, the gov module account at genesis, and as in `enterprise/poa` the current authority sets a new one with `MsgUpdateParams`. With the override set, the override account is the authority and the address in params has no effect. The authority sets the operator and scope and resets any pattern. It cannot trip.
 * **operator**: one address stored in params, or empty. It trips and resets patterns within its scope, effective in the same block.
 * **scope**: a list of patterns, empty at genesis, so a new operator can trip nothing until the authority grants scope.
 
@@ -60,13 +61,13 @@ A pattern is `*` for every msg, a prefix such as `/cosmos.bank.v1beta1.*` that m
 
 `IsAllowed` always allows msgs under `cosmos.safety.`, `cosmos.gov.` and `cosmos.upgrade.`, plus `/cosmos.consensus.v1.MsgUpdateParams`, whatever the disabled list contains.
 
-The SDK hardcodes this set and the wrapper set below. A list in params or genesis could leave out the reset path: a bad genesis file, or a params update that leaves out `MsgReset` or gov, would let a trip block its own reset, and the only way back would be a halt and a new binary. A configured wrapper list could also exempt an ordinary msg from `*`. A hardcoded list cannot be misconfigured on chain, and a chain that wants a different list changes it in a software upgrade, which the set keeps open.
+The SDK hardcodes this set and the wrapper set below. A list in params or genesis could leave out the reset path: a bad genesis file, or a params update that leaves out `MsgReset` or gov, would let a trip block its own reset, and the only way back would be a halt and a new binary. A configured wrapper list could also exempt an ordinary msg from `*`. A hardcoded list cannot be misconfigured on chain, but changing either list takes an SDK release or a fork. The protected set covers governance only under `cosmos.gov.`, so a chain that governs through another module gets no protection for it. The wrapper list names versioned URLs, so a new authz or group proto version must be added to it.
 
 ### Wrappers
 
-Authz `MsgExec` and group `MsgSubmitProposal`, `MsgVote` and `MsgExec` dispatch other msgs through the router. The breaker blocks a wrapper only on an exact trip of its own URL. Under a `*` or prefix trip it lets the wrapper through and still blocks the tripped msgs inside it.
+Authz `MsgExec` and group `MsgSubmitProposal`, `MsgVote` and `MsgExec` run other msgs. The breaker blocks a wrapper only on an exact trip of its own URL. Under a `*` or prefix trip it lets the wrapper through and still blocks the tripped msgs it dispatches.
 
-An authority or validator that acts through an authz grant or a group policy needs the wrapper during a global halt, or `*` locks it out of `MsgReset` and gov votes. The operator also needs to stop authz or group execution as a whole, such as when a grantee is compromised. The exact-trip rule covers both: `*` and prefixes leave recovery through wrappers open, and an exact trip stops the wrapper. The router still checks every msg a wrapper dispatches, so letting the wrapper through opens nothing a trip covers.
+An authority or validator that acts through an authz grant or a group policy needs the wrapper during a global halt, or `*` locks it out of `MsgReset` and gov votes. The operator also needs to stop authz or group execution as a whole, such as when a grantee is compromised. The exact-trip rule covers both: `*` and prefixes leave recovery through wrappers open, and an exact trip of each wrapper stops it. Letting a wrapper through does open something: under `*`, group `MsgSubmitProposal` and `MsgVote` still record proposals and votes, and with `EXEC_TRY` run the proposal without a group `MsgVote` or `MsgExec` reaching the router. That is the price of keeping recovery through group policies open.
 
 ### Scope changes and expiry
 
@@ -75,8 +76,8 @@ When gov narrows the scope, existing trips stay in place, and gov resets them in
 ### Enforcement
 
 * **Router.** The keeper implements `baseapp.CircuitBreaker`, and the app wires it with `BaseApp.SetCircuitBreaker`. The router checks every msg it routes, on every call and in every exec mode, including `CheckTx`, `Simulate`, `FinalizeBlock`, block hooks, vote extensions and query contexts. It reads the breaker on each call, so a breaker set after `RegisterServices` still covers every handler.
-* **Ante.** `ante.CircuitBreakerDecorator` in `x/auth/ante`, which `HandlerOptions.CircuitBreaker` adds, checks every msg in a tx and recurses into any msg that exposes `GetMessages` or `GetMsgs`, up to a depth limit. It runs in `CheckTx`, `ReCheckTx` and `Simulate`, and in `PrepareProposal` and `ProcessProposal` only with an app-side mempool; with the default `NoOpMempool` neither proposal handler runs the ante chain. It passes txs through in `FinalizeBlock`. A tx included after a trip then spends its sequence and fails at the router, so it cannot execute again once the operator resets. A gov or group proposal containing a tripped msg fails in `CheckTx`; one that reaches `FinalizeBlock` is created and fails at execution while the trip stands.
-* **One way to run a msg.** An `sdk.Msg` runs only through the `MsgServiceRouter`. In every SDK module the msg server type is unexported, and the keeper package exports `RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper)`, which `RegisterServices` calls. The authz, group, consensus, crisis, nft and counter keepers stop implementing their Msg service; their Msg methods move to an unexported type. For one release, `NewMsgServerImpl`, the keeper Msg methods and `MsgServiceRouter.HybridHandlerByMsgName`, which runs a handler by name without `ValidateBasic`, stay as deprecated wrappers; the next release removes them. A guard test fails on any other exported msg server type, constructor or Msg handler. A test in `keeper_test` reaches the constructor through `export_test.go`.
+* **Ante.** `ante.CircuitBreakerDecorator` in `x/auth/ante`, which `HandlerOptions.CircuitBreaker` adds, checks every msg in a tx and recurses into any msg that exposes `GetMessages` or `GetMsgs`, as deep as the tx decoder unpacks `Any` values, so it adds no nesting rule of its own. It runs in `CheckTx`, `ReCheckTx` and `Simulate`, and in `PrepareProposal` and `ProcessProposal` only with an app-side mempool; with the default `NoOpMempool` neither proposal handler runs the ante chain. It passes txs through in `FinalizeBlock`. A tx included after a trip then spends its sequence and fails at the router, so it cannot execute again once the operator resets. A gov or group proposal containing a tripped msg fails in `CheckTx`; one that reaches `FinalizeBlock` is created and fails at execution while the trip stands.
+* **One way to run a msg.** An `sdk.Msg` runs only through the `MsgServiceRouter`. In every SDK module the msg server type is unexported, and the keeper package exports `RegisterMsgServer(r grpc.ServiceRegistrar, ...)`, which `RegisterServices` calls with the keepers the msg server needs: the module keeper in most modules, the account keeper in `x/auth`, and the account and bank keepers in `x/auth/vesting`, whose function lives in package `vesting`. The authz, group, consensus, crisis, nft and counter keepers stop implementing their Msg service; their Msg methods move to an unexported type. For one release, `NewMsgServerImpl`, the keeper Msg methods, `enterprise/poa`'s `NewMsgServer` and `MsgServer`, `x/staking/testutil.NewHelper` and `MsgServiceRouter.HybridHandlerByMsgName`, which runs a handler by name without `ValidateBasic`, stay as deprecated wrappers; the next release removes them. A guard test fails on any other exported msg server type, constructor or Msg handler. A test in `keeper_test` reaches the constructor through `export_test.go`.
 * **Dispatch.** Code outside the module that owns a msg, such as a cosmos/evm precompile or another module's keeper, runs it with `msgservice.Dispatch[R](ctx, router, msg)`. `Dispatch` calls the router handler on a branch of `ctx`, so `ValidateBasic`, the breaker check and the msg server's events apply, writes the branch only on success, and returns the typed response. It does not check signers; the caller authorizes them as before.
 * **Keepers for module logic.** Logic another module needs, such as authz `DispatchActions` or a bank send, stays an exported keeper method, and the breaker does not see it. Upgrade handlers call keepers, not `Dispatch`, so a trip cannot halt an upgrade; the consensus keeper gains `SetParams` for handlers that ran consensus `MsgUpdateParams`, and a SimApp test fails if its upgrade handler calls `Dispatch`. A module's calls to its own handlers, such as group running `Exec` after a vote, stay internal calls on the unexported type.
 * A caller that registers a fake `grpc.ServiceRegistrar` can still capture the msg server it receives. That is deliberate abuse, not an API.
@@ -96,15 +97,15 @@ Chains remove `x/circuit` and add `x/safety` in the same upgrade: delete the cir
 ### Backwards Compatibility
 
 * Existing chains need a store upgrade that adds the safety store key, and `x/circuit` chains also delete the circuit store.
-* The x/safety PR adds API only: the module, `msgservice.Dispatch` and `ante.HandlerOptions.CircuitBreaker`.
-* The msg server PR deprecates `NewMsgServerImpl`, the keeper Msg methods and `MsgServiceRouter.HybridHandlerByMsgName` in every SDK module with a Msg service, adds `RegisterMsgServer` to each keeper package, and removes the deprecated calls in the next release. Two changes break at once: `x/staking/testutil.NewHelper` takes a `msgservice.MsgRouter`, and `enterprise/poa`, which has not shipped, unexports its msg server.
+* The x/safety PR adds API only: the module, `msgservice.Dispatch` and `ante.HandlerOptions.CircuitBreaker`. It changes one result: when a breaker refuses a msg without an error of its own, as `contrib/x/circuit` does, the router returns `sdkerrors.ErrCircuitBreakerTripped` (codespace `sdk`, code 43) in place of an unregistered error that reached clients as codespace `undefined`, code 1. A circuit chain that only bumps the SDK sees the new code in tx results, which feed the results hash, so a v0.54.x backport is state machine breaking. Importing the deprecated `contrib/x/circuit` package also trips staticcheck SA1019.
+* The msg server PR deprecates `NewMsgServerImpl`, the keeper Msg methods, `enterprise/poa`'s `NewMsgServer` and `MsgServer`, `x/staking/testutil.NewHelper` and `MsgServiceRouter.HybridHandlerByMsgName`, adds `RegisterMsgServer` to each keeper package, and removes the deprecated calls in the next release. Nothing breaks at compile time, but downstream staticcheck reports SA1019 at each call, in app code and in tests, until the chain migrates.
 * A caller that switches to `Dispatch` needs the app's `MsgServiceRouter`, so its constructor gains a router argument, and a multistore whose `CacheMultiStore` returns itself instead of a branch must be fixed first. The cosmos/evm snapshot multistore is one; without the fix a reverted EVM call keeps the msg's writes.
 
 ### Positive
 
 * Under a selective trip, precompiles that run their SDK msgs with `Dispatch` revert. In evmd with the precompiles switched to `Dispatch`, staking `delegate`, ERC20 and WERC20 `transfer`, distribution `withdrawDelegatorRewards`, slashing `unjail` and ICS20 `transfer` revert under a trip, and `eth_call` and `eth_estimateGas` return an error. Reverting the precompiles to direct msg server calls fails every one of those tests.
 * Module authors write no breaker code, and a new msg server needs nothing beyond `RegisterMsgServer`.
-* Once the deprecated calls are removed, a direct call to another module's msg server no longer compiles, so no in-repo or downstream caller can skip the breaker by accident. Until then, staticcheck flags each one.
+* Once the deprecated calls are removed, a direct call to another module's msg server no longer compiles, so no in-repo or downstream caller can skip the breaker by accident. Until then, staticcheck flags each downstream call. In the SDK, only the deprecated wrappers and their own tests call them.
 * Downstream migration is small. cosmos/evm deleted a deprecated `erc20.NewMsgServerImpl` wrapper around the bank msg server and moved 2 test calls to `Dispatch`; its precompiles already used `Dispatch`. ibc-go needed no change. wasmd moved 5 test calls and no production code.
 * Typos, empty lists and protected msgs fail at trip time instead of succeeding silently.
 * No sequence of trips can block the reset or governance.
@@ -116,8 +117,11 @@ Chains remove `x/circuit` and add `x/safety` in the same upgrade: delete the cir
 * A module outside the SDK that still exports its msg server, and any keeper method that runs a msg's logic, remain direct paths the breaker does not see.
 * Under a `*` trip the breaker blocks `MsgEthereumTx`, so during a global halt validators on an EVM chain vote with a Cosmos `MsgVote` tx, not through the gov precompile.
 * Recheck evicts txs already in the mempool at trip time, and their senders rebroadcast after the reset.
-* An app that does not build autocli from `runtimeservices.ExtractAutoCLIOptions` has no `tx safety` commands, so its operators sign `MsgTrip` and `MsgReset` as tx JSON. x/safety has no depinject config, so an app adds it with manual wiring.
+* An app that does not build autocli from `runtimeservices.ExtractAutoCLIOptions` has no `tx safety` commands, so its operators sign `MsgTrip` and `MsgReset` as tx JSON. x/safety has no depinject config, so an app adds it with manual wiring, and a `runtime.App` registers it with `RegisterStores` and `RegisterModules` before `Load`.
 * An authority set through the consensus `AuthorityParams` override that can act only through a wrapper the operator tripped by exact URL cannot recover on chain.
+* Only the authority removes the operator, by gov vote by default. Until the vote passes, a compromised operator can trip anything in its scope and re-trip after each reset.
+* `MsgReset` needs every named entry present, so a gov reset fails if the operator changes the list during voting.
+* While a trip covers a msg, a gov proposal that contains it fails `CheckTx`, so a fix that is not a software upgrade needs the trip narrowed first.
 
 ### Neutral
 
@@ -138,6 +142,7 @@ Chains remove `x/circuit` and add `x/safety` in the same upgrade: delete the cir
 * `tests/integration/safety`: `Dispatch` from block hooks, a `FinalizeBlock` tx and a query context in SimApp under a trip and after the reset.
 * `types/msgservice`: a guard test that fails when any SDK package exports a msg server type, constructor, alias or Msg handler func outside the deprecated wrappers, or when a listed wrapper loses its `Deprecated:` doc.
 * `simapp`: a test that fails when an upgrade handler calls `Dispatch`, and `x/consensus` tests of `Keeper.SetParams`.
+* `tests/integration/safety`: an upgrade off `contrib/x/circuit` that restarts SimApp without the circuit wiring, and a `runtime.App` with x/safety wired by hand.
 * System tests: `TestSafety*` and `TestChainUpgrade`, which upgrades a running v0.54 chain into x/safety.
 * cosmos/evm: precompile tests in evmd with the precompiles switched to `Dispatch`, ante tests of `ante.CircuitBreakerDecorator` under `MsgEthereumTx` and `*` trips, and a node-level script on a 4-validator testnet covering precompiles, `MsgEthereumTx` and `*` trips, native transfers and queued txs.
 * ibc-go: relayed transfers, recv, ack, timeout and client update trips, client expiry and recovery, misbehavior, ICA host and packet-forward-middleware, all through real `MsgTrip` and `MsgReset` txs.

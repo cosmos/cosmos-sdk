@@ -151,7 +151,7 @@ Chains remove `x/circuit` and add `x/safety` in the same upgrade: delete the cir
 
 ## References
 
-* x/safety PR: the module, `msgservice.Dispatch` and the router fixes, which folds in [#26892](https://github.com/cosmos/cosmos-sdk/pull/26892) and [#26898](https://github.com/cosmos/cosmos-sdk/pull/26898)
+* [#26906: the x/safety PR](https://github.com/cosmos/cosmos-sdk/pull/26906): the module, `msgservice.Dispatch` and the router fixes, which folds in [#26892](https://github.com/cosmos/cosmos-sdk/pull/26892) and [#26898](https://github.com/cosmos/cosmos-sdk/pull/26898)
 * [#26894: the msg server PR](https://github.com/cosmos/cosmos-sdk/pull/26894), unexported msg servers with a one-release deprecation window
 * [`contrib/x/circuit`](../../contrib/x/circuit)
 * [ADR 068: Preblock](./adr-068-preblock.md)

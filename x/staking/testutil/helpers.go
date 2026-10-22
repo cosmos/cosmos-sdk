@@ -11,16 +11,17 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Helper is a structure which wraps the staking message server
-// and provides methods useful in tests
+// Helper is a structure which runs staking msgs through an app's
+// MsgServiceRouter and provides methods useful in tests
 type Helper struct {
-	t       *testing.T
-	msgSrvr stakingtypes.MsgServer
-	k       *keeper.Keeper
+	t      *testing.T
+	router msgservice.MsgRouter
+	k      *keeper.Keeper
 
 	Ctx        sdk.Context
 	Commission stakingtypes.CommissionRates
@@ -28,11 +29,12 @@ type Helper struct {
 	Denom string
 }
 
-// NewHelper creates a new instance of Helper.
-func NewHelper(t *testing.T, ctx sdk.Context, k *keeper.Keeper) *Helper {
+// NewHelper creates a new instance of Helper. router must route the staking
+// Msg service, as an app's MsgServiceRouter does.
+func NewHelper(t *testing.T, ctx sdk.Context, k *keeper.Keeper, router msgservice.MsgRouter) *Helper {
 	t.Helper()
 
-	return &Helper{t, keeper.NewMsgServerImpl(k), k, ctx, ZeroCommission(), sdk.DefaultBondDenom}
+	return &Helper{t, router, k, ctx, ZeroCommission(), sdk.DefaultBondDenom}
 }
 
 // CreateValidator calls staking module `MsgServer/CreateValidator` to create a new validator
@@ -60,13 +62,13 @@ func (sh *Helper) CreateValidatorMsg(addr sdk.ValAddress, pk cryptotypes.PubKey,
 
 // CreateValidatorWithMsg calls staking module `MsgServer/CreateValidator`
 func (sh *Helper) CreateValidatorWithMsg(ctx context.Context, msg *stakingtypes.MsgCreateValidator) (*stakingtypes.MsgCreateValidatorResponse, error) {
-	return sh.msgSrvr.CreateValidator(ctx, msg)
+	return msgservice.Dispatch[*stakingtypes.MsgCreateValidatorResponse](sdk.UnwrapSDKContext(ctx), sh.router, msg)
 }
 
 func (sh *Helper) createValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, coin sdk.Coin, ok bool) {
 	msg, err := stakingtypes.NewMsgCreateValidator(addr.String(), pk, coin, stakingtypes.Description{Moniker: "TestValidator"}, sh.Commission, math.OneInt())
 	require.NoError(sh.t, err)
-	res, err := sh.msgSrvr.CreateValidator(sh.Ctx, msg)
+	res, err := msgservice.Dispatch[*stakingtypes.MsgCreateValidatorResponse](sh.Ctx, sh.router, msg)
 	if ok {
 		require.NoError(sh.t, err)
 		require.NotNil(sh.t, res)
@@ -80,7 +82,7 @@ func (sh *Helper) createValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, co
 func (sh *Helper) Delegate(delegator sdk.AccAddress, val sdk.ValAddress, amount math.Int) {
 	coin := sdk.NewCoin(sh.Denom, amount)
 	msg := stakingtypes.NewMsgDelegate(delegator.String(), val.String(), coin)
-	res, err := sh.msgSrvr.Delegate(sh.Ctx, msg)
+	res, err := msgservice.Dispatch[*stakingtypes.MsgDelegateResponse](sh.Ctx, sh.router, msg)
 	require.NoError(sh.t, err)
 	require.NotNil(sh.t, res)
 }
@@ -89,7 +91,7 @@ func (sh *Helper) Delegate(delegator sdk.AccAddress, val sdk.ValAddress, amount 
 func (sh *Helper) DelegateWithPower(delegator sdk.AccAddress, val sdk.ValAddress, power int64) {
 	coin := sdk.NewCoin(sh.Denom, sh.k.TokensFromConsensusPower(sh.Ctx, power))
 	msg := stakingtypes.NewMsgDelegate(delegator.String(), val.String(), coin)
-	res, err := sh.msgSrvr.Delegate(sh.Ctx, msg)
+	res, err := msgservice.Dispatch[*stakingtypes.MsgDelegateResponse](sh.Ctx, sh.router, msg)
 	require.NoError(sh.t, err)
 	require.NotNil(sh.t, res)
 }
@@ -98,7 +100,7 @@ func (sh *Helper) DelegateWithPower(delegator sdk.AccAddress, val sdk.ValAddress
 func (sh *Helper) Undelegate(delegator sdk.AccAddress, val sdk.ValAddress, amount math.Int, ok bool) {
 	unbondAmt := sdk.NewCoin(sh.Denom, amount)
 	msg := stakingtypes.NewMsgUndelegate(delegator.String(), val.String(), unbondAmt)
-	res, err := sh.msgSrvr.Undelegate(sh.Ctx, msg)
+	res, err := msgservice.Dispatch[*stakingtypes.MsgUndelegateResponse](sh.Ctx, sh.router, msg)
 	if ok {
 		require.NoError(sh.t, err)
 		require.NotNil(sh.t, res)

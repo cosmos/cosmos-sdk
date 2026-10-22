@@ -124,7 +124,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	ctx := integrationApp.Context()
 
 	// Register MsgServer and QueryServer
-	stakingtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), stakingkeeper.NewMsgServerImpl(stakingKeeper))
+	stakingkeeper.RegisterMsgServer(integrationApp.MsgServiceRouter(), stakingKeeper)
 	stakingtypes.RegisterQueryServer(integrationApp.QueryHelper(), stakingkeeper.NewQuerier(stakingKeeper))
 
 	// set default staking params

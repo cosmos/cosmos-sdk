@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"google.golang.org/grpc"
+
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
@@ -19,10 +21,19 @@ type msgServer struct {
 	*Keeper
 }
 
-// NewMsgServerImpl returns an implementation of the gov MsgServer interface
+// newMsgServerImpl returns an implementation of the gov MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(keeper *Keeper) v1.MsgServer {
+func newMsgServerImpl(keeper *Keeper) v1.MsgServer {
 	return &msgServer{Keeper: keeper}
+}
+
+// RegisterMsgServer registers the x/gov v1 Msg service and the v1beta1
+// legacy Msg service on r. The msg servers are unexported: code outside the
+// module runs a msg through the MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k *Keeper) {
+	server := newMsgServerImpl(k)
+	v1beta1.RegisterMsgServer(r, newLegacyMsgServerImpl(k.authKeeper.GetModuleAddress(govtypes.ModuleName).String(), server))
+	v1.RegisterMsgServer(r, server)
 }
 
 var _ v1.MsgServer = msgServer{}
@@ -289,9 +300,9 @@ type legacyMsgServer struct {
 	server  v1.MsgServer
 }
 
-// NewLegacyMsgServerImpl returns an implementation of the v1beta1 legacy MsgServer interface. It wraps around
+// newLegacyMsgServerImpl returns an implementation of the v1beta1 legacy MsgServer interface. It wraps around
 // the current MsgServer
-func NewLegacyMsgServerImpl(govAcct string, v1Server v1.MsgServer) v1beta1.MsgServer {
+func newLegacyMsgServerImpl(govAcct string, v1Server v1.MsgServer) v1beta1.MsgServer {
 	return &legacyMsgServer{govAcct: govAcct, server: v1Server}
 }
 

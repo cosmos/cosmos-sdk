@@ -8,7 +8,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/safety/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -26,8 +25,8 @@ func (f *routerFixture) dispatchSend(ctx sdk.Context) (*banktypes.MsgSendRespons
 }
 
 // TestDispatchBlockedByTrips dispatches a MsgSend under an exact, a prefix
-// and a "*" trip. Each fails with the x/safety error, while a direct call
-// to the bank msg server under the same trip moves the funds.
+// and a "*" trip. Each fails with the x/safety error, while a bank keeper
+// send under the same trip moves the funds.
 func TestDispatchBlockedByTrips(t *testing.T) {
 	for _, pattern := range []string{urlSend, "/cosmos.bank.*", types.Wildcard} {
 		t.Run(pattern, func(t *testing.T) {
@@ -39,12 +38,10 @@ func TestDispatchBlockedByTrips(t *testing.T) {
 			require.ErrorContains(t, err, urlSend)
 			require.Nil(t, resp)
 
-			// a direct msg server call skips the router, so the trip does
-			// not stop it
+			// a keeper call is module logic, which a trip does not cover
 			ctx := branch(f.ctx())
 			before := f.balance(ctx, f.grantee)
-			_, err = bankkeeper.NewMsgServerImpl(f.bankKeeper).Send(ctx, f.msgSend().(*banktypes.MsgSend))
-			require.NoError(t, err)
+			require.NoError(t, f.bankKeeper.SendCoins(ctx, f.user.addr, f.grantee.addr, oneStake))
 			require.Equal(t, before.AddRaw(1), f.balance(ctx, f.grantee))
 		})
 	}

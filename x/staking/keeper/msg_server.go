@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-metrics"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -24,10 +25,17 @@ type msgServer struct {
 	*Keeper
 }
 
-// NewMsgServerImpl returns an implementation of the staking MsgServer interface
+// newMsgServerImpl returns an implementation of the staking MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
+func newMsgServerImpl(keeper *Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
+}
+
+// RegisterMsgServer registers the x/staking Msg service on r. The msg server
+// is unexported: code outside the module runs a msg through the
+// MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k *Keeper) {
+	types.RegisterMsgServer(r, newMsgServerImpl(k))
 }
 
 var _ types.MsgServer = msgServer{}

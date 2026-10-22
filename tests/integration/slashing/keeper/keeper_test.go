@@ -110,7 +110,8 @@ func initFixture(tb testing.TB) *fixture {
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
 	// Register MsgServer and QueryServer
-	slashingtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), slashingkeeper.NewMsgServerImpl(slashingKeeper))
+	slashingkeeper.RegisterMsgServer(integrationApp.MsgServiceRouter(), slashingKeeper)
+	stakingkeeper.RegisterMsgServer(integrationApp.MsgServiceRouter(), stakingKeeper)
 	slashingtypes.RegisterQueryServer(integrationApp.QueryHelper(), slashingkeeper.NewQuerier(slashingKeeper))
 
 	// set default staking params
@@ -148,7 +149,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	require.NoError(t, f.stakingKeeper.SetParams(f.ctx, p))
 
 	pks := simtestutil.CreateTestPubKeys(6)
-	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper, f.app.MsgServiceRouter())
 
 	// create max (5) validators all with the same power
 	for i := uint32(0); i < p.MaxValidators; i++ {
@@ -228,7 +229,7 @@ func TestHandleNewValidator(t *testing.T) {
 
 	pks := simtestutil.CreateTestPubKeys(1)
 	addr, valpubkey := f.valAddrs[0], pks[0]
-	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper, f.app.MsgServiceRouter())
 	signedBlocksWindow, err := f.slashingKeeper.SignedBlocksWindow(f.ctx)
 	assert.NilError(t, err)
 	f.ctx = f.ctx.WithBlockHeight(signedBlocksWindow + 1)
@@ -285,7 +286,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	pks := simtestutil.CreateTestPubKeys(1)
 	addr, val := f.valAddrs[0], pks[0]
 	power := int64(100)
-	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper, f.app.MsgServiceRouter())
 
 	err := f.slashingKeeper.AddPubkey(f.ctx, pks[0])
 	assert.NilError(t, err)
@@ -358,7 +359,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	addr, val := pks[0].Address(), pks[0]
 	consAddr := sdk.ConsAddress(addr)
-	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper, f.app.MsgServiceRouter())
 	valAddr := sdk.ValAddress(addr)
 
 	assert.NilError(t, f.slashingKeeper.AddPubkey(f.ctx, pks[0]))

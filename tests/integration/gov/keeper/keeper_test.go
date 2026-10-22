@@ -143,12 +143,8 @@ func initFixture(tb testing.TB) *fixture {
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
-	msgSrvr := keeper.NewMsgServerImpl(govKeeper)
-	legacyMsgSrvr := keeper.NewLegacyMsgServerImpl(authority.String(), msgSrvr)
-
 	// Register MsgServer and QueryServer
-	v1.RegisterMsgServer(router, msgSrvr)
-	v1beta1.RegisterMsgServer(router, legacyMsgSrvr)
+	keeper.RegisterMsgServer(router, govKeeper)
 
 	v1.RegisterQueryServer(integrationApp.QueryHelper(), keeper.NewQueryServer(govKeeper))
 

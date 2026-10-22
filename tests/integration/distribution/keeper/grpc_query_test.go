@@ -96,7 +96,7 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds))))
 
 	initialStake := int64(10)
-	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper, f.app.MsgServiceRouter())
 	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
 
@@ -168,7 +168,7 @@ func TestGRPCValidatorCommission(t *testing.T) {
 	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds))))
 
 	initialStake := int64(10)
-	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper, f.app.MsgServiceRouter())
 	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
 
@@ -498,7 +498,7 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds))))
 
 	initialStake := int64(10)
-	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper, f.app.MsgServiceRouter())
 	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(f.valAddr, valConsPk0, math.NewInt(initialStake), true)
 

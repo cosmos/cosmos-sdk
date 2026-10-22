@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"google.golang.org/grpc"
+
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,12 +17,19 @@ type msgServer struct {
 	Keeper
 }
 
-// NewMsgServerImpl returns an implementation of the feegrant MsgServer interface
+// newMsgServerImpl returns an implementation of the feegrant MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(k Keeper) feegrant.MsgServer {
+func newMsgServerImpl(k Keeper) feegrant.MsgServer {
 	return &msgServer{
 		Keeper: k,
 	}
+}
+
+// RegisterMsgServer registers the x/feegrant Msg service on r. The msg server
+// is unexported: code outside the module runs a msg through the
+// MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) {
+	feegrant.RegisterMsgServer(r, newMsgServerImpl(k))
 }
 
 var _ feegrant.MsgServer = msgServer{}

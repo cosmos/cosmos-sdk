@@ -11,7 +11,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	safetytypes "github.com/cosmos/cosmos-sdk/x/safety/types"
 )
@@ -75,9 +74,8 @@ func (p *dispatchProbe) run(f *fixture) map[string]error {
 
 // TestDispatchInSimApp trips MsgSend on a SimApp chain and dispatches one
 // from the block hooks, a FinalizeBlock tx and a query context. Every
-// dispatch fails with the x/safety error while the trip stands, a direct
-// bank msg server call does not, and every dispatch succeeds after the
-// reset.
+// dispatch fails with the x/safety error while the trip stands, a bank
+// keeper send does not, and every dispatch succeeds after the reset.
 func TestDispatchInSimApp(t *testing.T) {
 	p := &dispatchProbe{}
 	f := newFixtureWithSetup(t, nil, nil, p.setup)
@@ -94,8 +92,8 @@ func TestDispatchInSimApp(t *testing.T) {
 	}
 
 	ctx, _ := f.ctx().CacheContext()
-	_, err := bankkeeper.NewMsgServerImpl(f.app.BankKeeper).Send(ctx, p.msg)
-	require.NoError(t, err, "a direct msg server call skips the trip")
+	err := f.app.BankKeeper.SendCoins(ctx, f.user.addr, f.other.addr, p.msg.Amount)
+	require.NoError(t, err, "a keeper call is module logic, which a trip does not cover")
 
 	f.mustDeliver(f.operator, safetytypes.NewMsgReset(f.operator.String(), msgSendURL))
 	for caller, err := range p.run(f) {

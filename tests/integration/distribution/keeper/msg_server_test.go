@@ -148,10 +148,10 @@ func initFixture(tb testing.TB) *fixture {
 	)
 
 	// Register MsgServer and QueryServer
-	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))
+	distrkeeper.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrKeeper)
 	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(distrKeeper))
 
-	stakingtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), stakingkeeper.NewMsgServerImpl(stakingKeeper))
+	stakingkeeper.RegisterMsgServer(integrationApp.MsgServiceRouter(), stakingKeeper)
 
 	return &fixture{
 		app:           integrationApp,
@@ -911,7 +911,7 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 	// send funds from module to addr to perform DepositValidatorRewardsPool
 	err = f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, distrtypes.ModuleName, addr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, tokens)))
 	require.NoError(t, err)
-	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper, f.app.MsgServiceRouter())
 	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(valAddr1, valConsPk0, math.NewInt(100), true)
 
@@ -1006,7 +1006,7 @@ func TestCannotDepositIfRewardPoolFull(t *testing.T) {
 	valPubKey := newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB53")
 	operatorAddr := sdk.ValAddress(valPubKey.Address())
 
-	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper, f.app.MsgServiceRouter())
 
 	assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))))
 	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, minttypes.ModuleName, sdk.AccAddress(operatorAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))))

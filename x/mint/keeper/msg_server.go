@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	"google.golang.org/grpc"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -14,11 +16,18 @@ type msgServer struct {
 	Keeper
 }
 
-// NewMsgServerImpl returns an implementation of the x/mint MsgServer interface.
-func NewMsgServerImpl(k Keeper) types.MsgServer {
+// newMsgServerImpl returns an implementation of the x/mint MsgServer interface.
+func newMsgServerImpl(k Keeper) types.MsgServer {
 	return &msgServer{
 		Keeper: k,
 	}
+}
+
+// RegisterMsgServer registers the x/mint Msg service on r. The msg server
+// is unexported: code outside the module runs a msg through the
+// MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) {
+	types.RegisterMsgServer(r, newMsgServerImpl(k))
 }
 
 // UpdateParams updates the params.

@@ -3,6 +3,7 @@
 package systemtests
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -54,73 +55,60 @@ func TestSafetyOperatorTripAndReset(t *testing.T) {
 
 	// default genesis: gov is the authority, no operator, nothing disabled.
 	// The default scope is checked in TestSafetyDefaultGenesisQueries.
-	params := cli.CustomQuery("q", "safety", "params")
+	params := safetyParams(t)
 	require.Equal(t, govAddr, gjson.Get(params, "params.authority").String(), params)
 	require.Empty(t, gjson.Get(params, "params.operator").String(), params)
-	require.Empty(t, safetyDisabledList(t, cli), "disabled list at genesis")
-	require.True(t, safetyIsAllowed(t, cli, safetyMsgSend))
+	require.Empty(t, safetyDisabledList(t), "disabled list at genesis")
+	require.True(t, safetyIsAllowed(t, safetyMsgSend))
 
 	// no operator yet: the key cannot trip
-	safetyRequireTxRejected(t, cli, "unauthorized",
-		"tx", "safety", "trip", safetyMsgSend, "--from", operatorAddr)
+	safetyRequireTxRejected(t, cli, "unauthorized", operatorAddr, safetyTrip(operatorAddr, safetyMsgSend))
 
-	// gov names the operator through the autocli proposal command
+	// gov names the operator through a proposal
 	newParams := fmt.Sprintf(`{"authority":%q,"operator":%q,"scope":["/cosmos.bank.*"]}`, govAddr, operatorAddr)
-	safetySubmitAndPassProposal(t, cli,
-		"tx", "safety", "update-params-proposal", newParams,
-		"--title", "name safety operator", "--summary", "grant /cosmos.bank.* scope",
-		"--deposit", "100000000stake", "--from", "node0")
+	safetySubmitAndPassProposal(t, cli, "tx", "gov", "submit-proposal",
+		safetyProposalFile(t, safetyUpdateParams(govAddr, newParams), "name safety operator", "grant /cosmos.bank.* scope"),
+		"--from", "node0")
 
-	params = cli.CustomQuery("q", "safety", "params")
+	params = safetyParams(t)
 	require.Equal(t, govAddr, gjson.Get(params, "params.authority").String(), params)
 	require.Equal(t, operatorAddr, gjson.Get(params, "params.operator").String(), params)
 	require.Equal(t, []string{"/cosmos.bank.*"}, safetyStrings(gjson.Get(params, "params.scope")), params)
 
 	// rejections that circuit accepted: empty list, out of scope, unknown,
 	// and a sender that is not the operator
-	safetyRequireTxRejected(t, cli, "pattern list is empty",
-		"tx", "safety", "trip", "--from", operatorAddr)
+	safetyRequireTxRejected(t, cli, "pattern list is empty", operatorAddr, safetyTrip(operatorAddr))
 	safetyRequireTxRejected(t, cli, "not covered by operator scope",
-		"tx", "safety", "trip", "/cosmos.staking.v1beta1.MsgDelegate", "--from", operatorAddr)
+		operatorAddr, safetyTrip(operatorAddr, "/cosmos.staking.v1beta1.MsgDelegate"))
 	safetyRequireTxRejected(t, cli, "matches no registered unprotected msg type",
-		"tx", "safety", "trip", "/cosmos.bank.v1beta1.MsgSnd", "--from", operatorAddr)
-	safetyRequireTxRejected(t, cli, "unauthorized",
-		"tx", "safety", "trip", safetyMsgSend, "--from", strangerAddr)
-	require.Empty(t, safetyDisabledList(t, cli), "failed trips must not change state")
+		operatorAddr, safetyTrip(operatorAddr, "/cosmos.bank.v1beta1.MsgSnd"))
+	safetyRequireTxRejected(t, cli, "unauthorized", strangerAddr, safetyTrip(strangerAddr, safetyMsgSend))
+	require.Empty(t, safetyDisabledList(t), "failed trips must not change state")
 
 	// set up an authz grant while sends still work, for the nested check below
 	rsp := cli.Run("tx", "authz", "grant", operatorAddr, "send", "--spend-limit", "1000stake", "--from", senderAddr)
 	safetyRequireCommittedOK(t, rsp)
 
-	// operator trips two patterns in one tx, each its own positional arg
-	rsp = cli.Run("tx", "safety", "trip", safetyMsgSend, safetyMsgMultiSend, "--from", operatorAddr)
-	txResult := safetyRequireCommittedOK(t, rsp)
+	// operator trips two patterns in one tx
+	txResult := safetyTx(t, cli, operatorAddr, safetyTrip(operatorAddr, safetyMsgSend, safetyMsgMultiSend))
 	require.True(t, gjson.Get(txResult, `events.#(type=="cosmos.safety.v1.EventTrip")`).Exists(), txResult)
 
-	require.Equal(t, []string{safetyMsgMultiSend, safetyMsgSend}, safetyDisabledList(t, cli))
-	require.False(t, safetyIsAllowed(t, cli, safetyMsgSend))
-	require.False(t, safetyIsAllowed(t, cli, safetyMsgMultiSend))
-	require.True(t, safetyIsAllowed(t, cli, "/cosmos.staking.v1beta1.MsgDelegate"))
-	require.True(t, safetyIsAllowed(t, cli, "/cosmos.safety.v1.MsgReset"))
+	require.Equal(t, []string{safetyMsgMultiSend, safetyMsgSend}, safetyDisabledList(t))
+	require.False(t, safetyIsAllowed(t, safetyMsgSend))
+	require.False(t, safetyIsAllowed(t, safetyMsgMultiSend))
+	require.True(t, safetyIsAllowed(t, "/cosmos.staking.v1beta1.MsgDelegate"))
+	require.True(t, safetyIsAllowed(t, "/cosmos.safety.v1.MsgReset"))
 
-	// the REST gateway agrees
-	list := safetyREST(t, "/cosmos/safety/v1/disabled_list")
-	require.Equal(t, []string{safetyMsgMultiSend, safetyMsgSend}, safetyStrings(gjson.Get(list, "disabled_patterns")), list)
-	allowed := safetyREST(t, "/cosmos/safety/v1/is_allowed?msg_type_url="+url.QueryEscape(safetyMsgSend))
-	require.True(t, gjson.Get(allowed, "allowed").Exists(), allowed)
-	require.False(t, gjson.Get(allowed, "allowed").Bool(), allowed)
-
-	// disabled-list paginates
-	page := cli.CustomQuery("q", "safety", "disabled-list", "--page-limit", "1", "--page-count-total")
+	// the disabled list paginates
+	page := safetyREST(t, "/cosmos/safety/v1/disabled_list?pagination.limit=1&pagination.count_total=true")
 	require.Equal(t, []string{safetyMsgMultiSend}, safetyStrings(gjson.Get(page, "disabled_patterns")), page)
 	require.NotEmpty(t, gjson.Get(page, "pagination.next_key").String(), page)
 	require.Equal(t, int64(2), gjson.Get(page, "pagination.total").Int(), page)
-	page = cli.CustomQuery("q", "safety", "disabled-list", "--page-limit", "1", "--page-offset", "1")
+	page = safetyREST(t, "/cosmos/safety/v1/disabled_list?pagination.limit=1&pagination.offset=1")
 	require.Equal(t, []string{safetyMsgSend}, safetyStrings(gjson.Get(page, "disabled_patterns")), page)
 
 	// tripping an already disabled pattern fails
-	safetyRequireTxRejected(t, cli, "already disabled",
-		"tx", "safety", "trip", safetyMsgSend, "--from", operatorAddr)
+	safetyRequireTxRejected(t, cli, "already disabled", operatorAddr, safetyTrip(operatorAddr, safetyMsgSend))
 
 	// a bank send fails in CheckTx and pays no fee
 	senderBalance := cli.QueryBalance(senderAddr, "stake")
@@ -136,17 +124,14 @@ func TestSafetyOperatorTripAndReset(t *testing.T) {
 	safetyRequireCheckTxRejected(t, out, safetyDisabledErr)
 
 	// the operator cannot reset a pattern that is not disabled, and a stranger cannot reset at all
-	safetyRequireTxRejected(t, cli, "not in disabled list",
-		"tx", "safety", "reset", "/cosmos.bank.*", "--from", operatorAddr)
-	safetyRequireTxRejected(t, cli, "unauthorized",
-		"tx", "safety", "reset", safetyMsgSend, "--from", strangerAddr)
+	safetyRequireTxRejected(t, cli, "not in disabled list", operatorAddr, safetyReset(operatorAddr, "/cosmos.bank.*"))
+	safetyRequireTxRejected(t, cli, "unauthorized", strangerAddr, safetyReset(strangerAddr, safetyMsgSend))
 
 	// operator resets both patterns in one tx
-	rsp = cli.Run("tx", "safety", "reset", safetyMsgSend, safetyMsgMultiSend, "--from", operatorAddr)
-	txResult = safetyRequireCommittedOK(t, rsp)
+	txResult = safetyTx(t, cli, operatorAddr, safetyReset(operatorAddr, safetyMsgSend, safetyMsgMultiSend))
 	require.True(t, gjson.Get(txResult, `events.#(type=="cosmos.safety.v1.EventReset")`).Exists(), txResult)
-	require.Empty(t, safetyDisabledList(t, cli))
-	require.True(t, safetyIsAllowed(t, cli, safetyMsgSend))
+	require.Empty(t, safetyDisabledList(t))
+	require.True(t, safetyIsAllowed(t, safetyMsgSend))
 
 	// the send now succeeds, directly and through authz
 	rsp = cli.Run("tx", "bank", "send", senderAddr, recipientAddr, "100stake")
@@ -183,25 +168,23 @@ func TestSafetyTripAllGovResets(t *testing.T) {
 	)
 	systest.Sut.StartChain(t)
 
-	params := cli.CustomQuery("q", "safety", "params")
+	params := safetyParams(t)
 	require.Equal(t, operatorAddr, gjson.Get(params, "params.operator").String(), params)
 	require.Equal(t, []string{"*"}, safetyStrings(gjson.Get(params, "params.scope")), params)
 
 	// protected msgs cannot be tripped, even with scope *
 	for _, pattern := range []string{"/cosmos.gov.v1.MsgVote", "/cosmos.safety.*", "/cosmos.safety.v1.MsgReset"} {
-		safetyRequireTxRejected(t, cli, "matches no registered unprotected msg type",
-			"tx", "safety", "trip", pattern, "--from", operatorAddr)
+		safetyRequireTxRejected(t, cli, "matches no registered unprotected msg type", operatorAddr, safetyTrip(operatorAddr, pattern))
 	}
 
-	rsp := cli.Run("tx", "safety", "trip", "*", "--from", operatorAddr)
-	safetyRequireCommittedOK(t, rsp)
+	safetyTx(t, cli, operatorAddr, safetyTrip(operatorAddr, "*"))
 
-	require.Equal(t, []string{"*"}, safetyDisabledList(t, cli))
-	require.False(t, safetyIsAllowed(t, cli, safetyMsgSend))
-	require.False(t, safetyIsAllowed(t, cli, "/cosmos.staking.v1beta1.MsgDelegate"))
-	require.False(t, safetyIsAllowed(t, cli, "/cosmos.authz.v1beta1.MsgGrant"))
+	require.Equal(t, []string{"*"}, safetyDisabledList(t))
+	require.False(t, safetyIsAllowed(t, safetyMsgSend))
+	require.False(t, safetyIsAllowed(t, "/cosmos.staking.v1beta1.MsgDelegate"))
+	require.False(t, safetyIsAllowed(t, "/cosmos.authz.v1beta1.MsgGrant"))
 	// only an exact trip blocks a wrapper such as authz MsgExec
-	require.True(t, safetyIsAllowed(t, cli, safetyMsgExec))
+	require.True(t, safetyIsAllowed(t, safetyMsgExec))
 	for _, protected := range []string{
 		"/cosmos.gov.v1.MsgSubmitProposal",
 		"/cosmos.gov.v1.MsgVote",
@@ -209,34 +192,20 @@ func TestSafetyTripAllGovResets(t *testing.T) {
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
 		"/cosmos.consensus.v1.MsgUpdateParams",
 	} {
-		require.True(t, safetyIsAllowed(t, cli, protected), protected)
+		require.True(t, safetyIsAllowed(t, protected), protected)
 	}
 
 	out, _ := cli.WithRunErrorsIgnored().RunOnly("tx", "bank", "send", "node0", recipientAddr, "100stake", safetyFees)
 	safetyRequireCheckTxRejected(t, out, safetyDisabledErr)
 
 	// gov submits, votes on and executes a reset of * while * is tripped
-	proposal := fmt.Sprintf(`{
- "messages": [
-  {
-   "@type": "/cosmos.safety.v1.MsgReset",
-   "sender": %q,
-   "patterns": ["*"]
-  }
- ],
- "metadata": "ipfs://CID",
- "deposit": "100000000stake",
- "title": "reset safety",
- "summary": "clear the * trip"
-}`, govAddr)
-	proposalFile := filepath.Join(t.TempDir(), "proposal.json")
-	require.NoError(t, os.WriteFile(proposalFile, []byte(proposal), 0o600))
-	safetySubmitAndPassProposal(t, cli, "tx", "gov", "submit-proposal", proposalFile, "--from", "node0")
+	safetySubmitAndPassProposal(t, cli, "tx", "gov", "submit-proposal",
+		safetyProposalFile(t, safetyReset(govAddr, "*"), "reset safety", "clear the * trip"), "--from", "node0")
 
-	require.Empty(t, safetyDisabledList(t, cli))
-	require.True(t, safetyIsAllowed(t, cli, safetyMsgSend))
+	require.Empty(t, safetyDisabledList(t))
+	require.True(t, safetyIsAllowed(t, safetyMsgSend))
 
-	rsp = cli.Run("tx", "bank", "send", "node0", recipientAddr, "100stake")
+	rsp := cli.Run("tx", "bank", "send", "node0", recipientAddr, "100stake")
 	safetyRequireCommittedOK(t, rsp)
 	require.Equal(t, int64(100), cli.QueryBalance(recipientAddr, "stake"))
 }
@@ -272,16 +241,16 @@ func TestSafetyAuthzAuthorityResetsUnderWildcard(t *testing.T) {
 	// the authority signs directly: it names the operator, then lets the
 	// grantee reset on its behalf
 	newParams := fmt.Sprintf(`{"authority":%q,"operator":%q,"scope":["*"]}`, authorityAddr, operatorAddr)
-	safetyRequireCommittedOK(t, cli.Run("tx", "safety", "update-params-proposal", newParams, "--no-proposal", "--from", authorityAddr))
-	params := cli.CustomQuery("q", "safety", "params")
+	safetyTx(t, cli, authorityAddr, safetyUpdateParams(authorityAddr, newParams))
+	params := safetyParams(t)
 	require.Equal(t, authorityAddr, gjson.Get(params, "params.authority").String(), params)
 	require.Equal(t, operatorAddr, gjson.Get(params, "params.operator").String(), params)
 	safetyRequireCommittedOK(t, cli.Run("tx", "authz", "grant", granteeAddr, "generic",
 		"--msg-type", "/cosmos.safety.v1.MsgReset", "--from", authorityAddr))
 
-	safetyRequireCommittedOK(t, cli.Run("tx", "safety", "trip", "*", "--from", operatorAddr))
-	require.True(t, safetyIsAllowed(t, cli, safetyMsgExec))
-	require.False(t, safetyIsAllowed(t, cli, safetyMsgSend))
+	safetyTx(t, cli, operatorAddr, safetyTrip(operatorAddr, "*"))
+	require.True(t, safetyIsAllowed(t, safetyMsgExec))
+	require.False(t, safetyIsAllowed(t, safetyMsgSend))
 
 	// MsgExec runs, but the send inside it is rejected in CheckTx
 	sendFile := safetyGenerateSendTx(t, cli, authorityAddr, recipientAddr, "100stake")
@@ -289,22 +258,21 @@ func TestSafetyAuthzAuthorityResetsUnderWildcard(t *testing.T) {
 	safetyRequireCheckTxRejected(t, out, safetyDisabledErr)
 
 	// the grantee resets * for the authority
-	resetFile := safetyGenerateTx(t, cli, "reset.json", "/cosmos.safety.v1.MsgReset",
-		"tx", "safety", "reset", "*", "--from", authorityAddr)
+	resetFile := safetyUnsignedTx(t, safetyReset(authorityAddr, "*"))
 	safetyRequireCommittedOK(t, cli.Run("tx", "authz", "exec", resetFile, "--from", granteeAddr))
-	require.Empty(t, safetyDisabledList(t, cli))
+	require.Empty(t, safetyDisabledList(t))
 
 	// an exact trip of MsgExec, accepted beside *, closes the path until the
 	// operator resets it
-	safetyRequireCommittedOK(t, cli.Run("tx", "safety", "trip", "*", safetyMsgExec, "--from", operatorAddr))
-	require.False(t, safetyIsAllowed(t, cli, safetyMsgExec))
+	safetyTx(t, cli, operatorAddr, safetyTrip(operatorAddr, "*", safetyMsgExec))
+	require.False(t, safetyIsAllowed(t, safetyMsgExec))
 	out, _ = cli.WithRunErrorsIgnored().RunOnly("tx", "authz", "exec", resetFile, "--from", granteeAddr, safetyFees)
 	safetyRequireCheckTxRejected(t, out, safetyDisabledErr)
-	require.Equal(t, []string{"*", safetyMsgExec}, safetyDisabledList(t, cli))
+	require.Equal(t, []string{"*", safetyMsgExec}, safetyDisabledList(t))
 
-	safetyRequireCommittedOK(t, cli.Run("tx", "safety", "reset", safetyMsgExec, "--from", operatorAddr))
+	safetyTx(t, cli, operatorAddr, safetyReset(operatorAddr, safetyMsgExec))
 	safetyRequireCommittedOK(t, cli.Run("tx", "authz", "exec", resetFile, "--from", granteeAddr))
-	require.Empty(t, safetyDisabledList(t, cli))
+	require.Empty(t, safetyDisabledList(t))
 
 	safetyRequireCommittedOK(t, cli.Run("tx", "bank", "send", authorityAddr, recipientAddr, "100stake"))
 	require.Equal(t, int64(100), cli.QueryBalance(recipientAddr, "stake"))
@@ -319,28 +287,21 @@ func TestSafetyDefaultGenesisQueries(t *testing.T) {
 	// then params show gov as authority, no operator and an empty scope,
 	// the disabled list is empty and every msg is allowed.
 	systest.Sut.ResetChain(t)
-	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	govAddr := sdk.AccAddress(address.Module("gov")).String()
 	systest.Sut.StartChain(t)
 
-	require.Empty(t, safetyDisabledList(t, cli))
-	require.True(t, safetyIsAllowed(t, cli, safetyMsgSend))
-	require.True(t, safetyIsAllowed(t, cli, "/cosmos.gov.v1.MsgVote"))
+	require.Empty(t, safetyDisabledList(t))
+	require.True(t, safetyIsAllowed(t, safetyMsgSend))
+	require.True(t, safetyIsAllowed(t, "/cosmos.gov.v1.MsgVote"))
 
-	params := cli.CustomQuery("q", "safety", "params")
+	params := safetyParams(t)
 	require.Equal(t, govAddr, gjson.Get(params, "params.authority").String(), params)
 	require.Empty(t, gjson.Get(params, "params.operator").String(), params)
 	require.Empty(t, safetyStrings(gjson.Get(params, "params.scope")), "default scope must be empty: %s", params)
 
-	// the same queries through the REST gateway routes under /cosmos/safety/v1/
-	params = safetyREST(t, "/cosmos/safety/v1/params")
-	require.Equal(t, govAddr, gjson.Get(params, "params.authority").String(), params)
-	require.Empty(t, gjson.Get(params, "params.operator").String(), params)
 	list := safetyREST(t, "/cosmos/safety/v1/disabled_list?pagination.count_total=true")
 	require.Empty(t, safetyStrings(gjson.Get(list, "disabled_patterns")), list)
 	require.Equal(t, int64(0), gjson.Get(list, "pagination.total").Int(), list)
-	allowed := safetyREST(t, "/cosmos/safety/v1/is_allowed?msg_type_url="+url.QueryEscape(safetyMsgSend))
-	require.True(t, gjson.Get(allowed, "allowed").Bool(), allowed)
 
 	// a type URL without its leading slash is rejected, not answered
 	systest.GetRequestWithHeaders(t,
@@ -369,8 +330,8 @@ func TestSafetyGovProposalWithDisabledMsgRejectedAtSubmission(t *testing.T) {
 	systest.Sut.StartChain(t)
 
 	// genesis state was applied
-	require.Equal(t, []string{safetyMsgSend}, safetyDisabledList(t, cli))
-	require.False(t, safetyIsAllowed(t, cli, safetyMsgSend))
+	require.Equal(t, []string{safetyMsgSend}, safetyDisabledList(t))
+	require.False(t, safetyIsAllowed(t, safetyMsgSend))
 
 	proposal := fmt.Sprintf(`{
  "messages": [
@@ -423,18 +384,100 @@ func safetySetGenesis(t *testing.T, operator string, scope, disabled []string) s
 	}
 }
 
-func safetyDisabledList(t *testing.T, cli *systest.CLIWrapper) []string {
+// safetyParams returns the x/safety params from the REST gateway.
+func safetyParams(t *testing.T) string {
 	t.Helper()
-	raw := safetyTrimJSON(cli.CustomQuery("q", "safety", "disabled-list"))
-	require.True(t, gjson.Valid(raw), raw)
-	return safetyStrings(gjson.Get(raw, "disabled_patterns"))
+	return safetyREST(t, "/cosmos/safety/v1/params")
 }
 
-func safetyIsAllowed(t *testing.T, cli *systest.CLIWrapper, typeURL string) bool {
+// safetyDisabledList returns the disabled patterns from the REST gateway.
+func safetyDisabledList(t *testing.T) []string {
 	t.Helper()
-	raw := safetyTrimJSON(cli.CustomQuery("q", "safety", "is-allowed", typeURL))
-	require.True(t, gjson.Valid(raw), raw)
-	return gjson.Get(raw, "allowed").Bool()
+	list := safetyREST(t, "/cosmos/safety/v1/disabled_list")
+	return safetyStrings(gjson.Get(list, "disabled_patterns"))
+}
+
+// safetyIsAllowed asks the REST gateway whether typeURL may execute.
+func safetyIsAllowed(t *testing.T, typeURL string) bool {
+	t.Helper()
+	res := safetyREST(t, "/cosmos/safety/v1/is_allowed?msg_type_url="+url.QueryEscape(typeURL))
+	require.True(t, gjson.Get(res, "allowed").Exists(), res)
+	return gjson.Get(res, "allowed").Bool()
+}
+
+// safetyTrip returns a MsgTrip as tx JSON.
+func safetyTrip(operator string, patterns ...string) string {
+	return safetyPatternsMsg("/cosmos.safety.v1.MsgTrip", "operator", operator, patterns)
+}
+
+// safetyReset returns a MsgReset as tx JSON.
+func safetyReset(sender string, patterns ...string) string {
+	return safetyPatternsMsg("/cosmos.safety.v1.MsgReset", "sender", sender, patterns)
+}
+
+func safetyPatternsMsg(typeURL, signerField, signer string, patterns []string) string {
+	if patterns == nil {
+		patterns = []string{}
+	}
+	bz, err := json.Marshal(map[string]any{"@type": typeURL, signerField: signer, "patterns": patterns})
+	if err != nil {
+		panic(err)
+	}
+	return string(bz)
+}
+
+// safetyUpdateParams returns a MsgUpdateParams as tx JSON. params is the
+// full params object as JSON.
+func safetyUpdateParams(authority, params string) string {
+	return fmt.Sprintf(`{"@type":"/cosmos.safety.v1.MsgUpdateParams","authority":%q,"params":%s}`, authority, params)
+}
+
+// safetyUnsignedTx writes an unsigned tx with msgs, each given as JSON, to a
+// file and returns its path, for tx sign or authz exec.
+func safetyUnsignedTx(t *testing.T, msgs ...string) string {
+	t.Helper()
+	tx := fmt.Sprintf(`{"body":{"messages":[%s]},"auth_info":{"fee":{"amount":[{"denom":"stake","amount":"1"}],"gas_limit":"200000"}},"signatures":[]}`,
+		strings.Join(msgs, ","))
+	path := filepath.Join(t.TempDir(), "unsigned.json")
+	require.NoError(t, os.WriteFile(path, []byte(tx), 0o600))
+	return path
+}
+
+// safetyBroadcast signs an unsigned tx with msgs as from, broadcasts it in
+// sync mode and returns the broadcast output without waiting for the tx to
+// commit.
+func safetyBroadcast(t *testing.T, cli *systest.CLIWrapper, from string, msgs ...string) string {
+	t.Helper()
+	signed := safetyTrimJSON(cli.RunCommandWithArgs(cli.WithTargetNodeFlags(
+		"tx", "sign", safetyUnsignedTx(t, msgs...), "--from", from, "--chain-id", cli.ChainID(),
+	)...))
+	require.True(t, gjson.Valid(signed), signed)
+	path := filepath.Join(t.TempDir(), "signed.json")
+	require.NoError(t, os.WriteFile(path, []byte(signed), 0o600))
+	out, _ := cli.WithRunErrorsIgnored().RunOnly("tx", "broadcast", path)
+	return out
+}
+
+// safetyTx signs and broadcasts a tx with msgs as from, requires it to commit
+// with code 0, and returns the committed tx result.
+func safetyTx(t *testing.T, cli *systest.CLIWrapper, from string, msgs ...string) string {
+	t.Helper()
+	out := safetyBroadcast(t, cli, from, msgs...)
+	systest.RequireTxSuccess(t, out)
+	res, found := cli.AwaitTxCommitted(out)
+	require.True(t, found, "tx not committed: %s", out)
+	return safetyRequireCommittedOK(t, res)
+}
+
+// safetyProposalFile writes a gov proposal with msg, given as JSON, and the
+// full deposit to a file and returns its path.
+func safetyProposalFile(t *testing.T, msg, title, summary string) string {
+	t.Helper()
+	proposal := fmt.Sprintf(`{"messages":[%s],"metadata":"ipfs://CID","deposit":"100000000stake","title":%q,"summary":%q}`,
+		msg, title, summary)
+	path := filepath.Join(t.TempDir(), "proposal.json")
+	require.NoError(t, os.WriteFile(path, []byte(proposal), 0o600))
+	return path
 }
 
 // safetyTrimJSON strips any non-JSON lines the binary prints before its JSON
@@ -476,13 +519,12 @@ func safetyRequireCheckTxRejected(t *testing.T, out, errMsg string) {
 	require.Contains(t, out, errMsg)
 }
 
-// safetyRequireTxRejected runs a tx and requires it to fail at any stage:
-// client-side validation, CheckTx, or execution. When errMsg is set, the
-// failure output must contain it.
-func safetyRequireTxRejected(t *testing.T, cli *systest.CLIWrapper, errMsg string, args ...string) {
+// safetyRequireTxRejected signs and broadcasts a tx with msgs as from and
+// requires it to fail in CheckTx or execution. When errMsg is set, the failure
+// output must contain it.
+func safetyRequireTxRejected(t *testing.T, cli *systest.CLIWrapper, errMsg, from string, msgs ...string) {
 	t.Helper()
-	out, _ := cli.WithRunErrorsIgnored().RunOnly(append(args, safetyFees)...)
-	out = safetyTrimJSON(out)
+	out := safetyTrimJSON(safetyBroadcast(t, cli, from, msgs...))
 	if gjson.Valid(out) && gjson.Get(out, "code").Int() == 0 && gjson.Get(out, "txhash").Exists() {
 		// accepted into the mempool: execution must fail
 		res, found := cli.AwaitTxCommitted(out)
@@ -530,17 +572,10 @@ func safetySubmitAndPassProposal(t *testing.T, cli *systest.CLIWrapper, args ...
 // safetyGenerateSendTx writes an unsigned bank send to a file for authz exec.
 func safetyGenerateSendTx(t *testing.T, cli *systest.CLIWrapper, from, to, amount string) string {
 	t.Helper()
-	return safetyGenerateTx(t, cli, "send.json", safetyMsgSend, "tx", "bank", "send", from, to, amount)
-}
-
-// safetyGenerateTx runs a tx command with --generate-only, checks the
-// unsigned tx contains msgType, and writes it to a file for authz exec.
-func safetyGenerateTx(t *testing.T, cli *systest.CLIWrapper, name, msgType string, args ...string) string {
-	t.Helper()
-	out := safetyTrimJSON(cli.RunCommandWithArgs(append(args, "--generate-only", "--chain-id="+cli.ChainID())...))
+	out := safetyTrimJSON(cli.RunCommandWithArgs("tx", "bank", "send", from, to, amount, "--generate-only", "--chain-id="+cli.ChainID()))
 	require.True(t, gjson.Valid(out), out)
-	require.True(t, strings.Contains(out, msgType), out)
-	path := filepath.Join(t.TempDir(), name)
+	require.True(t, strings.Contains(out, safetyMsgSend), out)
+	path := filepath.Join(t.TempDir(), "send.json")
 	require.NoError(t, os.WriteFile(path, []byte(out), 0o600))
 	return path
 }

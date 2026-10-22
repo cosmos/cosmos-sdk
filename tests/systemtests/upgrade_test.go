@@ -4,8 +4,6 @@ package systemtests
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"testing"
 	"time"
@@ -50,11 +48,11 @@ func TestChainUpgrade(t *testing.T) {
 
 	// x/safety is new in this version: the upgrade adds its store and runs its
 	// InitGenesis with the default params
-	safetyParamsRaw := cli.CustomQuery("q", "safety", "params")
+	safetyParamsRaw := safetyParams(t)
 	require.Equal(t, govAddr, gjson.Get(safetyParamsRaw, "params.authority").String(), safetyParamsRaw)
 	require.Empty(t, gjson.Get(safetyParamsRaw, "params.operator").String(), safetyParamsRaw)
-	require.Empty(t, safetyDisabledList(t, cli))
-	require.True(t, safetyIsAllowed(t, cli, safetyMsgSend))
+	require.Empty(t, safetyDisabledList(t))
+	require.True(t, safetyIsAllowed(t, safetyMsgSend))
 
 	regex, err := regexp.Compile("DBG this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
 	require.NoError(t, err)
@@ -82,21 +80,20 @@ func safetyAfterUpgrade(t *testing.T, cli *systest.CLIWrapper, govAddr string) {
 
 	// gov names the operator with scope /cosmos.bank.*
 	newParams := fmt.Sprintf(`{"authority":%q,"operator":%q,"scope":["/cosmos.bank.*"]}`, govAddr, operatorAddr)
-	safetySubmitAndPassProposal(t, cli,
-		"tx", "safety", "update-params-proposal", newParams,
-		"--title", "name safety operator", "--summary", "grant /cosmos.bank.* scope",
-		"--deposit", "100000000stake", "--from", "node0")
-	params := cli.CustomQuery("q", "safety", "params")
+	safetySubmitAndPassProposal(t, cli, "tx", "gov", "submit-proposal",
+		safetyProposalFile(t, safetyUpdateParams(govAddr, newParams), "name safety operator", "grant /cosmos.bank.* scope"),
+		"--from", "node0")
+	params := safetyParams(t)
 	require.Equal(t, operatorAddr, gjson.Get(params, "params.operator").String(), params)
 	require.Equal(t, []string{"/cosmos.bank.*"}, safetyStrings(gjson.Get(params, "params.scope")), params)
 
 	safetyRequireTxRejected(t, cli, "not covered by operator scope",
-		"tx", "safety", "trip", "/cosmos.distribution.v1beta1.MsgFundCommunityPool", "--from", operatorAddr)
+		operatorAddr, safetyTrip(operatorAddr, "/cosmos.distribution.v1beta1.MsgFundCommunityPool"))
 
 	// the operator trips MsgSend
-	safetyRequireCommittedOK(t, cli.Run("tx", "safety", "trip", safetyMsgSend, "--from", operatorAddr))
-	require.Equal(t, []string{safetyMsgSend}, safetyDisabledList(t, cli))
-	require.False(t, safetyIsAllowed(t, cli, safetyMsgSend))
+	safetyTx(t, cli, operatorAddr, safetyTrip(operatorAddr, safetyMsgSend))
+	require.Equal(t, []string{safetyMsgSend}, safetyDisabledList(t))
+	require.False(t, safetyIsAllowed(t, safetyMsgSend))
 
 	out, _ := cli.WithRunErrorsIgnored().RunOnly("tx", "bank", "send", "node0", recipientAddr, "100stake", safetyFees)
 	upgradeRequireSafetyRejected(t, out, safetyMsgSend+" by "+safetyMsgSend)
@@ -106,22 +103,21 @@ func safetyAfterUpgrade(t *testing.T, cli *systest.CLIWrapper, govAddr string) {
 	// operator scope to *
 	safetyRequireCommittedOK(t, cli.Run("tx", "distribution", "fund-community-pool", "100stake", "--from", "node0"))
 	newParams = fmt.Sprintf(`{"authority":%q,"operator":%q,"scope":["*"]}`, govAddr, operatorAddr)
-	safetySubmitAndPassProposal(t, cli,
-		"tx", "safety", "update-params-proposal", newParams,
-		"--title", "widen safety scope", "--summary", "grant * scope",
-		"--deposit", "100000000stake", "--from", "node0")
-	params = cli.CustomQuery("q", "safety", "params")
+	safetySubmitAndPassProposal(t, cli, "tx", "gov", "submit-proposal",
+		safetyProposalFile(t, safetyUpdateParams(govAddr, newParams), "widen safety scope", "grant * scope"),
+		"--from", "node0")
+	params = safetyParams(t)
 	require.Equal(t, []string{"*"}, safetyStrings(gjson.Get(params, "params.scope")), params)
 
 	// the operator resets MsgSend and the send goes through
-	safetyRequireCommittedOK(t, cli.Run("tx", "safety", "reset", safetyMsgSend, "--from", operatorAddr))
-	require.Empty(t, safetyDisabledList(t, cli))
-	require.True(t, safetyIsAllowed(t, cli, safetyMsgSend))
+	safetyTx(t, cli, operatorAddr, safetyReset(operatorAddr, safetyMsgSend))
+	require.Empty(t, safetyDisabledList(t))
+	require.True(t, safetyIsAllowed(t, safetyMsgSend))
 	safetyRequireCommittedOK(t, cli.Run("tx", "bank", "send", "node0", recipientAddr, "100stake"))
 	require.Equal(t, int64(100), cli.QueryBalance(recipientAddr, "stake"))
 
 	// the operator trips *, which now blocks the community pool fund too
-	safetyRequireCommittedOK(t, cli.Run("tx", "safety", "trip", "*", "--from", operatorAddr))
+	safetyTx(t, cli, operatorAddr, safetyTrip(operatorAddr, "*"))
 	out, _ = cli.WithRunErrorsIgnored().RunOnly("tx", "distribution", "fund-community-pool", "100stake", "--from", "node0", safetyFees)
 	upgradeRequireSafetyRejected(t, out, "/cosmos.distribution.v1beta1.MsgFundCommunityPool by *")
 
@@ -129,29 +125,15 @@ func safetyAfterUpgrade(t *testing.T, cli *systest.CLIWrapper, govAddr string) {
 	systest.Sut.StopChain()
 	systest.Sut.StartChain(t)
 	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
-	require.Equal(t, []string{"*"}, safetyDisabledList(t, cli))
+	require.Equal(t, []string{"*"}, safetyDisabledList(t))
 	out, _ = cli.WithRunErrorsIgnored().RunOnly("tx", "bank", "send", "node0", recipientAddr, "100stake", safetyFees)
 	upgradeRequireSafetyRejected(t, out, safetyMsgSend+" by *")
 
 	// gov submits, votes on and executes a reset of * while * is tripped
-	proposal := fmt.Sprintf(`{
- "messages": [
-  {
-   "@type": "/cosmos.safety.v1.MsgReset",
-   "sender": %q,
-   "patterns": ["*"]
-  }
- ],
- "metadata": "ipfs://CID",
- "deposit": "100000000stake",
- "title": "reset safety",
- "summary": "clear the * trip"
-}`, govAddr)
-	proposalFile := filepath.Join(t.TempDir(), "proposal.json")
-	require.NoError(t, os.WriteFile(proposalFile, []byte(proposal), 0o600))
-	safetySubmitAndPassProposal(t, cli, "tx", "gov", "submit-proposal", proposalFile, "--from", "node0")
+	safetySubmitAndPassProposal(t, cli, "tx", "gov", "submit-proposal",
+		safetyProposalFile(t, safetyReset(govAddr, "*"), "reset safety", "clear the * trip"), "--from", "node0")
 
-	require.Empty(t, safetyDisabledList(t, cli))
+	require.Empty(t, safetyDisabledList(t))
 	safetyRequireCommittedOK(t, cli.Run("tx", "bank", "send", "node0", recipientAddr, "100stake"))
 	require.Equal(t, int64(200), cli.QueryBalance(recipientAddr, "stake"))
 	safetyRequireCommittedOK(t, cli.Run("tx", "distribution", "fund-community-pool", "100stake", "--from", "node0"))

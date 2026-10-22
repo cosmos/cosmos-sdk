@@ -370,6 +370,22 @@ app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
 `SetParams` validates the params first. The operator can trip from the
 upgrade block on.
 
+#### From contrib/x/circuit
+
+In the same upgrade, remove the circuit module, its store key and its keeper,
+and pass the safety keeper to `SetCircuitBreaker` and the ante handler
+options.
+
+* The circuit store leaves the app hash once the binary stops mounting it.
+  `StoreUpgrades.Deleted` deletes nothing from a store key the app does not
+  mount, so the old circuit data stays in the database.
+* `RunMigrations` skips circuit's entry in the module version map, and the
+  upgrade keeper keeps it.
+* The circuit disabled list and permissions do not carry over. The operator
+  trips again anything that must stay blocked.
+
+`TestUpgradeFromCircuit` in `tests/integration/safety` runs this upgrade.
+
 ## Operating
 
 ### Incident runbook

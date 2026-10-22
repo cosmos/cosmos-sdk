@@ -154,19 +154,21 @@ func ExportGenesisFileWithTime(genFile string, appGenesis *types.AppGenesis, gen
 
 x/safety supports manual wiring only. It has no depinject module config, no autocli options and no types in `cosmossdk.io/api`, so a depinject app registers it with `app.RegisterModules` and `app.RegisterStores`. Operators use the generic `tx safety` and `q safety` commands that autocli derives from the module's services; see [Operating](x/safety/README.md#operating).
 
-The circuit breaker only sees msgs that go through the `MsgServiceRouter`, which is now the only way to run an SDK module's msg. See [Running msgs from code](#running-msgs-from-code) and [Direct callers](x/safety/README.md#direct-callers).
+The circuit breaker only sees msgs that go through the `MsgServiceRouter`. See [Running msgs from code](#running-msgs-from-code) and [Direct callers](x/safety/README.md#direct-callers).
 
 Wiring x/safety leaves gas unchanged. The circuit breaker check charges no gas in the router, the ante decorator or `msgservice.Dispatch`, so delivered and simulated gas match a chain with no circuit breaker set, and clients that hard-code gas limits need no change. See [Gas](x/safety/README.md#gas).
 
 ### Running msgs from code
 
-An `sdk.Msg` runs only through the `MsgServiceRouter`. No SDK module exports its msg server any more, so a trip of the circuit breaker stops every msg the SDK runs:
+An `sdk.Msg` should run only through the `MsgServiceRouter`, so a trip of the circuit breaker stops it. This release deprecates the ways to call an SDK module's msg server directly. They still compile, and the next release removes them:
 
-* `NewMsgServerImpl` is unexported in `x/auth`, `x/auth/vesting`, `x/bank`, `x/distribution`, `x/evidence`, `x/feegrant`, `x/gov` (with `NewLegacyMsgServerImpl`), `x/mint`, `x/slashing`, `x/staking`, `x/upgrade` and `contrib/x/circuit`, and `keeper.NewMsgServer` and the `keeper.MsgServer` type are unexported in `enterprise/poa`.
-* The keepers of `x/authz`, `x/consensus`, `contrib/x/crisis`, `contrib/x/nft`, `enterprise/group` and `testutil/x/counter` no longer implement their Msg service: the Msg methods, such as authz `Keeper.Exec` and consensus `Keeper.UpdateParams`, moved to an unexported type. Exported keeper methods for module logic, such as authz `DispatchActions`, `SaveGrant` and `GetAuthorization`, stay.
-* Each keeper package exports `RegisterMsgServer`, which the module's `RegisterServices` calls. `x/auth/vesting` takes the account and bank keepers, and `x/gov` registers both the v1 and the v1beta1 service.
-* `x/staking/testutil.NewHelper` takes the `msgservice.MsgRouter` that runs its msgs, such as `app.MsgServiceRouter()`.
-* `MsgServiceRouter.HybridHandlerByMsgName` is removed. It ran a registered msg handler by name and skipped `ValidateBasic`. Use `msgservice.Dispatch`.
+* `NewMsgServerImpl` in `x/auth`, `x/auth/vesting`, `x/bank`, `x/distribution`, `x/evidence`, `x/feegrant`, `x/gov` (with `NewLegacyMsgServerImpl`), `x/mint`, `x/slashing`, `x/staking`, `x/upgrade` and `contrib/x/circuit`.
+* The Msg methods on the keepers of `x/authz`, `x/consensus`, `contrib/x/crisis`, `contrib/x/nft`, `enterprise/group` and `testutil/x/counter`, such as authz `Keeper.Exec` and consensus `Keeper.UpdateParams`. Exported keeper methods for module logic, such as authz `DispatchActions`, `SaveGrant` and `GetAuthorization`, stay.
+* `MsgServiceRouter.HybridHandlerByMsgName`, which runs a registered msg handler by name and skips `ValidateBasic`.
+
+The msg server types are unexported. Each keeper package exports `RegisterMsgServer`, which the module's `RegisterServices` calls. `x/auth/vesting` takes the account and bank keepers, and `x/gov` registers both the v1 and the v1beta1 service.
+
+Two changes break now: `x/staking/testutil.NewHelper` takes the `msgservice.MsgRouter` that runs its msgs, such as `app.MsgServiceRouter()`, and `enterprise/poa` unexports `keeper.NewMsgServer` and the `keeper.MsgServer` type.
 
 An app or test that registers a module's msg server by hand calls the keeper package's `RegisterMsgServer`:
 
@@ -180,7 +182,7 @@ bankkeeper.RegisterMsgServer(router, bankKeeper)
 authzkeeper.RegisterMsgServer(router, authzKeeper)
 ```
 
-Code outside a module that ran one of its msgs, such as an EVM precompile or another module's keeper, runs it with `msgservice.Dispatch`, which runs the msg through its router handler and returns the typed response:
+Code outside a module that runs one of its msgs, such as an EVM precompile or another module's keeper, runs it with `msgservice.Dispatch`, which runs the msg through its router handler and returns the typed response:
 
 ```go
 // Before
@@ -196,11 +198,11 @@ resp, err := msgservice.Dispatch[*authz.MsgExecResponse](ctx, app.MsgServiceRout
 
 Logic that does not need a msg, such as a send in an upgrade handler, calls the keeper: `app.BankKeeper.SendCoins(ctx, from, to, amt)`. Upgrade handlers call keepers rather than `Dispatch`, so a trip cannot halt an upgrade.
 
-Tests in a module's `keeper_test` package reach the unexported constructor through an `export_test.go` in the `keeper` package, `var NewMsgServerImpl = newMsgServerImpl`, as the in-repo modules do. A module outside the SDK follows the same pattern: keep the msg server type and constructor unexported and export only `RegisterMsgServer`.
+Once the deprecated constructors are gone, tests in a module's `keeper_test` package reach the unexported constructor through an `export_test.go` in the `keeper` package: `var NewMsgServerImpl = newMsgServerImpl`. A module outside the SDK follows the same pattern: keep the msg server type and constructor unexported and export only `RegisterMsgServer`.
 
-`x/auth/vesting` has no keeper method that creates a vesting account. A test that called `vesting.NewMsgServerImpl` either registers vesting in its router and runs `MsgCreateVestingAccount` with `Dispatch`, or builds the account with `AccountKeeper.NewAccount` and `SetAccount` and funds it.
+`x/auth/vesting` has no keeper method that creates a vesting account. A test that calls `vesting.NewMsgServerImpl` either registers vesting in its router and runs `MsgCreateVestingAccount` with `Dispatch`, or builds the account with `AccountKeeper.NewAccount` and `SetAccount` and funds it.
 
-Moving cosmos/evm, ibc-go and wasmd to this change took:
+Moving cosmos/evm, ibc-go and wasmd off the deprecated calls took:
 
 * cosmos/evm: delete the deprecated `erc20.NewMsgServerImpl` wrapper around the bank msg server, pass `app.MsgServiceRouter()` to `teststaking.NewHelper`, and move 2 test calls (a staking `BeginRedelegate` and a consensus `UpdateParams`) to `Dispatch`. The precompiles already used `Dispatch` and needed no change.
 * ibc-go: nothing. No ibc-go code called an SDK module's msg server.

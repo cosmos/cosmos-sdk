@@ -218,12 +218,13 @@ at most 256 bytes.
 
 ### Direct callers
 
-The router checks only the msgs it routes, so the SDK makes the router the
-one way to run a msg. No SDK module exports its msg server: the msg server
-type and its constructor are unexported, and the keeper package exports only
-`RegisterMsgServer`, which the module's `RegisterServices` calls. Code
-outside the module that owns a msg, such as an EVM precompile or another
-module's keeper, runs the msg with `msgservice.Dispatch`:
+The router checks only the msgs it routes. The SDK msg server types are
+unexported, and each keeper package exports `RegisterMsgServer`, which the
+module's `RegisterServices` calls. The exported constructors and keeper Msg methods that still reach a
+msg server, such as `bankkeeper.NewMsgServerImpl` and authz `Keeper.Exec`,
+are deprecated, skip the check, and go in the next release. Code outside the
+module that owns a msg, such as an EVM precompile or another module's
+keeper, runs the msg with `msgservice.Dispatch`:
 
 ```go
 resp, err := msgservice.Dispatch[*banktypes.MsgSendResponse](ctx, app.MsgServiceRouter(), msg)
@@ -626,7 +627,8 @@ the pattern.
 
 The router check only sees msgs that pass through the `MsgServiceRouter`. Code
 that calls a keeper directly skips a selective trip, and so does code that
-calls the exported msg server of a module outside the SDK; see
+calls a deprecated SDK msg server constructor or keeper Msg method, or the
+exported msg server of a module outside the SDK; see
 [Direct callers](#direct-callers). Known paths:
 
 * cosmos/evm precompile methods that call SDK keepers, such as distribution

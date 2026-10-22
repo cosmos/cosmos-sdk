@@ -425,8 +425,49 @@ see [EVM chains](#evm-chains).
 
 ## Operating
 
-x/safety has no module CLI. To trip, put a `MsgTrip` in an unsigned tx, sign
-it with the operator key, and broadcast it. Save as `trip.json`:
+x/safety defines no CLI code. `simd`, and any app whose root command builds
+autocli from `runtimeservices.ExtractAutoCLIOptions`, derives generic commands
+from the module's Msg and Query services. `--from` fills the signer field.
+
+Trip and reset with the operator key:
+
+```shell
+simd tx safety trip --patterns '/cosmos.bank.v1beta1.MsgSend,/cosmos.staking.*' \
+  --from operator --chain-id <chain-id> --node <rpc> --fees 2000stake
+simd tx safety reset --patterns /cosmos.bank.v1beta1.MsgSend --patterns '/cosmos.staking.*' \
+  --from operator --chain-id <chain-id> --node <rpc> --fees 2000stake
+```
+
+`--patterns` takes a comma-separated list, repeats, or both. Quote `*` and
+prefix patterns so the shell does not expand them. The authority resets with
+the same `reset` command from its own key. An authority key that signs directly
+updates params with:
+
+```shell
+simd tx safety update-params \
+  --params '{"authority":"cosmos1...","operator":"cosmos1...","scope":["/cosmos.bank.*"]}' \
+  --from authority --chain-id <chain-id> --node <rpc> --fees 2000stake
+```
+
+A gov authority sends `MsgUpdateParams` or `MsgReset` in a proposal file for
+`simd tx gov submit-proposal`.
+
+Query:
+
+```shell
+simd q safety params --node <rpc>
+simd q safety disabled-list --node <rpc>
+simd q safety is-allowed --msg-type-url /cosmos.bank.v1beta1.MsgSend --node <rpc>
+```
+
+`is-allowed` omits `allowed` when it is false, since the output skips default
+values.
+
+### Without the generic commands
+
+An app binary that does not build autocli this way still registers the msg
+types, so the operator signs tx JSON with it and queries the REST gateway. Save
+as `trip.json`:
 
 ```json
 {
@@ -451,21 +492,8 @@ simd tx sign trip.json --from operator --chain-id <chain-id> --node <rpc> > trip
 simd tx broadcast trip.signed.json --node <rpc>
 ```
 
-To reset, use the same steps with this msg, signed by the operator or the
-authority:
-
-```json
-{
-  "@type": "/cosmos.safety.v1.MsgReset",
-  "sender": "cosmos1...",
-  "patterns": ["/cosmos.bank.v1beta1.MsgSend"]
-}
-```
-
-Give each pattern its own array entry. A gov authority sends `MsgUpdateParams`
-or `MsgReset` in a proposal file for `simd tx gov submit-proposal`.
-
-Query the module through the REST gateway:
+A reset uses the same steps with `"@type": "/cosmos.safety.v1.MsgReset"` and
+`"sender"` in place of `"operator"`. Give each pattern its own array entry.
 
 ```shell
 curl <api>/cosmos/safety/v1/params
@@ -671,5 +699,5 @@ is the consensus override.
 | Unregistered errors | Registered errors: codespace `safety`, or the shared SDK `ErrUnauthorized` and `ErrInvalidAddress` |
 | Unpaginated disabled list query | Paginated |
 | Ante decorator checked top-level msgs only | Recurses into nested msgs |
-| CLI examples quoted several type URLs as one argument | No module CLI; operators sign tx JSON with one pattern per array entry |
+| CLI examples quoted several type URLs as one argument | Generic `--patterns` flag takes a comma-separated list or repeats |
 | Exact type URLs only | Exact, prefix and `*` patterns |

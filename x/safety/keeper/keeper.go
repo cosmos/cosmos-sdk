@@ -9,11 +9,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/safety/types"
 )
 
-var _ sdk.CircuitBreaker = Keeper{}
+var _ baseapp.CircuitBreaker = Keeper{}
 
 // Keeper defines the x/safety keeper.
 type Keeper struct {
@@ -70,7 +71,7 @@ func (k Keeper) AddressCodec() address.Codec { return k.addressCodec }
 func (k Keeper) DefaultAuthority() string { return k.defaultAuthority }
 
 // IsAllowed reports whether a msg type URL may execute. It implements
-// sdk.CircuitBreaker. Protected msg types are always allowed. Otherwise
+// baseapp.CircuitBreaker. Protected msg types are always allowed. Otherwise
 // the msg is blocked when the disabled list contains its exact type URL, or,
 // unless the msg is a wrapper such as authz MsgExec, "*" or any of its
 // segment-boundary prefix patterns. The check is a bounded number of point

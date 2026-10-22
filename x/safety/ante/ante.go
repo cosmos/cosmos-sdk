@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/safety/types"
 )
@@ -43,12 +44,12 @@ type msgsWithGetMsgs interface {
 // like any failed tx. A proposal that reaches FinalizeBlock after a trip is
 // created, and the router blocks its disabled msg when the proposal executes.
 type SafetyDecorator struct {
-	breaker sdk.CircuitBreaker
+	breaker baseapp.CircuitBreaker
 }
 
 // NewSafetyDecorator returns a SafetyDecorator backed by the given breaker,
 // normally the x/safety keeper.
-func NewSafetyDecorator(breaker sdk.CircuitBreaker) SafetyDecorator {
+func NewSafetyDecorator(breaker baseapp.CircuitBreaker) SafetyDecorator {
 	return SafetyDecorator{breaker: breaker}
 }
 

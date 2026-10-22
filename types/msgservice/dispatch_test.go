@@ -29,12 +29,12 @@ func (b blockBreaker) IsAllowed(_ context.Context, typeURL string) (bool, error)
 	return true, nil
 }
 
-func newRouter(t *testing.T, cb sdk.CircuitBreaker) *baseapp.MsgServiceRouter {
+func newRouter(t *testing.T, cb baseapp.CircuitBreaker) *baseapp.MsgServiceRouter {
 	t.Helper()
 	return newRouterWithServer(t, cb, testdata.MsgServerImpl{})
 }
 
-func newRouterWithServer(t *testing.T, cb sdk.CircuitBreaker, srv testdata.MsgServer) *baseapp.MsgServiceRouter {
+func newRouterWithServer(t *testing.T, cb baseapp.CircuitBreaker, srv testdata.MsgServer) *baseapp.MsgServiceRouter {
 	t.Helper()
 	registry := codectypes.NewInterfaceRegistry()
 	testdata.RegisterInterfaces(registry)

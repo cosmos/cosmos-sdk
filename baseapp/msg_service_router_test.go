@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -221,7 +220,7 @@ func (b *typeBreaker) IsAllowed(_ context.Context, typeURL string) (bool, error)
 	return !b.blocked[typeURL], nil
 }
 
-func newHybridTestApp(t *testing.T, cb sdk.CircuitBreaker) *baseapp.BaseApp {
+func newHybridTestApp(t *testing.T, cb baseapp.CircuitBreaker) *baseapp.BaseApp {
 	t.Helper()
 	var (
 		appBuilder *runtime.AppBuilder

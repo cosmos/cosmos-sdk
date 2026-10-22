@@ -3,6 +3,7 @@ package simapp
 import (
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -16,7 +17,7 @@ type HandlerOptions struct {
 
 	// SafetyKeeper rejects txs that contain disabled msgs before fees are
 	// deducted.
-	SafetyKeeper sdk.CircuitBreaker
+	SafetyKeeper baseapp.CircuitBreaker
 }
 
 // NewAnteHandler returns the default SDK AnteHandler with the x/safety

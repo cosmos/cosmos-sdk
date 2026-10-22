@@ -893,7 +893,7 @@ func (s *KeeperTestSuite) TestNewKeeperRejectsInvalidDefaultAuthority() {
 }
 
 func (s *KeeperTestSuite) TestKeeperIsCircuitBreaker() {
-	var cb sdk.CircuitBreaker = s.keeper
+	var cb baseapp.CircuitBreaker = s.keeper
 	s.state(s.operator, []string{types.Wildcard}, uSend)
 	ok, err := cb.IsAllowed(s.ctx, uSend)
 	s.Require().ErrorIs(err, types.ErrMsgDisabled, "IsAllowed returns the registered error the router returns for a blocked msg")

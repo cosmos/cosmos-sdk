@@ -136,7 +136,7 @@ To cut off a compromised grantee that trips with the operator's grant:
 
 ### Enforcement
 
-`Keeper.IsAllowed(ctx, typeURL)` implements `sdk.CircuitBreaker`:
+`Keeper.IsAllowed(ctx, typeURL)` implements `baseapp.CircuitBreaker`:
 
 1. A protected type URL is allowed.
 2. The type URL is blocked if the disabled list contains the exact type URL.

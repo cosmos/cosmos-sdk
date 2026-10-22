@@ -6,16 +6,12 @@ sidebar_position: 1
 
 ## Abstract
 
-`x/safety` lets a chain stop specific msg types from executing, fast, without a
-chain halt or a software upgrade. One operator address can disable ("trip") msgs
-by exact type URL or by proto package prefix in a single tx, and the authority
-(governance by default) or the operator can re-enable ("reset") them.
-
-The module replaces `contrib/x/circuit`. It keeps what circuit got right:
-collections state and the BaseApp `CircuitBreaker` hook. It replaces the
-permission levels table with a single operator,
-moves the authority into params, and adds a protected set so that a trip can
-never block its own reset.
+`x/safety` stops chosen msg types from executing without a chain halt or a
+software upgrade. One operator address disables ("trips") msgs by exact type
+URL, proto package prefix or `*` in a single tx, and the authority (governance
+by default) or the operator re-enables ("resets") them. It replaces
+`contrib/x/circuit`. The design and its alternatives are in
+[ADR 077](../../docs/architecture/adr-077-x-safety.md).
 
 ## Contents
 
@@ -34,6 +30,9 @@ never block its own reset.
 * [Genesis](#genesis)
 * [Wiring](#wiring)
 * [Operating](#operating)
+    * [Incident runbook](#incident-runbook)
+    * [Before an incident](#before-an-incident)
+    * [Commands](#commands)
 * [IBC, EVM and wasm](#ibc-evm-and-wasm)
 * [Known gaps](#known-gaps)
 * [Changes from x/circuit](#changes-from-xcircuit)
@@ -49,23 +48,17 @@ never block its own reset.
 
 The authority check uses `sdk.ValidateAuthority`. Without the consensus
 `AuthorityParams` override, `params.authority` is the authority, and the
-current authority can hand the role to a new address with `MsgUpdateParams`.
+current authority hands the role to a new address with `MsgUpdateParams`.
 When a chain sets the override, the override account is the authority and
-`params.authority` has no effect, so only a change of the override moves the
-role.
+`params.authority` has no effect.
 
-The authority cannot trip. A chain that wants governance to trip directly sets
-the operator to the same address as the authority.
+The authority cannot trip. To let governance trip directly, set the operator
+to the authority's address.
 
-Either role may be an account that acts through an authz grantee or a group
-policy. Authz `MsgExec` and the group proposal msgs are in the
-[wrapper set](#wrapper-set), which a `*` or prefix trip does not block, so
-those paths reach `MsgReset` and votes during an incident. Exact trips of the
-wrappers do block them; see [Known gaps](#known-gaps).
+Either role may act through an authz grantee or a group policy; see
+[Wrapper set](#wrapper-set) and [Exact wrapper trips](#exact-wrapper-trips).
 
 ### Patterns
-
-A pattern takes one of three forms. Nothing else is valid.
 
 | Form | Example | Matches |
 | --- | --- | --- |
@@ -73,8 +66,8 @@ A pattern takes one of three forms. Nothing else is valid.
 | prefix | `/cosmos.bank.*` | every msg whose type URL starts with `/cosmos.bank.` |
 | exact | `/cosmos.bank.v1beta1.MsgSend` | that msg type URL |
 
-A prefix pattern is a leading `/`, one or more dot-separated proto identifiers,
-then `.*`. Prefixes match at segment boundaries: `/cosmos.bank.*` covers
+A prefix is a leading `/`, one or more dot-separated proto identifiers, then
+`.*`. It matches at segment boundaries: `/cosmos.bank.*` covers
 `/cosmos.bank.v1beta1.MsgSend` but not `/cosmos.banking.v1.MsgX`. A pattern is
 at most 256 bytes.
 
@@ -83,23 +76,19 @@ is a prefix `X.*` and `P` starts with `X.`. Only `*` covers `*`.
 
 ### Protected set
 
-These msg type URLs are hardcoded and always allowed, whatever the disabled
-list contains:
+Always allowed, whatever the disabled list contains:
 
 * every type URL under `/cosmos.safety.`
 * every type URL under `/cosmos.gov.`
 * every type URL under `/cosmos.upgrade.`
 * `/cosmos.consensus.v1.MsgUpdateParams`
 
-`MsgReset`, `MsgUpdateParams`, governance and upgrades always execute when
-signed directly or run by x/gov, so no trip and no genesis file can lock gov,
-a directly signing authority, or the operator out of recovery. A trip of `*`
-still leaves this set running.
+The set is hardcoded. A `*` trip leaves it running.
 
 ### Wrapper set
 
-These msg type URLs are hardcoded. Each one only dispatches other msgs through
-the router, which checks every msg it dispatches:
+These msgs only dispatch other msgs through the router, which checks each
+dispatched msg:
 
 * `/cosmos.authz.v1beta1.MsgExec`
 * `/cosmos.group.v1.MsgSubmitProposal`
@@ -107,31 +96,24 @@ the router, which checks every msg it dispatches:
 * `/cosmos.group.v1.MsgExec`
 
 Only an exact disabled entry for its own URL blocks a wrapper. `*` and prefix
-entries such as `/cosmos.authz.*` or `/cosmos.group.*` do not, in `IsAllowed`,
-in the ante decorator, or when `MsgTrip` checks what a pattern blocks. Under
-`*`, a wrapper still runs, and the router admits the msgs it dispatches from
-the protected set and the other wrappers and refuses the rest. An authority,
-operator or validator that acts through an authz grantee or a group policy
-still sends `MsgReset`, `MsgUpdateParams` and gov votes. A wrapper dispatched
-this way still writes state: under `*`, authz `MsgExec` runs a granted group
-`MsgVote`, and the group counts the vote.
+entries such as `/cosmos.authz.*` do not, in `IsAllowed`, in the ante
+decorator, or when `MsgTrip` checks what a pattern blocks. Under `*` a wrapper
+runs, and the router admits the msgs it dispatches from the protected set and
+the other wrappers and refuses the rest. A wrapper dispatched this way still
+writes state: under `*`, authz `MsgExec` runs a granted group `MsgVote`, and
+the group counts the vote.
 
-Wrappers are not protected. The operator trips one by its exact URL when its
-scope covers that URL; a scope of `*` or `/cosmos.authz.*` covers
-`/cosmos.authz.v1beta1.MsgExec`. The exact trip halts that wrapper's handler,
-and `MsgTrip` accepts it while `*` or a prefix entry stands.
+The operator trips a wrapper by its exact URL when its scope covers that URL;
+`*` and `/cosmos.authz.*` both cover `/cosmos.authz.v1beta1.MsgExec`.
 
-The group wrappers do not each stand alone. Group `MsgSubmitProposal` and
-`MsgVote` with `exec` set to `EXEC_TRY` call the group keeper's vote and exec
-directly, without a group `MsgVote` or `MsgExec` reaching the router. To halt
-group proposal execution, trip all three group wrappers. The router still
-checks every msg in a proposal, whichever path executes it.
+Group `MsgSubmitProposal` and `MsgVote` with `exec` set to `EXEC_TRY` run the
+group's vote and exec without a group `MsgVote` or `MsgExec` reaching the
+router. To halt group proposal execution, trip all three group wrappers.
 
 To cut off a compromised grantee that trips with the operator's grant:
 
 1. Trip `/cosmos.authz.v1beta1.MsgExec`.
-2. Reset the grantee's trips. The granter's `MsgRevoke` is an ordinary authz
-   msg, so `*` blocks it.
+2. Reset the grantee's trips. `*` blocks the granter's `MsgRevoke`.
 3. Revoke the grant.
 4. Reset `/cosmos.authz.v1beta1.MsgExec`.
 
@@ -140,125 +122,94 @@ To cut off a compromised grantee that trips with the operator's grant:
 `Keeper.IsAllowed(ctx, typeURL)` implements `baseapp.CircuitBreaker`:
 
 1. A protected type URL is allowed.
-2. The type URL is blocked if the disabled list contains the exact type URL.
+2. The type URL is blocked if the disabled list contains it exactly.
 3. A type URL in the wrapper set is allowed.
 4. The type URL is blocked if the disabled list contains `*` or any
    segment-boundary prefix of it. For `/cosmos.bank.v1beta1.MsgSend` the
    prefixes are `/cosmos.*`, `/cosmos.bank.*` and `/cosmos.bank.v1beta1.*`.
 5. Otherwise it is allowed.
 
-A blocked msg returns `false` with `ErrMsgDisabled`, naming the disabled entry
-that blocks it, and logs `msg refused by disabled pattern` at debug level with
-`type_url` and `pattern`. Run the node with `--log_level debug` to see
-refusals; the ante check logs them too. The router passes that error on unchanged, so a msg blocked at
-execution fails with code 10 in the `safety` codespace, the same error the ante
-decorator returns.
+A blocked msg fails with `ErrMsgDisabled`, code 10 in the `safety` codespace,
+naming the disabled entry that blocks it. The keeper logs
+`msg refused by disabled pattern` at debug level with `type_url` and
+`pattern`. Per check it runs at most two point lookups plus one per package
+segment, and none for a protected type URL.
 
-A check of a protected type URL runs no lookup. Any other check runs at most
-two point lookups plus one per package segment, and one for a wrapper; it
-stops at the first disabled entry that blocks the msg, and never walks the
-disabled list.
+The check runs in two places.
 
-The check runs in two places:
+**Router.** The `MsgServiceRouter` checks every msg it routes, in every exec
+mode: tx msgs, msgs that authz `MsgExec`, gov and group proposals dispatch,
+and msgs run with `msgservice.Dispatch`. The router reads the breaker on each
+call, so `SetCircuitBreaker` can run before or after `RegisterServices`.
 
-* The `MsgServiceRouter` calls it for every msg it routes, including msgs that
-  authz `MsgExec`, gov proposals and other modules dispatch through the router,
-  and msgs run with `msgservice.Dispatch`. This is the authoritative gate.
-* The optional `ante.CircuitBreakerDecorator` from `x/auth/ante`, which
-  `ante.HandlerOptions.CircuitBreaker` adds, calls it for every top-level msg
-  and, recursively, every msg returned by `GetMessages() ([]sdk.Msg, error)`
-  (authz `MsgExec`) or `GetMsgs() ([]sdk.Msg, error)` (gov v1 and group
-  `MsgSubmitProposal`), up to `MaxNestedMsgDepth` levels. It opens protected
-  wrappers such as gov `MsgSubmitProposal` too, so a proposal containing a
-  tripped msg fails `CheckTx`, and it opens a wrapper that `*` lets through, so
-  authz `MsgExec` wrapping a tripped msg fails too. Placed before fee deduction,
-  it turns away tripped txs in `CheckTx`, so they never enter the mempool and
-  never pay fees. A tx turned away in `CheckTx` keeps its sequence, so its
-  signed bytes stay valid: anyone with a copy, such as the RPC node that
-  received it, can broadcast it after the reset, and it executes. To cancel it,
-  sign another tx at the same sequence. A tx signed with a timeout, such as
-  `--timeout-duration`, expires on its own. A tx that entered the mempool
-  before a trip meets the decorator again: CometBFT rechecks the mempool after
-  every commit by default, and `ReCheckTx` evicts the tx, and with an app-side
-  mempool `PrepareProposal` removes it. Either way it pays no fee and keeps its
-  sequence, so, as with a tx turned away in `CheckTx`, its signed bytes execute
-  after the reset unless the sender signs another tx at the same sequence or
-  the tx times out. In `FinalizeBlock` the decorator passes every tx on to the
-  router. A tx that reaches `FinalizeBlock` after a trip, such as one later in
-  the same block as the trip or any tx on a node with recheck off, fails at the
-  router, pays its fee and uses its sequence, so its signed bytes cannot
-  execute again once the trip is reset. That holds with the default
-  `NoOpMempool`, where `ProcessProposal` accepts every block. With an
-  app-side mempool, `ProcessProposal` runs the ante chain on every tx in the
-  proposal, and the SDK's default handler rejects the whole proposal when one
-  tx fails, so validators reject a block that contains a tripped msg. The
-  SDK's default `PrepareProposal` runs the same decorator and leaves tripped
-  txs out; a proposer whose `PrepareProposal` skips the ante chain can have
-  its block rejected. Gov or group still creates a proposal
-  submitted in such a tx, because the router admits the wrapper and checks the
-  msgs only when the proposal executes; while the trip stands, the router
-  blocks the tripped msg there and the proposal fails. The
-  decorator checks every msg in a tx against the disabled list as it stands
-  before the tx runs, so a tx that resets a pattern and then sends a msg the
-  pattern blocked fails in `CheckTx`. Send that msg in a later tx.
+**Ante decorator.** `ante.CircuitBreakerDecorator` in `x/auth/ante`, which
+`ante.HandlerOptions.CircuitBreaker` adds:
+
+* checks every top-level msg and, recursively, every msg returned by
+  `GetMessages() ([]sdk.Msg, error)` (authz `MsgExec`) or
+  `GetMsgs() ([]sdk.Msg, error)` (gov v1 and group `MsgSubmitProposal`), up to
+  `MaxNestedMsgDepth` levels, including inside protected and wrapper msgs.
+* runs in `CheckTx`, `ReCheckTx` and simulation, and passes every tx through
+  in `FinalizeBlock`.
+* runs in `PrepareProposal` and `ProcessProposal` only with an app-side
+  mempool. The SDK default `PrepareProposal` then leaves tripped txs out, and
+  the default `ProcessProposal` rejects a block that contains one. With the
+  default `NoOpMempool` neither handler runs the ante chain.
+* checks against the disabled list as it stands before the tx, so a tx that
+  resets a pattern and then sends a msg the pattern blocked fails. Send that
+  msg in a later tx.
+
+What happens to a tx that contains a tripped msg:
+
+| Where | Result | Fee | Sequence |
+| --- | --- | --- | --- |
+| `CheckTx` | refused, never enters the mempool | not paid | kept |
+| mempool at trip time | evicted by `ReCheckTx` (on by default in CometBFT), or left out by an app-side mempool's `PrepareProposal` | not paid | kept |
+| `FinalizeBlock`, such as a tx later in the trip's block or on a node with recheck off | fails at the router | paid | used |
+
+A tx that keeps its sequence executes if anyone broadcasts its signed bytes
+after the reset. To cancel it, sign another tx at the same sequence. A tx
+signed with `--timeout-duration` expires on its own.
+
+A gov or group proposal that contains a tripped msg fails `CheckTx`. One that
+reaches `FinalizeBlock` is created, because the router admits the protected
+or wrapper msg, and fails at execution while the trip stands.
 
 ### Gas
 
 The check charges no gas. The keeper runs its lookups on an infinite gas
-meter that replaces the context's meter for the check only, so neither the tx
-nor the block gas meter pays for them. A msg uses the same gas with x/safety
-wired as with no circuit breaker set, both in `FinalizeBlock` and in
-simulation, so `--gas auto` estimates do not rise. The same holds for
-`msgservice.Dispatch` and for EVM precompiles that call it.
-
-Charging for the check would make every msg pay for the breaker whether or
-not anything is tripped. It would also inflate simulated gas: the ante
-decorator checks in `CheckTx` and simulation but not in `FinalizeBlock`, so
-users would pay fees for gas that never runs. The work stays bounded without
-gas: per msg, at most two lookups plus one per package segment, on a type URL
-that the interface registry knows or, through the `IsAllowed` query, one of
-at most 256 bytes.
+meter, so a msg uses the same gas with x/safety wired as with no circuit
+breaker set, in `FinalizeBlock` and in simulation. The same goes for
+`msgservice.Dispatch` and EVM precompiles that call it.
 
 ### Direct callers
 
 The router checks only the msgs it routes. A direct call to a msg server
 method, such as `bankkeeper.NewMsgServerImpl(k).Send(ctx, msg)`, skips the
-check, so a trip does not stop it. Code outside the module that owns a msg,
-such as an EVM precompile or another module's keeper, runs the msg with
-`msgservice.Dispatch` instead:
+check. Code outside the module that owns a msg, such as an EVM precompile or
+another module's keeper, runs the msg with `msgservice.Dispatch`:
 
 ```go
 resp, err := msgservice.Dispatch[*banktypes.MsgSendResponse](ctx, app.MsgServiceRouter(), msg)
 ```
 
-`Dispatch` calls the router handler for the msg on a branch of `ctx`: it runs
-`ValidateBasic`, the circuit breaker check and the msg server, and returns the
-typed response. It uses the same gas as a routed msg, which is the same gas
-as with no circuit breaker set, and a tripped msg fails
-with `ErrMsgDisabled`. The router checks on every call whatever the exec mode,
-so the check applies to `Dispatch` from a tx in `CheckTx`, simulation or
-`FinalizeBlock`, from `PreBlock`, `BeginBlock` and `EndBlock`, from vote
-extensions, and from query contexts such as the one `eth_call` runs in.
+`Dispatch` runs the router handler on a branch of `ctx`: `ValidateBasic`, the
+circuit breaker check and the msg server. It writes the branch and emits the
+msg server's events only on success, and returns the typed response.
 
-`Dispatch` writes the branch and emits the msg server's events on `ctx` only
-when the msg succeeds, so a failed `Dispatch` leaves `ctx` unchanged. This
-needs a multistore whose `CacheMultiStore` returns a branch. The cosmos/evm
-snapshot multistore returns itself, so fix that store before a precompile
-switches to `Dispatch`, or a reverted EVM call keeps the msg's writes.
-`Dispatch` does not emit the `message` event (`action`, `sender`, `module`) or
-the `msg_index` attribute that a msg in a tx gets, so an indexer keyed on
-`message.action` does not see it.
+* The multistore's `CacheMultiStore` must return a branch. The cosmos/evm
+  snapshot multistore returns itself; fix it before a precompile switches to
+  `Dispatch`, or a reverted EVM call keeps the msg's writes.
+* It emits no `message` event (`action`, `sender`, `module`) and no
+  `msg_index` attribute.
+* It does not check signers; the caller authorizes them.
+* The msg must be the gogoproto type, not the pulsar type from
+  `cosmossdk.io/api`. A msg with no handler fails with `ErrUnknownRequest`,
+  and a nil router returns an error.
 
-`Dispatch` does not check the msg's signers: the caller authorizes them. The
-msg must be the gogoproto type, not the pulsar type from `cosmossdk.io/api`.
-A msg with no registered handler fails with `ErrUnknownRequest`, and a nil
-router returns an error.
-
-Module logic that another module needs, such as authz `DispatchActions` or a
-bank keeper send, is a keeper method, and a trip does not cover it. Upgrade
-handlers call keepers, not `Dispatch`, so a trip cannot halt an upgrade. A
-module's calls to its own handlers, such as group running `Exec` after a vote
-or the gov v1beta1 server wrapping the v1 server, stay internal to the module.
+Keeper methods, such as authz `DispatchActions` or a bank keeper send, skip
+the check. Upgrade handlers call keepers, not `Dispatch`, so a trip cannot
+halt an upgrade.
 
 ## State
 
@@ -269,58 +220,45 @@ or the gov v1beta1 server wrapping the v1 server, stay internal to the module.
 
 ## Messages
 
-Every msg runs stateless checks first: addresses decode with the chain address
-codec, pattern lists are non-empty, patterns are well-formed and unique. Trip
-and reset are all-or-nothing: if any pattern fails, the msg changes nothing.
-
-### MsgUpdateParams
-
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/safety/v1/tx.proto
 ```
 
-Replaces the params. The signer must pass `sdk.ValidateAuthority` against the
-current `params.authority`. The new params need a valid authority, an empty or
-valid operator, and well-formed, unique scope patterns. Both addresses must be
-in canonical form (the string the address codec encodes), because
-`sdk.ValidateAuthority` compares strings. The msg never changes the disabled
-list; narrowing the scope leaves existing disabled entries in place, and the
-authority must reset them explicitly.
+Every msg runs stateless checks first: addresses decode with the chain address
+codec, pattern lists are non-empty, patterns are well-formed and unique. Trip
+and reset are all-or-nothing.
+
+### MsgUpdateParams
+
+Replaces the params. The signer must pass `sdk.ValidateAuthority`. The new
+params need a valid authority, an empty or valid operator, and well-formed,
+unique scope patterns. Both addresses must be in the canonical form the
+address codec encodes. The msg never changes the disabled list: narrowing the
+scope leaves existing entries in place, and the authority resets them.
 
 ### MsgTrip
 
 Adds patterns to the disabled list. The signer must equal the non-empty
-`params.operator`, in canonical form, so `EventTrip` names the operator exactly
-as params does. Each pattern must:
+`params.operator`, in canonical form. Each pattern must:
 
 * be covered by a scope entry,
-* block at least one msg type URL registered in the `InterfaceRegistry` that
-  is not protected, so typos and no-op trips fail,
+* block at least one registered msg type URL that is not protected,
 * not already be in the disabled list.
 
-A wrapper counts only for its exact URL. `/cosmos.authz.*` is a valid trip
-because it blocks `MsgGrant` and the other authz msgs, and it leaves `MsgExec`
-running.
+A wrapper counts only for its exact URL: `/cosmos.authz.*` is a valid trip
+because it blocks `MsgGrant`, and it leaves `MsgExec` running.
 
-A pattern under a broader disabled entry is accepted, and so is a pattern
-beside a broader one in the same msg. The operator uses this to pin a msg
-before the broad entry is reset: with `*` disabled, it trips
-`/cosmos.bank.v1beta1.MsgSend`, then resets `*`, and `MsgSend` never reopens.
-After the authority narrows the scope below a broad trip, the operator pins
-the msgs it still covers the same way before the authority resets the broad
-entry.
-
-A broad pattern can also be tripped over narrower entries already in the list.
-Resetting it later leaves those entries in place; check `DisabledList` after a
-reset.
+A pattern under or beside a broader entry is accepted. With `*` disabled, the
+operator trips `/cosmos.bank.v1beta1.MsgSend`, then resets `*`, and `MsgSend`
+stays blocked. A broad pattern can also be tripped over narrower entries;
+resetting it later leaves them in place.
 
 ### MsgReset
 
-Removes patterns from the disabled list. If the signer passes the authority
-check it may reset any pattern. Otherwise the signer must be the non-empty
-operator and each pattern must be covered by its scope. Both roles match the
-signer string exactly, as `sdk.ValidateAuthority` does. Each pattern must be in
-the disabled list exactly as given: resetting `/cosmos.bank.*` does not remove
+Removes patterns from the disabled list. A signer that passes the authority
+check may reset any pattern. Otherwise the signer must be the non-empty
+operator and each pattern must be covered by its scope. Each pattern must be
+in the list exactly as given: resetting `/cosmos.bank.*` does not remove
 `/cosmos.bank.v1beta1.MsgSend`.
 
 ## Events
@@ -337,15 +275,13 @@ the disabled list exactly as given: resetting `/cosmos.bank.*` does not remove
 | --- | --- | --- |
 | `Params` | `GET /cosmos/safety/v1/params` | the params |
 | `DisabledList` | `GET /cosmos/safety/v1/disabled_list` | a page of disabled patterns |
-| `IsAllowed` | `GET /cosmos/safety/v1/is_allowed?msg_type_url=...` | whether the type URL may execute and, if not, the disabled entry that blocks it in `blocked_by` |
+| `IsAllowed` | `GET /cosmos/safety/v1/is_allowed?msg_type_url=...` | whether the type URL may execute and, if not, the blocking entry in `blocked_by` |
 | `MatchingMsgs` | `GET /cosmos/safety/v1/matching_msgs?pattern=...` | a page of the registered msg type URLs a trip of the pattern would block, sorted |
 
-`IsAllowed` returns `InvalidArgument` for anything other than an exact msg type
-URL, such as a URL without the leading `/`, a prefix pattern or `*`.
+`IsAllowed` returns `InvalidArgument` for anything but an exact msg type URL.
 
-`MatchingMsgs` answers before a trip: it applies the protected and wrapper
-rules, so it leaves out protected msgs and, for `*` or a prefix, wrappers. It
-ignores the operator scope and the disabled list.
+`MatchingMsgs` is the dry run for a trip. It applies the protected and wrapper
+rules and ignores the operator scope and the disabled list.
 
 ## Genesis
 
@@ -356,19 +292,15 @@ message GenesisState {
 }
 ```
 
-The default genesis sets the authority to the one passed to `NewKeeper`, no
-operator, an empty scope, and an empty disabled list. An operator the authority appoints can trip and reset
-nothing until the authority also grants it scope. `ValidateGenesis` and
-`InitGenesis` check the params and that every disabled pattern is well-formed
-and unique; `InitGenesis` fails on an invalid state. `ExportGenesis` output
-always imports cleanly. Genesis may list a protected type URL; `IsAllowed`
-ignores it.
+The default genesis sets the authority passed to `NewKeeper`, no operator, an
+empty scope and an empty disabled list. `InitGenesis` fails on invalid params
+or a malformed or duplicate pattern. `ExportGenesis` output always imports.
+`IsAllowed` ignores a protected type URL listed in genesis.
 
 ## Wiring
 
-x/safety supports manual wiring only. It has no depinject module config and
-no autocli options, and its proto types are gogoproto only, with no pulsar
-types in `cosmossdk.io/api`.
+x/safety supports manual wiring only: no depinject module config, no autocli
+options, and gogoproto types only, with no pulsar types in `cosmossdk.io/api`.
 
 ```go
 app.SafetyKeeper = safetykeeper.NewKeeper(
@@ -381,21 +313,42 @@ app.SafetyKeeper = safetykeeper.NewKeeper(
 app.SetCircuitBreaker(app.SafetyKeeper)
 ```
 
-The router reads the breaker on every call, so `SetCircuitBreaker` can run
-before or after `ModuleManager.RegisterServices`.
-
 Register `safety.NewAppModule(app.SafetyKeeper)` with the module manager, add
 the store key, and add `safetytypes.ModuleName` to the init and export genesis
-orders, after `genutiltypes.ModuleName` in the init order. A chain that adds
-the module in an upgrade adds `safetytypes.StoreKey` to
-`StoreUpgrades.Added`; `RunMigrations` then runs the default genesis.
+orders.
+
+### Genesis order
+
+Order `safety` after `genutil` in `InitGenesis`. Genutil delivers gentxs
+through the router during `InitChain`. With `safety` first, a genesis entry
+that covers `/cosmos.staking.v1beta1.MsgCreateValidator` blocks every gentx and
+`InitChain` panics.
+
+### Ante handler
+
+Set `CircuitBreaker` in the `x/auth/ante` handler options. `NewAnteHandler`
+puts `ante.CircuitBreakerDecorator` right after `SetUpContextDecorator`, ahead
+of fee deduction:
+
+```go
+anteHandler, err := ante.NewAnteHandler(ante.HandlerOptions{
+	AccountKeeper:  app.AccountKeeper,
+	BankKeeper:     app.BankKeeper,
+	// ...
+	CircuitBreaker: app.SafetyKeeper,
+})
+```
+
+An app that builds its own chain adds
+`ante.NewCircuitBreakerDecorator(app.SafetyKeeper)` after
+`SetUpContextDecorator` and before `DeductFeeDecorator`, in every ante chain it
+has, such as the cosmos/evm chain for Ethereum txs.
 
 ### Upgrade handler
 
-The default genesis has no operator, so until the authority names one, a trip
-needs a gov proposal. To leave no gap, for example when moving off
-`contrib/x/circuit`, set the params in the upgrade handler right after
-`RunMigrations`:
+A chain that adds the module in an upgrade adds `safetytypes.StoreKey` to
+`StoreUpgrades.Added`; `RunMigrations` then runs the default genesis. To name
+an operator in the same upgrade, set the params right after `RunMigrations`:
 
 ```go
 app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
@@ -416,67 +369,66 @@ app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
 `SetParams` validates the params first. The operator can trip from the
 upgrade block on.
 
-### Genesis order
-
-Order `safety` after `genutil` in `InitGenesis`. Genutil delivers gentxs
-through the router during `InitChain`, and the router checks them against the
-disabled list. With `safety` first, a genesis entry that covers
-`/cosmos.staking.v1beta1.MsgCreateValidator`, such as `*` or
-`/cosmos.staking.*`, blocks every gentx and `InitChain` panics. With `safety`
-after `genutil`, gentxs run against an empty disabled list.
-
-### Ante handler
-
-Set `CircuitBreaker` in the `x/auth/ante` handler options. `NewAnteHandler`
-then puts `ante.CircuitBreakerDecorator` right after `SetUpContextDecorator`,
-ahead of fee deduction:
-
-```go
-anteHandler, err := ante.NewAnteHandler(ante.HandlerOptions{
-	AccountKeeper:   app.AccountKeeper,
-	BankKeeper:      app.BankKeeper,
-	// ...
-	CircuitBreaker: app.SafetyKeeper,
-})
-```
-
-An app that builds its own chain adds
-`ante.NewCircuitBreakerDecorator(app.SafetyKeeper)` after
-`SetUpContextDecorator` and before `DeductFeeDecorator`. An app with more than
-one ante chain, such as cosmos/evm with its separate chain for Ethereum txs,
-must add the decorator to each, or the txs that chain handles reach a block
-and pay fees; see [EVM chains](#evm-chains).
-
 ## Operating
+
+### Incident runbook
+
+1. Preview the trip: `q safety matching-msgs --pattern <pattern>`.
+2. Trip with the operator key.
+3. Confirm: `q safety disabled-list`, and `q safety is-allowed` for the
+   exploit's msg, which names the blocking entry in `blocked_by`.
+4. Patch first, then reset. Ship the fix, by software upgrade if needed (gov
+   and upgrade msgs run under any trip), and reset only after it is live.
+   Refused txs keep their sequence and execute if rebroadcast after the reset.
+
+| Exploit path | Trip | Stays open | Watch |
+| --- | --- | --- | --- |
+| one msg type | its exact URL | everything else | keeper callers of the same logic below |
+| one module | its prefix, such as `/cosmos.bank.*` | other modules, the module's wrappers | contracts and precompiles that call the module's keeper |
+| ICS20 | `/ibc.applications.transfer.v1.MsgTransfer` and `/ibc.core.channel.v1.MsgRecvPacket`, exact | acks, timeouts, client updates, so in-flight packets settle | packet-forward-middleware retries a timed-out forward through the transfer keeper |
+| IBC core or light client | `/ibc.*` or `/ibc.core.client.v1.*` | non-IBC msgs | client trusting periods: reset before the first client expires |
+| EVM tx, precompile, precompile keeper call or native transfer | `/cosmos.evm.vm.v1.MsgEthereumTx`, exact | Cosmos txs, including gov `MsgVote` | EVM txs queue in the EVM mempool with no error and run after the reset |
+| wasm `BankMsg::Burn` or `IbcMsg::SendPacket` | `/cosmwasm.wasm.v1.MsgExecuteContract`, exact, or `/cosmwasm.wasm.*` | non-wasm msgs | none |
+| wasm contract sending a routed SDK msg | that SDK msg | the contract's other msgs | `ReplyOn::Error` contracts continue after the failure |
+| compromised authz grantee | `/cosmos.authz.v1beta1.MsgExec`, exact | direct txs | see [Wrapper set](#wrapper-set) |
+| unknown | `*` | protected set and wrappers | grantees under `*`; IBC client trusting periods; EVM validators vote with a Cosmos `MsgVote` |
+
+Any trip that covers `MsgUpdateClient` (`/ibc.core.client.v1.*`, `/ibc.*` or
+`*`) has a deadline: the shortest trusting period of the chain's clients. A
+client that expires during the trip needs gov `MsgRecoverClient`, which the
+router refuses until the reset.
+
+### Before an incident
+
+* Appoint the operator and grant its scope right after the upgrade that adds
+  the module, with `SetParams` in the upgrade handler or a gov proposal.
+* Confirm the node binary has the `tx safety` and `q safety` commands, or keep
+  the tx JSON from [Without the generic commands](#without-the-generic-commands)
+  ready.
+* Put the ante check in every ante chain, including the Ethereum tx chain on
+  an EVM chain.
+* Write down the trusting period of every IBC client on the chain.
+
+### Commands
 
 x/safety defines no CLI code. `simd`, and any app whose root command builds
 autocli from `runtimeservices.ExtractAutoCLIOptions`, derives generic commands
 from the module's Msg and Query services. `--from` fills the signer field.
-
-Trip and reset with the operator key:
 
 ```shell
 simd tx safety trip --patterns '/cosmos.bank.v1beta1.MsgSend,/cosmos.staking.*' \
   --from operator --chain-id <chain-id> --node <rpc> --fees 2000stake
 simd tx safety reset --patterns /cosmos.bank.v1beta1.MsgSend --patterns '/cosmos.staking.*' \
   --from operator --chain-id <chain-id> --node <rpc> --fees 2000stake
-```
-
-`--patterns` takes a comma-separated list, repeats, or both. Quote `*` and
-prefix patterns so the shell does not expand them. The authority resets with
-the same `reset` command from its own key. An authority key that signs directly
-updates params with:
-
-```shell
 simd tx safety update-params \
   --params '{"authority":"cosmos1...","operator":"cosmos1...","scope":["/cosmos.bank.*"]}' \
   --from authority --chain-id <chain-id> --node <rpc> --fees 2000stake
 ```
 
-A gov authority sends `MsgUpdateParams` or `MsgReset` in a proposal file for
+`--patterns` takes a comma-separated list, repeats, or both. Quote `*` and
+prefix patterns. The authority resets with the same `reset` command. A gov
+authority sends `MsgUpdateParams` or `MsgReset` in a proposal file for
 `simd tx gov submit-proposal`.
-
-Query:
 
 ```shell
 simd q safety params --node <rpc>
@@ -485,14 +437,13 @@ simd q safety is-allowed --msg-type-url /cosmos.bank.v1beta1.MsgSend --node <rpc
 simd q safety matching-msgs --pattern '/cosmos.bank.*' --node <rpc>
 ```
 
-For a blocked msg, `is-allowed` prints the disabled entry that blocks it in
-`blocked_by` and omits `allowed`, since the output skips default values.
+For a blocked msg, `is-allowed` prints `blocked_by` and omits `allowed`, since
+the output skips default values.
 
-### Without the generic commands
+#### Without the generic commands
 
-An app binary that does not build autocli this way still registers the msg
-types, so the operator signs tx JSON with it and queries the REST gateway. Save
-as `trip.json`:
+The binary still registers the msg types, so the operator signs tx JSON and
+queries the REST gateway. Save as `trip.json`:
 
 ```json
 {
@@ -515,213 +466,146 @@ as `trip.json`:
 ```shell
 simd tx sign trip.json --from operator --chain-id <chain-id> --node <rpc> > trip.signed.json
 simd tx broadcast trip.signed.json --node <rpc>
-```
-
-A reset uses the same steps with `"@type": "/cosmos.safety.v1.MsgReset"` and
-`"sender"` in place of `"operator"`. Give each pattern its own array entry.
-
-```shell
-curl <api>/cosmos/safety/v1/params
-curl <api>/cosmos/safety/v1/disabled_list
 curl '<api>/cosmos/safety/v1/is_allowed?msg_type_url=/cosmos.bank.v1beta1.MsgSend'
 ```
+
+A reset uses `"@type": "/cosmos.safety.v1.MsgReset"` and `"sender"` in place
+of `"operator"`.
 
 ## IBC, EVM and wasm
 
 ### IBC relaying
 
-A relayer delivers packets, acks, timeouts and client updates as ordinary
-msgs, and the router checks each one. Effects of an exact trip on the tripped
-chain:
+Relayers deliver packets, acks, timeouts and client updates as ordinary msgs,
+and the router checks each one.
 
-| Trip | Effect |
+| Exact trip | Effect |
 | --- | --- |
-| `/ibc.core.channel.v1.MsgRecvPacket` | Inbound packets wait. A packet that times out refunds on its source chain. A relayer can still deliver a packet after the reset and before its timeout. |
-| `/ibc.core.channel.v1.MsgAcknowledgement` | Acks for outbound packets fail, so the chain refunds an error-acked packet only after the reset. A timeout cannot refund a packet the counterparty already received. |
+| `/ibc.core.channel.v1.MsgRecvPacket` | Inbound packets wait. One that times out refunds on its source chain; one delivered after the reset and before its timeout executes. |
+| `/ibc.core.channel.v1.MsgAcknowledgement` | Acks fail, so the chain refunds an error-acked packet only after the reset. |
 | `/ibc.core.client.v1.MsgUpdateClient` | No light client on the chain updates, so recv and ack fail proof verification. Misbehavior submissions fail too, since ibc-go v11 takes misbehavior in `MsgUpdateClient`. |
 
-Under `/ibc.core.channel.v1.*` the router refuses recv, ack and timeout but
-not `/ibc.applications.transfer.v1.MsgTransfer`, which lives in another
-package, so the chain keeps escrowing new sends that it can neither ack nor
-time out until the reset. To stop ICS20 too, add the `MsgTransfer` URL or trip
-`/ibc.*`.
+`/ibc.core.channel.v1.*` does not cover
+`/ibc.applications.transfer.v1.MsgTransfer`, so the chain keeps escrowing
+sends it can neither ack nor time out until the reset. Add the `MsgTransfer`
+URL or trip `/ibc.*`.
 
-End any trip that covers `MsgUpdateClient`, such as `/ibc.core.client.v1.*`,
-`/ibc.*` or `*`, within the trusting period of the chain's clients. A client
-that expires during the trip stays expired after the reset, and only gov
-`MsgRecoverClient` revives it. x/safety does not protect `MsgRecoverClient`, so
-the ante decorator refuses a gov proposal that wraps it, and a proposal that
-reaches a block passes the vote and fails at execution. Reset the trip before
-submitting the recovery proposal.
+x/safety does not protect `MsgRecoverClient`, so while a trip covers it the
+ante decorator refuses a gov proposal that wraps it, and a proposal that
+reaches a block fails at execution.
 
-To stop transfers without freezing clients, trip
-`/ibc.applications.transfer.v1.MsgTransfer` and `MsgRecvPacket` by exact URL,
-and leave acks, timeouts and client updates open so packets already in flight
-settle.
-
-Under `*` every IBC msg fails, and gov resets the trip as usual. After the
-reset, packets still inside their timeout relay and ack. The destination
-refuses a packet whose timeout passed during the trip, and the source chain
-refunds it on timeout.
+Under `*` every IBC msg fails. After the reset, packets inside their timeout
+relay and ack, and packets past it refund on their source.
 
 ### ICS20 transfers
 
-The router refuses a routed `MsgTransfer` that a trip covers.
-packet-forward-middleware calls the transfer keeper's `Transfer` msg server
-method directly, so a forward still escrows and sends under a `MsgTransfer`
-trip; see [Direct keeper calls](#direct-keeper-calls). The cosmos/evm ICS20
-precompile calls the same method. Once it runs the msg with
-`msgservice.Dispatch`, the router refuses the tripped msg and the precompile
-call reverts with nothing escrowed; see [Direct callers](#direct-callers).
+The router refuses a routed `MsgTransfer` under a trip. packet-forward-middleware
+calls the transfer keeper's `Transfer` method directly, so a forward still
+escrows and sends. The cosmos/evm ICS20 precompile reverts with nothing
+escrowed once it runs the msg with `msgservice.Dispatch`.
 
 ### Interchain account hosts
 
-The ICA host routes the msgs in a packet through the router. When the router
-refuses a tripped msg, the host fails the packet with an error ack,
-`ABCI code: 10: error handling packet: see events for details`, and moves no
-funds. The x/safety reason appears only in the host chain's events. The ante
-decorator cannot see msgs inside packet data, so CheckTx admits the
-`MsgRecvPacket`, which succeeds and pays its fee. Protected msgs still run:
-under `/cosmos.*` a gov `MsgVote` sent through an interchain account executes.
-Under `*` the host chain refuses the `MsgRecvPacket` itself; see
-[Interchain accounts](#interchain-accounts).
+The ICA host routes packet msgs through the router. For a tripped msg the host
+returns an error ack, `ABCI code: 10: error handling packet: see events for
+details`, and moves no funds; the x/safety reason appears only in the host
+chain's events. `CheckTx` cannot see msgs inside packet data, so the
+`MsgRecvPacket` succeeds and pays its fee. Protected msgs run: under
+`/cosmos.*` a gov `MsgVote` sent through an interchain account executes.
 
 ### EVM chains
 
-cosmos/evm sends every EVM tx as `/cosmos.evm.vm.v1.MsgEthereumTx`, and the
-router checks it like any msg. Under an exact trip of it, or `*`, the router
-refuses every EVM tx, precompile calls included, so during a `*` trip
-validators vote with a Cosmos gov `MsgVote` tx, not the gov precompile.
+cosmos/evm sends every EVM tx as `/cosmos.evm.vm.v1.MsgEthereumTx`. Under an
+exact trip of it, or `*`, the router refuses every EVM tx, precompile calls
+included.
 
-cosmos/evm runs Ethereum txs through a separate ante chain. Without
-`CircuitBreakerDecorator` in it, under a `MsgEthereumTx` or `*` trip the proposer
-includes EVM txs in a block, where they fail with code 10, pay their fee, use
-their nonce and return no receipt. Add the decorator to that chain; see
-[Ante handler](#ante-handler).
-
-With the decorator, the EVM mempool still answers `CheckTx` with code 0 and
-`eth_sendRawTransaction` with a tx hash, because it queues the tx before the
-ante chain runs. The decorator refuses the tx when the pool tries to promote
-it, so the tx never becomes pending, never reaches a block, and uses no nonce
-and pays no fee. The sender gets no error and no receipt. The tx stays queued and
-becomes pending after the reset.
-
-`eth_call` and `eth_estimateGas` route no `MsgEthereumTx`, so they never check
-it. Under a `MsgEthereumTx` or `*` trip a value transfer estimates at 21000
-gas, `eth_call` of it succeeds, and a gov precompile vote simulates as a
-success, though neither tx executes. A precompile that runs a tripped msg with
-`msgservice.Dispatch` fails in `eth_call` and `eth_estimateGas` too, because
-the router checks the msg in the query context.
-
-An EVM value transfer moves the native denom without a bank msg, so the router
-never checks it against a `/cosmos.bank.v1beta1.MsgSend` trip. A precompile
-that runs its SDK msg with `msgservice.Dispatch` reverts under a selective
-trip of that msg. A precompile that calls a msg server directly, or calls a
-keeper, skips the trip; see [Direct callers](#direct-callers) and
-[Direct keeper calls](#direct-keeper-calls).
+* Without `CircuitBreakerDecorator` in the Ethereum tx ante chain, tripped EVM
+  txs reach a block, fail with code 10, pay their fee, use their nonce and
+  return no receipt.
+* With it, `CheckTx` returns code 0 and `eth_sendRawTransaction` a tx hash,
+  because the EVM mempool queues the tx before the ante chain runs. The tx
+  never becomes pending, pays no fee and uses no nonce, and becomes pending
+  after the reset.
+* `eth_call` and `eth_estimateGas` route no `MsgEthereumTx`, so under its trip
+  a value transfer estimates at 21000 gas and a gov precompile vote simulates
+  as a success. A precompile that runs a tripped msg with `Dispatch` fails in
+  both.
+* An EVM value transfer moves the native denom without a bank msg, so a
+  `/cosmos.bank.v1beta1.MsgSend` trip does not stop it.
 
 ### CosmWasm contracts
 
-wasmd turns `BankMsg::Send`, staking, gov, `CosmosMsg::Any`, Stargate and
-`IbcMsg::Transfer` msgs into SDK msgs and routes them through the
-`MsgServiceRouter`, so when the router refuses a tripped SDK msg, the contract
-execution fails and moves no funds. CheckTx admits the outer
-`MsgExecuteContract`, since the decorator cannot see the msgs a contract emits.
-Gov msgs stay protected: under `/cosmos.*` a contract's gov vote executes and
-its bank send fails.
+wasmd routes `BankMsg::Send`, staking, gov, `CosmosMsg::Any`, Stargate and
+`IbcMsg::Transfer` msgs through the router, so a tripped SDK msg fails the
+contract execution and moves no funds. `CheckTx` admits the outer
+`MsgExecuteContract`. Gov msgs stay protected.
 
-Two wasmd paths call keepers directly and skip a selective trip:
-
-* `BankMsg::Burn` calls the bank keeper. The bank module defines no `MsgBurn`,
-  so `MsgTrip` of `/cosmos.bank.v1beta1.MsgBurn` fails with code 7.
-* `IbcMsg::SendPacket` calls the IBC channel keeper and goes through under
-  `/ibc.*`.
-
-To stop those two, trip `MsgExecuteContract` by exact URL, `/cosmwasm.wasm.*`
-or `*`; the router then refuses every contract execution.
+`BankMsg::Burn` and `IbcMsg::SendPacket` call keepers directly and skip a
+selective trip. The bank module defines no `MsgBurn`, so a trip of
+`/cosmos.bank.v1beta1.MsgBurn` fails with code 7.
 
 A contract that sends a tripped msg as a submessage with `ReplyOn::Error`
-receives the failure in its reply and continues. wasmd redacts the error to
-`codespace: safety, code: 10`, so the contract sees neither the type URL nor
-the pattern.
+continues, and sees only `codespace: safety, code: 10` in its reply.
 
 ## Known gaps
 
 ### Direct keeper calls
 
-The router check only sees msgs that pass through the `MsgServiceRouter`. Code
-that calls a keeper or a msg server directly skips a selective trip; see
-[Direct callers](#direct-callers). Known paths:
+Code that calls a keeper or a msg server directly skips a selective trip.
+Known paths:
 
 * cosmos/evm precompile methods that call SDK keepers, such as distribution
   `claimRewards` and WERC20 `deposit`,
 * EVM native value transfers,
-* the ibc-go transfer keeper's `Transfer` and `SendTransfer` methods, which
-  packet-forward-middleware and other modules call,
-* the ibc-go channel keeper's `SendPacket`, which any module or middleware can
-  call to send a packet,
-* wasmd `BankMsg::Burn` and `IbcMsg::SendPacket`. wasmd routes the other
-  contract msgs; see [CosmWasm contracts](#cosmwasm-contracts).
+* the ibc-go transfer keeper's `Transfer` and `SendTransfer`, which
+  packet-forward-middleware calls,
+* the ibc-go channel keeper's `SendPacket`,
+* wasmd `BankMsg::Burn` and `IbcMsg::SendPacket`.
 
-A `*` trip still blocks every msg outside the protected and wrapper sets that
-enters through a tx, directly or inside a wrapper, so it stops those paths at
-the tx msg that starts them. A selective trip of, for example, `/cosmos.bank.*`
-does not stop a contract or precompile from moving funds through the bank
-keeper.
+A `*` trip stops each of these at the tx msg that starts it.
 
 ### Exact wrapper trips
 
-An authority that can act only through a wrapper loses that path while the
-operator keeps exact trips of the wrappers it uses. An account that signs
-through an authz grantee loses it to a trip of `/cosmos.authz.v1beta1.MsgExec`.
-A group policy resets through a group proposal, and group `MsgVote` and
-`MsgExec` act only on proposals that already exist, so an exact trip of group
-`MsgSubmitProposal` alone locks out a group policy with no reset proposal
-pending. An exact trip of group `MsgVote` alone locks out a group whose
-decision policy needs votes from members who are not proposers: group
-`MsgSubmitProposal` with `exec` set to `EXEC_TRY` counts only the proposers'
-votes, and the other members cannot vote. An exact trip of group `MsgExec`
-alone leaves group `MsgVote` with `exec` set to `EXEC_TRY`, which executes the
-proposal. The path returns when the operator resets those trips. Otherwise
-recovery needs a chain-wide authority change, such as a gov proposal that sets
-the consensus `AuthorityParams` override, or a software upgrade. Neither works
-when the locked-out authority is the override itself: consensus
-`MsgUpdateParams`, upgrade `MsgSoftwareUpgrade` and x/safety `MsgReset` and
-`MsgUpdateParams` all check the override, so a gov proposal of any of them
-fails. Until the operator resets the trip, recovery then needs validators to
-halt and switch to a new binary off chain. Use gov or a directly signing
-account as the authority, and as the override.
+An authority that acts only through a wrapper loses that path while the
+operator keeps an exact trip of the wrapper:
+
+* an authz grantee, under a trip of `/cosmos.authz.v1beta1.MsgExec`;
+* a group policy with no reset proposal pending, under a trip of group
+  `MsgSubmitProposal`;
+* a group whose decision policy needs votes from non-proposers, under a trip
+  of group `MsgVote`.
+
+The path returns when the operator resets the trip. Otherwise recovery needs a
+gov proposal that sets the consensus `AuthorityParams` override, or a software
+upgrade. When the locked-out authority is the override itself, neither works,
+and recovery needs validators to switch to a new binary off chain. Use gov or
+a directly signing account as the authority and as the override.
 
 ### Grantees under `*`
 
 A `*` trip leaves authz `MsgExec` running, so a grantee can still run the
-protected msgs and the wrappers the granter granted it, such as a gov deposit
-from the granter's funds or a group vote in the granter's name, while `*`
-blocks the granter's `MsgRevoke`. Trip `/cosmos.authz.v1beta1.MsgExec` by its
-exact URL to stop it.
+protected msgs and wrappers it was granted, such as a gov deposit from the
+granter's funds, while `*` blocks the granter's `MsgRevoke`. Trip
+`/cosmos.authz.v1beta1.MsgExec` by its exact URL to stop it.
 
 ### Interchain accounts
 
 An authority that acts through an interchain account needs `MsgRecvPacket` and
-client updates, which a trip of `*` or `/ibc.*` blocks. Neither is a wrapper
-or protected. Use gov, a directly signing account or a group policy as the
-authority. A group policy is still exposed to
-[exact wrapper trips](#exact-wrapper-trips), with no on-chain recovery when it
-is the consensus override.
+client updates, which `*` and `/ibc.*` block. Use gov, a directly signing
+account or a group policy as the authority.
 
 ## Changes from x/circuit
 
 | x/circuit | x/safety |
 | --- | --- |
-| An empty type URL list tripped or reset nothing and succeeded | Empty lists are rejected |
+| Empty type URL lists succeeded and changed nothing | Empty lists are rejected |
 | Any string could be tripped | A pattern must match a registered, unprotected msg |
-| `MsgResetCircuitBreaker` could be tripped, locking out recovery | Protected set, always allowed |
+| `MsgResetCircuitBreaker` could be tripped | Protected set, always allowed |
 | Permission levels table and super admin delegation | One operator in params |
 | Authority fixed at build time, compared with `bytes.Equal` | Authority in params, checked with `sdk.ValidateAuthority` |
 | Revoked permissions left state that failed genesis validation | Genesis export always imports |
 | Untyped events with comma-joined attributes | Typed proto events |
-| Unregistered errors | Registered errors: codespace `safety`, or the shared SDK `ErrUnauthorized` and `ErrInvalidAddress` |
+| Unregistered errors | Registered errors |
 | Unpaginated disabled list query | Paginated |
 | Ante decorator checked top-level msgs only | Recurses into nested msgs |
-| CLI examples quoted several type URLs as one argument | Generic `--patterns` flag takes a comma-separated list or repeats |
 | Exact type URLs only | Exact, prefix and `*` patterns |

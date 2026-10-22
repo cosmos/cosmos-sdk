@@ -7,9 +7,12 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/cosmos/cosmos-sdk/baseapp/internal/protocompat"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -27,6 +30,7 @@ type MessageRouter interface {
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
+	hybridHandlers    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
 	circuitBreaker    CircuitBreaker
 }
 
@@ -38,7 +42,8 @@ var (
 // NewMsgServiceRouter creates a new MsgServiceRouter.
 func NewMsgServiceRouter() *MsgServiceRouter {
 	return &MsgServiceRouter{
-		routes: map[string]MsgServiceHandler{},
+		routes:         map[string]MsgServiceHandler{},
+		hybridHandlers: map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
 	}
 }
 
@@ -77,7 +82,55 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler any) 
 		if err != nil {
 			panic(err)
 		}
+		err = msr.registerHybridHandler(sd, method, handler)
+		if err != nil {
+			panic(err)
+		}
 	}
+}
+
+// HybridHandlerByMsgName returns the handler registered for the msg with
+// the given proto full name, or nil. The handler checks the circuit breaker
+// but skips ValidateBasic.
+//
+// Deprecated: run msgs from code with msgservice.Dispatch.
+// HybridHandlerByMsgName will be removed in the next release.
+func (msr *MsgServiceRouter) HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
+	return msr.hybridHandlers[msgName]
+}
+
+func (msr *MsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler any) error {
+	inputName, err := protocompat.RequestFullNameFromMethodDesc(sd, method)
+	if err != nil {
+		return err
+	}
+	cdc := codec.NewProtoCodec(msr.interfaceRegistry)
+	hybridHandler, err := protocompat.MakeHybridHandler(cdc, sd, method, handler)
+	if err != nil {
+		return err
+	}
+	// decorate the hybrid handler with the circuit breaker. It checks the
+	// msg type the handler runs, not the type of req: a request of another
+	// type whose bytes decode as inputName still runs inputName's handler.
+	// It reads the breaker on each call, since the app may install or remove
+	// it after registration.
+	messageName := "/" + string(inputName)
+	circuitBreakerHybridHandler := func(ctx context.Context, req, resp protoiface.MessageV1) error {
+		cb := msr.circuitBreaker
+		if cb == nil {
+			return hybridHandler(ctx, req, resp)
+		}
+		allowed, err := cb.IsAllowed(ctx, messageName)
+		if err != nil {
+			return err
+		}
+		if !allowed {
+			return fmt.Errorf("circuit breaker disallows execution of message %s", messageName)
+		}
+		return hybridHandler(ctx, req, resp)
+	}
+	msr.hybridHandlers[string(inputName)] = circuitBreakerHybridHandler
+	return nil
 }
 
 func (msr *MsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler any) error {

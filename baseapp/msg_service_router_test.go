@@ -11,11 +11,13 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log/v2"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -86,6 +88,42 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 			testdata.MsgServerImpl{},
 		)
 	})
+}
+
+func TestHybridHandlerByMsgName(t *testing.T) {
+	// Setup baseapp and router.
+	var (
+		appBuilder *runtime.AppBuilder
+		registry   codectypes.InterfaceRegistry
+	)
+	err := depinject.Inject(
+		depinject.Configs(
+			makeMinimalConfig(),
+			depinject.Supply(log.NewTestLogger(t)),
+		), &appBuilder, &registry,
+	)
+	require.NoError(t, err)
+	db := dbm.NewMemDB()
+	app := appBuilder.Build(db)
+	testdata.RegisterInterfaces(registry)
+
+	testdata.RegisterMsgServer(
+		app.MsgServiceRouter(),
+		testdata.MsgServerImpl{},
+	)
+
+	handler := app.MsgServiceRouter().HybridHandlerByMsgName("testpb.MsgCreateDog")
+
+	require.NotNil(t, handler)
+	require.NoError(t, app.Init())
+	ctx := app.NewContext(true)
+	resp := new(testdata.MsgCreateDogResponse)
+	err = handler(ctx, &testdata.MsgCreateDog{
+		Dog:   &testdata.Dog{Name: "Spot"},
+		Owner: "me",
+	}, resp)
+	require.NoError(t, err)
+	require.Equal(t, resp.Name, "Spot")
 }
 
 func TestMsgService(t *testing.T) {
@@ -180,4 +218,82 @@ type typeBreaker struct {
 func (b *typeBreaker) IsAllowed(_ context.Context, typeURL string) (bool, error) {
 	b.asked = append(b.asked, typeURL)
 	return !b.blocked[typeURL], nil
+}
+
+func newHybridTestApp(t *testing.T, cb baseapp.CircuitBreaker) *baseapp.BaseApp {
+	t.Helper()
+	var (
+		appBuilder *runtime.AppBuilder
+		registry   codectypes.InterfaceRegistry
+	)
+	err := depinject.Inject(
+		depinject.Configs(
+			makeMinimalConfig(),
+			depinject.Supply(log.NewTestLogger(t)),
+		), &appBuilder, &registry,
+	)
+	require.NoError(t, err)
+	app := appBuilder.Build(dbm.NewMemDB())
+	testdata.RegisterInterfaces(registry)
+	app.SetCircuitBreaker(cb)
+	testdata.RegisterMsgServer(app.MsgServiceRouter(), testdata.MsgServerImpl{})
+	require.NoError(t, app.Init())
+	return app.BaseApp
+}
+
+// TestHybridHandlerChecksRegisteredMsgType hands a hybrid handler a request
+// of another type whose wire bytes decode as the handler's own msg. The
+// handler must check the circuit breaker against the msg it runs, not the
+// type of the request it was handed, so a tripped msg cannot run under the
+// type URL of an allowed one.
+func TestHybridHandlerChecksRegisteredMsgType(t *testing.T) {
+	const dogURL = "/testpb.MsgCreateDog"
+	cb := &typeBreaker{blocked: map[string]bool{dogURL: true}}
+	app := newHybridTestApp(t, cb)
+	ctx := app.NewContext(true)
+
+	handler := app.MsgServiceRouter().HybridHandlerByMsgName(dogURL[1:])
+	require.NotNil(t, handler)
+
+	dogBz, err := (&testdata.Dog{Size_: "big", Name: "Rex"}).Marshal()
+	require.NoError(t, err)
+	// MsgCreateDogResponse field 1 is a string and MsgCreateDog field 1 is a
+	// Dog, so these bytes decode as a MsgCreateDog for Rex.
+	spoof := &testdata_pulsar.MsgCreateDogResponse{Name: string(dogBz)}
+	resp := new(testdata_pulsar.MsgCreateDogResponse)
+	err = handler(ctx, spoof, resp)
+	require.ErrorContains(t, err, dogURL)
+	require.Empty(t, resp.Name, "the tripped msg server ran")
+	require.Equal(t, []string{dogURL}, cb.asked)
+}
+
+// TestHybridHandlerAfterBreakerRemoved removes the circuit breaker after a
+// hybrid handler was registered under it. The handler must run the msg, not
+// call the removed breaker.
+func TestHybridHandlerAfterBreakerRemoved(t *testing.T) {
+	app := newHybridTestApp(t, &typeBreaker{})
+	app.SetCircuitBreaker(nil)
+
+	handler := app.MsgServiceRouter().HybridHandlerByMsgName("testpb.MsgCreateDog")
+	require.NotNil(t, handler)
+	resp := new(testdata_pulsar.MsgCreateDogResponse)
+	msg := &testdata_pulsar.MsgCreateDog{Dog: &testdata_pulsar.Dog{Name: "Spot"}}
+	require.NoError(t, handler(app.NewContext(true), msg, resp))
+	require.Equal(t, "Spot", resp.Name)
+}
+
+// TestHybridHandlerBreakerInstalledLater installs the circuit breaker after
+// the hybrid handler was registered without one. The handler must check the
+// breaker the app installed, as the routed handler does.
+func TestHybridHandlerBreakerInstalledLater(t *testing.T) {
+	const dogURL = "/testpb.MsgCreateDog"
+	app := newHybridTestApp(t, nil)
+	app.SetCircuitBreaker(&typeBreaker{blocked: map[string]bool{dogURL: true}})
+
+	handler := app.MsgServiceRouter().HybridHandlerByMsgName(dogURL[1:])
+	require.NotNil(t, handler)
+	resp := new(testdata_pulsar.MsgCreateDogResponse)
+	msg := &testdata_pulsar.MsgCreateDog{Dog: &testdata_pulsar.Dog{Name: "Spot"}}
+	require.ErrorContains(t, handler(app.NewContext(true), msg, resp), dogURL)
+	require.Empty(t, resp.Name, "the tripped msg server ran")
 }

@@ -59,9 +59,9 @@ func committedStores(t *testing.T, f *fixture) []string {
 }
 
 // TestUpgradeFromCircuit runs the upgrade a chain moving off contrib/x/circuit
-// makes: the new binary drops the circuit wiring and store key, and its
+// makes: the new binary removes the circuit wiring and store key, and its
 // handler names the x/safety operator right after RunMigrations. The circuit
-// store leaves the commit, circuit's disabled list does not carry over, and
+// store leaves the commit, the new binary ignores circuit's disabled list, and
 // the operator can trip in the upgrade block itself.
 //
 // SimApp always mounts the x/safety store, so the new binary loads with no

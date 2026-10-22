@@ -23,13 +23,14 @@ func init() {
 }
 
 type treeInstrument struct {
-	Meter        metric.Meter
-	Get          metric.Int64Histogram
-	Set          metric.Int64Histogram
-	Delete       metric.Int64Histogram
-	ReverseSeek  metric.Int64Histogram
-	Scan         metric.Int64Histogram
-	GetOrDefault metric.Int64Histogram
+	Meter             metric.Meter
+	Get               metric.Int64Histogram
+	Set               metric.Int64Histogram
+	Delete            metric.Int64Histogram
+	ReverseSeek       metric.Int64Histogram
+	Scan              metric.Int64Histogram
+	GetOrDefault      metric.Int64Histogram
+	BatchGetOrDefault metric.Int64Histogram
 }
 
 func (i *treeInstrument) Name() string { return TreeName }
@@ -83,6 +84,14 @@ func (i *treeInstrument) Start(cfg map[string]any) error {
 	i.GetOrDefault, err = i.Meter.Int64Histogram(
 		"get_or_default",
 		metric.WithDescription("Time to look up an item in the B-tree, inserting a default if not found"),
+		metric.WithUnit(TreeTimingUnit),
+	)
+	if err != nil {
+		return err
+	}
+	i.BatchGetOrDefault, err = i.Meter.Int64Histogram(
+		"batch_get_or_default",
+		metric.WithDescription("Time to look up a batch of items in the B-tree, atomically inserting defaults for missing items"),
 		metric.WithUnit(TreeTimingUnit),
 	)
 	if err != nil {

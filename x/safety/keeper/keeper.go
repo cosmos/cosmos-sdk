@@ -23,7 +23,8 @@ type Keeper struct {
 	registry     codectypes.InterfaceRegistry
 
 	// defaultAuthority is written into the default genesis params. The live
-	// authority is params.Authority.
+	// authority is params.Authority, or the consensus AuthorityParams
+	// override when a chain sets one.
 	defaultAuthority string
 
 	Schema collections.Schema

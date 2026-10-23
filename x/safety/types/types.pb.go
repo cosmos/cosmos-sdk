@@ -27,6 +27,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Params defines the parameters of the safety module.
 type Params struct {
 	// authority is the address that sets params and resets any disabled pattern.
+	// The consensus AuthorityParams override replaces it when a chain sets one.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// operator is the single address that may trip and reset patterns covered
 	// by scope. An empty operator means no operator is configured.

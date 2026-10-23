@@ -44,7 +44,7 @@ func NewHelperWithRouter(t *testing.T, ctx sdk.Context, k *keeper.Keeper, router
 // NewHelper creates a new instance of Helper that calls the staking msg server
 // directly, skipping the MsgServiceRouter.
 //
-// Deprecated: use NewHelperWithRouter. NewHelper will be removed in the next
+// Deprecated: use NewHelperWithRouter. NewHelper will be removed in a future
 // release.
 func NewHelper(t *testing.T, ctx sdk.Context, k *keeper.Keeper) *Helper {
 	t.Helper()

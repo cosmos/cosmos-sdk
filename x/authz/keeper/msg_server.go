@@ -162,7 +162,7 @@ func validateMsgs(msgs []sdk.Msg) error {
 // Grant runs MsgGrant on the module's msg server.
 //
 // Deprecated: run MsgGrant with msgservice.Dispatch. Keeper.Grant will be
-// removed in the next release.
+// removed in a future release.
 func (k Keeper) Grant(ctx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
 	return newMsgServerImpl(k).Grant(ctx, msg)
 }
@@ -170,7 +170,7 @@ func (k Keeper) Grant(ctx context.Context, msg *authz.MsgGrant) (*authz.MsgGrant
 // Revoke runs MsgRevoke on the module's msg server.
 //
 // Deprecated: run MsgRevoke with msgservice.Dispatch. Keeper.Revoke will be
-// removed in the next release.
+// removed in a future release.
 func (k Keeper) Revoke(ctx context.Context, msg *authz.MsgRevoke) (*authz.MsgRevokeResponse, error) {
 	return newMsgServerImpl(k).Revoke(ctx, msg)
 }
@@ -178,7 +178,7 @@ func (k Keeper) Revoke(ctx context.Context, msg *authz.MsgRevoke) (*authz.MsgRev
 // Exec runs MsgExec on the module's msg server.
 //
 // Deprecated: run MsgExec with msgservice.Dispatch. Keeper.Exec will be
-// removed in the next release.
+// removed in a future release.
 func (k Keeper) Exec(ctx context.Context, msg *authz.MsgExec) (*authz.MsgExecResponse, error) {
 	return newMsgServerImpl(k).Exec(ctx, msg)
 }

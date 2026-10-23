@@ -32,7 +32,7 @@ func newMsgServerImpl(keeper *Keeper) v1.MsgServer {
 //
 // Deprecated: register the service with RegisterMsgServer and run msgs from
 // outside the module with msgservice.Dispatch. NewMsgServerImpl will be
-// removed in the next release.
+// removed in a future release.
 func NewMsgServerImpl(keeper *Keeper) v1.MsgServer {
 	return newMsgServerImpl(keeper)
 }
@@ -321,7 +321,7 @@ func newLegacyMsgServerImpl(govAcct string, v1Server v1.MsgServer) v1beta1.MsgSe
 //
 // Deprecated: register the service with RegisterMsgServer and run msgs from
 // outside the module with msgservice.Dispatch. NewLegacyMsgServerImpl will be
-// removed in the next release.
+// removed in a future release.
 func NewLegacyMsgServerImpl(govAcct string, v1Server v1.MsgServer) v1beta1.MsgServer {
 	return newLegacyMsgServerImpl(govAcct, v1Server)
 }

@@ -74,7 +74,7 @@ func (k msgServer) Send(goCtx context.Context, msg *nft.MsgSend) (*nft.MsgSendRe
 // Send runs MsgSend on the module's msg server.
 //
 // Deprecated: run MsgSend with msgservice.Dispatch. Keeper.Send will be
-// removed in the next release.
+// removed in a future release.
 func (k Keeper) Send(ctx context.Context, msg *nft.MsgSend) (*nft.MsgSendResponse, error) {
 	return newMsgServerImpl(k).Send(ctx, msg)
 }

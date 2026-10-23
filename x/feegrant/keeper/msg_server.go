@@ -30,7 +30,7 @@ func newMsgServerImpl(k Keeper) feegrant.MsgServer {
 //
 // Deprecated: register the service with RegisterMsgServer and run msgs from
 // outside the module with msgservice.Dispatch. NewMsgServerImpl will be
-// removed in the next release.
+// removed in a future release.
 func NewMsgServerImpl(k Keeper) feegrant.MsgServer {
 	return newMsgServerImpl(k)
 }

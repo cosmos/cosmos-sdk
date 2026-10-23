@@ -21,15 +21,6 @@ func newMsgServerImpl(k Keeper) types.MsgServer {
 	return msgServer{Keeper: k}
 }
 
-// NewMsgServerImpl returns an implementation of the x/safety MsgServer.
-//
-// Deprecated: register the service with RegisterMsgServer and run msgs from
-// outside the module with msgservice.Dispatch. NewMsgServerImpl will be
-// removed in the next release.
-func NewMsgServerImpl(k Keeper) types.MsgServer {
-	return newMsgServerImpl(k)
-}
-
 // RegisterMsgServer registers the x/safety Msg service on r. The msg server
 // is unexported: code outside the module runs a msg through the
 // MsgServiceRouter with msgservice.Dispatch.

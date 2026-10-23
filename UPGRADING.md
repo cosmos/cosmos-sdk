@@ -160,9 +160,9 @@ Wiring x/safety leaves gas unchanged. The circuit breaker check charges no gas i
 
 ### Running msgs from code
 
-An `sdk.Msg` should run only through the `MsgServiceRouter`, so a trip of the circuit breaker stops it. This release deprecates the ways to call an SDK module's msg server directly. They still compile, and the next release removes them:
+An `sdk.Msg` should run only through the `MsgServiceRouter`, so a trip of the circuit breaker stops it. This release deprecates the ways to call an SDK module's msg server directly. They still compile, and a future release removes them:
 
-* `NewMsgServerImpl` in `x/auth`, `x/auth/vesting`, `x/bank`, `x/distribution`, `x/evidence`, `x/feegrant`, `x/gov` (with `NewLegacyMsgServerImpl`), `x/mint`, `x/safety`, `x/slashing`, `x/staking`, `x/upgrade` and `contrib/x/circuit`, and `NewMsgServer` with the `MsgServer` type in `enterprise/poa`.
+* `NewMsgServerImpl` in `x/auth`, `x/auth/vesting`, `x/bank`, `x/distribution`, `x/evidence`, `x/feegrant`, `x/gov` (with `NewLegacyMsgServerImpl`), `x/mint`, `x/slashing`, `x/staking`, `x/upgrade` and `contrib/x/circuit`, and `NewMsgServer` with the `MsgServer` type in `enterprise/poa`.
 * The Msg methods on the keepers of `x/authz`, `x/consensus`, `contrib/x/crisis`, `contrib/x/nft`, `enterprise/group` and `testutil/x/counter`, such as authz `Keeper.Exec` and consensus `Keeper.UpdateParams`. Exported keeper methods for module logic, such as authz `DispatchActions`, `SaveGrant` and `GetAuthorization`, stay.
 * `MsgServiceRouter.HybridHandlerByMsgName`, which runs a registered msg handler by name and skips `ValidateBasic`.
 * `x/staking/testutil.NewHelper`, which calls the staking msg server directly. `NewHelperWithRouter` takes the `msgservice.MsgRouter` that runs its msgs, such as `app.MsgServiceRouter()`.

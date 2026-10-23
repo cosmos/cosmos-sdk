@@ -32,7 +32,7 @@ func newMsgServerImpl(k keeper.AccountKeeper, bk types.BankKeeper) types.MsgServ
 //
 // Deprecated: register the service with RegisterMsgServer and run msgs from
 // outside the module with msgservice.Dispatch. NewMsgServerImpl will be
-// removed in the next release.
+// removed in a future release.
 func NewMsgServerImpl(k keeper.AccountKeeper, bk types.BankKeeper) types.MsgServer {
 	return newMsgServerImpl(k, bk)
 }

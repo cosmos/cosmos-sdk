@@ -25,7 +25,7 @@ var exportGuardAllowed = []string{
 }
 
 // exportGuardDeprecated lists the deprecated constructors and keeper Msg
-// methods kept so callers compile until the next release removes them. Each
+// methods kept so callers compile until a future release removes them. Each
 // needs a Deprecated: doc comment, and the guard fails when one is gone
 // but still listed. A "Keeper." prefix names a keeper Msg method, and a
 // "type " prefix an alias of the unexported msgServer type.
@@ -46,7 +46,6 @@ var exportGuardDeprecated = map[string][]string{
 	"x/feegrant/keeper/msg_server.go":               {"NewMsgServerImpl"},
 	"x/gov/keeper/msg_server.go":                    {"NewMsgServerImpl", "NewLegacyMsgServerImpl"},
 	"x/mint/keeper/msg_server.go":                   {"NewMsgServerImpl"},
-	"x/safety/keeper/msg_server.go":                 {"NewMsgServerImpl"},
 	"x/slashing/keeper/msg_server.go":               {"NewMsgServerImpl"},
 	"x/staking/keeper/msg_server.go":                {"NewMsgServerImpl"},
 	"x/upgrade/keeper/msg_server.go":                {"NewMsgServerImpl"},

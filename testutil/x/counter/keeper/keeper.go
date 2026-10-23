@@ -127,7 +127,7 @@ func (k *Keeper) SetHooks(gh types.CounterHooks) *Keeper {
 // IncreaseCount runs MsgIncreaseCounter on the module's msg server.
 //
 // Deprecated: run MsgIncreaseCounter with msgservice.Dispatch.
-// Keeper.IncreaseCount will be removed in the next release.
+// Keeper.IncreaseCount will be removed in a future release.
 func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter) (*types.MsgIncreaseCountResponse, error) {
 	return newMsgServerImpl(&k).IncreaseCount(ctx, msg)
 }

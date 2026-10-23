@@ -26,7 +26,7 @@ func newMsgServerImpl(ak AccountKeeper) types.MsgServer {
 //
 // Deprecated: register the service with RegisterMsgServer and run msgs from
 // outside the module with msgservice.Dispatch. NewMsgServerImpl will be
-// removed in the next release.
+// removed in a future release.
 func NewMsgServerImpl(ak AccountKeeper) types.MsgServer {
 	return newMsgServerImpl(ak)
 }

@@ -152,7 +152,7 @@ func (k Keeper) SetParams(ctx context.Context, update cmtproto.ConsensusParams) 
 //
 // Deprecated: run MsgUpdateParams with msgservice.Dispatch, or call SetParams
 // from an upgrade handler.
-// Keeper.UpdateParams will be removed in the next release.
+// Keeper.UpdateParams will be removed in a future release.
 func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	return newMsgServerImpl(k).UpdateParams(ctx, msg)
 }

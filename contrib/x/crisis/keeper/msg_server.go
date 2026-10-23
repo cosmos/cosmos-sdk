@@ -118,7 +118,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types2.MsgUpdateParams
 // VerifyInvariant runs MsgVerifyInvariant on the module's msg server.
 //
 // Deprecated: run MsgVerifyInvariant with msgservice.Dispatch.
-// Keeper.VerifyInvariant will be removed in the next release.
+// Keeper.VerifyInvariant will be removed in a future release.
 func (k *Keeper) VerifyInvariant(ctx context.Context, msg *types2.MsgVerifyInvariant) (*types2.MsgVerifyInvariantResponse, error) {
 	return newMsgServerImpl(k).VerifyInvariant(ctx, msg)
 }
@@ -126,7 +126,7 @@ func (k *Keeper) VerifyInvariant(ctx context.Context, msg *types2.MsgVerifyInvar
 // UpdateParams runs MsgUpdateParams on the module's msg server.
 //
 // Deprecated: run MsgUpdateParams with msgservice.Dispatch.
-// Keeper.UpdateParams will be removed in the next release.
+// Keeper.UpdateParams will be removed in a future release.
 func (k *Keeper) UpdateParams(ctx context.Context, msg *types2.MsgUpdateParams) (*types2.MsgUpdateParamsResponse, error) {
 	return newMsgServerImpl(k).UpdateParams(ctx, msg)
 }

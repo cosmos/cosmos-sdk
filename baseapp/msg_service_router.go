@@ -94,7 +94,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler any) 
 // but skips ValidateBasic.
 //
 // Deprecated: run msgs from code with msgservice.Dispatch.
-// HybridHandlerByMsgName will be removed in the next release.
+// HybridHandlerByMsgName will be removed in a future release.
 func (msr *MsgServiceRouter) HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
 	return msr.hybridHandlers[msgName]
 }

@@ -47,14 +47,14 @@ func newMsgServerImpl(keeper *Keeper) *msgServer {
 //
 // Deprecated: register the service with RegisterMsgServer and run msgs from
 // outside the module with msgservice.Dispatch. MsgServer will be removed in
-// the next release.
+// a future release.
 type MsgServer = msgServer
 
 // NewMsgServer returns the x/poa msg server.
 //
 // Deprecated: register the service with RegisterMsgServer and run msgs from
 // outside the module with msgservice.Dispatch. NewMsgServer will be removed in
-// the next release.
+// a future release.
 func NewMsgServer(keeper *Keeper) *MsgServer {
 	return newMsgServerImpl(keeper)
 }

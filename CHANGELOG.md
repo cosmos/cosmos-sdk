@@ -99,7 +99,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (enterprise/poa) [#26910](https://github.com/cosmos/cosmos-sdk/pull/26910) `keeper.NewMsgServer` and the `keeper.MsgServer` type are deprecated and will be removed in the next release; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
 * (enterprise/group) [#26910](https://github.com/cosmos/cosmos-sdk/pull/26910) The `Keeper` Msg methods, such as `CreateGroup`, `SubmitProposal`, `Vote` and `Exec`, are deprecated and will be removed in the next release; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
 * (testutil/x/counter) [#26910](https://github.com/cosmos/cosmos-sdk/pull/26910) `Keeper.IncreaseCount` is deprecated and will be removed in the next release; register the service with `keeper.RegisterMsgServer` and run msgs from outside the module with `msgservice.Dispatch`.
-* (contrib/x/circuit) [#26906](https://github.com/cosmos/cosmos-sdk/pull/26906) `contrib/x/circuit` is deprecated in favor of `x/safety` and will be removed in v0.57.0.
+* (contrib/x/circuit) [#26906](https://github.com/cosmos/cosmos-sdk/pull/26906) `contrib/x/circuit` is deprecated in favor of `x/safety` and will be removed in a future release.
 
 ## [v0.55.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.55.0) - 2026-07-27
 

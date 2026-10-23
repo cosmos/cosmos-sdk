@@ -1,6 +1,6 @@
 # `x/circuit`
 
-**Deprecated:** [`x/safety`](../../../x/safety/README.md) replaces this module, and v0.57.0 removes it. See [Changes from x/circuit](../../../x/safety/README.md#changes-from-xcircuit) and [Upgrade handler](../../../x/safety/README.md#upgrade-handler) to move a chain over.
+**Deprecated:** [`x/safety`](../../../x/safety/README.md) replaces this module, and a future release removes it. See [Changes from x/circuit](../../../x/safety/README.md#changes-from-xcircuit) and [Upgrade handler](../../../x/safety/README.md#upgrade-handler) to move a chain over.
 
 ⚠️ **NOTE**: This package is not actively maintained by Interchain Labs.
 

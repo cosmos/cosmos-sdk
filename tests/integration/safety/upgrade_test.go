@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	safetytypes "github.com/cosmos/cosmos-sdk/x/safety/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -99,11 +100,16 @@ func TestUpgradeFromCircuit(t *testing.T) {
 		if err != nil {
 			return nil, err
 		}
-		return vm, app.SafetyKeeper.InitGenesis(ctx, safetytypes.NewGenesisState(safetytypes.Params{
+		if err := app.SafetyKeeper.SetParams(ctx, safetytypes.Params{
 			Authority: govAddr,
 			Operator:  operator,
 			Scope:     []string{safetytypes.Wildcard},
-		}, []string{msgSendURL}))
+		}); err != nil {
+			return nil, err
+		}
+		_, err = msgservice.Dispatch[*safetytypes.MsgTripResponse](sdk.UnwrapSDKContext(ctx), app.MsgServiceRouter(),
+			safetytypes.NewMsgTrip(operator, msgSendURL))
+		return vm, err
 	})
 	require.NoError(t, app.LoadLatestVersion())
 	f.app = app
@@ -124,4 +130,10 @@ func TestUpgradeFromCircuit(t *testing.T) {
 	require.Equal(t, operator, f.params().Operator)
 	require.Equal(t, []string{msgSendURL}, f.disabled())
 	f.requireRejected(f.user, safetytypes.ErrMsgDisabled, send(f.user, f.other))
+
+	// a misspelled type URL fails the trip, so a typo in the handler's list
+	// fails the upgrade instead of disabling nothing
+	_, err = msgservice.Dispatch[*safetytypes.MsgTripResponse](f.ctx(), f.app.MsgServiceRouter(),
+		safetytypes.NewMsgTrip(operator, "/cosmos.bank.v1beta1.MsgSnd"))
+	require.ErrorIs(t, err, safetytypes.ErrNoMatchingMsg)
 }

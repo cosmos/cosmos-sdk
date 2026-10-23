@@ -197,7 +197,7 @@ resp, err := msgservice.Dispatch[*authz.MsgExecResponse](ctx, app.MsgServiceRout
 
 `Dispatch` does not check signers, so authorize them before the call as before. It writes its branch of `ctx` only on success, so the multistore under `ctx` must return a branch from `CacheMultiStore`, not itself.
 
-Logic that does not need a msg, such as a send in an upgrade handler, calls the keeper: `app.BankKeeper.SendCoins(ctx, from, to, amt)`. Upgrade handlers call keepers rather than `Dispatch`, so a trip cannot halt an upgrade.
+Logic that does not need a msg, such as a send in an upgrade handler, calls the keeper: `app.BankKeeper.SendCoins(ctx, from, to, amt)`. Upgrade handlers call keepers rather than `Dispatch`, so a trip cannot halt an upgrade. The circuit migration's `MsgTrip` is the one exception: it is protected, so no trip blocks it.
 
 Upgrade handlers that ran a msg on a keeper or msg server move to these keeper paths, each with the msg's validation and no authority check:
 

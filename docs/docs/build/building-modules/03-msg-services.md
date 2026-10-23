@@ -49,7 +49,7 @@ An `sdk.Msg` runs only through the app's `MsgServiceRouter`, which checks the ci
 ```go
 package keeper
 
-var NewMsgServerImpl = newMsgServerImpl
+var NewMsgServerForTest = newMsgServerImpl
 ```
 
 `msgServer` methods can retrieve the `sdk.Context` from the `context.Context` parameter using the `sdk.UnwrapSDKContext` method:

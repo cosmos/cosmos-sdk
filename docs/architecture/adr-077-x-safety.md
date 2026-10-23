@@ -5,6 +5,7 @@
 * 2026-10-21: Initial draft
 * 2026-10-22: Msgs run only through the router; split into the x/safety PR and the msg server PR
 * 2026-10-23: Correct the downstream migration and compatibility claims; leave the removal release open; shorten
+* 2026-10-23: Correct the refusal error, the keeper Msg methods, the circuit store and the migration of circuit trips
 
 ## Status
 
@@ -65,7 +66,7 @@ When the authority narrows the scope, existing trips stay in place; gov resets t
 
 ### Enforcement
 
-* **Router.** The keeper implements `baseapp.CircuitBreaker`, and the app wires it with `BaseApp.SetCircuitBreaker`. The router checks every msg it routes, in every exec mode, including block hooks, vote extensions and query contexts. A refusal returns `sdkerrors.ErrCircuitBreakerTripped`. A hybrid handler checks the msg type it was registered for, not the type of the request it receives.
+* **Router.** The keeper implements `baseapp.CircuitBreaker`, and the app wires it with `BaseApp.SetCircuitBreaker`. The router checks every msg it routes, in every exec mode, including block hooks, vote extensions and query contexts. An x/safety refusal returns `ErrMsgDisabled` from the safety codespace; a breaker that refuses with no error of its own gets `sdkerrors.ErrCircuitBreakerTripped`. A hybrid handler checks the msg type it was registered for, not the type of the request it receives.
 * **Ante.** `HandlerOptions.CircuitBreaker` adds `ante.CircuitBreakerDecorator`, which checks every msg in a tx and recurses into any msg with `GetMessages` or `GetMsgs`, as deep as the tx decoder unpacks. It runs in `CheckTx`, `ReCheckTx`, `Simulate`, and in `PrepareProposal` and `ProcessProposal` when the app runs the ante chain there. It passes txs through in `FinalizeBlock`, so a tx included after a trip spends its sequence and fails at the router, and cannot execute after the reset.
 * **Dispatch.** Code outside the module that owns a msg, such as a cosmos/evm precompile, runs it with `msgservice.Dispatch[R](ctx, router, msg)`. `Dispatch` calls the router handler on a branch of `ctx`, so `ValidateBasic`, the breaker and the msg server's events apply, writes the branch only on success, and returns the typed response. The caller still authorizes the signers.
 * **Keepers.** Logic that other modules need, such as authz `DispatchActions` or a bank send, stays an exported keeper method that the breaker does not see. Upgrade handlers call keepers, not `Dispatch`, so a trip cannot halt an upgrade; x/safety and x/consensus export `SetParams` for that.
@@ -74,7 +75,7 @@ When the authority narrows the scope, existing trips stay in place; gov resets t
 
 ### Unexported msg servers
 
-After the msg server PR, code runs an SDK `sdk.Msg` only through the router. Each SDK module unexports its msg server type and exports `RegisterMsgServer`, which `RegisterServices` calls. The authz, group, consensus, crisis, nft and counter keepers stop implementing their Msg service.
+Each SDK module unexports its msg server type and exports `RegisterMsgServer`, which `RegisterServices` calls. The authz, group, consensus, crisis, nft and counter keepers move their Msg handlers to an unexported type and keep deprecated Msg methods on the keeper, so they still satisfy their `MsgServer` interface until those methods go. Once they go, code runs an SDK `sdk.Msg` only through the router, short of a caller that passes `RegisterMsgServer` a fake registrar to capture the msg server.
 
 Deprecated wrappers, kept until a future release removes them:
 
@@ -92,7 +93,7 @@ x/safety uses gogoproto types only: no `cosmossdk.io/api` types, no autocli opti
 
 ### Migrating from x/circuit
 
-In one upgrade, the chain deletes the circuit store, adds the safety store, and swaps the circuit keeper for the safety keeper in `SetCircuitBreaker` and the ante handler. x/safety does not read the circuit disabled list or permissions. The upgrade handler sets the operator and scope, or governance sets them in a later proposal, and the operator re-trips anything that must stay blocked.
+In one upgrade, the chain stops mounting the circuit store, whose data stays in the database outside the app hash, adds the safety store, and swaps the circuit keeper for the safety keeper in `SetCircuitBreaker` and the ante handler. x/safety does not read the circuit disabled list or permissions, so the upgrade handler calls the safety keeper's `InitGenesis` with the operator, the scope and the msg type URLs circuit had tripped, and the upgrade block refuses them.
 
 ## Consequences
 
@@ -100,13 +101,13 @@ In one upgrade, the chain deletes the circuit store, adds the safety store, and 
 
 In the x/safety PR, the SDK adds `x/safety`, `msgservice.Dispatch` and `MsgRouter`, `ante.HandlerOptions.CircuitBreaker` and `NewCircuitBreakerDecorator`, and `sdkerrors.ErrCircuitBreakerTripped`. Three results change:
 
-* When a breaker refuses without an error of its own, as `contrib/x/circuit` does, the tx now fails with codespace `sdk`, code 43, where it failed with codespace `undefined`, code 1. The chain hashes tx results into the results hash, so a backport to v0.54.x breaks the state machine.
+* When a breaker refuses without an error of its own, as `contrib/x/circuit` does, the tx now fails with codespace `sdk`, code 43, where it failed with codespace `undefined`, code 1. The chain hashes tx results into the results hash, so a backport to v0.54.x or v0.55.x breaks the state machine.
 * A hybrid handler refuses a request when its own msg type is tripped, whatever the request's type.
 * `CollectionPaginate` and `CollectionFilteredPaginate` report the real total when `count_total` is set and the offset runs past the last item.
 
 The SDK also deprecates `contrib/x/circuit`, so staticcheck reports SA1019 on its import.
 
-In the msg server PR, the SDK adds `RegisterMsgServer` to each keeper package, `NewHelperWithRouter` and consensus `Keeper.SetParams`, and deprecates the APIs listed under [Unexported msg servers](#unexported-msg-servers). Nothing breaks at compile time; staticcheck reports SA1019 at each call until the caller migrates.
+In the msg server PR, the SDK adds `RegisterMsgServer` to each keeper package, `NewHelperWithRouter` and consensus `Keeper.SetParams`, and deprecates the APIs listed under [Unexported msg servers](#unexported-msg-servers). Nothing breaks at compile time; staticcheck reports SA1019 at each call to a deprecated function until the caller migrates. It does not flag a keeper registered as its own `MsgServer`, since that path calls no deprecated function by name.
 
 ### Positive
 
@@ -114,7 +115,7 @@ In the msg server PR, the SDK adds `RegisterMsgServer` to each keeper package, `
 * The `MsgTrip` handler rejects typos, empty lists and protected msgs.
 * The operator cannot block the reset or governance with any sequence of trips.
 * Gov controls the operator and scope through ordinary proposals and can hand off the authority.
-* Once maintainers remove the deprecated APIs, code that calls another module's msg server directly no longer compiles.
+* Once maintainers remove the deprecated APIs, code that calls another module's msg server directly no longer compiles, short of capturing it through a fake registrar.
 
 ### Negative
 
@@ -137,7 +138,7 @@ In the msg server PR, the SDK adds `RegisterMsgServer` to each keeper package, `
 
 * Switching cosmos/evm precompiles and packet-forward-middleware to `Dispatch`.
 * A bank `SendRestriction` backed by the breaker, to cover keeper-level transfers.
-* A backport to v0.54.x for chains on that line, including cosmos/evm.
+* A backport to v0.54.x and v0.55.x for chains on those lines, including cosmos/evm.
 * The release that removes the deprecated msg server APIs.
 
 ## Test Cases

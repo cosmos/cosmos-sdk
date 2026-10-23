@@ -62,15 +62,15 @@ An authority or validator acting through an authz grant or group policy can stil
 
 ### Scope changes and expiry
 
-When the authority narrows the scope, existing trips stay in place; gov resets them in the same proposal. Trips never expire.
+When the authority narrows the scope, existing trips stay in place; gov resets them in a separate proposal, since a reset that names an entry the operator already removed fails the whole proposal. Trips never expire.
 
 ### Enforcement
 
 * **Router.** The keeper implements `baseapp.CircuitBreaker`, and the app wires it with `BaseApp.SetCircuitBreaker`. The router checks every msg it routes, in every exec mode, including block hooks, vote extensions and query contexts. An x/safety refusal returns `ErrMsgDisabled` from the safety codespace; a breaker that refuses with no error of its own gets `sdkerrors.ErrCircuitBreakerTripped`. A hybrid handler checks the msg type it was registered for, not the type of the request it receives.
 * **Ante.** `HandlerOptions.CircuitBreaker` adds `ante.CircuitBreakerDecorator`, which checks every msg in a tx and recurses into any msg with `GetMessages` or `GetMsgs`, as deep as the tx decoder unpacks. It runs in `CheckTx`, `ReCheckTx`, `Simulate`, and in `PrepareProposal` and `ProcessProposal` when the app runs the ante chain there. It passes txs through in `FinalizeBlock`, so a tx included after a trip spends its sequence and fails at the router, and cannot execute after the reset.
 * **Dispatch.** Code outside the module that owns a msg, such as a cosmos/evm precompile, runs it with `msgservice.Dispatch[R](ctx, router, msg)`. `Dispatch` calls the router handler on a branch of `ctx`, so `ValidateBasic`, the breaker and the msg server's events apply, writes the branch only on success, and returns the typed response. The caller still authorizes the signers.
-* **Keepers.** Logic that other modules need, such as authz `DispatchActions` or a bank send, stays an exported keeper method that the breaker does not see. Upgrade handlers call keepers, not `Dispatch`, so a trip cannot halt an upgrade; x/safety and x/consensus export `SetParams` for that.
-* **Gas.** The keeper reads the disabled list on an infinite gas meter, so the check charges no gas and `Simulate` matches `FinalizeBlock`. Per msg the keeper makes at most two point lookups plus one per package segment.
+* **Keepers.** Logic that other modules need, such as authz `DispatchActions` or a bank send, stays an exported keeper method that the breaker does not see. Upgrade handlers call keepers, not `Dispatch`, so a trip cannot halt an upgrade; x/safety and x/consensus export `SetParams` for that. The circuit migration's `MsgTrip` is the one exception: it is protected, so no trip blocks it.
+* **Gas.** The keeper reads the disabled list on an infinite gas meter, so the check charges no gas, and a msg uses the same gas as on a chain with no circuit breaker. Per msg the keeper makes at most two point lookups plus one per package segment.
 * A breaker that returns an error blocks the msg.
 
 ### Unexported msg servers

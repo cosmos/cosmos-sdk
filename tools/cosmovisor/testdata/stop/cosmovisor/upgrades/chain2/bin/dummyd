@@ -1,0 +1,4 @@
+#!/bin/sh
+
+test "$1" = pre-upgrade && exit 0
+echo upgraded app started

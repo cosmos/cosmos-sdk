@@ -44,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#23683](https://github.com/cosmos/cosmos-sdk/pull/23683) Replace `SigInt` with `SigTerm` to gracefully shutdown the process.
 * [#26526](https://github.com/cosmos/cosmos-sdk/pull/26526) Buffer the `cmdDone` and `psChan` channels in `WaitForUpgradeOrExit` so the `cmd.Wait` / `Process.Wait` goroutines do not leak on the upgrade and shutdown-grace-timeout paths.
+* [#26879](https://github.com/cosmos/cosmos-sdk/pull/26879) Stop the per-run signal handler and batch upgrade watcher when `Launcher.Run` returns, so a `SIGTERM` after an upgrade reaches the upgraded app instead of exiting Cosmovisor and leaving the app running. Exit 0 if the app has already exited when a stop signal is forwarded, including during upgrade steps.
 
 ## v1.7.1 - 2025-01-12
 

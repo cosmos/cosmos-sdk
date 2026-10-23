@@ -93,7 +93,7 @@ x/safety uses gogoproto types only: no `cosmossdk.io/api` types, no autocli opti
 
 ### Migrating from x/circuit
 
-In one upgrade, the chain stops mounting the circuit store, whose data stays in the database outside the app hash, adds the safety store, and swaps the circuit keeper for the safety keeper in `SetCircuitBreaker` and the ante handler. x/safety does not read the circuit disabled list or permissions, so the upgrade handler calls the safety keeper's `InitGenesis` with the operator, the scope and the msg type URLs circuit had tripped, and the upgrade block refuses them.
+In one upgrade, the chain stops mounting the circuit store, whose data stays in the database outside the app hash, adds the safety store, and swaps the circuit keeper for the safety keeper in `SetCircuitBreaker` and the ante handler. x/safety does not read the circuit disabled list or permissions, so the upgrade handler sets the operator and scope, then dispatches a `MsgTrip` from the operator for the msg type URLs circuit had tripped, and the upgrade block refuses them. `MsgTrip` refuses a URL that matches no registered msg, so a typo fails the upgrade instead of disabling nothing.
 
 ## Consequences
 

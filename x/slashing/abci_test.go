@@ -48,7 +48,7 @@ func TestBeginBlocker(t *testing.T) {
 	pks := simtestutil.CreateTestPubKeys(1)
 	simtestutil.AddTestAddrsFromPubKeys(bankKeeper, stakingKeeper, ctx, pks, stakingKeeper.TokensFromConsensusPower(ctx, 200))
 	addr, pk := sdk.ValAddress(pks[0].Address()), pks[0]
-	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
+	tstaking := stakingtestutil.NewHelperWithRouter(t, ctx, stakingKeeper, app.MsgServiceRouter())
 
 	// bond the validator
 	power := int64(100)

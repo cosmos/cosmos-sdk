@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	"google.golang.org/grpc"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/safety/types"
@@ -14,9 +16,25 @@ type msgServer struct {
 
 var _ types.MsgServer = msgServer{}
 
-// NewMsgServerImpl returns an implementation of the x/safety MsgServer.
-func NewMsgServerImpl(k Keeper) types.MsgServer {
+// newMsgServerImpl returns an implementation of the x/safety MsgServer.
+func newMsgServerImpl(k Keeper) types.MsgServer {
 	return msgServer{Keeper: k}
+}
+
+// NewMsgServerImpl returns an implementation of the x/safety MsgServer.
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. NewMsgServerImpl will be
+// removed in the next release.
+func NewMsgServerImpl(k Keeper) types.MsgServer {
+	return newMsgServerImpl(k)
+}
+
+// RegisterMsgServer registers the x/safety Msg service on r. The msg server
+// is unexported: code outside the module runs a msg through the
+// MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) {
+	types.RegisterMsgServer(r, newMsgServerImpl(k))
 }
 
 // UpdateParams replaces the params. Only the authority may call it. It never

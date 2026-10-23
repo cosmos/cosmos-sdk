@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -51,9 +52,26 @@ func (k Keeper) GetCount(ctx context.Context, _ *types.QueryGetCountRequest) (*t
 
 // MsgServer
 
-var _ types.MsgServer = Keeper{}
+type msgServer struct {
+	*Keeper
+}
 
-func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter) (*types.MsgIncreaseCountResponse, error) {
+var _ types.MsgServer = msgServer{}
+
+// newMsgServerImpl returns an implementation of the x/counter MsgServer
+// interface for the provided Keeper.
+func newMsgServerImpl(k *Keeper) types.MsgServer {
+	return msgServer{Keeper: k}
+}
+
+// RegisterMsgServer registers the x/counter Msg service on r. The msg server
+// is unexported: code outside the module runs a msg through the
+// MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k *Keeper) {
+	types.RegisterMsgServer(r, newMsgServerImpl(k))
+}
+
+func (k msgServer) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter) (*types.MsgIncreaseCountResponse, error) {
 	var num int64
 	num, err := k.CountStore.Get(ctx)
 	if err != nil {
@@ -104,4 +122,12 @@ func (k *Keeper) SetHooks(gh types.CounterHooks) *Keeper {
 
 	k.hooks = gh
 	return k
+}
+
+// IncreaseCount runs MsgIncreaseCounter on the module's msg server.
+//
+// Deprecated: run MsgIncreaseCounter with msgservice.Dispatch.
+// Keeper.IncreaseCount will be removed in the next release.
+func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter) (*types.MsgIncreaseCountResponse, error) {
+	return newMsgServerImpl(&k).IncreaseCount(ctx, msg)
 }

@@ -36,7 +36,7 @@ var adminAddr = sdk.AccAddress("admin").String()
 func TestMsgServerUpdateParams(t *testing.T) {
 	t.Run("successfully updates params with valid admin", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -70,7 +70,7 @@ func TestMsgServerUpdateParams(t *testing.T) {
 
 	t.Run("fails with invalid admin", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
 
@@ -87,7 +87,7 @@ func TestMsgServerUpdateParams(t *testing.T) {
 
 	t.Run("fallback to keeper authority", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
 
@@ -112,7 +112,7 @@ func TestMsgServerUpdateParams(t *testing.T) {
 
 	t.Run("consensus params authority takes precedence", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
 
@@ -145,7 +145,7 @@ func TestMsgServerUpdateParams(t *testing.T) {
 
 	t.Run("fails when params are uninitialized", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		// Do NOT initialize params — admin is unknown
 		msg := &poatypes.MsgUpdateParams{
@@ -162,7 +162,7 @@ func TestMsgServerUpdateParams(t *testing.T) {
 func TestMsgServerCreateValidator(t *testing.T) {
 	t.Run("successfully creates validator", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Generate pubkey
@@ -212,7 +212,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 	t.Run("creates validator with complete metadata", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Generate pubkey
@@ -245,7 +245,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 	t.Run("fails when non-admin tries to create validator", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		pubKey := ed25519.GenPrivKey().PubKey()
@@ -268,7 +268,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 	t.Run("fails when creating zero-powered validator", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		pubKey := ed25519.GenPrivKey().PubKey()
@@ -291,7 +291,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 	t.Run("fails validation with empty moniker", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		pubKey := ed25519.GenPrivKey().PubKey()
@@ -314,7 +314,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 	t.Run("fails validation with moniker too long", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		pubKey := ed25519.GenPrivKey().PubKey()
@@ -340,7 +340,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 	t.Run("fails validation with description too long", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		pubKey := ed25519.GenPrivKey().PubKey()
@@ -366,7 +366,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 	t.Run("fails validation with missing operator address", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		pubKey := ed25519.GenPrivKey().PubKey()
@@ -388,7 +388,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 	t.Run("fails validation with invalid operator address", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		pubKey := ed25519.GenPrivKey().PubKey()
@@ -494,7 +494,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 	t.Run("fails when creating validator with duplicate operator address", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Use same operator address for both validators
@@ -537,7 +537,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 	t.Run("rejects same key for operator and consensus", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Use same key for both operator and consensus
@@ -563,7 +563,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 	t.Run("accepts different keys for operator and consensus", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Use different keys
@@ -595,7 +595,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 	t.Run("rejects pubkey type not in consensus params", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Set consensus params to only allow secp256k1 (not ed25519)
@@ -626,7 +626,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 	t.Run("accepts pubkey type in consensus params", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Set consensus params to allow ed25519
@@ -663,7 +663,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 	t.Run("rejects secp256k1 pubkey when only ed25519 is allowed", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Set consensus params to only allow ed25519
@@ -696,7 +696,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 
 	t.Run("fails when params are uninitialized", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		pubKey := ed25519.GenPrivKey().PubKey()
 		pubKeyAny := types.UnsafePackAny(pubKey)
@@ -719,7 +719,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 func TestMsgServerUpdateValidators(t *testing.T) {
 	t.Run("successfully updates validators with valid admin", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -761,7 +761,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("fails with invalid admin", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -797,7 +797,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("updates multiple validators at once", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -885,7 +885,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("rejects update that would set total power to zero", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -928,7 +928,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("empty update array is a no-op", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -973,7 +973,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("sets validator power to zero with other validators present", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -1036,7 +1036,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("fails validation with negative power", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -1073,7 +1073,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("fails validation with missing operator address", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -1105,7 +1105,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("rejects update with operator address matching consensus key", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -1155,7 +1155,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("accepts update with different operator address", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -1211,7 +1211,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("rejects update when pubkey type not in consensus params", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -1261,7 +1261,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("accepts update when pubkey type is in consensus params", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -1309,7 +1309,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("fallback to keeper authority", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -1354,7 +1354,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("consensus params authority takes precedence", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -1407,7 +1407,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("metadata-only update preserves power", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -1460,7 +1460,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("re-activates zero-power validator", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -1530,7 +1530,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("partial failure reverts all updates", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -1603,7 +1603,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("duplicate consensus address in update last wins", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		err := f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr})
 		require.NoError(t, err)
@@ -1645,7 +1645,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 
 	t.Run("fails when params are uninitialized", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		pubKey := ed25519.GenPrivKey().PubKey()
 		pubKeyAny := types.UnsafePackAny(pubKey)
@@ -1672,7 +1672,7 @@ func TestMsgServerUpdateValidators(t *testing.T) {
 func TestMsgServerWithdrawFees(t *testing.T) {
 	t.Run("successfully withdraws fees", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		// Create validator
 		opAddr, _ := createValidator(t, f, 1, 100)
@@ -1734,7 +1734,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 
 	t.Run("withdraws zero when no fees available", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		// Create validator
 		opAddr, _ := createValidator(t, f, 1, 100)
@@ -1760,7 +1760,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 
 	t.Run("withdraws correct amount with multiple validators", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		// Create validators with different power
 		opAddr1, _ := createValidator(t, f, 1, 100) // 25% power
@@ -1805,7 +1805,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 
 	t.Run("withdraws multiple denominations", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		// Create validator
 		opAddr, _ := createValidator(t, f, 1, 100)
@@ -1866,7 +1866,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 
 	t.Run("fails with invalid operator address", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		// Try to withdraw with invalid address
 		msg := &poatypes.MsgWithdrawFees{
@@ -1879,7 +1879,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 
 	t.Run("fails validation with empty operator address", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		// Try to withdraw with empty address (should fail when parsing address)
 		msg := &poatypes.MsgWithdrawFees{
@@ -1893,7 +1893,7 @@ func TestMsgServerWithdrawFees(t *testing.T) {
 
 	t.Run("withdraws pending fees without checkpoint", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		// Create validator
 		opAddr, _ := createValidator(t, f, 1, 100)
@@ -1924,7 +1924,7 @@ func TestMsgServerRotateConsPubKey(t *testing.T) {
 	t.Run("operator self-rotate applies and operator index resolves to new cons-addr", func(t *testing.T) {
 		f := setupTest(t)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		operatorAddr, oldConsAddr, _ := createRotatableValidator(t, f, 100)
 		newPubKey := ed25519.GenPrivKey().PubKey()
@@ -1963,7 +1963,7 @@ func TestMsgServerRotateConsPubKey(t *testing.T) {
 	t.Run("admin rotates another validator", func(t *testing.T) {
 		f := setupTest(t)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
 		newPubKey := ed25519.GenPrivKey().PubKey()
@@ -1987,7 +1987,7 @@ func TestMsgServerRotateConsPubKey(t *testing.T) {
 	t.Run("unrelated sender is rejected", func(t *testing.T) {
 		f := setupTest(t)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
 		stranger := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
@@ -2006,7 +2006,7 @@ func TestMsgServerRotateConsPubKey(t *testing.T) {
 	t.Run("unknown target validator is rejected", func(t *testing.T) {
 		f := setupTest(t)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		operatorAddr := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 		msg := &poatypes.MsgRotateConsPubKey{
@@ -2022,7 +2022,7 @@ func TestMsgServerRotateConsPubKey(t *testing.T) {
 	t.Run("rotate to an in-use key is rejected", func(t *testing.T) {
 		f := setupTest(t)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
 		_, _, otherConsPubKey := createRotatableValidator(t, f, 100)
@@ -2040,7 +2040,7 @@ func TestMsgServerRotateConsPubKey(t *testing.T) {
 	t.Run("no-op rotation to the current key is rejected", func(t *testing.T) {
 		f := setupTest(t)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		operatorAddr, _, consPubKey := createRotatableValidator(t, f, 100)
 
@@ -2057,7 +2057,7 @@ func TestMsgServerRotateConsPubKey(t *testing.T) {
 	t.Run("wrong-type pubkey is rejected", func(t *testing.T) {
 		f := setupTest(t)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 
 		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
 

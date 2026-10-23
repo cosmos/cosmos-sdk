@@ -19,6 +19,8 @@ import (
 	"context"
 	"strconv"
 
+	"google.golang.org/grpc"
+
 	errorsmod "cosmossdk.io/errors"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -27,22 +29,45 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// MsgServer implements the module's gRPC message service.
-type MsgServer struct {
+// msgServer implements the module's gRPC message service.
+type msgServer struct {
 	keeper *Keeper
 }
 
-var _ types.MsgServer = (*MsgServer)(nil)
+var _ types.MsgServer = (*msgServer)(nil)
 
-// NewMsgServer creates a new MsgServer instance.
-func NewMsgServer(keeper *Keeper) *MsgServer {
-	return &MsgServer{
+// newMsgServerImpl creates a new msgServer instance.
+func newMsgServerImpl(keeper *Keeper) *msgServer {
+	return &msgServer{
 		keeper: keeper,
 	}
 }
 
+// MsgServer is the x/poa msg server.
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. MsgServer will be removed in
+// the next release.
+type MsgServer = msgServer
+
+// NewMsgServer returns the x/poa msg server.
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. NewMsgServer will be removed in
+// the next release.
+func NewMsgServer(keeper *Keeper) *MsgServer {
+	return newMsgServerImpl(keeper)
+}
+
+// RegisterMsgServer registers the x/poa Msg service on r. The msg server is
+// unexported: code outside the module runs a msg through the
+// MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k *Keeper) {
+	types.RegisterMsgServer(r, newMsgServerImpl(k))
+}
+
 // UpdateParams updates the module parameters. Only the admin can update parameters.
-func (s *MsgServer) UpdateParams(
+func (s *msgServer) UpdateParams(
 	ctx context.Context, req *types.MsgUpdateParams,
 ) (*types.MsgUpdateParamsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -76,7 +101,7 @@ func (s *MsgServer) UpdateParams(
 }
 
 // CreateValidator creates a new validator with initial positive power. Only the admin can create validators.
-func (s *MsgServer) CreateValidator(
+func (s *msgServer) CreateValidator(
 	ctx context.Context, req *types.MsgCreateValidator,
 ) (*types.MsgCreateValidatorResponse, error) {
 	var pubKey cryptotypes.PubKey
@@ -139,7 +164,7 @@ func (s *MsgServer) CreateValidator(
 }
 
 // UpdateValidators updates one or more validators. Only the admin can update validators.
-func (s *MsgServer) UpdateValidators(
+func (s *msgServer) UpdateValidators(
 	ctx context.Context, req *types.MsgUpdateValidators,
 ) (*types.MsgUpdateValidatorsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -179,7 +204,7 @@ func (s *MsgServer) UpdateValidators(
 }
 
 // WithdrawFees allows a validator operator to withdraw their accumulated transaction fees.
-func (s *MsgServer) WithdrawFees(
+func (s *msgServer) WithdrawFees(
 	ctx context.Context, req *types.MsgWithdrawFees,
 ) (*types.MsgWithdrawFeesResponse, error) {
 	operatorAddress, err := sdk.AccAddressFromBech32(req.Operator)
@@ -207,7 +232,7 @@ func (s *MsgServer) WithdrawFees(
 
 // RotateConsPubKey rotates a validator's consensus public key. The validator
 // operator may rotate their own key, and the admin may rotate any validator's key.
-func (s *MsgServer) RotateConsPubKey(
+func (s *msgServer) RotateConsPubKey(
 	ctx context.Context, req *types.MsgRotateConsPubKey,
 ) (*types.MsgRotateConsPubKeyResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

@@ -69,7 +69,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.mintKeeper.Minter.Set(s.ctx, types.DefaultInitialMinter()))
 
-	s.msgServer = keeper.NewMsgServerImpl(s.mintKeeper)
+	s.msgServer = keeper.NewMsgServerForTest(s.mintKeeper)
 }
 
 func (s *IntegrationTestSuite) TestAliasFunctions() {

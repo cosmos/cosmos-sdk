@@ -15,9 +15,9 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -249,7 +249,6 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 func TestExportImportGenesisWithPendingConsensusKeyRotation(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
-	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
 
 	oldPk := ed25519.GenPrivKey().PubKey()
 	newPk := ed25519.GenPrivKey().PubKey()
@@ -259,7 +258,7 @@ func TestExportImportGenesisWithPendingConsensusKeyRotation(t *testing.T) {
 	// imported chain starts before comet activates the new key
 	writeHeight := f.app.LastBlockHeight()
 	writeCtx := f.sdkCtx.WithBlockHeight(writeHeight)
-	_, err := msgServer.RotateConsPubKey(writeCtx, &types.MsgRotateConsPubKey{
+	_, err := msgservice.Dispatch[*types.MsgRotateConsPubKeyResponse](writeCtx, f.app.MsgServiceRouter(), &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, newPk),
 	})
@@ -356,7 +355,6 @@ func TestExportImportGenesisWithPendingConsensusKeyRotation(t *testing.T) {
 func TestExportImportZeroHeightGenesisWithPendingConsensusKeyRotation(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
-	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
 
 	oldPk := ed25519.GenPrivKey().PubKey()
 	newPk := ed25519.GenPrivKey().PubKey()
@@ -365,7 +363,7 @@ func TestExportImportZeroHeightGenesisWithPendingConsensusKeyRotation(t *testing
 	// queue a rotation before the zero height prep runs
 	writeHeight := int64(100)
 	writeCtx := f.sdkCtx.WithBlockHeight(writeHeight)
-	_, err := msgServer.RotateConsPubKey(writeCtx, &types.MsgRotateConsPubKey{
+	_, err := msgservice.Dispatch[*types.MsgRotateConsPubKeyResponse](writeCtx, f.app.MsgServiceRouter(), &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, newPk),
 	})
@@ -444,7 +442,6 @@ func TestExportImportZeroHeightGenesisWithPendingConsensusKeyRotation(t *testing
 func TestExportGenesisWithPendingConsensusKeyRotationAtActivationHeight(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
-	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
 
 	oldPk := ed25519.GenPrivKey().PubKey()
 	newPk := ed25519.GenPrivKey().PubKey()
@@ -454,7 +451,7 @@ func TestExportGenesisWithPendingConsensusKeyRotationAtActivationHeight(t *testi
 	// the imported initial height is the activation height
 	writeHeight := f.app.LastBlockHeight()
 	writeCtx := f.sdkCtx.WithBlockHeight(writeHeight)
-	_, err := msgServer.RotateConsPubKey(writeCtx, &types.MsgRotateConsPubKey{
+	_, err := msgservice.Dispatch[*types.MsgRotateConsPubKeyResponse](writeCtx, f.app.MsgServiceRouter(), &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, newPk),
 	})
@@ -526,7 +523,6 @@ func TestExportGenesisWithPendingConsensusKeyRotationAtActivationHeight(t *testi
 func TestExportImportGenesisWithAppliedConsensusKeyRotationHistory(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
-	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
 
 	oldPk := ed25519.GenPrivKey().PubKey()
 	newPk := ed25519.GenPrivKey().PubKey()
@@ -537,7 +533,7 @@ func TestExportImportGenesisWithAppliedConsensusKeyRotationHistory(t *testing.T)
 	// there should be no pending apply queue entry
 	writeHeight := f.app.LastBlockHeight()
 	writeCtx := f.sdkCtx.WithBlockHeight(writeHeight)
-	_, err := msgServer.RotateConsPubKey(writeCtx, &types.MsgRotateConsPubKey{
+	_, err := msgservice.Dispatch[*types.MsgRotateConsPubKeyResponse](writeCtx, f.app.MsgServiceRouter(), &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, newPk),
 	})
@@ -593,7 +589,7 @@ func TestExportImportGenesisWithAppliedConsensusKeyRotationHistory(t *testing.T)
 
 	// the restored history should still block another rotation
 	// this should hold until the unbonding window has passed
-	_, err = keeper.NewMsgServerImpl(imported.stakingKeeper).RotateConsPubKey(imported.sdkCtx, &types.MsgRotateConsPubKey{
+	_, err = msgservice.Dispatch[*types.MsgRotateConsPubKeyResponse](imported.sdkCtx, imported.app.MsgServiceRouter(), &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, nextPk),
 	})

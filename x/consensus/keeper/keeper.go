@@ -2,9 +2,11 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -56,7 +58,24 @@ func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types
 
 // MsgServer
 
-var _ types.MsgServer = Keeper{}
+type msgServer struct {
+	Keeper
+}
+
+var _ types.MsgServer = msgServer{}
+
+// newMsgServerImpl returns an implementation of the x/consensus MsgServer
+// interface for the provided Keeper.
+func newMsgServerImpl(k Keeper) types.MsgServer {
+	return msgServer{Keeper: k}
+}
+
+// RegisterMsgServer registers the x/consensus Msg service on r. The msg server
+// is unexported: code outside the module runs a msg through the
+// MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) {
+	types.RegisterMsgServer(r, newMsgServerImpl(k))
+}
 
 func (k *Keeper) GetAuthority() string {
 	return k.authority
@@ -66,7 +85,7 @@ func (k *Keeper) GetAuthority() string {
 // takes effect at the start of the next block, when BeginBlock loads fresh
 // consensus params from the store. Within the same block as this update,
 // ValidateAuthority still checks against the old authority.
-func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	if err := sdk.ValidateAuthority(sdkCtx, k.authority, msg.Authority); err != nil {
@@ -78,29 +97,7 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 		return nil, err
 	}
 
-	paramsProto, err := k.ParamsStore.Get(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// initialize version params with zero value if not set
-	if paramsProto.Version == nil {
-		paramsProto.Version = &cmtproto.VersionParams{}
-	}
-
-	params := cmttypes.ConsensusParamsFromProto(paramsProto)
-
-	nextParams := params.Update(&consensusParams)
-
-	if err := nextParams.ValidateBasic(); err != nil {
-		return nil, err
-	}
-
-	if err := params.ValidateUpdate(&consensusParams, sdkCtx.BlockHeader().Height); err != nil {
-		return nil, err
-	}
-
-	if err := k.ParamsStore.Set(ctx, nextParams.ToProto()); err != nil {
+	if err := k.SetParams(ctx, consensusParams); err != nil {
 		return nil, err
 	}
 
@@ -114,4 +111,48 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+// SetParams applies update to the stored consensus params with the same
+// validation as MsgUpdateParams and no authority check. A nil section of update
+// leaves that section unchanged. Upgrade handlers call it in place of the msg.
+func (k Keeper) SetParams(ctx context.Context, update cmtproto.ConsensusParams) error {
+	if update.Authority != nil && update.Authority.Authority != "" {
+		if _, err := sdk.AccAddressFromBech32(update.Authority.Authority); err != nil {
+			return fmt.Errorf("invalid authority address in auth params: %w", err)
+		}
+	}
+
+	paramsProto, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return err
+	}
+
+	// initialize version params with zero value if not set
+	if paramsProto.Version == nil {
+		paramsProto.Version = &cmtproto.VersionParams{}
+	}
+
+	params := cmttypes.ConsensusParamsFromProto(paramsProto)
+
+	nextParams := params.Update(&update)
+
+	if err := nextParams.ValidateBasic(); err != nil {
+		return err
+	}
+
+	if err := params.ValidateUpdate(&update, sdk.UnwrapSDKContext(ctx).BlockHeader().Height); err != nil {
+		return err
+	}
+
+	return k.ParamsStore.Set(ctx, nextParams.ToProto())
+}
+
+// UpdateParams runs MsgUpdateParams on the module's msg server.
+//
+// Deprecated: run MsgUpdateParams with msgservice.Dispatch, or call SetParams
+// from an upgrade handler.
+// Keeper.UpdateParams will be removed in the next release.
+func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	return newMsgServerImpl(k).UpdateParams(ctx, msg)
 }

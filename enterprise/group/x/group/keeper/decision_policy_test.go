@@ -84,6 +84,7 @@ func TestLeaveGroup_MalformedPolicyUnpacking(t *testing.T) {
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	k := NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
+	msgServer := newMsgServerImpl(k)
 	ctx := testCtx.Ctx
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -92,7 +93,7 @@ func TestLeaveGroup_MalformedPolicyUnpacking(t *testing.T) {
 		{Address: addrs[0].String(), Weight: "1"},
 		{Address: addrs[1].String(), Weight: "1"},
 	}
-	groupRes, err := k.CreateGroup(ctx, &group.MsgCreateGroup{
+	groupRes, err := msgServer.CreateGroup(ctx, &group.MsgCreateGroup{
 		Admin:   addrs[0].String(),
 		Members: members,
 	})
@@ -110,7 +111,7 @@ func TestLeaveGroup_MalformedPolicyUnpacking(t *testing.T) {
 	nextAccVal := k.GetGroupPolicySeq(sdkCtx) + 1
 	derivationKey := make([]byte, 8)
 	binary.BigEndian.PutUint64(derivationKey, nextAccVal)
-	policyRes, err := k.CreateGroupPolicy(ctx, policyReq)
+	policyRes, err := msgServer.CreateGroupPolicy(ctx, policyReq)
 	require.NoError(t, err)
 	policyAddr := policyRes.Address
 
@@ -136,7 +137,7 @@ func TestLeaveGroup_MalformedPolicyUnpacking(t *testing.T) {
 
 	// LeaveGroup triggers validateDecisionPolicies, which loads policies and calls GetDecisionPolicy.
 	// With corrupted policy (wrong type in DecisionPolicy Any), we expect defensive error instead of panic.
-	_, err = k.LeaveGroup(ctx, &group.MsgLeaveGroup{
+	_, err = msgServer.LeaveGroup(ctx, &group.MsgLeaveGroup{
 		Address: addrs[1].String(),
 		GroupId: groupID,
 	})

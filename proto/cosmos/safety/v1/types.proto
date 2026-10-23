@@ -11,6 +11,7 @@ message Params {
   option (amino.name) = "cosmos-sdk/x/safety/Params";
 
   // authority is the address that sets params and resets any disabled pattern.
+  // The consensus AuthorityParams override replaces it when a chain sets one.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // operator is the single address that may trip and reset patterns covered

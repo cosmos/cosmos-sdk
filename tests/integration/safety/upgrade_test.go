@@ -89,7 +89,8 @@ func TestUpgradeFromCircuit(t *testing.T) {
 	}
 
 	// the new binary has no circuit wiring, so SimApp's x/safety keeper is
-	// the circuit breaker in the router and the ante handler
+	// the circuit breaker in the router and the ante handler; the handler
+	// names the operator and disables MsgSend again in the upgrade block
 	var fromVM module.VersionMap
 	app := simapp.NewSimApp(log.NewNopLogger(), f.db, false, simtestutil.NewAppOptionsWithFlagHome(f.home))
 	app.UpgradeKeeper.SetUpgradeHandler(upgradeName, func(ctx context.Context, _ upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -98,24 +99,19 @@ func TestUpgradeFromCircuit(t *testing.T) {
 		if err != nil {
 			return nil, err
 		}
-		return vm, app.SafetyKeeper.SetParams(ctx, safetytypes.Params{
+		return vm, app.SafetyKeeper.InitGenesis(ctx, safetytypes.NewGenesisState(safetytypes.Params{
 			Authority: govAddr,
 			Operator:  operator,
 			Scope:     []string{safetytypes.Wildcard},
-		})
+		}, []string{msgSendURL}))
 	})
 	require.NoError(t, app.LoadLatestVersion())
 	f.app = app
 
-	// in the upgrade block, MsgSend runs, since circuit's trip is gone, and
-	// the new operator trips it in x/safety
-	results := f.deliverTxs(
-		f.encode(f.user, send(f.user, f.other)),
-		f.encode(f.operator, safetytypes.NewMsgTrip(operator, msgSendURL)),
-	)
-	for _, r := range results {
-		require.Zero(t, r.Code, r.Log)
-	}
+	// in the upgrade block, MsgSend stays refused
+	res = f.deliver(f.user, send(f.user, f.other))
+	require.Equal(t, safetytypes.ErrMsgDisabled.ABCICode(), res.Code, res.Log)
+	require.Equal(t, safetytypes.ErrMsgDisabled.Codespace(), res.Codespace)
 	require.Equal(t, height, f.app.LastBlockHeight())
 	require.NotContains(t, committedStores(t, f), circuittypes.StoreKey)
 	require.Contains(t, fromVM, circuittypes.ModuleName)

@@ -339,12 +339,26 @@ if err := app.RegisterModules(safety.NewAppModule(app.SafetyKeeper)); err != nil
 app.ModuleManager.SetOrderInitGenesis(initGenesisOrder...) // genutil, then safety
 app.ModuleManager.SetOrderExportGenesis(initGenesisOrder...)
 app.SetInitChainer(app.InitChainer)
+
+anteHandler, err := ante.NewAnteHandler(ante.HandlerOptions{
+	// the options the tx module would set ...
+	CircuitBreaker: app.SafetyKeeper,
+})
+if err != nil {
+	return err
+}
+app.SetAnteHandler(anteHandler)
 ```
+
+The default `x/auth/tx` ante handler has no circuit breaker option, so set
+`skip_ante_handler: true` in the tx module config and set the ante handler as
+above. Without it, a tripped tx passes `CheckTx`, and the router refuses it in
+`FinalizeBlock` after it pays its fee.
 
 `Load` replaces the genesis orders with the app config's when the config sets
 them, so leave `init_genesis` and `export_genesis` out of the runtime config
-and set them here. `wireSafety` in `tests/integration/safety` wires a depinject
-app this way.
+and set them here. `newGroupFixture` in `tests/integration/safety` wires a
+depinject app this way.
 
 ### Genesis order
 
@@ -409,8 +423,21 @@ options.
   mount, so the old circuit data stays in the database.
 * `RunMigrations` skips circuit's entry in the module version map, and the
   upgrade keeper keeps it.
-* x/safety does not read the circuit disabled list or permissions. The
-  operator trips again anything that must stay blocked.
+* x/safety does not read the circuit disabled list or permissions. To keep
+  a circuit trip in force through the upgrade block, call `InitGenesis` in
+  place of `SetParams` and list the tripped msg type URLs, which the handler
+  hard-codes since the new binary cannot read the circuit store:
+
+```go
+return vm, app.SafetyKeeper.InitGenesis(ctx, safetytypes.NewGenesisState(
+	safetytypes.Params{
+		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Operator:  "cosmos1...",
+		Scope:     []string{safetytypes.Wildcard},
+	},
+	[]string{"/cosmos.bank.v1beta1.MsgSend"}, // circuit's disabled list
+))
+```
 
 `TestUpgradeFromCircuit` in `tests/integration/safety` runs this upgrade.
 

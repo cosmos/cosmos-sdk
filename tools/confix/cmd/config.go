@@ -23,6 +23,7 @@ func ConfigCommand() *cobra.Command {
 		SetCommand(),
 		ViewCommand(),
 		HomeCommand(),
+		ValidateCommand(),
 	)
 
 	return cmd

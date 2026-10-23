@@ -14,6 +14,7 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [Removed: x/protocolpool](#removed-xprotocolpool)
     * [Removed: SIGN_MODE_TEXTUAL](#removed-sign_mode_textual)
     * [Mempool Interface Changes](#mempool-interface-changes)
+    * [Slashing Parameter Reads](#slashing-parameter-reads)
     * [Staking: Key Rotation Wiring and Interface Changes](#staking-key-rotation-wiring-and-interface-changes)
     * [genutil: ExportGenesisFileWithTime Signature](#genutil-exportgenesisfilewithtime-signature)
     * [Upgrade Handler and Store Migrations](#upgrade-handler-and-store-migrations)
@@ -29,6 +30,12 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [Fee Allocation Migration](#fee-allocation-migration)
 
 ## Breaking Changes
+
+### Slashing Parameter Reads
+
+The slashing keeper reuses the parameters already decoded for a validator's signing window when calculating its missed-block threshold. Parameters are still read separately for each validator, and reads surrounding staking slash and jail hooks are unchanged.
+
+This removes one parameter-store read per processed validator and changes gas consumption. Apply this change at a coordinated chain upgrade. No store migration is needed.
 
 ### CometBFT Upgrade
 

@@ -39,10 +39,11 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 		return err
 	}
 
-	signedBlocksWindow, err := k.SignedBlocksWindow(ctx)
+	params, err := k.GetParams(ctx)
 	if err != nil {
 		return err
 	}
+	signedBlocksWindow := params.SignedBlocksWindow
 
 	// Compute the relative index, so we count the blocks the validator *should*
 	// have signed. We will use the 0-value default signing info if not present,
@@ -82,10 +83,8 @@ func (k Keeper) HandleValidatorSignature(ctx context.Context, addr cryptotypes.A
 		// bitmap value at this index has not changed, no need to update counter
 	}
 
-	minSignedPerWindow, err := k.MinSignedPerWindow(ctx)
-	if err != nil {
-		return err
-	}
+	// Updating the missed-block bitmap does not change the slashing parameters.
+	minSignedPerWindow := params.MinSignedPerWindow.MulInt64(signedBlocksWindow).RoundInt64()
 
 	if missed {
 		sdkCtx.EventManager().EmitEvent(

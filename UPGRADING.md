@@ -207,15 +207,15 @@ Upgrade handlers that ran a msg on a keeper or msg server move to these keeper p
 | gov `MsgUpdateParams` | `params.ValidateBasic()`, then `app.GovKeeper.Params.Set(ctx, params)` |
 | vesting `MsgCreateVestingAccount` | none; see below |
 
-Once the deprecated constructors are gone, tests in a module's `keeper_test` package reach the unexported constructor through an `export_test.go` in the `keeper` package: `var NewMsgServerImpl = newMsgServerImpl`. A module outside the SDK follows the same pattern: keep the msg server type and constructor unexported and export only `RegisterMsgServer`.
+Once the deprecated constructors are gone, tests in a module's `keeper_test` package reach the unexported constructor through an `export_test.go` in the `keeper` package: `var NewMsgServerForTest = newMsgServerImpl`. A module outside the SDK follows the same pattern: keep the msg server type and constructor unexported and export only `RegisterMsgServer`.
 
 `x/auth/vesting` has no keeper method that creates a vesting account. A test that calls `vesting.NewMsgServerImpl` either registers vesting in its router and runs `MsgCreateVestingAccount` with `Dispatch`, or builds the account with `AccountKeeper.NewAccount` and `SetAccount` and funds it.
 
-Moving cosmos/evm, ibc-go and wasmd off the deprecated calls took:
+What cosmos/evm, ibc-go and wasmd call on their main branches today:
 
-* cosmos/evm: delete the deprecated `erc20.NewMsgServerImpl` wrapper around the bank msg server, pass `app.MsgServiceRouter()` to `teststaking.NewHelper`, and move 2 test calls (a staking `BeginRedelegate` and a consensus `UpdateParams`) to `Dispatch`. The precompiles already used `Dispatch` and needed no change.
-* ibc-go: nothing. No ibc-go code called an SDK module's msg server.
-* wasmd: move 5 test calls (bank, staking twice, gov, vesting) to `Dispatch` or a keeper call. No production code changed.
+* cosmos/evm: the staking, distribution, gov and slashing precompiles build their msg servers with `NewMsgServerImpl` in `precompiles/types/static_precompiles.go`, and the ERC20 precompile wraps the bank msg server. Moving them to `Dispatch` gives each precompile the app's `MsgServiceRouter`, and needs a fix to the snapshot multistore, whose `CacheMultiStore` returns itself instead of a branch; without the fix, a reverted EVM call keeps the msg's writes. Its tests move to `teststaking.NewHelperWithRouter` and `Dispatch`.
+* ibc-go: nothing. No ibc-go code calls an SDK module's msg server.
+* wasmd: 4 test calls (staking twice, gov, vesting) move to `Dispatch` or a keeper call. No production code changes.
 
 ### Upgrade Handler and Store Migrations
 

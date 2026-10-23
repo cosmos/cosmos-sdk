@@ -191,7 +191,7 @@ The router checks only the msgs it routes. The SDK msg server types are
 unexported, and each keeper package exports `RegisterMsgServer`, which the
 module's `RegisterServices` calls. The exported constructors and keeper Msg
 methods that still reach a msg server, such as `bankkeeper.NewMsgServerImpl`
-and authz `Keeper.Exec`, are deprecated, skip the check, and go in the next
+and authz `Keeper.Exec`, are deprecated, skip the check, and go in a future
 release. Code outside the module that owns a msg, such as an EVM precompile or
 another module's keeper, runs the msg with `msgservice.Dispatch`:
 

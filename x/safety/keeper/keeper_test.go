@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	goruntime "runtime"
 	"slices"
 	"strings"
@@ -1175,6 +1176,12 @@ func (s *KeeperTestSuite) TestQueryMatchingMsgsPagination() {
 	s.Require().Empty(res.MsgTypeUrls)
 	s.Require().Nil(res.Pagination.NextKey)
 	s.Require().Equal(uint64(len(want)), res.Pagination.Total)
+
+	// a limit near the uint64 max with an offset returns the rest
+	res, err = s.matching(types.Wildcard, &querytypes.PageRequest{Offset: 1, Limit: math.MaxUint64})
+	s.Require().NoError(err)
+	s.Require().Equal(want[1:], res.MsgTypeUrls)
+	s.Require().Nil(res.Pagination.NextKey)
 
 	// reverse
 	res, err = s.matching(types.Wildcard, &querytypes.PageRequest{Limit: 2, Reverse: true})

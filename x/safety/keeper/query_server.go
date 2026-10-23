@@ -123,7 +123,7 @@ func paginateStrings(items []string, req *query.PageRequest) ([]string, *query.P
 		}
 		start = uint64(i)
 	}
-	end := min(start+limit, uint64(len(items)))
+	end := start + min(limit, uint64(len(items))-start)
 
 	res := &query.PageResponse{}
 	if end < uint64(len(items)) {

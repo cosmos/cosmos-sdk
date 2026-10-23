@@ -15,6 +15,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	safetytypes "github.com/cosmos/cosmos-sdk/x/safety/types"
 )
 
@@ -114,24 +115,27 @@ func TestGenesisDisabledProtectedIsInert(t *testing.T) {
 // TestGenesisInvalidRejected checks that InitChain fails on an invalid
 // x/safety genesis.
 func TestGenesisInvalidRejected(t *testing.T) {
-	for name, mutate := range map[string]func(*safetytypes.GenesisState){
-		"malformed pattern": func(gs *safetytypes.GenesisState) { gs.DisabledPatterns = []string{"cosmos.bank.v1beta1.MsgSend"} },
-		"duplicate pattern": func(gs *safetytypes.GenesisState) { gs.DisabledPatterns = []string{msgSendURL, msgSendURL} },
-		"empty authority":   func(gs *safetytypes.GenesisState) { gs.Params.Authority = "" },
-		"bad operator":      func(gs *safetytypes.GenesisState) { gs.Params.Operator = "nope" },
+	for name, tc := range map[string]struct {
+		mutate func(*safetytypes.GenesisState)
+		want   error
+	}{
+		"malformed pattern": {func(gs *safetytypes.GenesisState) { gs.DisabledPatterns = []string{"cosmos.bank.v1beta1.MsgSend"} }, safetytypes.ErrInvalidPattern},
+		"duplicate pattern": {func(gs *safetytypes.GenesisState) { gs.DisabledPatterns = []string{msgSendURL, msgSendURL} }, safetytypes.ErrDuplicatePattern},
+		"empty authority":   {func(gs *safetytypes.GenesisState) { gs.Params.Authority = "" }, safetytypes.ErrInvalidParams},
+		"bad operator":      {func(gs *safetytypes.GenesisState) { gs.Params.Operator = "nope" }, sdkerrors.ErrInvalidAddress},
 	} {
 		t.Run(name, func(t *testing.T) {
 			app := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 			genesis := app.DefaultGenesis()
 			var sgs safetytypes.GenesisState
 			require.NoError(t, app.AppCodec().UnmarshalJSON(genesis[safetytypes.ModuleName], &sgs))
-			mutate(&sgs)
+			tc.mutate(&sgs)
 			genesis[safetytypes.ModuleName] = app.AppCodec().MustMarshalJSON(&sgs)
 
 			// validate-genesis rejects it
-			require.Error(t, app.BasicModuleManager.ValidateGenesis(app.AppCodec(), app.TxConfig(), genesis))
+			require.ErrorIs(t, app.BasicModuleManager.ValidateGenesis(app.AppCodec(), app.TxConfig(), genesis), tc.want)
 
-			// and so does InitChain, by error or panic
+			// and so does x/safety's InitGenesis in InitChain, by error or panic
 			stateBytes, err := json.Marshal(genesis)
 			require.NoError(t, err)
 			err = func() (err error) {
@@ -147,7 +151,8 @@ func TestGenesisInvalidRejected(t *testing.T) {
 				})
 				return err
 			}()
-			require.Error(t, err)
+			require.ErrorContains(t, err, "failed to initialize safety genesis state")
+			require.ErrorContains(t, err, tc.want.Error())
 		})
 	}
 }

@@ -28,7 +28,9 @@ func TestUpgradeStoreUpgrades(t *testing.T) {
 }
 
 // Upgrade handlers call keepers. A msg run with msgservice.Dispatch goes
-// through the circuit breaker, so a trip would halt the upgrade.
+// through the circuit breaker, so a trip would halt the upgrade. The one
+// exception, a chain's circuit migration dispatching the protected MsgTrip,
+// does not apply to SimApp.
 func TestUpgradeHandlersDoNotDispatch(t *testing.T) {
 	const msgservicePath = "github.com/cosmos/cosmos-sdk/types/msgservice"
 

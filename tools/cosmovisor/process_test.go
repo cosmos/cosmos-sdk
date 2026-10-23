@@ -4,9 +4,11 @@ package cosmovisor_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -163,6 +165,73 @@ func TestLaunchProcessSignalAfterUpgrade(t *testing.T) {
 	// a signal handler left over from the first run would call os.Exit(1)
 	// once its batch upgrade watcher stops, which takes up to a second
 	time.Sleep(2 * time.Second)
+}
+
+func TestHelperRunLauncher(t *testing.T) {
+	if os.Getenv("COSMOVISOR_HELPER") != "1" {
+		return
+	}
+	cfg := &cosmovisor.Config{
+		Home:             os.Getenv("DAEMON_HOME"),
+		Name:             "dummyd",
+		PollInterval:     10 * time.Millisecond,
+		UnsafeSkipBackup: true,
+		CustomPreUpgrade: os.Getenv("COSMOVISOR_CUSTOM_PREUPGRADE"),
+		GRPCAddress:      "localhost:9090",
+	}
+	require.NoError(t, os.Chdir(cfg.Root()))
+	launcher, err := cosmovisor.NewLauncher(cfg.Logger(os.Stdout), cfg)
+	require.NoError(t, err)
+	for {
+		upgrade, err := launcher.Run([]string{"start", cfg.UpgradeInfoFilePath()}, nil, os.Stdout, os.Stderr)
+		require.NoError(t, err)
+		if !upgrade {
+			return
+		}
+		fmt.Println("upgrade detected, relaunching")
+	}
+}
+
+func TestLaunchProcessStop(t *testing.T) {
+	for name, hook := range map[string]string{"group": "", "pre-upgrade": "preupgrade.sh"} {
+		t.Run(name, func(t *testing.T) {
+			home := copyTestData(t, filepath.Join(workDir, "testdata", "stop"))
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			executable, err := os.Executable()
+			require.NoError(t, err)
+			cmd := exec.CommandContext(ctx, executable, "-test.run=^TestHelperRunLauncher$")
+			cmd.Env = append(os.Environ(), "COSMOVISOR_HELPER=1", "DAEMON_HOME="+home, "COSMOVISOR_CUSTOM_PREUPGRADE="+hook)
+			cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+			cmd.WaitDelay = time.Second
+			output := newBuffer()
+			cmd.Stdout, cmd.Stderr = output, output
+			require.NoError(t, cmd.Start())
+			defer func() {
+				_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+				if cmd.ProcessState == nil {
+					_ = cmd.Wait()
+				}
+			}()
+			require.Eventually(t, func() bool {
+				if hook != "" {
+					_, err := os.Stat(filepath.Join(home, "hook-started"))
+					return err == nil
+				}
+				return strings.Contains(output.String(), "ready\n") &&
+					strings.Contains(output.String(), "starting the batch watcher loop")
+			}, 5*time.Second, 10*time.Millisecond)
+			pid := cmd.Process.Pid
+			if hook == "" {
+				pid = -pid
+			}
+			require.NoError(t, syscall.Kill(pid, syscall.SIGTERM))
+			require.NoError(t, cmd.Wait(), "helper output:\n%s", output.String())
+			require.NotContains(t, output.String(), "process already finished")
+			require.NotContains(t, output.String(), "upgrade detected, relaunching")
+			require.NotContains(t, output.String(), "upgraded app started")
+		})
+	}
 }
 
 // TestPlanDisableRecase will test upgrades without lower case plan names

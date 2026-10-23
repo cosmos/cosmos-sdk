@@ -225,6 +225,9 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 		cancel()
 		wg.Wait()
 		if err := cmd.Process.Signal(sig); err != nil {
+			if errors.Is(err, os.ErrProcessDone) {
+				os.Exit(0)
+			}
 			l.logger.Error("terminated", "error", err, "bin", bin)
 			os.Exit(1)
 		}

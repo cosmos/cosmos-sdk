@@ -17,6 +17,7 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [Staking: Key Rotation Wiring and Interface Changes](#staking-key-rotation-wiring-and-interface-changes)
     * [genutil: ExportGenesisFileWithTime Signature](#genutil-exportgenesisfilewithtime-signature)
     * [x/safety](#xsafety)
+    * [Running msgs from code](#running-msgs-from-code)
     * [Upgrade Handler and Store Migrations](#upgrade-handler-and-store-migrations)
 * [Upgrading from v0.53.x](#upgrading-from-v053x)
 * [New Features and Non-Breaking Changes](#new-features-and-non-breaking-changes)
@@ -153,19 +154,68 @@ func ExportGenesisFileWithTime(genFile string, appGenesis *types.AppGenesis, gen
 
 x/safety supports manual wiring only: it has no depinject module config, no autocli options and no types in `cosmossdk.io/api`. A `runtime.App` registers it with `RegisterStores` and `RegisterModules` before `Load`; see [Apps built with depinject](x/safety/README.md#apps-built-with-depinject). Operators use the generic `tx safety` and `q safety` commands that autocli derives from the module's services; see [Operating](x/safety/README.md#operating).
 
-The circuit breaker only sees msgs that go through the `MsgServiceRouter`. Code outside a module that runs one of its msgs, such as an EVM precompile, should run it with `msgservice.Dispatch` instead of calling the msg server, so a trip stops it:
+The circuit breaker only sees msgs that go through the `MsgServiceRouter`. See [Running msgs from code](#running-msgs-from-code) and [Direct callers](x/safety/README.md#direct-callers).
+
+Wiring x/safety leaves gas unchanged. The circuit breaker check charges no gas in the router, the ante decorator or `msgservice.Dispatch`, so delivered and simulated gas match a chain with no circuit breaker set, and clients that hard-code gas limits need no change. See [Gas](x/safety/README.md#gas).
+
+### Running msgs from code
+
+An `sdk.Msg` should run only through the `MsgServiceRouter`, so a trip of the circuit breaker stops it. This release deprecates the ways to call an SDK module's msg server directly. They still compile, and the next release removes them:
+
+* `NewMsgServerImpl` in `x/auth`, `x/auth/vesting`, `x/bank`, `x/distribution`, `x/evidence`, `x/feegrant`, `x/gov` (with `NewLegacyMsgServerImpl`), `x/mint`, `x/safety`, `x/slashing`, `x/staking`, `x/upgrade` and `contrib/x/circuit`, and `NewMsgServer` with the `MsgServer` type in `enterprise/poa`.
+* The Msg methods on the keepers of `x/authz`, `x/consensus`, `contrib/x/crisis`, `contrib/x/nft`, `enterprise/group` and `testutil/x/counter`, such as authz `Keeper.Exec` and consensus `Keeper.UpdateParams`. Exported keeper methods for module logic, such as authz `DispatchActions`, `SaveGrant` and `GetAuthorization`, stay.
+* `MsgServiceRouter.HybridHandlerByMsgName`, which runs a registered msg handler by name and skips `ValidateBasic`.
+* `x/staking/testutil.NewHelper`, which calls the staking msg server directly. `NewHelperWithRouter` takes the `msgservice.MsgRouter` that runs its msgs, such as `app.MsgServiceRouter()`.
+
+The msg server types are unexported. Each keeper package exports `RegisterMsgServer`, which the module's `RegisterServices` calls. `x/auth/vesting` takes the account and bank keepers, and `x/gov` registers both the v1 and the v1beta1 service.
+
+staticcheck reports SA1019 at each call to a deprecated function, in app code and in tests. A test in a module's `keeper_test` package reaches the unexported msg server through an `export_test.go` in the keeper package, as the SDK modules do with `NewMsgServerForTest`.
+
+An app or test that registers a module's msg server by hand calls the keeper package's `RegisterMsgServer`:
+
+```go
+// Before
+banktypes.RegisterMsgServer(router, bankkeeper.NewMsgServerImpl(bankKeeper))
+authz.RegisterMsgServer(router, authzKeeper)
+
+// After
+bankkeeper.RegisterMsgServer(router, bankKeeper)
+authzkeeper.RegisterMsgServer(router, authzKeeper)
+```
+
+Code outside a module that runs one of its msgs, such as an EVM precompile or another module's keeper, runs it with `msgservice.Dispatch`, which runs the msg through its router handler and returns the typed response:
 
 ```go
 // Before
 resp, err := bankkeeper.NewMsgServerImpl(app.BankKeeper).Send(ctx, msg)
+resp, err := app.AuthzKeeper.Exec(ctx, execMsg)
 
 // After
 resp, err := msgservice.Dispatch[*banktypes.MsgSendResponse](ctx, app.MsgServiceRouter(), msg)
+resp, err := msgservice.Dispatch[*authz.MsgExecResponse](ctx, app.MsgServiceRouter(), execMsg)
 ```
 
-`Dispatch` does not check signers, so authorize them before the call as before. It writes its branch of `ctx` only on success, so the multistore under `ctx` must return a branch from `CacheMultiStore`, not itself. See [Direct callers](x/safety/README.md#direct-callers).
+`Dispatch` does not check signers, so authorize them before the call as before. It writes its branch of `ctx` only on success, so the multistore under `ctx` must return a branch from `CacheMultiStore`, not itself.
 
-Wiring x/safety leaves gas unchanged. The circuit breaker check charges no gas in the router, the ante decorator or `msgservice.Dispatch`, so delivered and simulated gas match a chain with no circuit breaker set, and clients that hard-code gas limits need no change. See [Gas](x/safety/README.md#gas).
+Logic that does not need a msg, such as a send in an upgrade handler, calls the keeper: `app.BankKeeper.SendCoins(ctx, from, to, amt)`. Upgrade handlers call keepers rather than `Dispatch`, so a trip cannot halt an upgrade.
+
+Upgrade handlers that ran a msg on a keeper or msg server move to these keeper paths, each with the msg's validation and no authority check:
+
+| Msg | Keeper path |
+| --- | --- |
+| consensus `MsgUpdateParams` | `app.ConsensusParamsKeeper.SetParams(ctx, cmtproto.ConsensusParams{...})`, new in this release. A nil section stays unchanged. |
+| gov `MsgUpdateParams` | `params.ValidateBasic()`, then `app.GovKeeper.Params.Set(ctx, params)` |
+| vesting `MsgCreateVestingAccount` | none; see below |
+
+Once the deprecated constructors are gone, tests in a module's `keeper_test` package reach the unexported constructor through an `export_test.go` in the `keeper` package: `var NewMsgServerImpl = newMsgServerImpl`. A module outside the SDK follows the same pattern: keep the msg server type and constructor unexported and export only `RegisterMsgServer`.
+
+`x/auth/vesting` has no keeper method that creates a vesting account. A test that calls `vesting.NewMsgServerImpl` either registers vesting in its router and runs `MsgCreateVestingAccount` with `Dispatch`, or builds the account with `AccountKeeper.NewAccount` and `SetAccount` and funds it.
+
+Moving cosmos/evm, ibc-go and wasmd off the deprecated calls took:
+
+* cosmos/evm: delete the deprecated `erc20.NewMsgServerImpl` wrapper around the bank msg server, pass `app.MsgServiceRouter()` to `teststaking.NewHelper`, and move 2 test calls (a staking `BeginRedelegate` and a consensus `UpdateParams`) to `Dispatch`. The precompiles already used `Dispatch` and needed no change.
+* ibc-go: nothing. No ibc-go code called an SDK module's msg server.
+* wasmd: move 5 test calls (bank, staking twice, gov, vesting) to `Dispatch` or a keeper call. No production code changed.
 
 ### Upgrade Handler and Store Migrations
 

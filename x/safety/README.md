@@ -187,9 +187,12 @@ breaker set, in `FinalizeBlock` and in simulation. The same goes for
 
 ### Direct callers
 
-The router checks only the msgs it routes. A direct call to a msg server
-method, such as `bankkeeper.NewMsgServerImpl(k).Send(ctx, msg)`, skips the
-check. Code outside the module that owns a msg, such as an EVM precompile or
+The router checks only the msgs it routes. The SDK msg server types are
+unexported, and each keeper package exports `RegisterMsgServer`, which the
+module's `RegisterServices` calls. The exported constructors and keeper Msg
+methods that still reach a msg server, such as `bankkeeper.NewMsgServerImpl`
+and authz `Keeper.Exec`, are deprecated, skip the check, and go in the next
+release. Code outside the module that owns a msg, such as an EVM precompile or
 another module's keeper, runs the msg with `msgservice.Dispatch`:
 
 ```go
@@ -213,6 +216,9 @@ msg server's events only on success, and returns the typed response.
 Keeper methods, such as authz `DispatchActions` or a bank keeper send, skip
 the check. Upgrade handlers call keepers, not `Dispatch`, so a trip cannot
 halt an upgrade.
+
+A caller that passes a fake `grpc.ServiceRegistrar` to `RegisterMsgServer`
+can capture the msg server it receives, and skips the check.
 
 ## State
 
@@ -627,8 +633,9 @@ continues, and sees only `codespace: safety, code: 10` in its reply.
 
 ### Direct keeper calls
 
-Code that calls a keeper or a msg server directly skips a selective trip.
-Known paths:
+Code that calls a keeper directly skips a selective trip, as does a call to a
+deprecated SDK msg server constructor or keeper Msg method, or to the exported
+msg server of a module outside the SDK. Known paths:
 
 * cosmos/evm precompile methods that call SDK keepers, such as distribution
   `claimRewards` and WERC20 `deposit`,

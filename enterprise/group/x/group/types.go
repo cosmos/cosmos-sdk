@@ -297,7 +297,7 @@ func (g *GroupPolicyInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) error
 func (g GroupPolicyInfo) GetDecisionPolicy() (DecisionPolicy, error) {
 	decisionPolicy, ok := g.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (DecisionPolicy)(nil), g.DecisionPolicy.GetCachedValue())
+		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", DecisionPolicy(nil), g.DecisionPolicy.GetCachedValue())
 	}
 
 	return decisionPolicy, nil

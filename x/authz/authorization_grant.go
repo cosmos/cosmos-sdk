@@ -48,7 +48,7 @@ func (g Grant) GetAuthorization() (Authorization, error) {
 	av := g.Authorization.GetCachedValue()
 	a, ok := av.(Authorization)
 	if !ok {
-		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (Authorization)(nil), av)
+		return nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", Authorization(nil), av)
 	}
 	return a, nil
 }
@@ -61,7 +61,7 @@ func (g Grant) ValidateBasic() error {
 	av := g.Authorization.GetCachedValue()
 	a, ok := av.(Authorization)
 	if !ok {
-		return sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (Authorization)(nil), av)
+		return sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", Authorization(nil), av)
 	}
 	return a.ValidateBasic()
 }

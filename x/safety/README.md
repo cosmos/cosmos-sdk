@@ -211,8 +211,9 @@ msg server's events only on success, and returns the typed response.
   and a nil router returns an error.
 
 Keeper methods, such as authz `DispatchActions` or a bank keeper send, skip
-the check. Upgrade handlers call keepers, not `Dispatch`, so a trip cannot
-halt an upgrade.
+the check. Upgrade handlers call keepers, so a trip cannot halt an upgrade.
+The circuit migration below dispatches `MsgTrip`, a protected msg that no
+trip blocks.
 
 ## State
 
@@ -424,19 +425,17 @@ options.
 * `RunMigrations` skips circuit's entry in the module version map, and the
   upgrade keeper keeps it.
 * x/safety does not read the circuit disabled list or permissions. To keep
-  a circuit trip in force through the upgrade block, call `InitGenesis` in
-  place of `SetParams` and list the tripped msg type URLs, which the handler
-  hard-codes since the new binary cannot read the circuit store:
+  a circuit trip in force through the upgrade block, have the new operator
+  trip it in the handler right after `SetParams`. The handler hard-codes the
+  type URLs, since the new binary cannot read the circuit store. `MsgTrip`
+  refuses a URL that matches no registered msg, so a typo fails the upgrade
+  instead of disabling nothing:
 
 ```go
-return vm, app.SafetyKeeper.InitGenesis(ctx, safetytypes.NewGenesisState(
-	safetytypes.Params{
-		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		Operator:  "cosmos1...",
-		Scope:     []string{safetytypes.Wildcard},
-	},
-	[]string{"/cosmos.bank.v1beta1.MsgSend"}, // circuit's disabled list
-))
+sdkCtx := sdk.UnwrapSDKContext(ctx)
+_, err = msgservice.Dispatch[*safetytypes.MsgTripResponse](sdkCtx, app.MsgServiceRouter(),
+	safetytypes.NewMsgTrip(operator, "/cosmos.bank.v1beta1.MsgSend")) // circuit's disabled list
+return vm, err
 ```
 
 `TestUpgradeFromCircuit` in `tests/integration/safety` runs this upgrade.

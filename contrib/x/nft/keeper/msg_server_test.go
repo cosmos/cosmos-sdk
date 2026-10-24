@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	"github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
 )
 
 var (
@@ -120,7 +121,7 @@ func (s *TestSuite) TestSend() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			_, err := s.nftKeeper.Send(s.ctx, tc.req)
+			_, err := keeper.NewMsgServerForTest(s.nftKeeper).Send(s.ctx, tc.req)
 			if tc.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.errMsg)

@@ -26,11 +26,11 @@ type MsgRouter interface {
 // event with action, sender and module, and the msg_index attribute, come
 // from baseapp's tx path and are absent, as they are for msgs authz runs.
 //
-// Code outside a module that would call the module's msg server directly,
-// such as an EVM precompile or another module's keeper, calls Dispatch
-// instead so a circuit breaker trip of the msg stops it. Dispatch does not
-// check the msg's signers: the caller authorizes them, as it would before a
-// direct call.
+// Code outside a module, such as an EVM precompile or another module's
+// keeper, runs the module's msgs with Dispatch. The SDK modules' exported
+// msg server constructors and keeper Msg methods are deprecated, so the
+// router, with its circuit breaker check, is the one supported way to run a
+// msg. Dispatch does not check the msg's signers: the caller authorizes them.
 func Dispatch[R proto.Message](ctx sdk.Context, router MsgRouter, msg sdk.Msg) (R, error) {
 	var resp R
 	if router == nil {

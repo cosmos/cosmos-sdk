@@ -52,7 +52,7 @@ func TestUpdateParamsAuthority(t *testing.T) {
 	)
 
 	require.NoError(t, distrKeeper.Params.Set(ctx, types.DefaultParams()))
-	msgServer := keeper.NewMsgServerImpl(distrKeeper)
+	msgServer := keeper.NewMsgServerForTest(distrKeeper)
 
 	t.Run("fallback to keeper authority", func(t *testing.T) {
 		_, err := msgServer.UpdateParams(ctx, &types.MsgUpdateParams{
@@ -118,7 +118,7 @@ func TestCommunityPoolSpendAuthority(t *testing.T) {
 	)
 
 	require.NoError(t, distrKeeper.Params.Set(ctx, types.DefaultParams()))
-	msgServer := keeper.NewMsgServerImpl(distrKeeper)
+	msgServer := keeper.NewMsgServerForTest(distrKeeper)
 
 	amount := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))
 	recipient := sdk.AccAddress("recipient____________").String()

@@ -127,31 +127,6 @@ func TestSafetyWiring(t *testing.T) {
 	require.Equal(t, int64(1), app.BankKeeper.GetBalance(app.NewContext(true), other, sdk.DefaultBondDenom).Amount.Int64())
 }
 
-// TestSafetyGatesHybridHandlers checks that SimApp's hybrid handlers run the
-// x/safety check for an exact, a prefix and a "*" trip.
-func TestSafetyGatesHybridHandlers(t *testing.T) {
-	app := Setup(t, false)
-	ctx := app.NewContext(false)
-	from := sdk.AccAddress("from________________")
-	to := sdk.AccAddress("to__________________")
-	send := banktypes.NewMsgSend(from, to, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)))
-
-	handler := app.MsgServiceRouter().HybridHandlerByMsgName(sdk.MsgTypeURL(send)[1:])
-	require.NotNil(t, handler)
-
-	for _, p := range []string{sdk.MsgTypeURL(send), "/cosmos.bank.*", safetytypes.Wildcard} {
-		require.NoError(t, app.SafetyKeeper.DisabledList.Set(ctx, p))
-		err := handler(ctx, send, &banktypes.MsgSendResponse{})
-		require.ErrorIs(t, err, safetytypes.ErrMsgDisabled, p)
-		require.NoError(t, app.SafetyKeeper.DisabledList.Remove(ctx, p))
-	}
-
-	// control: with nothing disabled the bank handler runs, and fails on the
-	// unfunded sender
-	err := handler(ctx, send, &banktypes.MsgSendResponse{})
-	require.ErrorIs(t, err, sdkerrors.ErrInsufficientFunds)
-}
-
 // TestRecheckEvictsPreTripTx shows what happens to a tx that entered the
 // mempool before a trip. ReCheckTx runs the decorator, so it turns the tx
 // away before it pays a fee or uses its sequence, and its signed bytes

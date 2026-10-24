@@ -206,7 +206,7 @@ func TestUpdateParams(t *testing.T) {
 func TestValidatePubkeyType(t *testing.T) {
 	t.Run("accepts ed25519 key when ed25519 is in consensus params", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		pubKey := ed25519.GenPrivKey().PubKey()
@@ -230,7 +230,7 @@ func TestValidatePubkeyType(t *testing.T) {
 
 	t.Run("accepts secp256k1 key when secp256k1 is in consensus params", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Set consensus params to allow secp256k1
@@ -263,7 +263,7 @@ func TestValidatePubkeyType(t *testing.T) {
 
 	t.Run("accepts both key types when both are in consensus params", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Set consensus params to allow both ed25519 and secp256k1
@@ -316,7 +316,7 @@ func TestValidatePubkeyType(t *testing.T) {
 
 	t.Run("rejects ed25519 key when only secp256k1 is in consensus params", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Set consensus params to only allow secp256k1
@@ -347,7 +347,7 @@ func TestValidatePubkeyType(t *testing.T) {
 
 	t.Run("rejects secp256k1 key when only ed25519 is in consensus params", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Set consensus params to only allow ed25519
@@ -380,7 +380,7 @@ func TestValidatePubkeyType(t *testing.T) {
 
 	t.Run("rejects key when consensus params has empty pubkey types", func(t *testing.T) {
 		f := setupTest(t)
-		msgServer := NewMsgServer(f.poaKeeper)
+		msgServer := newMsgServerImpl(f.poaKeeper)
 		require.NoError(t, f.poaKeeper.UpdateParams(f.ctx, poatypes.Params{Admin: adminAddr}))
 
 		// Set consensus params with no allowed pubkey types

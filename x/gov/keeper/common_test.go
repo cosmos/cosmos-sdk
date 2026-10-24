@@ -114,7 +114,7 @@ func setupGovKeeper(t *testing.T) (
 
 	// Register all handlers for the MsgServiceRouter.
 	msr.SetInterfaceRegistry(encCfg.InterfaceRegistry)
-	v1.RegisterMsgServer(msr, keeper.NewMsgServerImpl(govKeeper))
+	v1.RegisterMsgServer(msr, keeper.NewMsgServerForTest(govKeeper))
 	banktypes.RegisterMsgServer(msr, nil) // Nil is fine here as long as we never execute the proposal's Msgs.
 
 	return govKeeper, acctKeeper, bankKeeper, stakingKeeper, distributionKeeper, storeService, encCfg, ctx

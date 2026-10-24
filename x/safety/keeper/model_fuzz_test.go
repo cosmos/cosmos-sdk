@@ -341,7 +341,7 @@ func newModelSUT(t *testing.T, env modelEnv) modelSUT {
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
 	k := keeper.NewKeeper(env.cdc, runtime.NewKVStoreService(key), env.ac, env.registry, env.gov)
-	return modelSUT{t: t, ctx: ctx, k: k, srv: keeper.NewMsgServerImpl(k)}
+	return modelSUT{t: t, ctx: ctx, k: k, srv: keeper.NewMsgServerForTest(k)}
 }
 
 func (s modelSUT) withOverride(override string) sdk.Context {

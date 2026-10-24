@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-metrics"
+	"google.golang.org/grpc"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -20,10 +21,27 @@ type msgServer struct {
 	types.BankKeeper
 }
 
+// newMsgServerImpl returns an implementation of the vesting MsgServer interface,
+// wrapping the corresponding AccountKeeper and BankKeeper.
+func newMsgServerImpl(k keeper.AccountKeeper, bk types.BankKeeper) types.MsgServer {
+	return &msgServer{AccountKeeper: k, BankKeeper: bk}
+}
+
 // NewMsgServerImpl returns an implementation of the vesting MsgServer interface,
 // wrapping the corresponding AccountKeeper and BankKeeper.
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. NewMsgServerImpl will be
+// removed in a future release.
 func NewMsgServerImpl(k keeper.AccountKeeper, bk types.BankKeeper) types.MsgServer {
-	return &msgServer{AccountKeeper: k, BankKeeper: bk}
+	return newMsgServerImpl(k, bk)
+}
+
+// RegisterMsgServer registers the x/auth/vesting Msg service on r. The msg
+// server is unexported: code outside the module runs a msg through the
+// MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, ak keeper.AccountKeeper, bk types.BankKeeper) {
+	types.RegisterMsgServer(r, newMsgServerImpl(ak, bk))
 }
 
 var _ types.MsgServer = msgServer{}

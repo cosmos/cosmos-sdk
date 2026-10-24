@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	"google.golang.org/grpc"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -14,10 +16,27 @@ type msgServer struct {
 	Keeper
 }
 
+// newMsgServerImpl returns an implementation of the slashing MsgServer interface
+// for the provided Keeper.
+func newMsgServerImpl(keeper Keeper) types.MsgServer {
+	return &msgServer{Keeper: keeper}
+}
+
 // NewMsgServerImpl returns an implementation of the slashing MsgServer interface
 // for the provided Keeper.
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. NewMsgServerImpl will be
+// removed in a future release.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
-	return &msgServer{Keeper: keeper}
+	return newMsgServerImpl(keeper)
+}
+
+// RegisterMsgServer registers the x/slashing Msg service on r. The msg server
+// is unexported: code outside the module runs a msg through the
+// MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) {
+	types.RegisterMsgServer(r, newMsgServerImpl(k))
 }
 
 // UpdateParams implements MsgServer.UpdateParams method.

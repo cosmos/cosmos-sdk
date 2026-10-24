@@ -81,7 +81,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					Evidence:  modifiedConsensusParams.Evidence,
 					Auth:      &cmtproto.AuthorityParams{Authority: s.ctx.ConsensusParams().Authority.Authority},
 				}
-				_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, input)
+				_, err := consensusparamkeeper.NewMsgServerForTest(*s.consensusParamsKeeper).UpdateParams(s.ctx, input)
 				s.Require().NoError(err)
 			},
 			types.QueryParamsResponse{
@@ -114,7 +114,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 					},
 					Auth: &cmtproto.AuthorityParams{Authority: s.ctx.ConsensusParams().Authority.Authority},
 				}
-				_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, input)
+				_, err := consensusparamkeeper.NewMsgServerForTest(*s.consensusParamsKeeper).UpdateParams(s.ctx, input)
 				s.Require().NoError(err)
 			},
 			types.QueryParamsResponse{
@@ -351,7 +351,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			s.SetupTest()
-			_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, tc.input)
+			_, err := consensusparamkeeper.NewMsgServerForTest(*s.consensusParamsKeeper).UpdateParams(s.ctx, tc.input)
 			if tc.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.expErrMsg)
@@ -372,6 +372,48 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				s.Require().Equal(tc.input.Evidence, res.Params.Evidence)
 				s.Require().Equal(tc.input.Validator, res.Params.Validator)
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSetParams() {
+	defaultConsensusParams := cmttypes.DefaultConsensusParams().ToProto()
+
+	update := cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxBytes: 4194304, MaxGas: 100}}
+	s.Require().NoError(s.consensusParamsKeeper.SetParams(s.ctx, update))
+	got, err := s.consensusParamsKeeper.ParamsStore.Get(s.ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(int64(4194304), got.Block.MaxBytes)
+	s.Require().Equal(int64(100), got.Block.MaxGas)
+	s.Require().Equal(defaultConsensusParams.Evidence, got.Evidence, "a nil section stays unchanged")
+
+	for _, tc := range []struct {
+		name   string
+		update cmtproto.ConsensusParams
+		errMsg string
+	}{
+		{
+			name:   "invalid block params",
+			update: cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: -10, MaxBytes: -10}},
+			errMsg: "block.MaxBytes must be -1 or greater than 0. Got -10",
+		},
+		{
+			name:   "vote extensions at the current height",
+			update: cmtproto.ConsensusParams{Abci: &cmtproto.ABCIParams{VoteExtensionsEnableHeight: 5}},
+			errMsg: "vote extensions cannot be updated to a past or current height",
+		},
+		{
+			name:   "invalid authority address",
+			update: cmtproto.ConsensusParams{Authority: &cmtproto.AuthorityParams{Authority: "invalid"}},
+			errMsg: "invalid authority address in auth params",
+		},
+	} {
+		s.Run(tc.name, func() {
+			err := s.consensusParamsKeeper.SetParams(s.ctx, tc.update)
+			s.Require().ErrorContains(err, tc.errMsg)
+			after, err := s.consensusParamsKeeper.ParamsStore.Get(s.ctx)
+			s.Require().NoError(err)
+			s.Require().Equal(got, after, "a failed SetParams changes nothing")
 		})
 	}
 }

@@ -36,6 +36,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -200,7 +201,7 @@ func (suite *SimTestSuite) TestSimulateCreateGroupPolicy() {
 	acc := accounts[0]
 
 	// setup a group
-	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
+	_, err := msgservice.Dispatch[*group.MsgCreateGroupResponse](suite.ctx, suite.app.MsgServiceRouter(),
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -241,7 +242,7 @@ func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 
 	// setup a group
 	ctx := suite.ctx
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := msgservice.Dispatch[*group.MsgCreateGroupResponse](ctx, suite.app.MsgServiceRouter(),
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -261,7 +262,7 @@ func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
-	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
+	groupPolicyRes, err := msgservice.Dispatch[*group.MsgCreateGroupPolicyResponse](ctx, suite.app.MsgServiceRouter(), accountReq)
 	suite.Require().NoError(err)
 
 	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
@@ -293,7 +294,7 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 	// setup a group
 	ctx := suite.ctx
 	addr := acc.Address.String()
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := msgservice.Dispatch[*group.MsgCreateGroupResponse](ctx, suite.app.MsgServiceRouter(),
 		&group.MsgCreateGroup{
 			Admin: addr,
 			Members: []group.MemberRequest{
@@ -313,7 +314,7 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
-	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
+	groupPolicyRes, err := msgservice.Dispatch[*group.MsgCreateGroupPolicyResponse](ctx, suite.app.MsgServiceRouter(), accountReq)
 	suite.Require().NoError(err)
 
 	// setup a proposal
@@ -325,7 +326,7 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 		},
 	}, "", 0, "MsgSend", "this is a test proposal")
 	suite.Require().NoError(err)
-	_, err = suite.groupKeeper.SubmitProposal(ctx, proposalReq)
+	_, err = msgservice.Dispatch[*group.MsgSubmitProposalResponse](ctx, suite.app.MsgServiceRouter(), proposalReq)
 	suite.Require().NoError(err)
 
 	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
@@ -357,7 +358,7 @@ func (suite *SimTestSuite) TestSimulateVote() {
 	// setup a group
 	ctx := suite.ctx
 	addr := acc.Address.String()
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := msgservice.Dispatch[*group.MsgCreateGroupResponse](ctx, suite.app.MsgServiceRouter(),
 		&group.MsgCreateGroup{
 			Admin: addr,
 			Members: []group.MemberRequest{
@@ -378,7 +379,7 @@ func (suite *SimTestSuite) TestSimulateVote() {
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
-	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
+	groupPolicyRes, err := msgservice.Dispatch[*group.MsgCreateGroupPolicyResponse](ctx, suite.app.MsgServiceRouter(), accountReq)
 	suite.Require().NoError(err)
 
 	// setup a proposal
@@ -390,7 +391,7 @@ func (suite *SimTestSuite) TestSimulateVote() {
 		},
 	}, "", 0, "MsgSend", "this is a test proposal")
 	suite.Require().NoError(err)
-	_, err = suite.groupKeeper.SubmitProposal(ctx, proposalReq)
+	_, err = msgservice.Dispatch[*group.MsgSubmitProposalResponse](ctx, suite.app.MsgServiceRouter(), proposalReq)
 	suite.Require().NoError(err)
 
 	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
@@ -422,7 +423,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	// setup a group
 	ctx := suite.ctx
 	addr := acc.Address.String()
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := msgservice.Dispatch[*group.MsgCreateGroupResponse](ctx, suite.app.MsgServiceRouter(),
 		&group.MsgCreateGroup{
 			Admin: addr,
 			Members: []group.MemberRequest{
@@ -442,7 +443,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
-	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
+	groupPolicyRes, err := msgservice.Dispatch[*group.MsgCreateGroupPolicyResponse](ctx, suite.app.MsgServiceRouter(), accountReq)
 	suite.Require().NoError(err)
 
 	// setup a proposal
@@ -454,11 +455,11 @@ func (suite *SimTestSuite) TestSimulateExec() {
 		},
 	}, "", 0, "MsgSend", "this is a test proposal")
 	suite.Require().NoError(err)
-	proposalRes, err := suite.groupKeeper.SubmitProposal(ctx, proposalReq)
+	proposalRes, err := msgservice.Dispatch[*group.MsgSubmitProposalResponse](ctx, suite.app.MsgServiceRouter(), proposalReq)
 	suite.Require().NoError(err)
 
 	// vote
-	_, err = suite.groupKeeper.Vote(ctx, &group.MsgVote{
+	_, err = msgservice.Dispatch[*group.MsgVoteResponse](ctx, suite.app.MsgServiceRouter(), &group.MsgVote{
 		ProposalId: proposalRes.ProposalId,
 		Voter:      addr,
 		Option:     group.VOTE_OPTION_YES,
@@ -493,7 +494,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAdmin() {
 	acc := accounts[0]
 
 	// setup a group
-	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
+	_, err := msgservice.Dispatch[*group.MsgCreateGroupResponse](suite.ctx, suite.app.MsgServiceRouter(),
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -533,7 +534,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMetadata() {
 	acc := accounts[0]
 
 	// setup a group
-	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
+	_, err := msgservice.Dispatch[*group.MsgCreateGroupResponse](suite.ctx, suite.app.MsgServiceRouter(),
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -573,7 +574,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMembers() {
 	acc := accounts[0]
 
 	// setup a group
-	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
+	_, err := msgservice.Dispatch[*group.MsgCreateGroupResponse](suite.ctx, suite.app.MsgServiceRouter(),
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -614,7 +615,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 
 	// setup a group
 	ctx := suite.ctx
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := msgservice.Dispatch[*group.MsgCreateGroupResponse](ctx, suite.app.MsgServiceRouter(),
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -634,7 +635,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
-	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
+	groupPolicyRes, err := msgservice.Dispatch[*group.MsgCreateGroupPolicyResponse](ctx, suite.app.MsgServiceRouter(), accountReq)
 	suite.Require().NoError(err)
 
 	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
@@ -665,7 +666,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 
 	// setup a group
 	ctx := suite.ctx
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := msgservice.Dispatch[*group.MsgCreateGroupResponse](ctx, suite.app.MsgServiceRouter(),
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -685,7 +686,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
-	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
+	groupPolicyRes, err := msgservice.Dispatch[*group.MsgCreateGroupPolicyResponse](ctx, suite.app.MsgServiceRouter(), accountReq)
 	suite.Require().NoError(err)
 
 	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
@@ -716,7 +717,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 
 	// setup a group
 	ctx := suite.ctx
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := msgservice.Dispatch[*group.MsgCreateGroupResponse](ctx, suite.app.MsgServiceRouter(),
 		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
 			Members: []group.MemberRequest{
@@ -736,7 +737,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 	}
 	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
-	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
+	groupPolicyRes, err := msgservice.Dispatch[*group.MsgCreateGroupPolicyResponse](ctx, suite.app.MsgServiceRouter(), accountReq)
 	suite.Require().NoError(err)
 
 	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
@@ -772,7 +773,7 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 
 	// setup a group
 	ctx := suite.ctx
-	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
+	groupRes, err := msgservice.Dispatch[*group.MsgCreateGroupResponse](ctx, suite.app.MsgServiceRouter(),
 		&group.MsgCreateGroup{
 			Admin: admin.Address.String(),
 			Members: []group.MemberRequest{
@@ -800,7 +801,7 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 		Metadata: "",
 	}
 	require.NoError(accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("3", time.Hour, time.Hour)))
-	_, err = suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
+	_, err = msgservice.Dispatch[*group.MsgCreateGroupPolicyResponse](ctx, suite.app.MsgServiceRouter(), accountReq)
 	require.NoError(err)
 
 	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{

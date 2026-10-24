@@ -213,10 +213,11 @@ msg server's events only on success, and returns the typed response.
   `cosmossdk.io/api`. A msg with no handler fails with `ErrUnknownRequest`,
   and a nil router returns an error.
 
-Keeper methods, such as authz `DispatchActions` or a bank keeper send, skip
-the check. Upgrade handlers call keepers, so a trip cannot halt an upgrade.
-The circuit migration below dispatches `MsgTrip`, a protected msg that no
-trip blocks.
+Keeper methods, such as a bank keeper send or authz `SaveGrant`, skip the
+check. Authz `DispatchActions` runs each msg through the router, so a trip
+still blocks the msg it runs. Upgrade handlers call keepers, so a trip
+cannot halt an upgrade. The circuit migration below dispatches `MsgTrip`, a
+protected msg that no trip blocks.
 
 A caller that passes a fake `grpc.ServiceRegistrar` to `RegisterMsgServer`
 can capture the msg server it receives, and skips the check.
@@ -484,8 +485,9 @@ router refuses until the reset.
 
 `MsgReset` fails if any pattern it names is not in the disabled list, and gov
 runs a proposal's msgs together, so one failed msg fails them all. If the
-operator resets or trips during the voting period, a gov reset that names the
-old entries fails, along with anything in the same proposal. Agree the list
+operator resets a named entry during the voting period, the gov reset fails,
+along with anything in the same proposal. A pattern the operator trips during
+the vote stays disabled after the gov reset passes. Agree the list
 with the operator before submitting, ask the operator to make no changes
 until the vote ends, and send `MsgUpdateParams` in a proposal of its own.
 
@@ -493,8 +495,8 @@ until the vote ends, and send `MsgUpdateParams` in a proposal of its own.
 
 Only the authority removes the operator, with `MsgUpdateParams`, which takes a
 gov vote when gov is the authority. Until it executes, the operator can trip
-anything in its scope, re-trip after each reset, and change the list to fail a
-gov reset.
+anything in its scope, re-trip after each reset, and reset a named entry to fail
+a gov reset.
 
 1. Submit `MsgUpdateParams` that clears or replaces the operator, alone, as
    an expedited proposal.

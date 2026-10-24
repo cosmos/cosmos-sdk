@@ -127,7 +127,7 @@ In the msg server PR, the SDK adds `RegisterMsgServer` to each keeper package, `
 * Without autocli from `runtimeservices.ExtractAutoCLIOptions`, operators sign `MsgTrip` and `MsgReset` as tx JSON.
 * An override authority that can act only through a wrapper the operator tripped by exact URL cannot recover on chain.
 * Only the authority removes the operator. Until a gov vote passes, a compromised operator can trip anything in its scope and re-trip after each reset.
-* `MsgReset` needs every named entry present, so a gov reset fails if the operator changes the list during the vote.
+* `MsgReset` needs every named entry present, so a gov reset fails if the operator resets a named entry during the vote, and a pattern the operator trips during the vote stays disabled after the reset passes.
 * While a trip covers a msg, a gov proposal containing it fails `CheckTx`, so the operator narrows the trip before gov can propose a fix that is not a software upgrade.
 
 ### Neutral

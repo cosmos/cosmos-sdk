@@ -217,11 +217,21 @@ func (coins DecCoins) String() string {
 func (coins DecCoins) TruncateDecimal() (truncatedCoins Coins, changeCoins DecCoins) {
 	for _, coin := range coins {
 		truncated, change := coin.TruncateDecimal()
+		// Filtering a sorted, unique set preserves its order. Only merge when
+		// the input contains an out-of-order or repeated denomination.
 		if !truncated.IsZero() {
-			truncatedCoins = truncatedCoins.Add(truncated)
+			if len(truncatedCoins) > 0 && truncatedCoins[len(truncatedCoins)-1].Denom >= truncated.Denom {
+				truncatedCoins = truncatedCoins.Add(truncated)
+			} else {
+				truncatedCoins = append(truncatedCoins, truncated)
+			}
 		}
 		if !change.IsZero() {
-			changeCoins = changeCoins.Add(change)
+			if len(changeCoins) > 0 && changeCoins[len(changeCoins)-1].Denom >= change.Denom {
+				changeCoins = changeCoins.Add(change)
+			} else {
+				changeCoins = append(changeCoins, change)
+			}
 		}
 	}
 

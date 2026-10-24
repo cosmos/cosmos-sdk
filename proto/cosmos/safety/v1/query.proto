@@ -1,0 +1,100 @@
+syntax = "proto3";
+package cosmos.safety.v1;
+
+import "amino/amino.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/query/v1/query.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/safety/v1/types.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/safety/types";
+
+// Query defines the safety gRPC query service.
+service Query {
+  // Params returns the module params.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/safety/v1/params";
+  }
+
+  // DisabledList returns the disabled patterns.
+  rpc DisabledList(QueryDisabledListRequest) returns (QueryDisabledListResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/safety/v1/disabled_list";
+  }
+
+  // IsAllowed reports whether a msg type URL may execute right now.
+  rpc IsAllowed(QueryIsAllowedRequest) returns (QueryIsAllowedResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/safety/v1/is_allowed";
+  }
+
+  // MatchingMsgs lists the registered msg type URLs that a trip of a pattern
+  // would block. It leaves out protected msgs and, for "*" or a prefix
+  // pattern, wrappers.
+  rpc MatchingMsgs(QueryMatchingMsgsRequest) returns (QueryMatchingMsgsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/safety/v1/matching_msgs";
+  }
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the module params.
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// QueryDisabledListRequest is the request type for the Query/DisabledList RPC method.
+message QueryDisabledListRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryDisabledListResponse is the response type for the Query/DisabledList RPC method.
+message QueryDisabledListResponse {
+  // disabled_patterns are the disabled patterns in this page.
+  repeated string disabled_patterns = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryIsAllowedRequest is the request type for the Query/IsAllowed RPC method.
+message QueryIsAllowedRequest {
+  // msg_type_url is the msg type URL to check, for example
+  // "/cosmos.bank.v1beta1.MsgSend".
+  string msg_type_url = 1;
+}
+
+// QueryIsAllowedResponse is the response type for the Query/IsAllowed RPC method.
+message QueryIsAllowedResponse {
+  // allowed is true when the msg type URL may execute.
+  bool allowed = 1;
+
+  // blocked_by is the disabled entry that blocks the msg type URL, or empty
+  // when it is allowed.
+  string blocked_by = 2;
+}
+
+// QueryMatchingMsgsRequest is the request type for the Query/MatchingMsgs RPC method.
+message QueryMatchingMsgsRequest {
+  // pattern is "*", a prefix pattern such as "/cosmos.bank.*", or an exact
+  // msg type URL.
+  string pattern = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryMatchingMsgsResponse is the response type for the Query/MatchingMsgs RPC method.
+message QueryMatchingMsgsResponse {
+  // msg_type_urls are the msg type URLs in this page, sorted.
+  repeated string msg_type_urls = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

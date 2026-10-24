@@ -94,3 +94,4 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 047: Extend Upgrade Plan](./adr-047-extend-upgrade-plan.md)
 * [ADR 053: Go Module Refactoring](./adr-053-go-module-refactoring.md)
 * [ADR 068: Preblock](./adr-068-preblock.md)
+* [ADR 077: x/safety, an Emergency Msg Breaker](./adr-077-x-safety.md)

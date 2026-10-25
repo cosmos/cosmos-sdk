@@ -2,6 +2,7 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -10,24 +11,36 @@ import (
 // ValidateInputOutputs validates that each respective input and output is
 // valid and that the sum of inputs is equal to the sum of outputs.
 func ValidateInputOutputs(input Input, outputs []Output) error {
-	var totalIn, totalOut sdk.Coins
-
 	if err := input.ValidateBasic(); err != nil {
 		return err
 	}
-	totalIn = input.Coins
+	// Accumulate amounts by denomination instead of rebuilding and sorting the
+	// complete coin set after every output.
+	totalOut := make(map[string]math.Int, len(input.Coins))
 
 	for _, out := range outputs {
 		if err := out.ValidateBasic(); err != nil {
 			return err
 		}
 
-		totalOut = totalOut.Add(out.Coins...)
+		for _, coin := range out.Coins {
+			amount, ok := totalOut[coin.Denom]
+			if !ok {
+				amount = math.ZeroInt()
+			}
+			totalOut[coin.Denom] = amount.Add(coin.Amount)
+		}
 	}
 
 	// make sure inputs and outputs match
-	if !totalIn.Equal(totalOut) {
+	if len(input.Coins) != len(totalOut) {
 		return ErrInputOutputMismatch
+	}
+	for _, coin := range input.Coins {
+		amount, ok := totalOut[coin.Denom]
+		if !ok || !coin.Amount.Equal(amount) {
+			return ErrInputOutputMismatch
+		}
 	}
 
 	return nil

@@ -116,6 +116,8 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 // SetParams applies update to the stored consensus params with the same
 // validation as MsgUpdateParams and no authority check. A nil section of update
 // leaves that section unchanged. Upgrade handlers call it in place of the msg.
+// Like the SetParams of other modules, it emits no event; MsgUpdateParams
+// emits update_consensus_params.
 func (k Keeper) SetParams(ctx context.Context, update cmtproto.ConsensusParams) error {
 	if update.Authority != nil && update.Authority.Authority != "" {
 		if _, err := sdk.AccAddressFromBech32(update.Authority.Authority); err != nil {

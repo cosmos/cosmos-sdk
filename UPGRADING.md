@@ -169,7 +169,7 @@ An `sdk.Msg` should run only through the `MsgServiceRouter`, so a trip of the ci
 
 The msg server types are unexported. Each keeper package exports `RegisterMsgServer`, which the module's `RegisterServices` calls. `x/auth/vesting` takes the account and bank keepers, and `x/gov` registers both the v1 and the v1beta1 service.
 
-staticcheck reports SA1019 at each call to a deprecated function, in app code and in tests. A test in a module's `keeper_test` package reaches the unexported msg server through an `export_test.go` in the keeper package, as the SDK modules do with `NewMsgServerForTest`.
+staticcheck reports SA1019 at each call to a deprecated function, in app code and in tests. It does not report a keeper passed where a `MsgServer` is expected, such as `authz.RegisterMsgServer(router, authzKeeper)` in the example below, since that uses the deprecated methods without calling them. Search for those uses by hand: they stop compiling when the methods are removed. A test in a module's `keeper_test` package reaches the unexported msg server through an `export_test.go` in the keeper package, as the SDK modules do with `NewMsgServerForTest`.
 
 An app or test that registers a module's msg server by hand calls the keeper package's `RegisterMsgServer`:
 

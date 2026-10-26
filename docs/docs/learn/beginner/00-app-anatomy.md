@@ -194,7 +194,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/bank/v1beta1/tx.p
 
 Service methods use `keeper` in order to update the module state.
 
-Each module should also implement the `RegisterServices` method as part of the [`AppModule` interface](#application-module-interface). This method should call the `RegisterMsgServer` function provided by the generated Protobuf code.
+Each module should also implement the `RegisterServices` method as part of the [`AppModule` interface](#application-module-interface). This method should call the `RegisterMsgServer` function in the module's keeper package, which registers the module's unexported msg server with the `MsgServiceRouter`. Code outside the module runs the module's msgs with `msgservice.Dispatch`, so each one goes through the router.
 
 ### gRPC `Query` Services
 

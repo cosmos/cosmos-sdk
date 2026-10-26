@@ -65,7 +65,7 @@ func (s *VestingTestSuite) SetupTest() {
 
 	vestingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 	authtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
-	s.msgServer = vesting.NewMsgServerForTest(s.accountKeeper, s.bankKeeper)
+	s.msgServer = vesting.NewMsgServerImpl(s.accountKeeper, s.bankKeeper)
 }
 
 func (s *VestingTestSuite) TestCreateVestingAccount() {

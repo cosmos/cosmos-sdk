@@ -67,7 +67,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.homeDir = homeDir
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: 10})
 
-	s.msgSrvr = keeper.NewMsgServerForTest(s.upgradeKeeper)
+	s.msgSrvr = keeper.NewMsgServerImpl(s.upgradeKeeper)
 	s.addrs = simtestutil.CreateIncrementalAccounts(1)
 }
 

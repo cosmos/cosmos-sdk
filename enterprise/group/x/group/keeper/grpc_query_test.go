@@ -96,7 +96,7 @@ func initKeeper(t *testing.T) *fixture {
 	err := msgGroupAndPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("2", time.Second, 20))
 	require.NoError(t, err)
 
-	resp, err := groupkeeper.NewMsgServerForTest(groupKeeper).CreateGroupWithPolicy(ctx, msgGroupAndPolicy)
+	resp, err := groupKeeper.CreateGroupWithPolicy(ctx, msgGroupAndPolicy)
 	require.NoError(t, err)
 
 	return &fixture{
@@ -363,7 +363,7 @@ func TestQueryGroupsByMember(t *testing.T) {
 	members := []group.MemberRequest{
 		{Address: fixture.addrs[3].String(), Weight: "1"}, {Address: fixture.addrs[4].String(), Weight: "2"},
 	}
-	_, err := groupkeeper.NewMsgServerForTest(fixture.keeper).CreateGroup(fixture.ctx, &group.MsgCreateGroup{
+	_, err := fixture.keeper.CreateGroup(fixture.ctx, &group.MsgCreateGroup{
 		Admin:   fixture.addrs[1].String(),
 		Members: members,
 	})
@@ -397,7 +397,7 @@ func TestQueryGroups(t *testing.T) {
 	members := []group.MemberRequest{
 		{Address: fixture.addrs[3].String(), Weight: "1"},
 	}
-	_, err := groupkeeper.NewMsgServerForTest(fixture.keeper).CreateGroup(fixture.ctx, &group.MsgCreateGroup{
+	_, err := fixture.keeper.CreateGroup(fixture.ctx, &group.MsgCreateGroup{
 		Admin:   fixture.addrs[2].String(),
 		Members: members,
 	})

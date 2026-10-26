@@ -22,12 +22,6 @@ type msgServer struct {
 
 var _ types.MsgServer = msgServer{}
 
-// newMsgServerImpl returns an implementation of the circuit MsgServer interface
-// for the provided Keeper.
-func newMsgServerImpl(keeper Keeper) types.MsgServer {
-	return &msgServer{Keeper: keeper}
-}
-
 // NewMsgServerImpl returns an implementation of the circuit MsgServer interface
 // for the provided Keeper.
 //
@@ -35,14 +29,14 @@ func newMsgServerImpl(keeper Keeper) types.MsgServer {
 // outside the module with msgservice.Dispatch. NewMsgServerImpl will be
 // removed in a future release.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
-	return newMsgServerImpl(keeper)
+	return &msgServer{Keeper: keeper}
 }
 
 // RegisterMsgServer registers the x/circuit Msg service on r. The msg server
 // is unexported: code outside the module runs a msg through the
 // MsgServiceRouter with msgservice.Dispatch.
 func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) {
-	types.RegisterMsgServer(r, newMsgServerImpl(k))
+	types.RegisterMsgServer(r, NewMsgServerImpl(k))
 }
 
 func (srv msgServer) AuthorizeCircuitBreaker(ctx context.Context, msg *types.MsgAuthorizeCircuitBreaker) (*types.MsgAuthorizeCircuitBreakerResponse, error) {

@@ -16,27 +16,22 @@ type msgServer struct {
 	Keeper
 }
 
-// newMsgServerImpl returns an implementation of the x/mint MsgServer interface.
-func newMsgServerImpl(k Keeper) types.MsgServer {
-	return &msgServer{
-		Keeper: k,
-	}
-}
-
 // NewMsgServerImpl returns an implementation of the x/mint MsgServer interface.
 //
 // Deprecated: register the service with RegisterMsgServer and run msgs from
 // outside the module with msgservice.Dispatch. NewMsgServerImpl will be
 // removed in a future release.
 func NewMsgServerImpl(k Keeper) types.MsgServer {
-	return newMsgServerImpl(k)
+	return &msgServer{
+		Keeper: k,
+	}
 }
 
 // RegisterMsgServer registers the x/mint Msg service on r. The msg server
 // is unexported: code outside the module runs a msg through the
 // MsgServiceRouter with msgservice.Dispatch.
 func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) {
-	types.RegisterMsgServer(r, newMsgServerImpl(k))
+	types.RegisterMsgServer(r, NewMsgServerImpl(k))
 }
 
 // UpdateParams updates the params.

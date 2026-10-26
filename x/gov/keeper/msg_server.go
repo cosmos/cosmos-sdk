@@ -21,12 +21,6 @@ type msgServer struct {
 	*Keeper
 }
 
-// newMsgServerImpl returns an implementation of the gov MsgServer interface
-// for the provided Keeper.
-func newMsgServerImpl(keeper *Keeper) v1.MsgServer {
-	return &msgServer{Keeper: keeper}
-}
-
 // NewMsgServerImpl returns an implementation of the gov MsgServer interface
 // for the provided Keeper.
 //
@@ -34,15 +28,15 @@ func newMsgServerImpl(keeper *Keeper) v1.MsgServer {
 // outside the module with msgservice.Dispatch. NewMsgServerImpl will be
 // removed in a future release.
 func NewMsgServerImpl(keeper *Keeper) v1.MsgServer {
-	return newMsgServerImpl(keeper)
+	return &msgServer{Keeper: keeper}
 }
 
 // RegisterMsgServer registers the x/gov v1 Msg service and the v1beta1
 // legacy Msg service on r. The msg servers are unexported: code outside the
 // module runs a msg through the MsgServiceRouter with msgservice.Dispatch.
 func RegisterMsgServer(r grpc.ServiceRegistrar, k *Keeper) {
-	server := newMsgServerImpl(k)
-	v1beta1.RegisterMsgServer(r, newLegacyMsgServerImpl(k.authKeeper.GetModuleAddress(govtypes.ModuleName).String(), server))
+	server := NewMsgServerImpl(k)
+	v1beta1.RegisterMsgServer(r, NewLegacyMsgServerImpl(k.authKeeper.GetModuleAddress(govtypes.ModuleName).String(), server))
 	v1.RegisterMsgServer(r, server)
 }
 
@@ -310,12 +304,6 @@ type legacyMsgServer struct {
 	server  v1.MsgServer
 }
 
-// newLegacyMsgServerImpl returns an implementation of the v1beta1 legacy MsgServer interface. It wraps around
-// the current MsgServer
-func newLegacyMsgServerImpl(govAcct string, v1Server v1.MsgServer) v1beta1.MsgServer {
-	return &legacyMsgServer{govAcct: govAcct, server: v1Server}
-}
-
 // NewLegacyMsgServerImpl returns an implementation of the v1beta1 legacy MsgServer interface. It wraps around
 // the current MsgServer
 //
@@ -323,7 +311,7 @@ func newLegacyMsgServerImpl(govAcct string, v1Server v1.MsgServer) v1beta1.MsgSe
 // outside the module with msgservice.Dispatch. NewLegacyMsgServerImpl will be
 // removed in a future release.
 func NewLegacyMsgServerImpl(govAcct string, v1Server v1.MsgServer) v1beta1.MsgServer {
-	return newLegacyMsgServerImpl(govAcct, v1Server)
+	return &legacyMsgServer{govAcct: govAcct, server: v1Server}
 }
 
 var _ v1beta1.MsgServer = legacyMsgServer{}

@@ -13,14 +13,6 @@ type msgServer struct {
 	*Keeper
 }
 
-// newMsgServerImpl returns an implementation of the upgrade MsgServer interface
-// for the provided Keeper.
-func newMsgServerImpl(k *Keeper) types.MsgServer {
-	return &msgServer{
-		Keeper: k,
-	}
-}
-
 // NewMsgServerImpl returns an implementation of the upgrade MsgServer interface
 // for the provided Keeper.
 //
@@ -28,14 +20,16 @@ func newMsgServerImpl(k *Keeper) types.MsgServer {
 // outside the module with msgservice.Dispatch. NewMsgServerImpl will be
 // removed in a future release.
 func NewMsgServerImpl(k *Keeper) types.MsgServer {
-	return newMsgServerImpl(k)
+	return &msgServer{
+		Keeper: k,
+	}
 }
 
 // RegisterMsgServer registers the x/upgrade Msg service on r. The msg server
 // is unexported: code outside the module runs a msg through the
 // MsgServiceRouter with msgservice.Dispatch.
 func RegisterMsgServer(r grpc.ServiceRegistrar, k *Keeper) {
-	types.RegisterMsgServer(r, newMsgServerImpl(k))
+	types.RegisterMsgServer(r, NewMsgServerImpl(k))
 }
 
 var (

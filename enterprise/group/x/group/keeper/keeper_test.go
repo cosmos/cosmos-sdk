@@ -55,7 +55,6 @@ type TestSuite struct {
 	groupPolicyAddr sdk.AccAddress
 	policy          group.DecisionPolicy
 	groupKeeper     keeper.Keeper
-	msgServer       group.MsgServer
 	blockTime       time.Time
 	bankKeeper      *grouptestutil.MockBankKeeper
 	accountKeeper   *grouptestutil.MockAccountKeeper
@@ -90,7 +89,6 @@ func (s *TestSuite) SetupTest() {
 
 	config := group.DefaultConfig()
 	s.groupKeeper = keeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), s.accountKeeper, config)
-	s.msgServer = keeper.NewMsgServerForTest(s.groupKeeper)
 	s.ctx = testCtx.Ctx.WithBlockTime(s.blockTime)
 	s.sdkCtx = sdk.UnwrapSDKContext(s.ctx)
 
@@ -101,7 +99,7 @@ func (s *TestSuite) SetupTest() {
 
 	s.setNextAccount()
 
-	groupRes, err := s.msgServer.CreateGroup(s.ctx, &group.MsgCreateGroup{
+	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   s.addrs[0].String(),
 		Members: members,
 	})
@@ -124,7 +122,7 @@ func (s *TestSuite) SetupTest() {
 	groupSeq := s.groupKeeper.GetGroupSequence(s.sdkCtx)
 	s.Require().Equal(groupSeq, uint64(1))
 
-	policyRes, err := s.msgServer.CreateGroupPolicy(s.ctx, policyReq)
+	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 
 	addrbz, err := address.NewBech32Codec("cosmos").StringToBytes(policyRes.Address)
@@ -248,7 +246,7 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 		"tally of withdrawn proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				pID := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
-				_, err := s.msgServer.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
+				_, err := s.groupKeeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
 					ProposalId: pID,
 					Address:    proposers[0],
 				})
@@ -264,7 +262,7 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 		"tally of withdrawn proposal (with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				pID := submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
-				_, err := s.msgServer.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
+				_, err := s.groupKeeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
 					ProposalId: pID,
 					Address:    proposers[0],
 				})
@@ -324,7 +322,7 @@ func (s *TestSuite) TestPruneProposals() {
 
 	s.setNextAccount()
 
-	_, err = s.msgServer.CreateGroupPolicy(s.ctx, policyReq)
+	_, err = s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 
 	req := &group.MsgSubmitProposal{
@@ -333,7 +331,7 @@ func (s *TestSuite) TestPruneProposals() {
 	}
 	err = req.SetMsgs([]sdk.Msg{msgSend})
 	s.Require().NoError(err)
-	submittedProposal, err := s.msgServer.SubmitProposal(s.ctx, req)
+	submittedProposal, err := s.groupKeeper.SubmitProposal(s.ctx, req)
 	s.Require().NoError(err)
 	queryProposal := group.QueryProposalRequest{ProposalId: submittedProposal.ProposalId}
 	prePrune, err := s.groupKeeper.Proposal(s.ctx, &queryProposal)
@@ -369,7 +367,7 @@ func submitProposalWithPolicy(
 	err := proposalReq.SetMsgs(msgs)
 	s.Require().NoError(err)
 
-	proposalRes, err := s.msgServer.SubmitProposal(ctx, proposalReq)
+	proposalRes, err := s.groupKeeper.SubmitProposal(ctx, proposalReq)
 	s.Require().NoError(err)
 	return proposalRes.ProposalId
 }
@@ -388,7 +386,7 @@ func submitProposalAndVoteWithPolicy(
 	s.Require().Greater(len(proposers), 0)
 	myProposalID := submitProposalWithPolicy(ctx, s, policyAddr, msgs, proposers)
 
-	_, err := s.msgServer.Vote(ctx, &group.MsgVote{
+	_, err := s.groupKeeper.Vote(ctx, &group.MsgVote{
 		ProposalId: myProposalID,
 		Voter:      proposers[0],
 		Option:     voteOption,
@@ -405,7 +403,7 @@ func (s *TestSuite) createGroupAndGroupPolicy(
 	if len(members) == 0 {
 		members = []group.MemberRequest{{Address: admin.String(), Weight: "1"}}
 	}
-	groupRes, err := s.msgServer.CreateGroup(s.ctx, &group.MsgCreateGroup{
+	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   admin.String(),
 		Members: members,
 	})
@@ -423,7 +421,7 @@ func (s *TestSuite) createGroupAndGroupPolicy(
 
 		s.setNextAccount()
 
-		groupPolicyRes, err := s.msgServer.CreateGroupPolicy(s.ctx, groupPolicy)
+		groupPolicyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, groupPolicy)
 		s.Require().NoError(err)
 		policyAddr = groupPolicyRes.Address
 	}
@@ -453,21 +451,21 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	s.Require().NoError(groupMsg.SetDecisionPolicy(policy))
 
 	s.setNextAccount()
-	groupRes, err := s.msgServer.CreateGroupWithPolicy(s.ctx, groupMsg)
+	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
 	s.Require().NoError(err)
 	accountAddr := groupRes.GetGroupPolicyAddress()
 	groupPolicy, err := s.accountKeeper.AddressCodec().StringToBytes(accountAddr)
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 
-	proposalRes, err := s.msgServer.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
+	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
 		GroupPolicyAddress: accountAddr,
 		Proposers:          []string{addr1.String()},
 		Messages:           nil,
 	})
 	s.Require().NoError(err)
 
-	_, err = s.msgServer.Vote(s.ctx, &group.MsgVote{
+	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
 		ProposalId: proposalRes.ProposalId,
 		Voter:      addr1.String(),
 		Option:     group.VOTE_OPTION_YES,
@@ -513,14 +511,14 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	s.Require().NoError(groupMsg.SetDecisionPolicy(policy))
 
 	s.setNextAccount()
-	groupRes, err := s.msgServer.CreateGroupWithPolicy(s.ctx, groupMsg)
+	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
 	s.Require().NoError(err)
 	accountAddr := groupRes.GetGroupPolicyAddress()
 	groupPolicy, err := sdk.AccAddressFromBech32(accountAddr)
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 
-	proposalRes, err := s.msgServer.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
+	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
 		GroupPolicyAddress: accountAddr,
 		Proposers:          []string{addr1.String()},
 		Messages:           nil,
@@ -528,13 +526,13 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	s.Require().NoError(err)
 
 	// group members vote
-	_, err = s.msgServer.Vote(s.ctx, &group.MsgVote{
+	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
 		ProposalId: proposalRes.ProposalId,
 		Voter:      addr1.String(),
 		Option:     group.VOTE_OPTION_NO,
 	})
 	s.Require().NoError(err)
-	_, err = s.msgServer.Vote(s.ctx, &group.MsgVote{
+	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
 		ProposalId: proposalRes.ProposalId,
 		Voter:      addr2.String(),
 		Option:     group.VOTE_OPTION_NO,
@@ -549,7 +547,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	s.NotPanics(func() { _ = module2.EndBlocker(ctx, s.groupKeeper) })
 
 	// member 2 (high weight) leaves group.
-	_, err = s.msgServer.LeaveGroup(ctx, &group.MsgLeaveGroup{
+	_, err = s.groupKeeper.LeaveGroup(ctx, &group.MsgLeaveGroup{
 		Address: addr2.String(),
 		GroupId: groupRes.GroupId,
 	})

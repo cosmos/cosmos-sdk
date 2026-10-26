@@ -129,7 +129,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
 		suite.evidenceKeeper.Logger(testCtx.Ctx))
 
-	suite.msgServer = keeper.NewMsgServerForTest(suite.evidenceKeeper)
+	suite.msgServer = keeper.NewMsgServerImpl(suite.evidenceKeeper)
 }
 
 func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {

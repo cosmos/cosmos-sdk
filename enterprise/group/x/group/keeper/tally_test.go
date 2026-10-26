@@ -57,7 +57,7 @@ func (s *TestSuite) TestTally() {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
 				proposalID := submitProposal(ctx, s, msgs, proposers)
-				_, err := s.msgServer.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
+				_, err := s.groupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
 					ProposalId: proposalID,
 					Address:    proposers[0],
 				})

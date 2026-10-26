@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
 	)
-	suite.msgServer = keeper.NewMsgServerForTest(suite.accountKeeper)
+	suite.msgServer = keeper.NewMsgServerImpl(suite.accountKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, keeper.NewQueryServer(suite.accountKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)

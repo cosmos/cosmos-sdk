@@ -80,7 +80,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: keeper})
 	s.queryClient = stakingtypes.NewQueryClient(queryHelper)
-	s.msgServer = stakingkeeper.NewMsgServerForTest(keeper)
+	s.msgServer = stakingkeeper.NewMsgServerImpl(keeper)
 }
 
 func (s *KeeperTestSuite) TestParams() {

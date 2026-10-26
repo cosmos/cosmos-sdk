@@ -161,7 +161,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	queryClient := banktypes.NewQueryClient(queryHelper)
 
 	suite.queryClient = queryClient
-	suite.msgServer = keeper.NewMsgServerForTest(suite.bankKeeper)
+	suite.msgServer = keeper.NewMsgServerImpl(suite.bankKeeper)
 	suite.encCfg = encCfg
 }
 

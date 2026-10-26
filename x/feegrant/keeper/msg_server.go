@@ -17,14 +17,6 @@ type msgServer struct {
 	Keeper
 }
 
-// newMsgServerImpl returns an implementation of the feegrant MsgServer interface
-// for the provided Keeper.
-func newMsgServerImpl(k Keeper) feegrant.MsgServer {
-	return &msgServer{
-		Keeper: k,
-	}
-}
-
 // NewMsgServerImpl returns an implementation of the feegrant MsgServer interface
 // for the provided Keeper.
 //
@@ -32,14 +24,16 @@ func newMsgServerImpl(k Keeper) feegrant.MsgServer {
 // outside the module with msgservice.Dispatch. NewMsgServerImpl will be
 // removed in a future release.
 func NewMsgServerImpl(k Keeper) feegrant.MsgServer {
-	return newMsgServerImpl(k)
+	return &msgServer{
+		Keeper: k,
+	}
 }
 
 // RegisterMsgServer registers the x/feegrant Msg service on r. The msg server
 // is unexported: code outside the module runs a msg through the
 // MsgServiceRouter with msgservice.Dispatch.
 func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) {
-	feegrant.RegisterMsgServer(r, newMsgServerImpl(k))
+	feegrant.RegisterMsgServer(r, NewMsgServerImpl(k))
 }
 
 var _ feegrant.MsgServer = msgServer{}

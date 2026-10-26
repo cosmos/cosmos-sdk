@@ -65,7 +65,7 @@ func TestImportExportGenesis(t *testing.T) {
 	coins := sdk.NewCoins(sdk.NewCoin("foo", math.NewInt(1_000)))
 	now := f.ctx.BlockHeader().Time
 	oneYear := now.AddDate(1, 0, 0)
-	msgSrvr := keeper.NewMsgServerForTest(f.feegrantKeeper)
+	msgSrvr := keeper.NewMsgServerImpl(f.feegrantKeeper)
 
 	allowance := &feegrant.BasicAllowance{SpendLimit: coins, Expiration: &oneYear}
 	err := f.feegrantKeeper.GrantAllowance(f.ctx, granterAddr, granteeAddr, allowance)

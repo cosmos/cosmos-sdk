@@ -67,7 +67,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	slashingtypes.RegisterQueryServer(queryHelper, s.slashingKeeper)
 
 	s.queryClient = slashingtypes.NewQueryClient(queryHelper)
-	s.msgServer = slashingkeeper.NewMsgServerForTest(s.slashingKeeper)
+	s.msgServer = slashingkeeper.NewMsgServerImpl(s.slashingKeeper)
 }
 
 func (s *KeeperTestSuite) TestPubkey() {

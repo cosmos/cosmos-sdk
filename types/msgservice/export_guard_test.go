@@ -27,6 +27,14 @@ var exportGuardAllowed = []string{
 var exportGuardAllowedFindings = map[string]bool{
 	// Helper.CreateValidatorWithMsg runs the msg with msgservice.Dispatch
 	"x/staking/testutil/helpers.go: method Helper.CreateValidatorWithMsg is a Msg handler on an exported type": true,
+	// the exported x/poa MsgServer type, deprecated until a future release
+	// removes it
+	"enterprise/poa/x/poa/keeper/msg_server.go: exported type MsgServer implements MsgServer":                           true,
+	"enterprise/poa/x/poa/keeper/msg_server.go: method MsgServer.UpdateParams is a Msg handler on an exported type":     true,
+	"enterprise/poa/x/poa/keeper/msg_server.go: method MsgServer.CreateValidator is a Msg handler on an exported type":  true,
+	"enterprise/poa/x/poa/keeper/msg_server.go: method MsgServer.UpdateValidators is a Msg handler on an exported type": true,
+	"enterprise/poa/x/poa/keeper/msg_server.go: method MsgServer.WithdrawFees is a Msg handler on an exported type":     true,
+	"enterprise/poa/x/poa/keeper/msg_server.go: method MsgServer.RotateConsPubKey is a Msg handler on an exported type": true,
 }
 
 // exportGuardDeprecated lists the deprecated constructors and keeper Msg
@@ -38,7 +46,7 @@ var exportGuardDeprecated = map[string][]string{
 	"contrib/x/circuit/keeper/msg_server.go":        {"NewMsgServerImpl"},
 	"contrib/x/crisis/keeper/msg_server.go":         {"Keeper.VerifyInvariant", "Keeper.UpdateParams"},
 	"contrib/x/nft/keeper/msg_server.go":            {"Keeper.Send"},
-	"enterprise/poa/x/poa/keeper/msg_server.go":     {"type MsgServer", "NewMsgServer"},
+	"enterprise/poa/x/poa/keeper/msg_server.go":     {"NewMsgServer"},
 	"enterprise/group/x/group/keeper/msg_server.go": {"Keeper.CreateGroup", "Keeper.UpdateGroupMembers", "Keeper.UpdateGroupAdmin", "Keeper.UpdateGroupMetadata", "Keeper.CreateGroupWithPolicy", "Keeper.CreateGroupPolicy", "Keeper.UpdateGroupPolicyAdmin", "Keeper.UpdateGroupPolicyDecisionPolicy", "Keeper.UpdateGroupPolicyMetadata", "Keeper.SubmitProposal", "Keeper.WithdrawProposal", "Keeper.Vote", "Keeper.Exec", "Keeper.LeaveGroup"},
 	"testutil/x/counter/keeper/keeper.go":           {"Keeper.IncreaseCount"},
 	"x/auth/keeper/msg_server.go":                   {"NewMsgServerImpl"},

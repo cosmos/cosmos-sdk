@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.feegrantKeeper = keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), suite.accountKeeper).SetBankKeeper(suite.bankKeeper)
 	suite.ctx = testCtx.Ctx
-	suite.msgSrvr = keeper.NewMsgServerForTest(suite.feegrantKeeper)
+	suite.msgSrvr = keeper.NewMsgServerImpl(suite.feegrantKeeper)
 	suite.atom = sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(555)))
 }
 

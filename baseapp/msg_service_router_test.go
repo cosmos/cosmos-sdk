@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -321,4 +322,21 @@ func TestRouterRefusalIsRegisteredError(t *testing.T) {
 	err = handler(ctx, &testdata_pulsar.MsgCreateDog{Dog: &testdata_pulsar.Dog{Name: "Spot"}}, new(testdata_pulsar.MsgCreateDogResponse))
 	require.ErrorIs(t, err, sdkerrors.ErrCircuitBreakerTripped)
 	require.ErrorContains(t, err, dogURL)
+}
+
+// TestRouterCheckMsgsAllowed checks the router's breaker against msgs before
+// any of them runs, and passes everything when no breaker is set.
+func TestRouterCheckMsgsAllowed(t *testing.T) {
+	const dogURL = "/testpb.MsgCreateDog"
+	msgs := []sdk.Msg{&testdata.TestMsg{}, &testdata.MsgCreateDog{Dog: &testdata.Dog{Name: "Spot"}}}
+
+	app := newHybridTestApp(t, nil)
+	require.NoError(t, app.MsgServiceRouter().CheckMsgsAllowed(app.NewContext(true), msgs))
+
+	cb := &typeBreaker{blocked: map[string]bool{dogURL: true}}
+	app.SetCircuitBreaker(cb)
+	err := app.MsgServiceRouter().CheckMsgsAllowed(app.NewContext(true), msgs)
+	require.ErrorIs(t, err, sdkerrors.ErrCircuitBreakerTripped)
+	require.ErrorContains(t, err, dogURL)
+	require.Equal(t, []string{sdk.MsgTypeURL(msgs[0]), dogURL}, cb.asked)
 }

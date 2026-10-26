@@ -8,6 +8,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 
@@ -337,13 +338,11 @@ func TestRouterWildcardBlocksAllButProtected(t *testing.T) {
 		consensusMsg,
 		upgradeMsg,
 	)
-	failing := f.submitProposal(f.msgDistrParams("0.33"))
+	// a proposal holding a tripped msg is refused at submission
+	f.requireSubmitRejected(distrParamsURL, f.msgDistrParams("0.33"))
 	f.endVoting()
 
 	f.requireProposalStatus(id, govv1.StatusPassed)
-	p := f.requireProposalStatus(failing, govv1.StatusFailed)
-	require.Contains(t, p.FailedReason, routerBlockedMsg)
-	require.Contains(t, p.FailedReason, distrParamsURL)
 
 	ctx = f.ctx()
 	gotGov, err := f.app.GovKeeper.Params.Get(ctx)
@@ -407,10 +406,7 @@ func TestRouterPrefixTrips(t *testing.T) {
 		res := f.deliver(f.voter, msg)
 		requireRouterBlocked(t, res, url)
 	}
-	id := f.submitProposal(f.msgDistrParams("0.33"))
-	f.endVoting()
-	p := f.requireProposalStatus(id, govv1.StatusFailed)
-	require.Contains(t, p.FailedReason, distrParamsURL)
+	f.requireSubmitRejected(distrParamsURL, f.msgDistrParams("0.33"))
 
 	// tripping a disabled pattern again is rejected
 	res = f.deliver(f.voter, safetytypes.NewMsgTrip(f.voter.String(), "/cosmos.*"))
@@ -598,17 +594,15 @@ func TestAnteFinalizeBlockLeavesTrippedMsgsToRouter(t *testing.T) {
 	require.Equal(t, granteeBefore.Sub(feeAmt), f.balanceAt(f.ctx(), f.other))
 }
 
-// TestAnteFinalizeBlockAdmitsGovProposalOfTrippedMsg shows the limit of
-// rejection at submission. A gov proposal with a tripped msg that passed
-// CheckTx before the trip and executes after it in the same block is created,
-// since the router admits the protected gov MsgSubmitProposal and gov does not
-// run the msgs it stores. The router blocks the tripped msg when the proposal
-// executes while the trip stands, so the proposal fails.
-func TestAnteFinalizeBlockAdmitsGovProposalOfTrippedMsg(t *testing.T) {
+// TestGovRejectsProposalOfTrippedMsgInFinalizeBlock covers a proposal that
+// passed CheckTx before the trip and executes after it in the same block.
+// The ante decorator leaves FinalizeBlock to the router, which admits the
+// protected gov MsgSubmitProposal, so gov itself checks the proposal's msgs
+// at submission and the proposal is never stored.
+func TestGovRejectsProposalOfTrippedMsgInFinalizeBlock(t *testing.T) {
 	f := newGateFixture(t, true)
 	params, err := f.app.GovKeeper.Params.Get(f.ctx())
 	require.NoError(t, err)
-	taxBefore := f.communityTax()
 	id, err := f.app.GovKeeper.ProposalID.Peek(f.ctx())
 	require.NoError(t, err)
 
@@ -617,26 +611,24 @@ func TestAnteFinalizeBlockAdmitsGovProposalOfTrippedMsg(t *testing.T) {
 	submit, err := govv1.NewMsgSubmitProposal([]sdk.Msg{f.msgDistrParams("0.33")}, params.MinDeposit, f.voter.String(), "", "t", "s", false)
 	require.NoError(t, err)
 	submitTx := f.encodeAt(f.voter, seq+1, submit)
-	vote := f.encodeAt(f.voter, seq+2, govv1.NewMsgVote(f.voter.addr, id, govv1.OptionYes, ""))
 	for _, bz := range [][]byte{trip, submitTx} {
 		c := f.checkTx(bz)
 		require.Zero(t, c.Code, c.Log)
 	}
 
-	res := f.deliverTxs(trip, submitTx, vote)
-	for _, r := range res {
-		require.Zero(t, r.Code, r.Log)
-	}
+	res := f.deliverTxs(trip, submitTx)
+	require.Zero(t, res[0].Code, res[0].Log)
+	require.Equal(t, safetytypes.ErrMsgDisabled.ABCICode(), res[1].Code, res[1].Log)
+	require.Equal(t, safetytypes.ErrMsgDisabled.Codespace(), res[1].Codespace, res[1].Log)
+	require.Contains(t, res[1].Log, distrParamsURL)
+
+	_, err = f.app.GovKeeper.Proposals.Get(f.ctx(), id)
+	require.ErrorIs(t, err, collections.ErrNotFound, "gov must not store a proposal holding a tripped msg")
+
+	// control: after a reset the same proposal is stored
+	f.reset(distrParamsURL)
+	f.mustDeliver(f.voter, submit)
 	f.requireProposalStatus(id, govv1.StatusVotingPeriod)
-
-	// the same proposal now fails CheckTx
-	again := f.checkTx(f.encode(f.voter, submit))
-	require.Equal(t, safetytypes.ErrMsgDisabled.ABCICode(), again.Code, again.Log)
-
-	f.endVoting()
-	p := f.requireProposalStatus(id, govv1.StatusFailed)
-	require.Contains(t, p.FailedReason, distrParamsURL)
-	require.True(t, taxBefore.Equal(f.communityTax()), "tripped proposal changed distribution params")
 }
 
 // TestAnteNestingDepthLimit sends authz MsgExec chains through CheckTx: every

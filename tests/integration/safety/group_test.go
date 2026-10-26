@@ -352,3 +352,21 @@ func TestGroupWrapperSetIsExact(t *testing.T) {
 	require.Equal(t, len(wrappers), seen)
 	require.Positive(t, others)
 }
+
+// A group proposal holding a tripped msg fails at submission in FinalizeBlock
+// as well as in CheckTx: the ante decorator leaves FinalizeBlock to the
+// router, which admits the wrapper, so group checks the proposal's msgs
+// itself and stores nothing.
+func TestGroupRejectsProposalOfTrippedMsgInFinalizeBlock(t *testing.T) {
+	f := newGroupFixture(t)
+	send := banktypes.NewMsgSend(f.policy, f.member.addr, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)))
+	sendURL := sdk.MsgTypeURL(send)
+
+	f.trip(sendURL)
+	f.requireTx(f.member, sendURL, f.proposal(send))
+	_, err := f.groupKeeper.Proposal(f.ctx(), &group.QueryProposalRequest{ProposalId: f.proposals + 1})
+	require.Error(t, err, "group must not store a proposal holding a tripped msg")
+
+	f.reset(sendURL)
+	f.submit(send)
+}

@@ -289,11 +289,10 @@ func TestMatchingMsgsPreviewsTrip(t *testing.T) {
 }
 
 // TestProposalWithTrippedMsgRejected checks that a gov proposal with a tripped
-// msg is rejected at submission in CheckTx: the ante decorator opens any msg
-// exposing GetMsgs, including the protected gov MsgSubmitProposal, and checks
-// its contents. In FinalizeBlock the decorator stands aside, so a proposer can
-// still include the submission; the router checks the tripped msg when the
-// proposal executes.
+// msg is rejected at submission in CheckTx, where the ante decorator opens any
+// msg exposing GetMsgs, including the protected gov MsgSubmitProposal. In
+// FinalizeBlock the decorator stands aside, and gov runs the same check when
+// a proposer includes the submission anyway.
 func TestProposalWithTrippedMsgRejected(t *testing.T) {
 	f := newFixture(t, nil, nil)
 	f.setParams(f.operator.String(), "/cosmos.bank.*")
@@ -306,5 +305,6 @@ func TestProposalWithTrippedMsgRejected(t *testing.T) {
 	require.NoError(t, err)
 	bz := f.requireCheckTxRejected(f.voter, safetytypes.ErrMsgDisabled, submit)
 	res := f.finalize(bz).TxResults[0]
-	require.Zero(t, res.Code, res.Log)
+	require.Equal(t, safetytypes.ErrMsgDisabled.ABCICode(), res.Code, res.Log)
+	require.Equal(t, safetytypes.ErrMsgDisabled.Codespace(), res.Codespace, res.Log)
 }

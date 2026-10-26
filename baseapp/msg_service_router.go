@@ -54,6 +54,17 @@ func (msr *MsgServiceRouter) SetCircuit(cb CircuitBreaker) {
 // MsgServiceHandler defines a function type which handles Msg service message.
 type MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
 
+// CheckMsgsAllowed runs CheckMsgsAllowed with the router's circuit breaker,
+// and returns nil when no breaker is set. Gov and group call it when a
+// proposal is submitted, so a proposal holding a disabled msg fails even when
+// a proposer puts it in a block without CheckTx.
+func (msr *MsgServiceRouter) CheckMsgsAllowed(ctx context.Context, msgs []sdk.Msg) error {
+	if msr.circuitBreaker == nil {
+		return nil
+	}
+	return CheckMsgsAllowed(ctx, msr.circuitBreaker, msgs)
+}
+
 // Handler returns the MsgServiceHandler for a given msg or nil if not found.
 func (msr *MsgServiceRouter) Handler(msg sdk.Msg) MsgServiceHandler {
 	if msr == nil {

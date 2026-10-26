@@ -143,6 +143,13 @@ mode: tx msgs, msgs that authz `MsgExec`, gov and group proposals dispatch,
 and msgs run with `msgservice.Dispatch`. The router reads the breaker on each
 call, so `SetCircuitBreaker` can run before or after `RegisterServices`.
 
+**Proposal submission.** Gov and group check a proposal's msgs, recursively,
+when it is submitted, through `MsgServiceRouter.CheckMsgsAllowed`, and refuse
+the proposal when any of them is disabled. The check runs in every exec mode,
+so a proposer that puts the submission in a block without `CheckTx` still
+cannot store the proposal. A proposal stored before a trip fails when it
+executes while the trip stands.
+
 **Ante decorator.** `ante.CircuitBreakerDecorator` in `x/auth/ante`, which
 `ante.HandlerOptions.CircuitBreaker` adds:
 
@@ -452,8 +459,7 @@ return vm, err
 4. Patch first. A software upgrade goes through under any trip, since gov and
    upgrade msgs are protected. A fix that is an ordinary msg, such as a
    module's `MsgUpdateParams`, fails `CheckTx` in a gov proposal while a trip
-   covers it, because the ante decorator checks the proposal's msgs at
-   submission. Narrow the trip first: trip the exploit's exact URLs,
+   covers it, because gov checks the proposal's msgs at submission. Narrow the trip first: trip the exploit's exact URLs,
    then reset the broad entry.
 5. Reset once the fix is live. Refused txs keep their sequence and execute if
    rebroadcast after the reset.

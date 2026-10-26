@@ -2,6 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/core/address"
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -11,6 +12,10 @@ var (
 	_ sdk.Msg = &MsgUpdateParams{}
 	_ sdk.Msg = &MsgTrip{}
 	_ sdk.Msg = &MsgReset{}
+
+	_ sdk.HasValidateBasic = &MsgUpdateParams{}
+	_ sdk.HasValidateBasic = &MsgTrip{}
+	_ sdk.HasValidateBasic = &MsgReset{}
 )
 
 // NewMsgTrip creates a new MsgTrip.
@@ -49,6 +54,26 @@ func (m *MsgReset) Validate(ac address.Codec) error {
 	if err := validateAddress(ac, "sender", m.Sender); err != nil {
 		return err
 	}
+	return ValidatePatterns(m.Patterns)
+}
+
+// ValidateBasic checks the scope patterns, so CheckTx and gov or group
+// proposal submission refuse a malformed scope before it reaches the msg
+// server. Address checks need the address codec and stay in Validate.
+func (m *MsgUpdateParams) ValidateBasic() error {
+	if err := validateUniquePatterns(m.Params.Scope); err != nil {
+		return errorsmod.Wrap(err, "scope")
+	}
+	return nil
+}
+
+// ValidateBasic checks the patterns. Address checks stay in Validate.
+func (m *MsgTrip) ValidateBasic() error {
+	return ValidatePatterns(m.Patterns)
+}
+
+// ValidateBasic checks the patterns. Address checks stay in Validate.
+func (m *MsgReset) ValidateBasic() error {
 	return ValidatePatterns(m.Patterns)
 }
 

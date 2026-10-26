@@ -428,6 +428,18 @@ func (f *fixture) mustFailExecution(msgs ...sdk.Msg) string {
 	return proposal.FailedReason
 }
 
+// requireProposalRefused requires gov to refuse, at submission, a proposal
+// of msgs whose ValidateBasic fails with wantErr.
+func (f *fixture) requireProposalRefused(wantErr error, msgs ...sdk.Msg) {
+	f.t.Helper()
+	govParams, err := f.app.GovKeeper.Params.Get(f.ctx())
+	require.NoError(f.t, err)
+	submit, err := govv1.NewMsgSubmitProposal(msgs, govParams.MinDeposit, f.voter.String(), "", "safety", "safety", false)
+	require.NoError(f.t, err)
+	res := f.requireFails(f.voter, govtypes.ErrInvalidProposalMsg, submit)
+	require.Contains(f.t, res.Log, wantErr.Error())
+}
+
 // setParams changes the x/safety params through a gov proposal.
 func (f *fixture) setParams(operator string, scope ...string) {
 	f.t.Helper()

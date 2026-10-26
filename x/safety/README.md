@@ -649,9 +649,11 @@ relay and ack, and packets past it refund on their source.
 
 ### ICS20 transfers
 
-The router refuses a routed `MsgTransfer` under a trip. packet-forward-middleware
-calls the transfer keeper's `Transfer` method directly, so a forward still
-escrows and sends. The cosmos/evm ICS20 precompile reverts with nothing
+The router refuses a routed `MsgTransfer` under a trip. Released
+packet-forward-middleware calls the transfer keeper's `Transfer` method
+directly, so a forward still escrows and sends. Once it forwards the
+`MsgTransfer` with `msgservice.Dispatch`, a trip refuses the forward: the
+middle chain writes an error ack and the previous hop refunds the sender. The cosmos/evm ICS20 precompile reverts with nothing
 escrowed once it runs the msg with `msgservice.Dispatch`.
 
 ### Interchain account hosts
@@ -714,11 +716,12 @@ checked.
 Code that calls a keeper or a msg server directly skips a selective trip.
 Known paths:
 
-* cosmos/evm precompile methods that call SDK keepers, such as distribution
-  `claimRewards` and WERC20 `deposit`,
+* cosmos/evm precompile methods that call SDK keepers: distribution
+  `claimRewards` and ics02 `updateClient` until they run their msgs with
+  `msgservice.Dispatch`, and WERC20 `deposit`, which has no msg to run,
 * EVM native value transfers,
 * the ibc-go transfer keeper's `Transfer` and `SendTransfer`, which
-  packet-forward-middleware calls,
+  packet-forward-middleware calls until it forwards with `msgservice.Dispatch`,
 * the ibc-go channel keeper's `SendPacket`,
 * wasmd `BankMsg::Burn` and `IbcMsg::SendPacket`.
 

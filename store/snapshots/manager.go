@@ -38,9 +38,10 @@ type Manager struct {
 	store *Store
 	opts  types.SnapshotOptions
 	// multistore is the store from which snapshots are taken.
-	multistore    types.Snapshotter
-	snapAnnouncer types.SnapshotAnnouncer
-	logger        log.Logger
+	multistore types.Snapshotter
+	lifecycle  types.SnapshotLifecycle
+	announcer  types.SnapshotAnnouncer
+	logger     log.Logger
 
 	mtx               sync.Mutex
 	operation         operation
@@ -78,17 +79,21 @@ func NewManager(store *Store, opts types.SnapshotOptions, multistore types.Snaps
 	if extensions == nil {
 		extensions = map[string]types.ExtensionSnapshotter{}
 	}
-	var snapAnnouncer types.SnapshotAnnouncer = noopSnapshotAnnouncer{}
-	if v, ok := multistore.(types.SnapshotAnnouncer); ok {
-		snapAnnouncer = v
+	var lifecycle types.SnapshotLifecycle
+	var announcer types.SnapshotAnnouncer
+	if v, ok := multistore.(types.SnapshotLifecycle); ok {
+		lifecycle = v
+	} else if v, ok := multistore.(types.SnapshotAnnouncer); ok {
+		announcer = v
 	}
 	return &Manager{
-		store:         store,
-		opts:          opts,
-		multistore:    multistore,
-		snapAnnouncer: snapAnnouncer,
-		extensions:    extensions,
-		logger:        logger,
+		store:      store,
+		opts:       opts,
+		multistore: multistore,
+		lifecycle:  lifecycle,
+		announcer:  announcer,
+		extensions: extensions,
+		logger:     logger,
 	}
 }
 
@@ -172,9 +177,6 @@ func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 		return nil, errorsmod.Wrap(storetypes.ErrLogic, "no snapshot store configured")
 	}
 
-	m.snapAnnouncer.AnnounceSnapshotHeight(int64(height))
-	defer m.multistore.PruneSnapshotHeight(int64(height))
-
 	err := m.begin(opSnapshot)
 	if err != nil {
 		return nil, err
@@ -190,11 +192,32 @@ func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 			"a more recent snapshot already exists at height %v", latest.Height)
 	}
 
+	if m.lifecycle != nil {
+		m.lifecycle.StartSnapshot(int64(height))
+	} else if m.announcer != nil {
+		m.announcer.AnnounceSnapshotHeight(int64(height))
+	}
+
 	// Spawn goroutine to generate snapshot chunks and pass their io.ReadClosers through a channel
 	ch := make(chan io.ReadCloser)
 	go m.createSnapshot(height, ch)
 
-	return m.store.Save(height, types.CurrentFormat, ch)
+	snapshot, err := m.store.Save(height, types.CurrentFormat, ch)
+	if err != nil {
+		if m.lifecycle != nil {
+			m.lifecycle.FailSnapshot(int64(height))
+		} else if m.announcer != nil {
+			m.multistore.PruneSnapshotHeight(int64(height))
+		}
+		return nil, err
+	}
+
+	if m.lifecycle != nil {
+		m.lifecycle.CompleteSnapshot(int64(height))
+	} else {
+		m.multistore.PruneSnapshotHeight(int64(height))
+	}
+	return snapshot, nil
 }
 
 // createSnapshot do the heavy work of snapshotting after the validations of request are done
@@ -556,11 +579,4 @@ func (m *Manager) snapshot(height int64) {
 // Close the snapshot database.
 func (m *Manager) Close() error {
 	return m.store.db.Close()
-}
-
-// noopSnapshotAnnouncer is a null object for snapshot announcer.
-type noopSnapshotAnnouncer struct{}
-
-// AnnounceSnapshotHeight does nothing.
-func (n noopSnapshotAnnouncer) AnnounceSnapshotHeight(height int64) {
 }

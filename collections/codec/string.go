@@ -60,7 +60,7 @@ func (stringKey[T]) DecodeNonTerminal(buffer []byte) (int, T, error) {
 func (stringKey[T]) SizeNonTerminal(key T) int { return len(key) + 1 }
 
 func (stringKey[T]) Stringify(key T) string {
-	return (string)(key)
+	return string(key)
 }
 
 func (stringKey[T]) KeyType() string {

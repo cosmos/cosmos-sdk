@@ -267,7 +267,8 @@ func (suite *AnteTestSuite) createTx(
 		}
 		sigV2, err := tx.SignWithPrivKey(
 			ctx, signMode, signerData,
-			suite.txBuilder, priv, suite.clientCtx.TxConfig, accSeqs[i])
+			suite.txBuilder, priv, suite.clientCtx.TxConfig, accSeqs[i],
+		)
 		if err != nil {
 			return nil, err
 		}

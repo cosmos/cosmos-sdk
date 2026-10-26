@@ -237,7 +237,9 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/safety/v1/tx.proto
 ```
 
 Every msg runs stateless checks first: addresses decode with the chain address
-codec, pattern lists are non-empty, patterns are well-formed and unique. Trip
+codec, pattern lists are non-empty, patterns are well-formed and unique. The
+pattern checks also run in `ValidateBasic`, so CheckTx refuses a malformed
+pattern, and gov and group refuse a proposal holding one at submission. Trip
 and reset are all-or-nothing.
 
 ### MsgUpdateParams

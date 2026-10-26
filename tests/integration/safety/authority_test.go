@@ -65,23 +65,41 @@ func TestAuthorityReplacesItself(t *testing.T) {
 func TestInvalidParamsRejected(t *testing.T) {
 	f := newFixture(t, nil, nil)
 	good := f.params()
-
-	for name, mutate := range map[string]func(*safetytypes.Params){
-		"empty authority":   func(p *safetytypes.Params) { p.Authority = "" },
-		"bad authority":     func(p *safetytypes.Params) { p.Authority = "cosmos1bad" },
-		"bad operator":      func(p *safetytypes.Params) { p.Operator = "not-an-address" },
-		"malformed scope":   func(p *safetytypes.Params) { p.Scope = []string{"cosmos.bank.*"} },
-		"duplicate scope":   func(p *safetytypes.Params) { p.Scope = []string{"/cosmos.bank.*", "/cosmos.bank.*"} },
-		"half wildcard":     func(p *safetytypes.Params) { p.Scope = []string{"/cosmos.bank*"} },
-		"trailing dot only": func(p *safetytypes.Params) { p.Scope = []string{"/.*"} },
-	} {
+	run := func(name string, mutate func(*safetytypes.Params), check func(*safetytypes.MsgUpdateParams)) {
 		t.Run(name, func(t *testing.T) {
 			p := good
 			p.Scope = append([]string(nil), good.Scope...)
 			mutate(&p)
-			reason := f.mustFailExecution(&safetytypes.MsgUpdateParams{Authority: govAddr, Params: p})
-			require.NotEmpty(t, reason)
+			check(&safetytypes.MsgUpdateParams{Authority: govAddr, Params: p})
 			require.Equal(t, good, f.params())
+		})
+	}
+
+	// address checks need the address codec, so the msg server makes them and
+	// the proposal fails at execution
+	for name, mutate := range map[string]func(*safetytypes.Params){
+		"empty authority": func(p *safetytypes.Params) { p.Authority = "" },
+		"bad authority":   func(p *safetytypes.Params) { p.Authority = "cosmos1bad" },
+		"bad operator":    func(p *safetytypes.Params) { p.Operator = "not-an-address" },
+	} {
+		run(name, mutate, func(msg *safetytypes.MsgUpdateParams) {
+			require.NotEmpty(t, f.mustFailExecution(msg))
+		})
+	}
+
+	// scope checks are stateless: ValidateBasic makes them and gov refuses
+	// the proposal at submission
+	for name, tc := range map[string]struct {
+		mutate  func(*safetytypes.Params)
+		wantErr error
+	}{
+		"malformed scope":   {func(p *safetytypes.Params) { p.Scope = []string{"cosmos.bank.*"} }, safetytypes.ErrInvalidPattern},
+		"duplicate scope":   {func(p *safetytypes.Params) { p.Scope = []string{"/cosmos.bank.*", "/cosmos.bank.*"} }, safetytypes.ErrDuplicatePattern},
+		"half wildcard":     {func(p *safetytypes.Params) { p.Scope = []string{"/cosmos.bank*"} }, safetytypes.ErrInvalidPattern},
+		"trailing dot only": {func(p *safetytypes.Params) { p.Scope = []string{"/.*"} }, safetytypes.ErrInvalidPattern},
+	} {
+		run(name, tc.mutate, func(msg *safetytypes.MsgUpdateParams) {
+			f.requireProposalRefused(tc.wantErr, msg)
 		})
 	}
 }

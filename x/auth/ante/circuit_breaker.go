@@ -2,21 +2,8 @@ package ante
 
 import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
-
-// msgsWithGetMessages is implemented by wrappers such as authz MsgExec.
-type msgsWithGetMessages interface {
-	GetMessages() ([]sdk.Msg, error)
-}
-
-// msgsWithGetMsgs is implemented by wrappers such as gov v1 and group
-// MsgSubmitProposal.
-type msgsWithGetMsgs interface {
-	GetMsgs() ([]sdk.Msg, error)
-}
 
 // CircuitBreakerDecorator rejects a tx when the circuit breaker disallows any
 // of its msgs, or any msg nested inside them. It opens every msg that exposes
@@ -37,16 +24,12 @@ type msgsWithGetMsgs interface {
 // In FinalizeBlock the decorator passes every tx on and leaves the check to
 // the router, since a tx rejected before fee deduction would keep its
 // sequence. Rejected at the router, the tx pays its fee and uses its sequence
-// like any failed tx.
+// like any failed tx. Gov and group run the same check when a proposal is
+// submitted, through MsgServiceRouter.CheckMsgsAllowed, so a proposer cannot
+// store a proposal holding a disabled msg by skipping CheckTx.
 //
-// A breaker error rejects the tx with that error, so x/safety's refusal keeps
-// its codespace and names the blocking pattern. A refusal without an error
-// returns sdkerrors.ErrCircuitBreakerTripped, as the router does.
-//
-// The decorator descends as deep as the tx decoder unpacks Any values,
-// codectypes.MaxUnpackAnyRecursionDepth, so it checks every msg of a decoded
-// tx and adds no nesting rule of its own. A tx built in process that nests
-// deeper fails with sdkerrors.ErrInvalidRequest rather than pass unchecked.
+// The decorator runs baseapp.CheckMsgsAllowed, which sets the error a refused
+// tx returns and how deep the check descends into nested msgs.
 type CircuitBreakerDecorator struct {
 	breaker baseapp.CircuitBreaker
 }
@@ -62,57 +45,8 @@ func (d CircuitBreakerDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	if ctx.ExecMode() == sdk.ExecModeFinalize {
 		return next(ctx, tx, simulate)
 	}
-	if err := d.checkMsgs(ctx, tx.GetMsgs(), 0); err != nil {
+	if err := baseapp.CheckMsgsAllowed(ctx, d.breaker, tx.GetMsgs()); err != nil {
 		return ctx, err
 	}
 	return next(ctx, tx, simulate)
-}
-
-func (d CircuitBreakerDecorator) checkMsgs(ctx sdk.Context, msgs []sdk.Msg, depth int) error {
-	if depth > codectypes.MaxUnpackAnyRecursionDepth {
-		return sdkerrors.ErrInvalidRequest.Wrapf("nested msg depth exceeds limit %d", codectypes.MaxUnpackAnyRecursionDepth)
-	}
-	for _, msg := range msgs {
-		typeURL := sdk.MsgTypeURL(msg)
-		allowed, err := d.breaker.IsAllowed(ctx, typeURL)
-		if err != nil {
-			return err
-		}
-		if !allowed {
-			return sdkerrors.ErrCircuitBreakerTripped.Wrap(typeURL)
-		}
-
-		inner, err := innerMsgs(msg)
-		if err != nil {
-			return err
-		}
-		if len(inner) == 0 {
-			continue
-		}
-		if err := d.checkMsgs(ctx, inner, depth+1); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// innerMsgs returns the msgs a wrapper exposes through either GetMessages or
-// GetMsgs, or nil when msg wraps nothing.
-func innerMsgs(msg sdk.Msg) ([]sdk.Msg, error) {
-	var inner []sdk.Msg
-	if w, ok := msg.(msgsWithGetMessages); ok {
-		msgs, err := w.GetMessages()
-		if err != nil {
-			return nil, err
-		}
-		inner = append(inner, msgs...)
-	}
-	if w, ok := msg.(msgsWithGetMsgs); ok {
-		msgs, err := w.GetMsgs()
-		if err != nil {
-			return nil, err
-		}
-		inner = append(inner, msgs...)
-	}
-	return inner, nil
 }

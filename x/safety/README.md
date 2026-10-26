@@ -143,6 +143,13 @@ mode: tx msgs, msgs that authz `MsgExec`, gov and group proposals dispatch,
 and msgs run with `msgservice.Dispatch`. The router reads the breaker on each
 call, so `SetCircuitBreaker` can run before or after `RegisterServices`.
 
+**Proposal submission.** Gov and group check a proposal's msgs, recursively,
+when it is submitted, through `MsgServiceRouter.CheckMsgsAllowed`, and refuse
+the proposal when any of them is disabled. The check runs in every exec mode,
+so a proposer that puts the submission in a block without `CheckTx` still
+cannot store the proposal. A proposal stored before a trip fails when it
+executes while the trip stands.
+
 **Ante decorator.** `ante.CircuitBreakerDecorator` in `x/auth/ante`, which
 `ante.HandlerOptions.CircuitBreaker` adds:
 
@@ -434,18 +441,47 @@ options.
 * x/safety does not read the circuit disabled list or permissions. To keep
   a circuit trip in force through the upgrade block, have the new operator
   trip it in the handler right after `SetParams`. The handler hard-codes the
-  type URLs, since the new binary cannot read the circuit store. `MsgTrip`
-  refuses a URL that matches no registered msg, so a typo fails the upgrade
-  instead of disabling nothing:
+  type URLs, since the new binary cannot read the circuit store:
 
 ```go
-sdkCtx := sdk.UnwrapSDKContext(ctx)
-_, err = msgservice.Dispatch[*safetytypes.MsgTripResponse](sdkCtx, app.MsgServiceRouter(),
-	safetytypes.NewMsgTrip(operator, "/cosmos.bank.v1beta1.MsgSend")) // circuit's disabled list
-return vm, err
+app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
+	func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		vm, err := app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+		if err != nil {
+			return nil, err
+		}
+		operator := "cosmos1..." // the operator account
+		if err := app.SafetyKeeper.SetParams(ctx, safetytypes.Params{
+			Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			Operator:  operator,
+			Scope:     []string{safetytypes.Wildcard},
+		}); err != nil {
+			return nil, err
+		}
+		// circuit's disabled list, read from the chain before the upgrade
+		_, err = msgservice.Dispatch[*safetytypes.MsgTripResponse](sdk.UnwrapSDKContext(ctx), app.MsgServiceRouter(),
+			safetytypes.NewMsgTrip(operator, "/cosmos.bank.v1beta1.MsgSend"))
+		return vm, err
+	},
+)
 ```
 
-`TestUpgradeFromCircuit` in `tests/integration/safety` runs this upgrade.
+* A refused trip fails the upgrade, and the chain halts at the upgrade
+  height until validators run a fixed binary. Check circuit's list against
+  the new binary and leave out every URL `MsgTrip` refuses:
+  * a URL that matches no registered msg, such as a typo or a
+    `/cosmos.circuit.*` URL, which the new binary no longer registers (code
+    7);
+  * a protected URL, such as a gov or upgrade msg, which x/safety never
+    blocks (code 7);
+  * a URL outside the operator's scope (code 6).
+* A node restarted on the new binary checks txs against an empty disabled
+  list until the upgrade block runs the handler. A tx it admits to the mempool
+  in that window and that the handler then trips fails at the router and pays
+  its fee.
+
+`TestUpgradeFromCircuit` in `tests/integration/safety` runs this upgrade,
+including x/safety's `InitGenesis` from `RunMigrations` and each refused trip.
 
 ## Operating
 
@@ -458,8 +494,7 @@ return vm, err
 4. Patch first. A software upgrade goes through under any trip, since gov and
    upgrade msgs are protected. A fix that is an ordinary msg, such as a
    module's `MsgUpdateParams`, fails `CheckTx` in a gov proposal while a trip
-   covers it, because the ante decorator checks the proposal's msgs at
-   submission. Narrow the trip first: trip the exploit's exact URLs,
+   covers it, because gov checks the proposal's msgs at submission. Narrow the trip first: trip the exploit's exact URLs,
    then reset the broad entry.
 5. Reset once the fix is live. Refused txs keep their sequence and execute if
    rebroadcast after the reset.
@@ -600,9 +635,20 @@ and the router checks each one.
 sends it can neither ack nor time out until the reset. Add the `MsgTransfer`
 URL or trip `/ibc.*`.
 
-x/safety does not protect `MsgRecoverClient`, so while a trip covers it the
-ante decorator refuses a gov proposal that wraps it, and a proposal that
-reaches a block fails at execution.
+IBC v2 delivers packets with its own msgs:
+
+| Exact trip | Effect |
+| --- | --- |
+| `/ibc.core.channel.v2.MsgRecvPacket` | Inbound v2 packets wait, as with v1. |
+| `/ibc.core.channel.v2.MsgAcknowledgement` | v2 acks fail until the reset. |
+| `/ibc.core.channel.v2.MsgSendPacket` | Outbound v2 packets that a user sends directly, including ICS20 payloads, fail. A `MsgTransfer` trip does not cover them. |
+
+A trip of the v1 channel msgs does not stop v2 packets. On a chain that wires
+IBC v2, trip both versions, or `/ibc.core.channel.*`.
+
+x/safety does not protect `MsgRecoverClient`, so while a trip covers it gov
+refuses a proposal that wraps it at submission, and a proposal stored before
+the trip fails at execution.
 
 Under `*` every IBC msg fails. After the reset, packets inside their timeout
 relay and ack, and packets past it refund on their source.
@@ -642,6 +688,11 @@ included.
   both.
 * An EVM value transfer moves the native denom without a bank msg, so a
   `/cosmos.bank.v1beta1.MsgSend` trip does not stop it.
+* IBC callbacks run contract code with `CallEVMWithData`, not a
+  `MsgEthereumTx`, so a trip of `MsgEthereumTx` does not stop a callback. Trip
+  the IBC msg that delivers it, such as `MsgRecvPacket` or
+  `MsgAcknowledgement`. Precompile calls inside the callback are still
+  checked.
 
 ### CosmWasm contracts
 
@@ -656,6 +707,11 @@ selective trip. The bank module defines no `MsgBurn`, so a trip of
 
 A contract that sends a tripped msg as a submessage with `ReplyOn::Error`
 continues, and sees only `codespace: safety, code: 10` in its reply.
+
+A contract runs on packet receive, ack and timeout without a
+`MsgExecuteContract`, so a trip of `MsgExecuteContract` does not stop it. Trip
+the IBC msg that delivers the packet. Msgs the contract emits are still
+checked.
 
 ## Known gaps
 
@@ -674,6 +730,14 @@ msg server of a module outside the SDK. Known paths:
 * wasmd `BankMsg::Burn` and `IbcMsg::SendPacket`.
 
 A `*` trip stops each of these at the tx msg that starts it.
+
+### Legacy gov proposals
+
+A `MsgExecLegacyContent` proposal runs a v1beta1 content handler through the
+gov legacy router, not the msg router, and gov msgs are protected, so no trip
+stops it. SimApp registers only the text proposal handler. A chain that still
+registers a content handler that moves funds or changes state runs it outside
+x/safety.
 
 ### Exact wrapper trips
 

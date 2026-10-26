@@ -15,6 +15,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -100,6 +101,11 @@ type Keeper struct {
 	config group.Config
 
 	cdc codec.Codec
+}
+
+// msgsAllowedChecker is implemented by baseapp.MsgServiceRouter.
+type msgsAllowedChecker interface {
+	CheckMsgsAllowed(ctx context.Context, msgs []sdk.Msg) error
 }
 
 // NewKeeper creates a new group keeper.

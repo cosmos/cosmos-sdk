@@ -366,6 +366,18 @@ func (f *fixture) submitProposal(msgs ...sdk.Msg) uint64 {
 	return id
 }
 
+// requireSubmitRejected requires gov to refuse, at delivery, a proposal of
+// msgs that holds the tripped blockedURL.
+func (f *fixture) requireSubmitRejected(blockedURL string, msgs ...sdk.Msg) {
+	f.t.Helper()
+	govParams, err := f.app.GovKeeper.Params.Get(f.ctx())
+	require.NoError(f.t, err)
+	submit, err := govv1.NewMsgSubmitProposal(msgs, govParams.MinDeposit, f.voter.String(), "", "safety", "safety", false)
+	require.NoError(f.t, err)
+	res := f.requireFails(f.voter, safetytypes.ErrMsgDisabled, submit)
+	require.Contains(f.t, res.Log, blockedURL)
+}
+
 // endVoting runs an empty block past the voting period, so the gov
 // EndBlocker tallies and executes every proposal in voting.
 func (f *fixture) endVoting() *abci.ResponseFinalizeBlock {

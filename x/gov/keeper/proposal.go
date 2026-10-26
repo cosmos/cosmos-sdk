@@ -16,6 +16,11 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
+// msgsAllowedChecker is implemented by baseapp.MsgServiceRouter.
+type msgsAllowedChecker interface {
+	CheckMsgsAllowed(ctx context.Context, msgs []sdk.Msg) error
+}
+
 // SubmitProposal creates a new proposal given an array of messages
 func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress, expedited bool) (v1.Proposal, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -34,6 +39,14 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 	err = k.assertMetadataLength(title)
 	if err != nil {
 		return v1.Proposal{}, err
+	}
+
+	// refuse a proposal holding a msg the circuit breaker disallows, also
+	// when a proposer puts the tx in a block without CheckTx
+	if r, ok := k.router.(msgsAllowedChecker); ok {
+		if err := r.CheckMsgsAllowed(ctx, messages); err != nil {
+			return v1.Proposal{}, err
+		}
 	}
 
 	msgTypeURLs := make([]string, 0, len(messages))

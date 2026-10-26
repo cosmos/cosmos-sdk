@@ -477,3 +477,21 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	tstaking.CheckValidator(valAddr, stakingtypes.Unbonding, true)
 }
+
+// TestDeprecatedStakingHelper creates a validator with the deprecated
+// NewHelper, which calls the staking msg server directly, and with
+// NewHelperWithRouter, and checks both reach the same state.
+func TestDeprecatedStakingHelper(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+	pks := simtestutil.CreateTestPubKeys(2)
+
+	direct := stakingtestutil.NewHelper(t, f.ctx, f.stakingKeeper) //nolint:staticcheck // covers the deprecated path while it ships
+	routed := stakingtestutil.NewHelperWithRouter(t, f.ctx, f.stakingKeeper, f.app.MsgServiceRouter())
+	for i, h := range []*stakingtestutil.Helper{direct, routed} {
+		amt := h.CreateValidatorWithValPower(f.valAddrs[i], pks[i], 100, true)
+		val, err := f.stakingKeeper.GetValidator(f.ctx, f.valAddrs[i])
+		require.NoError(t, err)
+		require.True(t, amt.Equal(val.GetTokens()), "helper %d", i)
+	}
+}

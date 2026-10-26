@@ -207,3 +207,29 @@ func TestRecheckEvictsPreTripTx(t *testing.T) {
 	require.Zero(t, res.Code, "the pre-trip bytes execute after the reset: %s", res.Log)
 	require.Equal(t, uint64(1), sequence())
 }
+
+// TestSafetyGatesHybridHandlers checks that SimApp's hybrid handlers run the
+// x/safety check for an exact, a prefix and a "*" trip. HybridHandlerByMsgName
+// is deprecated, and callers keep it until a future release removes it.
+func TestSafetyGatesHybridHandlers(t *testing.T) {
+	app := Setup(t, false)
+	ctx := app.NewContext(false)
+	from := sdk.AccAddress("from________________")
+	to := sdk.AccAddress("to__________________")
+	send := banktypes.NewMsgSend(from, to, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)))
+
+	handler := app.MsgServiceRouter().HybridHandlerByMsgName(sdk.MsgTypeURL(send)[1:]) //nolint:staticcheck // covers the deprecated path while it ships
+	require.NotNil(t, handler)
+
+	for _, p := range []string{sdk.MsgTypeURL(send), "/cosmos.bank.*", safetytypes.Wildcard} {
+		require.NoError(t, app.SafetyKeeper.DisabledList.Set(ctx, p))
+		err := handler(ctx, send, &banktypes.MsgSendResponse{})
+		require.ErrorIs(t, err, safetytypes.ErrMsgDisabled, p)
+		require.NoError(t, app.SafetyKeeper.DisabledList.Remove(ctx, p))
+	}
+
+	// control: with nothing disabled the bank handler runs, and fails on the
+	// unfunded sender
+	err := handler(ctx, send, &banktypes.MsgSendResponse{})
+	require.ErrorIs(t, err, sdkerrors.ErrInsufficientFunds)
+}

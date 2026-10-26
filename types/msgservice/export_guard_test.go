@@ -14,14 +14,19 @@ import (
 
 // exportGuardAllowed lists the source paths, relative to the repo root, that
 // may export a msg server or a Msg handler shaped method: test fixtures with
-// no module state, and a test helper that runs msgs through a router.
+// no module state.
 var exportGuardAllowed = []string{
 	// the testpb Msg service fixture baseapp tests register
 	"testutil/testdata/",
 	// the bank keeper mock whose Msg methods return nil
 	"x/authz/testutil/bank_helpers.go",
+}
+
+// exportGuardAllowedFindings lists single findings the guard allows in files
+// it still scans, so a new export in the same file still fails.
+var exportGuardAllowedFindings = map[string]bool{
 	// Helper.CreateValidatorWithMsg runs the msg with msgservice.Dispatch
-	"x/staking/testutil/helpers.go",
+	"x/staking/testutil/helpers.go: method Helper.CreateValidatorWithMsg is a Msg handler on an exported type": true,
 }
 
 // exportGuardDeprecated lists the deprecated constructors and keeper Msg
@@ -135,6 +140,9 @@ func TestNoExportedMsgServer(t *testing.T) {
 		for _, decl := range file.Decls {
 			for _, reason := range exportedMsgServer(decl) {
 				key := rel + ": " + reason
+				if exportGuardAllowedFindings[key] {
+					continue
+				}
 				if deprecated[key] && isDeprecated(decl) {
 					delete(deprecated, key)
 					continue

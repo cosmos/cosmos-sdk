@@ -26,7 +26,9 @@ import (
 
 // withCircuit wires contrib/x/circuit into SimApp the way a chain still on it
 // does: the circuit store is mounted, the circuit keeper is the router's
-// circuit breaker, and the module version map records circuit.
+// circuit breaker, and the module version map records circuit and leaves out
+// x/safety, so the upgrade runs x/safety's InitGenesis as it does on a chain
+// that adds the module.
 func withCircuit(app *simapp.SimApp) {
 	key := storetypes.NewKVStoreKey(circuittypes.StoreKey)
 	app.MountStores(key)
@@ -41,7 +43,12 @@ func withCircuit(app *simapp.SimApp) {
 		}
 		vm := app.ModuleManager.GetVersionMap()
 		vm[circuittypes.ModuleName] = 1
-		return res, app.UpgradeKeeper.SetModuleVersionMap(ctx, vm)
+		if err := app.UpgradeKeeper.SetModuleVersionMap(ctx, vm); err != nil {
+			return nil, err
+		}
+		upgradeStore := ctx.KVStore(app.GetKey(upgradetypes.StoreKey))
+		upgradeStore.Delete(append([]byte{upgradetypes.VersionMapByte}, safetytypes.ModuleName...))
+		return res, nil
 	})
 }
 
@@ -65,9 +72,11 @@ func committedStores(t *testing.T, f *fixture) []string {
 // store leaves the commit, the new binary ignores circuit's disabled list, and
 // the operator can trip in the upgrade block itself.
 //
-// SimApp always mounts the x/safety store, so the new binary loads with no
-// StoreUpgrades. TestChainUpgrade in the system tests covers
-// StoreUpgrades.Added.
+// The version map leaves out x/safety, so RunMigrations runs its InitGenesis
+// before the handler sets the params and trips, in the order a chain adding
+// the module runs them. SimApp always mounts the x/safety store, so the new
+// binary loads with no StoreUpgrades. TestChainUpgrade in the system tests
+// covers StoreUpgrades.Added.
 func TestUpgradeFromCircuit(t *testing.T) {
 	const upgradeName = "circuit-to-safety"
 	f := newFixtureWithSetup(t, nil, nil, withCircuit)
@@ -121,12 +130,14 @@ func TestUpgradeFromCircuit(t *testing.T) {
 	require.Equal(t, height, f.app.LastBlockHeight())
 	require.NotContains(t, committedStores(t, f), circuittypes.StoreKey)
 	require.Contains(t, fromVM, circuittypes.ModuleName)
+	require.NotContains(t, fromVM, safetytypes.ModuleName)
 
 	// RunMigrations skips circuit's version map entry, and the upgrade
 	// keeper leaves it in the store
 	vm, err := f.app.UpgradeKeeper.GetModuleVersionMap(f.ctx())
 	require.NoError(t, err)
 	require.Contains(t, vm, circuittypes.ModuleName)
+	require.Contains(t, vm, safetytypes.ModuleName)
 	require.Equal(t, operator, f.params().Operator)
 	require.Equal(t, []string{msgSendURL}, f.disabled())
 	f.requireRejected(f.user, safetytypes.ErrMsgDisabled, send(f.user, f.other))
@@ -136,4 +147,27 @@ func TestUpgradeFromCircuit(t *testing.T) {
 	_, err = msgservice.Dispatch[*safetytypes.MsgTripResponse](f.ctx(), f.app.MsgServiceRouter(),
 		safetytypes.NewMsgTrip(operator, "/cosmos.bank.v1beta1.MsgSnd"))
 	require.ErrorIs(t, err, safetytypes.ErrNoMatchingMsg)
+
+	// circuit's list can hold URLs MsgTrip refuses, and any of them fails the
+	// upgrade: a protected msg, a circuit msg the new binary no longer
+	// registers, and a msg outside the new operator's scope
+	for _, tc := range []struct {
+		url     string
+		scope   string
+		wantErr error
+	}{
+		{"/cosmos.gov.v1.MsgSubmitProposal", safetytypes.Wildcard, safetytypes.ErrNoMatchingMsg},
+		{"/cosmos.circuit.v1.MsgTripCircuitBreaker", safetytypes.Wildcard, safetytypes.ErrNoMatchingMsg},
+		{"/cosmos.distribution.v1beta1.MsgFundCommunityPool", "/cosmos.bank.*", safetytypes.ErrOutOfScope},
+	} {
+		ctx, _ := f.ctx().CacheContext()
+		require.NoError(t, f.app.SafetyKeeper.SetParams(ctx, safetytypes.Params{
+			Authority: govAddr,
+			Operator:  operator,
+			Scope:     []string{tc.scope},
+		}))
+		_, err = msgservice.Dispatch[*safetytypes.MsgTripResponse](ctx, f.app.MsgServiceRouter(),
+			safetytypes.NewMsgTrip(operator, tc.url))
+		require.ErrorIs(t, err, tc.wantErr, tc.url)
+	}
 }

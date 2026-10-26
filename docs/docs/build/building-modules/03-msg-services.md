@@ -44,13 +44,7 @@ func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) {
 }
 ```
 
-An `sdk.Msg` runs only through the app's `MsgServiceRouter`, which checks the circuit breaker before the handler. Code outside the module runs a msg with `msgservice.Dispatch`, and module logic that another module needs belongs on a keeper method. Tests in the module's `keeper_test` package reach the constructor through an `export_test.go` file in the `keeper` package:
-
-```go
-package keeper
-
-var NewMsgServerForTest = newMsgServerImpl
-```
+An `sdk.Msg` runs only through the app's `MsgServiceRouter`, which checks the circuit breaker before the handler. Code outside the module runs a msg with `msgservice.Dispatch`, and module logic that another module needs belongs on a keeper method.
 
 `msgServer` methods can retrieve the `sdk.Context` from the `context.Context` parameter using the `sdk.UnwrapSDKContext` method:
 

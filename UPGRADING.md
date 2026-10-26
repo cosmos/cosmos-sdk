@@ -167,9 +167,9 @@ An `sdk.Msg` should run only through the `MsgServiceRouter`, so a trip of the ci
 * `MsgServiceRouter.HybridHandlerByMsgName`, which runs a registered msg handler by name and skips `ValidateBasic`.
 * `x/staking/testutil.NewHelper`, which calls the staking msg server directly. `NewHelperWithRouter` takes the `msgservice.MsgRouter` that runs its msgs, such as `app.MsgServiceRouter()`.
 
-The msg server types are unexported. Each keeper package exports `RegisterMsgServer`, which the module's `RegisterServices` calls. `x/auth/vesting` takes the account and bank keepers, and `x/gov` registers both the v1 and the v1beta1 service.
+The msg server types are unexported. Each keeper package exports `RegisterMsgServer`, which the module's `RegisterServices` calls. `x/auth/vesting` takes the account and bank keepers, and `x/gov` registers both the v1 and the v1beta1 service. A module outside the SDK follows the same pattern: keep the msg server type and constructor unexported and export only `RegisterMsgServer`.
 
-staticcheck reports SA1019 at each call to a deprecated function, in app code and in tests. It does not report a keeper passed where a `MsgServer` is expected, such as `authz.RegisterMsgServer(router, authzKeeper)` in the example below, since that uses the deprecated methods without calling them. Search for those uses by hand: they stop compiling when the methods are removed. A test in a module's `keeper_test` package reaches the unexported msg server through an `export_test.go` in the keeper package, as the SDK modules do with `NewMsgServerForTest`.
+staticcheck reports SA1019 at each call to a deprecated function from another package, in app code and in tests. It does not report a call from the package that declares the function or from that package's `_test` package, so a module's own tests can keep calling `NewMsgServerImpl`. It also does not report a keeper passed where a `MsgServer` is expected, such as `authz.RegisterMsgServer(router, authzKeeper)` in the example below, since that uses the deprecated methods without calling them. Search for those uses by hand: they stop compiling when the methods are removed.
 
 An app or test that registers a module's msg server by hand calls the keeper package's `RegisterMsgServer`:
 
@@ -207,15 +207,7 @@ Upgrade handlers that ran a msg on a keeper or msg server move to these keeper p
 | gov `MsgUpdateParams` | `params.ValidateBasic()`, then `app.GovKeeper.Params.Set(ctx, params)` |
 | vesting `MsgCreateVestingAccount` | none; see below |
 
-Once the deprecated constructors are gone, tests in a module's `keeper_test` package reach the unexported constructor through an `export_test.go` in the `keeper` package: `var NewMsgServerForTest = newMsgServerImpl`. A module outside the SDK follows the same pattern: keep the msg server type and constructor unexported and export only `RegisterMsgServer`.
-
 `x/auth/vesting` has no keeper method that creates a vesting account. A test that calls `vesting.NewMsgServerImpl` either registers vesting in its router and runs `MsgCreateVestingAccount` with `Dispatch`, or builds the account with `AccountKeeper.NewAccount` and `SetAccount` and funds it.
-
-What cosmos/evm, ibc-go and wasmd call on their main branches today:
-
-* cosmos/evm: the staking, distribution, gov and slashing precompiles build their msg servers with `NewMsgServerImpl` in `precompiles/types/static_precompiles.go`, and the ERC20 precompile wraps the bank msg server. Moving them to `Dispatch` gives each precompile the app's `MsgServiceRouter`, and needs a fix to the snapshot multistore, whose `CacheMultiStore` returns itself instead of a branch; without the fix, a reverted EVM call keeps the msg's writes. Its tests move to `teststaking.NewHelperWithRouter` and `Dispatch`.
-* ibc-go: nothing. No ibc-go code calls an SDK module's msg server.
-* wasmd: 4 test calls (staking twice, gov, vesting) move to `Dispatch` or a keeper call. No production code changes.
 
 ### Upgrade Handler and Store Migrations
 

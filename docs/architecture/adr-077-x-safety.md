@@ -34,7 +34,8 @@ DRAFT Not Implemented
 * **Expire trips.** An incident can outlast any preset timer, and an automatic unblock mid-exploit does more harm than an operator resetting late.
 * **Exempt wrapper msgs from trips.** Recovery through authz and group stays open, but the operator loses any way to stop authz or group execution as a whole.
 * **Check the breaker inside every msg server**, by hand or with a protoc plugin. A module that misses the check fails open, and the authz, group, consensus, crisis and nft keepers, which serve their own Msg services, still need hand-written checks.
-* **Add `Dispatch` without unexporting msg servers.** Code that calls a msg server directly still compiles and skips the breaker, and the chain finds out during the incident.
+* **Add `Dispatch` and keep msg servers exported for good.** Code that calls a msg server directly still compiles and skips the breaker, and the chain finds out during the incident.
+* **Unexport msg servers in the release that adds `Dispatch`.** Downstream code that calls them, such as the cosmos/evm precompiles, stops compiling with no release in which to migrate. The SDK instead deprecates them for one release: until the removal they still compile and skip the breaker, and staticcheck flags each call.
 
 ## Decision
 
@@ -68,6 +69,7 @@ When the authority narrows the scope, existing trips stay in place; gov resets t
 
 * **Router.** The keeper implements `baseapp.CircuitBreaker`, and the app wires it with `BaseApp.SetCircuitBreaker`. The router checks every msg it routes, in every exec mode, including block hooks, vote extensions and query contexts. An x/safety refusal returns `ErrMsgDisabled` from the safety codespace; a breaker that refuses with no error of its own gets `sdkerrors.ErrCircuitBreakerTripped`. A hybrid handler checks the msg type it was registered for, not the type of the request it receives.
 * **Ante.** `HandlerOptions.CircuitBreaker` adds `ante.CircuitBreakerDecorator`, which checks every msg in a tx and recurses into any msg with `GetMessages` or `GetMsgs`, as deep as the tx decoder unpacks. It runs in `CheckTx`, `ReCheckTx`, `Simulate`, and in `PrepareProposal` and `ProcessProposal` when the app runs the ante chain there. It passes txs through in `FinalizeBlock`, so a tx included after a trip spends its sequence and fails at the router, and cannot execute after the reset.
+* **Proposals.** Gov and group run the same recursive check on a proposal's msgs at submission, through `MsgServiceRouter.CheckMsgsAllowed`, in every exec mode. A proposer that includes a submission without `CheckTx` still cannot store a proposal that holds a tripped msg. A proposal stored before a trip fails at execution while the trip stands.
 * **Dispatch.** Code outside the module that owns a msg, such as a cosmos/evm precompile, runs it with `msgservice.Dispatch[R](ctx, router, msg)`. `Dispatch` calls the router handler on a branch of `ctx`, so `ValidateBasic`, the breaker and the msg server's events apply, writes the branch only on success, and returns the typed response. The caller still authorizes the signers.
 * **Keepers.** Logic that other modules need, such as a bank send or authz `SaveGrant`, stays an exported keeper method that the breaker does not see. Authz `DispatchActions` runs each msg through the router, so a trip still blocks it. Upgrade handlers call keepers, not `Dispatch`, so a trip cannot halt an upgrade; x/safety and x/consensus export `SetParams` for that. The circuit migration's `MsgTrip` is the one exception: it is protected, so no trip blocks it.
 * **Gas.** The keeper reads the disabled list on an infinite gas meter, so the check charges no gas, and a msg uses the same gas as on a chain with no circuit breaker. Per msg the keeper makes at most two point lookups plus one per package segment.
@@ -79,7 +81,7 @@ Each SDK module unexports its msg server type and exports `RegisterMsgServer`, w
 
 Deprecated wrappers, kept until a future release removes them:
 
-* `NewMsgServerImpl` in each module, and `NewLegacyMsgServerImpl` in `x/gov`
+* `NewMsgServerImpl` in each released module that exported it, and `NewLegacyMsgServerImpl` in `x/gov`; x/safety, which no release has shipped, never exports one
 * the Msg methods on the authz, consensus, crisis, nft, group and counter keepers
 * `enterprise/poa`'s `NewMsgServer` and `MsgServer`
 * `x/staking/testutil.NewHelper`, replaced by `NewHelperWithRouter`
@@ -93,7 +95,7 @@ x/safety uses gogoproto types only: no `cosmossdk.io/api` types, no autocli opti
 
 ### Migrating from x/circuit
 
-In one upgrade, the chain stops mounting the circuit store, whose data stays in the database outside the app hash, adds the safety store, and swaps the circuit keeper for the safety keeper in `SetCircuitBreaker` and the ante handler. x/safety does not read the circuit disabled list or permissions, so the upgrade handler sets the operator and scope, then dispatches a `MsgTrip` from the operator for the msg type URLs circuit had tripped, and the upgrade block refuses them. `MsgTrip` refuses a URL that matches no registered msg, so a typo fails the upgrade instead of disabling nothing.
+In one upgrade, the chain stops mounting the circuit store, whose data stays in the database outside the app hash, adds the safety store, and swaps the circuit keeper for the safety keeper in `SetCircuitBreaker` and the ante handler. x/safety does not read the circuit disabled list or permissions, so the upgrade handler sets the operator and scope, then dispatches a `MsgTrip` from the operator for the msg type URLs circuit had tripped, and the upgrade block refuses them. `MsgTrip` refuses a URL that matches no registered msg, so a typo fails the upgrade instead of disabling nothing. It also refuses a protected URL, a `/cosmos.circuit.*` URL the new binary no longer registers, and a URL outside the operator's scope, and any refusal halts the chain at the upgrade height, so the chain checks circuit's list against the new binary before it hard-codes the list.
 
 ## Consequences
 
@@ -128,7 +130,7 @@ In the msg server PR, the SDK adds `RegisterMsgServer` to each keeper package, `
 * An override authority that can act only through a wrapper the operator tripped by exact URL cannot recover on chain.
 * Only the authority removes the operator. Until a gov vote passes, a compromised operator can trip anything in its scope and re-trip after each reset.
 * `MsgReset` needs every named entry present, so a gov reset fails if the operator resets a named entry during the vote, and a pattern the operator trips during the vote stays disabled after the reset passes.
-* While a trip covers a msg, a gov proposal containing it fails `CheckTx`, so the operator narrows the trip before gov can propose a fix that is not a software upgrade.
+* While a trip covers a msg, gov refuses a proposal containing it at submission, so the operator narrows the trip before gov can propose a fix that is not a software upgrade.
 
 ### Neutral
 
@@ -145,9 +147,9 @@ In the msg server PR, the SDK adds `RegisterMsgServer` to each keeper package, `
 
 * x/safety keeper, pattern and ante decorator tests, with fuzzing of pattern parsing and of the keeper against a model.
 * `Dispatch` tests in `types/msgservice`, and `baseapp` tests that the router checks `Dispatch` in every exec mode and that hybrid handlers check their own msg type.
-* SimApp integration tests: gas of a bank send, a delegation, an authz exec and a gov proposal matches SimApp with no breaker, with 0 and 1000 disabled entries; `Dispatch` from block hooks, `FinalizeBlock` and queries; an upgrade off `contrib/x/circuit`; a `runtime.App` wired by hand; and a check that no upgrade handler calls `Dispatch`.
+* SimApp integration tests: gas of a bank send, a delegation, an authz exec and a gov proposal matches SimApp with no breaker, with 0 and 1000 disabled entries; `Dispatch` from block hooks, `FinalizeBlock` and queries; an upgrade off `contrib/x/circuit` that runs x/safety's `InitGenesis` from `RunMigrations` and checks each `MsgTrip` refusal that would halt it; gov and group proposals refused at submission in `FinalizeBlock`; a `runtime.App` wired by hand; and a check that SimApp's upgrade handler calls no `Dispatch`.
 * System tests `TestSafety*`, and `TestChainUpgrade`, which upgrades a running v0.54 chain into x/safety.
-* Local test branches of cosmos/evm, ibc-go and wasmd, built against both PRs, cover precompiles switched to `Dispatch`, `MsgEthereumTx` and `*` trips, relayed IBC transfers, ICA and packet-forward-middleware, and wasm contract msgs under trips. Removing `SetCircuitBreaker` fails the tests that depend on it.
+* Local test branches of cosmos/evm, ibc-go and wasmd, built against both PRs, cover precompiles switched to `Dispatch` (including ics02 `updateClient` and distribution `claimRewards`), `MsgEthereumTx` and `*` trips, IBC callbacks and wasm contracts run on packet receive, relayed IBC v1 and v2 transfers, ICA, 27-gmp and packet-forward-middleware forwarding through the router, and wasm contract msgs under trips. Removing `SetCircuitBreaker` or the ante decorator fails the tests that depend on it.
 
 ## References
 

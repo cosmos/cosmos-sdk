@@ -290,7 +290,7 @@ in the list exactly as given: resetting `/cosmos.bank.*` does not remove
 | `Params` | `GET /cosmos/safety/v1/params` | the params |
 | `DisabledList` | `GET /cosmos/safety/v1/disabled_list` | a page of disabled patterns |
 | `IsAllowed` | `GET /cosmos/safety/v1/is_allowed?msg_type_url=...` | whether the type URL may execute and, if not, the blocking entry in `blocked_by` |
-| `MatchingMsgs` | `GET /cosmos/safety/v1/matching_msgs?pattern=...` | a page of the registered msg type URLs a trip of the pattern would block, sorted |
+| `MatchingMsgs` | `GET /cosmos/safety/v1/matching_msgs?pattern=...` | the registered msg type URLs a trip of the pattern would block, sorted and unpaginated |
 
 `IsAllowed` returns `InvalidArgument` for anything but an exact msg type URL.
 
@@ -757,9 +757,8 @@ a directly signing account as the authority and as the override.
 ### Grantees under `*`
 
 A `*` trip leaves authz `MsgExec` running, so a grantee can still run the
-protected msgs and wrappers it was granted, such as a gov deposit from the
-granter's funds, while `*` blocks the granter's `MsgRevoke`. Trip
-`/cosmos.authz.v1beta1.MsgExec` by its exact URL to stop it.
+protected msgs and wrappers it was granted. [Wrapper set](#wrapper-set) lists
+the steps to cut it off.
 
 ### Interchain accounts
 

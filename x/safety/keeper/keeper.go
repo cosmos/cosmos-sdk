@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"slices"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
@@ -87,25 +88,11 @@ func (k Keeper) SetParams(ctx context.Context, params types.Params) error {
 // baseapp.CircuitBreaker. Protected msg types are always allowed. Otherwise
 // the msg is blocked when the disabled list contains its exact type URL, or,
 // unless the msg is a wrapper such as authz MsgExec, "*" or any of its
-// segment-boundary prefix patterns. The check is a bounded number of point
-// lookups and never walks the disabled list.
+// segment-boundary prefix patterns.
 //
-// The check charges no gas. The lookups run on an infinite gas meter that
-// replaces ctx's meter for the check only, so the tx, the block gas meter
-// and the caller's ctx see none of them, and a msg uses the same gas as with
-// no circuit breaker set. The router, the ante CircuitBreakerDecorator and
-// msgservice.Dispatch all reach the store through here. The work stays
-// bounded without gas: per msg, at most two lookups plus one per package
-// segment of its type URL, and a type URL is either one the interface
-// registry knows or, through the IsAllowed query, at most MaxPatternLength
-// bytes.
-//
-// A blocked msg logs a debug line naming the type URL and the blocking
-// pattern, then returns false with ErrMsgDisabled, so the router, which
-// passes the error on as is, rejects it under the safety codespace. The line
-// is debug level because anyone can send refused msgs to CheckTx and
-// simulation for free. A store error also returns false: the breaker fails
-// closed.
+// The check charges no gas and runs a bounded number of point lookups. A
+// blocked msg returns false with ErrMsgDisabled and logs the blocking pattern
+// at debug level. A store error also returns false: the breaker fails closed.
 func (k Keeper) IsAllowed(ctx context.Context, typeURL string) (bool, error) {
 	by, err := k.blockedBy(ctx, typeURL)
 	if err != nil {
@@ -125,16 +112,10 @@ func (k Keeper) blockedBy(ctx context.Context, typeURL string) (string, error) {
 	if types.IsProtected(typeURL) {
 		return "", nil
 	}
+	// one point lookup per blocking pattern
 	free := sdk.UnwrapSDKContext(ctx).WithGasMeter(storetypes.NewInfiniteGasMeter())
-	return k.disabledCover(free, typeURL)
-}
-
-// disabledCover returns the disabled entry that blocks the msg type URL
-// typeURL, or "" when none does. It runs one point lookup per blocking
-// pattern.
-func (k Keeper) disabledCover(ctx context.Context, typeURL string) (string, error) {
 	for c := range types.BlockingPatterns(typeURL) {
-		has, err := k.DisabledList.Has(ctx, c)
+		has, err := k.DisabledList.Has(free, c)
 		if err != nil {
 			return "", err
 		}
@@ -145,14 +126,16 @@ func (k Keeper) disabledCover(ctx context.Context, typeURL string) (string, erro
 	return "", nil
 }
 
-// matchesUnprotectedMsg reports whether pattern would block at least one msg
-// type URL registered in the interface registry that is not protected. A
-// wrapper counts only for its exact URL.
-func (k Keeper) matchesUnprotectedMsg(pattern string) bool {
+// matchingMsgs returns the unprotected msg type URLs registered in the
+// interface registry that pattern would block, sorted. A wrapper counts only
+// for its exact URL.
+func (k Keeper) matchingMsgs(pattern string) []string {
+	var urls []string
 	for _, typeURL := range k.registry.ListImplementations(sdk.MsgInterfaceProtoName) {
 		if !types.IsProtected(typeURL) && types.Blocks(pattern, typeURL) {
-			return true
+			urls = append(urls, typeURL)
 		}
 	}
-	return false
+	slices.Sort(urls)
+	return urls
 }

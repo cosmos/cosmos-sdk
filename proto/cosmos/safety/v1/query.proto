@@ -85,16 +85,11 @@ message QueryMatchingMsgsRequest {
   // pattern is "*", a prefix pattern such as "/cosmos.bank.*", or an exact
   // msg type URL.
   string pattern = 1;
-
-  // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // QueryMatchingMsgsResponse is the response type for the Query/MatchingMsgs RPC method.
 message QueryMatchingMsgsResponse {
-  // msg_type_urls are the msg type URLs in this page, sorted.
+  // msg_type_urls are the matching msg type URLs, sorted. The list is bounded
+  // by the msgs the app registers, so it is not paginated.
   repeated string msg_type_urls = 1;
-
-  // pagination defines the pagination in the response.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

@@ -602,8 +602,11 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPro
 	}
 
 	// refuse a proposal holding a msg the circuit breaker disallows, also
-	// when a proposer puts the tx in a block without CheckTx
-	if r, ok := k.router.(msgsAllowedChecker); ok {
+	// when a proposer puts the tx in a block without CheckTx;
+	// baseapp.MsgServiceRouter implements the check
+	if r, ok := k.router.(interface {
+		CheckMsgsAllowed(context.Context, []sdk.Msg) error
+	}); ok {
 		if err := r.CheckMsgsAllowed(goCtx, msgs); err != nil {
 			return nil, err
 		}

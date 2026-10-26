@@ -78,7 +78,7 @@ func (s msgServer) Trip(ctx context.Context, msg *types.MsgTrip) (*types.MsgTrip
 		if !types.CoveredByAny(params.Scope, p) {
 			return nil, types.ErrOutOfScope.Wrap(p)
 		}
-		if !s.matchesUnprotectedMsg(p) {
+		if len(s.matchingMsgs(p)) == 0 {
 			return nil, types.ErrNoMatchingMsg.Wrap(p)
 		}
 		has, err := s.DisabledList.Has(ctx, p)

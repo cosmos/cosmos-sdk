@@ -80,18 +80,11 @@ func TestSafetyEnforcementPaths(t *testing.T) {
 	}
 	require.True(t, safetyIsAllowed(t, safetyMsgDelegate))
 
-	// the preview of the trip pages through the same sorted list
+	// the preview of the trip lists the msgs it blocks, sorted
 	all := safetyStrings(gjson.Get(safetyREST(t, "/cosmos/safety/v1/matching_msgs?pattern="+url.QueryEscape("/cosmos.bank.*")), "msg_type_urls"))
 	require.Contains(t, all, safetyMsgSend)
 	require.Contains(t, all, safetyMsgMultiSend)
 	require.IsNonDecreasing(t, all)
-	page := safetyREST(t, "/cosmos/safety/v1/matching_msgs?pattern="+url.QueryEscape("/cosmos.bank.*")+
-		"&pagination.limit=1&pagination.count_total=true")
-	require.Equal(t, all[:1], safetyStrings(gjson.Get(page, "msg_type_urls")), page)
-	require.Equal(t, int64(len(all)), gjson.Get(page, "pagination.total").Int(), page)
-	page = safetyREST(t, "/cosmos/safety/v1/matching_msgs?pattern="+url.QueryEscape("/cosmos.bank.*")+
-		"&pagination.offset=1&pagination.limit=100")
-	require.Equal(t, all[1:], safetyStrings(gjson.Get(page, "msg_type_urls")), page)
 
 	// CheckTx: send and multi-send are refused, keep the fee and the sequence
 	senderBalance := cli.QueryBalance(senderAddr, "stake")

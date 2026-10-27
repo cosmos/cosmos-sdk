@@ -32,8 +32,6 @@ func APISignModeToInternal(mode signingv1beta1.SignMode) (signing.SignMode, erro
 		return signing.SignMode_SIGN_MODE_DIRECT, nil
 	case signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 		return signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, nil
-	case signingv1beta1.SignMode_SIGN_MODE_TEXTUAL:
-		return signing.SignMode_SIGN_MODE_TEXTUAL, nil
 	case signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX:
 		return signing.SignMode_SIGN_MODE_DIRECT_AUX, nil
 	default:
@@ -48,8 +46,6 @@ func internalSignModeToAPI(mode signing.SignMode) (signingv1beta1.SignMode, erro
 		return signingv1beta1.SignMode_SIGN_MODE_DIRECT, nil
 	case signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 		return signingv1beta1.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, nil
-	case signing.SignMode_SIGN_MODE_TEXTUAL:
-		return signingv1beta1.SignMode_SIGN_MODE_TEXTUAL, nil
 	case signing.SignMode_SIGN_MODE_DIRECT_AUX:
 		return signingv1beta1.SignMode_SIGN_MODE_DIRECT_AUX, nil
 	default:
@@ -85,7 +81,7 @@ func VerifySignature(
 	case *signing.MultiSignatureData:
 		multiPK, ok := pubKey.(multisig.PubKey)
 		if !ok {
-			return fmt.Errorf("expected %T, got %T", (multisig.PubKey)(nil), pubKey)
+			return fmt.Errorf("expected %T, got %T", multisig.PubKey(nil), pubKey)
 		}
 		err := multiPK.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
 			signMode, err := internalSignModeToAPI(mode)

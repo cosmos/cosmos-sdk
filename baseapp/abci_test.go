@@ -1562,7 +1562,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	tx2Bytes, err := suite.txConfig.TxEncoder()(tx2)
 	require.NoError(t, err)
 
-	err = pool.Insert(sdk.Context{}, tx2)
+	err = pool.Insert(sdk.Context{}, tx2, mempool.InsertOption{})
 	require.NoError(t, err)
 
 	reqPrepareProposal := abci.RequestPrepareProposal{
@@ -1726,7 +1726,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 
 	for i := range 100 {
 		tx2 := newTxCounter(t, suite.txConfig, int64(i), int64(i))
-		err := pool.Insert(sdk.Context{}, tx2)
+		err := pool.Insert(sdk.Context{}, tx2, mempool.InsertOption{})
 		require.NoError(t, err)
 	}
 
@@ -1755,7 +1755,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	require.NoError(t, err)
 
 	tx := newTxCounter(t, suite.txConfig, 0, 0)
-	err = pool.Insert(sdk.Context{}, tx)
+	err = pool.Insert(sdk.Context{}, tx, mempool.InsertOption{})
 	require.NoError(t, err)
 
 	reqPrepareProposal := abci.RequestPrepareProposal{
@@ -1793,7 +1793,7 @@ func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
 		builder.SetGasLimit(10)
 		setTxSignature(t, builder, uint64(i))
 
-		err := pool.Insert(sdk.Context{}, builder.GetTx())
+		err := pool.Insert(sdk.Context{}, builder.GetTx(), mempool.InsertOption{GasWanted: 10})
 		require.NoError(t, err)
 	}
 
@@ -1833,7 +1833,7 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 		builder.SetGasLimit(10)
 		setTxSignature(t, builder, uint64(i))
 
-		err := pool.Insert(sdk.Context{}, builder.GetTx())
+		err := pool.Insert(sdk.Context{}, builder.GetTx(), mempool.InsertOption{GasWanted: 10})
 		require.NoError(t, err)
 	}
 
@@ -1876,7 +1876,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	failTx := newTxCounter(t, suite.txConfig, 1, 1)
 	failTx = setFailOnAnte(t, suite.txConfig, failTx, true)
 
-	err = pool.Insert(sdk.Context{}, failTx)
+	err = pool.Insert(sdk.Context{}, failTx, mempool.InsertOption{})
 	require.NoError(t, err)
 	require.Equal(t, 2, pool.CountTx())
 
@@ -2580,7 +2580,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	tx2Bytes, err := suite.txConfig.TxEncoder()(tx2)
 	require.NoError(t, err)
 
-	err = pool.Insert(sdk.Context{}, tx2)
+	err = pool.Insert(sdk.Context{}, tx2, mempool.InsertOption{})
 	require.NoError(t, err)
 
 	require.Equal(t, 2, pool.CountTx())

@@ -286,6 +286,8 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
 
 	rewards, err := sdk.ParseDecCoins("9.8stake")
 	s.Require().NoError(err)
+	claimable, err := sdk.ParseCoinsNormalized("9stake")
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name     string
@@ -315,7 +317,8 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
 				Rewards: []types.DelegationDelegatorReward{
 					types.NewDelegationDelegatorReward(val.ValAddress.String(), rewards),
 				},
-				Total: rewards,
+				Total:     rewards,
+				Claimable: claimable,
 			},
 		},
 		{

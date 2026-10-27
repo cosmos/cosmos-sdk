@@ -224,7 +224,8 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 			}
 
 			return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
-		}, tempDir)
+		}, tempDir,
+	)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)

@@ -430,6 +430,20 @@ func (mr *MockStakingHooksMockRecorder) AfterValidatorBonded(ctx, consAddr, valA
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterValidatorBonded", reflect.TypeOf((*MockStakingHooks)(nil).AfterValidatorBonded), ctx, consAddr, valAddr)
 }
 
+// AfterValidatorConsKeyUpdated mocks base method.
+func (m *MockStakingHooks) AfterValidatorConsKeyUpdated(ctx context.Context, oldConsAddr, newConsAddr types.ConsAddress, valAddr types.ValAddress) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AfterValidatorConsKeyUpdated", ctx, oldConsAddr, newConsAddr, valAddr)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AfterValidatorConsKeyUpdated indicates an expected call of AfterValidatorConsKeyUpdated.
+func (mr *MockStakingHooksMockRecorder) AfterValidatorConsKeyUpdated(ctx, oldConsAddr, newConsAddr, valAddr any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterValidatorConsKeyUpdated", reflect.TypeOf((*MockStakingHooks)(nil).AfterValidatorConsKeyUpdated), ctx, oldConsAddr, newConsAddr, valAddr)
+}
+
 // AfterValidatorCreated mocks base method.
 func (m *MockStakingHooks) AfterValidatorCreated(ctx context.Context, valAddr types.ValAddress) error {
 	m.ctrl.T.Helper()

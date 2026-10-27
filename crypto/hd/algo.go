@@ -22,8 +22,9 @@ const (
 	// It is currently not supported for end-user keys (wallets/ledgers).
 	Bls12_381Type = PubKeyType("bls12_381")
 	// MlDsa65Type represents the NIST ML-DSA-65 (FIPS 204) post-quantum
-	// signature scheme. It is currently not supported for end-user keys
-	// (wallets/ledgers) and is intended for validator key use.
+	// signature scheme. It is supported for both validator keys and end-user
+	// account keys via the software keyring. Ledger/hardware wallets are not
+	// supported (no device implements ML-DSA today).
 	MlDsa65Type = PubKeyType("ml_dsa_65")
 )
 

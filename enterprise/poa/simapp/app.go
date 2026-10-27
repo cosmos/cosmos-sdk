@@ -121,10 +121,14 @@ func newPoAAppWithSDKConfig(
 		poaApp.BankKeeper,
 	)
 
-	poaAppModule := poa.NewAppModule(poaApp.AppCodec(), poaKeeper)
+	var poaOpts []poa.ModuleOption
 	if poaConfig.EnableSecp256k1Support {
-		poaAppModule = poa.NewAppModule(poaApp.AppCodec(), poaKeeper, poa.WithSecp256k1Support())
+		poaOpts = append(poaOpts, poa.WithSecp256k1Support())
 	}
+	if poaConfig.EnableMlDsa65Support {
+		poaOpts = append(poaOpts, poa.WithMlDsa65Support())
+	}
+	poaAppModule := poa.NewAppModule(poaApp.AppCodec(), poaKeeper, poaOpts...)
 
 	if err := poaApp.AddModules(poaModule{AppModule: poaAppModule, storeKey: poaStoreKey}); err != nil {
 		panic(err)

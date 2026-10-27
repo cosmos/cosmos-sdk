@@ -8,6 +8,87 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
+func (s *KeeperTestSuite) TestMoveValidatorSigningInfo() {
+	ctx, keeper := s.ctx, s.slashingKeeper
+	require := s.Require()
+
+	oldAddr := sdk.ConsAddress([]byte("old_addr____________"))
+	newAddr := sdk.ConsAddress([]byte("new_addr____________"))
+
+	info := slashingtypes.NewValidatorSigningInfo(oldAddr, 10, 3, time.Unix(100, 0), true, 7)
+	require.NoError(keeper.SetValidatorSigningInfo(ctx, oldAddr, info))
+
+	require.NoError(keeper.MoveValidatorSigningInfo(ctx, oldAddr, newAddr))
+
+	// old address no longer has signing info
+	require.False(keeper.HasValidatorSigningInfo(ctx, oldAddr))
+
+	// new address has the migrated info, with its Address field rewritten
+	got, err := keeper.GetValidatorSigningInfo(ctx, newAddr)
+	require.NoError(err)
+	require.Equal(newAddr.String(), got.Address)
+	require.Equal(info.StartHeight, got.StartHeight)
+	require.Equal(info.IndexOffset, got.IndexOffset)
+	require.True(info.JailedUntil.Equal(got.JailedUntil))
+	require.Equal(info.Tombstoned, got.Tombstoned)
+	require.Equal(info.MissedBlocksCounter, got.MissedBlocksCounter)
+}
+
+func (s *KeeperTestSuite) TestMoveValidatorSigningInfo_NoInfo() {
+	ctx, keeper := s.ctx, s.slashingKeeper
+	require := s.Require()
+
+	oldAddr := sdk.ConsAddress([]byte("old_addr____________"))
+	newAddr := sdk.ConsAddress([]byte("new_addr____________"))
+
+	// validators can rotate before they have ever bonded: there is no signing
+	// info to move and this must not error or create an entry.
+	require.NoError(keeper.MoveValidatorSigningInfo(ctx, oldAddr, newAddr))
+	require.False(keeper.HasValidatorSigningInfo(ctx, newAddr))
+}
+
+func (s *KeeperTestSuite) TestMoveMissedBlockBitmap() {
+	ctx, keeper := s.ctx, s.slashingKeeper
+	require := s.Require()
+
+	require.NoError(keeper.SetParams(ctx, testutil.TestParams()))
+
+	oldAddr := sdk.ConsAddress([]byte("old_addr____________"))
+	newAddr := sdk.ConsAddress([]byte("new_addr____________"))
+
+	// set bits in two different chunks (chunk size is 1024 bits) so the move
+	// is exercised across multiple chunk keys.
+	indices := []int64{5, 1500}
+	for _, idx := range indices {
+		require.NoError(keeper.SetMissedBlockBitmapValue(ctx, oldAddr, idx, true))
+	}
+
+	require.NoError(keeper.MoveMissedBlockBitmap(ctx, oldAddr, newAddr))
+
+	for _, idx := range indices {
+		// new address carries the missed bits
+		missed, err := keeper.GetMissedBlockBitmapValue(ctx, newAddr, idx)
+		require.NoError(err)
+		require.True(missed)
+
+		// old address bits are cleared
+		missed, err = keeper.GetMissedBlockBitmapValue(ctx, oldAddr, idx)
+		require.NoError(err)
+		require.False(missed)
+	}
+}
+
+func (s *KeeperTestSuite) TestMoveMissedBlockBitmap_Empty() {
+	ctx, keeper := s.ctx, s.slashingKeeper
+	require := s.Require()
+
+	oldAddr := sdk.ConsAddress([]byte("old_addr____________"))
+	newAddr := sdk.ConsAddress([]byte("new_addr____________"))
+
+	// no bitmap chunks exist for oldAddr; the move is a no-op.
+	require.NoError(keeper.MoveMissedBlockBitmap(ctx, oldAddr, newAddr))
+}
+
 func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	ctx, keeper := s.ctx, s.slashingKeeper
 	require := s.Require()

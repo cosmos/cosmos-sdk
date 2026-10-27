@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // NewGenesisState creates a new GenesisState instance
@@ -39,6 +40,12 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 func (g GenesisState) UnpackInterfaces(c codectypes.AnyUnpacker) error {
 	for i := range g.Validators {
 		if err := g.Validators[i].UnpackInterfaces(c); err != nil {
+			return err
+		}
+	}
+	for i := range g.PendingConsensusKeyRotations {
+		var pubKey cryptotypes.PubKey
+		if err := c.UnpackAny(g.PendingConsensusKeyRotations[i].NewPubkey, &pubKey); err != nil {
 			return err
 		}
 	}

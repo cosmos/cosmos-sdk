@@ -121,6 +121,20 @@ simd tx poa withdraw-fees \
     --keyring-backend test
 ```
 
+**Rotate a validator consensus key:**
+
+The operator rotates its own key, or the admin rotates any validator's key. The
+`--from` signer must be the operator or the admin. See the [consensus key
+rotation guide](./docs/key-rotation.md) for the message spec, design rationale,
+and the operator and admin runbooks (including the node `priv_validator_key.json`
+swap timing).
+```bash
+simd tx poa rotate-cons-pub-key <new_pubkey_base64> ed25519 \
+    --operator-address $OPERATOR_ADDR \
+    --from myvalidator \
+    --keyring-backend test
+```
+
 ### Creating and Adding a New Validator
 
 1. **Generate validator operator key and fund the account:**
@@ -302,6 +316,13 @@ The PoA module requires the following genesis configuration:
 - Validators automatically accumulate transaction fees proportional to their voting power
 - Fees are stored as `DecCoins` to handle fractional amounts precisely
 - Validators withdraw fees to their operator address via `withdraw-fees` transaction
+
+### Consensus Key Rotation
+
+- **Operator Self-Service**: A validator operator rotates its own consensus key via `MsgRotateConsPubKey`
+- **Admin Override**: The admin can rotate any validator's key (unresponsive operator, suspected compromise, recovery)
+- **Same-Block Swap**: The key is replaced in the block the transaction lands; accrued fees migrate to the new key and power is unchanged. No fee, no rate limit, no rotation history (POA has no slashing or evidence)
+- See the [consensus key rotation guide](./docs/key-rotation.md) for details and the operator runbook
 
 ### Governance Integration
 

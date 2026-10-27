@@ -363,3 +363,110 @@ func TestQueryDelegatorStartingInfo(t *testing.T) {
 		})
 	}
 }
+
+func TestQueryDelegationTotalRewards(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
+	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		storeService,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
+	)
+	require.NoError(t, distrKeeper.FeePool.Set(ctx, disttypes.InitialFeePool()))
+	require.NoError(t, distrKeeper.Params.Set(ctx, disttypes.DefaultParams()))
+
+	valAddr0 := sdk.ValAddress(valConsAddr0)
+	valAddr1 := sdk.ValAddress(valConsAddr1)
+	addr := sdk.AccAddress(valAddr0)
+
+	val0, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(1000))
+	require.NoError(t, err)
+	val0.Commission = stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec())
+
+	val1, err := distrtestutil.CreateValidator(valConsPk1, math.NewInt(1000))
+	require.NoError(t, err)
+	val1.Commission = stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec())
+
+	del0 := stakingtypes.NewDelegation(addr.String(), valAddr0.String(), val0.DelegatorShares)
+	del1 := stakingtypes.NewDelegation(addr.String(), valAddr1.String(), val1.DelegatorShares)
+
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr0).Return(val0, nil).AnyTimes()
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr1).Return(val1, nil).AnyTimes()
+	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr0).Return(del0, nil).AnyTimes()
+	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr1).Return(del1, nil).AnyTimes()
+	stakingKeeper.EXPECT().
+		IterateDelegations(gomock.Any(), addr, gomock.Any()).
+		DoAndReturn(func(_ interface{}, _ sdk.AccAddress, fn func(int64, stakingtypes.DelegationI) bool) error {
+			if fn(0, del0) {
+				return nil
+			}
+			fn(1, del1)
+			return nil
+		}).AnyTimes()
+
+	require.NoError(t, distrtestutil.CallCreateValidatorHooks(ctx, distrKeeper, addr, valAddr0))
+	require.NoError(t, distrtestutil.CallCreateValidatorHooks(ctx, distrKeeper, addr, valAddr1))
+
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// 1.6 per validator: the raw sum is 3.2, but each withdrawal truncates to 1, so only 2 is claimable.
+	frac := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyMustNewDecFromStr("1.6")}}
+	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val0, frac))
+	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val1, frac))
+
+	querier := keeper.NewQuerier(distrKeeper)
+
+	t.Run("nil request", func(t *testing.T) {
+		_, err := querier.DelegationTotalRewards(ctx, nil)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid request")
+	})
+
+	t.Run("empty delegator address", func(t *testing.T) {
+		_, err := querier.DelegationTotalRewards(ctx, &disttypes.QueryDelegationTotalRewardsRequest{})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "empty delegator address")
+	})
+
+	t.Run("invalid delegator address", func(t *testing.T) {
+		_, err := querier.DelegationTotalRewards(ctx, &disttypes.QueryDelegationTotalRewardsRequest{
+			DelegatorAddress: "invalid",
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("total is the raw sum and claimable is the per-delegation truncation", func(t *testing.T) {
+		resp, err := querier.DelegationTotalRewards(ctx, &disttypes.QueryDelegationTotalRewardsRequest{
+			DelegatorAddress: addr.String(),
+		})
+		require.NoError(t, err)
+
+		require.Len(t, resp.Rewards, 2)
+		for _, r := range resp.Rewards {
+			require.True(t, r.Reward.Equal(frac), "per-delegation reward should stay full precision, got %s", r.Reward)
+		}
+
+		wantTotal := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyMustNewDecFromStr("3.2")}}
+		require.True(t, resp.Total.Equal(wantTotal), "Total=%s want %s", resp.Total, wantTotal)
+
+		wantClaimable := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2))
+		require.True(t, resp.Claimable.Equal(wantClaimable), "Claimable=%s want %s", resp.Claimable, wantClaimable)
+	})
+}

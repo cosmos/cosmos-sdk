@@ -2175,7 +2175,8 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 		suite.bankKeeper.MintCoins(
 			suite.ctx,
 			multiPermAcc.Name,
-			sdk.NewCoins(sdk.NewCoin("utxo", math.NewInt(100000)))),
+			sdk.NewCoins(sdk.NewCoin("utxo", math.NewInt(100000))),
+		),
 	)
 	// send coins to address
 	suite.mockSendCoinsFromModuleToAccount(multiPermAcc, accAddrs[0])
@@ -2980,7 +2981,7 @@ func (suite *KeeperTestSuite) TestSetParams() {
 	suite.Run("stored params are as expected", func() {
 		actual := bankKeeper.GetParams(ctx)
 		require.True(actual.DefaultSendEnabled, "DefaultSendEnabled")
-		require.Len(actual.SendEnabled, 0, "SendEnabled") //nolint:staticcheck // test legacy deprecated param
+		require.Len(actual.SendEnabled, 0, "SendEnabled")
 	})
 
 	suite.Run("send enabled params converted to store", func() {

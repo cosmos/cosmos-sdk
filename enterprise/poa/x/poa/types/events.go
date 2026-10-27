@@ -16,19 +16,21 @@ package types
 
 // Event types for the POA module
 const (
-	EventTypeUpdateParams    = "update_params"
-	EventTypeCreateValidator = "create_validator"
-	EventTypeUpdateValidator = "update_validator"
-	EventTypeWithdrawFees    = "withdraw_fees"
+	EventTypeUpdateParams     = "update_params"
+	EventTypeCreateValidator  = "create_validator"
+	EventTypeUpdateValidator  = "update_validator"
+	EventTypeWithdrawFees     = "withdraw_fees"
+	EventTypeRotateConsPubKey = "rotate_cons_pubkey"
 )
 
 // Attribute keys for events
 const (
-	AttributeKeyAdmin            = "admin"
-	AttributeKeyParams           = "params"
-	AttributeKeyOperatorAddress  = "operator_address"
-	AttributeKeyConsensusAddress = "consensus_address"
-	AttributeKeyMoniker          = "moniker"
-	AttributeKeyPower            = "power"
-	AttributeKeyAmount           = "amount"
+	AttributeKeyAdmin               = "admin"
+	AttributeKeyParams              = "params"
+	AttributeKeyOperatorAddress     = "operator_address"
+	AttributeKeyConsensusAddress    = "consensus_address"
+	AttributeKeyNewConsensusAddress = "new_consensus_address"
+	AttributeKeyMoniker             = "moniker"
+	AttributeKeyPower               = "power"
+	AttributeKeyAmount              = "amount"
 )

@@ -59,14 +59,11 @@ func TestBlockedAddressesExcludesGovModuleAddress(t *testing.T) {
 }
 
 func TestConfigureExecutionModeUsesSerialWhenBlockSTMIsNil(t *testing.T) {
-	defer func() {
-		if r := recover(); r != nil {
-			t.Fatalf("configureExecutionMode panicked with nil BlockSTM: %v", r)
-		}
-	}()
+	app := NewSDKApp(log.NewNopLogger(), dbm.NewMemDB(), nil, DefaultSDKAppConfig("app", testAppOptions(t)))
+	app.LoadModules()
 
-	a := &SDKApp{cfg: SDKAppConfig{}}
-	a.configureExecutionMode()
+	// SetDisableBlockGasMeter panics when a parallel runner is installed.
+	app.SetDisableBlockGasMeter(false)
 }
 
 func TestNewSDKAppWithOptimisticExecutionEnabledLoadsModules(t *testing.T) {

@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * [#23683](https://github.com/cosmos/cosmos-sdk/pull/23683) Replace `SigInt` with `SigTerm` to gracefully shutdown the process.
+* [#26526](https://github.com/cosmos/cosmos-sdk/pull/26526) Buffer the `cmdDone` and `psChan` channels in `WaitForUpgradeOrExit` so the `cmd.Wait` / `Process.Wait` goroutines do not leak on the upgrade and shutdown-grace-timeout paths.
 
 ## v1.7.1 - 2025-01-12
 

@@ -35,14 +35,20 @@ var (
 	// DefaultMinCommissionRate is set to 0%
 	DefaultMinCommissionRate = math.LegacyZeroDec()
 
-	// DefaultKeyRotationFee is the fee charged to rotate a validators ConsPubkey
-	//
-	// TODO: move this into the actual params struct
-	DefaultKeyRotationFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)
+	// DefaultKeyRotationFeeAmount is the default amount charged to rotate a
+	// validator's consensus key. The fee denom is always the bond denom, so only
+	// the amount has a fixed default; callers pair it with the active bond denom.
+	DefaultKeyRotationFeeAmount = math.NewInt(1000000)
 )
 
 // NewParams creates a new Params instance
-func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string, minCommissionRate math.LegacyDec) Params {
+func NewParams(
+	unbondingTime time.Duration,
+	maxValidators, maxEntries, historicalEntries uint32,
+	bondDenom string,
+	minCommissionRate math.LegacyDec,
+	keyRotationFee sdk.Coin,
+) Params {
 	return Params{
 		UnbondingTime:     unbondingTime,
 		MaxValidators:     maxValidators,
@@ -50,6 +56,7 @@ func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historica
 		HistoricalEntries: historicalEntries,
 		BondDenom:         bondDenom,
 		MinCommissionRate: minCommissionRate,
+		KeyRotationFee:    keyRotationFee,
 	}
 }
 
@@ -62,6 +69,10 @@ func DefaultParams() Params {
 		DefaultHistoricalEntries,
 		sdk.DefaultBondDenom,
 		DefaultMinCommissionRate,
+		// Read the bond denom here so the fee tracks it even after
+		// sdk.DefaultBondDenom is overridden (e.g. init --default-denom);
+		// Validate requires the two denoms to match.
+		sdk.NewCoin(sdk.DefaultBondDenom, DefaultKeyRotationFeeAmount),
 	)
 }
 
@@ -109,6 +120,16 @@ func (p Params) Validate() error {
 
 	if err := validateHistoricalEntries(p.HistoricalEntries); err != nil {
 		return err
+	}
+
+	if err := validateKeyRotationFee(p.KeyRotationFee); err != nil {
+		return err
+	}
+
+	// The rotation fee is charged in this denom, so a validator can only pay it
+	// if it matches the staking denom they already hold.
+	if p.KeyRotationFee.Denom != p.BondDenom {
+		return fmt.Errorf("key rotation fee denom %q must match bond denom %q", p.KeyRotationFee.Denom, p.BondDenom)
 	}
 
 	return nil
@@ -206,6 +227,25 @@ func validateMinCommissionRate(i any) error {
 	}
 	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("minimum commission rate cannot be greater than 100%%: %s", v)
+	}
+
+	return nil
+}
+
+func validateKeyRotationFee(i any) error {
+	v, ok := i.(sdk.Coin)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNil() {
+		return fmt.Errorf("key rotation fee cannot be nil: %s", v)
+	}
+	if err := v.Validate(); err != nil {
+		return err
+	}
+	if !v.IsPositive() {
+		return fmt.Errorf("key rotation fee must be positive: %s", v)
 	}
 
 	return nil

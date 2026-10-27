@@ -15,6 +15,9 @@ option go_package = "github.com/cosmos/cosmos-sdk/types/tx/signing";
 // to this SignMode enum describing their sign mode so that different
 // apps have a consistent version of this enum.
 enum SignMode {
+  reserved 2;
+  reserved "SIGN_MODE_TEXTUAL";
+
   // SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be
   // rejected.
   SIGN_MODE_UNSPECIFIED = 0;
@@ -22,13 +25,6 @@ enum SignMode {
   // SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is
   // verified with raw bytes from Tx.
   SIGN_MODE_DIRECT = 1;
-
-  // SIGN_MODE_TEXTUAL is a future signing mode that will verify some
-  // human-readable textual representation on top of the binary representation
-  // from SIGN_MODE_DIRECT.
-  //
-  // Since: cosmos-sdk 0.50
-  SIGN_MODE_TEXTUAL = 2;
 
   // SIGN_MODE_DIRECT_AUX specifies a signing mode which uses
   // SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does not

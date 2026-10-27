@@ -95,7 +95,8 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
 		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
 		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{},
-		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{})
+		slashing.AppModuleBasic{}, staking.AppModuleBasic{}, upgrade.AppModuleBasic{}, vesting.AppModuleBasic{},
+	)
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 
@@ -573,6 +574,10 @@ func TestDecimalMutation(t *testing.T) {
 }
 
 func postFixPulsarMessage(msg proto.Message) {
+	if m, ok := msg.(*stakingapi.MsgUpdateParams); ok && m.Params != nil && m.Params.KeyRotationFee == nil {
+		m.Params.KeyRotationFee = &v1beta1.Coin{}
+	}
+
 	if m, ok := msg.(*authapi.ModuleAccount); ok {
 		if m.BaseAccount == nil {
 			m.BaseAccount = &authapi.BaseAccount{}

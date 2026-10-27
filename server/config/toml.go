@@ -23,7 +23,19 @@ minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 
 # The maximum gas a query coming over rest/grpc may consume.
 # If this is set to zero, the query can consume an unbounded amount of gas.
+# WARNING: leaving this at 0 (unbounded) on a public RPC node exposes it to
+# DoS via expensive queries (e.g. full-store iteration). Set an explicit limit,
+# e.g. query-gas-limit = "50000000", for any node that serves untrusted clients.
 query-gas-limit = "{{ .BaseConfig.QueryGasLimit }}"
+
+# BlockExecutor sets block execution mode: "block-stm" or "sequential".
+block-executor = "{{ .BaseConfig.BlockExecutor }}"
+
+# BlockSTMWorkers sets the number of workers for block-stm execution (0 = auto).
+block-stm-workers = {{ .BaseConfig.BlockSTMWorkers }}
+
+# BlockSTMPreEstimate enables pre-estimation for block-stm execution.
+block-stm-pre-estimate = {{ .BaseConfig.BlockSTMPreEstimate }}
 
 # default: the last 362880 states are kept, pruning at 10 block intervals
 # nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)

@@ -184,13 +184,15 @@ func TestTransientStoreQueuesValidatorUpdates(t *testing.T) {
 	require.NoError(t, err)
 
 	// Reap validator updates - should return the queued update from transient store
-	queuedUpdates := f.poaKeeper.ReapValidatorUpdates(ctx)
+	queuedUpdates, err := f.poaKeeper.ReapValidatorUpdates(ctx)
+	require.NoError(t, err)
 	require.Len(t, queuedUpdates, 1, "should have exactly 1 queued update in transient store")
 	assert.Equal(t, int64(2000), queuedUpdates[0].Power)
 
 	// Verify that reading again in the same context returns the same data
 	// (transient store persists within a block/context)
-	queuedUpdates2 := f.poaKeeper.ReapValidatorUpdates(ctx)
+	queuedUpdates2, err := f.poaKeeper.ReapValidatorUpdates(ctx)
+	require.NoError(t, err)
 	require.Len(t, queuedUpdates2, 1, "transient store persists within same context")
 
 	// Verify EndBlocker returns the queued updates
@@ -213,6 +215,7 @@ func TestTransientStoreQueuesValidatorUpdates(t *testing.T) {
 
 	// Query the transient store in the new block context - should be empty
 	// because transient stores are cleared on commit
-	queuedUpdatesAfterCommit := f.poaKeeper.ReapValidatorUpdates(newBlockCtx)
+	queuedUpdatesAfterCommit, err := f.poaKeeper.ReapValidatorUpdates(newBlockCtx)
+	require.NoError(t, err)
 	assert.Empty(t, queuedUpdatesAfterCommit, "transient store should be cleared after block commit")
 }

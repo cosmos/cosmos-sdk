@@ -403,7 +403,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v2.12.2
+golangci_version=v2.15.0
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
@@ -427,7 +427,7 @@ lint-fix:
 
 protoVer=0.18.1
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
-protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
+protoImage=$(DOCKER) run --rm -e GOTOOLCHAIN=auto -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
 proto-all: proto-format proto-lint proto-gen
 

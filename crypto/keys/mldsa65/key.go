@@ -14,6 +14,7 @@ import (
 
 	"github.com/cometbft/cometbft/crypto"
 	mldsa "github.com/cometbft/cometbft/crypto/mldsa65"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -40,6 +41,17 @@ func NewPrivateKeyFromBytes(bz []byte) (PrivKey, error) {
 // GenPrivKey generates a fresh ML-DSA-65 private key using OS randomness.
 func GenPrivKey() (PrivKey, error) {
 	sk, err := mldsa.GenPrivKey()
+	if err != nil {
+		return PrivKey{}, err
+	}
+	return PrivKey{Key: sk.Bytes()}, nil
+}
+
+// GenPrivKeyFromSeed deterministically derives an ML-DSA-65 private key from a
+// 32-byte seed (mldsa.SeedSize). The same seed always yields the same key,
+// which is what makes mnemonic-based account recovery possible.
+func GenPrivKeyFromSeed(seed []byte) (PrivKey, error) {
+	sk, err := mldsa.GenPrivKeyFromSeed(seed)
 	if err != nil {
 		return PrivKey{}, err
 	}
@@ -117,16 +129,18 @@ var (
 	_ codec.AminoMarshaler = &PubKey{}
 )
 
-// Address returns the validator address: SHA256(pubkey) truncated to 20 bytes,
-// matching the convention used by other CometBFT validator key types. ML-DSA-65
-// is not intended for account-level use; SDK accounts should not derive
-// addresses from this key.
+// Address returns the account/validator address: SHA256(pubkey) truncated to 20
+// bytes, matching the convention used by ed25519 keys. This scheme is valid for
+// both CometBFT validator addresses and SDK account addresses; it MUST NOT change
+// once accounts exist, as that would be a breaking change to derived addresses.
 func (pubKey PubKey) Address() crypto.Address {
-	pk, err := mldsa.NewPubKeyFromBytes(pubKey.Key)
-	if err != nil {
-		panic(fmt.Sprintf("mldsa65 pubkey: %v", err))
+	if len(pubKey.Key) != mldsa.PubKeySize {
+		panic(fmt.Sprintf("length of pubkey is incorrect, got: %d expected: %d", len(pubKey.Key), mldsa.PubKeySize))
 	}
-	return pk.Address()
+	// FIPS 204 packed encoding round-trips, so hashing the stored bytes matches
+	// what re-parsing then hashing would produce, without the expensive unpack.
+	// Mirrors CometBFT's mldsa65.PubKey.Address and the ed25519/secp256k1 keys.
+	return crypto.Address(tmhash.SumTruncated(pubKey.Key))
 }
 
 // VerifySignature verifies the given signature against msg.

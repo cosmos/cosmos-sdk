@@ -44,7 +44,8 @@ func RegisterUpgradeHandlers[T AppI](app T, upgrades ...Upgrade[T]) {
 				}
 
 				return app.ModuleManager().RunMigrations(ctx, app.Configurator(), fromVM)
-			})
+			},
+		)
 
 		upgradeInfo, err := app.UpgradeKeeper().ReadUpgradeInfoFromDisk()
 		if err != nil {

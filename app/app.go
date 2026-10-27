@@ -17,6 +17,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/app/services"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/blockexec"
 	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -271,24 +272,29 @@ func (app *SDKApp) configureOptimisticExecution() {
 }
 
 func (app *SDKApp) configureBlockSTM() {
+	stores := app.GetStoreKeys()
+	txDecoder := app.encodingConfig.TxConfig.TxDecoder()
+
+	// Without an explicit BlockSTM config, the executor comes from app.toml or the
+	// --block-executor flag.
 	if app.cfg.BlockSTM == nil {
+		blockexec.Apply(app.BaseApp, app.cfg.AppOpts, stores, txDecoder,
+			func(storetypes.MultiStore) string { return sdk.DefaultBondDenom },
+		)
 		return
 	}
-
-	stores := app.GetStoreKeys()
-
-	workers := app.cfg.BlockSTM.Workers
 
 	var coinDenom func(storetypes.MultiStore) string
 	if app.cfg.BlockSTM.Estimate {
 		coinDenom = func(storetypes.MultiStore) string { return sdk.DefaultBondDenom }
 	}
 
+	app.SetDisableBlockGasMeter(true)
 	app.SetBlockSTMTxRunner(
 		txnrunner.NewSTMRunner(
-			app.encodingConfig.TxConfig.TxDecoder(),
+			txDecoder,
 			stores,
-			workers,
+			app.cfg.BlockSTM.Workers,
 			app.cfg.BlockSTM.Estimate,
 			coinDenom,
 		),
@@ -441,7 +447,8 @@ func (app *SDKApp) loadModules() {
 			govtypes.ModuleName: gov.NewAppModuleBasic(
 				[]govclient.ProposalHandler{},
 			),
-		})
+		},
+	)
 	app.basicModuleManager.RegisterLegacyAminoCodec(app.encodingConfig.LegacyAmino)
 	app.basicModuleManager.RegisterInterfaces(app.encodingConfig.InterfaceRegistry)
 

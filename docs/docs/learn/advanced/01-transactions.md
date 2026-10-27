@@ -87,16 +87,6 @@ The use case is a multi-signer transaction, where one of the signers is appointe
 create the final transaction by appending a fee. Note that the fee payer of the transaction (in our case Charlie) must sign over the fees, so must use `SIGN_MODE_DIRECT` or `SIGN_MODE_LEGACY_AMINO_JSON`.
 
 
-#### `SIGN_MODE_TEXTUAL`
-
-`SIGN_MODE_TEXTUAL` is a new sign mode for delivering a better signing experience on hardware wallets and it is included in the v0.50 release. In this mode, the signer signs over the human-readable string representation of the transaction (CBOR) and makes all data being displayed easier to read. The data is formatted as screens, and each screen is meant to be displayed in its entirety even on small devices like the Ledger Nano.
-
-There are also _expert_ screens, which will only be displayed if the user has chosen that option in its hardware device. These screens contain things like account number, account sequence and the sign data hash.
-
-Data is formatted using a set of `ValueRenderer` which the SDK provides defaults for all the known messages and value types. Chain developers can also opt to implement their own `ValueRenderer` for a type/message if they'd like to display information differently.
-
-If you wish to learn more, please refer to [ADR-050](../../build/architecture/adr-050-sign-mode-textual.md).
-
 #### Custom Sign modes
 
 There is an opportunity to add your own custom sign mode to the Cosmos-SDK.  While we cannot accept the implementation of the sign mode to the repository, we can accept a pull request to add the custom signmode to the SignMode enum located [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/tx/signing/v1beta1/signing.proto#L17)

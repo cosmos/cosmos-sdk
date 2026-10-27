@@ -427,6 +427,55 @@ func (s *CLITestSuite) TestNewEditValidatorCmd() {
 	}
 }
 
+func (s *CLITestSuite) TestNewRotateConsPubKeyCmd() {
+	cmd := cli.NewRotateConsPubKeyCmd(addresscodec.NewBech32Codec("cosmosvaloper"))
+
+	validPubKey := `{"@type":"/cosmos.crypto.ed25519.PubKey","key":"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw="}`
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+	}{
+		{
+			"invalid pubkey JSON",
+			[]string{
+				`not-json`,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
+			},
+			"invalid consensus pubkey JSON",
+		},
+		{
+			"valid transaction",
+			[]string{
+				validPubKey,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
+			},
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
+			if tc.expectErrMsg != "" {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expectErrMsg)
+			} else {
+				s.Require().NoError(err, out.String())
+				resp := &sdk.TxResponse{}
+				s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), resp))
+			}
+		})
+	}
+}
+
 func (s *CLITestSuite) TestNewDelegateCmd() {
 	cmd := cli.NewDelegateCmd(addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
 

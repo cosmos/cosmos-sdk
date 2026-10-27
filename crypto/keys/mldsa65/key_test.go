@@ -66,3 +66,48 @@ func TestCmtBridge(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, tmPub.VerifySignature(msg, sig))
 }
+
+func TestGenPrivKeyFromSeedDeterministic(t *testing.T) {
+	seed := make([]byte, cmtmldsa65.SeedSize)
+	for i := range seed {
+		seed[i] = byte(i)
+	}
+
+	a, err := mldsa65.GenPrivKeyFromSeed(seed)
+	require.NoError(t, err)
+	b, err := mldsa65.GenPrivKeyFromSeed(seed)
+	require.NoError(t, err)
+
+	// Same seed -> identical key bytes.
+	require.Equal(t, a.Bytes(), b.Bytes())
+	require.True(t, a.PubKey().Equals(b.PubKey()))
+
+	// Different seed -> different key.
+	seed[0] ^= 0xff
+	c, err := mldsa65.GenPrivKeyFromSeed(seed)
+	require.NoError(t, err)
+	require.NotEqual(t, a.Bytes(), c.Bytes())
+}
+
+func TestGenPrivKeyFromSeedWrongSize(t *testing.T) {
+	_, err := mldsa65.GenPrivKeyFromSeed(make([]byte, cmtmldsa65.SeedSize-1))
+	require.Error(t, err)
+}
+
+// TestAddressMatchesParsedKey pins the length-check + hash implementation of
+// Address() to the value the previous parse-then-hash implementation produced:
+// the cometbft PubKey parsed from the same bytes must yield the identical address.
+func TestAddressMatchesParsedKey(t *testing.T) {
+	priv, err := mldsa65.GenPrivKey()
+	require.NoError(t, err)
+	pub := priv.PubKey()
+
+	parsed, err := cmtmldsa65.NewPubKeyFromBytes(pub.Bytes())
+	require.NoError(t, err)
+	require.Equal(t, parsed.Address().Bytes(), pub.Address().Bytes())
+}
+
+func TestAddressPanicsOnWrongSize(t *testing.T) {
+	pub := mldsa65.PubKey{Key: make([]byte, cmtmldsa65.PubKeySize-1)}
+	require.Panics(t, func() { pub.Address() })
+}

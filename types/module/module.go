@@ -637,7 +637,8 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 	if len(missing) != 0 {
 		sort.Strings(missing)
 		panic(fmt.Sprintf(
-			"all modules must be defined when setting %s, missing: %v", setOrderFnName, missing))
+			"all modules must be defined when setting %s, missing: %v", setOrderFnName, missing,
+		))
 	}
 }
 

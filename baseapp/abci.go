@@ -69,6 +69,13 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		}
 	}
 
+	// Reset any genesis-tx events left over from a previous InitChain call in
+	// this process (see ExecuteGenesisTx). Without this, a CometBFT restart at
+	// height 0 that re-runs InitChain before the first FinalizeBlock succeeds
+	// would replay the genesis txs and duplicate their events in the first
+	// block's response.
+	app.genesisEvents = nil
+
 	// initialize states with a correct header
 	app.stateManager.SetState(execModeFinalize, app.cms, initHeader, app.logger, app.streamingManager)
 	app.stateManager.SetState(execModeCheck, app.cms, initHeader, app.logger, app.streamingManager)
@@ -145,6 +152,9 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 }
 
 func (app *BaseApp) Info(_ *abci.RequestInfo) (*abci.ResponseInfo, error) {
+	app.mu.RLock()
+	defer app.mu.RUnlock()
+
 	lastCommitID := app.cms.LastCommitID()
 
 	return &abci.ResponseInfo{
@@ -794,6 +804,12 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		return nil, err
 	}
 
+	// genesis transaction events cannot be returned by ResponseInitChain, so include
+	// them in the first block's response.
+	if req.Height == app.initialHeight {
+		events = append(events, app.genesisEvents...)
+	}
+
 	// NOTE: Header populated here is intentionally partial; it omits Version, LastBlockID,
 	// LastCommitHash, DataHash, ValidatorsHash, ConsensusHash, LastResultsHash, and EvidenceHash.
 	// As a result, the HistoricalInfo headers stored by x/staking are unreliable and cannot reproduce
@@ -884,7 +900,8 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	finalizeState.SetContext(
 		finalizeState.Context().
 			WithBlockGasMeter(gasMeter).
-			WithTxCount(len(req.Txs)))
+			WithTxCount(len(req.Txs)),
+	)
 
 	// Iterate over all raw transactions in the proposal and attempt to execute
 	// them, gathering the execution results.
@@ -1019,6 +1036,11 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	nonOEStart := time.Now()
 	res, err = app.internalFinalizeBlock(context.Background(), req)
 	measureSince(app.metricsCtx(), func() metric.Int64Histogram { return inst.NonOEInternalFinalize }, nonOEStart)
+
+	if err == nil && req.Height == app.initialHeight {
+		app.genesisEvents = nil
+	}
+
 	if res != nil {
 		whStart := time.Now()
 		res.AppHash = app.workingHash()
@@ -1161,7 +1183,7 @@ func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.R
 			return &abci.ResponseQuery{
 				Codespace: sdkerrors.RootCodespace,
 				Height:    req.Height,
-				Value:     []byte(app.version),
+				Value:     []byte(app.Version()),
 			}
 
 		default:
@@ -1173,7 +1195,8 @@ func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.R
 		errorsmod.Wrap(
 			sdkerrors.ErrUnknownRequest,
 			"expected second parameter to be either 'simulate' or 'version', neither was present",
-		), app.trace)
+		), app.trace,
+	)
 }
 
 func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) *abci.ResponseQuery {
@@ -1190,7 +1213,8 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) *abci.
 			errorsmod.Wrap(
 				sdkerrors.ErrInvalidRequest,
 				"cannot query with proof when height <= 1; please provide a valid height",
-			), app.trace)
+			), app.trace,
+		)
 	}
 
 	sdkReq := storetypes.RequestQuery(req)

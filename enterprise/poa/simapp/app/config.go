@@ -21,8 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sigtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -35,7 +33,7 @@ type PoAConfig struct {
 	AppName                   string
 	EnableOptimisticExecution bool
 	EnableSecp256k1Support    bool
-	EnabledSignModes          []sigtypes.SignMode
+	EnableMlDsa65Support      bool
 }
 
 func DefaultPoAConfig() PoAConfig {
@@ -43,7 +41,7 @@ func DefaultPoAConfig() PoAConfig {
 		AppName:                   DefaultAppName,
 		EnableOptimisticExecution: true,
 		EnableSecp256k1Support:    true,
-		EnabledSignModes:          append(slices.Clone(authtx.DefaultSignModes), sigtypes.SignMode_SIGN_MODE_TEXTUAL),
+		EnableMlDsa65Support:      true,
 	}
 }
 

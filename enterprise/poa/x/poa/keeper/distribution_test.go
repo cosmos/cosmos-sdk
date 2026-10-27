@@ -22,6 +22,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -317,7 +318,7 @@ func TestProportionalDistribution(t *testing.T) {
 			require.NoError(t, err)
 
 			// Track what should have been distributed this block
-			distributed := math.LegacyNewDec(11).Mul(validatorPower).Quo(totalPower)
+			distributed := math.LegacyNewDec(11).Mul(validatorPower).QuoTruncate(totalPower)
 			totalDistributed = totalDistributed.Add(distributed)
 
 			// Checkpointing is required here to simulate the above calculation
@@ -344,9 +345,9 @@ func TestProportionalDistribution(t *testing.T) {
 		accFeesAfter, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		// This is rounded slightly because of the constant checkpointing at every distribution
-		// If we don't checkpoint every time, we end up with 0.714285714285714286.
+		// If we don't checkpoint every time, we end up with 0.714285714285714285.
 		// Both cases are "correct", but checkpointing every block simulated someone withdrawing at every block.
-		expectedRemainder, err := math.LegacyNewDecFromStr("0.714285714285714290")
+		expectedRemainder, err := math.LegacyNewDecFromStr("0.714285714285714280")
 		require.NoError(t, err)
 		require.Equal(t, expectedRemainder, accFeesAfter.Fees.AmountOf("stake"))
 
@@ -357,7 +358,7 @@ func TestProportionalDistribution(t *testing.T) {
 			err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 			require.NoError(t, err)
 
-			distributed := math.LegacyNewDec(11).Mul(validatorPower).Quo(totalPower)
+			distributed := math.LegacyNewDec(11).Mul(validatorPower).QuoTruncate(totalPower)
 			totalDistributedSecond = totalDistributedSecond.Add(distributed)
 			// Checkpointing is required here to simulate the above calculation
 			// where we divide every loop.
@@ -383,9 +384,9 @@ func TestProportionalDistribution(t *testing.T) {
 		accFeesFinal, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		// This is rounded slightly because of the constant checkpointing at every distribution
-		// If we don't checkpoint every time, we end up with 0.428571428571428572.
+		// If we don't checkpoint every time, we end up with 0.428571428571428571.
 		// Both cases are "correct", but checkpointing every block simulated someone withdrawing at every block.
-		finalRemainder, err := math.LegacyNewDecFromStr("0.428571428571428580")
+		finalRemainder, err := math.LegacyNewDecFromStr("0.428571428571428560")
 		require.NoError(t, err)
 		require.Equal(t, finalRemainder, accFeesFinal.Fees.AmountOf("stake"))
 
@@ -406,6 +407,26 @@ func TestProportionalDistribution(t *testing.T) {
 }
 
 func TestCheckpointAllValidators(t *testing.T) {
+	t.Run("equal split of one unit never allocates more than the balance", func(t *testing.T) {
+		f := setupTest(t)
+
+		for i := 1; i <= 6; i++ {
+			_, _ = createValidator(t, f, i, 1)
+		}
+
+		for round := 1; round <= 2; round++ {
+			fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1))
+			require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
+			require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
+
+			totalAllocated, err := f.poaKeeper.getTotalAllocated(f.ctx)
+			require.NoError(t, err)
+			balance := sdk.NewDecCoinsFromCoins(f.bankKeeper.GetAllBalances(f.ctx, f.authKeeper.GetModuleAddress(poatypes.ModuleName))...)
+			_, overshot := balance.SafeSub(totalAllocated)
+			require.False(t, overshot, "round %d: allocated %s exceeds balance %s", round, totalAllocated, balance)
+		}
+	})
+
 	t.Run("checkpoint allocates fees to all validators", func(t *testing.T) {
 		f := setupTest(t)
 
@@ -1065,6 +1086,17 @@ func TestCalculateValidatorPendingFees(t *testing.T) {
 		result := calculateValidatorPendingFees(validatorPower, totalPower, unallocated)
 		require.Equal(t, unallocated, result)
 	})
+
+	t.Run("truncates so shares never sum to more than unallocated", func(t *testing.T) {
+		unallocated := sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(1))}
+
+		// rounding to nearest would give 0.166666666666666667 each, summing to
+		// 1.000000000000000002
+		result := calculateValidatorPendingFees(1, 6, unallocated)
+		expected, err := math.LegacyNewDecFromStr("0.166666666666666666")
+		require.NoError(t, err)
+		require.Equal(t, expected, result.AmountOf("stake"))
+	})
 }
 
 func TestGetUnallocatedFees(t *testing.T) {
@@ -1152,6 +1184,33 @@ func TestGetUnallocatedFees(t *testing.T) {
 		unallocated, err := f.poaKeeper.getUnallocatedFees(f.ctx)
 		require.NoError(t, err)
 		require.True(t, unallocated.IsZero())
+	})
+
+	t.Run("errors when allocated exceeds balance", func(t *testing.T) {
+		f := setupTest(t)
+
+		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1))
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
+
+		overshoot, err := math.LegacyNewDecFromStr("1.000000000000000002")
+		require.NoError(t, err)
+		require.NoError(t, f.poaKeeper.totalAllocatedFees.Set(f.ctx, poatypes.ValidatorFees{
+			Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", overshoot)},
+		}))
+
+		_, err = f.poaKeeper.getUnallocatedFees(f.ctx)
+		require.ErrorIs(t, err, poatypes.ErrInvalidAllocatedFees)
+	})
+
+	t.Run("errors when allocated fees exist with an empty balance", func(t *testing.T) {
+		f := setupTest(t)
+
+		require.NoError(t, f.poaKeeper.totalAllocatedFees.Set(f.ctx, poatypes.ValidatorFees{
+			Fees: sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 1)),
+		}))
+
+		_, err := f.poaKeeper.getUnallocatedFees(f.ctx)
+		require.ErrorIs(t, err, poatypes.ErrInvalidAllocatedFees)
 	})
 }
 
@@ -1284,5 +1343,151 @@ func TestAdjustTotalAllocated(t *testing.T) {
 		total, err := f.poaKeeper.getTotalAllocated(f.ctx)
 		require.NoError(t, err)
 		require.Equal(t, delta1, total)
+	})
+}
+
+func TestRotateConsPubKeyFeeMigration(t *testing.T) {
+	t.Run("non-zero allocated fees move to new cons-addr, total unchanged", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, oldConsAddr, _ := createRotatableValidator(t, f, 100)
+
+		// Mint and checkpoint so the full balance is allocated under the old cons-addr.
+		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
+		require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
+
+		allocatedBefore, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, oldConsAddr.String())
+		require.NoError(t, err)
+		totalBefore, err := f.poaKeeper.getTotalAllocated(f.ctx)
+		require.NoError(t, err)
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		newConsAddr := sdk.GetConsAddress(newPubKey)
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey))
+
+		// New cons-addr holds the full balance, old entry is gone.
+		allocatedAfter, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, newConsAddr.String())
+		require.NoError(t, err)
+		require.Equal(t, allocatedBefore.Fees, allocatedAfter.Fees)
+
+		_, err = f.poaKeeper.validatorAllocatedFees.Get(f.ctx, oldConsAddr.String())
+		require.ErrorIs(t, err, collections.ErrNotFound)
+
+		// totalAllocatedFees is a move, not an add: unchanged across the rotation.
+		totalAfter, err := f.poaKeeper.getTotalAllocated(f.ctx)
+		require.NoError(t, err)
+		require.Equal(t, totalBefore, totalAfter)
+	})
+
+	t.Run("operator withdraws full balance after rotation", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+
+		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
+		require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey))
+
+		coins, err := f.poaKeeper.WithdrawValidatorFees(f.ctx, operatorAddr)
+		require.NoError(t, err)
+		require.Equal(t, fees, coins)
+		require.Equal(t, fees, f.bankKeeper.GetAllBalances(f.ctx, operatorAddr))
+	})
+
+	t.Run("zero accrued fees is a clean no-op for fee state", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, oldConsAddr, _ := createRotatableValidator(t, f, 100)
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		newConsAddr := sdk.GetConsAddress(newPubKey)
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey))
+
+		// No spurious entry under either cons-addr.
+		_, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, oldConsAddr.String())
+		require.ErrorIs(t, err, collections.ErrNotFound)
+		_, err = f.poaKeeper.validatorAllocatedFees.Get(f.ctx, newConsAddr.String())
+		require.ErrorIs(t, err, collections.ErrNotFound)
+
+		totalAllocated, err := f.poaKeeper.getTotalAllocated(f.ctx)
+		require.NoError(t, err)
+		require.True(t, totalAllocated.IsZero())
+	})
+
+	t.Run("withdrawable fees identical before and after rotation", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+
+		// Accrue fees by sending coins to the fee collector module account.
+		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
+
+		req := &poatypes.QueryWithdrawableFeesRequest{OperatorAddress: operatorAddr.String()}
+		before, err := f.poaKeeper.WithdrawableFees(f.ctx, req)
+		require.NoError(t, err)
+		require.Equal(t, sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(1000))}, before.Fees.Fees)
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		require.NoError(t, f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey))
+
+		// Query is keyed by operator address (unchanged), so it reports the same balance.
+		after, err := f.poaKeeper.WithdrawableFees(f.ctx, req)
+		require.NoError(t, err)
+		require.Equal(t, before.Fees.Fees, after.Fees.Fees)
+
+		// Withdraw the full pre-rotation balance.
+		coins, err := f.poaKeeper.WithdrawValidatorFees(f.ctx, operatorAddr)
+		require.NoError(t, err)
+		expected, _ := before.Fees.Fees.TruncateDecimal()
+		require.Equal(t, expected, coins)
+	})
+
+	t.Run("rotation fails closed when destination cons-addr already holds fees", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+
+		// Accrue fees so the source has an entry to migrate.
+		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
+		require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		newConsAddr := sdk.GetConsAddress(newPubKey)
+
+		// Seed an orphan fee entry at the destination (no validator lives there,
+		// so the validators.Has guard doesn't catch it). A blind Set would drop
+		// this and strand the fees.
+		orphan := poatypes.ValidatorFees{Fees: sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 500))}
+		require.NoError(t, f.poaKeeper.validatorAllocatedFees.Set(f.ctx, newConsAddr.String(), orphan))
+
+		err := f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey)
+		require.ErrorIs(t, err, poatypes.ErrConsensusPubKeyInUse)
+
+		// The guard fires before the Set, so the orphan entry is untouched.
+		stillThere, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, newConsAddr.String())
+		require.NoError(t, err)
+		require.Equal(t, orphan.Fees, stillThere.Fees)
+	})
+
+	t.Run("rotation fails closed on an occupied destination even with zero source fees", func(t *testing.T) {
+		f := setupTest(t)
+		operatorAddr, _, _ := createRotatableValidator(t, f, 100)
+
+		newPubKey := ed25519.GenPrivKey().PubKey()
+		newConsAddr := sdk.GetConsAddress(newPubKey)
+
+		orphan := poatypes.ValidatorFees{Fees: sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 500))}
+		require.NoError(t, f.poaKeeper.validatorAllocatedFees.Set(f.ctx, newConsAddr.String(), orphan))
+
+		// The rotating validator has accrued nothing, so the source entry is
+		// absent. The destination guard must still reject.
+		err := f.poaKeeper.RotateConsPubKey(f.ctx, operatorAddr, newPubKey)
+		require.ErrorIs(t, err, poatypes.ErrConsensusPubKeyInUse)
+
+		// The operator does not inherit the orphan balance.
+		stillThere, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, newConsAddr.String())
+		require.NoError(t, err)
+		require.Equal(t, orphan.Fees, stillThere.Fees)
 	})
 }

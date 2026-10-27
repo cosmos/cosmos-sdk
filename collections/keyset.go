@@ -54,65 +54,65 @@ func NewKeySet[K any](
 	if o.uncheckedValue {
 		vc = codec.NewAltValueCodec(vc, func(_ []byte) (NoValue, error) { return NoValue{}, nil })
 	}
-	return (KeySet[K])(NewMap(schema, prefix, name, keyCodec, vc, withMapSecondaryIndex(o.isSecondaryIndex)))
+	return KeySet[K](NewMap(schema, prefix, name, keyCodec, vc, withMapSecondaryIndex(o.isSecondaryIndex)))
 }
 
 // Set adds the key to the KeySet. Errors on encoding problems.
 func (k KeySet[K]) Set(ctx context.Context, key K) error {
-	return (Map[K, NoValue])(k).Set(ctx, key, NoValue{})
+	return Map[K, NoValue](k).Set(ctx, key, NoValue{})
 }
 
 // Has returns if the key is present in the KeySet.
 // An error is returned only in case of encoding problems.
 func (k KeySet[K]) Has(ctx context.Context, key K) (bool, error) {
-	return (Map[K, NoValue])(k).Has(ctx, key)
+	return Map[K, NoValue](k).Has(ctx, key)
 }
 
 // Remove removes the key for the KeySet. An error is returned in case of
 // encoding error, it won't report through the error if the key was
 // removed or not.
 func (k KeySet[K]) Remove(ctx context.Context, key K) error {
-	return (Map[K, NoValue])(k).Remove(ctx, key)
+	return Map[K, NoValue](k).Remove(ctx, key)
 }
 
 // Iterate iterates over the keys given the provided Ranger. If ranger is nil,
 // the KeySetIterator will include all the existing keys within the KeySet.
 func (k KeySet[K]) Iterate(ctx context.Context, ranger Ranger[K]) (KeySetIterator[K], error) {
-	iter, err := (Map[K, NoValue])(k).Iterate(ctx, ranger)
+	iter, err := Map[K, NoValue](k).Iterate(ctx, ranger)
 	if err != nil {
 		return KeySetIterator[K]{}, err
 	}
 
-	return (KeySetIterator[K])(iter), nil
+	return KeySetIterator[K](iter), nil
 }
 
 func (k KeySet[K]) IterateRaw(ctx context.Context, start, end []byte, order Order) (Iterator[K, NoValue], error) {
-	return (Map[K, NoValue])(k).IterateRaw(ctx, start, end, order)
+	return Map[K, NoValue](k).IterateRaw(ctx, start, end, order)
 }
 
 // Walk provides the same functionality as Map.Walk, but callbacks the walk
 // function only with the key.
 func (k KeySet[K]) Walk(ctx context.Context, ranger Ranger[K], walkFunc func(key K) (stop bool, err error)) error {
-	return (Map[K, NoValue])(k).Walk(ctx, ranger, func(key K, value NoValue) (bool, error) { return walkFunc(key) })
+	return Map[K, NoValue](k).Walk(ctx, ranger, func(key K, value NoValue) (bool, error) { return walkFunc(key) })
 }
 
 // Clear clears the KeySet using the provided Ranger. Refer to Map.Clear for
 // behavioral documentation.
 func (k KeySet[K]) Clear(ctx context.Context, ranger Ranger[K]) error {
-	return (Map[K, NoValue])(k).Clear(ctx, ranger)
+	return Map[K, NoValue](k).Clear(ctx, ranger)
 }
 
-func (k KeySet[K]) KeyCodec() codec.KeyCodec[K]           { return (Map[K, NoValue])(k).KeyCodec() }
-func (k KeySet[K]) ValueCodec() codec.ValueCodec[NoValue] { return (Map[K, NoValue])(k).ValueCodec() }
+func (k KeySet[K]) KeyCodec() codec.KeyCodec[K]           { return Map[K, NoValue](k).KeyCodec() }
+func (k KeySet[K]) ValueCodec() codec.ValueCodec[NoValue] { return Map[K, NoValue](k).ValueCodec() }
 
 // KeySetIterator works like an Iterator, but it does not expose any API to deal with values.
 type KeySetIterator[K any] Iterator[K, NoValue]
 
-func (i KeySetIterator[K]) Key() (K, error)    { return (Iterator[K, NoValue])(i).Key() }
-func (i KeySetIterator[K]) Keys() ([]K, error) { return (Iterator[K, NoValue])(i).Keys() }
-func (i KeySetIterator[K]) Next()              { (Iterator[K, NoValue])(i).Next() }
-func (i KeySetIterator[K]) Valid() bool        { return (Iterator[K, NoValue])(i).Valid() }
-func (i KeySetIterator[K]) Close() error       { return (Iterator[K, NoValue])(i).Close() }
+func (i KeySetIterator[K]) Key() (K, error)    { return Iterator[K, NoValue](i).Key() }
+func (i KeySetIterator[K]) Keys() ([]K, error) { return Iterator[K, NoValue](i).Keys() }
+func (i KeySetIterator[K]) Next()              { Iterator[K, NoValue](i).Next() }
+func (i KeySetIterator[K]) Valid() bool        { return Iterator[K, NoValue](i).Valid() }
+func (i KeySetIterator[K]) Close() error       { return Iterator[K, NoValue](i).Close() }
 
 var noValueCodec codec.ValueCodec[NoValue] = NoValue{}
 

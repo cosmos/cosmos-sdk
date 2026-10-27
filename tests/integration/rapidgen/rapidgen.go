@@ -123,7 +123,8 @@ var (
 			GenOpts.WithDisallowNil().
 				WithAnyTypes(
 					&feegrantapi.BasicAllowance{},
-					&feegrantapi.PeriodicAllowance{}).
+					&feegrantapi.PeriodicAllowance{},
+				).
 				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.BasicAllowance{}).
 				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.PeriodicAllowance{}),
 		),
@@ -173,6 +174,11 @@ var (
 		GenType(&stakingtypes.MsgUndelegate{}, &stakingapi.MsgUndelegate{}, GenOpts.WithDisallowNil()),
 		GenType(&stakingtypes.MsgBeginRedelegate{}, &stakingapi.MsgBeginRedelegate{}, GenOpts.WithDisallowNil()),
 		GenType(&stakingtypes.MsgUpdateParams{}, &stakingapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
+		GenType(&stakingtypes.MsgRotateConsPubKey{}, &stakingapi.MsgRotateConsPubKey{},
+			GenOpts.WithDisallowNil().
+				WithAnyTypes(&ed25519.PubKey{}).
+				WithInterfaceHint("cosmos.crypto.PubKey", &ed25519.PubKey{}),
+		),
 
 		// upgrade
 		GenType(&upgradetypes.MsgSoftwareUpgrade{}, &upgradeapi.MsgSoftwareUpgrade{}, GenOpts.WithDisallowNil()),
@@ -210,7 +216,8 @@ var (
 			GenOpts.WithDisallowNil().
 				WithAnyTypes(
 					&feegrantapi.BasicAllowance{},
-					&feegrantapi.PeriodicAllowance{}).
+					&feegrantapi.PeriodicAllowance{},
+				).
 				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.BasicAllowance{}).
 				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.PeriodicAllowance{}),
 		),

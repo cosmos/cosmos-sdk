@@ -125,8 +125,8 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 		return nil, err
 	}
 
-	if (!msg.Params.BaseProposerReward.IsNil() && !msg.Params.BaseProposerReward.IsZero()) || //nolint:staticcheck // deprecated but kept for backwards compatibility
-		(!msg.Params.BonusProposerReward.IsNil() && !msg.Params.BonusProposerReward.IsZero()) { //nolint:staticcheck // deprecated but kept for backwards compatibility
+	if (!msg.Params.BaseProposerReward.IsNil() && !msg.Params.BaseProposerReward.IsZero()) ||
+		(!msg.Params.BonusProposerReward.IsNil() && !msg.Params.BonusProposerReward.IsZero()) {
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot update base or bonus proposer reward because these are deprecated fields")
 	}
 
@@ -209,7 +209,7 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 			return nil, err
 		}
 		current := rewards.Rewards
-		historical, err := k.GetValidatorHistoricalRewards(ctx, valAddr, rewards.Period-1)
+		historical, err := k.getValidatorHistoricalRewards(ctx, valAddr, rewards.Period-1, true)
 		if err != nil {
 			return nil, err
 		}

@@ -210,7 +210,7 @@ func newKeystore(kr keyring.Keyring, cdc codec.Codec, backend string, opts ...Op
 	// Default options for keybase, these can be overwritten using the
 	// Option function
 	options := Options{
-		SupportedAlgos:       SigningAlgoList{hd.Secp256k1},
+		SupportedAlgos:       SigningAlgoList{hd.Secp256k1, hd.MlDsa65},
 		SupportedAlgosLedger: SigningAlgoList{hd.Secp256k1},
 	}
 
@@ -334,6 +334,18 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 	return nil
 }
 
+// generatePrivKey runs the signing algorithm's key generator on raw bytes,
+// converting a panic from invalid input (e.g. a wrong-length ML-DSA-65 seed
+// supplied via import-hex) into a returned error instead of crashing.
+func generatePrivKey(algo SignatureAlgo, bz []byte) (priv types.PrivKey, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid private key bytes for %s: %v", algo.Name(), r)
+		}
+	}()
+	return algo.Generate()(bz), nil
+}
+
 func (ks keystore) ImportPrivKeyHex(uid, privKey, algoStr string) error {
 	if _, err := ks.Key(uid); err == nil {
 		return errorsmod.Wrap(ErrOverwriteKey, uid)
@@ -349,7 +361,10 @@ func (ks keystore) ImportPrivKeyHex(uid, privKey, algoStr string) error {
 	if err != nil {
 		return err
 	}
-	priv := algo.Generate()(decodedPriv)
+	priv, err := generatePrivKey(algo, decodedPriv)
+	if err != nil {
+		return err
+	}
 	_, err = ks.writeLocalKey(uid, priv)
 	if err != nil {
 		return err
@@ -640,11 +655,6 @@ func SignWithLedger(k *Record, msg []byte, signMode signing.SignMode) (sig []byt
 	}
 
 	switch signMode {
-	case signing.SignMode_SIGN_MODE_TEXTUAL:
-		sig, err = priv.Sign(msg)
-		if err != nil {
-			return nil, nil, err
-		}
 	case signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 		sig, err = priv.SignLedgerAminoJSON(msg)
 		if err != nil {

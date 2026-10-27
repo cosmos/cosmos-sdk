@@ -17,8 +17,12 @@ package keeper
 import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
+	sdkerrors "cosmossdk.io/errors"
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	v3 "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/migrations/v3"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -95,8 +99,40 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, cdc codec.BinaryCodec, genesis *ty
 		}
 	}
 
-	// Return queued validator updates
-	updates := k.ReapValidatorUpdates(ctx)
+	// Exports from poa v1.x can carry rounding dust above the module balance;
+	// trim it the way the v3 migration does. v1.x rounded each validator's
+	// share to nearest, overshooting by less than 1e-18 per validator, and the
+	// overshoot did not build up across checkpoints. Validators are never
+	// deleted, only re-keyed, so the dust is at most 1e-18 per exported
+	// validator per denom. A larger excess is not rounding: the genesis is
+	// inconsistent, or bank's genesis has not run before poa's, so the balance
+	// reads as empty.
+	moduleAddr := k.authKeeper.GetModuleAddress(types.ModuleName)
+	balance := sdk.NewDecCoinsFromCoins(k.bankKeeper.GetAllBalances(ctx, moduleAddr)...)
+	excess := totalAllocated.Sub(totalAllocated.Intersect(balance))
+	maxDust := math.LegacyNewDecWithPrec(int64(len(genesis.Validators)), math.LegacyPrecision)
+	for _, coin := range excess {
+		if coin.Amount.GT(maxDust) {
+			return nil, sdkerrors.Wrapf(
+				types.ErrInvalidAllocatedFees,
+				"genesis allocated fees %s exceed module balance %s by %s, more than the rounding dust limit of %s per denom; bank genesis must run before poa",
+				totalAllocated, balance, excess, maxDust,
+			)
+		}
+	}
+	if !excess.IsZero() {
+		if err := v3.Migrate(ctx, balance, k.validatorAllocatedFees, k.totalAllocatedFees); err != nil {
+			return nil, err
+		}
+	}
 
+	// Compute the initial changeset and seed LastCommittedPower
+	updates, err := k.ReapValidatorUpdates(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := k.SetLastCommittedPower(ctx, updates); err != nil {
+		return nil, err
+	}
 	return updates, nil
 }

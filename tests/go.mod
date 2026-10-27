@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/tests
 
-go 1.26.10
+go 1.27.3
 
 require (
 	cosmossdk.io/api v1.1.0
@@ -15,6 +15,8 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.55.0
+	github.com/cosmos/cosmos-sdk/enterprise/group v0.0.0-00010101000000-000000000000
+	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/spf13/cobra v1.10.2
@@ -25,11 +27,6 @@ require (
 	google.golang.org/protobuf v1.36.12
 	gotest.tools/v3 v3.5.2
 	pgregory.net/rapid v1.3.0
-)
-
-require (
-	github.com/cosmos/cosmos-sdk/enterprise/group v0.0.0-00010101000000-000000000000
-	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0
 )
 
 require (

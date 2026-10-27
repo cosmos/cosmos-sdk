@@ -43,6 +43,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [#26672](https://github.com/cosmos/cosmos-sdk/pull/26672) An unordered transaction whose `timeout_timestamp` equals the block time is now rejected
 * (x/gov) [#26827](https://github.com/cosmos/cosmos-sdk/pull/26827) Remove the unused `types.ParamSubspace` interface, a leftover from the `x/params` removal in v0.55.
 
+### State Machine Breaking
+
+* (enterprise/poa) [#26875](https://github.com/cosmos/cosmos-sdk/pull/26875) Truncate per-validator fee shares so a checkpoint never allocates more than the module balance, and add a v2 → v3 store migration that trims any excess already allocated. Previously, rounding could push allocated fees above the balance and make every fee checkpoint (validator create/update, key rotation, fee withdrawal) panic until a fee in that denom arrived. Allocated fees exceeding the balance now return `ErrInvalidAllocatedFees` instead of panicking. `InitGenesis` now checks imported allocated fees against the module balance, so bank genesis must run before poa: an excess of at most 1e-18 per exported validator per denom (v1.x rounding dust) is trimmed, and anything larger fails with `ErrInvalidAllocatedFees`.
+
 ### Features
 
 * (x/distribution) [#26749](https://github.com/cosmos/cosmos-sdk/pull/26749) Add a `claimable` field to `QueryDelegationTotalRewardsResponse`, reporting the withdrawable amount as `sdk.Coins` by truncating each delegation reward the way `Msg/WithdrawDelegatorReward` does. `total` keeps its documented meaning as the raw `DecCoins` sum ([#24406](https://github.com/cosmos/cosmos-sdk/issues/24406)).

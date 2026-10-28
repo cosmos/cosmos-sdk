@@ -119,11 +119,11 @@ func (p Params) ValidateBasic() error {
 	}
 
 	if p.MaxDepositPeriod == nil {
-		return fmt.Errorf("maximum deposit period must not be nil: %d", p.MaxDepositPeriod)
+		return fmt.Errorf("maximum deposit period must not be nil")
 	}
 
 	if p.MaxDepositPeriod.Seconds() <= 0 {
-		return fmt.Errorf("maximum deposit period must be positive: %d", p.MaxDepositPeriod)
+		return fmt.Errorf("maximum deposit period must be positive: %s", p.MaxDepositPeriod)
 	}
 
 	quorum, err := sdkmath.LegacyNewDecFromStr(p.Quorum)
@@ -181,7 +181,7 @@ func (p Params) ValidateBasic() error {
 	}
 
 	if p.ExpeditedVotingPeriod == nil {
-		return fmt.Errorf("expedited voting period must not be nil: %d", p.ExpeditedVotingPeriod)
+		return fmt.Errorf("expedited voting period must not be nil")
 	}
 	if p.ExpeditedVotingPeriod.Seconds() <= 0 {
 		return fmt.Errorf("expedited voting period must be positive: %s", p.ExpeditedVotingPeriod)

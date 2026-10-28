@@ -85,7 +85,7 @@ func (i *ReversePair[K1, K2, Value]) Iterate(ctx context.Context, ranger collect
 	if err != nil {
 		return iter, err
 	}
-	return (ReversePairIterator[K2, K1])(sIter), nil
+	return ReversePairIterator[K2, K1](sIter), nil
 }
 
 // MatchExact will return an iterator containing only the primary keys starting with the provided second part of the multipart pair key.
@@ -158,17 +158,17 @@ func (m ReversePairIterator[K2, K1]) PrimaryKeys() (pairs []collections.Pair[K1,
 }
 
 func (m ReversePairIterator[K2, K1]) FullKey() (p collections.Pair[K2, K1], err error) {
-	return (collections.KeySetIterator[collections.Pair[K2, K1]])(m).Key()
+	return collections.KeySetIterator[collections.Pair[K2, K1]](m).Key()
 }
 
 func (m ReversePairIterator[K2, K1]) Next() {
-	(collections.KeySetIterator[collections.Pair[K2, K1]])(m).Next()
+	collections.KeySetIterator[collections.Pair[K2, K1]](m).Next()
 }
 
 func (m ReversePairIterator[K2, K1]) Valid() bool {
-	return (collections.KeySetIterator[collections.Pair[K2, K1]])(m).Valid()
+	return collections.KeySetIterator[collections.Pair[K2, K1]](m).Valid()
 }
 
 func (m ReversePairIterator[K2, K1]) Close() error {
-	return (collections.KeySetIterator[collections.Pair[K2, K1]])(m).Close()
+	return collections.KeySetIterator[collections.Pair[K2, K1]](m).Close()
 }

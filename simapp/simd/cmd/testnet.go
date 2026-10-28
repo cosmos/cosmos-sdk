@@ -606,7 +606,8 @@ func startTestnet(cmd *cobra.Command, args startArgs) error {
 	if _, err := os.Stat(baseDir); !os.IsNotExist(err) {
 		return fmt.Errorf(
 			"testnets directory already exists for chain-id '%s': %s, please remove or select a new --chain-id",
-			networkConfig.ChainID, baseDir)
+			networkConfig.ChainID, baseDir,
+		)
 	}
 
 	testnet, err := network.New(networkLogger, baseDir, networkConfig)

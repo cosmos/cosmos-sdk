@@ -31,7 +31,8 @@ func TestRegisterMsgService(t *testing.T) {
 		depinject.Configs(
 			makeMinimalConfig(),
 			depinject.Supply(log.NewTestLogger(t)),
-		), &appBuilder, &registry)
+		), &appBuilder, &registry,
+	)
 	require.NoError(t, err)
 	app := appBuilder.Build(dbm.NewMemDB())
 
@@ -63,7 +64,8 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 		depinject.Configs(
 			makeMinimalConfig(),
 			depinject.Supply(log.NewTestLogger(t)),
-		), &appBuilder, &registry)
+		), &appBuilder, &registry,
+	)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
 	app := appBuilder.Build(db)
@@ -96,7 +98,8 @@ func TestHybridHandlerByMsgName(t *testing.T) {
 		depinject.Configs(
 			makeMinimalConfig(),
 			depinject.Supply(log.NewTestLogger(t)),
-		), &appBuilder, &registry)
+		), &appBuilder, &registry,
+	)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
 	app := appBuilder.Build(db)
@@ -133,7 +136,8 @@ func TestMsgService(t *testing.T) {
 		depinject.Configs(
 			makeMinimalConfig(),
 			depinject.Supply(log.NewNopLogger()),
-		), &appBuilder, &cdc, &interfaceRegistry)
+		), &appBuilder, &cdc, &interfaceRegistry,
+	)
 	require.NoError(t, err)
 	app := appBuilder.Build(dbm.NewMemDB())
 
@@ -188,7 +192,8 @@ func TestMsgService(t *testing.T) {
 	}
 	sigV2, err = tx.SignWithPrivKey(
 		context.TODO(), defaultSignMode, signerData,
-		txBuilder, priv, txConfig, 0)
+		txBuilder, priv, txConfig, 0,
+	)
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sigV2)
 	require.NoError(t, err)

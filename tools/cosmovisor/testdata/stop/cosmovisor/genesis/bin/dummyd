@@ -1,0 +1,15 @@
+#!/bin/sh
+
+if [ "$1" = status ]; then
+    echo '{"sync_info":{"latest_block_height":"100"}}'
+    exit 0
+fi
+
+trap 'exit 0' TERM INT
+if [ -n "$COSMOVISOR_CUSTOM_PREUPGRADE" ]; then
+    echo '{"name":"chain2","height":10}' > "$2"
+fi
+echo ready
+while :; do
+    sleep 0.05
+done

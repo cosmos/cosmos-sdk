@@ -4,11 +4,15 @@ package cosmovisor_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 
@@ -88,6 +92,146 @@ func TestLaunchProcess(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, rPath, currentBin)
+}
+
+// TestLaunchProcessSignalAfterUpgrade will check that a SIGTERM received after an upgrade
+// is forwarded to the upgraded binary, and that the pre-upgrade run does not exit cosmovisor
+func TestLaunchProcessSignalAfterUpgrade(t *testing.T) {
+	// binaries from testdata/signal directory
+	cfg := prepareConfig(
+		t,
+		fmt.Sprintf("%s/%s", workDir, "testdata/signal"),
+		cosmovisor.Config{
+			Name:             "dummyd",
+			PollInterval:     15,
+			UnsafeSkipBackup: true,
+		},
+	)
+
+	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmosvisor")
+
+	// should run the genesis binary and produce expected output
+	stdin, _ := os.Open(os.DevNull)
+	stdout, stderr := newBuffer(), newBuffer()
+	currentBin, err := cfg.CurrentBin()
+	require.NoError(t, err)
+	rPath, err := filepath.EvalSymlinks(cfg.GenesisBin())
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
+
+	launcher, err := cosmovisor.NewLauncher(logger, cfg)
+	require.NoError(t, err)
+
+	upgradeFile := cfg.UpgradeInfoFilePath()
+
+	args := []string{"foo", "bar", "1234", upgradeFile}
+	doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
+	require.NoError(t, err)
+	require.True(t, doUpgrade)
+	require.Empty(t, stderr.String())
+	require.Equal(t, fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"chain2\" NEEDED at height: 49: {}\n", upgradeFile), stdout.String())
+
+	// ensure this is upgraded now and runs until it is signaled
+	currentBin, err = cfg.CurrentBin()
+	require.NoError(t, err)
+	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain2"))
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
+	args = []string{"second", "run", "--verbose"}
+	stdout.Reset()
+	stderr.Reset()
+
+	runErr := make(chan error, 1)
+	go func() {
+		doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
+		runErr <- err
+	}()
+	require.Eventually(t, func() bool {
+		return strings.Contains(stdout.String(), "Args: second run --verbose\n")
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// the signal goes to the whole test process, so no test in this package may run in parallel
+	require.NoError(t, syscall.Kill(os.Getpid(), syscall.SIGTERM))
+	select {
+	case err = <-runErr:
+	case <-time.After(10 * time.Second):
+		require.FailNow(t, "SIGTERM was not forwarded to the upgraded binary")
+	}
+	require.NoError(t, err)
+	require.False(t, doUpgrade)
+	require.Empty(t, stderr.String())
+	require.Equal(t, "Chain 2 is live!\nArgs: second run --verbose\nReceived SIGTERM\n", stdout.String())
+
+	// a signal handler left over from the first run would call os.Exit(1)
+	// once its batch upgrade watcher stops, which takes up to a second
+	time.Sleep(2 * time.Second)
+}
+
+func TestHelperRunLauncher(t *testing.T) {
+	if os.Getenv("COSMOVISOR_HELPER") != "1" {
+		return
+	}
+	cfg := &cosmovisor.Config{
+		Home:             os.Getenv("DAEMON_HOME"),
+		Name:             "dummyd",
+		PollInterval:     10 * time.Millisecond,
+		UnsafeSkipBackup: true,
+		CustomPreUpgrade: os.Getenv("COSMOVISOR_CUSTOM_PREUPGRADE"),
+		GRPCAddress:      "localhost:9090",
+	}
+	require.NoError(t, os.Chdir(cfg.Root()))
+	launcher, err := cosmovisor.NewLauncher(cfg.Logger(os.Stdout), cfg)
+	require.NoError(t, err)
+	for {
+		upgrade, err := launcher.Run([]string{"start", cfg.UpgradeInfoFilePath()}, nil, os.Stdout, os.Stderr)
+		require.NoError(t, err)
+		if !upgrade {
+			return
+		}
+		fmt.Println("upgrade detected, relaunching")
+	}
+}
+
+func TestLaunchProcessStop(t *testing.T) {
+	for name, hook := range map[string]string{"group": "", "pre-upgrade": "preupgrade.sh"} {
+		t.Run(name, func(t *testing.T) {
+			home := copyTestData(t, filepath.Join(workDir, "testdata", "stop"))
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			executable, err := os.Executable()
+			require.NoError(t, err)
+			cmd := exec.CommandContext(ctx, executable, "-test.run=^TestHelperRunLauncher$")
+			cmd.Env = append(os.Environ(), "COSMOVISOR_HELPER=1", "DAEMON_HOME="+home, "COSMOVISOR_CUSTOM_PREUPGRADE="+hook)
+			cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+			cmd.WaitDelay = time.Second
+			output := newBuffer()
+			cmd.Stdout, cmd.Stderr = output, output
+			require.NoError(t, cmd.Start())
+			defer func() {
+				_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+				if cmd.ProcessState == nil {
+					_ = cmd.Wait()
+				}
+			}()
+			require.Eventually(t, func() bool {
+				if hook != "" {
+					_, err := os.Stat(filepath.Join(home, "hook-started"))
+					return err == nil
+				}
+				return strings.Contains(output.String(), "ready\n") &&
+					strings.Contains(output.String(), "starting the batch watcher loop")
+			}, 5*time.Second, 10*time.Millisecond)
+			pid := cmd.Process.Pid
+			if hook == "" {
+				pid = -pid
+			}
+			require.NoError(t, syscall.Kill(pid, syscall.SIGTERM))
+			require.NoError(t, cmd.Wait(), "helper output:\n%s", output.String())
+			require.NotContains(t, output.String(), "process already finished")
+			require.NotContains(t, output.String(), "upgrade detected, relaunching")
+			require.NotContains(t, output.String(), "upgraded app started")
+		})
+	}
 }
 
 // TestPlanDisableRecase will test upgrades without lower case plan names

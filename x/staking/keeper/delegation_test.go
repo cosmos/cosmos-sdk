@@ -1243,55 +1243,43 @@ func (s *KeeperTestSuite) TestSetUnbondingDelegationEntry() {
 	require.Equal(uint64(2), resUnbonding.Entries[1].UnbondingId)
 }
 
-func (s *KeeperTestSuite) TestSetUnbondingDelegationEntryHookError() {
-	ctx, keeper := s.ctx, s.stakingKeeper
-	require := s.Require()
-
-	delAddrs, valAddrs := createValAddrs(1)
-	delAddr := delAddrs[0]
-	valAddr := valAddrs[0]
-
-	hookErr := errors.New("hook failed")
-	ctrl := gomock.NewController(s.T())
-	hooks := testutil.NewMockStakingHooks(ctrl)
-	hooks.EXPECT().AfterUnbondingInitiated(gomock.Any(), gomock.Any()).Return(hookErr)
-	keeper.SetHooks(hooks)
-
-	_, err := keeper.SetUnbondingDelegationEntry(
-		ctx,
-		delAddr,
-		valAddr,
-		0,
-		time.Unix(0, 0).UTC(),
-		math.NewInt(5),
-	)
-	require.ErrorIs(err, hookErr)
-}
-
-func (s *KeeperTestSuite) TestSetRedelegationEntryHookError() {
-	ctx, keeper := s.ctx, s.stakingKeeper
-	require := s.Require()
-
+func (s *KeeperTestSuite) TestAfterUnbondingInitiatedHookError() {
 	delAddrs, valAddrs := createValAddrs(2)
-	delAddr := delAddrs[0]
-	valSrcAddr, valDstAddr := valAddrs[0], valAddrs[1]
+	delAddr, valSrcAddr, valDstAddr := delAddrs[0], valAddrs[0], valAddrs[1]
+	minTime := time.Unix(0, 0).UTC()
 
-	hookErr := errors.New("hook failed")
-	ctrl := gomock.NewController(s.T())
-	hooks := testutil.NewMockStakingHooks(ctrl)
-	hooks.EXPECT().AfterUnbondingInitiated(gomock.Any(), gomock.Any()).Return(hookErr)
-	keeper.SetHooks(hooks)
+	testCases := []struct {
+		name string
+		call func() error
+	}{
+		{
+			name: "unbonding delegation entry",
+			call: func() error {
+				_, err := s.stakingKeeper.SetUnbondingDelegationEntry(s.ctx, delAddr, valSrcAddr, 0, minTime, math.NewInt(5))
+				return err
+			},
+		},
+		{
+			name: "redelegation entry",
+			call: func() error {
+				_, err := s.stakingKeeper.SetRedelegationEntry(s.ctx, delAddr, valSrcAddr, valDstAddr, 0, minTime,
+					math.NewInt(5), math.LegacyNewDec(5), math.LegacyNewDec(5))
+				return err
+			},
+		},
+	}
 
-	_, err := keeper.SetRedelegationEntry(
-		ctx,
-		delAddr,
-		valSrcAddr,
-		valDstAddr,
-		0,
-		time.Unix(0, 0).UTC(),
-		math.NewInt(5),
-		math.LegacyNewDec(5),
-		math.LegacyNewDec(5),
-	)
-	require.ErrorIs(err, hookErr)
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// SetHooks panics if called twice, so each case needs a fresh keeper.
+			s.SetupTest()
+
+			hookErr := errors.New("hook failed")
+			hooks := testutil.NewMockStakingHooks(gomock.NewController(s.T()))
+			hooks.EXPECT().AfterUnbondingInitiated(gomock.Any(), gomock.Any()).Return(hookErr)
+			s.stakingKeeper.SetHooks(hooks)
+
+			s.Require().ErrorIs(tc.call(), hookErr)
+		})
+	}
 }

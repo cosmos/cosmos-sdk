@@ -296,7 +296,7 @@ Changes on `main` since `v0.55.0`.
 
 ### Staking: AfterUnbondingInitiated Hook Errors
 
-`x/staking` no longer ignores errors from the `AfterUnbondingInitiated` hook ([#PRNUM](https://github.com/cosmos/cosmos-sdk/pull/PRNUM)). If a staking hook returns an error, `MsgUndelegate` and `MsgBeginRedelegate` now fail; before, the error was only logged and the unbonding went ahead. The SDK's own hooks always return nil, so apps without custom hooks see no change.
+`x/staking` no longer ignores errors from the `AfterUnbondingInitiated` hook ([#26925](https://github.com/cosmos/cosmos-sdk/pull/26925)). If a staking hook returns an error, `MsgUndelegate` and `MsgBeginRedelegate` now fail; before, the error was only logged and the unbonding went ahead. The SDK's own hooks always return nil, so apps without custom hooks see no change.
 
 If your app has a custom hook:
 

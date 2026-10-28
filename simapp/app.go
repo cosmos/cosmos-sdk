@@ -79,6 +79,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/safety"
+	safetykeeper "github.com/cosmos/cosmos-sdk/x/safety/keeper"
+	safetytypes "github.com/cosmos/cosmos-sdk/x/safety/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -143,6 +146,7 @@ type SimApp struct {
 	FeeGrantKeeper feegrantkeeper.Keeper
 	AuthzKeeper    authzkeeper.Keeper
 	EpochsKeeper   *epochskeeper.Keeper
+	SafetyKeeper   safetykeeper.Keeper
 
 	// the module manager
 	ModuleManager      *module.Manager
@@ -245,6 +249,7 @@ func NewSimApp(
 		evidencetypes.StoreKey,
 		authzkeeper.StoreKey,
 		epochstypes.StoreKey,
+		safetytypes.StoreKey,
 	)
 
 	stores := make([]storetypes.StoreKey, 0, len(keys))
@@ -441,6 +446,18 @@ func NewSimApp(
 		),
 	)
 
+	app.SafetyKeeper = safetykeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[safetytypes.StoreKey]),
+		app.AccountKeeper.AddressCodec(),
+		interfaceRegistry,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	// The MsgServiceRouter checks every msg handler, including hybrid
+	// handlers, against x/safety. It reads the breaker on each call, so this
+	// can run before or after the module services are registered.
+	app.SetCircuitBreaker(app.SafetyKeeper)
+
 	/****  Module Options ****/
 
 	// NOTE: Any module instantiated in the module manager that is later modified
@@ -464,6 +481,7 @@ func NewSimApp(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		epochs.NewAppModule(app.EpochsKeeper),
+		safety.NewAppModule(app.SafetyKeeper),
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
@@ -512,6 +530,8 @@ func NewSimApp(
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
 	// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
+	// NOTE: The safety module must occur after genutils. Genutils delivers gentxs through the router,
+	// and a genesis disabled pattern that covers MsgCreateValidator would otherwise block them.
 	genesisModuleOrder := []string{
 		authtypes.ModuleName,
 		banktypes.ModuleName,
@@ -528,6 +548,7 @@ func NewSimApp(
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		epochstypes.ModuleName,
+		safetytypes.ModuleName,
 	}
 
 	exportModuleOrder := []string{
@@ -546,6 +567,7 @@ func NewSimApp(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		epochstypes.ModuleName,
+		safetytypes.ModuleName,
 	}
 
 	app.ModuleManager.SetOrderInitGenesis(genesisModuleOrder...)
@@ -633,6 +655,7 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 				ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
 				ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
 			},
+			CircuitBreaker: app.SafetyKeeper,
 		},
 	)
 	if err != nil {

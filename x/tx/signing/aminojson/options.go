@@ -104,6 +104,7 @@ func (enc Encoder) getMessageEncoder(message protoreflect.Message) MessageEncode
 	return nil
 }
 
+//nolint:staticcheck // SA1019: protoimpl.ExtensionInfo is populated through these fields, as generated code does
 var customTypeExtension = &protoimpl.ExtensionInfo{
 	ExtendedType:  (*descriptorpb.FieldOptions)(nil),
 	ExtensionType: gogo.E_Customtype.ExtensionType,

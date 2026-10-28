@@ -108,7 +108,8 @@ func (s *CLITestSuite) SetupSuite() {
 func (s *CLITestSuite) TestCLIValidateSignatures() {
 	sendTokens := sdk.NewCoins(
 		sdk.NewCoin("testtoken", math.NewInt(10)),
-		sdk.NewCoin("stake", math.NewInt(10)))
+		sdk.NewCoin("stake", math.NewInt(10)),
+	)
 
 	res, err := s.createBankMsg(s.clientCtx, s.val, sendTokens,
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))

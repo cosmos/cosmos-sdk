@@ -167,7 +167,8 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 				newGrant, err := feegrant.NewGrant(
 					sdk.AccAddress(grant.Granter),
 					sdk.AccAddress(grant.Grantee),
-					allowance)
+					allowance,
+				)
 				require.NoError(t, err)
 
 				// save the grant

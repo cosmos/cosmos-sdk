@@ -10,7 +10,6 @@ import (
 	"go.opentelemetry.io/contrib/propagators/jaeger"
 	"go.opentelemetry.io/otel"
 	otellog "go.opentelemetry.io/otel/log"
-	logglobal "go.opentelemetry.io/otel/log/global"
 	lognoop "go.opentelemetry.io/otel/log/noop"
 	metricnoop "go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/propagation"
@@ -38,7 +37,7 @@ var (
 // IsOtelLoggerEnabled reports whether the global OTel log pipeline has active exporters.
 // It returns false for the noop provider or any real provider with no log processors configured.
 func IsOtelLoggerEnabled() bool {
-	l := logglobal.GetLoggerProvider().Logger("")
+	l := otel.GetLoggerProvider().Logger("")
 	// check if loggers are enabled at SeverityFatal4, which is the most severe level.
 	// If this returns false, it means either the provider is a noop or there are no processors configured to handle logs at any severity level.
 	// NOTE: there are some edge cases in the future where maybe a real logger
@@ -132,7 +131,7 @@ func InitializeOpenTelemetry(filePath string) error {
 	otel.SetTracerProvider(openTelemetrySDK.TracerProvider())
 	otel.SetMeterProvider(openTelemetrySDK.MeterProvider())
 	loggerProvider := openTelemetrySDK.LoggerProvider()
-	logglobal.SetLoggerProvider(loggerProvider)
+	otel.SetLoggerProvider(loggerProvider)
 
 	return nil
 }
@@ -170,7 +169,7 @@ func initPropagator(propagatorTypes []string) propagation.TextMapPropagator {
 func setNoop() {
 	otel.SetTracerProvider(tracenoop.NewTracerProvider())
 	otel.SetMeterProvider(metricnoop.NewMeterProvider())
-	logglobal.SetLoggerProvider(lognoop.NewLoggerProvider())
+	otel.SetLoggerProvider(lognoop.NewLoggerProvider())
 }
 
 // ExtensionOptions provides configuration for OpenTelemetry features not yet

@@ -239,7 +239,7 @@ func enhanceCustomCmd(builder *Builder, cmd *cobra.Command, cmdType cmdType, mod
 func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
 	clientCtx := client.Context{}
 	if v := cmd.Context().Value(client.ClientContextKey); v != nil {
-		clientCtx = *(v.(*client.Context))
+		clientCtx = *v.(*client.Context)
 	}
 	flagSet := cmd.Flags()
 	if clientCtx.OutputFormat == "" || flagSet.Changed(flags.FlagOutput) {

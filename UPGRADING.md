@@ -10,6 +10,7 @@ The headline changes in this release are the removal of three legacy surfaces (`
 
 * [Breaking Changes](#breaking-changes)
     * [CometBFT Upgrade](#cometbft-upgrade)
+    * [Bank: SpendableBalances Gas](#bank-spendablebalances-gas)
     * [Removed: x/params](#removed-xparams)
     * [Removed: x/protocolpool](#removed-xprotocolpool)
     * [Removed: SIGN_MODE_TEXTUAL](#removed-sign_mode_textual)
@@ -39,6 +40,10 @@ Cosmos SDK v0.55 requires CometBFT `v0.40.0` (the v0.54.x line shipped with `v0.
 * Updated `DefaultBlockParams` ([cometbft#5987](https://github.com/cometbft/cometbft/pull/5987)). This changes defaults for new chains only; existing chains keep their on-chain consensus params.
 
 See the [CometBFT changelog](https://github.com/cometbft/cometbft/blob/main/CHANGELOG.md) for the full list.
+
+### Bank: SpendableBalances Gas
+
+`x/bank` no longer scans all balances after reading an unlocked account's requested `SpendableBalances` page. Response balances and pagination are unchanged, but gas consumption is lower. Applications that call this module-safe query during transaction execution must activate the change at a coordinated upgrade height. No store migration is required.
 
 ### Removed: x/params
 

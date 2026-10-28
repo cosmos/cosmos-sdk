@@ -79,11 +79,13 @@ func TestCLI(t *testing.T) {
 		// Assert against a couple fields that are difficult to predict in test
 		// without copying and pasting code.
 		require.NotEmpty(t, info.GoVersion)
+		require.NotEmpty(t, info.BuildDeps)
 
 		// The SDK version appears to not be set during this test, so we'll ignore it here.
 
 		// Now clear out the non-empty fields, so we can compare against a fixed value.
 		info.GoVersion = ""
+		info.BuildDeps = nil
 
 		want := version.Info{
 			Name:      testName,

@@ -394,7 +394,8 @@ func TestDisplay(t *testing.T) {
 				func() runtime.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") },
 				func() runtime.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") },
 			),
-		), &cdc)
+		), &cdc,
+	)
 	require.NoError(err)
 	bz, err := cdc.MarshalInterfaceJSON(msig)
 	require.NoError(err)

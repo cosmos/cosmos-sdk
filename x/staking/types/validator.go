@@ -334,18 +334,18 @@ func (v Validator) InvalidExRate() bool {
 
 // TokensFromShares calculates the token worth of provided shares
 func (v Validator) TokensFromShares(shares math.LegacyDec) math.LegacyDec {
-	return (shares.MulInt(v.Tokens)).Quo(v.DelegatorShares)
+	return shares.MulInt(v.Tokens).Quo(v.DelegatorShares)
 }
 
 // TokensFromSharesTruncated calculates the token worth of provided shares, truncated
 func (v Validator) TokensFromSharesTruncated(shares math.LegacyDec) math.LegacyDec {
-	return (shares.MulInt(v.Tokens)).QuoTruncate(v.DelegatorShares)
+	return shares.MulInt(v.Tokens).QuoTruncate(v.DelegatorShares)
 }
 
 // TokensFromSharesRoundUp returns the token worth of provided shares, rounded
 // up.
 func (v Validator) TokensFromSharesRoundUp(shares math.LegacyDec) math.LegacyDec {
-	return (shares.MulInt(v.Tokens)).QuoRoundUp(v.DelegatorShares)
+	return shares.MulInt(v.Tokens).QuoRoundUp(v.DelegatorShares)
 }
 
 // SharesFromTokens returns the shares of a delegation given a bond amount. It

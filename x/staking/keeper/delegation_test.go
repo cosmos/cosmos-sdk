@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"time"
 
 	"go.uber.org/mock/gomock"
@@ -1240,4 +1241,45 @@ func (s *KeeperTestSuite) TestSetUnbondingDelegationEntry() {
 	// unbondingID == 1 was skipped because the entry was merged with the existing entry with unbondingID == 0
 	// unbondingID comes from a global counter -> gaps in unbondingIDs are OK as long as every unbondingID is unique
 	require.Equal(uint64(2), resUnbonding.Entries[1].UnbondingId)
+}
+
+func (s *KeeperTestSuite) TestAfterUnbondingInitiatedHookError() {
+	delAddrs, valAddrs := createValAddrs(2)
+	delAddr, valSrcAddr, valDstAddr := delAddrs[0], valAddrs[0], valAddrs[1]
+	minTime := time.Unix(0, 0).UTC()
+
+	testCases := []struct {
+		name string
+		call func() error
+	}{
+		{
+			name: "unbonding delegation entry",
+			call: func() error {
+				_, err := s.stakingKeeper.SetUnbondingDelegationEntry(s.ctx, delAddr, valSrcAddr, 0, minTime, math.NewInt(5))
+				return err
+			},
+		},
+		{
+			name: "redelegation entry",
+			call: func() error {
+				_, err := s.stakingKeeper.SetRedelegationEntry(s.ctx, delAddr, valSrcAddr, valDstAddr, 0, minTime,
+					math.NewInt(5), math.LegacyNewDec(5), math.LegacyNewDec(5))
+				return err
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// SetHooks panics if called twice, so each case needs a fresh keeper.
+			s.SetupTest()
+
+			hookErr := errors.New("hook failed")
+			hooks := testutil.NewMockStakingHooks(gomock.NewController(s.T()))
+			hooks.EXPECT().AfterUnbondingInitiated(gomock.Any(), gomock.Any()).Return(hookErr)
+			s.stakingKeeper.SetHooks(hooks)
+
+			s.Require().ErrorIs(tc.call(), hookErr)
+		})
+	}
 }

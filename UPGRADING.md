@@ -25,6 +25,8 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [secp256k1eth Validator Consensus Keys](#secp256k1eth-validator-consensus-keys)
     * [Block-STM Configuration](#block-stm-configuration)
 * [Behavior Changes Affecting Dapps and Indexers](#behavior-changes-affecting-dapps-and-indexers)
+* [Unreleased](#unreleased)
+    * [Staking: AfterUnbondingInitiated Hook Errors](#staking-afterunbondinginitiated-hook-errors)
 * [enterprise/poa (unreleased)](#enterprisepoa-unreleased)
     * [Fee Allocation Migration](#fee-allocation-migration)
 
@@ -287,6 +289,19 @@ Observable changes between v0.54.x and v0.55.x that don't require code changes b
 * **`x/authz` prunes at most 200 expired grants per begin block** ([#26588](https://github.com/cosmos/cosmos-sdk/pull/26588)); mass-expiry cleanup now spreads across blocks.
 * **`x/distribution` reward withdrawals to blocked addresses** during begin/end block fall back to the delegator/validator owner and then the community pool instead of failing ([#26406](https://github.com/cosmos/cosmos-sdk/pull/26406)). User-initiated withdrawals to blocked addresses still return `ErrUnauthorized`.
 * **`x/feegrant` `Allowances` and `AllowancesByGranter` queries** now honor `PageRequest.offset` and `count_total` correctly ([#26596](https://github.com/cosmos/cosmos-sdk/pull/26596)); clients that compensated for the old off-by-page results should re-check.
+
+## Unreleased
+
+Changes on `main` since `v0.55.0`.
+
+### Staking: AfterUnbondingInitiated Hook Errors
+
+`x/staking` no longer ignores errors from the `AfterUnbondingInitiated` hook ([#26925](https://github.com/cosmos/cosmos-sdk/pull/26925)). If a staking hook returns an error, `MsgUndelegate` and `MsgBeginRedelegate` now fail; before, the error was only logged and the unbonding went ahead. The SDK's own hooks always return nil, so apps without custom hooks see no change.
+
+If your app has a custom hook:
+
+* Return an error only when the unbonding must not go ahead, never based on state another account can change, or that account can block other delegators from unbonding.
+* If your module calls `Undelegate` or `BeginRedelegation` outside a transaction (for example in `EndBlock`), wrap the call in `ctx.CacheContext()` and write only on success. Otherwise a hook error leaves the unbonding record and moved tokens in state without queuing the entry to mature.
 
 ## enterprise/poa (unreleased)
 

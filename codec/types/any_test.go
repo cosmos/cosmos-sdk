@@ -70,5 +70,5 @@ func BenchmarkNewAnyWithCustomTypeURLWithErrorReturned(b *testing.B) {
 	if sink == nil {
 		b.Fatal("benchmark didn't run")
 	}
-	sink = (any)(nil)
+	sink = any(nil)
 }

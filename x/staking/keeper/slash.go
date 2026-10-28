@@ -94,7 +94,8 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 		// Can't slash infractions in the future
 		return math.NewInt(0), fmt.Errorf(
 			"impossible attempt to slash future infraction at height %d but we are at height %d",
-			infractionHeight, sdkCtx.BlockHeight())
+			infractionHeight, sdkCtx.BlockHeight(),
+		)
 
 	case infractionHeight == sdkCtx.BlockHeight():
 		// Special-case slash at current height for efficiency - we don't need to

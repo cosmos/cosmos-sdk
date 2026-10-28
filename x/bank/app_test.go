@@ -127,7 +127,8 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper)
+		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper,
+	)
 
 	res.App = app
 

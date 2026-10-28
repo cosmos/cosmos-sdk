@@ -73,6 +73,15 @@ func (mgr *Manager) GetState(mode sdk.ExecMode) *State {
 	}
 }
 
+// GetQueryStates returns the check and finalize states from the same snapshot.
+// Reading them separately could pair the old check state with a finalize state
+// that Commit has already cleared.
+func (mgr *Manager) GetQueryStates() [2]*State {
+	mgr.stateMut.RLock()
+	defer mgr.stateMut.RUnlock()
+	return [2]*State{mgr.checkState, mgr.finalizeBlockState}
+}
+
 // SetState sets the BaseApp's state for the corresponding mode with a branched
 // multi-store (i.e. a CacheMultiStore) and a new Context with the same
 // multi-store branch, and provided header.

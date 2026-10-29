@@ -22,13 +22,13 @@ func TestMigrate(t *testing.T) {
 	require.NoError(t, err)
 
 	// check that after migration the sequence is what we want it to be
-	_, err = (collections.Item[uint64])(seq).Get(ctx)
+	_, err = collections.Item[uint64](seq).Get(ctx)
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
 	// case the global account number was not set
 	ctx = kv.NewStoreContext() // this resets the store to zero
 	err = Migrate(ctx, kv, seq)
 	require.NoError(t, err)
-	_, err = (collections.Item[uint64])(seq).Get(ctx)
+	_, err = collections.Item[uint64](seq).Get(ctx)
 	require.ErrorIs(t, err, collections.ErrNotFound)
 }

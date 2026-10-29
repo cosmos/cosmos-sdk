@@ -491,16 +491,10 @@ func (k BaseSendKeeper) GetAllSendEnabledEntries(ctx context.Context) []types.Se
 //	    sendEnabled = DefaultSendEnabled
 //	}
 func (k BaseSendKeeper) getSendEnabled(ctx context.Context, denom string) (bool, bool) {
-	has, err := k.SendEnabled.Has(ctx, denom)
-	if err != nil || !has {
-		return false, false
-	}
-
 	v, err := k.SendEnabled.Get(ctx, denom)
 	if err != nil {
 		return false, false
 	}
-
 	return v, true
 }
 

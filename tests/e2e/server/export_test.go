@@ -184,6 +184,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	assert.NilError(t, err)
 
 	_, err = app.InitChain(&abci.RequestInitChain{
+		ChainId:         app.Name(),
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: simtestutil.DefaultConsensusParams,
 		AppStateBytes:   appGenesis.AppState,
@@ -200,14 +201,26 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 
 	cmd := server.ExportCmd(
 		func(_ log.Logger, _ dbm.DB, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
+			homeDir, err := os.MkdirTemp("", "simapp-export-*")
+			if err != nil {
+				return types.ExportedApp{}, err
+			}
+			defer os.RemoveAll(homeDir)
+
+			chainID := app.Name()
+			if v, ok := appOptions.Get(flags.FlagChainID).(string); ok && v != "" {
+				chainID = v
+			}
+			simAppOptions := simtestutil.NewAppOptionsWithFlagHomeAndChainID(homeDir, chainID)
+
 			var simApp *simapp.SimApp
 			if height != -1 {
-				simApp = simapp.NewSimApp(logger, db, false, appOptions)
+				simApp = simapp.NewSimApp(logger, db, false, simAppOptions)
 				if err := simApp.LoadHeight(height); err != nil {
 					return types.ExportedApp{}, err
 				}
 			} else {
-				simApp = simapp.NewSimApp(logger, db, true, appOptions)
+				simApp = simapp.NewSimApp(logger, db, true, simAppOptions)
 			}
 
 			return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)

@@ -68,6 +68,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (baseapp) [#26738](https://github.com/cosmos/cosmos-sdk/pull/26738) Return genesis transaction events in the first block's `FinalizeBlock` response so block indexers can observe them.
 * (x/gov) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Schedule legacy simulation votes on the proposal just submitted instead of the next unused proposal ID, drop the trailing nil future operation, skip scheduled votes whose proposal is not in its voting period, and schedule votes on expedited proposals within the expedited voting period (or before the voting end time when the proposal is already in voting).
 * (x/simulation) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Time-scheduled future operations were silently dropped by `queueOperations` (the appended queue was never returned to the caller), and executed time operations were never removed from the queue. Both now update the caller's queue.
+* (x/auth/ante) [#26813](https://github.com/cosmos/cosmos-sdk/pull/26813) `DeductFeeDecorator` now deducts fees to the recipient module it was configured with. Previously it used the package-level `FeeRecipientModule`, which every `NewDeductFeeDecorator` call reset to `fee_collector`, so building a second ante chain silently redirected the fees of a decorator configured via `WithFeeRecipientModule`.
 
 ### Deprecated
 

@@ -317,6 +317,8 @@ func NewSimApp(
 		authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
 		authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
 	)
+	// reject consensus params updates that drop a key type still used by a validator
+	app.ConsensusParamsKeeper.SetValidatorPubKeyTypesChecker(app.StakingKeeper)
 	app.MintKeeper = mintkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[minttypes.StoreKey]),

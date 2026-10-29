@@ -22,7 +22,7 @@ func (am AppModule) IsAppModule() {}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterMsgServer(registrar, am.keeper)
+	keeper.RegisterMsgServer(registrar, am.keeper)
 	types.RegisterQueryServer(registrar, am.keeper)
 	return nil
 }

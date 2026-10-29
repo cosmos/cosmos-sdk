@@ -134,7 +134,7 @@ func (am AppModule) IsAppModule() {}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterMsgServer(registrar, keeper3.NewMsgServerImpl(am.keeper))
+	keeper3.RegisterMsgServer(registrar, am.keeper)
 	types.RegisterQueryServer(registrar, keeper3.NewQuerier(&am.keeper))
 	return nil
 }

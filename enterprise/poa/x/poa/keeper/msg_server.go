@@ -19,6 +19,8 @@ import (
 	"context"
 	"strconv"
 
+	"google.golang.org/grpc"
+
 	errorsmod "cosmossdk.io/errors"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -28,6 +30,10 @@ import (
 )
 
 // MsgServer implements the module's gRPC message service.
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. MsgServer will be removed in
+// a future release.
 type MsgServer struct {
 	keeper *Keeper
 }
@@ -35,10 +41,20 @@ type MsgServer struct {
 var _ types.MsgServer = (*MsgServer)(nil)
 
 // NewMsgServer creates a new MsgServer instance.
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. NewMsgServer will be removed in
+// a future release.
 func NewMsgServer(keeper *Keeper) *MsgServer {
 	return &MsgServer{
 		keeper: keeper,
 	}
+}
+
+// RegisterMsgServer registers the x/poa Msg service on r. Code outside the
+// module runs a msg through the MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k *Keeper) {
+	types.RegisterMsgServer(r, NewMsgServer(k))
 }
 
 // UpdateParams updates the module parameters. Only the admin can update parameters.

@@ -1821,3 +1821,27 @@ func (suite *KeeperTestSuite) TestUpdateParamsAuthority() {
 		suite.Require().Contains(err.Error(), "invalid authority")
 	})
 }
+
+// TestRegisterMsgServerRoutesLegacyService runs a v1beta1 MsgSubmitProposal
+// through the router that RegisterMsgServer filled, so the legacy service it
+// registers stores the proposal as the v1 service does.
+func (suite *KeeperTestSuite) TestRegisterMsgServerRoutesLegacyService() {
+	suite.reset()
+	proposer := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, suite.ctx, 1, sdkmath.NewInt(50000000))[0]
+	params, err := suite.govKeeper.Params.Get(suite.ctx)
+	suite.Require().NoError(err)
+	id, err := suite.govKeeper.ProposalID.Peek(suite.ctx)
+	suite.Require().NoError(err)
+
+	msg, err := v1beta1.NewMsgSubmitProposal(v1beta1.NewTextProposal("title", "description"), params.MinDeposit, proposer)
+	suite.Require().NoError(err)
+	handler := suite.govKeeper.Router().Handler(msg)
+	suite.Require().NotNil(handler, "RegisterMsgServer must register the v1beta1 Msg service")
+	_, err = handler(suite.ctx, msg)
+	suite.Require().NoError(err)
+
+	proposal, err := suite.govKeeper.Proposals.Get(suite.ctx, id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(proposer.String(), proposal.Proposer)
+	suite.Require().Equal("title", proposal.Title)
+}

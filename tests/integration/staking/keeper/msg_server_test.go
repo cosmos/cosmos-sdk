@@ -11,8 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -21,7 +21,6 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	f := initFixture(t)
 
 	ctx := f.sdkCtx
-	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
 	bondDenom, err := f.stakingKeeper.BondDenom(ctx)
 	assert.NilError(t, err)
 
@@ -161,7 +160,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			_, err := msgServer.CancelUnbondingDelegation(ctx, &testCase.req)
+			_, err := msgservice.Dispatch[*types.MsgCancelUnbondingDelegationResponse](ctx, f.app.MsgServiceRouter(), &testCase.req)
 			if testCase.exceptErr {
 				assert.ErrorContains(t, err, testCase.expErrMsg)
 			} else {

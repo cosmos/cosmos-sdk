@@ -141,9 +141,7 @@ func (am AppModule) IsAppModule() {}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	msgServer := keeper.NewMsgServerImpl(am.keeper)
-	v1beta1.RegisterMsgServer(cfg.MsgServer(), keeper.NewLegacyMsgServerImpl(am.accountKeeper.GetModuleAddress(govtypes.ModuleName).String(), msgServer))
-	v1.RegisterMsgServer(cfg.MsgServer(), msgServer)
+	keeper.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 
 	v1.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.keeper))
 

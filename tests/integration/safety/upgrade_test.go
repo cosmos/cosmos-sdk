@@ -34,7 +34,7 @@ func withCircuit(app *simapp.SimApp) {
 	app.MountStores(key)
 	k := circuitkeeper.NewKeeper(app.AppCodec(), runtime.NewKVStoreService(key), govAddr, app.AccountKeeper.AddressCodec())
 	circuittypes.RegisterInterfaces(app.InterfaceRegistry())
-	circuittypes.RegisterMsgServer(app.MsgServiceRouter(), circuitkeeper.NewMsgServerImpl(k))
+	circuitkeeper.RegisterMsgServer(app.MsgServiceRouter(), k)
 	app.SetCircuitBreaker(&k)
 	app.SetInitChainer(func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 		res, err := app.InitChainer(ctx, req)

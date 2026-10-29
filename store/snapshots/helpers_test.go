@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -317,7 +318,9 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 		defer close(done)
 		_, err := mgr.Create(1)
 		require.NoError(t, err)
+		hung.mu.Lock()
 		_, didPruneHeight := hung.prunedHeights[1]
+		hung.mu.Unlock()
 		require.True(t, didPruneHeight)
 	}()
 	time.Sleep(10 * time.Millisecond)
@@ -334,6 +337,7 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 // hungSnapshotter can be used to test operations in progress. Call close to end the snapshot.
 type hungSnapshotter struct {
 	ch                   chan struct{}
+	mu                   sync.Mutex
 	announcedSnapHeights map[int64]struct{}
 	prunedHeights        map[int64]struct{}
 	snapshotInterval     uint64
@@ -357,10 +361,14 @@ func (m *hungSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) er
 }
 
 func (m *hungSnapshotter) StartSnapshot(height int64) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.announcedSnapHeights[height] = struct{}{}
 }
 
 func (m *hungSnapshotter) PruneSnapshotHeight(height int64) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if _, ok := m.announcedSnapHeights[height]; !ok {
 		panic(fmt.Sprintf("snap height %d was not announced", height))
 	}
@@ -372,6 +380,8 @@ func (m *hungSnapshotter) CompleteSnapshot(height int64) {
 }
 
 func (m *hungSnapshotter) FailSnapshot(height int64) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	delete(m.announcedSnapHeights, height)
 }
 

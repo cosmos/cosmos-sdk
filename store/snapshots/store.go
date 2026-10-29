@@ -3,13 +3,16 @@ package snapshots
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	stderrors "errors"
 	"hash"
 	"io"
 	"math"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
+	"syscall"
 
 	db "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
@@ -39,8 +42,22 @@ func NewStore(db db.DB, dir string) (*Store, error) {
 	if dir == "" {
 		return nil, errors.Wrap(storetypes.ErrLogic, "snapshot directory not given")
 	}
-	err := os.MkdirAll(dir, 0o755)
-	if err != nil {
+
+	dir = filepath.Clean(dir)
+
+	stableBase := filepath.Dir(dir)
+	for {
+		if _, err := os.Stat(stableBase); err == nil {
+			break
+		}
+		parent := filepath.Dir(stableBase)
+		if parent == stableBase {
+			break
+		}
+		stableBase = parent
+	}
+
+	if err := mkdirAllSync(dir, stableBase, 0o755); err != nil {
 		return nil, errors.Wrapf(err, "failed to create snapshot directory %q", dir)
 	}
 
@@ -269,10 +286,9 @@ func (s *Store) Save(
 		// the whole operation will fail anyway.
 		if !dirCreated {
 			dir := s.pathSnapshot(height, format)
-			if err := os.MkdirAll(dir, 0o755); err != nil {
+			if err := mkdirAllSync(dir, s.dir, 0o755); err != nil {
 				return nil, errors.Wrapf(err, "failed to create snapshot directory %q", dir)
 			}
-
 			dirCreated = true
 		}
 
@@ -289,28 +305,36 @@ func (s *Store) Save(
 // saveChunk saves the given chunkBody with the given index to its appropriate path on disk.
 // The hash of the chunk is appended to the snapshot's metadata,
 // and the overall snapshot hash is updated with the chunk content too.
-func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types.Snapshot, chunkHasher, snapshotHasher hash.Hash) error {
-	defer chunkBody.Close()
+func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types.Snapshot, chunkHasher, snapshotHasher hash.Hash) (err error) {
+	defer func() {
+		if cerr := chunkBody.Close(); cerr != nil && err == nil {
+			err = errors.Wrapf(cerr, "failed to close snapshot chunk body %d", index)
+		}
+	}()
 
 	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
 	chunkFile, err := os.Create(path)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create snapshot chunk file %q", path)
 	}
-	defer chunkFile.Close()
+	defer func() {
+		if chunkFile != nil {
+			if cerr := chunkFile.Close(); cerr != nil && err == nil {
+				err = errors.Wrapf(cerr, "failed to close snapshot chunk file %d", index)
+			}
+		}
+	}()
 
 	chunkHasher.Reset()
 	if _, err := io.Copy(io.MultiWriter(chunkFile, chunkHasher, snapshotHasher), chunkBody); err != nil {
 		return errors.Wrapf(err, "failed to generate snapshot chunk %d", index)
 	}
 
-	if err := chunkFile.Close(); err != nil {
-		return errors.Wrapf(err, "failed to close snapshot chunk file %d", index)
+	if err := syncAndClose(chunkFile); err != nil {
+		chunkFile = nil
+		return err
 	}
-
-	if err := chunkBody.Close(); err != nil {
-		return errors.Wrapf(err, "failed to close snapshot chunk body %d", index)
-	}
+	chunkFile = nil
 
 	snapshot.Metadata.ChunkHashes = append(snapshot.Metadata.ChunkHashes, chunkHasher.Sum(nil))
 	return nil
@@ -319,7 +343,74 @@ func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types
 // saveChunkContent save the chunk to disk
 func (s *Store) saveChunkContent(chunk []byte, index uint32, snapshot *types.Snapshot) error {
 	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
-	return os.WriteFile(path, chunk, 0o600)
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create snapshot chunk file %q", path)
+	}
+	if _, err := f.Write(chunk); err != nil {
+		f.Close()
+		return errors.Wrapf(err, "failed to write snapshot chunk %d", index)
+	}
+	return syncAndClose(f)
+}
+
+func syncAndClose(f *os.File) error {
+	if err := f.Sync(); err != nil {
+		f.Close()
+		return errors.Wrapf(err, "failed to sync %q", f.Name())
+	}
+	if err := f.Close(); err != nil {
+		return errors.Wrapf(err, "failed to close %q", f.Name())
+	}
+	return syncDirFn(filepath.Dir(f.Name()))
+}
+
+func mkdirAllSync(dir, stableBase string, perm os.FileMode) error {
+	dir = filepath.Clean(dir)
+	stableBase = filepath.Clean(stableBase)
+
+	rel, err := filepath.Rel(stableBase, dir)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return errors.Wrapf(storetypes.ErrLogic, "stableBase %q is not an ancestor of %q", stableBase, dir)
+	}
+
+	if err := os.MkdirAll(dir, perm); err != nil {
+		return err
+	}
+
+	for d := filepath.Dir(dir); ; d = filepath.Dir(d) {
+		if err := syncDirFn(d); err != nil {
+			return err
+		}
+		if d == stableBase || filepath.Dir(d) == d {
+			break
+		}
+	}
+	return nil
+}
+
+// syncDirFn is the function used to fsync a directory. Overridable in tests.
+var syncDirFn = syncDir
+
+// syncDir fsyncs dirPath so the directory entry for a newly created file is durable.
+func syncDir(dirPath string) error {
+	dir, err := os.Open(dirPath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to open directory %q for sync", dirPath)
+	}
+	if err := dir.Sync(); err != nil {
+		dir.Close()
+		// Some filesystems (e.g. tmpfs, FAT, certain network mounts) do not support
+		// directory fsync and return EINVAL or ENOTSUP. Treat these as non-fatal.
+		if stderrors.Is(err, syscall.EINVAL) || stderrors.Is(err, syscall.ENOTSUP) {
+			return nil
+		}
+		return errors.Wrapf(err, "failed to sync directory %q", dirPath)
+	}
+	if err := dir.Close(); err != nil {
+		return errors.Wrapf(err, "failed to close directory %q after sync", dirPath)
+	}
+	return nil
 }
 
 // saveSnapshot saves snapshot metadata to the database.

@@ -38,7 +38,8 @@ func (app *BaseApp) grpcQueryInterceptor(skipCheckHeader bool) grpc.UnaryServerI
 			if err != nil {
 				return nil, errorsmod.Wrapf(
 					sdkerrors.ErrInvalidRequest,
-					"Baseapp.RegisterGRPCServer: invalid height header %q: %v", grpctypes.GRPCBlockHeightHeader, err)
+					"Baseapp.RegisterGRPCServer: invalid height header %q: %v", grpctypes.GRPCBlockHeightHeader, err,
+				)
 			}
 			if err := checkNegativeHeight(height); err != nil {
 				return nil, err

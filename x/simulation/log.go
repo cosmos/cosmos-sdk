@@ -47,7 +47,7 @@ func (lw *StandardLogWriter) PrintLogs() {
 	defer f.Close()
 
 	for i := range lw.OpEntries {
-		writeEntry := fmt.Sprintf("%s\n", (lw.OpEntries[i]).MustMarshal())
+		writeEntry := fmt.Sprintf("%s\n", lw.OpEntries[i].MustMarshal())
 		_, err := f.WriteString(writeEntry)
 		if err != nil {
 			panic("Failed to write logs to file")

@@ -1,6 +1,6 @@
 module cosmossdk.io/errors
 
-go 1.26.10
+go 1.27.3
 
 require (
 	github.com/pkg/errors v0.9.1

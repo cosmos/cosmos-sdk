@@ -1,4 +1,4 @@
-go 1.26.10
+go 1.27.3
 
 module github.com/cosmos/cosmos-sdk
 
@@ -43,15 +43,15 @@ require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/jhump/protoreflect v1.19.0
-	github.com/magiconair/properties v1.18.11
+	github.com/magiconair/properties v1.18.12
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mattn/go-isatty v0.0.24
 	github.com/mdp/qrterminal/v3 v3.2.1
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.24.1
+	github.com/prometheus/client_golang v1.25.0
 	github.com/prometheus/common v0.72.0
 	github.com/rs/zerolog v1.35.1
-	github.com/shirou/gopsutil/v4 v4.26.7
+	github.com/shirou/gopsutil/v4 v4.26.9
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
@@ -59,8 +59,8 @@ require (
 	github.com/stretchr/testify v1.12.1
 	github.com/tendermint/go-amino v0.16.0
 	github.com/test-go/testify v1.1.4
-	go.opentelemetry.io/contrib/bridges/otelslog v0.20.1
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.71.0
+	go.opentelemetry.io/contrib/bridges/otelslog v0.21.0
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.72.0
 	go.opentelemetry.io/contrib/instrumentation/host v0.71.0
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.72.0
 	go.opentelemetry.io/contrib/otelconf v0.27.0
@@ -123,8 +123,8 @@ require (
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.6 // indirect
 	github.com/bytedance/gopkg v0.1.4 // indirect
-	github.com/bytedance/sonic v1.15.1 // indirect
-	github.com/bytedance/sonic/loader v0.5.1 // indirect
+	github.com/bytedance/sonic v1.15.5 // indirect
+	github.com/bytedance/sonic/loader v0.5.3 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -148,7 +148,7 @@ require (
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.7.0 // indirect
-	github.com/ebitengine/purego v0.10.2 // indirect
+	github.com/ebitengine/purego v0.11.1 // indirect
 	github.com/emicklei/dot v1.11.0 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.37.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.3.3 // indirect

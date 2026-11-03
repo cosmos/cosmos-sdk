@@ -700,7 +700,8 @@ func TestGraphAndLogOutput(t *testing.T) {
 	debugOpts := depinject.DebugOptions(
 		depinject.Visualizer(func(dotGraph string) {
 			graphOut = dotGraph
-		}))
+		}),
+	)
 	require.NoError(t, depinject.InjectDebug(debugOpts, scenarioConfig, &b))
 	golden.Assert(t, graphOut, "example.dot")
 
@@ -722,7 +723,8 @@ func TestConditionalDebugging(t *testing.T) {
 		})),
 		depinject.OnSuccess(depinject.DebugCleanup(func() {
 			success = true
-		})))
+		})),
+	)
 
 	var input TestInput
 	require.Error(t, depinject.InjectDebug(
@@ -766,7 +768,8 @@ func TestFuncTypes(t *testing.T) {
 	var duckReturnerFactory func() Duck
 	err := depinject.Inject(
 		depinject.Supply(func() Duck { return smallMallard{} }),
-		&duckReturnerFactory)
+		&duckReturnerFactory,
+	)
 	require.NoError(t, err)
 	_, ok := duckReturnerFactory().(smallMallard)
 	require.True(t, ok)
@@ -777,7 +780,8 @@ func TestFuncTypes(t *testing.T) {
 			depinject.Supply(func() Duck { return smallMallard{} }),
 			depinject.Provide(DuckProvider),
 		),
-		&duck)
+		&duck,
+	)
 	_, ok = duck.(smallMallard)
 	require.True(t, ok)
 	require.NoError(t, err)
@@ -786,7 +790,8 @@ func TestFuncTypes(t *testing.T) {
 		depinject.Configs(
 			depinject.Provide(DuckProvider),
 		),
-		&duck)
+		&duck,
+	)
 	_, ok = duck.(Mallard)
 	require.True(t, ok)
 	require.NoError(t, err)

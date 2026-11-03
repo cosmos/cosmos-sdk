@@ -352,7 +352,8 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	if interactive {
 		bip39Passphrase, err = input.GetString(
 			"Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed. "+
-				"Most users should just hit enter to use the default, \"\"", inBuf)
+				"Most users should just hit enter to use the default, \"\"", inBuf,
+		)
 		if err != nil {
 			return err
 		}

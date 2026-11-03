@@ -179,6 +179,11 @@ func TestHelperRunLauncher(t *testing.T) {
 		CustomPreUpgrade: os.Getenv("COSMOVISOR_CUSTOM_PREUPGRADE"),
 		GRPCAddress:      "localhost:9090",
 	}
+	if shutdownGrace := os.Getenv("DAEMON_SHUTDOWN_GRACE"); shutdownGrace != "" {
+		var err error
+		cfg.ShutdownGrace, err = time.ParseDuration(shutdownGrace)
+		require.NoError(t, err)
+	}
 	require.NoError(t, os.Chdir(cfg.Root()))
 	launcher, err := cosmovisor.NewLauncher(cfg.Logger(os.Stdout), cfg)
 	require.NoError(t, err)
@@ -193,7 +198,16 @@ func TestHelperRunLauncher(t *testing.T) {
 }
 
 func TestLaunchProcessStop(t *testing.T) {
-	for name, hook := range map[string]string{"group": "", "pre-upgrade": "preupgrade.sh"} {
+	for name, tc := range map[string]struct {
+		hook          string
+		marker        string
+		shutdownGrace string
+		group         bool
+	}{
+		"group":        {group: true},
+		"pre-upgrade":  {hook: "preupgrade.sh", marker: "hook-started"},
+		"upgrade-halt": {marker: "shutdown-started", shutdownGrace: "5s"},
+	} {
 		t.Run(name, func(t *testing.T) {
 			home := copyTestData(t, filepath.Join(workDir, "testdata", "stop"))
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -201,7 +215,8 @@ func TestLaunchProcessStop(t *testing.T) {
 			executable, err := os.Executable()
 			require.NoError(t, err)
 			cmd := exec.CommandContext(ctx, executable, "-test.run=^TestHelperRunLauncher$")
-			cmd.Env = append(os.Environ(), "COSMOVISOR_HELPER=1", "DAEMON_HOME="+home, "COSMOVISOR_CUSTOM_PREUPGRADE="+hook)
+			cmd.Env = append(os.Environ(), "COSMOVISOR_HELPER=1", "DAEMON_HOME="+home,
+				"COSMOVISOR_CUSTOM_PREUPGRADE="+tc.hook, "DAEMON_SHUTDOWN_GRACE="+tc.shutdownGrace)
 			cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 			cmd.WaitDelay = time.Second
 			output := newBuffer()
@@ -214,15 +229,15 @@ func TestLaunchProcessStop(t *testing.T) {
 				}
 			}()
 			require.Eventually(t, func() bool {
-				if hook != "" {
-					_, err := os.Stat(filepath.Join(home, "hook-started"))
+				if tc.marker != "" {
+					_, err := os.Stat(filepath.Join(home, tc.marker))
 					return err == nil
 				}
 				return strings.Contains(output.String(), "ready\n") &&
 					strings.Contains(output.String(), "starting the batch watcher loop")
 			}, 5*time.Second, 10*time.Millisecond)
 			pid := cmd.Process.Pid
-			if hook == "" {
+			if tc.group {
 				pid = -pid
 			}
 			require.NoError(t, syscall.Kill(pid, syscall.SIGTERM))
@@ -230,6 +245,15 @@ func TestLaunchProcessStop(t *testing.T) {
 			require.NotContains(t, output.String(), "process already finished")
 			require.NotContains(t, output.String(), "upgrade detected, relaunching")
 			require.NotContains(t, output.String(), "upgraded app started")
+			require.NoFileExists(t, filepath.Join(home, "pre-upgrade-ran"))
+			current, err := filepath.EvalSymlinks(filepath.Join(home, "cosmovisor", "current"))
+			require.NoError(t, err)
+			genesis, err := filepath.EvalSymlinks(filepath.Join(home, "cosmovisor", "genesis"))
+			require.NoError(t, err)
+			require.Equal(t, genesis, current)
+			if tc.shutdownGrace != "" {
+				require.FileExists(t, filepath.Join(home, "data", "upgrade-info.json"))
+			}
 		})
 	}
 }

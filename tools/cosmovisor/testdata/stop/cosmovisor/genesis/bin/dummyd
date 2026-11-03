@@ -6,6 +6,11 @@ if [ "$1" = status ]; then
 fi
 
 trap 'exit 0' TERM INT
+if [ -n "$DAEMON_SHUTDOWN_GRACE" ]; then
+    trap 'trap "" TERM; touch "$DAEMON_HOME/shutdown-started"; sleep 2; exit 0' TERM
+    echo '{"name":"chain2","height":10}' > "$2"
+    echo 'UPGRADE "chain2" NEEDED at height: 10: {}'
+fi
 if [ -n "$COSMOVISOR_CUSTOM_PREUPGRADE" ]; then
     echo '{"name":"chain2","height":10}' > "$2"
 fi

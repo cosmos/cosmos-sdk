@@ -216,12 +216,14 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 	}()
 
 	sigDone := make(chan struct{})
+	stopRequested := false
 	go func() {
 		defer close(sigDone)
 		sig, ok := <-sigs
 		if !ok {
 			return
 		}
+		stopRequested = true
 		cancel()
 		wg.Wait()
 		if err := cmd.Process.Signal(sig); err != nil {
@@ -232,17 +234,41 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 			os.Exit(1)
 		}
 	}()
-
 	defer func() {
-		signal.Stop(sigs)
-		close(sigs)
-		<-sigDone
 		cancel()
 		wg.Wait()
 	}()
 
-	if needsUpdate, err := l.WaitForUpgradeOrExit(cmd); err != nil || !needsUpdate {
+	needsUpdate, err := l.WaitForUpgradeOrExit(cmd)
+
+	// The app has exited. Register the upgrade-step handler before stopping the
+	// app handler, so no stop signal gets the default action in between.
+	// signal.Stop delivers pending signals to sigs before it returns, and
+	// <-sigDone waits for the handler, so stopRequested is final after it.
+	upgradeSigs := make(chan os.Signal, 1)
+	signal.Notify(upgradeSigs, syscall.SIGQUIT, syscall.SIGTERM)
+	upgradeSigDone := make(chan struct{})
+	go func() {
+		defer close(upgradeSigDone)
+		if _, ok := <-upgradeSigs; ok {
+			os.Exit(0)
+		}
+	}()
+	defer func() {
+		signal.Stop(upgradeSigs)
+		close(upgradeSigs)
+		<-upgradeSigDone
+	}()
+	signal.Stop(sigs)
+	close(sigs)
+	<-sigDone
+
+	if err != nil || !needsUpdate {
 		return false, err
+	}
+	if stopRequested {
+		l.logger.Info("stop requested, skipping upgrade")
+		return false, nil
 	}
 
 	if !IsSkipUpgradeHeight(args, l.fw.currentInfo) {

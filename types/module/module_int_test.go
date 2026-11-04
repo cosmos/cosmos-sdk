@@ -53,8 +53,10 @@ func (s *TestSuite) TestDefaultMigrationsOrder() {
 	require := s.Require()
 	require.Equal(
 		[]string{"auth2", "d", "z", "auth"},
-		DefaultMigrationsOrder([]string{"d", "auth", "auth2", "z"}), "alphabetical, but auth should be last")
+		DefaultMigrationsOrder([]string{"d", "auth", "auth2", "z"}), "alphabetical, but auth should be last",
+	)
 	require.Equal(
 		[]string{"auth2", "d", "z"},
-		DefaultMigrationsOrder([]string{"d", "auth2", "z"}), "alphabetical")
+		DefaultMigrationsOrder([]string{"d", "auth2", "z"}), "alphabetical",
+	)
 }

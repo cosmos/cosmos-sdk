@@ -46,7 +46,7 @@ func (a *AuxSignerData) ValidateBasic() error {
 func (a *AuxSignerData) GetSignatureV2() (signing.SignatureV2, error) {
 	pk, ok := a.SignDoc.PublicKey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
-		return signing.SignatureV2{}, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (cryptotypes.PubKey)(nil), pk)
+		return signing.SignatureV2{}, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", cryptotypes.PubKey(nil), pk)
 	}
 
 	return signing.SignatureV2{

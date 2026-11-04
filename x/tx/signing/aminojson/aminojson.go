@@ -63,7 +63,8 @@ func (h SignModeHandler) Mode() signingv1beta1.SignMode {
 func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
 	body := txData.Body
 	_, err := decode.RejectUnknownFields(
-		txData.BodyBytes, body.ProtoReflect().Descriptor(), false, h.fileResolver)
+		txData.BodyBytes, body.ProtoReflect().Descriptor(), false, h.fileResolver,
+	)
 	if err != nil {
 		return nil, err
 	}

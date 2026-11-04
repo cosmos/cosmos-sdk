@@ -118,7 +118,7 @@ Read [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) for m
 
 #### Guideline
 
-`ValidateBasic` should not be used anymore. Message validation should be performed in the `Msg` service when [handling a message](../../build/building-modules/03-msg-services.md#Validation) in a module Msg Server.
+`ValidateBasic` should not be used anymore. Message validation should be performed in the `Msg` service when [handling a message](../../build/building-modules/03-msg-services.md#validation) in a module Msg Server.
 
 ### AnteHandler
 

@@ -136,7 +136,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 			sdkerrors.ErrNoSignatures,
 		},
 		{
-			"num sigs dont match GetSigners",
+			"num sigs don't match GetSigners",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
 

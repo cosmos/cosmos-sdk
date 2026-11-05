@@ -49,7 +49,7 @@ func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, val
 		// subtract from outstanding
 		outstanding = outstanding.Sub(commission)
 
-		// cant lookup validator from state since it has been removed
+		// can't lookup validator from state since it has been removed
 		valOperator, err := h.k.stakingKeeper.ValidatorAddressCodec().BytesToString(valAddr)
 		if err != nil {
 			return err

@@ -263,7 +263,7 @@ func (k Keeper) MoveMissedBlockBitmap(ctx context.Context, oldAddr, newAddr sdk.
 		value  []byte
 	}
 
-	// collect chunks so we dont delete while iterating
+	// collect chunks so we don't delete while iterating
 	var chunks []bitmapChunk
 	for ; iter.Valid(); iter.Next() {
 		// old key is the old consensus address + bitmap chunk index

@@ -108,7 +108,7 @@ https://github.com/cosmos/cosmos-sdk/blob/e8f28bf5db18b8d6b7e0d94b542ce4cf48fed9
 
 ### Dont_OmitEmpty 
 
-Dont omitempty specifies that the field should not be omitted when encoding to amino. 
+Don't omitempty specifies that the field should not be omitted when encoding to amino. 
 
 ```proto
 repeated cosmos.base.v1beta1.Coin amount = 3 [(amino.dont_omitempty)   = true];

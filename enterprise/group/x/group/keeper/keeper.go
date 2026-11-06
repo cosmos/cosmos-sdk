@@ -405,7 +405,8 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 				ProposalId:  proposal.Id,
 				Status:      proposal.Status,
 				TallyResult: &proposal.FinalTallyResult,
-			}); err != nil {
+			},
+		); err != nil {
 			return err
 		}
 	}
@@ -446,7 +447,8 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				&group.EventProposalPruned{
 					ProposalId: proposal.Id,
 					Status:     proposal.Status,
-				}); err != nil {
+				},
+			); err != nil {
 				return err
 			}
 		case group.PROPOSAL_STATUS_SUBMITTED:

@@ -72,7 +72,7 @@ func rejectNonADR027TxRaw(txBytes []byte) error {
 func varintMinLength(n uint64) int {
 	switch {
 	// Note: 1<<N == 2**N.
-	case n < 1<<(7):
+	case n < 1<<7:
 		return 1
 	case n < 1<<(7*2):
 		return 2

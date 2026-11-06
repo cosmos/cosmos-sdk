@@ -155,7 +155,7 @@ func (bva BaseVestingAccount) Validate() error {
 		return fmt.Errorf("invalid coins: %s", bva.OriginalVesting.String())
 	}
 
-	if !(bva.DelegatedVesting.IsAllLTE(bva.OriginalVesting)) {
+	if !bva.DelegatedVesting.IsAllLTE(bva.OriginalVesting) {
 		return errors.New("delegated vesting amount cannot be greater than original vesting amount")
 	}
 

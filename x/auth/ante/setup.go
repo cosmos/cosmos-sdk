@@ -58,7 +58,8 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 			case storetypes.ErrorOutOfGas:
 				log := fmt.Sprintf(
 					"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
-					rType.Descriptor, gasTx.GetGas(), newCtx.GasMeter().GasConsumed())
+					rType.Descriptor, gasTx.GetGas(), newCtx.GasMeter().GasConsumed(),
+				)
 
 				err = errorsmod.Wrap(sdkerrors.ErrOutOfGas, log)
 			default:

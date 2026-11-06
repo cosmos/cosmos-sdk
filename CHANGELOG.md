@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### State Machine Breaking
 
 * (enterprise/poa) [#26875](https://github.com/cosmos/cosmos-sdk/pull/26875) Truncate per-validator fee shares so a checkpoint never allocates more than the module balance, and add a v2 → v3 store migration that trims any excess already allocated. Previously, rounding could push allocated fees above the balance and make every fee checkpoint (validator create/update, key rotation, fee withdrawal) panic until a fee in that denom arrived. Allocated fees exceeding the balance now return `ErrInvalidAllocatedFees` instead of panicking. `InitGenesis` now checks imported allocated fees against the module balance, so bank genesis must run before poa: an excess of at most 1e-18 per exported validator per denom (v1.x rounding dust) is trimmed, and anything larger fails with `ErrInvalidAllocatedFees`.
+* (x/feegrant) [#26944](https://github.com/cosmos/cosmos-sdk/pull/26944) Store fee allowance expiry queue entries as an encoded `true` in the v1 → v2 store migration, and add a v2 → v3 store migration that rewrites any queue entry stored with an empty value. Previously, entries written by the v1 → v2 migration or by the standalone `cosmossdk.io/x/feegrant` module had an empty value, which the keeper cannot decode, so `RemoveExpiredAllowances` failed in the `EndBlocker` and halted the chain once such an entry expired.
 
 ### Features
 

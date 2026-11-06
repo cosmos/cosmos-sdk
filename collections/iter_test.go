@@ -166,6 +166,78 @@ func TestIteratorRanging(t *testing.T) {
 	require.ErrorIs(t, err, ErrInvalidIterator)
 }
 
+func TestIteratorUnboundedPrefix(t *testing.T) {
+	for _, prefix := range []Prefix{NewPrefix(255), NewPrefix([]byte{0xff, 0xff})} {
+		t.Run(fmt.Sprintf("%x", prefix), func(t *testing.T) {
+			for _, raw := range []bool{false, true} {
+				for _, order := range []Order{OrderAscending, OrderDescending} {
+					t.Run(fmt.Sprintf("raw=%t/order=%d", raw, order), func(t *testing.T) {
+						sk, ctx := deps()
+						builder := NewSchemaBuilder(sk)
+						m := NewMap(builder, prefix, "last", Uint64Key, StringValue)
+						_, err := builder.Build()
+						require.NoError(t, err)
+						require.NoError(t, sk.OpenKVStore(ctx).Set([]byte{0xfe}, []byte("outside")))
+						for i := uint64(1); i <= 3; i++ {
+							require.NoError(t, m.Set(ctx, i, "value"))
+						}
+
+						var iter Iterator[uint64, string]
+						if raw {
+							iter, err = m.IterateRaw(ctx, nil, nil, order)
+						} else {
+							rng := new(Range[uint64])
+							if order == OrderDescending {
+								rng.Descending()
+							}
+							iter, err = m.Iterate(ctx, rng)
+						}
+						require.NoError(t, err)
+						keys, err := iter.Keys()
+						require.NoError(t, err)
+						want := []uint64{1, 2, 3}
+						if order == OrderDescending {
+							want = []uint64{3, 2, 1}
+						}
+						require.Equal(t, want, keys)
+					})
+				}
+			}
+
+			t.Run("walk and clear", func(t *testing.T) {
+				sk, ctx := deps()
+				builder := NewSchemaBuilder(sk)
+				m := NewMap(builder, prefix, "last", Uint64Key, StringValue)
+				_, err := builder.Build()
+				require.NoError(t, err)
+				require.NoError(t, sk.OpenKVStore(ctx).Set([]byte{0xfe}, []byte("outside")))
+				for i := uint64(1); i <= 3; i++ {
+					require.NoError(t, m.Set(ctx, i, "value"))
+				}
+
+				var keys []uint64
+				err = m.Walk(ctx, nil, func(key uint64, value string) (bool, error) {
+					keys = append(keys, key)
+					require.Equal(t, "value", value)
+					return false, nil
+				})
+				require.NoError(t, err)
+				require.Equal(t, []uint64{1, 2, 3}, keys)
+
+				require.NoError(t, m.Clear(ctx, nil))
+				for _, key := range keys {
+					has, err := m.Has(ctx, key)
+					require.NoError(t, err)
+					require.False(t, has)
+				}
+				outside, err := sk.OpenKVStore(ctx).Get([]byte{0xfe})
+				require.NoError(t, err)
+				require.Equal(t, []byte("outside"), outside)
+			})
+		})
+	}
+}
+
 func TestWalk(t *testing.T) {
 	sk, ctx := deps()
 	schemaBuilder := NewSchemaBuilder(sk)

@@ -162,7 +162,7 @@ func parseRangeInstruction[K any](prefix []byte, keyCodec codec.KeyCodec[K], r R
 	} else {
 		endBytes = nextBytesPrefixKey(prefix)
 	}
-	if bytes.Compare(startBytes, endBytes) == 1 {
+	if endBytes != nil && bytes.Compare(startBytes, endBytes) == 1 {
 		return nil, nil, 0, ErrInvalidIterator
 	}
 	return startBytes, endBytes, order, nil

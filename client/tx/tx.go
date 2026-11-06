@@ -145,24 +145,12 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 }
 
 // CalculateGas simulates the execution of a transaction and returns the
-// simulation response obtained by the query and the adjusted gas amount.
+// final simulation response and the adjusted gas amount. It verifies the estimate
+// with the candidate's encoded gas limit and fees, using at most four simulations.
 func CalculateGas(
 	clientCtx gogogrpc.ClientConn, txf Factory, msgs ...sdk.Msg,
 ) (*tx.SimulateResponse, uint64, error) {
-	txBytes, err := txf.BuildSimTx(msgs...)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	txSvcClient := tx.NewServiceClient(clientCtx)
-	simRes, err := txSvcClient.Simulate(context.Background(), &tx.SimulateRequest{
-		TxBytes: txBytes,
-	})
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return simRes, uint64(txf.GasAdjustment() * float64(simRes.GasInfo.GasUsed)), nil
+	return calculateGas(clientCtx, txf, msgs...)
 }
 
 // SignWithPrivKey signs a given tx with the given private key, and returns the

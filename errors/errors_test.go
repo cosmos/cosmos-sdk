@@ -256,6 +256,28 @@ func (s *errorsTestSuite) TestGRPCStatus() {
 	s.Require().Equal("codespace testtesttest code 38: not found: test", status.Message())
 }
 
+func (s *errorsTestSuite) TestGRPCStatusStandardWrapping() {
+	var notFound error = ErrNotFound
+	cases := map[string]error{
+		"fmt wrapper":         fmt.Errorf("lookup: %w", notFound),
+		"nested fmt wrappers": fmt.Errorf("query: %w", fmt.Errorf("lookup: %w", notFound)),
+		"joined errors":       stdlib.Join(stdlib.New("lookup failed"), ErrNotFound),
+	}
+	for name, parent := range cases {
+		s.Run(name, func() {
+			status, ok := grpcstatus.FromError(Wrap(parent, "request"))
+			s.Require().True(ok)
+			s.Require().Equal(codes.NotFound, status.Code())
+			s.Require().Equal(parent.Error()+": request", status.Message())
+		})
+	}
+
+	status, ok := grpcstatus.FromError(Wrap(stdlib.New("plain error"), "request"))
+	s.Require().True(ok)
+	s.Require().Equal(codes.Unknown, status.Code())
+	s.Require().Equal("request", status.Message())
+}
+
 func (s *errorsTestSuite) TestDoubleRegister() {
 	s.Require().NotPanics(func() {
 		_ = Register(testCodespace, 50, "Internal IO error")

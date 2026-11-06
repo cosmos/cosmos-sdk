@@ -25,6 +25,8 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [secp256k1eth Validator Consensus Keys](#secp256k1eth-validator-consensus-keys)
     * [Block-STM Configuration](#block-stm-configuration)
 * [Behavior Changes Affecting Dapps and Indexers](#behavior-changes-affecting-dapps-and-indexers)
+* [x/feegrant (unreleased)](#xfeegrant-unreleased)
+    * [Fee Allowance Queue Migration](#fee-allowance-queue-migration)
 * [enterprise/poa (unreleased)](#enterprisepoa-unreleased)
     * [Fee Allocation Migration](#fee-allocation-migration)
 
@@ -287,6 +289,16 @@ Observable changes between v0.54.x and v0.55.x that don't require code changes b
 * **`x/authz` prunes at most 200 expired grants per begin block** ([#26588](https://github.com/cosmos/cosmos-sdk/pull/26588)); mass-expiry cleanup now spreads across blocks.
 * **`x/distribution` reward withdrawals to blocked addresses** during begin/end block fall back to the delegator/validator owner and then the community pool instead of failing ([#26406](https://github.com/cosmos/cosmos-sdk/pull/26406)). User-initiated withdrawals to blocked addresses still return `ErrUnauthorized`.
 * **`x/feegrant` `Allowances` and `AllowancesByGranter` queries** now honor `PageRequest.offset` and `count_total` correctly ([#26596](https://github.com/cosmos/cosmos-sdk/pull/26596)); clients that compensated for the old off-by-page results should re-check.
+
+## x/feegrant (unreleased)
+
+### Fee Allowance Queue Migration
+
+The fee allowance expiry queue (`FeeAllowanceQueue`, prefix `0x01`) stores an encoded `true` for each entry, but the v1 → v2 store migration and the standalone `cosmossdk.io/x/feegrant` module (v0.1.x, v0.2.0) wrote these entries with an empty value ([#XXXXX](https://github.com/cosmos/cosmos-sdk/pull/XXXXX)). The keeper cannot decode an empty value, so once such an entry expires `RemoveExpiredAllowances` fails in the `EndBlocker` and the chain halts.
+
+The module's consensus version goes from 2 to 3. `Migrate2to3` runs through `RunMigrations` in your upgrade handler and rewrites every queue entry that has an empty value to an encoded `true`. Entries that already have a value are left unchanged. The v1 → v2 migration now writes an encoded `true` as well.
+
+Chains that carry empty-valued queue entries must run this upgrade before the earliest of those entries expires.
 
 ## enterprise/poa (unreleased)
 

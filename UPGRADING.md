@@ -294,7 +294,7 @@ Observable changes between v0.54.x and v0.55.x that don't require code changes b
 
 ### Fee Allowance Queue Migration
 
-The fee allowance expiry queue (`FeeAllowanceQueue`, prefix `0x01`) stores an encoded `true` for each entry, but the v1 → v2 store migration and the standalone `cosmossdk.io/x/feegrant` module (v0.1.x, v0.2.0) wrote these entries with an empty value ([#XXXXX](https://github.com/cosmos/cosmos-sdk/pull/XXXXX)). The keeper cannot decode an empty value, so once such an entry expires `RemoveExpiredAllowances` fails in the `EndBlocker` and the chain halts.
+The fee allowance expiry queue (`FeeAllowanceQueue`, prefix `0x01`) stores an encoded `true` for each entry, but the v1 → v2 store migration and the standalone `cosmossdk.io/x/feegrant` module (v0.1.x, v0.2.0) wrote these entries with an empty value ([#26944](https://github.com/cosmos/cosmos-sdk/pull/26944)). The keeper cannot decode an empty value, so once such an entry expires `RemoveExpiredAllowances` fails in the `EndBlocker` and the chain halts.
 
 The module's consensus version goes from 2 to 3. `Migrate2to3` runs through `RunMigrations` in your upgrade handler and rewrites every queue entry that has an empty value to an encoded `true`. Entries that already have a value are left unchanged. The v1 → v2 migration now writes an encoded `true` as well.
 

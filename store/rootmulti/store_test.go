@@ -1190,3 +1190,26 @@ func TestEarliestVersionPersistence(t *testing.T) {
 	require.Equal(t, earliestBeforeRestart, ms2.EarliestVersion(),
 		"earliest version should persist across restarts")
 }
+
+func TestPruningDeletesCommitInfo(t *testing.T) {
+	db := dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 1))
+	require.NoError(t, ms.LoadLatestVersion())
+
+	for i := 0; i < 10; i++ {
+		ms.Commit()
+	}
+
+	require.Eventually(t, func() bool {
+		return ms.EarliestVersion() > 1
+	}, 1*time.Second, 10*time.Millisecond)
+
+	earliest := ms.EarliestVersion()
+	for v := int64(1); v < earliest; v++ {
+		_, err := ms.GetCommitInfo(v)
+		require.Error(t, err, "commit info for pruned version %d should be deleted", v)
+	}
+
+	_, err := ms.GetCommitInfo(ms.LatestVersion())
+	require.NoError(t, err, "commit info for latest version should still exist")
+}

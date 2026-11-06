@@ -731,6 +731,12 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 	if newEarliest > currentEarliest {
 		batch := rs.db.NewBatch()
 		defer batch.Close()
+		// Delete stale commit-info records for heights just pruned.
+		for v := currentEarliest; v <= pruningHeight; v++ {
+			if err := batch.Delete([]byte(fmt.Sprintf(commitInfoKeyFmt, v))); err != nil {
+				rs.logger.Error("failed to delete stale commit info", "version", v, "err", err)
+			}
+		}
 		flushEarliestVersion(batch, newEarliest)
 		if err := batch.WriteSync(); err != nil {
 			rs.logger.Error("failed to persist earliest version", "err", err)

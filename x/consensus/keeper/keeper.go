@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"slices"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -26,6 +27,8 @@ type Keeper struct {
 
 	authority   string
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
+
+	pubKeyTypesChecker types.ValidatorPubKeyTypesChecker
 }
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
@@ -38,6 +41,13 @@ func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, au
 		event:        em,
 		ParamsStore:  collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
 	}
+}
+
+// SetValidatorPubKeyTypesChecker sets the checker used by UpdateParams to reject an
+// update of the validator public key types that the current validators can't satisfy.
+// It must be set before the keeper is passed to the module.
+func (k *Keeper) SetValidatorPubKeyTypesChecker(checker types.ValidatorPubKeyTypesChecker) {
+	k.pubKeyTypesChecker = checker
 }
 
 // Querier
@@ -98,6 +108,12 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 
 	if err := params.ValidateUpdate(&consensusParams, sdkCtx.BlockHeader().Height); err != nil {
 		return nil, err
+	}
+
+	if k.pubKeyTypesChecker != nil && !slices.Equal(params.Validator.PubKeyTypes, nextParams.Validator.PubKeyTypes) {
+		if err := k.pubKeyTypesChecker.ValidateValidatorPubKeyTypes(ctx, nextParams.Validator.PubKeyTypes); err != nil {
+			return nil, err
+		}
 	}
 
 	if err := k.ParamsStore.Set(ctx, nextParams.ToProto()); err != nil {

@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"context"
+	"fmt"
+	"slices"
 	"testing"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -372,6 +375,77 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				s.Require().Equal(tc.input.Evidence, res.Params.Evidence)
 				s.Require().Equal(tc.input.Validator, res.Params.Validator)
 			}
+		})
+	}
+}
+
+// pubKeyTypesChecker accepts a set of key types only if it contains all of inUse.
+type pubKeyTypesChecker struct {
+	inUse []string
+	calls int
+}
+
+func (c *pubKeyTypesChecker) ValidateValidatorPubKeyTypes(_ context.Context, pubKeyTypes []string) error {
+	c.calls++
+	for _, t := range c.inUse {
+		if !slices.Contains(pubKeyTypes, t) {
+			return fmt.Errorf("key type %s is used by a validator", t)
+		}
+	}
+	return nil
+}
+
+func (s *KeeperTestSuite) TestUpdateParamsValidatorPubKeyTypesInUse() {
+	defaultConsensusParams := cmttypes.DefaultConsensusParams().ToProto()
+	msg := func(pubKeyTypes ...string) *types.MsgUpdateParams {
+		return &types.MsgUpdateParams{
+			Authority: s.ctx.ConsensusParams().Authority.Authority,
+			Block:     defaultConsensusParams.Block,
+			Validator: &cmtproto.ValidatorParams{PubKeyTypes: pubKeyTypes},
+			Evidence:  defaultConsensusParams.Evidence,
+		}
+	}
+
+	testCases := []struct {
+		name      string
+		input     *types.MsgUpdateParams
+		expCalls  int
+		expErrMsg string
+	}{
+		{
+			name:     "key types unchanged, checker not called",
+			input:    msg(defaultConsensusParams.Validator.PubKeyTypes...),
+			expCalls: 0,
+		},
+		{
+			name:     "adding a key type",
+			input:    msg(cmttypes.ABCIPubKeyTypeEd25519, cmttypes.ABCIPubKeyTypeSecp256k1),
+			expCalls: 1,
+		},
+		{
+			name:      "removing a key type still in use",
+			input:     msg(cmttypes.ABCIPubKeyTypeSecp256k1),
+			expCalls:  1,
+			expErrMsg: "key type ed25519 is used by a validator",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			checker := &pubKeyTypesChecker{inUse: []string{cmttypes.ABCIPubKeyTypeEd25519}}
+			s.consensusParamsKeeper.SetValidatorPubKeyTypesChecker(checker)
+
+			_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, tc.input)
+			s.Require().Equal(tc.expCalls, checker.calls)
+			if tc.expErrMsg != "" {
+				s.Require().ErrorContains(err, tc.expErrMsg)
+				res, err := s.consensusParamsKeeper.Params(s.ctx, &types.QueryParamsRequest{})
+				s.Require().NoError(err)
+				s.Require().Equal(defaultConsensusParams.Validator, res.Params.Validator)
+				return
+			}
+			s.Require().NoError(err)
 		})
 	}
 }

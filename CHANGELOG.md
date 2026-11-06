@@ -57,6 +57,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (store) [#26782](https://github.com/cosmos/cosmos-sdk/pull/26782) Fix a data race in the root multi-store pruning test.
 * (blockstm) [#26779](https://github.com/cosmos/cosmos-sdk/pull/26779) perf(blockstm): memoize merge iterator source.
 * (deps) [#26850](https://github.com/cosmos/cosmos-sdk/pull/26850) Bump google.golang.org/grpc to v1.84.0 in all modules except `api` and `depinject`.
+* (x/distribution) [#26918](https://github.com/cosmos/cosmos-sdk/pull/26918) Accumulate delegation reward totals by denomination and sort once, preserving per-delegation claimable amounts.
 
 
 ### Bug Fixes

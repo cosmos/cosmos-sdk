@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/errors"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
@@ -265,8 +266,11 @@ func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDel
 		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
 
-	total := sdk.DecCoins{}
-	claimable := sdk.Coins{}
+	type rewardTotals struct {
+		total     math.LegacyDec
+		claimable math.Int
+	}
+	totals := make(map[string]rewardTotals)
 	var delRewards []types.DelegationDelegatorReward
 
 	delAdr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddress)
@@ -298,12 +302,19 @@ func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDel
 			}
 
 			delRewards = append(delRewards, types.NewDelegationDelegatorReward(del.GetValidatorAddr(), delReward))
-			total = total.Add(delReward...)
-			// WithdrawDelegationRewards truncates each delegation independently before
-			// sending coins, so the claimable amount must be accumulated per delegation
-			// rather than truncated once at the end.
-			truncated, _ := delReward.TruncateDecimal()
-			claimable = claimable.Add(truncated...)
+			// Each delegation is truncated independently, as during withdrawal.
+			for _, coin := range delReward {
+				truncated := coin.Amount.TruncateInt()
+				if old, ok := totals[coin.Denom]; ok {
+					old.total = old.total.Add(coin.Amount)
+					if !truncated.IsZero() {
+						old.claimable = old.claimable.Add(truncated)
+					}
+					totals[coin.Denom] = old
+				} else if !coin.IsZero() {
+					totals[coin.Denom] = rewardTotals{coin.Amount, truncated}
+				}
+			}
 			return false
 		},
 	)
@@ -311,6 +322,21 @@ func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDel
 		return nil, err
 	}
 
+	// Preserve the empty response shape: no delegations produces an empty total,
+	// while delegations without rewards have a nil total.
+	var total sdk.DecCoins
+	if len(delRewards) == 0 || len(totals) > 0 {
+		total = make(sdk.DecCoins, 0, len(totals))
+	}
+	claimable := make(sdk.Coins, 0, len(totals))
+	for denom, amounts := range totals {
+		total = append(total, sdk.DecCoin{Denom: denom, Amount: amounts.total})
+		if !amounts.claimable.IsZero() {
+			claimable = append(claimable, sdk.Coin{Denom: denom, Amount: amounts.claimable})
+		}
+	}
+	total.Sort()
+	claimable.Sort()
 	return &types.QueryDelegationTotalRewardsResponse{Rewards: delRewards, Total: total, Claimable: claimable}, nil
 }
 

@@ -36,6 +36,17 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		return v1.Proposal{}, err
 	}
 
+	// refuse a proposal holding a msg the circuit breaker disallows, also
+	// when a proposer puts the tx in a block without CheckTx;
+	// baseapp.MsgServiceRouter implements the check
+	if r, ok := k.router.(interface {
+		CheckMsgsAllowed(context.Context, []sdk.Msg) error
+	}); ok {
+		if err := r.CheckMsgsAllowed(ctx, messages); err != nil {
+			return v1.Proposal{}, err
+		}
+	}
+
 	msgTypeURLs := make([]string, 0, len(messages))
 
 	// Loop through all messages and confirm that each has a handler and the gov module account

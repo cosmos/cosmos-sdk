@@ -1,0 +1,73 @@
+syntax = "proto3";
+package cosmos.safety.v1;
+
+import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/safety/v1/types.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/safety/types";
+
+// Msg defines the safety Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  // UpdateParams replaces the module params. Only the authority may call it.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+
+  // Trip disables the given patterns. Only the operator may call it, and only
+  // for patterns covered by its scope.
+  rpc Trip(MsgTrip) returns (MsgTripResponse);
+
+  // Reset removes the given patterns from the disabled list. The authority may
+  // reset any pattern; the operator may reset patterns covered by its scope.
+  rpc Reset(MsgReset) returns (MsgResetResponse);
+}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "cosmos-sdk/x/safety/MsgUpdateParams";
+
+  // authority is the current module authority.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the new module params. All fields must be supplied.
+  Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// MsgUpdateParamsResponse is the Msg/UpdateParams response type.
+message MsgUpdateParamsResponse {}
+
+// MsgTrip is the Msg/Trip request type.
+message MsgTrip {
+  option (cosmos.msg.v1.signer) = "operator";
+  option (amino.name)           = "cosmos-sdk/x/safety/MsgTrip";
+
+  // operator is the configured operator address.
+  string operator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // patterns are the patterns to disable. The list must be non-empty and
+  // every pattern must match at least one registered, unprotected msg type.
+  repeated string patterns = 2;
+}
+
+// MsgTripResponse is the Msg/Trip response type.
+message MsgTripResponse {}
+
+// MsgReset is the Msg/Reset request type.
+message MsgReset {
+  option (cosmos.msg.v1.signer) = "sender";
+  option (amino.name)           = "cosmos-sdk/x/safety/MsgReset";
+
+  // sender is the authority or the operator.
+  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // patterns are the disabled patterns to remove. Each must appear in the
+  // disabled list exactly as given.
+  repeated string patterns = 2;
+}
+
+// MsgResetResponse is the Msg/Reset response type.
+message MsgResetResponse {}

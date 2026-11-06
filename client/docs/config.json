@@ -116,6 +116,16 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/cosmos/safety/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "SafetyParams",
+          "DisabledList": "SafetyDisabledList",
+          "IsAllowed": "SafetyIsAllowed"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/cosmos/slashing/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {

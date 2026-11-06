@@ -29,10 +29,8 @@ A Cosmos SDK module that implements a Proof of Authority (PoA) consensus mechani
 
 **Documentation:**
 - [README](./poa/README.md) - Quick start and usage guide
-- [API Reference](./poa/docs/api.md) - gRPC queries and transactions
-- [Architecture](./poa/docs/architecture.md) - System design and module interactions
-- [Distribution](./poa/docs/distribution.md) - Fee distribution mechanics
-- [Governance](./poa/docs/governance.md) - Governance integration details
+- [Architecture diagram](./poa/docs/architecture.png) - System design overview
+- [Key rotation](./poa/docs/key-rotation.md) - Validator key rotation
 
 **Quick Links:**
 - [Installation & Setup](./poa/README.md#quick-start)
@@ -54,8 +52,7 @@ A Cosmos SDK module that allows the creation and management of on-chain multisig
 
 **Documentation:**
 - [README](./group/README.md) - Overview and quick start
-- [API Reference](./group/docs/api.md) - gRPC queries and transactions
-- [Architecture](./group/docs/architecture.md) - System design and module interactions
+- [Architecture diagram](./group/docs/architecture.png) - System design overview
 
 **Quick Links:**
 - [Build & Test](./group/README.md#quick-start)

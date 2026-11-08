@@ -62,7 +62,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			testutil.AppConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
-		&interfaceRegistry, &bankKeeper, &appBuilder, &cdc)
+		&interfaceRegistry, &bankKeeper, &appBuilder, &cdc,
+	)
 	s.NoError(err)
 
 	app := appBuilder.Build(dbm.NewMemDB())

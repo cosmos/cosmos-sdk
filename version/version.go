@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"runtime"
 	"runtime/debug"
+	"strings"
 )
 
 // ContextKey is used to store the ExtraInfo in the context.
@@ -122,3 +123,27 @@ func (d buildDep) String() string {
 
 func (d buildDep) MarshalJSON() ([]byte, error) { return json.Marshal(d.String()) }
 func (d buildDep) MarshalYAML() (any, error)    { return d.String(), nil }
+
+func (d *buildDep) UnmarshalJSON(bz []byte) error {
+	var s string
+	if err := json.Unmarshal(bz, &s); err != nil {
+		return err
+	}
+
+	mod, replace, ok := strings.Cut(s, " => ")
+	d.Module = parseModule(mod)
+	if ok {
+		d.Replace = parseModule(replace)
+	}
+
+	return nil
+}
+
+func parseModule(s string) *debug.Module {
+	i := strings.LastIndex(s, "@")
+	if i < 0 {
+		return &debug.Module{Path: s}
+	}
+
+	return &debug.Module{Path: s[:i], Version: s[i+1:]}
+}

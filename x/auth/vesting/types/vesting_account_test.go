@@ -851,14 +851,16 @@ func TestGenesisAccountValidate(t *testing.T) {
 			"invalid vesting period lengths",
 			types.NewPeriodicVestingAccountRaw(
 				baseVestingWithCoins,
-				0, types.Periods{types.Period{Length: int64(50), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}}}),
+				0, types.Periods{types.Period{Length: int64(50), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}}},
+			),
 			true,
 		},
 		{
 			"invalid vesting period amounts",
 			types.NewPeriodicVestingAccountRaw(
 				baseVestingWithCoins,
-				0, types.Periods{types.Period{Length: int64(100), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25)}}}),
+				0, types.Periods{types.Period{Length: int64(100), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25)}}},
+			),
 			true,
 		},
 		{

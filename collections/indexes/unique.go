@@ -84,7 +84,7 @@ func (i *Unique[ReferenceKey, PrimaryKey, Value]) MatchExact(ctx context.Context
 
 func (i *Unique[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Context, ranger collections.Ranger[ReferenceKey]) (UniqueIterator[ReferenceKey, PrimaryKey], error) {
 	iter, err := i.refKeys.Iterate(ctx, ranger)
-	return (UniqueIterator[ReferenceKey, PrimaryKey])(iter), err
+	return UniqueIterator[ReferenceKey, PrimaryKey](iter), err
 }
 
 func (i *Unique[ReferenceKey, PrimaryKey, Value]) Walk(
@@ -100,7 +100,7 @@ func (i *Unique[ReferenceKey, PrimaryKey, Value]) IterateRaw(ctx context.Context
 	if err != nil {
 		return u, err
 	}
-	return (UniqueIterator[ReferenceKey, PrimaryKey])(iter), nil
+	return UniqueIterator[ReferenceKey, PrimaryKey](iter), nil
 }
 
 // UniqueIterator is an Iterator wrapper, that exposes only the functionality needed to work with Unique keys.
@@ -108,22 +108,22 @@ type UniqueIterator[ReferenceKey, PrimaryKey any] collections.Iterator[Reference
 
 // PrimaryKey returns the iterator's current primary key.
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) PrimaryKey() (PrimaryKey, error) {
-	return (collections.Iterator[ReferenceKey, PrimaryKey])(i).Value()
+	return collections.Iterator[ReferenceKey, PrimaryKey](i).Value()
 }
 
 // PrimaryKeys fully consumes the iterator, and returns all the primary keys.
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) PrimaryKeys() ([]PrimaryKey, error) {
-	return (collections.Iterator[ReferenceKey, PrimaryKey])(i).Values()
+	return collections.Iterator[ReferenceKey, PrimaryKey](i).Values()
 }
 
 // FullKey returns the iterator's current full reference key as Pair[ReferenceKey, PrimaryKey].
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) FullKey() (collections.Pair[ReferenceKey, PrimaryKey], error) {
-	kv, err := (collections.Iterator[ReferenceKey, PrimaryKey])(i).KeyValue()
+	kv, err := collections.Iterator[ReferenceKey, PrimaryKey](i).KeyValue()
 	return collections.Join(kv.Key, kv.Value), err
 }
 
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) FullKeys() ([]collections.Pair[ReferenceKey, PrimaryKey], error) {
-	kvs, err := (collections.Iterator[ReferenceKey, PrimaryKey])(i).KeyValues()
+	kvs, err := collections.Iterator[ReferenceKey, PrimaryKey](i).KeyValues()
 	if err != nil {
 		return nil, err
 	}
@@ -136,13 +136,13 @@ func (i UniqueIterator[ReferenceKey, PrimaryKey]) FullKeys() ([]collections.Pair
 }
 
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) Next() {
-	(collections.Iterator[ReferenceKey, PrimaryKey])(i).Next()
+	collections.Iterator[ReferenceKey, PrimaryKey](i).Next()
 }
 
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) Valid() bool {
-	return (collections.Iterator[ReferenceKey, PrimaryKey])(i).Valid()
+	return collections.Iterator[ReferenceKey, PrimaryKey](i).Valid()
 }
 
 func (i UniqueIterator[ReferenceKey, PrimaryKey]) Close() error {
-	return (collections.Iterator[ReferenceKey, PrimaryKey])(i).Close()
+	return collections.Iterator[ReferenceKey, PrimaryKey](i).Close()
 }

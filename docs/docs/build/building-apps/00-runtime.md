@@ -133,7 +133,7 @@ An application only needs to call `AppBuilder.Build` to create a fully configure
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/runtime/builder.go#L26-L57
 ```
 
-More information on building applications can be found in the [next section](./02-app-building.md).
+More information on building applications can be found in the [next section](./01-app-go-di.md).
 
 ## Best Practices
 

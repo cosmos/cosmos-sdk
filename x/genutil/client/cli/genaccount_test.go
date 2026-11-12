@@ -160,6 +160,43 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 		},
 
 		{
+			name: "same address twice in one file without append",
+			state: [][]genutil.GenesisAccount{
+				{
+					{
+						Address: addr1Str,
+						Coins:   sdk.NewCoins(sdk.NewInt64Coin("test", 1)),
+					},
+					{
+						Address: addr1Str,
+						Coins:   sdk.NewCoins(sdk.NewInt64Coin("test", 2)),
+					},
+				},
+			},
+			appendFlag: false,
+			expectErr:  true,
+		},
+		{
+			name: "same address twice in one file with append",
+			state: [][]genutil.GenesisAccount{
+				{
+					{
+						Address: addr1Str,
+						Coins:   sdk.NewCoins(sdk.NewInt64Coin("test", 1)),
+					},
+					{
+						Address: addr1Str,
+						Coins:   sdk.NewCoins(sdk.NewInt64Coin("test", 2)),
+					},
+				},
+			},
+			expected: map[string]sdk.Coins{
+				addr1Str: sdk.NewCoins(sdk.NewInt64Coin("test", 3)),
+			},
+			appendFlag: true,
+			expectErr:  false,
+		},
+		{
 			name: "multiple additions with append",
 			state: [][]genutil.GenesisAccount{
 				{

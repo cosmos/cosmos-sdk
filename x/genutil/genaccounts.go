@@ -258,6 +258,7 @@ func AddGenesisAccounts(
 		} else {
 			accs = append(accs, genAccount)
 			bankGenState.Balances = append(bankGenState.Balances, balances)
+			balanceCache[addr] = balances
 		}
 
 		newSupplyCoinsCache = newSupplyCoinsCache.Add(coins...)

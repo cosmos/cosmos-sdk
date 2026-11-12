@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/log/v2 v2.1.0
 	cosmossdk.io/math v1.5.3
 	github.com/99designs/keyring v1.2.1
-	github.com/RoaringBitmap/roaring/v2 v2.29.0
+	github.com/RoaringBitmap/roaring/v2 v2.30.0
 	github.com/bgentry/speakeasy v0.2.0
 	github.com/bits-and-blooms/bitset v1.26.0
 	github.com/chzyer/readline v1.5.1
@@ -36,7 +36,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-getter v1.8.10
-	github.com/hashicorp/go-metrics v0.5.4
+	github.com/hashicorp/go-metrics v0.7.0
 	github.com/hashicorp/golang-lru v1.0.2
 	github.com/hdevalence/ed25519consensus v0.2.0
 	github.com/huandu/skiplist v1.2.1
@@ -49,9 +49,9 @@ require (
 	github.com/mdp/qrterminal/v3 v3.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.25.0
-	github.com/prometheus/common v0.72.0
+	github.com/prometheus/common v0.73.1
 	github.com/rs/zerolog v1.35.1
-	github.com/shirou/gopsutil/v4 v4.26.9
+	github.com/shirou/gopsutil/v4 v4.26.10
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
@@ -96,10 +96,11 @@ require (
 	filippo.io/edwards25519 v1.2.0 // indirect
 	filippo.io/keygen v0.0.0-20260114151900-8e2790ea4c5b // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
-	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
+	github.com/DataDog/datadog-go v4.8.3+incompatible // indirect
 	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.57.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.57.0 // indirect
+	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.47.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.20 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.33.6 // indirect
@@ -148,7 +149,7 @@ require (
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.7.0 // indirect
-	github.com/ebitengine/purego v0.11.1 // indirect
+	github.com/ebitengine/purego v0.11.2 // indirect
 	github.com/emicklei/dot v1.11.0 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.37.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.3.3 // indirect
@@ -157,7 +158,7 @@ require (
 	github.com/flynn/noise v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/getsentry/sentry-go v0.46.2 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.6 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.1 // indirect
@@ -237,7 +238,7 @@ require (
 	github.com/nxadm/tail v1.4.11 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20251114093237-2ab5a27a1729 // indirect
 	github.com/oklog/run v1.2.0 // indirect
-	github.com/pascaldekloe/goe v0.1.1 // indirect
+	github.com/pandatix/go-abnf v0.5.3 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/petermattis/goid v0.0.0-20260330135022-df67b199bc81 // indirect
@@ -317,7 +318,7 @@ require (
 	golang.org/x/arch v0.26.0 // indirect
 	golang.org/x/exp v0.0.0-20260908205506-85c1c2202aba // indirect
 	golang.org/x/mod v0.41.0 // indirect
-	golang.org/x/net v0.60.0 // indirect
+	golang.org/x/net v0.61.0 // indirect
 	golang.org/x/oauth2 v0.37.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260924152758-ed294f943157 // indirect

@@ -311,7 +311,7 @@ func RawBytesCmd() *cobra.Command {
 
 			byteArray := []byte{}
 			for _, s := range spl {
-				b, err := strconv.ParseInt(s, 10, 8)
+				b, err := strconv.ParseUint(s, 10, 8)
 				if err != nil {
 					return err
 				}

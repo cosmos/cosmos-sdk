@@ -168,8 +168,8 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 	if req.Pagination != nil {
 		offset = req.Pagination.Offset
 		limit = req.Pagination.Limit
-	} else {
-		offset = 0
+	}
+	if limit == 0 {
 		limit = query.DefaultLimit
 	}
 

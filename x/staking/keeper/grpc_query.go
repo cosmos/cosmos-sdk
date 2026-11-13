@@ -572,39 +572,56 @@ func queryAllRedelegations(store storetypes.KVStore, k Querier, req *types.Query
 // util
 
 func delegationToDelegationResponse(ctx context.Context, k *Keeper, del types.Delegation) (types.DelegationResponse, error) {
-	valAddr, err := k.validatorAddressCodec.StringToBytes(del.GetValidatorAddr())
+	converter := delegationResponseConverter{}
+	return converter.convert(ctx, k, del)
+}
+
+// delegationResponseConverter reuses records only within a single query.
+type delegationResponseConverter struct {
+	validatorAddr string
+	validator     types.Validator
+	bondDenom     string
+}
+
+func (c *delegationResponseConverter) convert(ctx context.Context, k *Keeper, del types.Delegation) (types.DelegationResponse, error) {
+	if c.validatorAddr == "" || c.validatorAddr != del.GetValidatorAddr() {
+		valAddr, err := k.validatorAddressCodec.StringToBytes(del.GetValidatorAddr())
+		if err != nil {
+			return types.DelegationResponse{}, err
+		}
+		c.validator, err = k.GetValidator(ctx, valAddr)
+		if err != nil {
+			return types.DelegationResponse{}, err
+		}
+		c.validatorAddr = del.GetValidatorAddr()
+	}
+
+	_, err := k.authKeeper.AddressCodec().StringToBytes(del.DelegatorAddress)
 	if err != nil {
 		return types.DelegationResponse{}, err
 	}
 
-	val, err := k.GetValidator(ctx, valAddr)
-	if err != nil {
-		return types.DelegationResponse{}, err
-	}
-
-	_, err = k.authKeeper.AddressCodec().StringToBytes(del.DelegatorAddress)
-	if err != nil {
-		return types.DelegationResponse{}, err
-	}
-
-	bondDenom, err := k.BondDenom(ctx)
-	if err != nil {
-		return types.DelegationResponse{}, err
+	if c.bondDenom == "" {
+		c.bondDenom, err = k.BondDenom(ctx)
+		if err != nil {
+			return types.DelegationResponse{}, err
+		}
 	}
 
 	return types.NewDelegationResp(
 		del.DelegatorAddress,
 		del.GetValidatorAddr(),
 		del.Shares,
-		sdk.NewCoin(bondDenom, val.TokensFromShares(del.Shares).TruncateInt()),
+		sdk.NewCoin(c.bondDenom, c.validator.TokensFromShares(del.Shares).TruncateInt()),
 	), nil
 }
 
 func delegationsToDelegationResponses(ctx context.Context, k *Keeper, delegations types.Delegations) (types.DelegationResponses, error) {
 	resp := make(types.DelegationResponses, len(delegations))
+	converter := delegationResponseConverter{}
 
 	for i, del := range delegations {
-		delResp, err := delegationToDelegationResponse(ctx, k, del)
+		delResp, err := converter.convert(ctx, k, del)
 		if err != nil {
 			return nil, err
 		}

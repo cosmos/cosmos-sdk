@@ -433,7 +433,8 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 14637, false)
+	// The three delegations share a single validator and parameter read.
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 8345, false)
 }
 
 func TestGRPCValidatorUnbondingDelegations(t *testing.T) {

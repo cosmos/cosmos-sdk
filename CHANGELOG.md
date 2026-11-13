@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (blockstm) [#26773](https://github.com/cosmos/cosmos-sdk/pull/26773) Batch copy-on-write B-tree insertions for MVData index updates, reducing allocations and index publication overhead when adding multiple keys.
 * (types) [#26729](https://github.com/cosmos/cosmos-sdk/pull/26729) Memoize `GetConfig`'s "hostname|binary|pid" registry-key fallback, which derived the executable path, hostname, and PID on every call.
+* (types) [#26912](https://github.com/cosmos/cosmos-sdk/pull/26912) Avoid repeatedly merging coin sets when truncating decimal rewards with sorted, unique denominations.
 * (store) [#26782](https://github.com/cosmos/cosmos-sdk/pull/26782) Fix a data race in the root multi-store pruning test.
 * (blockstm) [#26779](https://github.com/cosmos/cosmos-sdk/pull/26779) perf(blockstm): memoize merge iterator source.
 * (deps) [#26850](https://github.com/cosmos/cosmos-sdk/pull/26850) Bump google.golang.org/grpc to v1.84.0 in all modules except `api` and `depinject`.

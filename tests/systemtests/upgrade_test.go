@@ -166,6 +166,14 @@ func TestChainUpgrade(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
 
+	// decode every collections entry the legacy binary and the migrations
+	// wrote, before the seeded grants expire and get pruned
+	systest.Sut.StopChain()
+	for _, out := range systest.Sut.ForEachNodeExecAndWait(t, []string{"debug", "decode-state"}) {
+		require.Contains(t, out[0], "all collections state decodes", out[0])
+	}
+	systest.Sut.StartChain(t)
+
 	assertSeededStateAfterExpiry(t, cli, seeded)
 
 	// smoke test that new version runs

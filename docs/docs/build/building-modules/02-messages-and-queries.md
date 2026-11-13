@@ -116,13 +116,13 @@ queryCategory/queryRoute/queryType/arg1/arg2/...
 where:
 
 * `queryCategory` is the category of the `query`, typically `custom` for module queries. It is used to differentiate between different kinds of queries within `BaseApp`'s [`Query` method](../../learn/advanced/00-baseapp.md#query).
-* `queryRoute` is used by `BaseApp`'s [`queryRouter`](../../learn/advanced/00-baseapp.md#query-routing) to map the `query` to its module. Usually, `queryRoute` should be the name of the module.
+* `queryRoute` is used by `BaseApp`'s [`queryRouter`](../../learn/advanced/00-baseapp.md#grpc-query-router) to map the `query` to its module. Usually, `queryRoute` should be the name of the module.
 * `queryType` is used by the module's [`querier`](./04-query-services.md#legacy-queriers) to map the `query` to the appropriate `querier function` within the module.
 * `args` are the actual arguments needed to process the `query`. They are filled out by the end-user. Note that for bigger queries, you might prefer passing arguments in the `Data` field of the request `req` instead of the `path`.
 
 The `path` for each `query` must be defined by the module developer in the module's [command-line interface file](./09-module-interfaces.md#query-commands).Overall, there are 3 mains components module developers need to implement in order to make the subset of the state defined by their module queryable:
 
-* A [`querier`](./04-query-services.md#legacy-queriers), to process the `query` once it has been [routed to the module](../../learn/advanced/00-baseapp.md#query-routing).
+* A [`querier`](./04-query-services.md#legacy-queriers), to process the `query` once it has been [routed to the module](../../learn/advanced/00-baseapp.md#grpc-query-router).
 * [Query commands](./09-module-interfaces.md#query-commands) in the module's CLI file, where the `path` for each `query` is specified.
 * `query` return types. Typically defined in a file `types/querier.go`, they specify the result type of each of the module's `queries`. These custom types must implement the `String()` method of [`fmt.Stringer`](https://pkg.go.dev/fmt#Stringer).
 

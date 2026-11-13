@@ -50,6 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (deps) [#26968](https://github.com/cosmos/cosmos-sdk/pull/26968) Bump cosmos/iavl to v1.2.9, which validates malformed snapshot input during import.
 * (deps) [#26969](https://github.com/cosmos/cosmos-sdk/pull/26969) Bump Go to 1.26.11 and patch vulnerable dependencies (klauspost/compress, grpc, golang.org/x, pion, otel).
+* (telemetry) [#26979](https://github.com/cosmos/cosmos-sdk/pull/26979) Use `otel.GetLoggerProvider` and `otel.SetLoggerProvider` in place of the deprecated `go.opentelemetry.io/otel/log/global` package (backport of the telemetry change in #26897).
 
 ### Bug Fixes
 

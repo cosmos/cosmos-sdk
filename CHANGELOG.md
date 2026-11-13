@@ -44,6 +44,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (deps) [#26969](https://github.com/cosmos/cosmos-sdk/pull/26969) Bump Go to 1.26.11 and patch vulnerable dependencies (klauspost/compress, grpc, golang.org/x, pion, otel).
+
 ### Bug Fixes
 
 ### Deprecated

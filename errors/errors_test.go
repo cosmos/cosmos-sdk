@@ -258,17 +258,33 @@ func (s *errorsTestSuite) TestGRPCStatus() {
 
 func (s *errorsTestSuite) TestGRPCStatusStandardWrapping() {
 	var notFound error = ErrNotFound
-	cases := map[string]error{
-		"fmt wrapper":         fmt.Errorf("lookup: %w", notFound),
-		"nested fmt wrappers": fmt.Errorf("query: %w", fmt.Errorf("lookup: %w", notFound)),
-		"joined errors":       stdlib.Join(stdlib.New("lookup failed"), ErrNotFound),
+	cases := map[string]struct {
+		parent  error
+		message string
+	}{
+		"fmt wrapper": {
+			parent:  fmt.Errorf("lookup: %w", notFound),
+			message: "codespace testtesttest code 38: not found: request",
+		},
+		"nested fmt wrappers": {
+			parent:  fmt.Errorf("query: %w", fmt.Errorf("lookup: %w", notFound)),
+			message: "codespace testtesttest code 38: not found: request",
+		},
+		"joined errors": {
+			parent:  stdlib.Join(stdlib.New("lookup failed"), ErrNotFound),
+			message: "codespace testtesttest code 38: not found: request",
+		},
+		"fmt wrapper around SDK wrapper": {
+			parent:  fmt.Errorf("query: %w", Wrap(ErrNotFound, "lookup")),
+			message: "codespace testtesttest code 38: not found: lookup: request",
+		},
 	}
-	for name, parent := range cases {
+	for name, tc := range cases {
 		s.Run(name, func() {
-			status, ok := grpcstatus.FromError(Wrap(parent, "request"))
+			status, ok := grpcstatus.FromError(Wrap(tc.parent, "request"))
 			s.Require().True(ok)
 			s.Require().Equal(codes.NotFound, status.Code())
-			s.Require().Equal(parent.Error()+": request", status.Message())
+			s.Require().Equal(tc.message, status.Message())
 		})
 	}
 

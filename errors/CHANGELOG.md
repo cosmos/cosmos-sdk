@@ -33,7 +33,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* Preserve gRPC status codes through standard Go error wrappers and joined errors inside an SDK-wrapped error.
+* [#26948](https://github.com/cosmos/cosmos-sdk/pull/26948) Preserve gRPC status codes through standard Go error wrappers and joined errors inside an SDK-wrapped error.
 
 ## [v1.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/errors%2Fv1.1.0)
 

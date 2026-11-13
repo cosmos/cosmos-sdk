@@ -227,7 +227,8 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 	assert.NilError(t, err)
 
 	req := banktypes.NewQuerySpendableBalancesRequest(addr1, nil)
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.SpendableBalances, 2059, false)
+	// Unlocked accounts no longer pay for a second scan of all balances.
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.SpendableBalances, 1702, false)
 }
 
 func TestGRPCQueryTotalSupply(t *testing.T) {

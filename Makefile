@@ -183,7 +183,7 @@ go.sum: go.mod
 	go mod tidy
 
 tidy-all:
-	sh ./scripts/go-mod-tidy-all.sh
+	./scripts/go-mod-tidy-all.sh
 
 .PHONY: tidy-all
 

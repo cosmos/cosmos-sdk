@@ -23,6 +23,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -299,6 +300,9 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 				expectedSupply = expectedSupply.Add(coins...)
 			}
 			require.Equal(t, expectedSupply, bankState.Supply)
+
+			authState := authtypes.GetGenesisStateFromAppState(appCodec, appState)
+			require.Len(t, authState.Accounts, len(tc.expected))
 		})
 	}
 }

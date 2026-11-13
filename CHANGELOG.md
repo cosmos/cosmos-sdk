@@ -44,6 +44,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (deps) [#26968](https://github.com/cosmos/cosmos-sdk/pull/26968) Bump cosmos/iavl to v1.2.9, which validates malformed snapshot input during import.
+
 ### Bug Fixes
 
 ### Deprecated

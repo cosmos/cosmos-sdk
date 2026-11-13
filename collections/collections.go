@@ -90,6 +90,9 @@ type Collection interface {
 	// ValueCodec returns the codec used to encode/decode values of the collection.
 	ValueCodec() codec.UntypedValueCodec
 
+	// KeyCodec returns the codec used to decode keys of the collection.
+	KeyCodec() codec.UntypedKeyCodec
+
 	genesisHandler
 
 	// collectionSchemaCodec returns the schema codec for this collection.
@@ -157,6 +160,10 @@ type collectionImpl[K, V any] struct {
 
 func (c collectionImpl[K, V]) ValueCodec() codec.UntypedValueCodec {
 	return codec.NewUntypedValueCodec(c.m.vc)
+}
+
+func (c collectionImpl[K, V]) KeyCodec() codec.UntypedKeyCodec {
+	return codec.NewUntypedKeyCodec(c.m.kc)
 }
 
 func (c collectionImpl[K, V]) GetName() string { return c.m.name }

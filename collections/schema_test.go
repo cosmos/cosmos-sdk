@@ -70,3 +70,24 @@ func TestSchemaBuilderCantBeUsedAfterBuild(t *testing.T) {
 		NewMap(schemaBuilder, NewPrefix(2), "def", Uint64Key, Uint64Value)
 	})
 }
+
+func TestCollectionKeyCodec(t *testing.T) {
+	sk, ctx := deps()
+	sb := NewSchemaBuilder(sk)
+	m := NewMap(sb, NewPrefix(1), "map", PairKeyCodec(StringKey, Uint64Key), StringValue)
+	schema, err := sb.Build()
+	require.NoError(t, err)
+	require.NoError(t, m.Set(ctx, Join("a", uint64(7)), "v"))
+
+	colls := schema.ListCollections()
+	require.Len(t, colls, 1)
+	kc := colls[0].KeyCodec()
+	require.Equal(t, m.KeyCodec().KeyType(), kc.KeyType())
+
+	raw, err := EncodeKeyWithPrefix(NewPrefix(1), m.KeyCodec(), Join("a", uint64(7)))
+	require.NoError(t, err)
+	n, key, err := kc.Decode(raw[1:])
+	require.NoError(t, err)
+	require.Equal(t, len(raw)-1, n)
+	require.Equal(t, Join("a", uint64(7)), key)
+}

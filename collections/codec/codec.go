@@ -124,6 +124,22 @@ type UntypedValueCodec struct {
 	ValueType  func() string
 }
 
+// NewUntypedKeyCodec returns an UntypedKeyCodec for the provided KeyCodec.
+func NewUntypedKeyCodec[K any](k KeyCodec[K]) UntypedKeyCodec {
+	return UntypedKeyCodec{
+		Decode: func(b []byte) (int, interface{}, error) {
+			return k.Decode(b)
+		},
+		KeyType: func() string { return k.KeyType() },
+	}
+}
+
+// UntypedKeyCodec wraps a KeyCodec to expose an untyped API for decoding keys.
+type UntypedKeyCodec struct {
+	Decode  func(b []byte) (int, interface{}, error)
+	KeyType func() string
+}
+
 // KeyToValueCodec converts a KeyCodec into a ValueCodec.
 func KeyToValueCodec[K any](keyCodec KeyCodec[K]) NameableValueCodec[K] {
 	return keyToValueCodec[K]{kc: keyCodec}

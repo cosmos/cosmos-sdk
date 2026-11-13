@@ -23,6 +23,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -160,6 +161,43 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 		},
 
 		{
+			name: "same address twice in one file without append",
+			state: [][]genutil.GenesisAccount{
+				{
+					{
+						Address: addr1Str,
+						Coins:   sdk.NewCoins(sdk.NewInt64Coin("test", 1)),
+					},
+					{
+						Address: addr1Str,
+						Coins:   sdk.NewCoins(sdk.NewInt64Coin("test", 2)),
+					},
+				},
+			},
+			appendFlag: false,
+			expectErr:  true,
+		},
+		{
+			name: "same address twice in one file with append",
+			state: [][]genutil.GenesisAccount{
+				{
+					{
+						Address: addr1Str,
+						Coins:   sdk.NewCoins(sdk.NewInt64Coin("test", 1)),
+					},
+					{
+						Address: addr1Str,
+						Coins:   sdk.NewCoins(sdk.NewInt64Coin("test", 2)),
+					},
+				},
+			},
+			expected: map[string]sdk.Coins{
+				addr1Str: sdk.NewCoins(sdk.NewInt64Coin("test", 3)),
+			},
+			appendFlag: true,
+			expectErr:  false,
+		},
+		{
 			name: "multiple additions with append",
 			state: [][]genutil.GenesisAccount{
 				{
@@ -262,6 +300,9 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 				expectedSupply = expectedSupply.Add(coins...)
 			}
 			require.Equal(t, expectedSupply, bankState.Supply)
+
+			authState := authtypes.GetGenesisStateFromAppState(appCodec, appState)
+			require.Len(t, authState.Accounts, len(tc.expected))
 		})
 	}
 }

@@ -303,7 +303,7 @@ func RawBytesCmd() *cobra.Command {
 		Long:    "Convert raw-bytes to hex.",
 		Example: fmt.Sprintf("%s debug raw-bytes '[72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]'", version.AppName),
 		Args:    cobra.ExactArgs(1),
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			stringBytes := args[0]
 			stringBytes = strings.Trim(stringBytes, "[")
 			stringBytes = strings.Trim(stringBytes, "]")
@@ -311,13 +311,13 @@ func RawBytesCmd() *cobra.Command {
 
 			byteArray := []byte{}
 			for _, s := range spl {
-				b, err := strconv.ParseInt(s, 10, 8)
+				b, err := strconv.ParseUint(s, 10, 8)
 				if err != nil {
 					return err
 				}
 				byteArray = append(byteArray, byte(b))
 			}
-			fmt.Printf("%X\n", byteArray)
+			cmd.Printf("%X\n", byteArray)
 			return nil
 		},
 	}

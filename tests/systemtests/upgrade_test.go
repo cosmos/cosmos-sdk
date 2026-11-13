@@ -34,19 +34,17 @@ type upgradeSource struct {
 	hasKeyRotationFee bool
 }
 
-// upgradeSources lists the supported upgrade paths to v0.55.x. v0.53 is the
+// upgradeSources lists the supported upgrade paths to main. v0.55 is the
 // default; set SYSTEMTEST_UPGRADE_FROM to run another.
 var upgradeSources = map[string]upgradeSource{
-	"v0.53":   {binaryDir: "v0.53", upgradeName: "v053-to-v055"},
-	"v0.54":   {binaryDir: "v0.54", upgradeName: "v054-to-v055", hasMaxSupply: true},
-	"v0.55.0": {binaryDir: "v0.55.0", upgradeName: "v055-to-v0551", hasMaxSupply: true, hasKeyRotationFee: true},
+	"v0.55": {binaryDir: "v0.55", upgradeName: "v055-to-v056", hasMaxSupply: true, hasKeyRotationFee: true},
 }
 
 func currentUpgradeSource(t *testing.T) upgradeSource {
 	t.Helper()
 	from := os.Getenv("SYSTEMTEST_UPGRADE_FROM")
 	if from == "" {
-		from = "v0.53"
+		from = "v0.55"
 	}
 	src, ok := upgradeSources[from]
 	require.True(t, ok, "unknown SYSTEMTEST_UPGRADE_FROM %q", from)
@@ -79,10 +77,9 @@ func TestChainUpgrade(t *testing.T) {
 
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
-	// Create a fee grant that expires after the upgrade. Grants created by the
-	// standalone x/feegrant module (v0.53.x) store an empty expiry queue value,
-	// which the v2 to v3 store migration rewrites. Without it, the EndBlocker
-	// fails and the chain halts when the grant expires.
+	// Create a fee grant that expires after the upgrade. The EndBlocker must
+	// remove it on the upgraded chain without halting; see the x/feegrant
+	// v2 to v3 store migration for the failure this guards against.
 	granter := cli.GetKeyAddr("node0")
 	grantee := cli.AddKey("feegrantee")
 	blocksToUpgrade := upgradeHeight - systest.Sut.CurrentHeight()

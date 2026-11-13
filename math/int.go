@@ -562,6 +562,13 @@ func FormatInt(v string) (string, error) {
 		v = strings.TrimLeft(v, "0")
 	}
 
+	// A value made up entirely of zeros (e.g. "00") is trimmed down to the empty
+	// string above. Normalize it back to a single "0" so it formats as zero
+	// instead of failing the digit check below as if it held non-digits.
+	if v == "" {
+		v = "0"
+	}
+
 	// Ensure that the string contains only digits at this point.
 	if !hasOnlyDigits(v) {
 		return "", fmt.Errorf("expecting only digits 0-9, but got non-digits in %q", v)

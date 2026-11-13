@@ -168,8 +168,8 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 	if req.Pagination != nil {
 		offset = req.Pagination.Offset
 		limit = req.Pagination.Limit
-	} else {
-		offset = 0
+	}
+	if limit == 0 {
 		limit = query.DefaultLimit
 	}
 
@@ -198,8 +198,8 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		return nil
 	}
 	if req.Pagination != nil && req.Pagination.Reverse {
-		for i, count := offset, uint64(0); i > 0 && count != limit; i, count = i-1, count+1 {
-			if err = decodeTxAt(i); err != nil {
+		for i, count := blockTxsLn-offset, uint64(0); i > 0 && count != limit; i, count = i-1, count+1 {
+			if err = decodeTxAt(i - 1); err != nil {
 				sdkCtx.Logger().Error("failed to decode tx", "error", err)
 			}
 		}

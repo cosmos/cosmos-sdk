@@ -36,6 +36,8 @@ Always read the [App Wiring Changes](#app-wiring-changes) section for more infor
     - [Centralized Authority via Consensus Params](#centralized-authority-via-consensus-params)
         - [How AuthorityParams Works](#how-authorityparams-works)
 - [Upgrade Handler](#upgrade-handler)
+- [x/feegrant (v0.54.5)](#xfeegrant-v0545)
+    - [Fee Allowance Queue Migration](#fee-allowance-queue-migration)
 - [IBC v11 Updates](#ibc-v11-updates)
 - [Cosmos Performance Upgrades (Experimental)](#cosmos-performance-upgrades-experimental)
     - [Cosmos SDK](#cosmos-sdk)
@@ -431,6 +433,23 @@ func (app SimApp) RegisterUpgradeHandlers() {
     }
 }
 ```
+
+## x/feegrant (v0.54.5)
+
+### Fee Allowance Queue Migration
+
+On chains that upgraded from v0.53.x or earlier, fee allowance expiry queue entries (`FeeAllowanceQueue`, prefix `0x01`) may have an empty value. The standalone `cosmossdk.io/x/feegrant` module (v0.1.x, v0.2.0) and the v1 → v2 store migration wrote these entries ([#26944](https://github.com/cosmos/cosmos-sdk/pull/26944)). The keeper reads the queue with `collections.BoolValue`, which cannot decode an empty value, so `RemoveExpiredAllowances` returns an error from the feegrant `EndBlocker` at the first block after such an entry expires.
+
+A chain is affected if both of the following apply:
+
+* it upgraded from v0.53.x or earlier to a v0.54.x or v0.55.x release without this migration, and
+* fee grants with an expiration were created before that upgrade and have not yet expired.
+
+Chains that started on v0.54 or later are not affected, and grants without an expiration never create a queue entry. Any entry under prefix `0x01` of the feegrant store with an empty value marks an affected chain.
+
+The feegrant consensus version goes from 2 to 3. `Migrate2to3` runs through `RunMigrations` in the upgrade handler and rewrites every queue entry that has an empty value to an encoded `true`. Entries that already store a value stay unchanged. The v1 → v2 migration now writes an encoded `true` as well.
+
+Affected chains must run this migration before the earliest empty-valued entry expires.
 
 ## IBC v11 Updates
 

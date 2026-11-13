@@ -48,6 +48,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### STATE-BREAKING
 
+* (x/feegrant) [#26944](https://github.com/cosmos/cosmos-sdk/pull/26944) Add a v2 → v3 store migration that rewrites fee allowance expiry queue entries stored with an empty value to an encoded `true`, and write an encoded `true` in the v1 → v2 migration. The standalone `cosmossdk.io/x/feegrant` module and the v1 → v2 migration wrote empty values, which the keeper cannot decode, so `RemoveExpiredAllowances` returned an error from the `EndBlocker` once such an entry expired.
+
 ### API-BREAKING
 
 ## [v0.54.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.54.4) 

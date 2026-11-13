@@ -1,8 +1,7 @@
 package debug
 
 import (
-	"io"
-	"os"
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -28,23 +27,16 @@ func TestRawBytesCmd(t *testing.T) {
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true
 
-			// the command writes its result with fmt.Printf, so capture os.Stdout
-			r, w, err := os.Pipe()
-			require.NoError(t, err)
-			stdout := os.Stdout
-			os.Stdout = w
-			err = cmd.Execute()
-			os.Stdout = stdout
-			require.NoError(t, w.Close())
-			out, readErr := io.ReadAll(r)
-			require.NoError(t, readErr)
+			var out bytes.Buffer
+			cmd.SetOut(&out)
+			err := cmd.Execute()
 
 			if tc.wantErr {
 				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
-			require.Equal(t, tc.want, string(out))
+			require.Equal(t, tc.want, out.String())
 		})
 	}
 }

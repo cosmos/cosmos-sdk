@@ -33,7 +33,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
-* Allow typed and raw iteration, walking and clearing when an all-`0xff` collection prefix has no finite upper endpoint. Storage key encoding is unchanged, but applications using these operations in state transitions must coordinate the upgrade.
+* [#26947](https://github.com/cosmos/cosmos-sdk/pull/26947) Allow typed and raw iteration, walking and clearing when an all-`0xff` collection prefix has no finite upper endpoint. Storage key encoding is unchanged, but applications using these operations in state transitions must coordinate the upgrade.
 
 ## [v1.4.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv1.4.0)
 

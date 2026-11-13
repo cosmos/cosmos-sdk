@@ -204,7 +204,11 @@ func (fw *fileWatcher) checkHeight() (int64, error) {
 		if err != nil {
 			result = []byte("goleveldb") // set default value, old version may not have config command
 		}
-		blockStoreDB, err := dbm.NewDB("blockstore", dbm.BackendType(result), filepath.Join(fw.daemonHome, "data"))
+		backend, err := parseDBBackend(result)
+		if err != nil {
+			return 0, fmt.Errorf("parse db_backend output %q: %w", result, err)
+		}
+		blockStoreDB, err := dbm.NewDB("blockstore", backend, filepath.Join(fw.daemonHome, "data"))
 		if err != nil {
 			return 0, err
 		}

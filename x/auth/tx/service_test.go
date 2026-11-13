@@ -59,6 +59,10 @@ func TestGetBlockWithTxsPagination(t *testing.T) {
 		{"explicit limit", &query.PageRequest{Limit: 2}, []string{"tx0", "tx1"}},
 		{"offset without limit", &query.PageRequest{Offset: 1}, []string{"tx1", "tx2"}},
 		{"count_total without limit", &query.PageRequest{CountTotal: true}, []string{"tx0", "tx1", "tx2"}},
+		{"reverse", &query.PageRequest{Reverse: true}, []string{"tx2", "tx1", "tx0"}},
+		{"reverse with limit", &query.PageRequest{Reverse: true, Limit: 2}, []string{"tx2", "tx1"}},
+		{"reverse with offset", &query.PageRequest{Reverse: true, Offset: 1}, []string{"tx1", "tx0"}},
+		{"reverse with offset and limit", &query.PageRequest{Reverse: true, Offset: 1, Limit: 1}, []string{"tx1"}},
 	}
 
 	for _, tc := range tests {

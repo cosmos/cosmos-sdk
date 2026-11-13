@@ -70,7 +70,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Schedule legacy simulation votes on the proposal just submitted instead of the next unused proposal ID, drop the trailing nil future operation, skip scheduled votes whose proposal is not in its voting period, and schedule votes on expedited proposals within the expedited voting period (or before the voting end time when the proposal is already in voting).
 * (x/simulation) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Time-scheduled future operations were silently dropped by `queueOperations` (the appended queue was never returned to the caller), and executed time operations were never removed from the queue. Both now update the caller's queue.
 * (x/auth/tx) [#26815](https://github.com/cosmos/cosmos-sdk/pull/26815) `GetSigningTxData` now converts the nested `ModeInfos` of a multisig `ModeInfo`; previously the converted entries were discarded and the slice was left as nil placeholders.
-* (x/auth/tx) [#26955](https://github.com/cosmos/cosmos-sdk/pull/26955) `GetBlockWithTxs` now uses the default limit when `pagination.limit` is 0; a request that set only `offset` or `count_total` returned no txs.
+* (x/auth/tx) [#26955](https://github.com/cosmos/cosmos-sdk/pull/26955) `GetBlockWithTxs` now uses the default limit when `pagination.limit` is 0; a request that set only `offset` or `count_total` returned no txs. Reverse pagination now walks back from the last tx and includes the first one, with `offset` counted from the end like other paginated queries.
 
 ### Deprecated
 

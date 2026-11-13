@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### State Machine Breaking
 
 * (enterprise/poa) [#26875](https://github.com/cosmos/cosmos-sdk/pull/26875) Truncate per-validator fee shares so a checkpoint never allocates more than the module balance, and add a v2 → v3 store migration that trims any excess already allocated. Previously, rounding could push allocated fees above the balance and make every fee checkpoint (validator create/update, key rotation, fee withdrawal) panic until a fee in that denom arrived. Allocated fees exceeding the balance now return `ErrInvalidAllocatedFees` instead of panicking. `InitGenesis` now checks imported allocated fees against the module balance, so bank genesis must run before poa: an excess of at most 1e-18 per exported validator per denom (v1.x rounding dust) is trimmed, and anything larger fails with `ErrInvalidAllocatedFees`.
+* (x/feegrant) [#26944](https://github.com/cosmos/cosmos-sdk/pull/26944) Add a v2 → v3 store migration that rewrites fee allowance expiry queue entries stored with an empty value to an encoded `true`, and write an encoded `true` in the v1 → v2 migration. The standalone `cosmossdk.io/x/feegrant` module and the v1 → v2 migration wrote empty values, which the keeper cannot decode, so `RemoveExpiredAllowances` returned an error from the `EndBlocker` once such an entry expired.
 
 ### Features
 
@@ -57,6 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (store) [#26782](https://github.com/cosmos/cosmos-sdk/pull/26782) Fix a data race in the root multi-store pruning test.
 * (blockstm) [#26779](https://github.com/cosmos/cosmos-sdk/pull/26779) perf(blockstm): memoize merge iterator source.
 * (deps) [#26850](https://github.com/cosmos/cosmos-sdk/pull/26850) Bump google.golang.org/grpc to v1.84.0 in all modules except `api` and `depinject`.
+* (deps) [#26967](https://github.com/cosmos/cosmos-sdk/pull/26967) Bump cosmos/iavl to v1.2.9, which validates malformed snapshot input during import.
 
 
 ### Bug Fixes
@@ -70,6 +72,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Schedule legacy simulation votes on the proposal just submitted instead of the next unused proposal ID, drop the trailing nil future operation, skip scheduled votes whose proposal is not in its voting period, and schedule votes on expedited proposals within the expedited voting period (or before the voting end time when the proposal is already in voting).
 * (x/simulation) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Time-scheduled future operations were silently dropped by `queueOperations` (the appended queue was never returned to the caller), and executed time operations were never removed from the queue. Both now update the caller's queue.
 * (x/auth/tx) [#26815](https://github.com/cosmos/cosmos-sdk/pull/26815) `GetSigningTxData` now converts the nested `ModeInfos` of a multisig `ModeInfo`; previously the converted entries were discarded and the slice was left as nil placeholders.
+* (keys) [#26833](https://github.com/cosmos/cosmos-sdk/pull/26833) Strip leading and trailing whitespace when reading a mnemonic from a source file.
 * (x/genutil) [#26956](https://github.com/cosmos/cosmos-sdk/pull/26956) `bulk-add-genesis-account` now treats an address listed twice in the same file like one added by an earlier run: it errors without `--append` and merges the coins with it. Previously both entries were written, leaving a genesis with a duplicate account and balance that fails `validate-genesis`.
 
 ### Deprecated

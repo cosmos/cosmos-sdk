@@ -15,7 +15,7 @@ var (
 	FeeAllowanceKeyPrefix = []byte{0x00}
 
 	// FeeAllowanceQueueKeyPrefix is the set of the kvstore for fee allowance keys data
-	// - 0x01<allowance_prefix_queue_key_bytes>: <empty value>
+	// - 0x01<allowance_prefix_queue_key_bytes>: <bool value>
 	FeeAllowanceQueueKeyPrefix = []byte{0x01}
 )
 

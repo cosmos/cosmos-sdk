@@ -548,9 +548,12 @@ build-system-test-current: build
 
 # test-sdk-system runs only the core SDK system tests (tests/systemtests), not enterprise.
 # Used by CI to avoid redundant runs when test-poa-system and test-group-system exist.
-test-sdk-system: build-v54 build-system-test-current
-	mkdir -p ./tests/systemtests/binaries/v0.54 ./tests/systemtests/testnet
-	mv $(BUILDDIR)/simdv54 ./tests/systemtests/binaries/v0.54/simd
+# The upgrade test defaults to v0.53, the default upgrade path for v0.55.x. Set
+# SYSTEMTEST_UPGRADE_FROM=v0.54 or v0.55.0 and place that simd under
+# tests/systemtests/binaries/<version>/ to test another path.
+test-sdk-system: build-v53 build-system-test-current
+	mkdir -p ./tests/systemtests/binaries/v0.53 ./tests/systemtests/testnet
+	cp $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
 	$(MAKE) -C tests/systemtests test
 
 test-system: test-sdk-system
@@ -565,3 +568,11 @@ build-v54:
 	@if [ -f $(BUILDDIR)/simdv54 ]; then echo "build/simdv54 exists, skipping"; else \
 		BUILDDIR=$(BUILDDIR) bash scripts/build-v54.sh; fi
 .PHONY: build-v54
+
+# build-v53 builds the v0.53 simd binary for the upgrade system test from the
+# latest v0.53 release tag. Skips if $(BUILDDIR)/simdv53 exists.
+V053_TAG ?= v0.53.8
+build-v53:
+	@if [ -f $(BUILDDIR)/simdv53 ]; then echo "build/simdv53 exists, skipping"; else \
+		bash scripts/build-simd-from-tag.sh $(V053_TAG) $(BUILDDIR)/simdv53; fi
+.PHONY: build-v53

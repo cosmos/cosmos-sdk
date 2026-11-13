@@ -16,6 +16,7 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [Mempool Interface Changes](#mempool-interface-changes)
     * [Staking: Key Rotation Wiring and Interface Changes](#staking-key-rotation-wiring-and-interface-changes)
     * [genutil: ExportGenesisFileWithTime Signature](#genutil-exportgenesisfilewithtime-signature)
+    * [x/safety](#xsafety)
     * [Upgrade Handler and Store Migrations](#upgrade-handler-and-store-migrations)
 * [Upgrading from v0.53.x](#upgrading-from-v053x)
 * [New Features and Non-Breaking Changes](#new-features-and-non-breaking-changes)
@@ -146,6 +147,26 @@ func ExportGenesisFileWithTime(genFile, chainID string, validators []cmttypes.Ge
 func ExportGenesisFileWithTime(genFile string, appGenesis *types.AppGenesis, genTime time.Time) error
 ```
 
+### x/safety
+
+`x/safety` replaces `contrib/x/circuit`. To wire it, follow [Wiring](x/safety/README.md#wiring) in its README: build the keeper, call `app.SetCircuitBreaker(app.SafetyKeeper)`, register the module, order `safety` after `genutil` in `InitGenesis`, and set `CircuitBreaker: app.SafetyKeeper` in `ante.HandlerOptions`. An ante chain the app builds itself, such as a separate chain for Ethereum txs, adds `ante.NewCircuitBreakerDecorator(app.SafetyKeeper)` right after `SetUpContextDecorator`. A live chain adds `safetytypes.StoreKey` to `StoreUpgrades.Added` in the upgrade that introduces it (see the [Reference Upgrade Handler](#reference-upgrade-handler)). A chain moving off `contrib/x/circuit` removes that module's wiring and store key in the same upgrade; see [From contrib/x/circuit](x/safety/README.md#from-contribxcircuit). The default genesis has no operator, so call `app.SafetyKeeper.SetParams` right after `RunMigrations` in the upgrade handler to name one; see [Upgrade handler](x/safety/README.md#upgrade-handler). x/safety does not read `contrib/x/circuit` state, so trip any msg that must stay disabled from the upgrade handler with `msgservice.Dispatch` and a `MsgTrip` from the new operator; see [From contrib/x/circuit](x/safety/README.md#from-contribxcircuit). `contrib/x/circuit` is deprecated, so staticcheck reports SA1019 on each import of the package until the chain moves off it.
+
+x/safety supports manual wiring only: it has no depinject module config, no autocli options and no types in `cosmossdk.io/api`. A `runtime.App` registers it with `RegisterStores` and `RegisterModules` and sets its own ante handler with `skip_ante_handler` before `Load`; see [Apps built with depinject](x/safety/README.md#apps-built-with-depinject). Operators use the generic `tx safety` and `q safety` commands that autocli derives from the module's services; see [Operating](x/safety/README.md#operating).
+
+The circuit breaker only sees msgs that go through the `MsgServiceRouter`. Code outside a module that runs one of its msgs, such as an EVM precompile, should run it with `msgservice.Dispatch` instead of calling the msg server, so a trip stops it:
+
+```go
+// Before
+resp, err := bankkeeper.NewMsgServerImpl(app.BankKeeper).Send(ctx, msg)
+
+// After
+resp, err := msgservice.Dispatch[*banktypes.MsgSendResponse](ctx, app.MsgServiceRouter(), msg)
+```
+
+`Dispatch` does not check signers, so authorize them before the call as before. It writes its branch of `ctx` only on success, so the multistore under `ctx` must return a branch from `CacheMultiStore`, not itself. See [Direct callers](x/safety/README.md#direct-callers).
+
+Wiring x/safety leaves gas unchanged. The circuit breaker check charges no gas in the router, the ante decorator or `msgservice.Dispatch`, so delivered and simulated gas match a chain with no circuit breaker set, and clients that hard-code gas limits need no change. See [Gas](x/safety/README.md#gas).
+
 ### Upgrade Handler and Store Migrations
 
 #### Module Migrations
@@ -177,15 +198,15 @@ func (app SimApp) RegisterUpgradeHandlers() {
 
     if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
         storeUpgrades := storetypes.StoreUpgrades{
-            Added:   []string{},
+            // Leave safetytypes.StoreKey out if the app does not wire x/safety.
+            Added: []string{safetytypes.StoreKey},
+            // Add "params" if the app still had the x/params store mounted.
             Deleted: []string{"protocolpool"},
         }
         app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
     }
 }
 ```
-
-Add `"params"` to `Deleted` as well if your app still had the `x/params` store mounted.
 
 ## Upgrading from v0.53.x
 

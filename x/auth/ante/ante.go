@@ -3,6 +3,7 @@ package ante
 import (
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -24,6 +25,11 @@ type HandlerOptions struct {
 	// This allows for modification of signature verification behavior, such as how long an unordered transaction can
 	// be valid, or how much gas to charge for unordered transactions.
 	SigVerifyOptions []SigVerificationDecoratorOption
+	// CircuitBreaker, when set, adds a CircuitBreakerDecorator right after
+	// context setup, so a tx with a disabled msg fails CheckTx before it pays
+	// fees or enters the mempool. Pass the breaker given to
+	// BaseApp.SetCircuitBreaker, such as the x/safety keeper.
+	CircuitBreaker baseapp.CircuitBreaker
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -44,6 +50,11 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 
 	anteDecorators := []sdk.AnteDecorator{
 		NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+	}
+	if options.CircuitBreaker != nil {
+		anteDecorators = append(anteDecorators, NewCircuitBreakerDecorator(options.CircuitBreaker))
+	}
+	anteDecorators = append(anteDecorators,
 		NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		NewValidateBasicDecorator(),
 		NewTxTimeoutHeightDecorator(),
@@ -55,7 +66,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler, options.SigVerifyOptions...),
 		NewIncrementSequenceDecorator(options.AccountKeeper),
-	}
+	)
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil
 }

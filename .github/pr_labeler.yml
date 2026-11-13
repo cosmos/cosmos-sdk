@@ -49,6 +49,8 @@
   - x/upgrade/**/*
 "C:x/epochs":
   - x/epochs/**/*
+"C:x/safety":
+  - x/safety/**/*
 "Type: ADR":
   - docs/architecture/**/*
 "Type: Build":

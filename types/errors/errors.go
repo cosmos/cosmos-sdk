@@ -145,4 +145,8 @@ var (
 	// ErrTxTimeout defines an error for when a tx is rejected out due to an
 	// explicitly set timeout timestamp.
 	ErrTxTimeout = errorsmod.Register(RootCodespace, 42, "tx timeout")
+
+	// ErrCircuitBreakerTripped defines an error for when the app's circuit
+	// breaker refuses a msg type without an error of its own.
+	ErrCircuitBreakerTripped = errorsmod.Register(RootCodespace, 43, "circuit breaker disables execution of this message")
 )

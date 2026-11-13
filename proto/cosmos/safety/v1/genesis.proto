@@ -1,0 +1,17 @@
+syntax = "proto3";
+package cosmos.safety.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/safety/v1/types.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/safety/types";
+
+// GenesisState defines the safety module's genesis state.
+message GenesisState {
+  // params defines the module parameters.
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  // disabled_patterns lists the patterns that are disabled at genesis.
+  repeated string disabled_patterns = 2;
+}

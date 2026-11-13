@@ -310,45 +310,54 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 			config := types.GetConfig()
 			config.SetBech32PrefixForAccount(
 				prefix+types.PrefixAccount,
-				prefix+types.PrefixPublic)
+				prefix+types.PrefixPublic,
+			)
 
 			acc := types.AccAddress(pub.Address())
 			s.Require().True(strings.HasPrefix(
 				acc.String(),
-				prefix+types.PrefixAccount), acc.String())
+				prefix+types.PrefixAccount,
+			), acc.String())
 
 			bech32Pub := legacybech32.MustMarshalPubKey(legacybech32.AccPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32Pub,
-				prefix+types.PrefixPublic))
+				prefix+types.PrefixPublic,
+			))
 
 			config.SetBech32PrefixForValidator(
 				prefix+types.PrefixValidator+types.PrefixAddress,
-				prefix+types.PrefixValidator+types.PrefixPublic)
+				prefix+types.PrefixValidator+types.PrefixPublic,
+			)
 
 			val := types.ValAddress(pub.Address())
 			s.Require().True(strings.HasPrefix(
 				val.String(),
-				prefix+types.PrefixValidator+types.PrefixAddress))
+				prefix+types.PrefixValidator+types.PrefixAddress,
+			))
 
 			bech32ValPub := legacybech32.MustMarshalPubKey(legacybech32.ValPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32ValPub,
-				prefix+types.PrefixValidator+types.PrefixPublic))
+				prefix+types.PrefixValidator+types.PrefixPublic,
+			))
 
 			config.SetBech32PrefixForConsensusNode(
 				prefix+types.PrefixConsensus+types.PrefixAddress,
-				prefix+types.PrefixConsensus+types.PrefixPublic)
+				prefix+types.PrefixConsensus+types.PrefixPublic,
+			)
 
 			cons := types.ConsAddress(pub.Address())
 			s.Require().True(strings.HasPrefix(
 				cons.String(),
-				prefix+types.PrefixConsensus+types.PrefixAddress))
+				prefix+types.PrefixConsensus+types.PrefixAddress,
+			))
 
 			bech32ConsPub := legacybech32.MustMarshalPubKey(legacybech32.ConsPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32ConsPub,
-				prefix+types.PrefixConsensus+types.PrefixPublic))
+				prefix+types.PrefixConsensus+types.PrefixPublic,
+			))
 		}
 	}
 }

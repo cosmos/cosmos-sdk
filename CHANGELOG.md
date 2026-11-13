@@ -43,6 +43,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client/keys) [#26872](https://github.com/cosmos/cosmos-sdk/pull/26872) `keys add --key-type ml_dsa_65` now derives keys with PQHD by default and requires a 24-word mnemonic. Pass `--legacy-bip44` to opt out, which is required to recover `ml_dsa_65` keys created by v0.55; it prints a warning that the key shares the BIP44 index space with secp256k1 keys. The unreleased `--bip85` flag is removed. See `UPGRADING.md`.
 * (x/auth) [#26672](https://github.com/cosmos/cosmos-sdk/pull/26672) An unordered transaction whose `timeout_timestamp` equals the block time is now rejected
 
+### State Machine Breaking
+
+* (enterprise/poa) [#26875](https://github.com/cosmos/cosmos-sdk/pull/26875) Truncate per-validator fee shares so a checkpoint never allocates more than the module balance, and add a v2 → v3 store migration that trims any excess already allocated. Previously, rounding could push allocated fees above the balance and make every fee checkpoint (validator create/update, key rotation, fee withdrawal) panic until a fee in that denom arrived. Allocated fees exceeding the balance now return `ErrInvalidAllocatedFees` instead of panicking. `InitGenesis` now checks imported allocated fees against the module balance, so bank genesis must run before poa: an excess of at most 1e-18 per exported validator per denom (v1.x rounding dust) is trimmed, and anything larger fails with `ErrInvalidAllocatedFees`.
+
 ### Features
 
 * (crypto/hd) [#26872](https://github.com/cosmos/cosmos-sdk/pull/26872) Add experimental PQHD BIP85/SHAKE256 derivation for ML-DSA-65 account keys from a 24-word mnemonic, pinned to the pre-v1 family-block registry (scheme 201). Coin-type/account/index separation and NFKD passphrases (without whitespace trimming) match PQHD. Earlier unreleased `--bip85` keys, including scheme-3 draft keys, are incompatible; see `UPGRADING.md`.
@@ -51,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (blockstm) [#26773](https://github.com/cosmos/cosmos-sdk/pull/26773) Batch copy-on-write B-tree insertions for MVData index updates, reducing allocations and index publication overhead when adding multiple keys.
 * (types) [#26729](https://github.com/cosmos/cosmos-sdk/pull/26729) Memoize `GetConfig`'s "hostname|binary|pid" registry-key fallback, which derived the executable path, hostname, and PID on every call.
 * (store) [#26782](https://github.com/cosmos/cosmos-sdk/pull/26782) Fix a data race in the root multi-store pruning test.
 * (blockstm) [#26779](https://github.com/cosmos/cosmos-sdk/pull/26779) perf(blockstm): memoize merge iterator source.
@@ -64,8 +69,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [#26772](https://github.com/cosmos/cosmos-sdk/pull/26772) Panic with a descriptive error when accessing an unregistered store instead of silently using store index zero.
 * (x/genutil) [#26741](https://github.com/cosmos/cosmos-sdk/issues/26741) Preserve vote extension enable height when exporting genesis state.
 * (baseapp) [#26738](https://github.com/cosmos/cosmos-sdk/pull/26738) Return genesis transaction events in the first block's `FinalizeBlock` response so block indexers can observe them.
+* (baseapp) [#26800](https://github.com/cosmos/cosmos-sdk/pull/26800) Take a read lock rather than an exclusive lock in `getContextForTx`, so transaction execution no longer serializes against the `Name`, `Version`, `AppVersion` and `Info` readers; `mu` documents itself as protecting only those three fields, none of which this path touches.
 * (x/gov) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Schedule legacy simulation votes on the proposal just submitted instead of the next unused proposal ID, drop the trailing nil future operation, skip scheduled votes whose proposal is not in its voting period, and schedule votes on expedited proposals within the expedited voting period (or before the voting end time when the proposal is already in voting).
 * (x/simulation) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Time-scheduled future operations were silently dropped by `queueOperations` (the appended queue was never returned to the caller), and executed time operations were never removed from the queue. Both now update the caller's queue.
+* (x/auth/tx) [#26815](https://github.com/cosmos/cosmos-sdk/pull/26815) `GetSigningTxData` now converts the nested `ModeInfos` of a multisig `ModeInfo`; previously the converted entries were discarded and the slice was left as nil placeholders.
 
 ### Deprecated
 

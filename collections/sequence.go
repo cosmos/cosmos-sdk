@@ -14,14 +14,14 @@ type Sequence Item[uint64]
 // NewSequence instantiates a new sequence given
 // a Schema, a Prefix and humanized name for the sequence.
 func NewSequence(schema *SchemaBuilder, prefix Prefix, name string) Sequence {
-	return (Sequence)(NewItem(schema, prefix, name, Uint64Value))
+	return Sequence(NewItem(schema, prefix, name, Uint64Value))
 }
 
 // Peek returns the current sequence value, if no number
 // is set then the DefaultSequenceStart is returned.
 // Errors on encoding issues.
 func (s Sequence) Peek(ctx context.Context) (uint64, error) {
-	n, err := (Item[uint64])(s).Get(ctx)
+	n, err := Item[uint64](s).Get(ctx)
 	switch {
 	case err == nil:
 		return n, nil
@@ -45,5 +45,5 @@ func (s Sequence) Next(ctx context.Context) (uint64, error) {
 // Set hard resets the sequence to the provided value.
 // Errors on encoding issues.
 func (s Sequence) Set(ctx context.Context, value uint64) error {
-	return (Item[uint64])(s).Set(ctx, value)
+	return Item[uint64](s).Set(ctx, value)
 }

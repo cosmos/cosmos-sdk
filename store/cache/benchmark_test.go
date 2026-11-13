@@ -16,9 +16,9 @@ func freshMgr() *CommitKVStoreCacheManager {
 }
 
 func populate(mgr *CommitKVStoreCacheManager) {
-	mgr.caches["this one"] = (types.CommitKVStore)(nil)
-	mgr.caches["those ones are the ones"] = (types.CommitKVStore)(nil)
-	mgr.caches["very huge key right here and there are we going to ones are the ones"] = (types.CommitKVStore)(nil)
+	mgr.caches["this one"] = types.CommitKVStore(nil)
+	mgr.caches["those ones are the ones"] = types.CommitKVStore(nil)
+	mgr.caches["very huge key right here and there are we going to ones are the ones"] = types.CommitKVStore(nil)
 }
 
 func BenchmarkReset(b *testing.B) {

@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### State Machine Breaking
 
 * (enterprise/poa) [#26875](https://github.com/cosmos/cosmos-sdk/pull/26875) Truncate per-validator fee shares so a checkpoint never allocates more than the module balance, and add a v2 → v3 store migration that trims any excess already allocated. Previously, rounding could push allocated fees above the balance and make every fee checkpoint (validator create/update, key rotation, fee withdrawal) panic until a fee in that denom arrived. Allocated fees exceeding the balance now return `ErrInvalidAllocatedFees` instead of panicking. `InitGenesis` now checks imported allocated fees against the module balance, so bank genesis must run before poa: an excess of at most 1e-18 per exported validator per denom (v1.x rounding dust) is trimmed, and anything larger fails with `ErrInvalidAllocatedFees`.
+* (x/feegrant) [#26944](https://github.com/cosmos/cosmos-sdk/pull/26944) Add a v2 → v3 store migration that rewrites fee allowance expiry queue entries stored with an empty value to an encoded `true`, and write an encoded `true` in the v1 → v2 migration. The standalone `cosmossdk.io/x/feegrant` module and the v1 → v2 migration wrote empty values, which the keeper cannot decode, so `RemoveExpiredAllowances` returned an error from the `EndBlocker` once such an entry expired.
 
 ### Features
 
@@ -57,6 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (store) [#26782](https://github.com/cosmos/cosmos-sdk/pull/26782) Fix a data race in the root multi-store pruning test.
 * (blockstm) [#26779](https://github.com/cosmos/cosmos-sdk/pull/26779) perf(blockstm): memoize merge iterator source.
 * (deps) [#26850](https://github.com/cosmos/cosmos-sdk/pull/26850) Bump google.golang.org/grpc to v1.84.0 in all modules except `api` and `depinject`.
+* (deps) [#26967](https://github.com/cosmos/cosmos-sdk/pull/26967) Bump cosmos/iavl to v1.2.9, which validates malformed snapshot input during import.
 
 
 ### Bug Fixes

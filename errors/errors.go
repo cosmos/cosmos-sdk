@@ -272,6 +272,15 @@ func (e *wrappedError) GRPCStatus() *grpcstatus.Status {
 			w = x.Cause()
 		}
 		if x == nil {
+			// Standard wrappers expose Unwrap instead of the legacy Cause method.
+			var hasStatus interface {
+				GRPCStatus() *grpcstatus.Status
+			}
+			if errors.As(w, &hasStatus) {
+				if status := hasStatus.GRPCStatus(); status != nil {
+					return grpcstatus.New(status.Code(), fmt.Sprintf("%s: %s", status.Message(), e.msg))
+				}
+			}
 			return grpcstatus.New(grpccodes.Unknown, e.msg)
 		}
 	}

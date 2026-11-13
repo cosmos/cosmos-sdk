@@ -27,6 +27,14 @@ The headline changes in this release are the removal of three legacy surfaces (`
 * [Behavior Changes Affecting Dapps and Indexers](#behavior-changes-affecting-dapps-and-indexers)
 * [enterprise/poa (unreleased)](#enterprisepoa-unreleased)
     * [Fee Allocation Migration](#fee-allocation-migration)
+* [Collections (unreleased)](#collections-unreleased)
+    * [Unbounded Collection Iteration](#unbounded-collection-iteration)
+
+## Collections (unreleased)
+
+### Unbounded Collection Iteration
+
+Collections with an all-`0xff` prefix, including `collections.NewPrefix(255)`, now support typed and raw iteration, walking and clearing without a finite upper endpoint. These operations previously returned `ErrInvalidIterator` because the nil upper bound was compared as an ordinary byte slice. Storage key encoding is unchanged and this fix requires no key migration. Applications using the affected operations in deterministic state transitions should activate the change in a coordinated upgrade, since the operations now succeed instead of returning an error.
 
 ## Breaking Changes
 

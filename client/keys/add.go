@@ -177,6 +177,23 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		algo = hd.MlDsa65BIP85
 	}
 
+	coinType, _ := cmd.Flags().GetUint32(flagCoinType)
+	account, _ := cmd.Flags().GetUint32(flagAccount)
+	index, _ := cmd.Flags().GetUint32(flagIndex)
+	hdPath, _ := cmd.Flags().GetString(flagHDPath)
+	useLedger, _ := cmd.Flags().GetBool(flags.FlagUseLedger)
+	if useLedger {
+		if algo.Name() == hd.MlDsa65Type {
+			return errors.New("ledger devices do not support ml_dsa_65 keys")
+		}
+		if len(hdPath) != 0 {
+			return errors.New("cannot set custom bip32 path with ledger")
+		}
+	}
+
+	// When overwriting an existing key, delete it only once the replacement is
+	// ready to be saved, so that a failed add leaves the existing key in place.
+	replaceExisting := func() error { return nil }
 	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); dryRun {
 		// use in memory keybase
 		kb = keyring.NewInMemory(ctx.Codec)
@@ -193,10 +210,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 				return errors.New("aborted")
 			}
 
-			err2 = kb.Delete(name)
-			if err2 != nil {
-				return err2
-			}
+			replaceExisting = func() error { return kb.Delete(name) }
 		}
 
 		multisigKeys, _ := cmd.Flags().GetStringSlice(flagMultisig)
@@ -209,6 +223,9 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 			seenKeys := make(map[string]struct{})
 			for i, keyName := range multisigKeys {
+				if keyName == name {
+					return fmt.Errorf("multisig key %s cannot include the key it replaces", name)
+				}
 				if _, ok := seenKeys[keyName]; ok {
 					return fmt.Errorf("duplicate multisig keys: %s", keyName)
 				}
@@ -233,6 +250,9 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			}
 
 			pk := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
+			if err := replaceExisting(); err != nil {
+				return err
+			}
 			k, err := kb.SaveMultisig(name, pk)
 			if err != nil {
 				return err
@@ -253,6 +273,9 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			return err
 		}
 
+		if err := replaceExisting(); err != nil {
+			return err
+		}
 		k, err := kb.SaveOfflineKey(name, pk)
 		if err != nil {
 			return err
@@ -288,6 +311,9 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			return err
 		}
 
+		if err := replaceExisting(); err != nil {
+			return err
+		}
 		k, err := kb.SaveOfflineKey(name, pk)
 		if err != nil {
 			return fmt.Errorf("failed to save offline key: %w", err)
@@ -295,12 +321,6 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 		return printCreate(cmd, k, false, "", outputFormat)
 	}
-
-	coinType, _ := cmd.Flags().GetUint32(flagCoinType)
-	account, _ := cmd.Flags().GetUint32(flagAccount)
-	index, _ := cmd.Flags().GetUint32(flagIndex)
-	hdPath, _ := cmd.Flags().GetString(flagHDPath)
-	useLedger, _ := cmd.Flags().GetBool(flags.FlagUseLedger)
 
 	if len(hdPath) == 0 {
 		if pqhd {
@@ -311,14 +331,12 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		} else {
 			hdPath = hd.CreateHDPath(coinType, account, index).String()
 		}
-	} else if useLedger {
-		return errors.New("cannot set custom bip32 path with ledger")
 	}
 
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
 	if useLedger {
-		if algo.Name() == hd.MlDsa65Type {
-			return errors.New("ledger devices do not support ml_dsa_65 keys")
+		if err := replaceExisting(); err != nil {
+			return err
 		}
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 		k, err := kb.SaveLedgerKey(name, hd.Secp256k1, bech32PrefixAccAddr, coinType, account, index)
@@ -417,10 +435,25 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			"Create new post-quantum keys without --legacy-bip44 to use the separate PQHD namespace. See the keyring documentation.")
 	}
 
-	k, err := kb.NewAccount(name, mnemonic, bip39Passphrase, hdPath, algo)
+	// Derive the key before replacing an existing one, so that a bad mnemonic,
+	// path or duplicate address cannot delete the existing key.
+	derivedPriv, err := algo.Derive()(mnemonic, bip39Passphrase, hdPath)
 	if errors.Is(err, hd.ErrMlDsa65BIP85Mnemonic) || errors.Is(err, hd.ErrMlDsa65BIP85Path) {
 		return fmt.Errorf("%w; to recover an ml_dsa_65 key created before PQHD, pass --legacy-bip44", err)
 	}
+	if err != nil {
+		return err
+	}
+	address := sdk.AccAddress(algo.Generate()(derivedPriv).PubKey().Address())
+	clear(derivedPriv)
+	if existing, err := kb.KeyByAddress(address); err == nil && existing.Name != name {
+		return keyring.ErrDuplicatedAddress
+	}
+	if err := replaceExisting(); err != nil {
+		return err
+	}
+
+	k, err := kb.NewAccount(name, mnemonic, bip39Passphrase, hdPath, algo)
 	if err != nil {
 		return err
 	}

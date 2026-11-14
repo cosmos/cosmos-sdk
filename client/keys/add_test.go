@@ -707,3 +707,66 @@ func Test_runAddCmdMnemonicSource(t *testing.T) {
 		})
 	}
 }
+
+// TestAddFailedOverwriteKeepsExistingKey checks that when the user confirms
+// overwriting an existing key but the new key cannot be created, the existing
+// key is left in place.
+func TestAddFailedOverwriteKeepsExistingKey(t *testing.T) {
+	mnemonic24 := strings.Repeat("abandon ", 23) + "art"
+	mnemonic12 := strings.Repeat("abandon ", 11) + "about"
+	for _, tc := range []struct {
+		name, input, err string
+		args             []string
+		setup            func(t *testing.T, kb keyring.Keyring)
+	}{
+		{name: "ledger ml_dsa_65", input: "y\n", err: "ledger devices do not support ml_dsa_65", args: []string{"--key-type=ml_dsa_65", "--ledger"}},
+		{name: "ledger custom path", input: "y\n", err: "cannot set custom bip32 path with ledger", args: []string{"--ledger", "--hd-path=m/44'/118'/0'/0/1"}},
+		{name: "pqhd 12-word mnemonic", input: "y\n" + mnemonic12 + "\n", err: "pass --legacy-bip44", args: []string{"--key-type=ml_dsa_65", "--recover"}},
+		{name: "pqhd bip44 path", input: "y\n" + mnemonic24 + "\n", err: "pass --legacy-bip44", args: []string{"--key-type=ml_dsa_65", "--recover", "--hd-path=m/44'/118'/0'/0/0"}},
+		{name: "pqhd invalid checksum", input: "y\n" + strings.Repeat("abandon ", 24) + "\n", err: "Invalid byte", args: []string{"--key-type=ml_dsa_65", "--recover"}},
+		{name: "invalid secp256k1 path", input: "y\n" + mnemonic24 + "\n", err: "invalid", args: []string{"--recover", "--hd-path=m/notapath"}},
+		{
+			name: "duplicate address", input: "y\n" + mnemonic24 + "\n", err: keyring.ErrDuplicatedAddress.Error(), args: []string{"--recover"},
+			setup: func(t *testing.T, kb keyring.Keyring) {
+				t.Helper()
+				_, err := kb.NewAccount("other", mnemonic24, "", sdk.FullFundraiserPath, hd.Secp256k1)
+				require.NoError(t, err)
+			},
+		},
+		{
+			name: "multisig includes itself", input: "y\n", err: "cannot include the key it replaces", args: []string{"--multisig=victim,other", "--multisig-threshold=1"},
+			setup: func(t *testing.T, kb keyring.Keyring) {
+				t.Helper()
+				_, _, err := kb.NewMnemonic("other", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+				require.NoError(t, err)
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := AddKeyCommand()
+			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+			cdc := moduletestutil.MakeTestEncodingConfig().Codec
+			kb := keyring.NewInMemory(cdc)
+			victim, _, err := kb.NewMnemonic("victim", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+			require.NoError(t, err)
+			wantAddr, err := victim.GetAddress()
+			require.NoError(t, err)
+			if tc.setup != nil {
+				tc.setup(t, kb)
+			}
+
+			mockIn.Reset(tc.input)
+			clientCtx := client.Context{}.WithKeyring(kb).WithCodec(cdc).WithInput(mockIn)
+			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+			cmd.SetArgs(append([]string{"victim", "--no-backup"}, tc.args...))
+			require.ErrorContains(t, cmd.ExecuteContext(ctx), tc.err)
+
+			got, err := kb.Key("victim")
+			require.NoError(t, err, "existing key was deleted")
+			gotAddr, err := got.GetAddress()
+			require.NoError(t, err)
+			require.Equal(t, wantAddr, gotAddr)
+		})
+	}
+}

@@ -36,10 +36,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Bug Fixes
-
-* [#26819](https://github.com/cosmos/cosmos-sdk/pull/26819) Fix the inverted retry condition when `upgrade-info.json` is still empty: the watcher now keeps waiting (up to 10 × 2 ms) until the write lands instead of giving up after the first empty stat.
-
 ### Improvements
 
 * [#23720](https://github.com/cosmos/cosmos-sdk/pull/23720) Get block height from db after node execution fails
@@ -48,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#23683](https://github.com/cosmos/cosmos-sdk/pull/23683) Replace `SigInt` with `SigTerm` to gracefully shutdown the process.
 * [#26526](https://github.com/cosmos/cosmos-sdk/pull/26526) Buffer the `cmdDone` and `psChan` channels in `WaitForUpgradeOrExit` so the `cmd.Wait` / `Process.Wait` goroutines do not leak on the upgrade and shutdown-grace-timeout paths.
+* [#26819](https://github.com/cosmos/cosmos-sdk/pull/26819) Fix the inverted retry condition when `upgrade-info.json` is still empty: the watcher now keeps waiting (up to 10 × 2 ms) until the write lands instead of giving up after the first empty stat.
 
 ## v1.7.1 - 2025-01-12
 

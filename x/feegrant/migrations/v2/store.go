@@ -3,6 +3,7 @@ package v2
 import (
 	"context"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -13,6 +14,13 @@ import (
 )
 
 func addAllowancesByExpTimeQueue(ctx context.Context, store store.KVStore, cdc codec.BinaryCodec) error {
+	// The keeper reads the queue with collections.BoolValue, which cannot
+	// decode an empty value, so every queue entry stores an encoded true.
+	queueValue, err := collections.BoolValue.Encode(true)
+	if err != nil {
+		return err
+	}
+
 	prefixStore := prefix.NewStore(runtime.KVStoreAdapter(store), FeeAllowanceKeyPrefix)
 	iterator := prefixStore.Iterator(nil, nil)
 	defer iterator.Close()
@@ -41,7 +49,7 @@ func addAllowancesByExpTimeQueue(ctx context.Context, store store.KVStore, cdc c
 				prefixStore.Delete(key)
 			} else {
 				grantByExpTimeQueueKey := FeeAllowancePrefixQueue(exp, key)
-				err = store.Set(grantByExpTimeQueueKey, []byte{})
+				err = store.Set(grantByExpTimeQueueKey, queueValue)
 				if err != nil {
 					return err
 				}

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -291,6 +292,41 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	_, err = suite.feegrantKeeper.GetAllowance(ctx, suite.addrs[0], suite.addrs[2])
 	suite.Error(err)
 	suite.Contains(err.Error(), "not found")
+}
+
+func (suite *KeeperTestSuite) TestUseGrantedFeePeriodicMultiDenom() {
+	blockTime := suite.ctx.BlockTime()
+	oneYear := blockTime.AddDate(1, 0, 0)
+
+	// foo's period limit is above its absolute limit, stake's is below it
+	basic := sdk.NewCoins(sdk.NewInt64Coin("foo", 100), sdk.NewInt64Coin("stake", 10))
+	allowance := &feegrant.PeriodicAllowance{
+		Basic:            feegrant.BasicAllowance{SpendLimit: basic, Expiration: &oneYear},
+		Period:           time.Hour,
+		PeriodReset:      blockTime,
+		PeriodSpendLimit: sdk.NewCoins(sdk.NewInt64Coin("foo", 200), sdk.NewInt64Coin("stake", 5)),
+	}
+	suite.Require().NoError(allowance.ValidateBasic())
+	suite.Require().NoError(suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[0], suite.addrs[1], allowance))
+
+	// 6 stake is over the 5 stake period limit
+	err := suite.feegrantKeeper.UseGrantedFees(suite.ctx, suite.addrs[0], suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin("stake", 6)), []sdk.Msg{})
+	suite.Require().ErrorIs(err, feegrant.ErrFeeLimitExceeded)
+
+	// a rejected fee leaves the stored allowance as granted
+	stored, err := suite.feegrantKeeper.GetAllowance(suite.ctx, suite.addrs[0], suite.addrs[1])
+	suite.Require().NoError(err)
+	suite.Require().Equal(basic, stored.(*feegrant.PeriodicAllowance).Basic.SpendLimit)
+
+	// 5 stake is fine
+	err = suite.feegrantKeeper.UseGrantedFees(suite.ctx, suite.addrs[0], suite.addrs[1], sdk.NewCoins(sdk.NewInt64Coin("stake", 5)), []sdk.Msg{})
+	suite.Require().NoError(err)
+
+	stored, err = suite.feegrantKeeper.GetAllowance(suite.ctx, suite.addrs[0], suite.addrs[1])
+	suite.Require().NoError(err)
+	periodic := stored.(*feegrant.PeriodicAllowance)
+	suite.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin("foo", 100), sdk.NewInt64Coin("stake", 5)), periodic.Basic.SpendLimit)
+	suite.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin("foo", 100)), periodic.PeriodCanSpend)
 }
 
 func (suite *KeeperTestSuite) TestIterateGrants() {

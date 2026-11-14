@@ -25,6 +25,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
 	oneAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1))
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 1))
+	fiveEth := sdk.NewCoins(sdk.NewInt64Coin("eth", 5))
 	emptyCoins := sdk.Coins{}
 
 	now := ctx.BlockTime()
@@ -151,6 +152,55 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			remove:        false,
 			remainsPeriod: emptyCoins,
 			periodReset:   oneHour.Add(tenMinutes), // one step from last reset, not now
+		},
+		"multi denom, period limit above basic on one denom only": {
+			allow: feegrant.PeriodicAllowance{
+				Basic: feegrant.BasicAllowance{
+					SpendLimit: atom.Add(eth...),
+					Expiration: &twoHours,
+				},
+				Period:           tenMinutes,
+				PeriodReset:      now,
+				PeriodSpendLimit: smallAtom.Add(fiveEth...),
+			},
+			valid:         true,
+			fee:           smallAtom,
+			blockTime:     oneHour,
+			accept:        true,
+			remove:        false,
+			remainsPeriod: eth,
+			remains:       leftAtom.Add(eth...),
+			periodReset:   oneHour.Add(tenMinutes),
+		},
+		"multi denom, period limit above basic on one denom only, over the other": {
+			allow: feegrant.PeriodicAllowance{
+				Basic: feegrant.BasicAllowance{
+					SpendLimit: atom.Add(eth...),
+					Expiration: &twoHours,
+				},
+				Period:           tenMinutes,
+				PeriodReset:      now,
+				PeriodSpendLimit: smallAtom.Add(fiveEth...),
+			},
+			valid:     true,
+			fee:       smallAtom.Add(oneAtom...),
+			blockTime: oneHour,
+			accept:    false,
+		},
+		"denom missing from period limit is not spendable": {
+			allow: feegrant.PeriodicAllowance{
+				Basic: feegrant.BasicAllowance{
+					SpendLimit: smallAtom.Add(eth...),
+					Expiration: &twoHours,
+				},
+				Period:           tenMinutes,
+				PeriodReset:      now,
+				PeriodSpendLimit: atom,
+			},
+			valid:     true,
+			fee:       eth,
+			blockTime: oneHour,
+			accept:    false,
 		},
 		"expired": {
 			allow: feegrant.PeriodicAllowance{

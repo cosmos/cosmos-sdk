@@ -460,8 +460,9 @@ func (rs *Store) LastCommitID() types.CommitID {
 // It must be called before the underlying database is closed.
 func (rs *Store) Close() error {
 	var errs []error
-	for _, s := range rs.stores {
-		if c, ok := s.(io.Closer); ok {
+	for key := range rs.stores {
+		// unwrap the inter-block cache, which does not forward Close
+		if c, ok := rs.getCommitStore(key).(io.Closer); ok {
 			errs = append(errs, c.Close())
 		}
 	}

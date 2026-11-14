@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
 
+	"github.com/cosmos/cosmos-sdk/store/v2/cache"
 	"github.com/cosmos/cosmos-sdk/store/v2/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/v2/internal/maps"
@@ -1224,20 +1225,27 @@ func (d *lateOpDB) NewBatchWithSize(n int) dbm.Batch { d.hit(); return d.DB.NewB
 
 // Close must stop IAVL's async pruning so no DB operation may run after the DB is closed.
 func TestStoreCloseStopsAsyncPruning(t *testing.T) {
-	gdb, err := dbm.NewGoLevelDB("test", t.TempDir(), nil)
-	require.NoError(t, err)
-	db := &lateOpDB{DB: gdb}
-	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningEverything))
-	require.NoError(t, ms.LoadLatestVersion())
-	kv := ms.getCommitKVStore(ms.keysByName["store1"])
-	for i := range 300 {
-		for j := range 100 {
-			kv.(types.KVStore).Set([]byte(fmt.Sprintf("k%d-%d", i%7, j)), []byte(fmt.Sprintf("v%d", i)))
-		}
-		ms.Commit()
+	for _, withCache := range []bool{false, true} {
+		t.Run(fmt.Sprintf("interBlockCache=%t", withCache), func(t *testing.T) {
+			gdb, err := dbm.NewGoLevelDB("test", t.TempDir(), nil)
+			require.NoError(t, err)
+			db := &lateOpDB{DB: gdb}
+			ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningEverything))
+			if withCache {
+				ms.SetInterBlockCache(cache.NewCommitKVStoreCacheManager(1000))
+			}
+			require.NoError(t, ms.LoadLatestVersion())
+			kv := ms.getCommitKVStore(ms.keysByName["store1"])
+			for i := range 300 {
+				for j := range 100 {
+					kv.(types.KVStore).Set([]byte(fmt.Sprintf("k%d-%d", i%7, j)), []byte(fmt.Sprintf("v%d", i)))
+				}
+				ms.Commit()
+			}
+			require.NoError(t, ms.Close())
+			require.NoError(t, db.Close())
+			time.Sleep(200 * time.Millisecond)
+			require.Zero(t, db.late.Load(), "DB used after Close")
+		})
 	}
-	require.NoError(t, ms.Close())
-	require.NoError(t, db.Close())
-	time.Sleep(200 * time.Millisecond)
-	require.Zero(t, db.late.Load(), "DB used after Close")
 }

@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Breaking Changes
 
 * (x/auth) [#26672](https://github.com/cosmos/cosmos-sdk/pull/26672) An unordered transaction whose `timeout_timestamp` equals the block time is now rejected
+* (x/consensus) [#26838](https://github.com/cosmos/cosmos-sdk/pull/26838) `MsgUpdateParams` now fails if `validator.pub_key_types` no longer includes the consensus key type of any validator in the x/staking store. Without this check CometBFT rejects the next validator update for such a validator and `FinalizeBlock` returns an error. The check runs only when `pub_key_types` changes and iterates all validators, so it uses more gas. It counts every validator, including unbonded, jailed and tombstoned ones, so a type can be removed only once no validator, whatever its status, still uses it. The check is set through `Keeper.SetValidatorPubKeyTypesChecker` (wired in simapp and through depinject).
 
 ### Features
 
@@ -56,7 +57,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (x/consensus) [#26838](https://github.com/cosmos/cosmos-sdk/pull/26838) Reject a `MsgUpdateParams` whose `validator.pub_key_types` no longer includes the consensus key type of an existing validator, which CometBFT would reject at that validator's next update and halt the chain. The check is done by x/staking through `Keeper.SetValidatorPubKeyTypesChecker` (wired in simapp and through depinject).
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.
 * (client/tx) [#26759](https://github.com/cosmos/cosmos-sdk/issues/26759) Populate the multisig bit array in simulation txs so `--gas auto` works for multisig senders.
 * (blockstm) [#26772](https://github.com/cosmos/cosmos-sdk/pull/26772) Panic with a descriptive error when accessing an unregistered store instead of silently using store index zero.

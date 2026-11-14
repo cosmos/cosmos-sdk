@@ -309,6 +309,14 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
+			// Unordered txs are signed with sequence 0 and do not consume a
+			// sequence number, matching sign-batch.
+			sequence := txFactory.Sequence()
+			utx, isUnordered := scanner.Tx().(sdk.TxWithUnordered)
+			isUnordered = isUnordered && utx.GetUnordered()
+			if isUnordered {
+				sequence = 0
+			}
 			pubKey, err := k.GetPubKey()
 			if err != nil {
 				return err
@@ -323,7 +331,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			txSignerData := txsigning.SignerData{
 				ChainID:       txFactory.ChainID(),
 				AccountNumber: txFactory.AccountNumber(),
-				Sequence:      txFactory.Sequence(),
+				Sequence:      sequence,
 				Address:       sdk.AccAddress(pubKey.Address()).String(),
 				PubKey: &anypb.Any{
 					TypeUrl: anyPk.TypeUrl,
@@ -353,7 +361,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			sigV2 := signingtypes.SignatureV2{
 				PubKey:   multisigPub,
 				Data:     multisigSig,
-				Sequence: txFactory.Sequence(),
+				Sequence: sequence,
 			}
 
 			err = txBldr.SetSignatures(sigV2)
@@ -373,11 +381,10 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 				return err
 			}
 
-			if viper.GetBool(flagNoAutoIncrement) {
+			if isUnordered || viper.GetBool(flagNoAutoIncrement) {
 				continue
 			}
-			sequence := txFactory.Sequence() + 1
-			txFactory = txFactory.WithSequence(sequence)
+			txFactory = txFactory.WithSequence(txFactory.Sequence() + 1)
 		}
 
 		return scanner.UnmarshalErr()

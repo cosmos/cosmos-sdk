@@ -14,6 +14,7 @@ import (
 
 	db "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	errorsmod "cosmossdk.io/errors"
@@ -316,9 +317,9 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 	go func() {
 		defer close(done)
 		_, err := mgr.Create(1)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		_, didPruneHeight := hung.prunedHeights[1]
-		require.True(t, didPruneHeight)
+		assert.True(t, didPruneHeight)
 	}()
 	time.Sleep(10 * time.Millisecond)
 

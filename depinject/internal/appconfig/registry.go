@@ -47,7 +47,8 @@ func ModulesByModuleTypeName() (map[string]*ModuleInitializer, error) {
 				return nil, fmt.Errorf(
 					"protobuf type %s registered as a module should have the option %s",
 					desc.FullName(),
-					v1alpha1.E_Module.Name)
+					v1alpha1.E_Module.Name,
+				)
 			}
 
 			if modDesc.GoImport == "" {

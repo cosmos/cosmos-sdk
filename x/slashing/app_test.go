@@ -66,7 +66,8 @@ func TestSlashingMsgs(t *testing.T) {
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		startupCfg, &stakingKeeper, &bankKeeper, &slashingKeeper)
+		startupCfg, &stakingKeeper, &bankKeeper, &slashingKeeper,
+	)
 	require.NoError(t, err)
 
 	baseApp := app.BaseApp

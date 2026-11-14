@@ -135,8 +135,14 @@ func adaptModeInfo(legacy *tx.ModeInfo, res *txv1beta1.ModeInfo) {
 		}
 		multiModeInfos := mi.Multi.ModeInfos
 		modeInfos := make([]*txv1beta1.ModeInfo, len(multiModeInfos))
-		for _, modeInfo := range multiModeInfos {
-			adaptModeInfo(modeInfo, &txv1beta1.ModeInfo{})
+		// Always allocate the destination entry, even when the legacy entry is
+		// nil (an omitted sub-signature): a nil element in a protov2 repeated
+		// message field makes proto.Marshal / proto.Equal panic on the adapted
+		// AuthInfo, whereas an empty ModeInfo mirrors the top-level handling in
+		// GetSigningTxData.
+		for i, modeInfo := range multiModeInfos {
+			modeInfos[i] = &txv1beta1.ModeInfo{}
+			adaptModeInfo(modeInfo, modeInfos[i])
 		}
 		var bitarray *multisigv1beta1.CompactBitArray
 		if mi.Multi.Bitarray != nil {

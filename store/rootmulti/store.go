@@ -456,6 +456,19 @@ func (rs *Store) LastCommitID() types.CommitID {
 	return info.CommitID()
 }
 
+// Close closes every sub-store that holds background resources.
+// It must be called before the underlying database is closed.
+func (rs *Store) Close() error {
+	var errs []error
+	for key := range rs.stores {
+		// unwrap the inter-block cache, which does not forward Close
+		if c, ok := rs.getCommitStore(key).(io.Closer); ok {
+			errs = append(errs, c.Close())
+		}
+	}
+	return errors.Join(errs...)
+}
+
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
 	var previousHeight, version int64

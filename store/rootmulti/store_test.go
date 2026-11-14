@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
 
+	"github.com/cosmos/cosmos-sdk/store/v2/cache"
 	"github.com/cosmos/cosmos-sdk/store/v2/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/v2/internal/maps"
@@ -1189,4 +1191,61 @@ func TestEarliestVersionPersistence(t *testing.T) {
 	// Earliest version should be persisted and restored
 	require.Equal(t, earliestBeforeRestart, ms2.EarliestVersion(),
 		"earliest version should persist across restarts")
+}
+
+// lateOpDB counts reads/iterations issued after Close.
+type lateOpDB struct {
+	dbm.DB
+	closed atomic.Bool
+	late   atomic.Int64
+}
+
+func (d *lateOpDB) hit() {
+	if d.closed.Load() {
+		d.late.Add(1)
+	}
+}
+
+func (d *lateOpDB) Close() error { d.closed.Store(true); return d.DB.Close() }
+
+func (d *lateOpDB) Get(k []byte) ([]byte, error) { d.hit(); return d.DB.Get(k) }
+
+func (d *lateOpDB) Has(k []byte) (bool, error) { d.hit(); return d.DB.Has(k) }
+
+func (d *lateOpDB) Iterator(s, e []byte) (dbm.Iterator, error) { d.hit(); return d.DB.Iterator(s, e) }
+
+func (d *lateOpDB) ReverseIterator(s, e []byte) (dbm.Iterator, error) {
+	d.hit()
+	return d.DB.ReverseIterator(s, e)
+}
+
+func (d *lateOpDB) NewBatch() dbm.Batch { d.hit(); return d.DB.NewBatch() }
+
+func (d *lateOpDB) NewBatchWithSize(n int) dbm.Batch { d.hit(); return d.DB.NewBatchWithSize(n) }
+
+// Close must stop IAVL's async pruning so no DB operation may run after the DB is closed.
+func TestStoreCloseStopsAsyncPruning(t *testing.T) {
+	for _, withCache := range []bool{false, true} {
+		t.Run(fmt.Sprintf("interBlockCache=%t", withCache), func(t *testing.T) {
+			gdb, err := dbm.NewGoLevelDB("test", t.TempDir(), nil)
+			require.NoError(t, err)
+			db := &lateOpDB{DB: gdb}
+			ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningEverything))
+			if withCache {
+				ms.SetInterBlockCache(cache.NewCommitKVStoreCacheManager(1000))
+			}
+			require.NoError(t, ms.LoadLatestVersion())
+			kv := ms.getCommitKVStore(ms.keysByName["store1"])
+			for i := range 300 {
+				for j := range 100 {
+					kv.(types.KVStore).Set([]byte(fmt.Sprintf("k%d-%d", i%7, j)), []byte(fmt.Sprintf("v%d", i)))
+				}
+				ms.Commit()
+			}
+			require.NoError(t, ms.Close())
+			require.NoError(t, db.Close())
+			time.Sleep(200 * time.Millisecond)
+			require.Zero(t, db.late.Load(), "DB used after Close")
+		})
+	}
 }

@@ -659,3 +659,32 @@ func (k Keeper) GetPubKeyByConsAddr(ctx context.Context, addr sdk.ConsAddress) (
 
 	return pubkey, nil
 }
+
+// ValidateValidatorPubKeyTypes returns an error if the consensus key of a validator
+// is not one of pubKeyTypes. It is used to reject a consensus params update that
+// removes a key type still in use: CometBFT rejects the validator update of such a
+// validator and FinalizeBlock returns an error.
+//
+// Every validator in the store is checked, whatever its status. Unbonded and jailed
+// validators can bond again, and a jailed validator cannot rotate its key
+// (see RotateConsPubKey), so a key type can only be removed once no validator
+// uses it, including tombstoned ones whose delegations have not all left.
+func (k Keeper) ValidateValidatorPubKeyTypes(ctx context.Context, pubKeyTypes []string) error {
+	validators, err := k.GetAllValidators(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, validator := range validators {
+		pk, err := validator.ConsPubKey()
+		if err != nil {
+			return err
+		}
+
+		if err := types.ValidateConsensusPubKeyType(pk, pubKeyTypes); err != nil {
+			return errorsmod.Wrapf(err, "validator %s", validator.GetOperator())
+		}
+	}
+
+	return nil
+}

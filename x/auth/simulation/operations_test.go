@@ -57,7 +57,8 @@ func (s *SimTestSuite) SetupTest() {
 				configurator.TxModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
-		), &s.accountKeeper, &s.bankKeeper, &s.cdc, &s.txConfig)
+		), &s.accountKeeper, &s.bankKeeper, &s.cdc, &s.txConfig,
+	)
 	s.Require().NoError(err)
 
 	s.ctx = s.app.NewContext(false)

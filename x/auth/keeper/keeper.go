@@ -95,6 +95,10 @@ type AccountKeeper struct {
 	// This boolean helps sigverify ante handlers to determine if they should process unordered transactions.
 	enableUnorderedTxs bool
 
+	// rekeyPubKeyCheck, if set, is an extra app-supplied check on the new
+	// pubkey of a MsgChangePubKey. See WithRekeyPubKeyCheck.
+	rekeyPubKeyCheck func(cryptotypes.PubKey) error
+
 	// The prototypical AccountI constructor.
 	proto func() sdk.AccountI
 
@@ -132,6 +136,23 @@ type InitOption func(*AccountKeeper)
 func WithUnorderedTransactions(enable bool) InitOption {
 	return func(ak *AccountKeeper) {
 		ak.enableUnorderedTxs = enable
+	}
+}
+
+// WithRekeyPubKeyCheck sets an extra check that MsgChangePubKey runs on the
+// new pubkey, after types.ValidateRekeyPubKey has accepted it and before any
+// gas is charged for the rotation. An error rejects the message.
+//
+// types.ValidateRekeyPubKey accepts the key types that
+// ante.DefaultSigVerificationGasConsumer accepts. An app whose
+// HandlerOptions.SigGasConsumer rejects some of them (for example ed25519)
+// must use this option to reject the same types, or an account could rotate to
+// a key the ante handler never accepts and be locked out. The check receives
+// the whole new pubkey, so it must walk the subkeys of a multisig itself.
+// This option can only narrow the accepted key types, not widen them.
+func WithRekeyPubKeyCheck(check func(cryptotypes.PubKey) error) InitOption {
+	return func(ak *AccountKeeper) {
+		ak.rekeyPubKeyCheck = check
 	}
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa65"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
@@ -214,9 +215,9 @@ type changePubKeyFixture struct {
 	ms types.MsgServer
 }
 
-func newChangePubKeyFixture(t *testing.T, enabled bool) changePubKeyFixture {
+func newChangePubKeyFixture(t *testing.T, enabled bool, opts ...keeper.InitOption) changePubKeyFixture {
 	t.Helper()
-	f := newRekeyFixture(t)
+	f := newRekeyFixture(t, opts...)
 	f.ctx = f.ctx.WithChainID(rekeyChainID)
 	params := types.DefaultParams()
 	params.PubKeyChangeEnabled = enabled
@@ -600,4 +601,36 @@ func TestChangePubKey_BadProofConsumesGas(t *testing.T) {
 	_, err := f.ms.ChangePubKey(ctx, changePubKeyMsg(t, rekeyChainID, acc, pk1, &otherSk))
 	require.ErrorIs(t, err, types.ErrInvalidPubKeyProof)
 	require.GreaterOrEqual(t, ctx.GasMeter().GasConsumed(), types.DefaultPubKeyChangeCost)
+}
+
+// TestChangePubKey_AppPubKeyCheck checks that an app can restrict the key
+// types an account may rotate to, for a chain whose signature gas consumer
+// rejects some of the types ValidateRekeyPubKey accepts.
+func TestChangePubKey_AppPubKeyCheck(t *testing.T) {
+	errRejected := fmt.Errorf("mldsa65 keys are not accepted by this chain")
+	f := newChangePubKeyFixture(t, true, keeper.WithRekeyPubKeyCheck(func(pk cryptotypes.PubKey) error {
+		if _, ok := pk.(*mldsa65.PubKey); ok {
+			return errRejected
+		}
+		return nil
+	}))
+	k0 := secp256k1.GenPrivKey().PubKey()
+	acc := newAccountWithKey(t, f.ctx, f.ak, k0)
+	addr := acc.GetAddress()
+
+	sk1, pk1 := genMlDsa65Key(t)
+	ctx := f.ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+	_, err := f.ms.ChangePubKey(ctx, changePubKeyMsg(t, rekeyChainID, acc, pk1, &sk1))
+	require.ErrorIs(t, err, types.ErrInvalidNewPubKey)
+	require.ErrorContains(t, err, errRejected.Error())
+	require.True(t, f.ak.GetAccount(ctx, addr).GetPubKey().Equals(k0))
+	require.Empty(t, historyFor(t, ctx, f.ak, addr))
+	params, err := f.ak.Params.Get(ctx)
+	require.NoError(t, err)
+	require.Less(t, ctx.GasMeter().GasConsumed(), params.PubKeyChangeCost, "rejected before charging the rekey cost")
+
+	sk2 := secp256k1.GenPrivKey()
+	_, err = f.ms.ChangePubKey(ctx, changePubKeyMsg(t, rekeyChainID, acc, sk2.PubKey(), sk2))
+	require.NoError(t, err)
+	require.True(t, f.ak.GetAccount(ctx, addr).GetPubKey().Equals(sk2.PubKey()))
 }

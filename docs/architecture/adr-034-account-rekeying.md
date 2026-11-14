@@ -103,6 +103,8 @@ A multisig may contain multisigs, but those may not: at most 2 levels of multisi
 
 `CountSubKeys(new_pub_key) <= Params.TxSigLimit` must hold, so the account can't lock itself out by adopting a key it can never sign with.
 
+An app whose `SigGasConsumer` rejects some of these types must reject the same types for rekeying, or an account could rotate to a key the ante handler never accepts. The `AccountKeeper` option `WithRekeyPubKeyCheck` adds an app-supplied check that runs after the built-in validation and before the rotation is charged. It can only narrow the accepted types.
+
 The handler rejects `ModuleCredential`, `secp256k1eth`, a nil key, and a key that `Equals` the current one.
 
 ### 4. Who can rekey

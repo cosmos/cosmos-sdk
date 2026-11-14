@@ -331,7 +331,30 @@ The bundled PoA simapp and migration example include this wiring. The hook preve
 
 The signer account is now read before the pubkey is checked against the signer address. A tx whose signer account does not exist and whose pubkey does not hash to the signer now fails with `ErrUnknownAddress` (code 9) instead of `ErrInvalidPubKey` (code 8). The tx result code is part of consensus, so all nodes must upgrade together.
 
-**Custom signature gas consumers.** `MsgChangePubKey` accepts the key types `DefaultSigVerificationGasConsumer` accepts (`secp256k1`, `secp256r1`, `ed25519`, `mldsa65` and `LegacyAminoPubKey` multisigs of them). If your app sets `HandlerOptions.SigGasConsumer` to a consumer that rejects any of these (for example `ed25519`), an account could rotate to a key your ante handler never accepts and lock itself out. Make sure your consumer accepts every one of these types before enabling `pub_key_change_enabled`.
+**Custom signature gas consumers.** `MsgChangePubKey` accepts the key types `DefaultSigVerificationGasConsumer` accepts (`secp256k1`, `secp256r1`, `ed25519`, `mldsa65` and `LegacyAminoPubKey` multisigs of them). If your app sets `HandlerOptions.SigGasConsumer` to a consumer that rejects any of these (for example `ed25519`), an account could rotate to a key your ante handler never accepts. Every later tx from that account would then fail, locking its funds and stake. Pass `authkeeper.WithRekeyPubKeyCheck` to `NewAccountKeeper` with a check that rejects the same key types, including inside multisigs, before enabling `pub_key_change_enabled`:
+
+```go
+func rejectEd25519(pk cryptotypes.PubKey) error {
+	switch pk := pk.(type) {
+	case *ed25519.PubKey:
+		return errors.New("ed25519 account keys are not supported")
+	case *kmultisig.LegacyAminoPubKey:
+		for _, sub := range pk.GetPubKeys() {
+			if err := rejectEd25519(sub); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+app.AccountKeeper = authkeeper.NewAccountKeeper(
+	/* ... */
+	authkeeper.WithRekeyPubKeyCheck(rejectEd25519),
+)
+```
+
+The check runs after the built-in validation, so it can only narrow the accepted key types.
 
 **Authorization.** `x/authz` refuses to grant or execute `MsgChangePubKey` (`ErrMsgNotAuthorizable`), and that includes grants created before the upgrade. Module accounts and accounts whose pubkey is a `ModuleCredential` (gov, group policies and other module-derived accounts) cannot rekey. Neither can an account with no stored pubkey, such as a CosmWasm contract or an ibc-go interchain account: those can dispatch messages as themselves, and without this rule such a dispatch could bind the account to an attacker's key. A user's own signature stores its pubkey earlier in the same tx, so users are not affected.
 

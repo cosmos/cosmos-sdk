@@ -164,7 +164,8 @@ func signTxForWithGas(
 			Sequence:      seq,
 			PubKey:        priv.PubKey(),
 		},
-		suite.txBuilder, priv, suite.clientCtx.TxConfig, seq)
+		suite.txBuilder, priv, suite.clientCtx.TxConfig, seq,
+	)
 	require.NoError(t, err)
 	sigV2.PubKey = pk
 	require.NoError(t, suite.txBuilder.SetSignatures(sigV2))
@@ -485,7 +486,8 @@ func TestSimulate_RekeyedMlDsaMultisig_Unsigned(t *testing.T) {
 				Sequence:      acc.GetSequence(),
 				PubKey:        msPk,
 			},
-			suite.txBuilder, sk, suite.clientCtx.TxConfig, acc.GetSequence())
+			suite.txBuilder, sk, suite.clientCtx.TxConfig, acc.GetSequence(),
+		)
 		require.NoError(t, err)
 		require.NoError(t, multisig.AddSignatureV2(multi, sigV2, msPk.GetPubKeys()))
 	}

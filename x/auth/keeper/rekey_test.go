@@ -29,7 +29,7 @@ type rekeyFixture struct {
 	encCfg moduletestutil.TestEncodingConfig
 }
 
-func newRekeyFixture(t *testing.T) rekeyFixture {
+func newRekeyFixture(t *testing.T, opts ...keeper.InitOption) rekeyFixture {
 	t.Helper()
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 	vestingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
@@ -44,6 +44,7 @@ func newRekeyFixture(t *testing.T) rekeyFixture {
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
+		opts...,
 	)
 	ctx := testCtx.Ctx.WithBlockHeight(1).WithBlockTime(time.Unix(1_700_000_000, 0).UTC())
 	require.NoError(t, ak.Params.Set(ctx, types.DefaultParams()))

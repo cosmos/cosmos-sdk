@@ -94,6 +94,11 @@ func (ms msgServer) ChangePubKey(goCtx context.Context, msg *types.MsgChangePubK
 	if err := types.ValidateRekeyPubKey(oldPk, newPk, params); err != nil {
 		return nil, err
 	}
+	if ms.ak.rekeyPubKeyCheck != nil {
+		if err := ms.ak.rekeyPubKeyCheck(newPk); err != nil {
+			return nil, errorsmod.Wrap(types.ErrInvalidNewPubKey, err.Error())
+		}
+	}
 
 	// Charge before decoding and verifying the proof, so a tx whose proof
 	// fails still pays for the signature verification it caused.

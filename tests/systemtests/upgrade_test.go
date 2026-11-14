@@ -82,7 +82,7 @@ func TestChainUpgrade(t *testing.T) {
 	// Create a fee grant that expires after the upgrade. Grants created by the
 	// standalone x/feegrant module (v0.53.x) store an empty expiry queue value,
 	// which the v2 to v3 store migration rewrites. Without it, the EndBlocker
-	// fails and the chain halts when the grant expires.
+	// returns an error at the first block after the grant expires.
 	granter := cli.GetKeyAddr("node0")
 	grantee := cli.AddKey("feegrantee")
 	blocksToUpgrade := upgradeHeight - systest.Sut.CurrentHeight()

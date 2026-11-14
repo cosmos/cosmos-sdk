@@ -73,6 +73,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/simulation) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Time-scheduled future operations were silently dropped by `queueOperations` (the appended queue was never returned to the caller), and executed time operations were never removed from the queue. Both now update the caller's queue.
 * (x/auth/tx) [#26815](https://github.com/cosmos/cosmos-sdk/pull/26815) `GetSigningTxData` now converts the nested `ModeInfos` of a multisig `ModeInfo`; previously the converted entries were discarded and the slice was left as nil placeholders.
 * (keys) [#26833](https://github.com/cosmos/cosmos-sdk/pull/26833) Strip leading and trailing whitespace when reading a mnemonic from a source file.
+* (baseapp) [#26558](https://github.com/cosmos/cosmos-sdk/issues/26558) Make `BaseApp.Close` idempotent so the two deferred cleanups in `server/start.go` no longer close the application database twice, which panicked on pebble-backed nodes at the end of an otherwise clean shutdown.
 
 ### Deprecated
 

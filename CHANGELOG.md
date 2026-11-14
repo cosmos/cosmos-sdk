@@ -59,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [#26779](https://github.com/cosmos/cosmos-sdk/pull/26779) perf(blockstm): memoize merge iterator source.
 * (deps) [#26850](https://github.com/cosmos/cosmos-sdk/pull/26850) Bump google.golang.org/grpc to v1.84.0 in all modules except `api` and `depinject`.
 * (deps) [#26967](https://github.com/cosmos/cosmos-sdk/pull/26967) Bump cosmos/iavl to v1.2.9, which validates malformed snapshot input during import.
+* (store) [#26541](https://github.com/cosmos/cosmos-sdk/pull/26541) Memoize `LastCommitID` in rootmulti so queries no longer rebuild the commit merkle root.
 
 
 ### Bug Fixes

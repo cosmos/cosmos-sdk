@@ -2,13 +2,13 @@
 
 ## Highlights
 
-Cosmos SDK v0.55.1 is a patch release with three changes: a fix for a fee grant bug that can halt chains which upgraded from v0.53.x or earlier, IAVL v1.2.9, and patched Go and dependency versions.
+Cosmos SDK v0.55.1 is a patch release with three changes: a fix for fee allowance expiry queue entries that the keeper cannot decode on chains that upgraded from v0.53.x or earlier, IAVL v1.2.9, and patched Go and dependency versions.
 
 Upgrading from v0.55.0 **requires a coordinated chain upgrade**. The `x/feegrant` consensus version goes from 2 to 3, and its store migration runs through `RunMigrations` in the upgrade handler.
 
 ### x/feegrant migration
 
-Chains that upgraded from v0.53.x or earlier can hold fee allowance expiry queue entries with an empty value. The keeper cannot decode them, so the feegrant `EndBlocker` returns an error, and the chain halts, at the first block after such an entry expires. The v2 to v3 migration rewrites those entries.
+Chains that upgraded from v0.53.x or earlier can store fee allowance expiry queue entries with an empty value. The keeper cannot decode them, so the feegrant `EndBlocker` returns an error at the first block after such an entry expires. The v2 to v3 migration rewrites those entries.
 
 A chain is affected if it upgraded from v0.53.x or earlier and still has unexpired fee grants with an expiration that were created before that upgrade. Affected chains must run the migration before the earliest of those grants expires. Chains that started on v0.54 or later are not affected.
 

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
+	"sync"
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -16,6 +17,7 @@ import (
 
 	"cosmossdk.io/log/v2"
 
+	"github.com/cosmos/cosmos-sdk/store/v2/cache"
 	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
 	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
@@ -316,4 +318,163 @@ func BenchmarkMultistoreSnapshotRestore100K(b *testing.B) {
 
 func BenchmarkMultistoreSnapshotRestore1M(b *testing.B) {
 	benchmarkMultistoreSnapshotRestore(b, 10, 100000)
+}
+
+// TestInterBlockCacheResetOnRestore verifies that the inter-block cache is reset
+// when stores are reloaded after a snapshot restore. This is a regression test for
+// issue #26877: if CheckTx reads missing keys during state sync, those nil values
+// get cached, and without a cache reset, the first block after restore reads stale
+// nil values instead of the restored data, causing an AppHash mismatch.
+func TestInterBlockCacheResetOnRestore(t *testing.T) {
+	// Create source store with data
+	sourceDB := dbm.NewMemDB()
+	source := rootmulti.NewStore(sourceDB, log.NewNopLogger())
+	key := types.NewKVStoreKey("test")
+	source.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
+	require.NoError(t, source.LoadLatestVersion())
+
+	// Write data to source store
+	store := source.GetKVStore(key)
+	testKey := []byte("auth-params")
+	testValue := []byte("max_memo_characters=256")
+	store.Set(testKey, testValue)
+	source.Commit()
+
+	// Take snapshot
+	version := uint64(source.LastCommitID().Version)
+	chunks := make(chan io.ReadCloser, 100)
+	go func() {
+		streamWriter := snapshots.NewStreamWriter(chunks)
+		require.NotNil(t, streamWriter)
+		defer streamWriter.Close()
+		require.NoError(t, source.Snapshot(version, streamWriter))
+	}()
+
+	// Create target store with inter-block cache enabled
+	targetDB := dbm.NewMemDB()
+	target := rootmulti.NewStore(targetDB, log.NewNopLogger())
+	target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
+
+	// Enable inter-block cache BEFORE LoadLatestVersion (simulates app.toml inter-block-cache = true)
+	cacheSize := uint(1000)
+	cacheManager := cache.NewCommitKVStoreCacheManager(cacheSize)
+	target.SetInterBlockCache(cacheManager)
+
+	require.NoError(t, target.LoadLatestVersion())
+
+	// Simulate CheckTx reading from empty store during state sync:
+	// this caches nil for testKey
+	targetStore := target.GetKVStore(key)
+	cachedValue := targetStore.Get(testKey)
+	require.Nil(t, cachedValue, "pre-restore read should return nil")
+
+	// Restore snapshot
+	streamReader, err := snapshots.NewStreamReader(chunks)
+	require.NoError(t, err)
+	_, err = target.Restore(version, snapshottypes.CurrentFormat, streamReader)
+	require.NoError(t, err)
+
+	// The bug: without cache reset, the post-restore read returns the cached nil
+	// instead of the restored value.
+	// After the fix, the cache is reset and we get the correct restored value.
+	restoredStore := target.GetKVStore(key)
+	restoredValue := restoredStore.Get(testKey)
+	require.NotNil(t, restoredValue, "post-restore read should return restored value, not cached nil")
+	require.Equal(t, testValue, restoredValue, "post-restore value should match source value")
+}
+
+// TestInterBlockCacheResetSerializedWithQueryReaders verifies that a concurrent
+// GetStoreByName reader overlapping Restore cannot observe a half-reset cache
+// (which would make Unwrap miss and treat the cache wrapper as *iavl.Store).
+// Query / CacheMultiStoreWithVersion are not exercised here because they would
+// also race inside the IAVL tree during snapshot import, which is outside the
+// cache reset+reload window this change serializes.
+func TestInterBlockCacheResetSerializedWithQueryReaders(t *testing.T) {
+	sourceDB := dbm.NewMemDB()
+	source := rootmulti.NewStore(sourceDB, log.NewNopLogger())
+	key := types.NewKVStoreKey("test")
+	source.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
+	require.NoError(t, source.LoadLatestVersion())
+
+	store := source.GetKVStore(key)
+	testKey := []byte("auth-params")
+	testValue := []byte("max_memo_characters=256")
+	store.Set(testKey, testValue)
+	source.Commit()
+
+	version := uint64(source.LastCommitID().Version)
+	chunks := make(chan io.ReadCloser, 100)
+	go func() {
+		streamWriter := snapshots.NewStreamWriter(chunks)
+		require.NotNil(t, streamWriter)
+		defer streamWriter.Close()
+		require.NoError(t, source.Snapshot(version, streamWriter))
+	}()
+
+	targetDB := dbm.NewMemDB()
+	target := rootmulti.NewStore(targetDB, log.NewNopLogger())
+	target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
+	cacheManager := cache.NewCommitKVStoreCacheManager(uint(1000))
+	target.SetInterBlockCache(cacheManager)
+	require.NoError(t, target.LoadLatestVersion())
+
+	// Cache a nil miss, as CheckTx may do during state sync.
+	require.Nil(t, target.GetKVStore(key).Get(testKey))
+
+	errCh := make(chan error, 1)
+	stop := make(chan struct{})
+	var wg sync.WaitGroup
+	reader := func() {
+		defer wg.Done()
+		defer func() {
+			if r := recover(); r != nil {
+				select {
+				case errCh <- fmt.Errorf("query reader panic: %v", r):
+				default:
+				}
+			}
+		}()
+
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+			}
+
+			s := target.GetStoreByName("test")
+			if s != nil {
+				if _, ok := s.(*iavl.Store); !ok {
+					select {
+					case errCh <- fmt.Errorf("GetStoreByName: expected *iavl.Store, got %T", s):
+					default:
+					}
+					return
+				}
+			}
+		}
+	}
+
+	const readers = 8
+	wg.Add(readers)
+	for i := 0; i < readers; i++ {
+		go reader()
+	}
+
+	streamReader, err := snapshots.NewStreamReader(chunks)
+	require.NoError(t, err)
+	_, err = target.Restore(version, snapshottypes.CurrentFormat, streamReader)
+	require.NoError(t, err)
+
+	close(stop)
+	wg.Wait()
+
+	select {
+	case err := <-errCh:
+		require.NoError(t, err)
+	default:
+	}
+
+	restoredValue := target.GetKVStore(key).Get(testKey)
+	require.Equal(t, testValue, restoredValue, "post-restore value should match source value")
 }

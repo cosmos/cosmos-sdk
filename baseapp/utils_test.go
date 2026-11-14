@@ -104,7 +104,8 @@ func makeMinimalConfig() depinject.Config {
 					}),
 				},
 			},
-		}))
+		}),
+	)
 }
 
 type MsgKeyValueImpl struct{}

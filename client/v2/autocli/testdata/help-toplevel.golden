@@ -12,6 +12,6 @@ Available Commands:
   skipecho       Querying commands for the testpbpulsar.Query service
 
 Flags:
-  -h, --help   help for test
+  -h, --help[=true|false]   help for test
 
 Use "test [command] --help" for more information about a command.

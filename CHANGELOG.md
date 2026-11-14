@@ -54,6 +54,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) `BaseAccount.Validate` no longer requires `pubkey.Address() == address`. `types.ValidateGenesis` now accepts a mismatched pubkey only when `pub_key_history` has an entry for that address, and requires each history to belong to a genesis account with a non-nil, non-`ModuleCredential` pubkey, to start with a pubkey that hashes to the account address, and to chain through `new_key_address` to the account's current pubkey.
 * (enterprise/poa) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) `Keeper.ValidateOperatorAndConsensusPubKeyDifferent` now takes a context, and the PoA `AccountKeeper` interface now requires `GetAccount` so validation can use the operator account's current pubkey.
 * (types/mempool) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) The default `SignerExtractionAdapter` and `SenderNonceMempool` key senders by `GetSigners()` instead of the address of the signature pubkey. They return an error, instead of panicking, for a tx that does not implement `SigVerifiableTx` or whose signer count differs from its signature count.
+* (enterprise/poa) [#26875](https://github.com/cosmos/cosmos-sdk/pull/26875) Truncate per-validator fee shares so a checkpoint never allocates more than the module balance, and add a v2 → v3 store migration that trims any excess already allocated. Previously, rounding could push allocated fees above the balance and make every fee checkpoint (validator create/update, key rotation, fee withdrawal) panic until a fee in that denom arrived. Allocated fees exceeding the balance now return `ErrInvalidAllocatedFees` instead of panicking. `InitGenesis` now checks imported allocated fees against the module balance, so bank genesis must run before poa: an excess of at most 1e-18 per exported validator per denom (v1.x rounding dust) is trimmed, and anything larger fails with `ErrInvalidAllocatedFees`.
+* (x/feegrant) [#26944](https://github.com/cosmos/cosmos-sdk/pull/26944) Add a v2 → v3 store migration that rewrites fee allowance expiry queue entries stored with an empty value to an encoded `true`, and write an encoded `true` in the v1 → v2 migration. The standalone `cosmossdk.io/x/feegrant` module and the v1 → v2 migration wrote empty values, which the keeper cannot decode, so `RemoveExpiredAllowances` returned an error from the `EndBlocker` once such an entry expired.
 
 ### Features
 
@@ -64,11 +66,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (blockstm) [#26773](https://github.com/cosmos/cosmos-sdk/pull/26773) Batch copy-on-write B-tree insertions for MVData index updates, reducing allocations and index publication overhead when adding multiple keys.
 * (types) [#26729](https://github.com/cosmos/cosmos-sdk/pull/26729) Memoize `GetConfig`'s "hostname|binary|pid" registry-key fallback, which derived the executable path, hostname, and PID on every call.
 * (store) [#26782](https://github.com/cosmos/cosmos-sdk/pull/26782) Fix a data race in the root multi-store pruning test.
 * (blockstm) [#26779](https://github.com/cosmos/cosmos-sdk/pull/26779) perf(blockstm): memoize merge iterator source.
 * (deps) [#26850](https://github.com/cosmos/cosmos-sdk/pull/26850) Bump google.golang.org/grpc to v1.84.0 in all modules except `api` and `depinject`.
 * (x/auth/ante) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) In simulate mode, `ConsumeTxSizeGasDecorator` sizes a missing signature from the signer's stored pubkey, or, if the account has none, from the `SignerInfo` pubkey, so gas estimates cover ML-DSA-65 accounts (including accounts rekeyed to ML-DSA-65 keys or multisigs of them). A multisig `SignerInfo` pubkey on an account's first tx is now estimated like a stored multisig pubkey (scaled by `TxSigLimit`), which raises that estimate. Non-simulate gas is unchanged.
+* (deps) [#26967](https://github.com/cosmos/cosmos-sdk/pull/26967) Bump cosmos/iavl to v1.2.9, which validates malformed snapshot input during import.
 
 
 ### Bug Fixes
@@ -80,6 +84,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (baseapp) [#26738](https://github.com/cosmos/cosmos-sdk/pull/26738) Return genesis transaction events in the first block's `FinalizeBlock` response so block indexers can observe them.
 * (x/genutil) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) Make `gentx --signer-address` validate genesis funds and build the validator transaction for the specified account address instead of the signing key's natural address.
 * (simulation) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) Compare account addresses instead of pubkeys when excluding self-sends and current group administrators, so distinct rekeyed accounts may share a pubkey.
+* (baseapp) [#26800](https://github.com/cosmos/cosmos-sdk/pull/26800) Take a read lock rather than an exclusive lock in `getContextForTx`, so transaction execution no longer serializes against the `Name`, `Version`, `AppVersion` and `Info` readers; `mu` documents itself as protecting only those three fields, none of which this path touches.
+* (x/gov) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Schedule legacy simulation votes on the proposal just submitted instead of the next unused proposal ID, drop the trailing nil future operation, skip scheduled votes whose proposal is not in its voting period, and schedule votes on expedited proposals within the expedited voting period (or before the voting end time when the proposal is already in voting).
+* (x/simulation) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Time-scheduled future operations were silently dropped by `queueOperations` (the appended queue was never returned to the caller), and executed time operations were never removed from the queue. Both now update the caller's queue.
+* (x/auth/tx) [#26815](https://github.com/cosmos/cosmos-sdk/pull/26815) `GetSigningTxData` now converts the nested `ModeInfos` of a multisig `ModeInfo`; previously the converted entries were discarded and the slice was left as nil placeholders.
+* (keys) [#26833](https://github.com/cosmos/cosmos-sdk/pull/26833) Strip leading and trailing whitespace when reading a mnemonic from a source file.
 
 ### Deprecated
 

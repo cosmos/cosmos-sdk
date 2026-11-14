@@ -178,13 +178,13 @@ func Paginate(
 		obj := reflect.New(elemType)
 		val := obj.Elem()
 		model := obj
-		if elemType.Kind() == reflect.Ptr {
+		if elemType.Kind() == reflect.Pointer {
 			val.Set(reflect.New(elemType.Elem()))
 			// if elemType is already a pointer (e.g. dest being some pointer to a slice of pointers,
 			// like []*GroupMember), then obj is a pointer to a pointer which might cause issues
 			// if we try to do obj.Interface().(codec.ProtoMarshaler).
 			// For that reason, we copy obj into model if we have a simple pointer
-			// but in case elemType.Kind() == reflect.Ptr, we overwrite it with model = val
+			// but in case elemType.Kind() == reflect.Pointer, we overwrite it with model = val
 			// so we can safely call model.Interface().(codec.ProtoMarshaler) afterwards.
 			model = val
 		}
@@ -266,7 +266,7 @@ func ReadAll(it Iterator, dest ModelSlicePtr) ([]RowID, error) {
 		obj := reflect.New(elemType)
 		val := obj.Elem()
 		model := obj
-		if elemType.Kind() == reflect.Ptr {
+		if elemType.Kind() == reflect.Pointer {
 			val.Set(reflect.New(elemType.Elem()))
 			model = val
 		}
@@ -293,7 +293,7 @@ func assertDest(dest ModelSlicePtr, destRef, tmpSlice *reflect.Value) (reflect.T
 		return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "destination must not be nil")
 	}
 	tp := reflect.ValueOf(dest)
-	if tp.Kind() != reflect.Ptr {
+	if tp.Kind() != reflect.Pointer {
 		return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "destination must be a pointer to a slice")
 	}
 	if tp.Elem().Kind() != reflect.Slice {

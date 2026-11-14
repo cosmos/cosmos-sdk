@@ -99,12 +99,14 @@ func GetHeightFromMetadataStrict(grpcCtx gocontext.Context) (int64, error) {
 	if err != nil {
 		return 0, errorsmod.Wrapf(
 			sdkerrors.ErrInvalidRequest,
-			"invalid height header %q: %v", grpctypes.GRPCBlockHeightHeader, err)
+			"invalid height header %q: %v", grpctypes.GRPCBlockHeightHeader, err,
+		)
 	}
 	if height < 0 {
 		return 0, errorsmod.Wrapf(
 			sdkerrors.ErrInvalidRequest,
-			"height (%d) from %q must be >= 0", height, grpctypes.GRPCBlockHeightHeader)
+			"height (%d) from %q must be >= 0", height, grpctypes.GRPCBlockHeightHeader,
+		)
 	}
 	return height, nil
 }

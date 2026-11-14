@@ -116,16 +116,14 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 		} else if !bytes.Equal(feeGranterAddr, feePayer) {
 			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranterAddr, feePayer, fee, sdkTx.GetMsgs())
 			if err != nil {
-				// Encode the addresses as bech32 strings; feeGranter and feePayer
-				// are raw address bytes, and formatting them directly with %s
-				// emits control characters into the error (and the tx log).
+				// feeGranter/feePayer are raw address bytes; bech32-encode them so the error (and tx log) stays valid UTF-8.
 				granterStr, gErr := dfd.accountKeeper.AddressCodec().BytesToString(feeGranter)
 				if gErr != nil {
-					return errorsmod.Wrapf(err, "%s, feeGranter does not allow to pay fees", gErr.Error())
+					granterStr = feeGranterAddr.String()
 				}
 				payerStr, pErr := dfd.accountKeeper.AddressCodec().BytesToString(feePayer)
 				if pErr != nil {
-					return errorsmod.Wrapf(err, "%s, feeGranter does not allow to pay fees", pErr.Error())
+					payerStr = sdk.AccAddress(feePayer).String()
 				}
 				return errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", granterStr, payerStr)
 			}

@@ -348,6 +348,11 @@ replace (
 )
 
 retract (
+	// feegrant expiry queue entries written before v0.54 fail to decode; fixed in v0.55.1
+	v0.55.0
+	// feegrant expiry queue entries written before v0.54 fail to decode; fixed in v0.54.5
+	[v0.54.0, v0.54.4]
+
 	// incorrect tag for patch version
 	v0.53.1
 

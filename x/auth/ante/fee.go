@@ -3,6 +3,8 @@ package ante
 import (
 	"bytes"
 	"fmt"
+	"sort"
+	"sync"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -11,12 +13,51 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// FeeRecipientModule holds the module name that receives deducted tx fees
-// (default: fee_collector). It is updated by WithFeeRecipientModule and used
-// by DeductFees. Other modules can read this to verify that fees are being
-// routed to the expected destination. DeductFeeDecorator itself always
-// deducts to the recipient it was configured with.
+// FeeRecipientModule holds the module name most recently passed to
+// WithFeeRecipientModule (default: fee_collector). It is what DeductFees sends
+// fees to. It does NOT say where every DeductFeeDecorator sends fees: each
+// decorator deducts to the recipient it was configured with, so an app that
+// builds several decorators can have several recipients. Modules that need
+// fees to reach a specific module account should check FeeRecipientModules,
+// which lists the recipient of every configured decorator.
 var FeeRecipientModule = types.FeeCollectorName
+
+var (
+	feeRecipientsMu sync.Mutex
+	// feeRecipients counts the DeductFeeDecorators currently configured to pay
+	// each module account.
+	feeRecipients = map[string]int{}
+)
+
+// FeeRecipientModules returns the sorted, de-duplicated module names that the
+// DeductFeeDecorators built so far deduct fees to. A decorator built with
+// NewDeductFeeDecorator counts towards fee_collector until it is redirected
+// with WithFeeRecipientModule.
+func FeeRecipientModules() []string {
+	feeRecipientsMu.Lock()
+	defer feeRecipientsMu.Unlock()
+
+	modules := make([]string, 0, len(feeRecipients))
+	for m, n := range feeRecipients {
+		if n > 0 {
+			modules = append(modules, m)
+		}
+	}
+	sort.Strings(modules)
+	return modules
+}
+
+func moveFeeRecipient(from, to string) {
+	feeRecipientsMu.Lock()
+	defer feeRecipientsMu.Unlock()
+
+	if from != "" {
+		if feeRecipients[from]--; feeRecipients[from] <= 0 {
+			delete(feeRecipients, from)
+		}
+	}
+	feeRecipients[to]++
+}
 
 // TxFeeChecker check if the provided fee is enough and returns the effective fee and tx priority,
 // the effective fee should be deducted later, and the priority should be returned in abci response.
@@ -39,6 +80,8 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 		tfc = checkTxFeeWithValidatorMinGasPrices
 	}
 
+	moveFeeRecipient("", types.FeeCollectorName)
+
 	return DeductFeeDecorator{
 		accountKeeper:      ak,
 		bankKeeper:         bk,
@@ -55,6 +98,7 @@ func (dfd DeductFeeDecorator) WithFeeRecipientModule(moduleName string) DeductFe
 	if moduleName == "" {
 		panic("fee recipient module name cannot be empty")
 	}
+	moveFeeRecipient(dfd.feeRecipientModule, moduleName)
 	dfd.feeRecipientModule = moduleName
 	FeeRecipientModule = moduleName
 	return dfd

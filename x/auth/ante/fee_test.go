@@ -221,3 +221,20 @@ func TestDeductFees_RecipientNotClobberedByLaterDecorator(t *testing.T) {
 	_, err = sdk.ChainAnteDecorators(custom)(s.ctx, tx, false)
 	require.NoError(t, err)
 }
+
+func TestFeeRecipientModules(t *testing.T) {
+	s := SetupTestSuite(t, false)
+
+	// Redirecting a decorator moves its recipient; the plain decorator built
+	// afterwards still pays fee_collector.
+	redirected := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil).WithFeeRecipientModule("poa-test")
+	require.Contains(t, ante.FeeRecipientModules(), "poa-test")
+	_ = ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil)
+	require.Contains(t, ante.FeeRecipientModules(), "poa-test")
+	require.Contains(t, ante.FeeRecipientModules(), authtypes.FeeCollectorName)
+
+	// Redirecting again releases the previous recipient.
+	_ = redirected.WithFeeRecipientModule("poa-test-2")
+	require.NotContains(t, ante.FeeRecipientModules(), "poa-test")
+	require.Contains(t, ante.FeeRecipientModules(), "poa-test-2")
+}

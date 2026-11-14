@@ -411,7 +411,8 @@ func TestCoreAPIManagerOrderSetters(t *testing.T) {
 			"module1": mockAppModule1,
 			"module2": mockAppModule2,
 			"module3": mockAppModule3,
-		})
+		},
+	)
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
 

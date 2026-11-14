@@ -177,7 +177,8 @@ func SignWithPrivKey(
 
 	// Generate the bytes to be signed.
 	signBytes, err := authsigning.GetSignBytesAdapter(
-		ctx, txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
+		ctx, txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx(),
+	)
 	if err != nil {
 		return sigV2, err
 	}

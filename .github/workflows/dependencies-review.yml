@@ -40,7 +40,16 @@ jobs:
           #                 Pulled via libp2->pion/stun. Tracking: https://github.com/libp2p/go-libp2p/issues/3464
           # - GO-2026-5932: golang.org/x/crypto openpgp armor. No fixed release yet,
           #                 called from crypto/armor.go (key export/import armoring).
+          # - GO-2026-6443: grpc missing :authority/Host panic. False positive at v1.84.0: the
+          #                 fix was cherry-picked to v1.84.x (d5a41119, GHSA-2v4p-qf9q-27wj agrees),
+          #                 but the vulndb range still covers it. Only ignored while root grpc >= v1.84.0.
+          #                 Tracking: https://github.com/golang/vulndb/issues/6511
           IGNORED_VULNS="GO-2025-3443 GO-2026-4479 GO-2026-5932"
+          grpc_version=$(go list -m -f '{{.Version}}' google.golang.org/grpc)
+          echo "Root grpc: $grpc_version"
+          if [ "$(printf '%s\n' v1.84.0 "$grpc_version" | sort -V | head -n1)" = "v1.84.0" ]; then
+            IGNORED_VULNS="$IGNORED_VULNS GO-2026-6443"
+          fi
 
           for vuln in $vulnerabilities; do
             if ! echo "$IGNORED_VULNS" | grep -qw "$vuln"; then

@@ -230,7 +230,8 @@ func (k Querier) Delegation(ctx context.Context, req *types.QueryDelegationReque
 		return nil, status.Errorf(
 			codes.NotFound,
 			"delegation with delegator %s not found for validator %s",
-			req.DelegatorAddr, req.ValidatorAddr)
+			req.DelegatorAddr, req.ValidatorAddr,
+		)
 	}
 
 	delResponse, err := delegationToDelegationResponse(ctx, k.Keeper, delegation)
@@ -269,7 +270,8 @@ func (k Querier) UnbondingDelegation(ctx context.Context, req *types.QueryUnbond
 		return nil, status.Errorf(
 			codes.NotFound,
 			"unbonding delegation with delegator %s not found for validator %s",
-			req.DelegatorAddr, req.ValidatorAddr)
+			req.DelegatorAddr, req.ValidatorAddr,
+		)
 	}
 
 	return &types.QueryUnbondingDelegationResponse{Unbond: unbond}, nil
@@ -518,7 +520,8 @@ func queryRedelegation(ctx context.Context, k Querier, req *types.QueryRedelegat
 		return nil, status.Errorf(
 			codes.NotFound,
 			"redelegation not found for delegator address %s from validator address %s",
-			req.DelegatorAddr, req.SrcValidatorAddr)
+			req.DelegatorAddr, req.SrcValidatorAddr,
+		)
 	}
 	redels = []types.Redelegation{redel}
 

@@ -68,8 +68,6 @@ func (k Keeper) GetAuthority() string {
 // - depositing funds into proposals, and activating upon sufficient funds being deposited
 // - users voting on proposals, with weight proportional to stake in the system
 // - and tallying the result of the vote.
-//
-// CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.Codec,
 	storeService corestoretypes.KVStoreService,

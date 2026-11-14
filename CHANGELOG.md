@@ -42,19 +42,25 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
-* (x/feegrant) [#26944](https://github.com/cosmos/cosmos-sdk/pull/26944) Add a v2 → v3 store migration that rewrites fee allowance expiry queue entries stored with an empty value to an encoded `true`, and write an encoded `true` in the v1 → v2 migration. The standalone `cosmossdk.io/x/feegrant` module and the v1 → v2 migration wrote empty values, which the keeper cannot decode, so `RemoveExpiredAllowances` returned an error from the `EndBlocker` once such an entry expired.
-
 ### Features
+
+### Improvements
+
+### Bug Fixes
+
+### Deprecated
+
+## [v0.55.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.55.1) - 2026-11-13
+
+### State Machine Breaking
+
+* (x/feegrant) [#26944](https://github.com/cosmos/cosmos-sdk/pull/26944) Add a v2 → v3 store migration that rewrites fee allowance expiry queue entries stored with an empty value to an encoded `true`, and write an encoded `true` in the v1 → v2 migration. The standalone `cosmossdk.io/x/feegrant` module and the v1 → v2 migration wrote empty values, which the keeper cannot decode, so `RemoveExpiredAllowances` returned an error from the `EndBlocker` once such an entry expired.
 
 ### Improvements
 
 * (deps) [#26968](https://github.com/cosmos/cosmos-sdk/pull/26968) Bump cosmos/iavl to v1.2.9, which validates malformed snapshot input during import.
 * (deps) [#26969](https://github.com/cosmos/cosmos-sdk/pull/26969) Bump Go to 1.26.11 and patch vulnerable dependencies (klauspost/compress, grpc, golang.org/x, pion, otel).
 * (telemetry) [#26979](https://github.com/cosmos/cosmos-sdk/pull/26979) Use `otel.GetLoggerProvider` and `otel.SetLoggerProvider` in place of the deprecated `go.opentelemetry.io/otel/log/global` package (backport of the telemetry change in #26897).
-
-### Bug Fixes
-
-### Deprecated
 
 ## [v0.55.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.55.0) - 2026-07-27
 

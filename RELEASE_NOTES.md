@@ -1,15 +1,24 @@
-# Cosmos SDK v0.55.0 Release Notes
+# Cosmos SDK v0.55.1 Release Notes
 
-## 🚀 Highlights
+## Highlights
 
-Announcing Cosmos SDK v0.55
+Cosmos SDK v0.55.1 is a patch release with three changes: a fix for fee allowance expiry queue entries that the keeper cannot decode on chains that upgraded from v0.53.x or earlier, IAVL v1.2.9, and patched Go and dependency versions.
 
-We are pleased to announce the release of Cosmos SDK v0.55! We’re excited to be delivering a new version of the Cosmos SDK that provides key features and updates around consensus key rotation and new post quantum key types.
+Upgrading from v0.55.0 **requires a coordinated chain upgrade**. The `x/feegrant` consensus version goes from 2 to 3, and its store migration runs through `RunMigrations` in the upgrade handler.
 
-Upgrading to this version of the Cosmos SDK from any `v0.54.x` release will **require a coordinated chain upgrade**.
+### x/feegrant migration
 
-For more upgrade information, check out our [upgrading guide](https://github.com/cosmos/cosmos-sdk/blob/v0.55.0/UPGRADING.md)
+Chains that upgraded from v0.53.x or earlier can store fee allowance expiry queue entries with an empty value. The keeper cannot decode them, so the feegrant `EndBlocker` returns an error at the first block after such an entry expires. The v2 to v3 migration rewrites those entries.
 
-## 📝 Changelog
+A chain is affected if it upgraded from v0.53.x or earlier and still has unexpired fee grants with an expiration that were created before that upgrade. Affected chains must run the migration before the earliest of those grants expires. Chains that started on v0.54 or later are not affected.
 
-Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.55.0/CHANGELOG.md) for an exhaustive list of changes, or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.54.3...v0.55.0) from the last release.
+See the [upgrading guide](https://github.com/cosmos/cosmos-sdk/blob/v0.55.1/UPGRADING.md#xfeegrant-v0551) for how to check a chain.
+
+### Other changes
+
+* IAVL v1.2.9: snapshot import returns an error on malformed input instead of panicking.
+* Go 1.26.11 and patched dependencies (klauspost/compress, grpc, golang.org/x, pion, otel).
+
+## Changelog
+
+See the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.55.1/CHANGELOG.md) for the full list of changes, or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.55.0...v0.55.1) from the last release.

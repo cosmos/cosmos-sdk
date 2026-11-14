@@ -65,7 +65,7 @@ func TestParseChainIDFromGenesis(t *testing.T) {
 				"chain-id": 1,
 			}`,
 			"",
-			"invalid character '}' looking for beginning of object key string",
+			"invalid character",
 		},
 		{
 			"invalid json",

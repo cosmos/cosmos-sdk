@@ -183,7 +183,7 @@ go.sum: go.mod
 	go mod tidy
 
 tidy-all:
-	sh ./scripts/go-mod-tidy-all.sh
+	./scripts/go-mod-tidy-all.sh
 
 .PHONY: tidy-all
 
@@ -548,9 +548,10 @@ build-system-test-current: build
 
 # test-sdk-system runs only the core SDK system tests (tests/systemtests), not enterprise.
 # Used by CI to avoid redundant runs when test-poa-system and test-group-system exist.
-test-sdk-system: build-v54 build-system-test-current
-	mkdir -p ./tests/systemtests/binaries/v0.54 ./tests/systemtests/testnet
-	mv $(BUILDDIR)/simdv54 ./tests/systemtests/binaries/v0.54/simd
+# The upgrade test upgrades from the latest v0.55 release.
+test-sdk-system: build-v55 build-system-test-current
+	mkdir -p ./tests/systemtests/binaries/v0.55 ./tests/systemtests/testnet
+	cp $(BUILDDIR)/simdv55 ./tests/systemtests/binaries/v0.55/simd
 	$(MAKE) -C tests/systemtests test
 
 test-system: test-sdk-system
@@ -565,3 +566,11 @@ build-v54:
 	@if [ -f $(BUILDDIR)/simdv54 ]; then echo "build/simdv54 exists, skipping"; else \
 		BUILDDIR=$(BUILDDIR) bash scripts/build-v54.sh; fi
 .PHONY: build-v54
+
+# build-v55 builds the v0.55 simd binary for the upgrade system test from the
+# latest v0.55 release tag. Skips if $(BUILDDIR)/simdv55 exists.
+V055_TAG ?= v0.55.0
+build-v55:
+	@if [ -f $(BUILDDIR)/simdv55 ]; then echo "build/simdv55 exists, skipping"; else \
+		bash scripts/build-simd-from-tag.sh $(V055_TAG) $(BUILDDIR)/simdv55; fi
+.PHONY: build-v55

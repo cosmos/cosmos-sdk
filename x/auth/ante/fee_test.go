@@ -2,19 +2,34 @@ package ante_test
 
 import (
 	"testing"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	feegranttestutil "github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
 )
 
 func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
@@ -195,4 +210,87 @@ func TestDeductFees_WithFeeRecipientModule(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+}
+
+// TestDeductFeeDecorator_FeegrantErrorIsBech32 runs the DeductFeeDecorator through the
+// real x/feegrant keeper (not a mock) and asserts that when a fee grant does not allow
+// paying the fee, the returned error contains both bech32 addresses and no raw address
+// bytes / control characters. Formatting the raw []byte granter/payer with %s previously
+// emitted control characters into the error and the tx log, breaking UTF-8/YAML clients.
+// It fails on main (raw bytes) and passes with the fix.
+func TestDeductFeeDecorator_FeegrantErrorIsBech32(t *testing.T) {
+	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
+	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
+	feegrant.RegisterInterfaces(encCfg.InterfaceRegistry)
+
+	authKey := storetypes.NewKVStoreKey(authtypes.StoreKey)
+	fgKey := storetypes.NewKVStoreKey(feegrant.StoreKey)
+	ctx := testutil.DefaultContextWithKeys(
+		map[string]*storetypes.KVStoreKey{authtypes.StoreKey: authKey, feegrant.StoreKey: fgKey},
+		nil, nil,
+	).WithBlockHeight(1)
+
+	ak := authkeeper.NewAccountKeeper(
+		encCfg.Codec, runtime.NewKVStoreService(authKey), authtypes.ProtoBaseAccount,
+		map[string][]string{authtypes.FeeCollectorName: nil},
+		authcodec.NewBech32Codec("cosmos"), sdk.Bech32MainPrefix, authtypes.NewModuleAddress("gov").String(),
+	)
+	require.NoError(t, ak.Params.Set(ctx, authtypes.DefaultParams()))
+	ak.GetModuleAccount(ctx, authtypes.FeeCollectorName)
+
+	// real feegrant keeper on a test store
+	ctrl := gomock.NewController(t)
+	bankKeeper := feegranttestutil.NewMockBankKeeper(ctrl)
+	bankKeeper.EXPECT().BlockedAddr(gomock.Any()).Return(false).AnyTimes()
+	fgk := feegrantkeeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(fgKey), ak).SetBankKeeper(bankKeeper)
+
+	// granter and payer accounts
+	_, _, granter := testdata.KeyTestPubAddr()
+	payerPriv, _, payer := testdata.KeyTestPubAddr()
+	for i, addr := range []sdk.AccAddress{granter, payer} {
+		acc := ak.NewAccountWithAddress(ctx, addr)
+		require.NoError(t, acc.SetAccountNumber(uint64(i)))
+		ak.SetAccount(ctx, acc)
+	}
+
+	txCfg := tx.NewTxConfig(codec.NewProtoCodec(encCfg.InterfaceRegistry), tx.DefaultSignModes)
+	dfd := ante.NewDeductFeeDecorator(ak, nil, fgk, nil)
+	anteHandler := sdk.ChainAnteDecorators(dfd)
+	fee := sdk.NewCoins(sdk.NewInt64Coin("atom", 1000))
+
+	buildTx := func(t *testing.T) sdk.Tx {
+		acc := ak.GetAccount(ctx, payer)
+		msgs := []sdk.Msg{testdata.NewTestMsg(payer)}
+		txn, err := genTxWithFeeGranter(txCfg, msgs, fee, 10_000_000, ctx.ChainID(),
+			[]uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}, granter, payerPriv)
+		require.NoError(t, err)
+		return txn
+	}
+
+	assertCleanError := func(t *testing.T, err error) {
+		require.Error(t, err)
+		msg := err.Error()
+		require.Truef(t, utf8.ValidString(msg), "error must be valid UTF-8, got %q", msg)
+		for _, r := range msg {
+			if r != '\n' && r != '\t' {
+				require.Falsef(t, unicode.IsControl(r), "error contains control char %U: %q", r, msg)
+			}
+		}
+		require.Contains(t, msg, granter.String())
+		require.Contains(t, msg, payer.String())
+		require.Contains(t, msg, "does not allow to pay fees for")
+	}
+
+	t.Run("no grant", func(t *testing.T) {
+		_, err := anteHandler(ctx, buildTx(t), false)
+		assertCleanError(t, err)
+	})
+
+	t.Run("grant spend limit below fee", func(t *testing.T) {
+		require.NoError(t, fgk.GrantAllowance(ctx, granter, payer, &feegrant.BasicAllowance{
+			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 1)),
+		}))
+		_, err := anteHandler(ctx, buildTx(t), false)
+		assertCleanError(t, err)
+	})
 }

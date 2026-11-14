@@ -63,6 +63,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (x/auth) [#26966](https://github.com/cosmos/cosmos-sdk/pull/26966) Encode the fee-granter and fee-payer addresses as bech32 in the `DeductFeeDecorator` error when a fee grant does not allow paying the fee; previously the raw address bytes were formatted with `%s`, emitting control characters into the error and the tx log (regression of [#20963](https://github.com/cosmos/cosmos-sdk/pull/20963)).
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.
 * (client/tx) [#26759](https://github.com/cosmos/cosmos-sdk/issues/26759) Populate the multisig bit array in simulation txs so `--gas auto` works for multisig senders.
 * (blockstm) [#26772](https://github.com/cosmos/cosmos-sdk/pull/26772) Panic with a descriptive error when accessing an unregistered store instead of silently using store index zero.

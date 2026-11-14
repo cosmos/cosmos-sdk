@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sync"
 	"testing"
 	"time"
 
@@ -319,7 +318,8 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 		defer close(done)
 		_, err := mgr.Create(1)
 		assert.NoError(t, err)
-		assert.True(t, hung.didPruneHeight(1))
+		_, didPruneHeight := hung.prunedHeights[1]
+		assert.True(t, didPruneHeight)
 	}()
 	time.Sleep(10 * time.Millisecond)
 
@@ -334,10 +334,7 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 
 // hungSnapshotter can be used to test operations in progress. Call close to end the snapshot.
 type hungSnapshotter struct {
-	ch chan struct{}
-	// mtx guards the height maps, which are touched both by the goroutine
-	// blocked in Snapshot and by the test goroutine issuing further calls.
-	mtx                  sync.Mutex
+	ch                   chan struct{}
 	announcedSnapHeights map[int64]struct{}
 	prunedHeights        map[int64]struct{}
 	snapshotInterval     uint64
@@ -361,14 +358,10 @@ func (m *hungSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) er
 }
 
 func (m *hungSnapshotter) StartSnapshot(height int64) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
 	m.announcedSnapHeights[height] = struct{}{}
 }
 
 func (m *hungSnapshotter) PruneSnapshotHeight(height int64) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
 	if _, ok := m.announcedSnapHeights[height]; !ok {
 		panic(fmt.Sprintf("snap height %d was not announced", height))
 	}
@@ -380,17 +373,7 @@ func (m *hungSnapshotter) CompleteSnapshot(height int64) {
 }
 
 func (m *hungSnapshotter) FailSnapshot(height int64) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
 	delete(m.announcedSnapHeights, height)
-}
-
-// didPruneHeight reports whether PruneSnapshotHeight was called for height.
-func (m *hungSnapshotter) didPruneHeight(height int64) bool {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-	_, ok := m.prunedHeights[height]
-	return ok
 }
 
 func (m *hungSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {

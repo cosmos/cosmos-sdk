@@ -89,6 +89,11 @@ type BaseApp struct {
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
 
+	// closeOnce guarantees Close only ever closes the underlying resources once,
+	// and closeErr replays the result to any subsequent caller.
+	closeOnce sync.Once
+	closeErr  error
+
 	stateManager *state.Manager
 
 	// An inter-block write-through cache provided to the context during the ABCI
@@ -1164,8 +1169,21 @@ func (app *BaseApp) StreamingManager() storetypes.StreamingManager {
 	return app.streamingManager
 }
 
-// Close is called in start cmd to gracefully cleanup resources.
+// Close is called in start cmd to gracefully cleanup resources. It is safe to
+// call multiple times: the underlying resources are closed on the first call
+// only, and every later call replays that first result. Several shutdown paths
+// in server/start.go each defer a cleanup that calls Close, and some database
+// backends (pebble, for one) panic rather than return an error when closed
+// twice.
 func (app *BaseApp) Close() error {
+	app.closeOnce.Do(func() {
+		app.closeErr = app.close()
+	})
+
+	return app.closeErr
+}
+
+func (app *BaseApp) close() error {
 	var errs []error
 
 	// Close app.db (opened by cosmos-sdk/server/start.go call to openDB)

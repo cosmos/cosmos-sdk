@@ -95,6 +95,10 @@ type AccountKeeper struct {
 	// This boolean helps sigverify ante handlers to determine if they should process unordered transactions.
 	enableUnorderedTxs bool
 
+	// rekeyPubKeyCheck, if set, is an extra app-supplied check on the new
+	// pubkey of a MsgChangePubKey. See WithRekeyPubKeyCheck.
+	rekeyPubKeyCheck func(cryptotypes.PubKey) error
+
 	// The prototypical AccountI constructor.
 	proto func() sdk.AccountI
 
@@ -102,12 +106,26 @@ type AccountKeeper struct {
 	// should be the x/gov module account.
 	authority string
 
+	// pubKeyChangeHooks is shared by AccountKeeper copies so hooks registered
+	// during app wiring are visible to the AppModule and msg server.
+	pubKeyChangeHooks *pubKeyChangeHooks
+
 	// State
 	Schema          collections.Schema
 	Params          collections.Item[types.Params]
 	AccountNumber   collections.Sequence
 	Accounts        *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
 	UnorderedNonces collections.KeySet[collections.Pair[int64, []byte]]
+	// PubKeyHistory holds the pubkeys an account has replaced, keyed by
+	// (account address, rotation index). The first rotation is index 0.
+	PubKeyHistory collections.Map[collections.Pair[sdk.AccAddress, uint64], types.PubKeyHistoryEntry]
+	// RekeyIndex holds (natural address of the current pubkey, account address)
+	// for every account whose current pubkey does not hash to its address.
+	RekeyIndex collections.KeySet[collections.Pair[sdk.AccAddress, sdk.AccAddress]]
+}
+
+type pubKeyChangeHooks struct {
+	hooks types.PubKeyChangeHooks
 }
 
 type InitOption func(*AccountKeeper)
@@ -118,6 +136,23 @@ type InitOption func(*AccountKeeper)
 func WithUnorderedTransactions(enable bool) InitOption {
 	return func(ak *AccountKeeper) {
 		ak.enableUnorderedTxs = enable
+	}
+}
+
+// WithRekeyPubKeyCheck sets an extra check that MsgChangePubKey runs on the
+// new pubkey, after types.ValidateRekeyPubKey has accepted it and before any
+// gas is charged for the rotation. An error rejects the message.
+//
+// types.ValidateRekeyPubKey accepts the key types that
+// ante.DefaultSigVerificationGasConsumer accepts. An app whose
+// HandlerOptions.SigGasConsumer rejects some of them (for example ed25519)
+// must use this option to reject the same types, or an account could rotate to
+// a key the ante handler never accepts and be locked out. The check receives
+// the whole new pubkey, so it must walk the subkeys of a multisig itself.
+// This option can only narrow the accepted key types, not widen them.
+func WithRekeyPubKeyCheck(check func(cryptotypes.PubKey) error) InitOption {
+	return func(ak *AccountKeeper) {
+		ak.rekeyPubKeyCheck = check
 	}
 }
 
@@ -141,17 +176,20 @@ func NewAccountKeeper(
 	sb := collections.NewSchemaBuilder(storeService)
 
 	ak := AccountKeeper{
-		addressCodec:    ac,
-		bech32Prefix:    bech32Prefix,
-		storeService:    storeService,
-		proto:           proto,
-		cdc:             cdc,
-		permAddrs:       permAddrs,
-		authority:       authority,
-		Params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		AccountNumber:   collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"), //nolint:staticcheck // kept in place for the migration
-		Accounts:        collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
-		UnorderedNonces: collections.NewKeySet(sb, types.UnorderedNoncesKey, "unordered_nonces", collections.PairKeyCodec(collections.Int64Key, collections.BytesKey)),
+		addressCodec:      ac,
+		bech32Prefix:      bech32Prefix,
+		storeService:      storeService,
+		proto:             proto,
+		cdc:               cdc,
+		permAddrs:         permAddrs,
+		authority:         authority,
+		pubKeyChangeHooks: &pubKeyChangeHooks{},
+		Params:            collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		AccountNumber:     collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"), //nolint:staticcheck // kept in place for the migration
+		Accounts:          collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
+		UnorderedNonces:   collections.NewKeySet(sb, types.UnorderedNoncesKey, "unordered_nonces", collections.PairKeyCodec(collections.Int64Key, collections.BytesKey)),
+		PubKeyHistory:     collections.NewMap(sb, types.PubKeyHistoryPrefix, "pub_key_history", collections.PairKeyCodec(sdk.AccAddressKey, collections.Uint64Key), codec.CollValue[types.PubKeyHistoryEntry](cdc)),
+		RekeyIndex:        collections.NewKeySet(sb, types.RekeyIndexPrefix, "rekey_index", collections.PairKeyCodec(sdk.AccAddressKey, sdk.AccAddressKey)),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -162,6 +200,27 @@ func NewAccountKeeper(
 	for _, opt := range opts {
 		opt(&ak)
 	}
+	return ak
+}
+
+// PubKeyChangeHooks returns the registered pubkey change hooks, or a no-op set.
+func (ak AccountKeeper) PubKeyChangeHooks() types.PubKeyChangeHooks {
+	if ak.pubKeyChangeHooks == nil || ak.pubKeyChangeHooks.hooks == nil {
+		return types.MultiPubKeyChangeHooks{}
+	}
+	return ak.pubKeyChangeHooks.hooks
+}
+
+// SetPubKeyChangeHooks registers pubkey change hooks. It panics if called more
+// than once.
+func (ak *AccountKeeper) SetPubKeyChangeHooks(hooks types.PubKeyChangeHooks) *AccountKeeper {
+	if ak.pubKeyChangeHooks == nil {
+		ak.pubKeyChangeHooks = &pubKeyChangeHooks{}
+	}
+	if ak.pubKeyChangeHooks.hooks != nil {
+		panic("cannot set pubkey change hooks twice")
+	}
+	ak.pubKeyChangeHooks.hooks = hooks
 	return ak
 }
 

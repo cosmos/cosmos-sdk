@@ -5,6 +5,7 @@ import (
 	"sort"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
@@ -42,6 +43,7 @@ type DeterministicTestSuite struct {
 var (
 	addr        = sdk.MustAccAddressFromBech32("cosmos1j364pjm8jkxxmujj0vp2xjg0y7w8tyveuamfm6")
 	pub, _      = hex.DecodeString("01090C02812F010C25200ED40E004105160196E801F70005070EA21603FF06001E")
+	rekeyPub, _ = hex.DecodeString("02A1633CAFCC01EBFB6D78E39F687A1F0995C62FC95F51EAD10A02EE0BE551B5DC")
 	permissions = []string{"burner", "minter", "staking", "random"}
 )
 
@@ -213,6 +215,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryParameters() {
 			rapid.Uint64Min(1).Draw(t, "sig-verify-cost-ed25519"),
 			rapid.Uint64Min(1).Draw(t, "sig-verify-cost-Secp256k1"),
 			rapid.Uint64Min(1).Draw(t, "sig-verify-cost-MlDsa65"),
+			rapid.Bool().Draw(t, "pub-key-change-enabled"),
+			rapid.Uint64Min(1).Draw(t, "pub-key-change-cost"),
 		)
 		err := suite.accountKeeper.Params.Set(suite.ctx, params)
 		suite.Require().NoError(err)
@@ -222,13 +226,13 @@ func (suite *DeterministicTestSuite) TestGRPCQueryParameters() {
 	})
 
 	// Regression test
-	params := types.NewParams(15, 167, 100, 1, 21457, 1)
+	params := types.NewParams(15, 167, 100, 1, 21457, 1, false, 1)
 
 	err := suite.accountKeeper.Params.Set(suite.ctx, params)
 	suite.Require().NoError(err)
 
 	req := &types.QueryParamsRequest{}
-	testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.Params, 1048, false)
+	testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.Params, 1054, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
@@ -375,4 +379,50 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 	queryClient := suite.createAndReturnQueryClient(suite.accountKeeper)
 	req := &types.QueryModuleAccountByNameRequest{Name: "mint"}
 	testdata.DeterministicIterations(suite.ctx, suite.T(), req, queryClient.ModuleAccountByName, 1399, false)
+}
+
+func (suite *DeterministicTestSuite) TestGRPCQueryRekeyedAccounts() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		accs := suite.createAndSetAccounts(t, 1)
+		newPk := pubkeyGenerator(t).Draw(t, "new-pubkey")
+		suite.Require().NoError(suite.accountKeeper.ApplyRekey(suite.ctx, accs[0], &newPk))
+
+		req := &types.QueryRekeyedAccountsRequest{Address: sdk.AccAddress(newPk.Address()).String()}
+		testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.RekeyedAccounts, 0, true)
+	})
+
+	// Regression test
+	acc := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, 10087, 10)
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
+
+	newPk := &secp256k1.PubKey{Key: rekeyPub}
+	suite.Require().NoError(suite.accountKeeper.ApplyRekey(suite.ctx, acc, newPk))
+
+	req := &types.QueryRekeyedAccountsRequest{Address: sdk.AccAddress(newPk.Address()).String()}
+	testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.RekeyedAccounts, 312, false)
+}
+
+func (suite *DeterministicTestSuite) TestGRPCQueryPubKeyHistory() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		accs := suite.createAndSetAccounts(t, 1)
+		rotations := rapid.IntRange(1, 3).Draw(t, "rotations")
+		for range rotations {
+			newPk := pubkeyGenerator(t).Draw(t, "new-pubkey")
+			acc := suite.accountKeeper.GetAccount(suite.ctx, accs[0].GetAddress())
+			suite.Require().NoError(suite.accountKeeper.ApplyRekey(suite.ctx, acc, &newPk))
+		}
+
+		req := &types.QueryPubKeyHistoryRequest{Address: accs[0].GetAddress().String()}
+		testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.PubKeyHistory, 0, true)
+	})
+
+	// Regression test. The block time is pinned because the history entry
+	// stores it, and the encoded size of time.Now() varies, which changes gas.
+	acc := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, 10087, 10)
+	suite.accountKeeper.SetAccount(suite.ctx, acc)
+	rekeyCtx := suite.ctx.WithBlockTime(time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC))
+	suite.Require().NoError(suite.accountKeeper.ApplyRekey(rekeyCtx, acc, &secp256k1.PubKey{Key: rekeyPub}))
+
+	req := &types.QueryPubKeyHistoryRequest{Address: addr.String()}
+	testdata.DeterministicIterations(suite.ctx, suite.T(), req, suite.queryClient.PubKeyHistory, 1002, false)
 }

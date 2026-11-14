@@ -24,6 +24,7 @@ import (
 
 // AccountKeeper defines the expected interface for the auth module
 type AccountKeeper interface {
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
 	GetModuleAddress(name string) sdk.AccAddress
 	AddressCodec() address.Codec

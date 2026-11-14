@@ -19,6 +19,10 @@ import (
 	testpb "cosmossdk.io/client/v2/internal/testpbpulsar"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var buildModuleMsgCommand = func(moduleName string, f *fixture) (*cobra.Command, error) {
@@ -304,4 +308,88 @@ func TestNotFoundErrorsMsg(t *testing.T) {
 		},
 	})
 	assert.ErrorContains(t, err, "can't find field un-existent-flag")
+}
+
+// TestMsgSignerAddress checks that --signer-address, used to sign for a
+// rekeyed account whose address differs from the --from key's address, sets
+// the signer field of the message whether the signer is given as a positional
+// argument, as --from or as a custom signer flag. Without --signer-address the
+// signer is the key's own address.
+func TestMsgSignerAddress(t *testing.T) {
+	fixture := initFixture(t)
+	rec, _, err := fixture.clientCtx.Keyring.NewMnemonic("new-key", sdkkeyring.English, sdk.FullFundraiserPath, sdkkeyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	assert.NilError(t, err)
+	keyAddr, err := rec.GetAddress()
+	assert.NilError(t, err)
+	account := sdk.AccAddress("rekeyed_account_addr")
+	to := "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk"
+
+	signerDescriptor := func(positionalArgs []*autocliv1.PositionalArgDescriptor, flagOpts map[string]*autocliv1.FlagOptions) *autocliv1.ServiceCommandDescriptor {
+		return &autocliv1.ServiceCommandDescriptor{
+			Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{{
+				RpcMethod:      "Send",
+				PositionalArgs: positionalArgs,
+				FlagOptions:    flagOpts,
+			}},
+		}
+	}
+	toAndAmount := []*autocliv1.PositionalArgDescriptor{{ProtoField: "to_address"}, {ProtoField: "amount"}}
+
+	testCases := []struct {
+		name       string
+		descriptor *autocliv1.ServiceCommandDescriptor
+		args       []string
+	}{
+		{
+			name:       "positional signer key name",
+			descriptor: bankAutoCLI,
+			args:       []string{"new-key", to, "1foo"},
+		},
+		{
+			name:       "positional signer address",
+			descriptor: bankAutoCLI,
+			args:       []string{keyAddr.String(), to, "1foo"},
+		},
+		{
+			name:       "from flag",
+			descriptor: signerDescriptor(toAndAmount, nil),
+			args:       []string{to, "1foo", "--from", "new-key"},
+		},
+		{
+			name: "custom signer flag",
+			descriptor: signerDescriptor(toAndAmount, map[string]*autocliv1.FlagOptions{
+				"from_address": {Name: "sender"},
+			}),
+			args: []string{to, "1foo", "--sender", keyAddr.String()},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, signer := range []sdk.AccAddress{nil, account} {
+				args := append([]string{"send"}, tc.args...)
+				args = append(args, "--generate-only", "--output", "json", "--chain-id", "test-chain")
+				want := keyAddr
+				if signer != nil {
+					args = append(args, "--"+flags.FlagSignerAddress, signer.String())
+					want = signer
+				}
+
+				out, err := runCmd(fixture, buildCustomModuleMsgCommand(tc.descriptor), args...)
+				assert.NilError(t, err)
+
+				var tx struct {
+					Body struct {
+						Messages []struct {
+							FromAddress string `json:"from_address"`
+						} `json:"messages"`
+					} `json:"body"`
+				}
+				assert.NilError(t, json.Unmarshal(out.Bytes(), &tx), out.String())
+				assert.Equal(t, len(tx.Body.Messages), 1)
+				assert.Equal(t, tx.Body.Messages[0].FromAddress, want.String())
+			}
+		})
+	}
 }

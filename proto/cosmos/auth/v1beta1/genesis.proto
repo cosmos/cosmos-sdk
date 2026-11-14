@@ -5,6 +5,7 @@ import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
@@ -15,4 +16,15 @@ message GenesisState {
 
   // accounts are the accounts present at genesis.
   repeated google.protobuf.Any accounts = 2;
+
+  // pub_key_history holds the public key rotation history of rekeyed accounts.
+  repeated GenesisPubKeyHistory pub_key_history = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// GenesisPubKeyHistory is the public key rotation history of a single account.
+message GenesisPubKeyHistory {
+  // address is the account address.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // entries are the account's history entries, in the order the rotations happened.
+  repeated PubKeyHistoryEntry entries = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

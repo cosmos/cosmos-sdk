@@ -274,8 +274,28 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		}
 	}
 
-	if clientCtx.From == "" || flagSet.Changed(flags.FlagFrom) {
-		from, _ := flagSet.GetString(flags.FlagFrom)
+	// Read the signer address before the from key, since GetFromFields
+	// returns it in place of the key's address.
+	if clientCtx.SignerAddress == nil || flagSet.Changed(flags.FlagSignerAddress) {
+		signer, _ := flagSet.GetString(flags.FlagSignerAddress)
+
+		if signer != "" {
+			signerAcc, err := sdk.AccAddressFromBech32(signer)
+			if err != nil {
+				return clientCtx, err
+			}
+
+			clientCtx = clientCtx.WithSignerAddress(signerAcc)
+		}
+	}
+
+	// Recompute the from fields when --signer-address changes too, so the from
+	// address is the signer address even if the context already had a from key.
+	if clientCtx.From == "" || flagSet.Changed(flags.FlagFrom) || flagSet.Changed(flags.FlagSignerAddress) {
+		from := clientCtx.From
+		if from == "" || flagSet.Changed(flags.FlagFrom) {
+			from, _ = flagSet.GetString(flags.FlagFrom)
+		}
 		fromAddr, fromName, keyType, err := GetFromFields(clientCtx, clientCtx.Keyring, from)
 		if err != nil {
 			return clientCtx, fmt.Errorf("failed to convert address field to address: %w", err)

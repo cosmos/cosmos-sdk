@@ -2,11 +2,13 @@ package client_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
@@ -17,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
@@ -245,4 +248,70 @@ func TestGetFromFields(t *testing.T) {
 			require.True(t, strings.HasPrefix(err.Error(), tc.expectedErr))
 		}
 	}
+}
+
+func TestGetFromFields_SignerAddress(t *testing.T) {
+	cfg := testutil.MakeTestEncodingConfig()
+	path := hd.CreateHDPath(118, 0, 0).String()
+	kb := keyring.NewInMemory(cfg.Codec)
+	rec, _, err := kb.NewMnemonic("alice", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(t, err)
+	keyAddr, err := rec.GetAddress()
+	require.NoError(t, err)
+
+	accountAddr := sdk.AccAddress("rekeyed_account_addr")
+	require.NotEqual(t, keyAddr, accountAddr)
+
+	// Without an override, the key's own address is returned.
+	addr, name, _, err := client.GetFromFields(client.Context{}, kb, "alice")
+	require.NoError(t, err)
+	require.Equal(t, keyAddr, addr)
+	require.Equal(t, "alice", name)
+
+	// With an override, the key still signs but the account address is the
+	// override.
+	ctx := client.Context{}.WithSignerAddress(accountAddr)
+	for _, from := range []string{"alice", keyAddr.String()} {
+		addr, name, _, err = client.GetFromFields(ctx, kb, from)
+		require.NoError(t, err)
+		require.Equal(t, accountAddr, addr)
+		require.Equal(t, "alice", name)
+	}
+
+	// The override also applies in generate-only mode.
+	addr, name, _, err = client.GetFromFields(ctx.WithGenerateOnly(true), kb, "alice")
+	require.NoError(t, err)
+	require.Equal(t, accountAddr, addr)
+	require.Equal(t, "alice", name)
+}
+
+// TestGetClientTxContext_SignerAddressWithPresetFrom checks that
+// --signer-address replaces the from address even when the context already
+// has a from key, so msgs and signing name the same account.
+func TestGetClientTxContext_SignerAddressWithPresetFrom(t *testing.T) {
+	cfg := testutil.MakeTestEncodingConfig()
+	path := hd.CreateHDPath(118, 0, 0).String()
+	kb := keyring.NewInMemory(cfg.Codec)
+	rec, _, err := kb.NewMnemonic("alice", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(t, err)
+	keyAddr, err := rec.GetAddress()
+	require.NoError(t, err)
+	accountAddr := sdk.AccAddress("rekeyed_account_addr")
+
+	initCtx := client.Context{}.WithKeyring(kb).WithFrom("alice").WithFromAddress(keyAddr).WithFromName("alice")
+
+	var got client.Context
+	cmd := &cobra.Command{
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			got, err = client.GetClientTxContext(cmd)
+			return err
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	cmd.SetArgs([]string{"--" + flags.FlagSignerAddress + "=" + accountAddr.String()})
+	require.NoError(t, cmd.ExecuteContext(context.WithValue(context.Background(), client.ClientContextKey, &initCtx)))
+
+	require.Equal(t, accountAddr, got.SignerAddress)
+	require.Equal(t, accountAddr, got.GetFromAddress())
+	require.Equal(t, "alice", got.GetFromName())
 }

@@ -54,7 +54,7 @@ func (k *Keeper) UpdateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, u
 			pubKeyToCheck = updates.PubKey
 		}
 
-		if err := k.ValidateOperatorAndConsensusPubKeyDifferent(updates.Metadata.OperatorAddress, pubKeyToCheck); err != nil {
+		if err := k.ValidateOperatorAndConsensusPubKeyDifferent(ctx, updates.Metadata.OperatorAddress, pubKeyToCheck); err != nil {
 			return err
 		}
 
@@ -127,7 +127,7 @@ func (k *Keeper) CreateValidator(ctx sdk.Context, consAddress sdk.ConsAddress, v
 		return types.ErrValidatorAlreadyExists
 	}
 
-	if err := k.ValidateOperatorAndConsensusPubKeyDifferent(validator.Metadata.OperatorAddress, validator.PubKey); err != nil {
+	if err := k.ValidateOperatorAndConsensusPubKeyDifferent(ctx, validator.Metadata.OperatorAddress, validator.PubKey); err != nil {
 		return err
 	}
 
@@ -199,7 +199,7 @@ func (k *Keeper) RotateConsPubKey(ctx sdk.Context, operatorAddr sdk.AccAddress, 
 
 	// disallow setting the consensus key to your key backing the operator
 	// address
-	if err := k.ValidateOperatorAndConsensusPubKeyDifferent(validator.Metadata.OperatorAddress, newPubKeyAny); err != nil {
+	if err := k.ValidateOperatorAndConsensusPubKeyDifferent(ctx, validator.Metadata.OperatorAddress, newPubKeyAny); err != nil {
 		return err
 	}
 

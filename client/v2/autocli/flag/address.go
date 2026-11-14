@@ -128,7 +128,12 @@ func (a *consensusAddressValue) Set(s string) error {
 		return nil
 	}
 
-	// fallback to pubkey parsing
+	// fallback to pubkey parsing. A consensus address is always the address
+	// of the consensus pubkey, so this is not affected by account rekeying.
+	// Account address flags (addressValue) accept an address or a key name,
+	// not a pubkey. A key name resolves to the key's own address, so a key
+	// that a rekeyed account was changed to does not resolve to that account;
+	// pass the account's address explicitly instead.
 	registry := types.NewInterfaceRegistry()
 	cryptocodec.RegisterInterfaces(registry)
 	cdc := codec.NewProtoCodec(registry)

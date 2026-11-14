@@ -135,8 +135,12 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 			return b.handleGovProposal(cmd, input, clientCtx, addressCodec, fd)
 		}
 
-		// set signer to signer field if empty
-		if addr := input.Get(fd).String(); addr == "" {
+		// set signer to signer field if empty, or if --signer-address is set.
+		// A signer given as a positional argument or custom flag was resolved
+		// to the address of its key, and also set as --from. With
+		// --signer-address that key signs for a rekeyed account, whose
+		// address is the from address.
+		if addr := input.Get(fd).String(); addr == "" || len(clientCtx.SignerAddress) > 0 {
 			scalarType, ok := flag.GetScalarType(fd)
 			if ok {
 				// override address codec if validator or consensus address

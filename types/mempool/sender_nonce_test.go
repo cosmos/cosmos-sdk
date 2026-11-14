@@ -274,3 +274,47 @@ func (s *MempoolTestSuite) TestUnorderedTx() {
 
 	require.True(t, anyAcceptableOrder, "expected any of %v but got %v", acceptableOptions, orderedTxsIds)
 }
+
+// TestSenderNonce_RekeyedSender checks that txs from an account whose pubkey was
+// rotated (so the pubkey's natural address differs from the account address)
+// are keyed by the signer address, not by the address derived from the pubkey.
+func TestSenderNonce_RekeyedSender(t *testing.T) {
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
+	sa := accounts[0].Address
+	sb := accounts[1].Address
+
+	mp := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
+
+	txs := []testTx{
+		// account A, signed by a key whose natural address is B
+		{id: 0, nonce: 0, address: sa, pubKeyAddress: sb},
+		{id: 1, nonce: 1, address: sa, pubKeyAddress: sb},
+		// account A, pubkey omitted from the tx
+		{id: 2, nonce: 2, address: sa, nilPubKey: true},
+		// account B itself, same nonce as A's first tx
+		{id: 3, nonce: 0, address: sb},
+	}
+	for _, tx := range txs {
+		require.NoError(t, mp.Insert(ctx, tx, mempool.InsertOption{}))
+	}
+	require.Equal(t, len(txs), mp.CountTx())
+
+	require.Equal(t, txs[0], mp.NextSenderTx(sa.String()))
+	require.Equal(t, txs[3], mp.NextSenderTx(sb.String()))
+
+	var aIDs []int
+	for _, tx := range fetchTxs(mp.Select(ctx, nil), 1000) {
+		if tt := tx.(testTx); tt.address.Equals(sa) {
+			aIDs = append(aIDs, tt.id)
+		}
+	}
+	require.Equal(t, []int{0, 1, 2}, aIDs)
+
+	for _, tx := range txs {
+		require.NoError(t, mp.Remove(tx))
+	}
+	require.Equal(t, 0, mp.CountTx())
+	require.Nil(t, mp.NextSenderTx(sa.String()))
+	require.Nil(t, mp.NextSenderTx(sb.String()))
+}

@@ -561,7 +561,7 @@ func simulateMsgUpdateGroupAdmin(
 		}
 		newAdmin, _ := simtypes.RandomAcc(r, accounts)
 		// disallow setting current admin as new admin
-		for acc.PubKey.Equals(newAdmin.PubKey) {
+		for acc.Address.Equals(newAdmin.Address) {
 			newAdmin, _ = simtypes.RandomAcc(r, accounts)
 		}
 
@@ -798,7 +798,7 @@ func simulateMsgUpdateGroupPolicyAdmin(
 		}
 		newAdmin, _ := simtypes.RandomAcc(r, accounts)
 		// disallow setting current admin as new admin
-		for acc.PubKey.Equals(newAdmin.PubKey) {
+		for acc.Address.Equals(newAdmin.Address) {
 			newAdmin, _ = simtypes.RandomAcc(r, accounts)
 		}
 

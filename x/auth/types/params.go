@@ -21,10 +21,21 @@ const (
 	//
 	// The large ML-DSA signature is additionally charged via TxSizeCostPerByte.
 	DefaultSigVerifyCostMlDsa65 uint64 = 750
+
+	// DefaultPubKeyChangeEnabled is off: account rekeying must be enabled by
+	// governance.
+	DefaultPubKeyChangeEnabled = false
+
+	// DefaultPubKeyChangeCost is the gas charged by MsgChangePubKey on top of
+	// the normal transaction byte and store write gas.
+	DefaultPubKeyChangeCost uint64 = 50000
 )
 
 // NewParams creates a new Params object
-func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1, sigVerifyCostMlDsa65 uint64) Params {
+func NewParams(
+	maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED25519, sigVerifyCostSecp256k1, sigVerifyCostMlDsa65 uint64,
+	pubKeyChangeEnabled bool, pubKeyChangeCost uint64,
+) Params {
 	return Params{
 		MaxMemoCharacters:      maxMemoCharacters,
 		TxSigLimit:             txSigLimit,
@@ -32,6 +43,8 @@ func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte, sigVerifyCostED
 		SigVerifyCostED25519:   sigVerifyCostED25519,
 		SigVerifyCostSecp256k1: sigVerifyCostSecp256k1,
 		SigVerifyCostMlDsa65:   sigVerifyCostMlDsa65,
+		PubKeyChangeEnabled:    pubKeyChangeEnabled,
+		PubKeyChangeCost:       pubKeyChangeCost,
 	}
 }
 
@@ -44,6 +57,8 @@ func DefaultParams() Params {
 		SigVerifyCostED25519:   DefaultSigVerifyCostED25519,
 		SigVerifyCostSecp256k1: DefaultSigVerifyCostSecp256k1,
 		SigVerifyCostMlDsa65:   DefaultSigVerifyCostMlDsa65,
+		PubKeyChangeEnabled:    DefaultPubKeyChangeEnabled,
+		PubKeyChangeCost:       DefaultPubKeyChangeCost,
 	}
 }
 
@@ -80,6 +95,19 @@ func validateSigVerifyCostMlDsa65(i any) error {
 
 	if v == 0 {
 		return fmt.Errorf("invalid ML-DSA-65 signature verification cost: %d", v)
+	}
+
+	return nil
+}
+
+func validatePubKeyChangeCost(i any) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("invalid pubkey change cost: %d", v)
 	}
 
 	return nil
@@ -155,6 +183,9 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateTxSizeCostPerByte(p.TxSizeCostPerByte); err != nil {
+		return err
+	}
+	if err := validatePubKeyChangeCost(p.PubKeyChangeCost); err != nil {
 		return err
 	}
 

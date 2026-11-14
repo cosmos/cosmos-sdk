@@ -45,3 +45,16 @@ service Counter2 {
 service KeyValue {
   rpc Set(MsgKeyValue) returns (MsgCreateKeyValueResponse);
 }
+
+message MsgInternal {
+  option (cosmos.msg.v1.signer)   = "signer";
+  option (cosmos.msg.v1.internal) = true;
+
+  string signer = 1;
+}
+
+message MsgInternalResponse {}
+
+service Internal {
+  rpc DoInternal(MsgInternal) returns (MsgInternalResponse);
+}

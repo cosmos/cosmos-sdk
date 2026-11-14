@@ -52,3 +52,26 @@ func TestEndBlockerFeeRecipientValidation(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateFeeRecipients(t *testing.T) {
+	tests := []struct {
+		name        string
+		last        string
+		configured  []string
+		shouldPanic bool
+	}{
+		{"only poa", poatypes.ModuleName, []string{poatypes.ModuleName}, false},
+		{"poa decorator plus plain decorator", poatypes.ModuleName, []string{"fee_collector", poatypes.ModuleName}, true},
+		{"last recipient not poa", "fee_collector", []string{poatypes.ModuleName}, true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			run := func() { validateFeeRecipients(tc.last, tc.configured) }
+			if tc.shouldPanic {
+				require.Panics(t, run)
+			} else {
+				require.NotPanics(t, run)
+			}
+		})
+	}
+}

@@ -30,12 +30,6 @@ The headline changes in this release are the removal of three legacy surfaces (`
 * [Collections (unreleased)](#collections-unreleased)
     * [Unbounded Collection Iteration](#unbounded-collection-iteration)
 
-## Collections (unreleased)
-
-### Unbounded Collection Iteration
-
-Collections with an all-`0xff` prefix, including `collections.NewPrefix(255)`, now support typed and raw iteration, walking and clearing without a finite upper endpoint. These operations previously returned `ErrInvalidIterator` because the nil upper bound was compared as an ordinary byte slice. Storage key encoding is unchanged and this fix requires no key migration. Applications using the affected operations in deterministic state transitions should activate the change in a coordinated upgrade, since the operations now succeed instead of returning an error.
-
 ## Breaking Changes
 
 ### CometBFT Upgrade
@@ -314,3 +308,9 @@ return app.ModuleManager.RunMigrations(ctx, app.configurator, fromVM)
 ```
 
 Genesis import applies the same trim. `InitGenesis` now compares the imported allocated fees with the poa module balance, so bank's genesis must run before poa's (`SetOrderInitGenesis`). Rounding in v1.x leaves at most `1e-18` per validator per denom above the balance. An excess within that limit (the number of exported validators × `1e-18`, per denom) is trimmed; anything larger, including allocations imported before bank has funded the module, fails `InitGenesis` with `ErrInvalidAllocatedFees`.
+
+## Collections (unreleased)
+
+### Unbounded Collection Iteration
+
+Collections with an all-`0xff` prefix, including `collections.NewPrefix(255)`, now support typed and raw iteration, walking and clearing without a finite upper endpoint. These operations previously returned `ErrInvalidIterator` because the nil upper bound was compared as an ordinary byte slice. Storage key encoding is unchanged and this fix requires no key migration. Applications using the affected operations in deterministic state transitions should activate the change in a coordinated upgrade, since the operations now succeed instead of returning an error.

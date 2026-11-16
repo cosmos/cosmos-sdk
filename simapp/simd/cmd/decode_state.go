@@ -37,7 +37,7 @@ func decodeStateCmd() *cobra.Command {
 			ctx := app.NewContextLegacy(true, cmtproto.Header{Height: height})
 			results, err := app.CheckStateDecodes(ctx)
 			for _, r := range results {
-				cmd.Printf("%s: %d entries decoded, %d outside collections\n", r.Name, r.Checked, r.Unmatched)
+				cmd.Printf("%s: %d entries decoded, %d under raw prefixes not decoded\n", r.Name, r.Checked, r.Raw)
 			}
 			excluded := simapp.StateCheckExcludedStores()
 			for _, name := range slices.Sorted(maps.Keys(excluded)) {

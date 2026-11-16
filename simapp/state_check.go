@@ -25,9 +25,18 @@ func (app *SimApp) CollectionsModules() []statecheck.Module {
 	return []statecheck.Module{
 		{Name: authtypes.ModuleName, StoreKey: app.GetKey(authtypes.StoreKey), Schema: app.AccountKeeper.Schema},
 		{Name: banktypes.ModuleName, StoreKey: app.GetKey(banktypes.StoreKey), Schema: app.BankKeeper.Schema},
-		// x/distribution keeps the previous proposer and the validator and
-		// delegator reward records under raw keys outside its collections.
-		{Name: distrtypes.ModuleName, StoreKey: app.GetKey(distrtypes.StoreKey), Schema: app.DistrKeeper.Schema, AllowUnmatched: true},
+		// x/distribution keeps the previous proposer, reward records, withdraw
+		// addresses and slash events under raw keys outside its collections.
+		{Name: distrtypes.ModuleName, StoreKey: app.GetKey(distrtypes.StoreKey), Schema: app.DistrKeeper.Schema, RawPrefixes: [][]byte{
+			distrtypes.ProposerKey,
+			distrtypes.ValidatorOutstandingRewardsPrefix,
+			distrtypes.DelegatorWithdrawAddrPrefix,
+			distrtypes.DelegatorStartingInfoPrefix,
+			distrtypes.ValidatorHistoricalRewardsPrefix,
+			distrtypes.ValidatorCurrentRewardsPrefix,
+			distrtypes.ValidatorAccumulatedCommissionPrefix,
+			distrtypes.ValidatorSlashEventPrefix,
+		}},
 		{Name: epochstypes.ModuleName, StoreKey: app.GetKey(epochstypes.StoreKey), Schema: app.EpochsKeeper.Schema},
 		{Name: evidencetypes.ModuleName, StoreKey: app.GetKey(evidencetypes.StoreKey), Schema: app.EvidenceKeeper.Schema},
 		{Name: feegrant.ModuleName, StoreKey: app.GetKey(feegrant.StoreKey), Schema: app.FeeGrantKeeper.Schema},

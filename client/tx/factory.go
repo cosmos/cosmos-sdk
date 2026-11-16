@@ -22,6 +22,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // Factory defines a client transaction factory that facilitates generating and
@@ -435,6 +436,14 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 	txb, err := f.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return nil, err
+	}
+
+	if f.signMode == signing.SignMode_SIGN_MODE_UNSPECIFIED {
+		mode, err := authsigning.APISignModeToInternal(f.txConfig.SignModeHandler().DefaultMode())
+		if err != nil {
+			return nil, err
+		}
+		f = f.WithSignMode(mode)
 	}
 
 	pk, err := f.getSimPK()

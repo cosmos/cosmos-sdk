@@ -27,24 +27,48 @@ type Module struct {
 	Name     string
 	StoreKey storetypes.StoreKey
 	Schema   collections.Schema
+	// AllowUnmatched accepts entries outside every collection prefix of the
+	// schema. Set it only for a module that keeps part of its state outside
+	// collections. Check counts such entries in the result instead of failing
+	// on them.
+	AllowUnmatched bool
 }
 
-// Check decodes every entry of every module store and returns an error that
-// lists each entry that does not decode. An entry under the prefix of a
-// collection fails when its key does not decode with the key codec of the
-// collection or leaves bytes over, or when its value does not decode with the
-// value codec of the collection. Entries outside every collection prefix are
-// not checked.
-func Check(ctx sdk.Context, modules []Module) error {
+// Result reports how many entries of a module store Check matched to a
+// collection and decoded, and how many it accepted outside every collection
+// prefix because the module sets AllowUnmatched.
+type Result struct {
+	Name      string
+	Checked   int
+	Unmatched int
+}
+
+// Check decodes every entry of every module store and returns a result per
+// module and an error that lists each entry that does not decode.
+//
+// An entry under the prefix of a collection fails when its key does not decode
+// with the key codec of the collection or leaves bytes over, or when its value
+// does not decode with the value codec of the collection. An entry outside
+// every collection prefix fails unless the module sets AllowUnmatched. A
+// module whose schema lists no collections fails, since no entry of its store
+// could be checked.
+func Check(ctx sdk.Context, modules []Module) ([]Result, error) {
+	results := make([]Result, 0, len(modules))
 	var errs []error
 	for _, m := range modules {
-		errs = append(errs, checkModule(ctx, m)...)
+		res, modErrs := checkModule(ctx, m)
+		results = append(results, res)
+		errs = append(errs, modErrs...)
 	}
-	return errors.Join(errs...)
+	return results, errors.Join(errs...)
 }
 
-func checkModule(ctx sdk.Context, m Module) []error {
+func checkModule(ctx sdk.Context, m Module) (Result, []error) {
+	res := Result{Name: m.Name}
 	colls := m.Schema.ListCollections()
+	if len(colls) == 0 {
+		return res, []error{fmt.Errorf("%s: schema lists no collections", m.Name)}
+	}
 
 	var errs []error
 	it := ctx.KVStore(m.StoreKey).Iterator(nil, nil)
@@ -54,11 +78,15 @@ func checkModule(ctx sdk.Context, m Module) []error {
 
 		coll := collectionFor(colls, key)
 		if coll == nil {
-			// Some modules keep part of their state outside collections,
-			// with no codec to check it against.
+			if m.AllowUnmatched {
+				res.Unmatched++
+				continue
+			}
+			errs = append(errs, fmt.Errorf("%s: key %X is outside every collection prefix", m.Name, key))
 			continue
 		}
 
+		res.Checked++
 		if err := decodeKey(coll, key[len(coll.GetPrefix()):]); err != nil {
 			errs = append(errs, fmt.Errorf("%s/%s: key %X: %w", m.Name, coll.GetName(), key, err))
 			continue
@@ -67,7 +95,7 @@ func checkModule(ctx sdk.Context, m Module) []error {
 			errs = append(errs, fmt.Errorf("%s/%s: key %X value %X: %w", m.Name, coll.GetName(), key, value, err))
 		}
 	}
-	return errs
+	return res, errs
 }
 
 // collectionFor returns the collection whose prefix the key starts with, or

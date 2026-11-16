@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"maps"
 	"path/filepath"
+	"slices"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -33,7 +35,15 @@ func decodeStateCmd() *cobra.Command {
 			app := simapp.NewSimApp(serverCtx.Logger, db, true, serverCtx.Viper)
 			height := app.LastBlockHeight()
 			ctx := app.NewContextLegacy(true, cmtproto.Header{Height: height})
-			if err := app.CheckStateDecodes(ctx); err != nil {
+			results, err := app.CheckStateDecodes(ctx)
+			for _, r := range results {
+				cmd.Printf("%s: %d entries decoded, %d outside collections\n", r.Name, r.Checked, r.Unmatched)
+			}
+			excluded := simapp.StateCheckExcludedStores()
+			for _, name := range slices.Sorted(maps.Keys(excluded)) {
+				cmd.Printf("%s: not checked, %s\n", name, excluded[name])
+			}
+			if err != nil {
 				return fmt.Errorf("state at height %d does not decode:\n%w", height, err)
 			}
 			cmd.Printf("all collections state decodes at height %d\n", height)

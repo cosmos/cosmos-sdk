@@ -38,13 +38,14 @@ func TestCheckFeegrantQueueEmptyValue(t *testing.T) {
 	queueKey := collections.Join3(exp, grantee, granter)
 	require.NoError(t, k.FeeAllowanceQueue.Set(ctx, queueKey, true))
 
-	require.NoError(t, statecheck.Check(ctx, modules))
+	_, err = statecheck.Check(ctx, modules)
+	require.NoError(t, err)
 
 	queueKeyBz, err := collections.EncodeKeyWithPrefix(feegrant.FeeAllowanceQueueKeyPrefix, k.FeeAllowanceQueue.KeyCodec(), queueKey)
 	require.NoError(t, err)
 	ctx.KVStore(key).Set(queueKeyBz, []byte{})
 
-	err = statecheck.Check(ctx, modules)
+	_, err = statecheck.Check(ctx, modules)
 	require.ErrorIs(t, err, collections.ErrEncoding)
 	require.ErrorContains(t, err, "feegrant/allowances_queue")
 	require.ErrorContains(t, err, "wanted size to be at least 1")
@@ -64,7 +65,37 @@ func TestCheckKeyTrailingBytes(t *testing.T) {
 	require.NoError(t, err)
 	ctx.KVStore(key).Set(append(queueKeyBz, 0xff), []byte{0x01})
 
-	err = statecheck.Check(ctx, []statecheck.Module{{Name: feegrant.ModuleName, StoreKey: key, Schema: k.Schema}})
+	_, err = statecheck.Check(ctx, []statecheck.Module{{Name: feegrant.ModuleName, StoreKey: key, Schema: k.Schema}})
 	require.ErrorIs(t, err, collections.ErrEncoding)
 	require.ErrorContains(t, err, "feegrant/allowances_queue")
+}
+
+// TestCheckEmptySchema requires Check to fail for a module whose schema lists
+// no collections, since none of its entries could be checked.
+func TestCheckEmptySchema(t *testing.T) {
+	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
+	ctx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test")).Ctx
+
+	_, err := statecheck.Check(ctx, []statecheck.Module{{Name: feegrant.ModuleName, StoreKey: key}})
+	require.ErrorContains(t, err, "feegrant: schema lists no collections")
+}
+
+// TestCheckUnmatchedKey requires Check to fail on an entry outside every
+// collection prefix, and to count it instead when the module sets
+// AllowUnmatched.
+func TestCheckUnmatchedKey(t *testing.T) {
+	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
+	ctx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test")).Ctx
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	k := keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(key), nil)
+	ctx.KVStore(key).Set([]byte{0x7f, 0x01}, []byte{0x01})
+
+	m := statecheck.Module{Name: feegrant.ModuleName, StoreKey: key, Schema: k.Schema}
+	_, err := statecheck.Check(ctx, []statecheck.Module{m})
+	require.ErrorContains(t, err, "feegrant: key 7F01 is outside every collection prefix")
+
+	m.AllowUnmatched = true
+	res, err := statecheck.Check(ctx, []statecheck.Module{m})
+	require.NoError(t, err)
+	require.Equal(t, []statecheck.Result{{Name: feegrant.ModuleName, Checked: 0, Unmatched: 1}}, res)
 }

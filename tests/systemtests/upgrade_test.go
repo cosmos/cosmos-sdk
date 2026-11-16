@@ -167,7 +167,13 @@ func TestChainUpgrade(t *testing.T) {
 	require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
 
 	// decode every collections entry the legacy binary and the migrations
-	// wrote, before the seeded grants expire and get pruned
+	// wrote. The seeded grants must still be in state, or the decode would
+	// pass on entries the EndBlockers already pruned.
+	require.True(t, time.Now().Before(seeded.expiration), "seeded grants expired before the decode; raise expiryMargin")
+	raw = cli.CustomQuery("q", "feegrant", "grant", seeded.granter, seeded.grantee)
+	require.True(t, gjson.Get(raw, "allowance").Exists(), raw)
+	raw = cli.CustomQuery("q", "authz", "grants", seeded.granter, seeded.grantee)
+	require.NotEmpty(t, gjson.Get(raw, "grants").Array(), raw)
 	systest.Sut.StopChain()
 	for _, out := range systest.Sut.ForEachNodeExecAndWait(t, []string{"debug", "decode-state"}) {
 		require.Contains(t, out[0], "all collections state decodes", out[0])
@@ -192,8 +198,11 @@ func TestChainUpgrade(t *testing.T) {
 
 // expiryMargin is how long after the estimated upgrade time the seeded grants
 // expire. The grants must expire on the upgraded binary, so the EndBlocker of
-// the new version prunes state that the legacy binary wrote.
-const expiryMargin = 20 * time.Second
+// the new version prunes state that the legacy binary wrote, and must outlive
+// the restart and the decode-state run that follow the upgrade. The fee grant
+// TestChainUpgrade creates first expires about 20 blocks plus 30s after the
+// upgrade, so the margin stays well below that.
+const expiryMargin = 40 * time.Second
 
 type seededState struct {
 	granter, grantee string

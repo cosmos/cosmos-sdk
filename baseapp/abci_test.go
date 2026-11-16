@@ -416,6 +416,49 @@ func TestABCI_ExtendVote_PanicRecovery(t *testing.T) {
 
 // TestABCI_VerifyVoteExtension_PanicRecovery tests that when VerifyVoteExtensionHandler panics,
 // the panic is recovered and the error contains the panic message.
+// TestABCI_ExtendVote_BlockTime ensures the ExtendVote handler sees the block
+// time of the request, both at the initial height, where the context is taken
+// from the finalize state, and at later heights.
+func TestABCI_ExtendVote_BlockTime(t *testing.T) {
+	var (
+		genesisTime = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+		blockTime   = genesisTime.Add(time.Hour)
+	)
+	testCases := []struct {
+		name   string
+		height int64
+	}{
+		{"initial height", 1},
+		{"later height", 5},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			app := baseapp.NewBaseApp(t.Name(), log.NewTestLogger(t), dbm.NewMemDB(), nil)
+			app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+
+			var ctxTime, headerInfoTime time.Time
+			app.SetExtendVoteHandler(func(ctx sdk.Context, _ *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+				ctxTime, headerInfoTime = ctx.BlockTime(), ctx.HeaderInfo().Time
+				return &abci.ResponseExtendVote{}, nil
+			})
+
+			_, err := app.InitChain(&abci.RequestInitChain{
+				Time:          genesisTime,
+				InitialHeight: 1,
+				ConsensusParams: &cmtproto.ConsensusParams{
+					Abci: &cmtproto.ABCIParams{VoteExtensionsEnableHeight: 1},
+				},
+			})
+			require.NoError(t, err)
+
+			_, err = app.ExtendVote(context.Background(), &abci.RequestExtendVote{Height: tc.height, Hash: []byte("hash"), Time: blockTime})
+			require.NoError(t, err)
+			require.Equal(t, blockTime, ctxTime)
+			require.Equal(t, blockTime, headerInfoTime)
+		})
+	}
+}
+
 func TestABCI_VerifyVoteExtension_PanicRecovery(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()

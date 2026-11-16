@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (baseapp) [#26906](https://github.com/cosmos/cosmos-sdk/pull/26906) When the circuit breaker refuses a msg without an error of its own, the `MsgServiceRouter` and its hybrid handlers return the registered `sdkerrors.ErrCircuitBreakerTripped` (codespace `sdk`, code 43) instead of an unregistered error that reached clients as codespace `undefined`, code 1. An error the breaker returns, such as x/safety's `ErrMsgDisabled`, passes through as before.
 * (enterprise/poa) [#26875](https://github.com/cosmos/cosmos-sdk/pull/26875) Truncate per-validator fee shares so a checkpoint never allocates more than the module balance, and add a v2 → v3 store migration that trims any excess already allocated. Previously, rounding could push allocated fees above the balance and make every fee checkpoint (validator create/update, key rotation, fee withdrawal) panic until a fee in that denom arrived. Allocated fees exceeding the balance now return `ErrInvalidAllocatedFees` instead of panicking. `InitGenesis` now checks imported allocated fees against the module balance, so bank genesis must run before poa: an excess of at most 1e-18 per exported validator per denom (v1.x rounding dust) is trimmed, and anything larger fails with `ErrInvalidAllocatedFees`.
+* (x/feegrant) [#26944](https://github.com/cosmos/cosmos-sdk/pull/26944) Add a v2 → v3 store migration that rewrites fee allowance expiry queue entries stored with an empty value to an encoded `true`, and write an encoded `true` in the v1 → v2 migration. The standalone `cosmossdk.io/x/feegrant` module and the v1 → v2 migration wrote empty values, which the keeper cannot decode, so `RemoveExpiredAllowances` returned an error from the `EndBlocker` once such an entry expired.
 
 ### Features
 
@@ -61,10 +62,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (store) [#26782](https://github.com/cosmos/cosmos-sdk/pull/26782) Fix a data race in the root multi-store pruning test.
 * (blockstm) [#26779](https://github.com/cosmos/cosmos-sdk/pull/26779) perf(blockstm): memoize merge iterator source.
 * (deps) [#26850](https://github.com/cosmos/cosmos-sdk/pull/26850) Bump google.golang.org/grpc to v1.84.0 in all modules except `api` and `depinject`.
+* (deps) [#26967](https://github.com/cosmos/cosmos-sdk/pull/26967) Bump cosmos/iavl to v1.2.9, which validates malformed snapshot input during import.
 
 
 ### Bug Fixes
 
+* (errors) [#26948](https://github.com/cosmos/cosmos-sdk/pull/26948) Preserve gRPC status codes through standard Go error wrappers and joined errors inside an SDK-wrapped error.
 * (types/query) [#26906](https://github.com/cosmos/cosmos-sdk/pull/26906) `CollectionPaginate` and `CollectionFilteredPaginate` report the real total, not the offset, when `count_total` is set and the offset runs past the last item.
 * (baseapp) [#26906](https://github.com/cosmos/cosmos-sdk/pull/26906) A hybrid handler from `MsgServiceRouter.HybridHandlerByMsgName` checks the circuit breaker against the msg type it handles, not the type of the request it is given, so a request of an allowed type whose bytes decode as a tripped msg no longer runs that msg. It reads the breaker on each call, so it checks a breaker the app sets after registration and no longer panics when the app removes one.
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.
@@ -72,8 +75,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [#26772](https://github.com/cosmos/cosmos-sdk/pull/26772) Panic with a descriptive error when accessing an unregistered store instead of silently using store index zero.
 * (x/genutil) [#26741](https://github.com/cosmos/cosmos-sdk/issues/26741) Preserve vote extension enable height when exporting genesis state.
 * (baseapp) [#26738](https://github.com/cosmos/cosmos-sdk/pull/26738) Return genesis transaction events in the first block's `FinalizeBlock` response so block indexers can observe them.
+* (baseapp) [#26800](https://github.com/cosmos/cosmos-sdk/pull/26800) Take a read lock rather than an exclusive lock in `getContextForTx`, so transaction execution no longer serializes against the `Name`, `Version`, `AppVersion` and `Info` readers; `mu` documents itself as protecting only those three fields, none of which this path touches.
 * (x/gov) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Schedule legacy simulation votes on the proposal just submitted instead of the next unused proposal ID, drop the trailing nil future operation, skip scheduled votes whose proposal is not in its voting period, and schedule votes on expedited proposals within the expedited voting period (or before the voting end time when the proposal is already in voting).
 * (x/simulation) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Time-scheduled future operations were silently dropped by `queueOperations` (the appended queue was never returned to the caller), and executed time operations were never removed from the queue. Both now update the caller's queue.
+* (x/auth/tx) [#26815](https://github.com/cosmos/cosmos-sdk/pull/26815) `GetSigningTxData` now converts the nested `ModeInfos` of a multisig `ModeInfo`; previously the converted entries were discarded and the slice was left as nil placeholders.
+* (keys) [#26833](https://github.com/cosmos/cosmos-sdk/pull/26833) Strip leading and trailing whitespace when reading a mnemonic from a source file.
+* (x/auth/tx) [#26955](https://github.com/cosmos/cosmos-sdk/pull/26955) `GetBlockWithTxs` now uses the default limit when `pagination.limit` is 0; a request that set only `offset` or `count_total` returned no txs. Reverse pagination now walks back from the last tx and includes the first one, with `offset` counted from the end like other paginated queries.
 
 ### Deprecated
 

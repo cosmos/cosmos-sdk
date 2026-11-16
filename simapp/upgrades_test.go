@@ -12,7 +12,7 @@ import (
 	safetytypes "github.com/cosmos/cosmos-sdk/x/safety/types"
 )
 
-// x/safety is new in this version, so the upgrade from v0.54 must add its
+// x/safety is new in this version, so the upgrade from v0.55 must add its
 // store, and every added store must be one the app mounts.
 func TestUpgradeStoreUpgrades(t *testing.T) {
 	app := Setup(t, false)

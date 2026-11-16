@@ -11,12 +11,12 @@ import (
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade
-// from v054 to v055.
+// from v055 to v056.
 //
 // NOTE: This upgrade defines a reference implementation of what an upgrade
 // could look like when an application is migrating from Cosmos SDK version
-// v0.54.x to v0.55.x.
-const UpgradeName = "v054-to-v055"
+// v0.55.x to v0.56.x.
+const UpgradeName = "v055-to-v056"
 
 func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
@@ -43,7 +43,6 @@ func (app SimApp) RegisterUpgradeHandlers() {
 // upgradeStoreUpgrades returns the stores UpgradeName adds and deletes.
 func upgradeStoreUpgrades() storetypes.StoreUpgrades {
 	return storetypes.StoreUpgrades{
-		Added:   []string{safetytypes.StoreKey},
-		Deleted: []string{"protocolpool"},
+		Added: []string{safetytypes.StoreKey},
 	}
 }

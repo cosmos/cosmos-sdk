@@ -156,7 +156,7 @@ Fee Allowances queue items are identified by combining the `FeeAllowancePrefixQu
 
 Fee allowance queue keys are stored in the state as follows:
 
-* Grant: `0x01 | expiration_bytes | grantee_addr_len (1 byte) | grantee_addr_bytes |  granter_addr_len (1 byte) | granter_addr_bytes -> EmptyBytes`
+* Grant: `0x01 | expiration_bytes | grantee_addr_len (1 byte) | grantee_addr_bytes |  granter_addr_len (1 byte) | granter_addr_bytes -> BoolValue (true)`
 
 ## Messages
 

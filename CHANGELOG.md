@@ -65,6 +65,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.
 * (client/tx) [#26759](https://github.com/cosmos/cosmos-sdk/issues/26759) Populate the multisig bit array in simulation txs so `--gas auto` works for multisig senders.
+* (x/auth) [#PR-number](https://github.com/cosmos/cosmos-sdk/pull/PR-number) `ConsumeTxSizeGasDecorator` now sizes the simulated placeholder signature by the signer's actual key type instead of always assuming a 64-byte secp256k1 signature, so `--gas auto` no longer underestimates gas for `ml_dsa_65` accounts (whose real signatures are 3,309 bytes).
 * (blockstm) [#26772](https://github.com/cosmos/cosmos-sdk/pull/26772) Panic with a descriptive error when accessing an unregistered store instead of silently using store index zero.
 * (x/genutil) [#26741](https://github.com/cosmos/cosmos-sdk/issues/26741) Preserve vote extension enable height when exporting genesis state.
 * (baseapp) [#26738](https://github.com/cosmos/cosmos-sdk/pull/26738) Return genesis transaction events in the first block's `FinalizeBlock` response so block indexers can observe them.

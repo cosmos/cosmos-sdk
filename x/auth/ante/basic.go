@@ -4,9 +4,12 @@ import (
 	"slices"
 	"time"
 
+	cmtmldsa65 "github.com/cometbft/cometbft/crypto/mldsa65"
+
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa65"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
@@ -127,16 +130,21 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 
 			acc := cgts.ak.GetAccount(ctx, signer)
 
-			// use placeholder simSecp256k1Pubkey if sig is nil
-			if acc == nil || acc.GetPubKey() == nil {
-				pubkey = simSecp256k1Pubkey
-			} else {
+			// prefer the pubkey stored on the account; for an account's first tx
+			// fall back to the pubkey carried in the tx's SignerInfo, and only then
+			// to the secp256k1 placeholder.
+			switch {
+			case acc != nil && acc.GetPubKey() != nil:
 				pubkey = acc.GetPubKey()
+			case i < n && sigs[i].PubKey != nil:
+				pubkey = sigs[i].PubKey
+			default:
+				pubkey = simSecp256k1Pubkey
 			}
 
 			// use stdsignature to mock the size of a full signature
 			simSig := legacytx.StdSignature{ //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated
-				Signature: simSecp256k1Sig[:],
+				Signature: simSignaturePlaceholder(pubkey),
 				PubKey:    pubkey,
 			}
 
@@ -224,4 +232,14 @@ func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	}
 
 	return next(ctx, tx, simulate)
+}
+
+// simSignaturePlaceholder returns a zero signature of the size the given key
+// type produces, so simulation charges tx-size gas for the real signature.
+// Key types with signatures larger than secp256k1's must be listed here.
+func simSignaturePlaceholder(pk cryptotypes.PubKey) []byte {
+	if _, ok := pk.(*mldsa65.PubKey); ok {
+		return make([]byte, cmtmldsa65.SignatureSize)
+	}
+	return simSecp256k1Sig[:]
 }

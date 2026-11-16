@@ -33,7 +33,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* Add `Collection.KeyCodec`, which returns the key codec of a collection as a `codec.UntypedKeyCodec`, so a caller holding a `Schema` can decode raw keys.
+* [#26989](https://github.com/cosmos/cosmos-sdk/pull/26989) Add `Collection.KeyCodec`, which returns the key codec of a collection as a `codec.UntypedKeyCodec`, so a caller holding a `Schema` can decode raw keys.
 
 ## [v1.4.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv1.4.0)
 

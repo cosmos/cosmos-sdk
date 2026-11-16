@@ -27,20 +27,20 @@ type Module struct {
 	Name     string
 	StoreKey storetypes.StoreKey
 	Schema   collections.Schema
-	// AllowUnmatched accepts entries outside every collection prefix of the
-	// schema. Set it only for a module that keeps part of its state outside
-	// collections. Check counts such entries in the result instead of failing
-	// on them.
-	AllowUnmatched bool
+	// RawPrefixes lists the key prefixes under which the module keeps state
+	// outside its collections. Check counts entries under these prefixes in the
+	// result without decoding them. An entry outside every collection prefix
+	// and every raw prefix still fails.
+	RawPrefixes [][]byte
 }
 
 // Result reports how many entries of a module store Check matched to a
-// collection and decoded, and how many it accepted outside every collection
-// prefix because the module sets AllowUnmatched.
+// collection and decoded, and how many it counted under a raw prefix of the
+// module without decoding.
 type Result struct {
-	Name      string
-	Checked   int
-	Unmatched int
+	Name    string
+	Checked int
+	Raw     int
 }
 
 // Check decodes every entry of every module store and returns a result per
@@ -49,7 +49,8 @@ type Result struct {
 // An entry under the prefix of a collection fails when its key does not decode
 // with the key codec of the collection or leaves bytes over, or when its value
 // does not decode with the value codec of the collection. An entry outside
-// every collection prefix fails unless the module sets AllowUnmatched. A
+// every collection prefix fails unless it falls under a raw prefix of the
+// module. A
 // module whose schema lists no collections fails, since no entry of its store
 // could be checked.
 func Check(ctx sdk.Context, modules []Module) ([]Result, error) {
@@ -78,11 +79,11 @@ func checkModule(ctx sdk.Context, m Module) (Result, []error) {
 
 		coll := collectionFor(colls, key)
 		if coll == nil {
-			if m.AllowUnmatched {
-				res.Unmatched++
+			if hasAnyPrefix(key, m.RawPrefixes) {
+				res.Raw++
 				continue
 			}
-			errs = append(errs, fmt.Errorf("%s: key %X is outside every collection prefix", m.Name, key))
+			errs = append(errs, fmt.Errorf("%s: key %X is outside every collection prefix and every raw prefix", m.Name, key))
 			continue
 		}
 
@@ -96,6 +97,16 @@ func checkModule(ctx sdk.Context, m Module) (Result, []error) {
 		}
 	}
 	return res, errs
+}
+
+// hasAnyPrefix reports whether the key starts with one of the prefixes.
+func hasAnyPrefix(key []byte, prefixes [][]byte) bool {
+	for _, p := range prefixes {
+		if bytes.HasPrefix(key, p) {
+			return true
+		}
+	}
+	return false
 }
 
 // collectionFor returns the collection whose prefix the key starts with, or

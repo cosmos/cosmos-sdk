@@ -80,10 +80,10 @@ func TestCheckEmptySchema(t *testing.T) {
 	require.ErrorContains(t, err, "feegrant: schema lists no collections")
 }
 
-// TestCheckUnmatchedKey requires Check to fail on an entry outside every
-// collection prefix, and to count it instead when the module sets
-// AllowUnmatched.
-func TestCheckUnmatchedKey(t *testing.T) {
+// TestCheckRawPrefixes requires Check to fail on an entry outside every
+// collection prefix, to count it instead when it falls under a raw prefix of
+// the module, and to still fail when the module lists only other raw prefixes.
+func TestCheckRawPrefixes(t *testing.T) {
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
 	ctx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test")).Ctx
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
@@ -92,10 +92,14 @@ func TestCheckUnmatchedKey(t *testing.T) {
 
 	m := statecheck.Module{Name: feegrant.ModuleName, StoreKey: key, Schema: k.Schema}
 	_, err := statecheck.Check(ctx, []statecheck.Module{m})
-	require.ErrorContains(t, err, "feegrant: key 7F01 is outside every collection prefix")
+	require.ErrorContains(t, err, "feegrant: key 7F01 is outside every collection prefix and every raw prefix")
 
-	m.AllowUnmatched = true
+	m.RawPrefixes = [][]byte{{0x7e}}
+	_, err = statecheck.Check(ctx, []statecheck.Module{m})
+	require.ErrorContains(t, err, "feegrant: key 7F01 is outside every collection prefix and every raw prefix")
+
+	m.RawPrefixes = [][]byte{{0x7e}, {0x7f}}
 	res, err := statecheck.Check(ctx, []statecheck.Module{m})
 	require.NoError(t, err)
-	require.Equal(t, []statecheck.Result{{Name: feegrant.ModuleName, Checked: 0, Unmatched: 1}}, res)
+	require.Equal(t, []statecheck.Result{{Name: feegrant.ModuleName, Checked: 0, Raw: 1}}, res)
 }

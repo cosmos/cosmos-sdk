@@ -38,7 +38,7 @@ func protoToTm(protoPk *LegacyAminoPubKey) (tmMultisig, error) {
 	for i, pk := range protoPk.PubKeys {
 		pks[i], ok = pk.GetCachedValue().(cryptotypes.PubKey)
 		if !ok {
-			return tmMultisig{}, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (cryptotypes.PubKey)(nil), pk.GetCachedValue())
+			return tmMultisig{}, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", cryptotypes.PubKey(nil), pk.GetCachedValue())
 		}
 	}
 

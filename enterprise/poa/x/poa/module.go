@@ -52,7 +52,7 @@ var (
 )
 
 // ConsensusVersion defines the current POA module consensus version.
-const ConsensusVersion = 2
+const ConsensusVersion = 3
 
 // AppModuleBasic defines the basic application module for the POA module.
 type AppModuleBasic struct {
@@ -230,6 +230,9 @@ func (m AppModule) RegisterServices(cfg module.Configurator) {
 	migrator := keeper.NewMigrator(m.keeper)
 	if err := cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1to2); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	}
+	if err := cfg.RegisterMigration(types.ModuleName, 2, migrator.Migrate2to3); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
 	}
 }
 

@@ -37,7 +37,8 @@ func (suite *GenesisTestSuite) SetupTest() {
 			depinject.Supply(log.NewNopLogger()),
 			testutil.AppConfig,
 		),
-		&evidenceKeeper)
+		&evidenceKeeper,
+	)
 	require.NoError(suite.T(), err)
 
 	suite.ctx = app.NewContextLegacy(false, cmtproto.Header{Height: 1})

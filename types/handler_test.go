@@ -30,7 +30,8 @@ func TestChainAnteDecorators(t *testing.T) {
 
 	_, err = sdk.ChainAnteDecorators(
 		mockAnteDecorator1,
-		mockAnteDecorator2)(ctx, tx, true)
+		mockAnteDecorator2,
+	)(ctx, tx, true)
 	require.NoError(t, err)
 }
 

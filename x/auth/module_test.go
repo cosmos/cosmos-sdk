@@ -21,7 +21,8 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 			testutil.AppConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
-		&accountKeeper)
+		&accountKeeper,
+	)
 	require.NoError(t, err)
 
 	ctx := app.NewContext(false)

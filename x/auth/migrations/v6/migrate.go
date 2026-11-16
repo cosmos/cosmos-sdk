@@ -15,7 +15,7 @@ func Migrate(ctx context.Context, storeService storetypes.KVStoreService, sequen
 	}
 
 	// remove the global account number.
-	err = (collections.Item[uint64])(sequence).Remove(ctx)
+	err = collections.Item[uint64](sequence).Remove(ctx)
 	if err != nil {
 		return err
 	}

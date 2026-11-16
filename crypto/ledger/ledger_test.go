@@ -187,7 +187,8 @@ func TestPublicKeyHDPath(t *testing.T) {
 func getFakeTx(accountNumber uint32) []byte {
 	tmp := fmt.Sprintf(
 		`{"account_number":"%d","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"5000"},"memo":"memo","msgs":[[""]],"sequence":"6"}`,
-		accountNumber)
+		accountNumber,
+	)
 
 	return []byte(tmp)
 }

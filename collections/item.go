@@ -21,30 +21,30 @@ func NewItem[V any](
 	name string,
 	valueCodec codec.ValueCodec[V],
 ) Item[V] {
-	item := (Item[V])(NewMap[noKey](schema, prefix, name, noKey{}, valueCodec))
+	item := Item[V](NewMap[noKey](schema, prefix, name, noKey{}, valueCodec))
 	return item
 }
 
 // Get gets the item, if it is not set it returns an ErrNotFound error.
 // If value decoding fails then an ErrEncoding is returned.
 func (i Item[V]) Get(ctx context.Context) (V, error) {
-	return (Map[noKey, V])(i).Get(ctx, noKey{})
+	return Map[noKey, V](i).Get(ctx, noKey{})
 }
 
 // Set sets the item in the store. If Value encoding fails then an ErrEncoding is returned.
 func (i Item[V]) Set(ctx context.Context, value V) error {
-	return (Map[noKey, V])(i).Set(ctx, noKey{}, value)
+	return Map[noKey, V](i).Set(ctx, noKey{}, value)
 }
 
 // Has reports whether the item exists in the store or not.
 // Returns an error in case encoding fails.
 func (i Item[V]) Has(ctx context.Context) (bool, error) {
-	return (Map[noKey, V])(i).Has(ctx, noKey{})
+	return Map[noKey, V](i).Has(ctx, noKey{})
 }
 
 // Remove removes the item in the store.
 func (i Item[V]) Remove(ctx context.Context) error {
-	return (Map[noKey, V])(i).Remove(ctx, noKey{})
+	return Map[noKey, V](i).Remove(ctx, noKey{})
 }
 
 // noKey defines a KeyCodec which decodes nothing.

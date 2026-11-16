@@ -81,7 +81,7 @@ func VerifySignature(
 	case *signing.MultiSignatureData:
 		multiPK, ok := pubKey.(multisig.PubKey)
 		if !ok {
-			return fmt.Errorf("expected %T, got %T", (multisig.PubKey)(nil), pubKey)
+			return fmt.Errorf("expected %T, got %T", multisig.PubKey(nil), pubKey)
 		}
 		err := multiPK.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
 			signMode, err := internalSignModeToAPI(mode)

@@ -28,7 +28,7 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) error {
 			shouldInitialEpochStart := !epochInfo.EpochCountingStarted
 
 			epochEndTime := epochInfo.CurrentEpochStartTime.Add(epochInfo.Duration)
-			shouldEpochStart := (blockTime.After(epochEndTime)) || shouldInitialEpochStart
+			shouldEpochStart := blockTime.After(epochEndTime) || shouldInitialEpochStart
 
 			if !shouldEpochStart {
 				return false, nil

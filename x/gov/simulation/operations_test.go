@@ -602,7 +602,8 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		&res.TxConfig, &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper, &res.DistributionKeeper)
+		&res.TxConfig, &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper, &res.DistributionKeeper,
+	)
 	require.NoError(t, err)
 
 	ctx := app.NewContext(isCheckTx)

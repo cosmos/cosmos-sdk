@@ -84,7 +84,8 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 			wantErr: errUnknownField(
 				"testpb.TestVersion1",
 				25,
-				0),
+				0,
+			),
 		},
 		{
 			name:                     "Unknown field in midst of repeated values, allowUnknownNonCriticals set",
@@ -138,7 +139,8 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 			wantErr: errUnknownField(
 				"testpb.TestVersion1",
 				25,
-				0),
+				0,
+			),
 		},
 		{
 			name: "Unknown field in midst of repeated values, non-critical field to be rejected",
@@ -183,7 +185,8 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 			wantErr: errUnknownField(
 				"testpb.TestVersion1",
 				1031,
-				2),
+				2,
+			),
 			hasUnknownNonCriticals: true,
 		},
 		{
@@ -240,7 +243,8 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 			}
 			desc := tt.recv.ProtoReflect().Descriptor()
 			hasUnknownNonCriticals, gotErr := decode.RejectUnknownFields(
-				protoBlob, desc, tt.allowUnknownNonCriticals, ProtoResolver)
+				protoBlob, desc, tt.allowUnknownNonCriticals, ProtoResolver,
+			)
 			if tt.wantErr != nil {
 				require.EqualError(t, gotErr, tt.wantErr.Error())
 			} else {
@@ -267,7 +271,8 @@ func TestRejectUnknownFields_allowUnknownNonCriticals(t *testing.T) {
 			wantErr: errUnknownField(
 				"testpb.Customer1",
 				1047,
-				0),
+				0,
+			),
 		},
 		{
 			name:                     "Field that's in the reserved range, toggle allowUnknownNonCriticals",
@@ -288,7 +293,8 @@ func TestRejectUnknownFields_allowUnknownNonCriticals(t *testing.T) {
 			wantErr: errUnknownField(
 				"testpb.Customer1",
 				6,
-				0),
+				0,
+			),
 		},
 	}
 
@@ -346,7 +352,8 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			wantErr: errUnknownField(
 				"testpb.TestVersionFD1",
 				12,
-				2),
+				2,
+			),
 		},
 		{
 			name: "Alternating oneofs",
@@ -371,7 +378,8 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			wantErr: errUnknownField(
 				"testpb.TestVersion3LoneOneOfValue",
 				7,
-				2),
+				2,
+			),
 		},
 		{
 			name: "Discrepancy in a deeply nested one of field",
@@ -393,7 +401,8 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			wantErr: errUnknownField(
 				"testpb.TestVersion3LoneNesting",
 				6,
-				0),
+				0,
+			),
 		},
 		{
 			name: "unknown field types.Any in G",
@@ -412,7 +421,8 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			recv: new(testpb.TestVersion3),
 			wantErr: errUnknownField(
 				"testpb.TestVersion1",
-				25, 0),
+				25, 0,
+			),
 		},
 		{
 			name: "types.Any with extra fields",
@@ -436,7 +446,8 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 			wantErr: errUnknownField(
 				"google.protobuf.Any",
 				3,
-				0),
+				0,
+			),
 		},
 		{
 			name: "mismatched types.Any in G",
@@ -534,7 +545,8 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 			},
 			wantErr: errUnknownField(
 				"testpb.Customer1",
-				8, 2),
+				8, 2,
+			),
 		},
 		{
 			name: "Any in a field, the extra field will be serialized so should fail",
@@ -544,7 +556,8 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 			wantErr: errUnknownField(
 				"testpb.Customer1",
 				10,
-				2),
+				2,
+			),
 		},
 		{
 			name: "With a nested struct as a field",
@@ -557,7 +570,8 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 			wantErr: errUnknownField(
 				"testpb.Customer1",
 				9,
-				2),
+				2,
+			),
 		},
 		{
 			name: "An extra field that's non-existent in Customer1",
@@ -578,7 +592,8 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 			wantErr: errUnknownField(
 				"testpb.Customer1",
 				1047,
-				0),
+				0,
+			),
 		},
 		{
 			name: "Only fields matching",

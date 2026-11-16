@@ -4,4 +4,4 @@ Usage:
   test skipecho [flags]
 
 Flags:
-  -h, --help   help for skipecho
+  -h, --help[=true|false]   help for skipecho

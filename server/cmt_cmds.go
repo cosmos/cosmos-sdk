@@ -132,7 +132,7 @@ func ShowAddressCmd() *cobra.Command {
 
 			privValidator := pvm.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 
-			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
+			valConsAddr := sdk.ConsAddress(privValidator.GetAddress())
 
 			cmd.Println(valConsAddr.String())
 			return nil

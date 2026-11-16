@@ -305,7 +305,7 @@ type delegationRespAlias DelegationResponse
 // MarshalJSON implements the json.Marshaler interface. This is so we can
 // achieve a flattened structure while embedding other types.
 func (d DelegationResponse) MarshalJSON() ([]byte, error) {
-	return json.Marshal((delegationRespAlias)(d))
+	return json.Marshal(delegationRespAlias(d))
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface. This is so we can
@@ -355,7 +355,7 @@ type redelegationRespAlias RedelegationResponse
 // MarshalJSON implements the json.Marshaler interface. This is so we can
 // achieve a flattened structure while embedding other types.
 func (r RedelegationResponse) MarshalJSON() ([]byte, error) {
-	return json.Marshal((redelegationRespAlias)(r))
+	return json.Marshal(redelegationRespAlias(r))
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface. This is so we can

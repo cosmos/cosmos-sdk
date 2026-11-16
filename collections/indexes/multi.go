@@ -116,7 +116,7 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) unreference(ctx context.Context
 
 func (m *Multi[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Context, ranger collections.Ranger[collections.Pair[ReferenceKey, PrimaryKey]]) (MultiIterator[ReferenceKey, PrimaryKey], error) {
 	iter, err := m.refKeys.Iterate(ctx, ranger)
-	return (MultiIterator[ReferenceKey, PrimaryKey])(iter), err
+	return MultiIterator[ReferenceKey, PrimaryKey](iter), err
 }
 
 func (m *Multi[ReferenceKey, PrimaryKey, Value]) IterateRaw(
@@ -168,25 +168,25 @@ func (i MultiIterator[ReferenceKey, PrimaryKey]) PrimaryKeys() ([]PrimaryKey, er
 
 // FullKey returns the current full reference key as Pair[ReferenceKey, PrimaryKey].
 func (i MultiIterator[ReferenceKey, PrimaryKey]) FullKey() (collections.Pair[ReferenceKey, PrimaryKey], error) {
-	return (collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]])(i).Key()
+	return collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]](i).Key()
 }
 
 // FullKeys fully consumes the iterator and returns all the list of full reference keys.
 func (i MultiIterator[ReferenceKey, PrimaryKey]) FullKeys() ([]collections.Pair[ReferenceKey, PrimaryKey], error) {
-	return (collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]])(i).Keys()
+	return collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]](i).Keys()
 }
 
 // Next advances the iterator.
 func (i MultiIterator[ReferenceKey, PrimaryKey]) Next() {
-	(collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]])(i).Next()
+	collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]](i).Next()
 }
 
 // Valid asserts if the iterator is still valid or not.
 func (i MultiIterator[ReferenceKey, PrimaryKey]) Valid() bool {
-	return (collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]])(i).Valid()
+	return collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]](i).Valid()
 }
 
 // Close closes the iterator.
 func (i MultiIterator[ReferenceKey, PrimaryKey]) Close() error {
-	return (collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]])(i).Close()
+	return collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]](i).Close()
 }

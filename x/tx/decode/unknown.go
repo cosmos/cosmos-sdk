@@ -73,7 +73,8 @@ func doRejectUnknownFields(
 				// The tag is critical, so report it.
 				return hasUnknownNonCriticals, ErrUnknownField.Wrapf(
 					"%s: {TagNum: %d, WireType:%q}",
-					desc.FullName(), tagNum, WireTypeToString(wireType))
+					desc.FullName(), tagNum, WireTypeToString(wireType),
+				)
 			}
 		}
 

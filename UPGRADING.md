@@ -25,6 +25,10 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [secp256k1eth Validator Consensus Keys](#secp256k1eth-validator-consensus-keys)
     * [Block-STM Configuration](#block-stm-configuration)
 * [Behavior Changes Affecting Dapps and Indexers](#behavior-changes-affecting-dapps-and-indexers)
+* [x/feegrant (unreleased)](#xfeegrant-unreleased)
+    * [Fee Allowance Queue Migration](#fee-allowance-queue-migration)
+* [enterprise/poa (unreleased)](#enterprisepoa-unreleased)
+    * [Fee Allocation Migration](#fee-allocation-migration)
 
 ## Breaking Changes
 
@@ -285,3 +289,39 @@ Observable changes between v0.54.x and v0.55.x that don't require code changes b
 * **`x/authz` prunes at most 200 expired grants per begin block** ([#26588](https://github.com/cosmos/cosmos-sdk/pull/26588)); mass-expiry cleanup now spreads across blocks.
 * **`x/distribution` reward withdrawals to blocked addresses** during begin/end block fall back to the delegator/validator owner and then the community pool instead of failing ([#26406](https://github.com/cosmos/cosmos-sdk/pull/26406)). User-initiated withdrawals to blocked addresses still return `ErrUnauthorized`.
 * **`x/feegrant` `Allowances` and `AllowancesByGranter` queries** now honor `PageRequest.offset` and `count_total` correctly ([#26596](https://github.com/cosmos/cosmos-sdk/pull/26596)); clients that compensated for the old off-by-page results should re-check.
+
+## x/feegrant (unreleased)
+
+### Fee Allowance Queue Migration
+
+On chains that upgraded from v0.53.x or earlier, fee allowance expiry queue entries (`FeeAllowanceQueue`, prefix `0x01`) may have an empty value. The standalone `cosmossdk.io/x/feegrant` module (v0.1.x, v0.2.0) and the v1 → v2 store migration wrote these entries ([#26944](https://github.com/cosmos/cosmos-sdk/pull/26944)). The keeper reads the queue with `collections.BoolValue`, which cannot decode an empty value, so `RemoveExpiredAllowances` returns an error from the feegrant `EndBlocker` at the first block after such an entry expires.
+
+A chain is affected if both of the following apply:
+
+* it upgraded from v0.53.x or earlier to a v0.54.x or v0.55.x release without this migration, and
+* fee grants with an expiration were created before that upgrade and have not yet expired.
+
+Chains that started on v0.54 or later are not affected, and grants without an expiration never create a queue entry. Any entry under prefix `0x01` of the feegrant store with an empty value marks an affected chain.
+
+The feegrant consensus version goes from 2 to 3. `Migrate2to3` runs through `RunMigrations` in the upgrade handler and rewrites every queue entry that has an empty value to an encoded `true`. Entries that already store a value stay unchanged. The v1 → v2 migration now writes an encoded `true` as well.
+
+Affected chains must run this migration before the earliest empty-valued entry expires.
+
+## enterprise/poa (unreleased)
+
+The PoA module versions separately from the Cosmos SDK, on `enterprise/poa/v1.x` tags. This section covers changes since `enterprise/poa/v1.1.0`.
+
+### Fee Allocation Migration
+
+The PoA module now truncates each validator's fee share instead of rounding it to nearest, so allocated fees can no longer exceed the module balance ([#26875](https://github.com/cosmos/cosmos-sdk/pull/26875)). This changes fee allocation on every checkpoint, so all nodes must switch at the same height through a coordinated upgrade.
+
+The module's consensus version goes from 2 to 3. `Migrate2to3` runs through `RunMigrations` in your upgrade handler and, for each denom where allocated fees exceed the module balance, trims the excess (rounding dust) from the per-validator entries and recomputes the total.
+
+Chains upgrading from `enterprise/poa/v1.0.0` must set the module's starting version before running migrations. v1.0.0 has no consensus version, so it is recorded as 0, and there is no 0 → 1 migration:
+
+```go
+fromVM[poatypes.ModuleName] = 1
+return app.ModuleManager.RunMigrations(ctx, app.configurator, fromVM)
+```
+
+Genesis import applies the same trim. `InitGenesis` now compares the imported allocated fees with the poa module balance, so bank's genesis must run before poa's (`SetOrderInitGenesis`). Rounding in v1.x leaves at most `1e-18` per validator per denom above the balance. An excess within that limit (the number of exported validators × `1e-18`, per denom) is trimmed; anything larger, including allocations imported before bank has funded the module, fails `InitGenesis` with `ErrInvalidAllocatedFees`.

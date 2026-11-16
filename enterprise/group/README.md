@@ -35,7 +35,7 @@ The Group module allows any set of accounts to form a named group, attach one or
 
 ### Prerequisites
 
-- Go 1.26+
+- Go 1.27+
 - Docker (for proto generation)
 
 ## Usage

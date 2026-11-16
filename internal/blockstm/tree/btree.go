@@ -48,6 +48,48 @@ func (bt *BTree[T]) GetOrDefault(ctx context.Context, item T, fillDefaults func(
 	}
 }
 
+// BatchGetOrDefault atomically inserts defaults for missing items and returns the stored values.
+func (bt *BTree[T]) BatchGetOrDefault(ctx context.Context, items []T, fillDefaults func(*T)) []T {
+	defer measureSince(ctx, func() metric.Int64Histogram { return treeInst.BatchGetOrDefault }, treeNow())
+
+	results := make([]T, len(items))
+	defaults := make([]T, len(items))
+	initialized := make([]bool, len(items))
+	for {
+		t := bt.Load()
+		var updated *btree.BTreeG[T]
+		for i, item := range items {
+			lookup := t
+			if updated != nil {
+				lookup = updated
+			}
+			if result, ok := lookup.Get(item); ok {
+				results[i] = result
+				continue
+			}
+
+			if !initialized[i] {
+				defaults[i] = item
+				fillDefaults(&defaults[i])
+				initialized[i] = true
+			}
+			if updated == nil {
+				updated = t.Copy()
+			}
+			updated.Set(defaults[i])
+			results[i] = defaults[i]
+		}
+
+		if updated == nil {
+			return results
+		}
+		updated.Freeze()
+		if bt.CompareAndSwap(t, updated) {
+			return results
+		}
+	}
+}
+
 func (bt *BTree[T]) Set(ctx context.Context, item T) (prev T, ok bool) {
 	defer measureSince(ctx, func() metric.Int64Histogram { return treeInst.Set }, treeNow())
 	for {

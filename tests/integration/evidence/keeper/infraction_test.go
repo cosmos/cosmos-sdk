@@ -552,7 +552,7 @@ func populateValidators(t assert.TestingT, f *fixture) {
 	assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, minttypes.ModuleName, totalSupply))
 
 	for _, addr := range valAddresses {
-		assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, minttypes.ModuleName, (sdk.AccAddress)(addr), initCoins))
+		assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, minttypes.ModuleName, sdk.AccAddress(addr), initCoins))
 	}
 }
 

@@ -123,7 +123,8 @@ var (
 			GenOpts.WithDisallowNil().
 				WithAnyTypes(
 					&feegrantapi.BasicAllowance{},
-					&feegrantapi.PeriodicAllowance{}).
+					&feegrantapi.PeriodicAllowance{},
+				).
 				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.BasicAllowance{}).
 				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.PeriodicAllowance{}),
 		),
@@ -215,7 +216,8 @@ var (
 			GenOpts.WithDisallowNil().
 				WithAnyTypes(
 					&feegrantapi.BasicAllowance{},
-					&feegrantapi.PeriodicAllowance{}).
+					&feegrantapi.PeriodicAllowance{},
+				).
 				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.BasicAllowance{}).
 				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.PeriodicAllowance{}),
 		),

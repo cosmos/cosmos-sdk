@@ -52,7 +52,8 @@ func Test_splitAndCall_Splitting(t *testing.T) {
 
 			return nil
 		},
-		clientCtx, nil, msgs, chunkSize)
+		clientCtx, nil, msgs, chunkSize,
+	)
 
 	require.NoError(t, err, "")
 	require.Equal(t, 3, callCount)

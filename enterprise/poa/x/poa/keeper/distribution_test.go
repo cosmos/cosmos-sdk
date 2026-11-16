@@ -318,7 +318,7 @@ func TestProportionalDistribution(t *testing.T) {
 			require.NoError(t, err)
 
 			// Track what should have been distributed this block
-			distributed := math.LegacyNewDec(11).Mul(validatorPower).Quo(totalPower)
+			distributed := math.LegacyNewDec(11).Mul(validatorPower).QuoTruncate(totalPower)
 			totalDistributed = totalDistributed.Add(distributed)
 
 			// Checkpointing is required here to simulate the above calculation
@@ -345,9 +345,9 @@ func TestProportionalDistribution(t *testing.T) {
 		accFeesAfter, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		// This is rounded slightly because of the constant checkpointing at every distribution
-		// If we don't checkpoint every time, we end up with 0.714285714285714286.
+		// If we don't checkpoint every time, we end up with 0.714285714285714285.
 		// Both cases are "correct", but checkpointing every block simulated someone withdrawing at every block.
-		expectedRemainder, err := math.LegacyNewDecFromStr("0.714285714285714290")
+		expectedRemainder, err := math.LegacyNewDecFromStr("0.714285714285714280")
 		require.NoError(t, err)
 		require.Equal(t, expectedRemainder, accFeesAfter.Fees.AmountOf("stake"))
 
@@ -358,7 +358,7 @@ func TestProportionalDistribution(t *testing.T) {
 			err := f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees)
 			require.NoError(t, err)
 
-			distributed := math.LegacyNewDec(11).Mul(validatorPower).Quo(totalPower)
+			distributed := math.LegacyNewDec(11).Mul(validatorPower).QuoTruncate(totalPower)
 			totalDistributedSecond = totalDistributedSecond.Add(distributed)
 			// Checkpointing is required here to simulate the above calculation
 			// where we divide every loop.
@@ -384,9 +384,9 @@ func TestProportionalDistribution(t *testing.T) {
 		accFeesFinal, err := f.poaKeeper.validatorAllocatedFees.Get(f.ctx, consAddr1.String())
 		require.NoError(t, err)
 		// This is rounded slightly because of the constant checkpointing at every distribution
-		// If we don't checkpoint every time, we end up with 0.428571428571428572.
+		// If we don't checkpoint every time, we end up with 0.428571428571428571.
 		// Both cases are "correct", but checkpointing every block simulated someone withdrawing at every block.
-		finalRemainder, err := math.LegacyNewDecFromStr("0.428571428571428580")
+		finalRemainder, err := math.LegacyNewDecFromStr("0.428571428571428560")
 		require.NoError(t, err)
 		require.Equal(t, finalRemainder, accFeesFinal.Fees.AmountOf("stake"))
 
@@ -407,6 +407,26 @@ func TestProportionalDistribution(t *testing.T) {
 }
 
 func TestCheckpointAllValidators(t *testing.T) {
+	t.Run("equal split of one unit never allocates more than the balance", func(t *testing.T) {
+		f := setupTest(t)
+
+		for i := 1; i <= 6; i++ {
+			_, _ = createValidator(t, f, i, 1)
+		}
+
+		for round := 1; round <= 2; round++ {
+			fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1))
+			require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
+			require.NoError(t, f.poaKeeper.checkpointAllValidators(f.ctx))
+
+			totalAllocated, err := f.poaKeeper.getTotalAllocated(f.ctx)
+			require.NoError(t, err)
+			balance := sdk.NewDecCoinsFromCoins(f.bankKeeper.GetAllBalances(f.ctx, f.authKeeper.GetModuleAddress(poatypes.ModuleName))...)
+			_, overshot := balance.SafeSub(totalAllocated)
+			require.False(t, overshot, "round %d: allocated %s exceeds balance %s", round, totalAllocated, balance)
+		}
+	})
+
 	t.Run("checkpoint allocates fees to all validators", func(t *testing.T) {
 		f := setupTest(t)
 
@@ -1066,6 +1086,17 @@ func TestCalculateValidatorPendingFees(t *testing.T) {
 		result := calculateValidatorPendingFees(validatorPower, totalPower, unallocated)
 		require.Equal(t, unallocated, result)
 	})
+
+	t.Run("truncates so shares never sum to more than unallocated", func(t *testing.T) {
+		unallocated := sdk.DecCoins{sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(1))}
+
+		// rounding to nearest would give 0.166666666666666667 each, summing to
+		// 1.000000000000000002
+		result := calculateValidatorPendingFees(1, 6, unallocated)
+		expected, err := math.LegacyNewDecFromStr("0.166666666666666666")
+		require.NoError(t, err)
+		require.Equal(t, expected, result.AmountOf("stake"))
+	})
 }
 
 func TestGetUnallocatedFees(t *testing.T) {
@@ -1153,6 +1184,33 @@ func TestGetUnallocatedFees(t *testing.T) {
 		unallocated, err := f.poaKeeper.getUnallocatedFees(f.ctx)
 		require.NoError(t, err)
 		require.True(t, unallocated.IsZero())
+	})
+
+	t.Run("errors when allocated exceeds balance", func(t *testing.T) {
+		f := setupTest(t)
+
+		fees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1))
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, poatypes.ModuleName, fees))
+
+		overshoot, err := math.LegacyNewDecFromStr("1.000000000000000002")
+		require.NoError(t, err)
+		require.NoError(t, f.poaKeeper.totalAllocatedFees.Set(f.ctx, poatypes.ValidatorFees{
+			Fees: sdk.DecCoins{sdk.NewDecCoinFromDec("stake", overshoot)},
+		}))
+
+		_, err = f.poaKeeper.getUnallocatedFees(f.ctx)
+		require.ErrorIs(t, err, poatypes.ErrInvalidAllocatedFees)
+	})
+
+	t.Run("errors when allocated fees exist with an empty balance", func(t *testing.T) {
+		f := setupTest(t)
+
+		require.NoError(t, f.poaKeeper.totalAllocatedFees.Set(f.ctx, poatypes.ValidatorFees{
+			Fees: sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 1)),
+		}))
+
+		_, err := f.poaKeeper.getUnallocatedFees(f.ctx)
+		require.ErrorIs(t, err, poatypes.ErrInvalidAllocatedFees)
 	})
 }
 

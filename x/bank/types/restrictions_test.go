@@ -583,7 +583,8 @@ func TestSendRestriction_Then(t *testing.T) {
 				ExpAddr:  nil,
 				ExpErr:   "this is a test error",
 				ExpCalls: h.NewCalls(h.NewArgs(
-					"r1", fromAddr, addr1, coins),
+					"r1", fromAddr, addr1, coins,
+				),
 					h.NewArgs("this is a test error", fromAddr, addr2, coins),
 				),
 			},

@@ -46,7 +46,7 @@ func (b boolKey[T]) DecodeJSON(buffer []byte) (T, error) {
 }
 
 func (b boolKey[T]) Stringify(key T) string {
-	return strconv.FormatBool((bool)(key))
+	return strconv.FormatBool(bool(key))
 }
 
 func (b boolKey[T]) KeyType() string {

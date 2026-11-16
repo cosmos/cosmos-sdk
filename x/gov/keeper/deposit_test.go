@@ -276,7 +276,8 @@ func TestValidateInitialDeposit(t *testing.T) {
 		"min deposit * initial percent == initial deposit (multiple coins): success": {
 			minDeposit: sdk.NewCoins(
 				sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(baseDepositTestAmount)),
-				sdk.NewCoin("uosmo", sdkmath.NewInt(baseDepositTestAmount*2))),
+				sdk.NewCoin("uosmo", sdkmath.NewInt(baseDepositTestAmount*2)),
+			),
 			minInitialDepositPercent: baseDepositTestPercent,
 			initialDeposit: sdk.NewCoins(
 				sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(baseDepositTestAmount*baseDepositTestPercent/100)),
@@ -286,7 +287,8 @@ func TestValidateInitialDeposit(t *testing.T) {
 		"min deposit * initial percent > initial deposit (multiple coins): error": {
 			minDeposit: sdk.NewCoins(
 				sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(baseDepositTestAmount)),
-				sdk.NewCoin("uosmo", sdkmath.NewInt(baseDepositTestAmount*2))),
+				sdk.NewCoin("uosmo", sdkmath.NewInt(baseDepositTestAmount*2)),
+			),
 			minInitialDepositPercent: baseDepositTestPercent,
 			initialDeposit: sdk.NewCoins(
 				sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(baseDepositTestAmount*baseDepositTestPercent/100)),

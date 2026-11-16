@@ -63,7 +63,8 @@ func TestStakingMsgs(t *testing.T) {
 			testutil.AppConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
-		startupCfg, &bankKeeper, &stakingKeeper)
+		startupCfg, &bankKeeper, &stakingKeeper,
+	)
 	require.NoError(t, err)
 	ctxCheck := app.NewContext(true)
 
@@ -165,7 +166,8 @@ func TestBeginRedelegateAllSharesFromUnbondedSource(t *testing.T) {
 			testutil.AppConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
-		startupCfg, &bankKeeper, &stakingKeeper)
+		startupCfg, &bankKeeper, &stakingKeeper,
+	)
 	require.NoError(t, err)
 
 	txConfig := moduletestutil.MakeTestTxConfig()

@@ -77,7 +77,8 @@ func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter
 	sdkCtx.EventManager().EmitEvent(sdk.NewEvent(
 		"increase_counter",
 		sdk.NewAttribute("signer", msg.Signer),
-		sdk.NewAttribute("new count", fmt.Sprint(num+msg.Count))),
+		sdk.NewAttribute("new count", fmt.Sprint(num+msg.Count)),
+	),
 	)
 
 	return &types.MsgIncreaseCountResponse{

@@ -75,7 +75,8 @@ func (s *paginationTestSuite) SetupTest() {
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		&bankKeeper, &accountKeeper, &reg, &cdc)
+		&bankKeeper, &accountKeeper, &reg, &cdc,
+	)
 
 	s.NoError(err)
 

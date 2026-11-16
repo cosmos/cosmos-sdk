@@ -63,6 +63,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (errors) [#26948](https://github.com/cosmos/cosmos-sdk/pull/26948) Preserve gRPC status codes through standard Go error wrappers and joined errors inside an SDK-wrapped error.
 * (baseapp) [#26986](https://github.com/cosmos/cosmos-sdk/pull/26986) Set the block time on the `ExtendVote` context again, which was lost when main was reset to release/v0.53.x.
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.
 * (client/tx) [#26759](https://github.com/cosmos/cosmos-sdk/issues/26759) Populate the multisig bit array in simulation txs so `--gas auto` works for multisig senders.
@@ -74,6 +75,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/simulation) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Time-scheduled future operations were silently dropped by `queueOperations` (the appended queue was never returned to the caller), and executed time operations were never removed from the queue. Both now update the caller's queue.
 * (x/auth/tx) [#26815](https://github.com/cosmos/cosmos-sdk/pull/26815) `GetSigningTxData` now converts the nested `ModeInfos` of a multisig `ModeInfo`; previously the converted entries were discarded and the slice was left as nil placeholders.
 * (keys) [#26833](https://github.com/cosmos/cosmos-sdk/pull/26833) Strip leading and trailing whitespace when reading a mnemonic from a source file.
+* (x/auth/tx) [#26955](https://github.com/cosmos/cosmos-sdk/pull/26955) `GetBlockWithTxs` now uses the default limit when `pagination.limit` is 0; a request that set only `offset` or `count_total` returned no txs. Reverse pagination now walks back from the last tx and includes the first one, with `offset` counted from the end like other paginated queries.
 
 ### Deprecated
 

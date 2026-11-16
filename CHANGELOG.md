@@ -63,6 +63,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (errors) [#26948](https://github.com/cosmos/cosmos-sdk/pull/26948) Preserve gRPC status codes through standard Go error wrappers and joined errors inside an SDK-wrapped error.
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.
 * (client/tx) [#26759](https://github.com/cosmos/cosmos-sdk/issues/26759) Populate the multisig bit array in simulation txs so `--gas auto` works for multisig senders.
 * (blockstm) [#26772](https://github.com/cosmos/cosmos-sdk/pull/26772) Panic with a descriptive error when accessing an unregistered store instead of silently using store index zero.

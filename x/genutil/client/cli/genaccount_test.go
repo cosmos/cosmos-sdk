@@ -127,6 +127,7 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 		expected   map[string]sdk.Coins
 		appendFlag bool
 		expectErr  bool
+		expErrMsg  string
 	}{
 		{
 			name: "invalid address",
@@ -176,6 +177,7 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 			},
 			appendFlag: false,
 			expectErr:  true,
+			expErrMsg:  addr1Str + " already exists",
 		},
 		{
 			name: "same address twice in one file with append",
@@ -256,6 +258,7 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 			// The first iteration (pre-append) may not error.
 			// Check if any errors after all state transitions to genesis.
 			doesErr := false
+			var lastErr error
 
 			// apply multiple state iterations if applicable (e.g. --append)
 			for _, state := range tc.state {
@@ -276,9 +279,13 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 				err = cmd.ExecuteContext(ctx)
 				if err != nil {
 					doesErr = true
+					lastErr = err
 				}
 			}
 			require.Equal(t, tc.expectErr, doesErr)
+			if tc.expErrMsg != "" {
+				require.ErrorContains(t, lastErr, tc.expErrMsg)
+			}
 
 			// an error already occurred, no need to check the state
 			if doesErr {

@@ -292,7 +292,8 @@ in the list exactly as given: resetting `/cosmos.bank.*` does not remove
 | `IsAllowed` | `GET /cosmos/safety/v1/is_allowed?msg_type_url=...` | whether the type URL may execute and, if not, the blocking entry in `blocked_by` |
 | `MatchingMsgs` | `GET /cosmos/safety/v1/matching_msgs?pattern=...` | the registered msg type URLs a trip of the pattern would block, sorted and unpaginated |
 
-`IsAllowed` returns `InvalidArgument` for anything but an exact msg type URL.
+`IsAllowed` returns `InvalidArgument` for anything but the exact type URL of a
+msg the app registers.
 
 `MatchingMsgs` is the dry run for a trip. It applies the protected and wrapper
 rules and ignores the operator scope and the disabled list.

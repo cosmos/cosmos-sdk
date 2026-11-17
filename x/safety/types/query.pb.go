@@ -218,7 +218,8 @@ func (m *QueryDisabledListResponse) GetPagination() *query.PageResponse {
 // QueryIsAllowedRequest is the request type for the Query/IsAllowed RPC method.
 type QueryIsAllowedRequest struct {
 	// msg_type_url is the msg type URL to check, for example
-	// "/cosmos.bank.v1beta1.MsgSend".
+	// "/cosmos.bank.v1beta1.MsgSend". It must name a msg type the app
+	// registers; any other value returns InvalidArgument.
 	MsgTypeUrl string `protobuf:"bytes,1,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
 }
 

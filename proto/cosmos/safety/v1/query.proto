@@ -66,7 +66,8 @@ message QueryDisabledListResponse {
 // QueryIsAllowedRequest is the request type for the Query/IsAllowed RPC method.
 message QueryIsAllowedRequest {
   // msg_type_url is the msg type URL to check, for example
-  // "/cosmos.bank.v1beta1.MsgSend".
+  // "/cosmos.bank.v1beta1.MsgSend". It must name a msg type the app
+  // registers; any other value returns InvalidArgument.
   string msg_type_url = 1;
 }
 

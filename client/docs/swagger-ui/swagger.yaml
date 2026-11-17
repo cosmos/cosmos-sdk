@@ -20853,7 +20853,8 @@ paths:
         - name: msgTypeUrl
           description: |-
             msg_type_url is the msg type URL to check, for example
-            "/cosmos.bank.v1beta1.MsgSend".
+            "/cosmos.bank.v1beta1.MsgSend". It must name a msg type the app
+            registers; any other value returns InvalidArgument.
           in: query
           required: false
           type: string

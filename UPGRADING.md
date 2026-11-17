@@ -27,7 +27,7 @@ The headline changes in this release are the removal of three legacy surfaces (`
 * [Behavior Changes Affecting Dapps and Indexers](#behavior-changes-affecting-dapps-and-indexers)
 * [x/feegrant (unreleased)](#xfeegrant-unreleased)
     * [Fee Allowance Queue Migration](#fee-allowance-queue-migration)
-* [Unreleased](#unreleased)
+* [x/staking (unreleased)](#xstaking-unreleased)
     * [Staking: AfterUnbondingInitiated Hook Errors](#staking-afterunbondinginitiated-hook-errors)
 * [enterprise/poa (unreleased)](#enterprisepoa-unreleased)
     * [Fee Allocation Migration](#fee-allocation-migration)
@@ -308,9 +308,8 @@ Chains that started on v0.54 or later are not affected, and grants without an ex
 The feegrant consensus version goes from 2 to 3. `Migrate2to3` runs through `RunMigrations` in the upgrade handler and rewrites every queue entry that has an empty value to an encoded `true`. Entries that already store a value stay unchanged. The v1 → v2 migration now writes an encoded `true` as well.
 
 Affected chains must run this migration before the earliest empty-valued entry expires.
-## Unreleased
 
-Changes on `main` since `v0.55.0`.
+## x/staking (unreleased)
 
 ### Staking: AfterUnbondingInitiated Hook Errors
 

@@ -78,7 +78,7 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 
 // RegisterServices registers the x/safety msg and query services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
+	keeper.RegisterMsgServer(registrar, am.keeper)
 	types.RegisterQueryServer(registrar, keeper.NewQueryServer(am.keeper))
 	return nil
 }

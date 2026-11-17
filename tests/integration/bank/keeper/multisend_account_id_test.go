@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/log/v2"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -15,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
@@ -105,8 +107,10 @@ func TestMultiSendNewAccountsGetUniqueIDs(t *testing.T) {
 	totalSend := sdk.NewCoins(sdk.NewInt64Coin("stake", int64(100*numRecipients)))
 	input := banktypes.NewInput(senderAddr, totalSend)
 
-	msgServer := bankkeeper.NewMsgServerImpl(bankKeeper)
-	_, err := msgServer.MultiSend(ctx, banktypes.NewMsgMultiSend(input, outputs))
+	router := baseapp.NewMsgServiceRouter()
+	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
+	bankkeeper.RegisterMsgServer(router, bankKeeper)
+	_, err := msgservice.Dispatch[*banktypes.MsgMultiSendResponse](ctx, router, banktypes.NewMsgMultiSend(input, outputs))
 	require.NoError(t, err)
 
 	// --- Verify all recipients were created with unique account IDs ---

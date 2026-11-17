@@ -14,13 +14,13 @@ import (
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -164,8 +164,6 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
-
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 	newProposalMsg, err := v1.NewMsgSubmitProposal(
@@ -179,7 +177,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	res, err := govMsgSvr.SubmitProposal(ctx, newProposalMsg)
+	res, err := msgservice.Dispatch[*v1.MsgSubmitProposalResponse](ctx, app.MsgServiceRouter(), newProposalMsg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
@@ -216,8 +214,6 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
-
 	checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 	newProposalMsg, err := v1.NewMsgSubmitProposal(
@@ -231,7 +227,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	res, err := govMsgSvr.SubmitProposal(ctx, newProposalMsg)
+	res, err := msgservice.Dispatch[*v1.MsgSubmitProposalResponse](ctx, app.MsgServiceRouter(), newProposalMsg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
@@ -254,7 +250,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	res, err = govMsgSvr.SubmitProposal(ctx, newProposalMsg2)
+	res, err = msgservice.Dispatch[*v1.MsgSubmitProposalResponse](ctx, app.MsgServiceRouter(), newProposalMsg2)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
@@ -288,8 +284,6 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
-
 	newProposalMsg, err := v1.NewMsgSubmitProposal(
 		[]sdk.Msg{mkTestLegacyContent(t)},
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)},
@@ -301,7 +295,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	res, err := govMsgSvr.SubmitProposal(ctx, newProposalMsg)
+	res, err := msgservice.Dispatch[*v1.MsgSubmitProposalResponse](ctx, app.MsgServiceRouter(), newProposalMsg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
@@ -317,7 +311,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 	newDepositMsg := v1.NewMsgDeposit(addrs[1], proposalID, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)})
 
-	res1, err := govMsgSvr.Deposit(ctx, newDepositMsg)
+	res1, err := msgservice.Dispatch[*v1.MsgDepositResponse](ctx, app.MsgServiceRouter(), newDepositMsg)
 	require.NoError(t, err)
 	require.NotNil(t, res1)
 
@@ -354,8 +348,6 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
-
 			checkInactiveProposalsQueue(t, ctx, suite.GovKeeper)
 			checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
 
@@ -363,7 +355,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{mkTestLegacyContent(t)}, proposalCoins, addrs[0].String(), "", "Proposal", "description of proposal", tc.expedited)
 			require.NoError(t, err)
 
-			res, err := govMsgSvr.SubmitProposal(ctx, newProposalMsg)
+			res, err := msgservice.Dispatch[*v1.MsgSubmitProposalResponse](ctx, app.MsgServiceRouter(), newProposalMsg)
 			require.NoError(t, err)
 			require.NotNil(t, res)
 
@@ -375,7 +367,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 			newDepositMsg := v1.NewMsgDeposit(addrs[1], proposalID, proposalCoins)
 
-			res1, err := govMsgSvr.Deposit(ctx, newDepositMsg)
+			res1, err := msgservice.Dispatch[*v1.MsgDepositResponse](ctx, app.MsgServiceRouter(), newDepositMsg)
 			require.NoError(t, err)
 			require.NotNil(t, res1)
 
@@ -440,9 +432,6 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 			SortAddresses(addrs)
 
-			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
-			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
-
 			_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 				Height: app.LastBlockHeight() + 1,
 				Hash:   app.LastCommitID().Hash,
@@ -452,7 +441,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			valAddr := sdk.ValAddress(addrs[0])
 			proposer := addrs[0]
 
-			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
+			createValidators(t, app.MsgServiceRouter(), ctx, []sdk.ValAddress{valAddr}, []int64{10})
 			_, err = suite.StakingKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
 
@@ -466,7 +455,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10*depositMultiplier))}
 			newDepositMsg := v1.NewMsgDeposit(addrs[0], proposal.Id, proposalCoins)
 
-			res, err := govMsgSvr.Deposit(ctx, newDepositMsg)
+			res, err := msgservice.Dispatch[*v1.MsgDepositResponse](ctx, app.MsgServiceRouter(), newDepositMsg)
 			require.NoError(t, err)
 			require.NotNil(t, res)
 
@@ -502,8 +491,6 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 
 	SortAddresses(addrs)
 
-	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
-
 	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: app.LastBlockHeight() + 1,
 		Hash:   app.LastCommitID().Hash,
@@ -513,7 +500,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	valAddr := sdk.ValAddress(addrs[0])
 	proposer := addrs[0]
 
-	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
+	createValidators(t, app.MsgServiceRouter(), ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	_, err = suite.StakingKeeper.EndBlocker(ctx)
 	require.NoError(t, err)
 
@@ -523,9 +510,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10)))
 	newDepositMsg := v1.NewMsgDeposit(addrs[0], proposal.Id, proposalCoins)
-
-	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
-	res, err := govMsgSvr.Deposit(ctx, newDepositMsg)
+	res, err := msgservice.Dispatch[*v1.MsgDepositResponse](ctx, app.MsgServiceRouter(), newDepositMsg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
@@ -587,9 +572,6 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 
 			SortAddresses(addrs)
 
-			govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
-			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(suite.StakingKeeper)
-
 			_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 				Height: app.LastBlockHeight() + 1,
 				Hash:   app.LastCommitID().Hash,
@@ -600,7 +582,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			proposer := addrs[0]
 
 			// Create a validator so that able to vote on proposal.
-			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
+			createValidators(t, app.MsgServiceRouter(), ctx, []sdk.ValAddress{valAddr}, []int64{10})
 			_, err = suite.StakingKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
 
@@ -618,7 +600,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{}, proposalCoins, proposer.String(), "metadata", "title", "summary", true)
 			require.NoError(t, err)
 
-			res, err := govMsgSvr.SubmitProposal(ctx, newProposalMsg)
+			res, err := msgservice.Dispatch[*v1.MsgSubmitProposalResponse](ctx, app.MsgServiceRouter(), newProposalMsg)
 			require.NoError(t, err)
 			require.NotNil(t, res)
 
@@ -630,7 +612,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 
 			newDepositMsg := v1.NewMsgDeposit(addrs[1], proposalID, proposalCoins)
 
-			res1, err := govMsgSvr.Deposit(ctx, newDepositMsg)
+			res1, err := msgservice.Dispatch[*v1.MsgDepositResponse](ctx, app.MsgServiceRouter(), newDepositMsg)
 			require.NoError(t, err)
 			require.NotNil(t, res1)
 
@@ -741,7 +723,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 	}
 }
 
-func createValidators(t *testing.T, stakingMsgSvr stakingtypes.MsgServer, ctx sdk.Context, addrs []sdk.ValAddress, powerAmt []int64) {
+func createValidators(t *testing.T, router msgservice.MsgRouter, ctx sdk.Context, addrs []sdk.ValAddress, powerAmt []int64) {
 	t.Helper()
 
 	require.True(t, len(addrs) <= len(pubkeys), "Not enough pubkeys specified at top of file.")
@@ -753,7 +735,7 @@ func createValidators(t *testing.T, stakingMsgSvr stakingtypes.MsgServer, ctx sd
 			TestDescription, TestCommissionRates, math.OneInt(),
 		)
 		require.NoError(t, err)
-		res, err := stakingMsgSvr.CreateValidator(ctx, valCreateMsg)
+		res, err := msgservice.Dispatch[*stakingtypes.MsgCreateValidatorResponse](ctx, router, valCreateMsg)
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

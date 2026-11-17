@@ -162,7 +162,7 @@ func newBlockSTMTestApp(t *testing.T, db dbm.DB, logger log.Logger, enableBlockS
 		return &abci.ResponseInitChain{}, nil
 	})
 
-	banktypes.RegisterMsgServer(bApp.MsgServiceRouter(), bankkeeper.NewMsgServerImpl(bankKeeper))
+	bankkeeper.RegisterMsgServer(bApp.MsgServiceRouter(), bankKeeper)
 
 	if enableBlockSTM {
 		bApp.SetBlockSTMTxRunner(newTestSTMRunner(

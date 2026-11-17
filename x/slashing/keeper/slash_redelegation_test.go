@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
@@ -37,9 +38,8 @@ func TestSlashRedelegation(t *testing.T) {
 	), &stakingKeeper, &bankKeeper, &slashKeeper, &distrKeeper)
 	require.NoError(t, err)
 
-	// get sdk context, staking msg server and bond denom
+	// get sdk context and bond denom
 	ctx := app.NewContext(false)
-	stakingMsgServer := stakingkeeper.NewMsgServerImpl(stakingKeeper)
 	bondDenom, err := stakingKeeper.BondDenom(ctx)
 	require.NoError(t, err)
 
@@ -71,7 +71,7 @@ func TestSlashRedelegation(t *testing.T) {
 	createValMsg1, _ := stakingtypes.NewMsgCreateValidator(
 		evilValAddr.String(), evilValPubKey, testCoins[0], stakingtypes.Description{Details: "test"}, stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)), math.OneInt(),
 	)
-	_, err = stakingMsgServer.CreateValidator(ctx, createValMsg1)
+	_, err = msgservice.Dispatch[*stakingtypes.MsgCreateValidatorResponse](ctx, app.MsgServiceRouter(), createValMsg1)
 	require.NoError(t, err)
 
 	// creating good val
@@ -80,7 +80,7 @@ func TestSlashRedelegation(t *testing.T) {
 	createValMsg2, _ := stakingtypes.NewMsgCreateValidator(
 		goodValAddr.String(), goodValPubKey, testCoins[0], stakingtypes.Description{Details: "test"}, stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)), math.OneInt(),
 	)
-	_, err = stakingMsgServer.CreateValidator(ctx, createValMsg2)
+	_, err = msgservice.Dispatch[*stakingtypes.MsgCreateValidatorResponse](ctx, app.MsgServiceRouter(), createValMsg2)
 	require.NoError(t, err)
 
 	// next block, commit height 2, move to height 3
@@ -92,12 +92,12 @@ func TestSlashRedelegation(t *testing.T) {
 
 	// Acc 2 delegate
 	delMsg := stakingtypes.NewMsgDelegate(testAcc2.String(), evilValAddr.String(), testCoins[0])
-	_, err = stakingMsgServer.Delegate(ctx, delMsg)
+	_, err = msgservice.Dispatch[*stakingtypes.MsgDelegateResponse](ctx, app.MsgServiceRouter(), delMsg)
 	require.NoError(t, err)
 
 	// Acc 1 delegate
 	delMsg = stakingtypes.NewMsgDelegate(testAcc1.String(), evilValAddr.String(), testCoins[0])
-	_, err = stakingMsgServer.Delegate(ctx, delMsg)
+	_, err = msgservice.Dispatch[*stakingtypes.MsgDelegateResponse](ctx, app.MsgServiceRouter(), delMsg)
 	require.NoError(t, err)
 
 	// next block, commit height 3, move to height 4
@@ -113,17 +113,17 @@ func TestSlashRedelegation(t *testing.T) {
 
 	// Acc 1 redelegate from evil val to good val
 	redelMsg := stakingtypes.NewMsgBeginRedelegate(testAcc1.String(), evilValAddr.String(), goodValAddr.String(), testCoins[0])
-	_, err = stakingMsgServer.BeginRedelegate(ctx, redelMsg)
+	_, err = msgservice.Dispatch[*stakingtypes.MsgBeginRedelegateResponse](ctx, app.MsgServiceRouter(), redelMsg)
 	require.NoError(t, err)
 
 	// Acc 1 undelegate from good val
 	undelMsg := stakingtypes.NewMsgUndelegate(testAcc1.String(), goodValAddr.String(), testCoins[0])
-	_, err = stakingMsgServer.Undelegate(ctx, undelMsg)
+	_, err = msgservice.Dispatch[*stakingtypes.MsgUndelegateResponse](ctx, app.MsgServiceRouter(), undelMsg)
 	require.NoError(t, err)
 
 	// Acc 2 undelegate from evil val
 	undelMsg = stakingtypes.NewMsgUndelegate(testAcc2.String(), evilValAddr.String(), testCoins[0])
-	_, err = stakingMsgServer.Undelegate(ctx, undelMsg)
+	_, err = msgservice.Dispatch[*stakingtypes.MsgUndelegateResponse](ctx, app.MsgServiceRouter(), undelMsg)
 	require.NoError(t, err)
 
 	// next block, commit height 4, move to height 5

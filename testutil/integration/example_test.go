@@ -71,8 +71,8 @@ func Example() {
 	)
 
 	// register the message and query servers
-	authtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), authkeeper.NewMsgServerImpl(accountKeeper))
-	minttypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), mintkeeper.NewMsgServerImpl(mintKeeper))
+	authkeeper.RegisterMsgServer(integrationApp.MsgServiceRouter(), accountKeeper)
+	mintkeeper.RegisterMsgServer(integrationApp.MsgServiceRouter(), mintKeeper)
 	minttypes.RegisterQueryServer(integrationApp.QueryHelper(), mintkeeper.NewQueryServerImpl(mintKeeper))
 
 	params := minttypes.DefaultParams()
@@ -154,7 +154,7 @@ func Example_oneModule() {
 	)
 
 	// register the message and query servers
-	authtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), authkeeper.NewMsgServerImpl(accountKeeper))
+	authkeeper.RegisterMsgServer(integrationApp.MsgServiceRouter(), accountKeeper)
 
 	params := authtypes.DefaultParams()
 	params.MaxMemoCharacters = 1000

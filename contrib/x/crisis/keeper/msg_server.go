@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	"google.golang.org/grpc"
+
 	"cosmossdk.io/errors"
 
 	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
@@ -11,11 +13,28 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-var _ types2.MsgServer = &Keeper{}
+type msgServer struct {
+	*Keeper
+}
+
+var _ types2.MsgServer = msgServer{}
+
+// newMsgServerImpl returns an implementation of the x/crisis MsgServer
+// interface for the provided Keeper.
+func newMsgServerImpl(k *Keeper) types2.MsgServer {
+	return msgServer{Keeper: k}
+}
+
+// RegisterMsgServer registers the x/crisis Msg service on r. The msg server
+// is unexported: code outside the module runs a msg through the
+// MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k *Keeper) {
+	types2.RegisterMsgServer(r, newMsgServerImpl(k))
+}
 
 // VerifyInvariant implements MsgServer.VerifyInvariant method.
 // It defines a method to verify a particular invariant.
-func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types2.MsgVerifyInvariant) (*types2.MsgVerifyInvariantResponse, error) {
+func (k msgServer) VerifyInvariant(goCtx context.Context, msg *types2.MsgVerifyInvariant) (*types2.MsgVerifyInvariantResponse, error) {
 	if msg.Sender == "" {
 		return nil, sdkerrors.ErrInvalidAddress.Wrap("empty address string is not allowed")
 	}
@@ -76,7 +95,7 @@ func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types2.MsgVerifyInv
 
 // UpdateParams implements MsgServer.UpdateParams method.
 // It defines a method to update the x/crisis module parameters.
-func (k *Keeper) UpdateParams(ctx context.Context, msg *types2.MsgUpdateParams) (*types2.MsgUpdateParamsResponse, error) {
+func (k msgServer) UpdateParams(ctx context.Context, msg *types2.MsgUpdateParams) (*types2.MsgUpdateParamsResponse, error) {
 	if k.authority != msg.Authority {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
 	}
@@ -94,4 +113,20 @@ func (k *Keeper) UpdateParams(ctx context.Context, msg *types2.MsgUpdateParams) 
 	}
 
 	return &types2.MsgUpdateParamsResponse{}, nil
+}
+
+// VerifyInvariant runs MsgVerifyInvariant on the module's msg server.
+//
+// Deprecated: run MsgVerifyInvariant with msgservice.Dispatch.
+// Keeper.VerifyInvariant will be removed in a future release.
+func (k *Keeper) VerifyInvariant(ctx context.Context, msg *types2.MsgVerifyInvariant) (*types2.MsgVerifyInvariantResponse, error) {
+	return newMsgServerImpl(k).VerifyInvariant(ctx, msg)
+}
+
+// UpdateParams runs MsgUpdateParams on the module's msg server.
+//
+// Deprecated: run MsgUpdateParams with msgservice.Dispatch.
+// Keeper.UpdateParams will be removed in a future release.
+func (k *Keeper) UpdateParams(ctx context.Context, msg *types2.MsgUpdateParams) (*types2.MsgUpdateParamsResponse, error) {
+	return newMsgServerImpl(k).UpdateParams(ctx, msg)
 }

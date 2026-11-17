@@ -62,7 +62,6 @@ type KeeperTestEnvironment struct {
 	bankKeeper    *stakingtestutil.MockBankKeeper
 	accountKeeper *stakingtestutil.MockAccountKeeper
 	queryClient   types.QueryClient
-	msgServer     types.MsgServer
 }
 
 func newTestEnvironment(tb testing.TB) *KeeperTestEnvironment {
@@ -106,7 +105,6 @@ func newTestEnvironment(tb testing.TB) *KeeperTestEnvironment {
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: keeper})
 	testEnv.queryClient = types.NewQueryClient(queryHelper)
-	testEnv.msgServer = stakingkeeper.NewMsgServerImpl(keeper)
 	return testEnv
 }
 

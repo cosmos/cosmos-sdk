@@ -110,7 +110,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.other = sdk.AccAddress("unit_other__________").String()
 
 	s.keeper = keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(s.key), addresscodec.NewBech32Codec("cosmos"), s.registry, s.authority)
-	s.msgServer = keeper.NewMsgServerImpl(s.keeper)
+	s.msgServer = keeper.NewMsgServerForTest(s.keeper)
 	s.queryServer = keeper.NewQueryServer(s.keeper)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.registry)
@@ -767,7 +767,7 @@ func (s *KeeperTestSuite) TestTripPrefixCoveringOnlyAWrapper() {
 	types.RegisterInterfaces(encCfg.InterfaceRegistry)
 	encCfg.InterfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &authz.MsgExec{})
 	k := keeper.NewKeeper(encCfg.Codec, runtime.NewKVStoreService(s.key), addresscodec.NewBech32Codec("cosmos"), encCfg.InterfaceRegistry, s.authority)
-	srv := keeper.NewMsgServerImpl(k)
+	srv := keeper.NewMsgServerForTest(k)
 	s.state(s.operator, []string{types.Wildcard})
 
 	for _, p := range []string{"/cosmos.authz.*", "/cosmos.authz.v1beta1.*", "/cosmos.*"} {

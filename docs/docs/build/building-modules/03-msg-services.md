@@ -27,11 +27,24 @@ Protobuf generates a `MsgServer` interface based on a definition of `Msg` servic
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/types/tx.pb.go#L550-L568
 ```
 
-When possible, the existing module's [`Keeper`](./06-keeper.md) should implement `MsgServer`, otherwise a `msgServer` struct that embeds the `Keeper` can be created, typically in `./keeper/msg_server.go`:
+Implement `MsgServer` on an unexported `msgServer` struct that embeds the module's [`Keeper`](./06-keeper.md), typically in `./keeper/msg_server.go`. Keep the struct and its constructor unexported, and export only a function that registers the service, which `RegisterServices` calls:
 
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/keeper/msg_server.go#L17-L19
+```go
+type msgServer struct {
+	Keeper
+}
+
+func newMsgServerImpl(k Keeper) types.MsgServer {
+	return &msgServer{Keeper: k}
+}
+
+// RegisterMsgServer registers the module's Msg service on r.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) {
+	types.RegisterMsgServer(r, newMsgServerImpl(k))
+}
 ```
+
+An `sdk.Msg` runs only through the app's `MsgServiceRouter`, which checks the circuit breaker before the handler. Code outside the module runs a msg with `msgservice.Dispatch`, and module logic that another module needs belongs on a keeper method.
 
 `msgServer` methods can retrieve the `sdk.Context` from the `context.Context` parameter using the `sdk.UnwrapSDKContext` method:
 

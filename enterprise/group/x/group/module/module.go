@@ -143,7 +143,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	group.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+	keeper.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 	group.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	m := keeper.NewMigrator(am.keeper)

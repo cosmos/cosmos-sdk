@@ -125,7 +125,7 @@ func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAc
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.accountKeeper))
+	keeper.RegisterMsgServer(cfg.MsgServer(), am.accountKeeper)
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(am.accountKeeper))
 
 	m := keeper.NewMigrator(am.accountKeeper, cfg.QueryServer())

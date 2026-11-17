@@ -49,7 +49,7 @@ func (AppModuleBasic) Name() string {
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	nft.RegisterMsgServer(registrar, am.keeper)
+	keeper.RegisterMsgServer(registrar, am.keeper)
 	nft.RegisterQueryServer(registrar, am.keeper)
 	return nil
 }

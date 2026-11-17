@@ -129,7 +129,7 @@ func AddModuleInitFlags(startCmd *cobra.Command) {
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+	keeper.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 
 	_ = keeper.NewMigrator(am.keeper)
 }

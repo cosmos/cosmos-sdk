@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-metrics"
+	"google.golang.org/grpc"
 
 	"cosmossdk.io/errors"
 
@@ -22,8 +23,19 @@ var _ types.MsgServer = msgServer{}
 
 // NewMsgServerImpl returns an implementation of the distribution MsgServer interface
 // for the provided Keeper.
+//
+// Deprecated: register the service with RegisterMsgServer and run msgs from
+// outside the module with msgservice.Dispatch. NewMsgServerImpl will be
+// removed in a future release.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
+}
+
+// RegisterMsgServer registers the x/distribution Msg service on r. The msg server
+// is unexported: code outside the module runs a msg through the
+// MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) {
+	types.RegisterMsgServer(r, NewMsgServerImpl(k))
 }
 
 func (k msgServer) SetWithdrawAddress(ctx context.Context, msg *types.MsgSetWithdrawAddress) (*types.MsgSetWithdrawAddressResponse, error) {

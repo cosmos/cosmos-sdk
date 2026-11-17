@@ -156,7 +156,7 @@ func initFixture(tb testing.TB) *fixture {
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
 	// Register MsgServer and QueryServer
-	types.RegisterMsgServer(integrationApp.MsgServiceRouter(), stakingkeeper.NewMsgServerImpl(stakingKeeper))
+	stakingkeeper.RegisterMsgServer(integrationApp.MsgServiceRouter(), stakingKeeper)
 	types.RegisterQueryServer(integrationApp.QueryHelper(), stakingkeeper.NewQuerier(stakingKeeper))
 
 	// set default staking params

@@ -128,7 +128,8 @@ func TestSafetyWiring(t *testing.T) {
 }
 
 // TestSafetyGatesHybridHandlers checks that SimApp's hybrid handlers run the
-// x/safety check for an exact, a prefix and a "*" trip.
+// x/safety check for an exact, a prefix and a "*" trip. HybridHandlerByMsgName
+// is deprecated, and callers keep it until a future release removes it.
 func TestSafetyGatesHybridHandlers(t *testing.T) {
 	app := Setup(t, false)
 	ctx := app.NewContext(false)
@@ -136,7 +137,7 @@ func TestSafetyGatesHybridHandlers(t *testing.T) {
 	to := sdk.AccAddress("to__________________")
 	send := banktypes.NewMsgSend(from, to, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)))
 
-	handler := app.MsgServiceRouter().HybridHandlerByMsgName(sdk.MsgTypeURL(send)[1:])
+	handler := app.MsgServiceRouter().HybridHandlerByMsgName(sdk.MsgTypeURL(send)[1:]) //nolint:staticcheck // covers the deprecated path while it ships
 	require.NotNil(t, handler)
 
 	for _, p := range []string{sdk.MsgTypeURL(send), "/cosmos.bank.*", safetytypes.Wildcard} {

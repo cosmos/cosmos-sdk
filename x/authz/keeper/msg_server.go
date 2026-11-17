@@ -5,6 +5,8 @@ import (
 	"errors"
 	"strings"
 
+	"google.golang.org/grpc"
+
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,10 +14,27 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
-var _ authz.MsgServer = Keeper{}
+type msgServer struct {
+	Keeper
+}
+
+var _ authz.MsgServer = msgServer{}
+
+// newMsgServerImpl returns an implementation of the x/authz MsgServer
+// interface for the provided Keeper.
+func newMsgServerImpl(k Keeper) authz.MsgServer {
+	return msgServer{Keeper: k}
+}
+
+// RegisterMsgServer registers the x/authz Msg service on r. The msg server
+// is unexported: code outside the module runs a msg through the
+// MsgServiceRouter with msgservice.Dispatch.
+func RegisterMsgServer(r grpc.ServiceRegistrar, k Keeper) {
+	authz.RegisterMsgServer(r, newMsgServerImpl(k))
+}
 
 // Grant implements the MsgServer.Grant method to create a new grant.
-func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
+func (k msgServer) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
 	if strings.EqualFold(msg.Grantee, msg.Granter) {
 		return nil, authz.ErrGranteeIsGranter
 	}
@@ -65,7 +84,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 }
 
 // Revoke implements the MsgServer.Revoke method.
-func (k Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgRevokeResponse, error) {
+func (k msgServer) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgRevokeResponse, error) {
 	if strings.EqualFold(msg.Grantee, msg.Granter) {
 		return nil, authz.ErrGranteeIsGranter
 	}
@@ -93,7 +112,7 @@ func (k Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgR
 }
 
 // Exec implements the MsgServer.Exec method.
-func (k Keeper) Exec(goCtx context.Context, msg *authz.MsgExec) (*authz.MsgExecResponse, error) {
+func (k msgServer) Exec(goCtx context.Context, msg *authz.MsgExec) (*authz.MsgExecResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg.Grantee == "" {
 		return nil, errors.New("empty address string is not allowed")
@@ -138,4 +157,28 @@ func validateMsgs(msgs []sdk.Msg) error {
 	}
 
 	return nil
+}
+
+// Grant runs MsgGrant on the module's msg server.
+//
+// Deprecated: run MsgGrant with msgservice.Dispatch. Keeper.Grant will be
+// removed in a future release.
+func (k Keeper) Grant(ctx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
+	return newMsgServerImpl(k).Grant(ctx, msg)
+}
+
+// Revoke runs MsgRevoke on the module's msg server.
+//
+// Deprecated: run MsgRevoke with msgservice.Dispatch. Keeper.Revoke will be
+// removed in a future release.
+func (k Keeper) Revoke(ctx context.Context, msg *authz.MsgRevoke) (*authz.MsgRevokeResponse, error) {
+	return newMsgServerImpl(k).Revoke(ctx, msg)
+}
+
+// Exec runs MsgExec on the module's msg server.
+//
+// Deprecated: run MsgExec with msgservice.Dispatch. Keeper.Exec will be
+// removed in a future release.
+func (k Keeper) Exec(ctx context.Context, msg *authz.MsgExec) (*authz.MsgExecResponse, error) {
+	return newMsgServerImpl(k).Exec(ctx, msg)
 }

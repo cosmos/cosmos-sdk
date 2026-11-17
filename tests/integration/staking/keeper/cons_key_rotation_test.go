@@ -13,6 +13,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -24,7 +25,6 @@ import (
 func TestRotateConsPubKey_MsgServerQueuesAndEndBlockerApplies(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
-	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
 	bondDenom, err := f.stakingKeeper.BondDenom(f.sdkCtx)
 	assert.NilError(t, err)
 
@@ -45,7 +45,7 @@ func TestRotateConsPubKey_MsgServerQueuesAndEndBlockerApplies(t *testing.T) {
 
 	writeCtx := f.sdkCtx.WithBlockHeight(f.app.LastBlockHeight() + 1)
 	writeHeight := writeCtx.BlockHeight()
-	_, err = msgServer.RotateConsPubKey(writeCtx, &types.MsgRotateConsPubKey{
+	_, err = msgservice.Dispatch[*types.MsgRotateConsPubKeyResponse](writeCtx, f.app.MsgServiceRouter(), &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, newPk),
 	})
@@ -139,14 +139,13 @@ func TestRotateConsPubKey_MsgServerQueuesAndEndBlockerApplies(t *testing.T) {
 func TestRotateConsPubKey_PruneClearsRotationStateAfterUnbonding(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
-	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
 
 	oldPk := ed25519.GenPrivKey().PubKey()
 	newPk := ed25519.GenPrivKey().PubKey()
 	valAddr, _ := bondConsKeyRotationValidator(t, f, oldPk)
 	oldConsAddr := sdk.ConsAddress(oldPk.Address())
 
-	_, err := msgServer.RotateConsPubKey(f.sdkCtx, &types.MsgRotateConsPubKey{
+	_, err := msgservice.Dispatch[*types.MsgRotateConsPubKeyResponse](f.sdkCtx, f.app.MsgServiceRouter(), &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, newPk),
 	})
@@ -185,7 +184,6 @@ func TestRotateConsPubKey_PruneClearsRotationStateAfterUnbonding(t *testing.T) {
 func TestRotateConsPubKey_SecondRotationAfterPruningSucceeds(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
-	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
 
 	pkA := ed25519.GenPrivKey().PubKey()
 	pkB := ed25519.GenPrivKey().PubKey()
@@ -195,7 +193,7 @@ func TestRotateConsPubKey_SecondRotationAfterPruningSucceeds(t *testing.T) {
 	// first rotation A -> B
 	writeCtx := f.sdkCtx.WithBlockHeight(f.app.LastBlockHeight() + 1)
 	writeHeight := writeCtx.BlockHeight()
-	_, err := msgServer.RotateConsPubKey(writeCtx, &types.MsgRotateConsPubKey{
+	_, err := msgservice.Dispatch[*types.MsgRotateConsPubKeyResponse](writeCtx, f.app.MsgServiceRouter(), &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, pkB),
 	})
@@ -203,7 +201,7 @@ func TestRotateConsPubKey_SecondRotationAfterPruningSucceeds(t *testing.T) {
 	advanceBlock(t, f, f.sdkCtx.BlockHeader().Time)
 
 	// a second rotation inside the unbonding window is rejected
-	_, err = msgServer.RotateConsPubKey(f.sdkCtx, &types.MsgRotateConsPubKey{
+	_, err = msgservice.Dispatch[*types.MsgRotateConsPubKeyResponse](f.sdkCtx, f.app.MsgServiceRouter(), &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, pkC),
 	})
@@ -225,7 +223,7 @@ func TestRotateConsPubKey_SecondRotationAfterPruningSucceeds(t *testing.T) {
 	// history was cleared by pruning
 	writeCtx = f.sdkCtx.WithBlockHeight(f.app.LastBlockHeight() + 1)
 	writeHeight = writeCtx.BlockHeight()
-	_, err = msgServer.RotateConsPubKey(writeCtx, &types.MsgRotateConsPubKey{
+	_, err = msgservice.Dispatch[*types.MsgRotateConsPubKeyResponse](writeCtx, f.app.MsgServiceRouter(), &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, pkA),
 	})
@@ -246,7 +244,6 @@ func TestRotateConsPubKey_SecondRotationAfterPruningSucceeds(t *testing.T) {
 func TestRotateConsPubKey_PowerChangeUpdatesAcceptedByComet(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
-	msgServer := keeper.NewMsgServerImpl(f.stakingKeeper)
 
 	oldPk := ed25519.GenPrivKey().PubKey()
 	newPk := ed25519.GenPrivKey().PubKey()
@@ -259,7 +256,7 @@ func TestRotateConsPubKey_PowerChangeUpdatesAcceptedByComet(t *testing.T) {
 	assert.NilError(t, err)
 	valSet := cmttypes.NewValidatorSet(initialCmtVals)
 
-	_, err = msgServer.RotateConsPubKey(f.sdkCtx, &types.MsgRotateConsPubKey{
+	_, err = msgservice.Dispatch[*types.MsgRotateConsPubKeyResponse](f.sdkCtx, f.app.MsgServiceRouter(), &types.MsgRotateConsPubKey{
 		ValidatorAddress: valAddr.String(),
 		NewPubkey:        newPubKeyAny(t, newPk),
 	})

@@ -5,20 +5,25 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Helper is a structure which wraps the staking message server
-// and provides methods useful in tests
+// Helper is a structure which runs staking msgs through an app's
+// MsgServiceRouter and provides methods useful in tests
 type Helper struct {
-	t       *testing.T
+	t      *testing.T
+	router msgservice.MsgRouter
+	// msgSrvr runs msgs when the Helper came from the deprecated NewHelper
+	// and has no router.
 	msgSrvr stakingtypes.MsgServer
 	k       *keeper.Keeper
 
@@ -28,11 +33,32 @@ type Helper struct {
 	Denom string
 }
 
-// NewHelper creates a new instance of Helper.
+// NewHelperWithRouter creates a new instance of Helper. router must route the
+// staking Msg service, as an app's MsgServiceRouter does.
+func NewHelperWithRouter(t *testing.T, ctx sdk.Context, k *keeper.Keeper, router msgservice.MsgRouter) *Helper {
+	t.Helper()
+
+	return &Helper{t: t, router: router, k: k, Ctx: ctx, Commission: ZeroCommission(), Denom: sdk.DefaultBondDenom}
+}
+
+// NewHelper creates a new instance of Helper that calls the staking msg server
+// directly, skipping the MsgServiceRouter.
+//
+// Deprecated: use NewHelperWithRouter. NewHelper will be removed in a future
+// release.
 func NewHelper(t *testing.T, ctx sdk.Context, k *keeper.Keeper) *Helper {
 	t.Helper()
 
-	return &Helper{t, keeper.NewMsgServerImpl(k), k, ctx, ZeroCommission(), sdk.DefaultBondDenom}
+	return &Helper{t: t, msgSrvr: keeper.NewMsgServerImpl(k), k: k, Ctx: ctx, Commission: ZeroCommission(), Denom: sdk.DefaultBondDenom}
+}
+
+// run runs msg through the router, or through the msg server with call when
+// the Helper has no router.
+func run[R proto.Message](sh *Helper, ctx context.Context, msg sdk.Msg, call func(stakingtypes.MsgServer) (R, error)) (R, error) {
+	if sh.router == nil {
+		return call(sh.msgSrvr)
+	}
+	return msgservice.Dispatch[R](sdk.UnwrapSDKContext(ctx), sh.router, msg)
 }
 
 // CreateValidator calls staking module `MsgServer/CreateValidator` to create a new validator
@@ -60,13 +86,17 @@ func (sh *Helper) CreateValidatorMsg(addr sdk.ValAddress, pk cryptotypes.PubKey,
 
 // CreateValidatorWithMsg calls staking module `MsgServer/CreateValidator`
 func (sh *Helper) CreateValidatorWithMsg(ctx context.Context, msg *stakingtypes.MsgCreateValidator) (*stakingtypes.MsgCreateValidatorResponse, error) {
-	return sh.msgSrvr.CreateValidator(ctx, msg)
+	return run(sh, ctx, msg, func(m stakingtypes.MsgServer) (*stakingtypes.MsgCreateValidatorResponse, error) {
+		return m.CreateValidator(ctx, msg)
+	})
 }
 
 func (sh *Helper) createValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, coin sdk.Coin, ok bool) {
 	msg, err := stakingtypes.NewMsgCreateValidator(addr.String(), pk, coin, stakingtypes.Description{Moniker: "TestValidator"}, sh.Commission, math.OneInt())
 	require.NoError(sh.t, err)
-	res, err := sh.msgSrvr.CreateValidator(sh.Ctx, msg)
+	res, err := run(sh, sh.Ctx, msg, func(m stakingtypes.MsgServer) (*stakingtypes.MsgCreateValidatorResponse, error) {
+		return m.CreateValidator(sh.Ctx, msg)
+	})
 	if ok {
 		require.NoError(sh.t, err)
 		require.NotNil(sh.t, res)
@@ -80,7 +110,9 @@ func (sh *Helper) createValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, co
 func (sh *Helper) Delegate(delegator sdk.AccAddress, val sdk.ValAddress, amount math.Int) {
 	coin := sdk.NewCoin(sh.Denom, amount)
 	msg := stakingtypes.NewMsgDelegate(delegator.String(), val.String(), coin)
-	res, err := sh.msgSrvr.Delegate(sh.Ctx, msg)
+	res, err := run(sh, sh.Ctx, msg, func(m stakingtypes.MsgServer) (*stakingtypes.MsgDelegateResponse, error) {
+		return m.Delegate(sh.Ctx, msg)
+	})
 	require.NoError(sh.t, err)
 	require.NotNil(sh.t, res)
 }
@@ -89,7 +121,9 @@ func (sh *Helper) Delegate(delegator sdk.AccAddress, val sdk.ValAddress, amount 
 func (sh *Helper) DelegateWithPower(delegator sdk.AccAddress, val sdk.ValAddress, power int64) {
 	coin := sdk.NewCoin(sh.Denom, sh.k.TokensFromConsensusPower(sh.Ctx, power))
 	msg := stakingtypes.NewMsgDelegate(delegator.String(), val.String(), coin)
-	res, err := sh.msgSrvr.Delegate(sh.Ctx, msg)
+	res, err := run(sh, sh.Ctx, msg, func(m stakingtypes.MsgServer) (*stakingtypes.MsgDelegateResponse, error) {
+		return m.Delegate(sh.Ctx, msg)
+	})
 	require.NoError(sh.t, err)
 	require.NotNil(sh.t, res)
 }
@@ -98,7 +132,9 @@ func (sh *Helper) DelegateWithPower(delegator sdk.AccAddress, val sdk.ValAddress
 func (sh *Helper) Undelegate(delegator sdk.AccAddress, val sdk.ValAddress, amount math.Int, ok bool) {
 	unbondAmt := sdk.NewCoin(sh.Denom, amount)
 	msg := stakingtypes.NewMsgUndelegate(delegator.String(), val.String(), unbondAmt)
-	res, err := sh.msgSrvr.Undelegate(sh.Ctx, msg)
+	res, err := run(sh, sh.Ctx, msg, func(m stakingtypes.MsgServer) (*stakingtypes.MsgUndelegateResponse, error) {
+		return m.Undelegate(sh.Ctx, msg)
+	})
 	if ok {
 		require.NoError(sh.t, err)
 		require.NotNil(sh.t, res)

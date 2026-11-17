@@ -456,14 +456,16 @@ func (rs *Store) LastCommitID() types.CommitID {
 	return info.CommitID()
 }
 
-// Close closes every sub-store that holds background resources.
-// It must be called before the underlying database is closed.
+// Close stops the background pruning of every IAVL store and waits for it to
+// finish. It does not close the database, which the caller still owns and must
+// close after Close returns.
 func (rs *Store) Close() error {
 	var errs []error
 	for key := range rs.stores {
-		// unwrap the inter-block cache, which does not forward Close
-		if c, ok := rs.getCommitStore(key).(io.Closer); ok {
-			errs = append(errs, c.Close())
+		// Only IAVL stores: a StoreTypeDB store's Close would close rs.db through its PrefixDB.
+		// getCommitStore unwraps the inter-block cache, which does not forward Close.
+		if s, ok := rs.getCommitStore(key).(*iavl.Store); ok {
+			errs = append(errs, s.Close())
 		}
 	}
 	return errors.Join(errs...)

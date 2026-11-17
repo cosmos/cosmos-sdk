@@ -1249,3 +1249,19 @@ func TestStoreCloseStopsAsyncPruning(t *testing.T) {
 		})
 	}
 }
+
+// Close must leave the caller's DB open, even with a StoreTypeDB store mounted,
+// whose PrefixDB would close the parent DB.
+func TestStoreCloseKeepsDBOpen(t *testing.T) {
+	db, err := dbm.NewGoLevelDB("test", t.TempDir(), nil)
+	require.NoError(t, err)
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	ms.MountStoreWithDB(testStoreKey4, types.StoreTypeDB, nil)
+	require.NoError(t, ms.LoadLatestVersion())
+	ms.Commit()
+
+	require.NoError(t, ms.Close())
+	_, err = db.Get([]byte("k"))
+	require.NoError(t, err, "Close closed the caller's DB")
+	require.NoError(t, db.Close())
+}

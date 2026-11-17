@@ -338,7 +338,7 @@ The `Tree` interface in `store/iavl` now includes `Close() error` ([#26940](http
 
 `Close` stops the tree's background work and waits for it to finish. For an IAVL tree with async pruning, that is the pruning goroutine. `Close` must not close the database, because other stores may share it. A tree with no background work returns `nil`. Do not use a tree after closing it.
 
-Whoever owns the database closes the stores first. `rootmulti.Store.Close` closes every mounted store that implements `io.Closer`, including IAVL stores wrapped by the inter-block cache:
+Whoever owns the database closes the stores first. `rootmulti.Store.Close` closes every mounted IAVL store, including those wrapped by the inter-block cache. It does not close the database:
 
 ```go
 rs := rootmulti.NewStore(db, logger)

@@ -421,3 +421,11 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestSchema() {
+	var names []string
+	for _, c := range suite.feegrantKeeper.Schema.ListCollections() {
+		names = append(names, c.GetName())
+	}
+	suite.Require().ElementsMatch([]string{"allowances", "allowances_queue"}, names)
+}

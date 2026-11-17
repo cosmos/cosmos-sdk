@@ -25,6 +25,7 @@ type Keeper struct {
 	event        event.Service
 
 	authority   string
+	Schema      collections.Schema
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
 }
 
@@ -32,12 +33,19 @@ var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
 
 func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, authority string, em event.Service) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
-	return Keeper{
+	k := Keeper{
 		storeService: storeService,
 		authority:    authority,
 		event:        em,
 		ParamsStore:  collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
 	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // Querier

@@ -1,11 +1,13 @@
 {
   "auth": {
-    "consensus_version": 7,
+    "consensus_version": 8,
     "collections": [
       "account_by_number prefix=6163636F756E744E756D626572 key=uint64 value=sdk.AccAddress key_codec=codec.uint64Key[uint64] value_codec=codec.keyToValueCodec[github.com/cosmos/cosmos-sdk/types.AccAddress]",
       "account_number prefix=02 key=no_key value=uint64 key_codec=collections.noKey value_codec=codec.keyToValueCodec[uint64]",
       "accounts prefix=01 key=sdk.AccAddress value=<nil> key_codec=types.genericAddressKey[github.com/cosmos/cosmos-sdk/types.AccAddress] value_codec=codec.collInterfaceValue[github.com/cosmos/cosmos-sdk/types.AccountI]",
       "params prefix=00 key=no_key value=github.com/cosmos/gogoproto/cosmos.auth.v1beta1.Params key_codec=collections.noKey value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/auth/types.Params,*github.com/cosmos/cosmos-sdk/x/auth/types.Params]",
+      "pub_key_history prefix=5B key=Pair[sdk.AccAddress, uint64] value=github.com/cosmos/gogoproto/cosmos.auth.v1beta1.PubKeyHistoryEntry key_codec=collections.pairKeyCodec[github.com/cosmos/cosmos-sdk/types.AccAddress,uint64] value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/auth/types.PubKeyHistoryEntry,*github.com/cosmos/cosmos-sdk/x/auth/types.PubKeyHistoryEntry]",
+      "rekey_index prefix=5C key=Pair[sdk.AccAddress, sdk.AccAddress] value=no_value key_codec=collections.pairKeyCodec[github.com/cosmos/cosmos-sdk/types.AccAddress,github.com/cosmos/cosmos-sdk/types.AccAddress] value_codec=collections.NoValue",
       "unordered_nonces prefix=5A key=Pair[int64, bytes] value=no_value key_codec=collections.pairKeyCodec[int64,[]uint8] value_codec=collections.NoValue"
     ]
   },

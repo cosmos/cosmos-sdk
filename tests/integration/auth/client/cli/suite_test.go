@@ -65,7 +65,7 @@ func (s *CLITestSuite) SetupSuite() {
 		WithTxConfig(s.encCfg.TxConfig).
 		WithCodec(s.encCfg.Codec).
 		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
-		WithAccountRetriever(client.MockAccountRetriever{}).
+		WithAccountRetriever(storedAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
 
@@ -144,14 +144,17 @@ func (s *CLITestSuite) TestCLIValidateSignatures() {
 	s.Require().EqualError(err, "signatures validation failed")
 }
 
-// storedAccountRetriever returns acc from GetAccount, standing in for an
-// account whose stored pubkey does not hash to its address.
+// storedAccountRetriever returns its configured account or a fresh account
+// without a stored pubkey.
 type storedAccountRetriever struct {
 	client.MockAccountRetriever
 	acc client.Account
 }
 
-func (r storedAccountRetriever) GetAccount(_ client.Context, _ sdk.AccAddress) (client.Account, error) {
+func (r storedAccountRetriever) GetAccount(_ client.Context, addr sdk.AccAddress) (client.Account, error) {
+	if r.acc == nil {
+		return authtypes.NewBaseAccountWithAddress(addr), nil
+	}
 	return r.acc, nil
 }
 

@@ -27,7 +27,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking
 
-* [#26940](https://github.com/cosmos/cosmos-sdk/pull/26940) Add `Close() error` to the exported `iavl.Tree` interface. External implementations of `iavl.Tree` must add it.
+* (store) [#26940](https://github.com/cosmos/cosmos-sdk/pull/26940) Add `Close() error` to the exported `iavl.Tree` interface. External implementations of `iavl.Tree` must add it.
 
 ### Features
 
@@ -37,7 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* [#26940](https://github.com/cosmos/cosmos-sdk/pull/26940) Add `Close` to the IAVL and root multi stores so IAVL async pruning stops before the database is closed.
+* (store) [#26940](https://github.com/cosmos/cosmos-sdk/pull/26940) Add `Close` to the IAVL and root multi stores so IAVL async pruning stops before the database is closed.
 
 ## v2.0.0 (April 10, 2026)
 

@@ -29,6 +29,8 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [Fee Allowance Queue Migration](#fee-allowance-queue-migration)
 * [enterprise/poa (unreleased)](#enterprisepoa-unreleased)
     * [Fee Allocation Migration](#fee-allocation-migration)
+* [store/v2 (unreleased)](#storev2-unreleased)
+    * [IAVL Tree Close](#iavl-tree-close)
 
 ## Breaking Changes
 
@@ -325,3 +327,26 @@ return app.ModuleManager.RunMigrations(ctx, app.configurator, fromVM)
 ```
 
 Genesis import applies the same trim. `InitGenesis` now compares the imported allocated fees with the poa module balance, so bank's genesis must run before poa's (`SetOrderInitGenesis`). Rounding in v1.x leaves at most `1e-18` per validator per denom above the balance. An excess within that limit (the number of exported validators × `1e-18`, per denom) is trimmed; anything larger, including allocations imported before bank has funded the module, fails `InitGenesis` with `ErrInvalidAllocatedFees`.
+
+## store/v2 (unreleased)
+
+The store module versions separately from the Cosmos SDK, on `store/v2.x` tags. This section covers changes since `store/v2.0.0`.
+
+### IAVL Tree Close
+
+The `Tree` interface in `store/iavl` now includes `Close() error` ([#26940](https://github.com/cosmos/cosmos-sdk/pull/26940)). Types outside the SDK that implement `iavl.Tree` must add it. `*iavl.MutableTree` from `github.com/cosmos/iavl` already has it.
+
+`Close` stops the tree's background work and waits for it to finish. For an IAVL tree with async pruning, that is the pruning goroutine. `Close` must not close the database, because other stores may share it. A tree with no background work returns `nil`. Do not use a tree after closing it.
+
+Whoever owns the database closes the stores first. `rootmulti.Store.Close` closes every mounted store that implements `io.Closer`, including IAVL stores wrapped by the inter-block cache:
+
+```go
+rs := rootmulti.NewStore(db, logger)
+// mount, load, and commit stores
+if err := rs.Close(); err != nil {
+	return err
+}
+return db.Close()
+```
+
+`BaseApp.Close` does not call `rootmulti.Store.Close` yet. That call lands when the root module moves to a `store/v2` release that contains this change. Until then, code that creates a `rootmulti.Store` outside `BaseApp` must call `Close` before closing the database.

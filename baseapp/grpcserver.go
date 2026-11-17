@@ -97,6 +97,15 @@ func (app *BaseApp) grpcQueryInterceptor(skipCheckHeader bool) grpc.UnaryServerI
 	}
 }
 
+// grpcQueryPanicHandler converts a panic recovered from a gRPC query into an error.
+// When trace is enabled, the error carries the panic's stack trace, as ABCI queries do.
+func (app *BaseApp) grpcQueryPanicHandler(p any) error {
+	if !app.trace {
+		return status.Errorf(codes.Internal, "%v", p)
+	}
+	return status.Errorf(codes.Internal, "%+v", errorsmod.Wrapf(sdkerrors.ErrPanic, "%v", p))
+}
+
 // RegisterGRPCServer registers gRPC services directly with the gRPC server.
 func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 	app.RegisterGRPCServerWithSkipCheckHeader(server, false)
@@ -126,7 +135,7 @@ func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server
 				MethodName: method.MethodName,
 				Handler: func(srv any, ctx context.Context, dec func(any) error, _ grpc.UnaryServerInterceptor) (any, error) {
 					return methodHandler(srv, ctx, dec, grpcmiddleware.ChainUnaryServer(
-						grpcrecovery.UnaryServerInterceptor(),
+						grpcrecovery.UnaryServerInterceptor(grpcrecovery.WithRecoveryHandler(app.grpcQueryPanicHandler)),
 						interceptor,
 					))
 				},

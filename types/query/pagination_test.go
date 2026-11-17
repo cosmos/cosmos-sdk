@@ -345,6 +345,57 @@ func (s *paginationTestSuite) TestReversePagination() {
 	s.Require().Nil(res.Pagination.NextKey)
 }
 
+func (s *paginationTestSuite) TestReversePaginationFromLastKey() {
+	balances := sdk.NewCoins(
+		sdk.NewInt64Coin("foo0denom", 100),
+		sdk.NewInt64Coin("foo1denom", 100),
+		sdk.NewInt64Coin("foo2denom", 100),
+	)
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	acc1 := s.accountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	s.accountKeeper.SetAccount(s.ctx, acc1)
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances))
+
+	authStore := s.ctx.KVStore(s.app.UnsafeFindStoreKey(types.StoreKey))
+	balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
+	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
+
+	s.T().Log("verify Paginate with Reverse true and the last key as start")
+	var denoms []string
+	pageReq := &query.PageRequest{Key: []byte("foo2denom"), Limit: 2, Reverse: true}
+	res, err := query.Paginate(accountStore, pageReq, func(key, _ []byte) error {
+		denoms = append(denoms, string(key))
+		return nil
+	})
+	s.Require().NoError(err)
+	s.Require().Equal([]string{"foo2denom", "foo1denom"}, denoms)
+	s.Require().Equal([]byte("foo0denom"), res.NextKey)
+
+	s.T().Log("verify Paginate with Reverse true and a missing start key after the second-to-last key")
+	denoms = nil
+	pageReq = &query.PageRequest{Key: []byte("foo1z"), Limit: 5, Reverse: true}
+	res, err = query.Paginate(accountStore, pageReq, func(key, _ []byte) error {
+		denoms = append(denoms, string(key))
+		return nil
+	})
+	s.Require().NoError(err)
+	s.Require().Equal([]string{"foo2denom", "foo1denom", "foo0denom"}, denoms)
+	s.Require().Nil(res.NextKey)
+
+	s.T().Log("verify FilteredPaginate with Reverse true and the last key as start")
+	denoms = nil
+	pageReq = &query.PageRequest{Key: []byte("foo2denom"), Limit: 5, Reverse: true}
+	res, err = query.FilteredPaginate(accountStore, pageReq, func(key, _ []byte, accumulate bool) (bool, error) {
+		if accumulate {
+			denoms = append(denoms, string(key))
+		}
+		return true, nil
+	})
+	s.Require().NoError(err)
+	s.Require().Equal([]string{"foo2denom", "foo1denom", "foo0denom"}, denoms)
+	s.Require().Nil(res.NextKey)
+}
+
 func (s *paginationTestSuite) TestPaginate() {
 	var balances sdk.Coins
 

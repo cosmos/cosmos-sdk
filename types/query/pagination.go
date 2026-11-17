@@ -132,7 +132,10 @@ func getIterator(prefixStore types.KVStore, start []byte, reverse bool) db.Itera
 			defer itr.Close()
 			if itr.Valid() {
 				itr.Next()
-				end = itr.Key()
+				// If the first key at or after start is the last key, leave end nil so the reverse iterator includes it.
+				if itr.Valid() {
+					end = itr.Key()
+				}
 			}
 		}
 		return prefixStore.ReverseIterator(nil, end)

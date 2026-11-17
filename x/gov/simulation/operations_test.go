@@ -496,33 +496,23 @@ func TestSimulateMsgSubmitProposalScheduledVotesUseCurrentKeys(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	op := simulation.SimulateMsgSubmitProposal(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
-	operationMsg, fops, err := op(r, app.BaseApp, ctx, accounts, "")
+	submittedID, err := suite.GovKeeper.ProposalID.Peek(ctx)
+	require.NoError(t, err)
+
+	op := simulation.SimulateMsgSubmitProposalWithVotes(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
+	operationMsg, votes, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 	require.True(t, operationMsg.OK)
 
-	var votes []simtypes.FutureOperation
-	for _, fop := range fops {
-		if fop.Op != nil {
-			votes = append(votes, fop)
-		}
-	}
 	require.NotEmpty(t, votes)
 
-	// The scheduled votes target the ID that ProposalID.Peek returns after
-	// the submission. Put a proposal with that ID in its voting period so the
-	// votes can be delivered.
-	voteProposalID, err := suite.GovKeeper.ProposalID.Peek(ctx)
+	// Activate voting for the submitted proposal if the initial deposit did
+	// not already activate it.
+	proposal, err := suite.GovKeeper.Proposals.Get(ctx, submittedID)
 	require.NoError(t, err)
-	govAcc := suite.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String()
-	contentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), govAcc)
-	require.NoError(t, err)
-	submitTime := ctx.BlockHeader().Time
-	params, err := suite.GovKeeper.Params.Get(ctx)
-	require.NoError(t, err)
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, voteProposalID, submitTime, submitTime.Add(*params.MaxDepositPeriod), "", "text proposal", "description", accounts[0].Address, false)
-	require.NoError(t, err)
-	require.NoError(t, suite.GovKeeper.ActivateVotingPeriod(ctx, proposal))
+	if proposal.Status == v1.StatusDepositPeriod {
+		require.NoError(t, suite.GovKeeper.ActivateVotingPeriod(ctx, proposal))
+	}
 
 	// Rotate every account's key on chain and in the simulation account list
 	// after the votes were scheduled.
@@ -536,6 +526,7 @@ func TestSimulateMsgSubmitProposalScheduledVotesUseCurrentKeys(t *testing.T) {
 	}
 
 	for _, vote := range votes {
+		require.NotNil(t, vote.Op)
 		voteMsg, _, err := vote.Op(r, app.BaseApp, ctx, accounts, "")
 		require.NoError(t, err)
 		require.True(t, voteMsg.OK)

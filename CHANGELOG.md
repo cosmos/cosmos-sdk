@@ -64,6 +64,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) Add `MsgChangePubKey`, which replaces an account's pubkey while keeping its address, with a proof of possession from the new key. It also adds the `RekeyedAccounts` and `PubKeyHistory` queries and the `tx auth change-pubkey` and `tx auth sign-rekey-proof` CLI commands. The feature is off until `pub_key_change_enabled` is set by governance. `x/auth` simulation gains a `MsgChangePubKey` operation.
 * (x/auth) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) Add `types.PubKeyChangeHooks` and `AccountKeeper.SetPubKeyChangeHooks`, allowing modules to reject account pubkey changes that would violate their invariants.
 * (client) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) Add the `--signer-address` tx flag and `Factory.WithSignerAddress`, so the `--from` key can sign for an account whose address is not the key's own address (a rekeyed account). `tx sign --multisig`, `tx sign-batch --multisig`, `tx multisign` and `tx multisign-batch` honour it, so an account rekeyed to a multisig can spend, and `tx validate-signatures` accepts a signature made by the signer's stored pubkey. `client/v2` autocli tx commands honour it too.
+* (testutil/statecheck) [#26991](https://github.com/cosmos/cosmos-sdk/pull/26991) Add `statecheck.Check`, which decodes every entry of a module store with the codecs of its collections schema and reports each entry that does not decode, and the `simd debug decode-state` command, which runs the check against the stores of a stopped node.
 * (x/distribution) [#26749](https://github.com/cosmos/cosmos-sdk/pull/26749) Add a `claimable` field to `QueryDelegationTotalRewardsResponse`, reporting the withdrawable amount as `sdk.Coins` by truncating each delegation reward the way `Msg/WithdrawDelegatorReward` does. `total` keeps its documented meaning as the raw `DecCoins` sum ([#24406](https://github.com/cosmos/cosmos-sdk/issues/24406)).
 
 ### Improvements
@@ -79,6 +80,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (x/feegrant) [#26990](https://github.com/cosmos/cosmos-sdk/pull/26990) Build the collections schema in `NewKeeper`, so `Keeper.Schema` lists the `allowances` and `allowances_queue` collections. It was left empty.
+* (errors) [#26948](https://github.com/cosmos/cosmos-sdk/pull/26948) Preserve gRPC status codes through standard Go error wrappers and joined errors inside an SDK-wrapped error.
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.
 * (client/tx) [#26759](https://github.com/cosmos/cosmos-sdk/issues/26759) Populate the multisig bit array in simulation txs so `--gas auto` works for multisig senders.
 * (blockstm) [#26772](https://github.com/cosmos/cosmos-sdk/pull/26772) Panic with a descriptive error when accessing an unregistered store instead of silently using store index zero.
@@ -91,6 +94,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/simulation) [#26868](https://github.com/cosmos/cosmos-sdk/pull/26868) Time-scheduled future operations were silently dropped by `queueOperations` (the appended queue was never returned to the caller), and executed time operations were never removed from the queue. Both now update the caller's queue.
 * (x/auth/tx) [#26815](https://github.com/cosmos/cosmos-sdk/pull/26815) `GetSigningTxData` now converts the nested `ModeInfos` of a multisig `ModeInfo`; previously the converted entries were discarded and the slice was left as nil placeholders.
 * (keys) [#26833](https://github.com/cosmos/cosmos-sdk/pull/26833) Strip leading and trailing whitespace when reading a mnemonic from a source file.
+* (x/auth/tx) [#26955](https://github.com/cosmos/cosmos-sdk/pull/26955) `GetBlockWithTxs` now uses the default limit when `pagination.limit` is 0; a request that set only `offset` or `count_total` returned no txs. Reverse pagination now walks back from the last tx and includes the first one, with `offset` counted from the end like other paginated queries.
 
 ### Deprecated
 

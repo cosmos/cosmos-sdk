@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	mldsa "github.com/cometbft/cometbft/crypto/mldsa65"
+	"google.golang.org/protobuf/encoding/protowire"
 
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
@@ -218,6 +219,9 @@ const MaxChangePubKeyProofDepth = MaxSignatureTreeDepth
 // DecodeChangePubKeyProof decodes a MsgChangePubKey proof, the proto encoding
 // of a SignatureDescriptor.Data.
 func DecodeChangePubKeyProof(bz []byte) (signing.SignatureData, error) {
+	if err := checkProofWireFields(bz, 0, false); err != nil {
+		return nil, errorsmod.Wrap(ErrInvalidPubKeyProof, err.Error())
+	}
 	var data signing.SignatureDescriptor_Data
 	if err := data.Unmarshal(bz); err != nil {
 		return nil, errorsmod.Wrap(ErrInvalidPubKeyProof, err.Error())
@@ -227,6 +231,53 @@ func DecodeChangePubKeyProof(bz []byte) (signing.SignatureData, error) {
 		return nil, err
 	}
 	return signing.SignatureDataFromProto(&data), nil
+}
+
+// In the proof schema, field 2 alternates between Data.multi and
+// Multi.signatures. Inspect those fields before the generated decoder builds
+// the tree, including any oneof values that later fields overwrite.
+func checkProofWireFields(bz []byte, depth int, inMulti bool) error {
+	children := 0
+	for len(bz) > 0 {
+		number, wireType, n := protowire.ConsumeTag(bz)
+		if n < 0 {
+			return protowire.ParseError(n)
+		}
+		bz = bz[n:]
+		if wireType == protowire.StartGroupType || wireType == protowire.EndGroupType {
+			return errorsmod.Wrap(ErrInvalidPubKeyProof, "unexpected protobuf group")
+		}
+		if number != 2 || wireType != protowire.BytesType {
+			n = protowire.ConsumeFieldValue(number, wireType, bz)
+		} else {
+			var nested []byte
+			nested, n = protowire.ConsumeBytes(bz)
+			if n < 0 {
+				return protowire.ParseError(n)
+			}
+			if inMulti {
+				children++
+				if children > MaxSignatureTreeBreadth {
+					return errorsmod.Wrapf(ErrInvalidPubKeyProof, "multisignature has more than %d signatures", MaxSignatureTreeBreadth)
+				}
+				if err := checkProofWireFields(nested, depth+1, false); err != nil {
+					return err
+				}
+			} else {
+				if depth >= MaxChangePubKeyProofDepth {
+					return errorsmod.Wrapf(ErrInvalidPubKeyProof, "multisignature nested deeper than %d levels", MaxChangePubKeyProofDepth)
+				}
+				if err := checkProofWireFields(nested, depth, true); err != nil {
+					return err
+				}
+			}
+		}
+		if n < 0 {
+			return protowire.ParseError(n)
+		}
+		bz = bz[n:]
+	}
+	return nil
 }
 
 func validateSignatureDescriptorData(data *signing.SignatureDescriptor_Data, depth int) error {

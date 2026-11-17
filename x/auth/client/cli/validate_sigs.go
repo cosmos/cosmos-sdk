@@ -117,36 +117,36 @@ func printAndValidateSigs(
 		// from the address of the signing pubkey, so the pubkey must instead
 		// be the account's stored pubkey.
 		signerAddr := sdk.AccAddress(signers[i])
-		if !bytes.Equal(sigAddr, signerAddr) {
+		var accountNumber, sequence uint64
+		matchesSigner := bytes.Equal(sigAddr, signerAddr)
+		if !offline {
+			acc, err := clientCtx.AccountRetriever.GetAccount(clientCtx, signerAddr)
+			if err != nil || acc == nil {
+				cmd.PrintErrf("failed to get account: %s\n", signerAddr)
+				return false
+			}
+			accountNumber, sequence = acc.GetAccountNumber(), acc.GetSequence()
+			if storedKey := acc.GetPubKey(); storedKey != nil {
+				matchesSigner = storedKey.Equals(pubKey)
+			}
+		}
+		if !matchesSigner {
 			if offline {
 				sigSanity = "WARNING: signature pubkey does not hash to its signer; the signer may be a rekeyed account, which offline mode cannot check"
 			} else {
-				acc, err := clientCtx.AccountRetriever.GetAccount(clientCtx, signerAddr)
-				switch {
-				case err != nil:
-					cmd.PrintErrf("failed to get account: %s\n", signerAddr)
-					return false
-				case acc == nil || acc.GetPubKey() == nil || !acc.GetPubKey().Equals(pubKey):
-					sigSanity = "ERROR: signature does not match its respective signer"
-					success = false
-				}
+				sigSanity = "ERROR: signature does not match its respective signer"
+				success = false
 			}
 		}
 
 		// validate the actual signature over the transaction bytes since we can
 		// reach out to a full node to query accounts.
 		if !offline && success {
-			accNum, accSeq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, signerAddr)
-			if err != nil {
-				cmd.PrintErrf("failed to get account: %s\n", signerAddr)
-				return false
-			}
-
 			signingData := authsigning.SignerData{
 				Address:       signerAddr.String(),
 				ChainID:       chainID,
-				AccountNumber: accNum,
-				Sequence:      accSeq,
+				AccountNumber: accountNumber,
+				Sequence:      sequence,
 				PubKey:        pubKey,
 			}
 			anyPk, err := codectypes.NewAnyWithValue(pubKey)

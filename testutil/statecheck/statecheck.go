@@ -140,16 +140,33 @@ func KeyType(coll collections.Collection) string {
 	return keyCodec(coll).MethodByName("KeyType").Call(nil)[0].String()
 }
 
-// keyCodec returns the key codec of a collection. The Collection interface does
-// not expose the key codec, but every collection in a schema wraps a
-// collections.Map in an unexported field, and Map.KeyCodec is exported. The
-// field is read through unsafe because reflect refuses to call methods on a
-// value read from an unexported field.
+// CodecTypes returns the concrete Go types of the key codec and the value
+// codec of a collection, for example "codec.AltValueCodec[cosmossdk.io/math.Int]".
+// Unlike KeyType and ValueType, which a wrapping codec can share with the codec
+// it wraps, the concrete type changes when a codec is swapped or a wrapper is
+// added or removed.
+func CodecTypes(coll collections.Collection) (key, value string) {
+	m := innerMap(coll)
+	key = fmt.Sprintf("%T", m.MethodByName("KeyCodec").Call(nil)[0].Interface())
+	value = fmt.Sprintf("%T", m.MethodByName("ValueCodec").Call(nil)[0].Interface())
+	return key, value
+}
+
+// keyCodec returns the key codec of a collection.
 func keyCodec(coll collections.Collection) reflect.Value {
+	return innerMap(coll).MethodByName("KeyCodec").Call(nil)[0]
+}
+
+// innerMap returns the collections.Map a schema collection wraps. The
+// Collection interface does not expose the key codec or the typed value codec,
+// but every collection in a schema wraps a collections.Map in an unexported
+// field, and Map.KeyCodec and Map.ValueCodec are exported. The field is read
+// through unsafe because reflect refuses to call methods on a value read from
+// an unexported field.
+func innerMap(coll collections.Collection) reflect.Value {
 	v := reflect.ValueOf(coll)
 	addressable := reflect.New(v.Type()).Elem()
 	addressable.Set(v)
 	field := addressable.Field(0)
-	m := reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem()
-	return m.MethodByName("KeyCodec").Call(nil)[0]
+	return reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem()
 }

@@ -20821,6 +20821,13 @@ paths:
               allowed:
                 type: boolean
                 description: allowed is true when the msg type URL may execute.
+              blockedBy:
+                type: string
+                description: >-
+                  blocked_by is the disabled entry that blocks the msg type URL,
+                  or empty
+
+                  when it is allowed.
             description: >-
               QueryIsAllowedResponse is the response type for the
               Query/IsAllowed RPC method.
@@ -20852,6 +20859,61 @@ paths:
           type: string
       tags:
         - Query
+  /cosmos/safety/v1/matching_msgs:
+    get:
+      summary: |-
+        MatchingMsgs lists the registered msg type URLs that a trip of a pattern
+        would block. It leaves out protected msgs and, for "*" or a prefix
+        pattern, wrappers.
+      operationId: SafetyMatchingMsgs
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              msgTypeUrls:
+                type: array
+                items:
+                  type: string
+                description: >-
+                  msg_type_urls are the matching msg type URLs, sorted. The list
+                  is bounded
+
+                  by the msgs the app registers, so it is not paginated.
+            description: >-
+              QueryMatchingMsgsResponse is the response type for the
+              Query/MatchingMsgs RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pattern
+          description: >-
+            pattern is "*", a prefix pattern such as "/cosmos.bank.*", or an
+            exact
+
+            msg type URL.
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
   /cosmos/safety/v1/params:
     get:
       summary: Params returns the module params.
@@ -20871,6 +20933,9 @@ paths:
                     description: >-
                       authority is the address that sets params and resets any
                       disabled pattern.
+
+                      The consensus AuthorityParams override replaces it when a
+                      chain sets one.
                   operator:
                     type: string
                     description: >-
@@ -45407,6 +45472,9 @@ definitions:
         description: >-
           authority is the address that sets params and resets any disabled
           pattern.
+
+          The consensus AuthorityParams override replaces it when a chain sets
+          one.
       operator:
         type: string
         description: >-
@@ -45461,9 +45529,31 @@ definitions:
       allowed:
         type: boolean
         description: allowed is true when the msg type URL may execute.
+      blockedBy:
+        type: string
+        description: >-
+          blocked_by is the disabled entry that blocks the msg type URL, or
+          empty
+
+          when it is allowed.
     description: >-
       QueryIsAllowedResponse is the response type for the Query/IsAllowed RPC
       method.
+  cosmos.safety.v1.QueryMatchingMsgsResponse:
+    type: object
+    properties:
+      msgTypeUrls:
+        type: array
+        items:
+          type: string
+        description: >-
+          msg_type_urls are the matching msg type URLs, sorted. The list is
+          bounded
+
+          by the msgs the app registers, so it is not paginated.
+    description: >-
+      QueryMatchingMsgsResponse is the response type for the Query/MatchingMsgs
+      RPC method.
   cosmos.safety.v1.QueryParamsResponse:
     type: object
     properties:
@@ -45476,6 +45566,9 @@ definitions:
             description: >-
               authority is the address that sets params and resets any disabled
               pattern.
+
+              The consensus AuthorityParams override replaces it when a chain
+              sets one.
           operator:
             type: string
             description: >-

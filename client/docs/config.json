@@ -121,7 +121,8 @@
         "rename": {
           "Params": "SafetyParams",
           "DisabledList": "SafetyDisabledList",
-          "IsAllowed": "SafetyIsAllowed"
+          "IsAllowed": "SafetyIsAllowed",
+          "MatchingMsgs": "SafetyMatchingMsgs"
         }
       }
     },

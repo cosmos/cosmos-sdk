@@ -181,9 +181,9 @@ A tx that keeps its sequence executes if anyone broadcasts its signed bytes
 after the reset. To cancel it, sign another tx at the same sequence. A tx
 signed with `--timeout-duration` expires on its own.
 
-A gov or group proposal that contains a tripped msg fails `CheckTx`. One that
-reaches `FinalizeBlock` is created, because the router admits the protected
-or wrapper msg, and fails at execution while the trip stands.
+A gov or group proposal that contains a tripped msg fails `CheckTx`, and
+one that reaches `FinalizeBlock` is refused at submission. A proposal stored
+before the trip fails at execution while the trip stands.
 
 ### Gas
 

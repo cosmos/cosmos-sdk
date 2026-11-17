@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -339,4 +340,29 @@ func TestRouterCheckMsgsAllowed(t *testing.T) {
 	require.ErrorIs(t, err, sdkerrors.ErrCircuitBreakerTripped)
 	require.ErrorContains(t, err, dogURL)
 	require.Equal(t, []string{sdk.MsgTypeURL(msgs[0]), dogURL}, cb.asked)
+}
+
+// gasBreaker allows every msg and charges gas on the context it is given, as
+// a breaker that reads state on the caller's gas meter does.
+type gasBreaker struct{}
+
+func (gasBreaker) IsAllowed(ctx context.Context, _ string) (bool, error) {
+	sdk.UnwrapSDKContext(ctx).GasMeter().ConsumeGas(1000, "breaker read")
+	return true, nil
+}
+
+// TestCheckMsgsAllowedChargesNoGas requires CheckMsgsAllowed to leave the
+// caller's gas meter as it was, even for a breaker that charges gas, so gov
+// and group submission and the ante decorator use the same gas as without
+// the check.
+func TestCheckMsgsAllowedChargesNoGas(t *testing.T) {
+	app := newHybridTestApp(t, gasBreaker{})
+	msgs := []sdk.Msg{&testdata.TestMsg{}, &testdata.MsgCreateDog{Dog: &testdata.Dog{Name: "Spot"}}}
+	meter := storetypes.NewGasMeter(10_000)
+	meter.ConsumeGas(7, "before")
+	ctx := app.NewContext(true).WithGasMeter(meter)
+
+	require.NoError(t, app.MsgServiceRouter().CheckMsgsAllowed(ctx, msgs))
+	require.NoError(t, baseapp.CheckMsgsAllowed(ctx, gasBreaker{}, msgs))
+	require.Equal(t, storetypes.Gas(7), meter.GasConsumed())
 }

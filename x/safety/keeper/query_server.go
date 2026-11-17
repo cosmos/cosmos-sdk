@@ -58,6 +58,11 @@ func (q queryServer) IsAllowed(ctx context.Context, req *types.QueryIsAllowedReq
 	if err := types.ValidateTypeURL(req.MsgTypeUrl); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
+	// blockedBy charges no gas and does one lookup per package segment, so
+	// only a registered msg type, whose segments the binary bounds, is looked up
+	if !q.k.isRegisteredMsg(req.MsgTypeUrl) {
+		return nil, status.Errorf(codes.InvalidArgument, "%s is not a registered msg type", req.MsgTypeUrl)
+	}
 	by, err := q.k.blockedBy(ctx, req.MsgTypeUrl)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

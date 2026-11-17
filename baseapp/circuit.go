@@ -4,6 +4,7 @@ import (
 	"context"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -33,12 +34,17 @@ type msgsWithGetMsgs interface {
 // codespace and names the blocking pattern. A refusal without an error
 // returns sdkerrors.ErrCircuitBreakerTripped, as the router does.
 //
+// It charges no gas: the breaker runs on an infinite gas meter, so a breaker
+// that reads state on the caller's meter, such as contrib/x/circuit, leaves
+// the gas of the tx, simulated or delivered, as it would be without the check.
+//
 // It descends as deep as the tx decoder unpacks Any values,
 // codectypes.MaxUnpackAnyRecursionDepth, and adds no nesting rule of its own.
 // Msgs built in process that nest deeper fail with sdkerrors.ErrInvalidRequest
 // rather than pass unchecked.
 func CheckMsgsAllowed(ctx context.Context, cb CircuitBreaker, msgs []sdk.Msg) error {
-	return checkMsgsAllowed(ctx, cb, msgs, 0)
+	sdkCtx := sdk.UnwrapSDKContext(ctx).WithGasMeter(storetypes.NewInfiniteGasMeter())
+	return checkMsgsAllowed(sdkCtx, cb, msgs, 0)
 }
 
 func checkMsgsAllowed(ctx context.Context, cb CircuitBreaker, msgs []sdk.Msg, depth int) error {

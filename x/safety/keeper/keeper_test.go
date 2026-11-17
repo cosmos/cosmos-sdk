@@ -263,6 +263,10 @@ func (s *KeeperTestSuite) TestIsAllowedTable() {
 			s.Require().Equal(tc.want, s.allowed(tc.url))
 
 			res, err := s.queryClient.IsAllowed(s.ctx, &types.QueryIsAllowedRequest{MsgTypeUrl: tc.url})
+			if !slices.Contains(s.registry.ListImplementations(sdk.MsgInterfaceProtoName), tc.url) {
+				s.Require().Equal(codes.InvalidArgument, status.Code(err), "the query must refuse an unregistered msg type")
+				return
+			}
 			s.Require().NoError(err)
 			s.Require().Equal(tc.want, res.Allowed, "query must agree with the keeper")
 			if tc.want {
@@ -846,6 +850,8 @@ func (s *KeeperTestSuite) TestQueryNilRequests() {
 // do so before any work that grows with the input.
 func (s *KeeperTestSuite) TestQueryIsAllowedRejectsMalformed() {
 	s.state(s.operator, []string{types.Wildcard}, "/cosmos.bank.*")
+	deep := "/a" + strings.Repeat(".a", (types.MaxPatternLength-2)/2)
+	s.Require().NoError(types.ValidateTypeURL(deep), "deep must pass the syntax check and reach the registry check")
 	for _, u := range []string{
 		"cosmos.bank.v1beta1.MsgSend", // no leading slash: would never match a prefix
 		"/cosmos.bank.*",
@@ -853,6 +859,10 @@ func (s *KeeperTestSuite) TestQueryIsAllowedRejectsMalformed() {
 		"/",
 		"/cosmos..MsgSend",
 		"/" + strings.Repeat("a.", types.MaxPatternLength) + "MsgX",
+		// well formed and within the length bound, but not a registered msg:
+		// looking it up would cost one free store read per segment
+		deep,
+		"/cosmos.bank.v1beta1.MsgSendX",
 	} {
 		_, err := s.queryClient.IsAllowed(s.ctx, &types.QueryIsAllowedRequest{MsgTypeUrl: u})
 		s.Require().Equal(codes.InvalidArgument, status.Code(err), "%.40q: %v", u, err)

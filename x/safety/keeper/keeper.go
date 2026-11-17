@@ -126,6 +126,12 @@ func (k Keeper) blockedBy(ctx context.Context, typeURL string) (string, error) {
 	return "", nil
 }
 
+// isRegisteredMsg reports whether typeURL names a msg type registered in the
+// interface registry.
+func (k Keeper) isRegisteredMsg(typeURL string) bool {
+	return slices.Contains(k.registry.ListImplementations(sdk.MsgInterfaceProtoName), typeURL)
+}
+
 // matchingMsgs returns the unprotected msg type URLs registered in the
 // interface registry that pattern would block, sorted. A wrapper counts only
 // for its exact URL.

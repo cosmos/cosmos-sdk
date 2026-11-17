@@ -169,6 +169,8 @@ resp, err := msgservice.Dispatch[*banktypes.MsgSendResponse](ctx, app.MsgService
 
 Wiring x/safety leaves gas unchanged. The circuit breaker check charges no gas in the router, the ante decorator or `msgservice.Dispatch`, so delivered and simulated gas match a chain with no circuit breaker set, and clients that hard-code gas limits need no change. See [Gas](x/safety/README.md#gas).
 
+Gov and group now refuse a proposal at submission when it contains a msg the circuit breaker disallows, nested msgs included. This applies with any circuit breaker, `contrib/x/circuit` included, and in `FinalizeBlock` as well as `CheckTx`. Before, such a proposal was stored and failed at execution. Submit a proposal that must run a tripped msg after the trip is reset.
+
 ### Upgrade Handler and Store Migrations
 
 #### Module Migrations

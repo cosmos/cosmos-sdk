@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -15,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	v2 "github.com/cosmos/cosmos-sdk/x/feegrant/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/module"
 )
@@ -87,4 +89,19 @@ func TestMigration(t *testing.T) {
 	require.Nil(t, store.Get(v2.FeeAllowanceKey(granter2, grantee2)))
 	require.NotNil(t, store.Get(v2.FeeAllowanceKey(granter1, grantee2)))
 	require.Nil(t, store.Get(v2.FeeAllowanceKey(granter2, grantee1)))
+
+	// the queue entry written for the remaining expiring grant can be decoded
+	// by the keeper, so RemoveExpiredAllowances prunes the grant once it expires
+	k := keeper.NewKeeper(cdc, runtime.NewKVStoreService(feegrantKey), nil)
+	queueKey := collections.Join3(twoDays, grantee1, granter1)
+	value, err := k.FeeAllowanceQueue.Get(ctx, queueKey)
+	require.NoError(t, err)
+	require.True(t, value)
+
+	ctx = ctx.WithBlockTime(twoDays.Add(time.Second))
+	require.NoError(t, k.RemoveExpiredAllowances(ctx, 200))
+	require.Nil(t, store.Get(v2.FeeAllowanceKey(granter1, grantee1)))
+	has, err := k.FeeAllowanceQueue.Has(ctx, queueKey)
+	require.NoError(t, err)
+	require.False(t, has)
 }

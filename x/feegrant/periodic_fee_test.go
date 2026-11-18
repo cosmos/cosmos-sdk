@@ -264,3 +264,22 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		})
 	}
 }
+
+// TestPeriodicResetEmptySpendLimit checks that the period reset treats an empty,
+// non-nil Basic.SpendLimit as set, like Accept does, and gives no period allowance.
+func TestPeriodicResetEmptySpendLimit(t *testing.T) {
+	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+
+	now := time.Now()
+	allow := feegrant.PeriodicAllowance{
+		Basic:            feegrant.BasicAllowance{SpendLimit: sdk.Coins{}},
+		Period:           time.Hour,
+		PeriodSpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 10)),
+		PeriodReset:      now,
+	}
+	ctx := testCtx.Ctx.WithBlockTime(now.Add(time.Minute))
+	_, err := allow.Accept(ctx, sdk.NewCoins(sdk.NewInt64Coin("atom", 1)), []sdk.Msg{})
+	require.ErrorIs(t, err, feegrant.ErrFeeLimitExceeded)
+	require.ErrorContains(t, err, "period limit")
+}

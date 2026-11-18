@@ -212,12 +212,7 @@ func TestDeductFees_WithFeeRecipientModule(t *testing.T) {
 	}
 }
 
-// TestDeductFeeDecorator_FeegrantErrorIsBech32 runs the DeductFeeDecorator through the
-// real x/feegrant keeper (not a mock) and asserts that when a fee grant does not allow
-// paying the fee, the returned error contains both bech32 addresses and no raw address
-// bytes / control characters. Formatting the raw []byte granter/payer with %s previously
-// emitted control characters into the error and the tx log, breaking UTF-8/YAML clients.
-// It fails on main (raw bytes) and passes with the fix.
+// TestDeductFeeDecorator_FeegrantErrorIsBech32 asserts that a rejected fee grant error names both addresses in bech32, with no raw bytes.
 func TestDeductFeeDecorator_FeegrantErrorIsBech32(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
@@ -259,6 +254,7 @@ func TestDeductFeeDecorator_FeegrantErrorIsBech32(t *testing.T) {
 	fee := sdk.NewCoins(sdk.NewInt64Coin("atom", 1000))
 
 	buildTx := func(t *testing.T) sdk.Tx {
+		t.Helper()
 		acc := ak.GetAccount(ctx, payer)
 		msgs := []sdk.Msg{testdata.NewTestMsg(payer)}
 		txn, err := genTxWithFeeGranter(txCfg, msgs, fee, 10_000_000, ctx.ChainID(),
@@ -268,6 +264,7 @@ func TestDeductFeeDecorator_FeegrantErrorIsBech32(t *testing.T) {
 	}
 
 	assertCleanError := func(t *testing.T, err error) {
+		t.Helper()
 		require.Error(t, err)
 		msg := err.Error()
 		require.Truef(t, utf8.ValidString(msg), "error must be valid UTF-8, got %q", msg)

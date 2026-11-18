@@ -366,6 +366,69 @@ func TestGRPCValidatorSlashes(t *testing.T) {
 	}
 }
 
+// TestGRPCValidatorSlashesByHeight checks that StartingHeight and EndingHeight select
+// slash events by the block height of the slash, not by the validator period.
+func TestGRPCValidatorSlashesByHeight(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+	queryClient := types.NewQueryClient(f.app.QueryHelper())
+	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, stakingtypes.DefaultParams()))
+
+	funds := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 1000)
+	assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds))))
+	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, types.ModuleName, sdk.AccAddress(f.valAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, funds))))
+
+	tstaking := stakingtestutil.NewHelper(t, f.sdkCtx, f.stakingKeeper)
+	tstaking.CreateValidator(f.valAddr, valConsPk0, f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 100), true)
+	tstaking.TurnBlock(f.sdkCtx.BlockTime())
+
+	// slash at heights 1000, 2000 and 3000; each slash starts a new validator period
+	for _, height := range []int64{1000, 2000, 3000} {
+		_, err := f.stakingKeeper.Slash(f.sdkCtx.WithBlockHeight(height), sdk.ConsAddress(valConsPk0.Address()), height, 100, math.LegacyNewDecWithPrec(1, 2))
+		assert.NilError(t, err)
+	}
+
+	slashesIn := func(t *testing.T, start, end uint64, pagination *query.PageRequest) []types.ValidatorSlashEvent {
+		t.Helper()
+		res, err := queryClient.ValidatorSlashes(f.sdkCtx, &types.QueryValidatorSlashesRequest{
+			ValidatorAddress: f.valAddr.String(),
+			StartingHeight:   start,
+			EndingHeight:     end,
+			Pagination:       pagination,
+		})
+		assert.NilError(t, err)
+		return res.Slashes
+	}
+
+	slashes := slashesIn(t, 0, ^uint64(0), nil)
+	assert.Equal(t, 3, len(slashes))
+	for _, slash := range slashes {
+		assert.Assert(t, slash.ValidatorPeriod < 1000)
+	}
+
+	testCases := []struct {
+		name       string
+		start, end uint64
+		pagination *query.PageRequest
+		exp        []types.ValidatorSlashEvent
+	}{
+		{name: "range around one height", start: 900, end: 1100, exp: slashes[:1]},
+		{name: "bounds are inclusive", start: 1000, end: 3000, exp: slashes},
+		{name: "single height", start: 2000, end: 2000, exp: slashes[1:2]},
+		{name: "between heights", start: 1001, end: 2999, exp: slashes[1:2]},
+		{name: "range covering only the periods", start: 1, end: 999, exp: nil},
+		{name: "limit", start: 1000, end: 3000, pagination: &query.PageRequest{Limit: 2}, exp: slashes[:2]},
+		{name: "offset", start: 1000, end: 3000, pagination: &query.PageRequest{Offset: 1, Limit: 1}, exp: slashes[1:2]},
+		{name: "limit with range", start: 1500, end: 3000, pagination: &query.PageRequest{Limit: 1}, exp: slashes[1:2]},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.DeepEqual(t, tc.exp, slashesIn(t, tc.start, tc.end, tc.pagination))
+		})
+	}
+}
+
 func TestGRPCDelegatorWithdrawAddress(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)

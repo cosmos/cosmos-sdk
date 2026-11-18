@@ -23,6 +23,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -126,6 +127,7 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 		expected   map[string]sdk.Coins
 		appendFlag bool
 		expectErr  bool
+		expErrMsg  string
 	}{
 		{
 			name: "invalid address",
@@ -159,6 +161,44 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 			expectErr:  true,
 		},
 
+		{
+			name: "same address twice in one file without append",
+			state: [][]genutil.GenesisAccount{
+				{
+					{
+						Address: addr1Str,
+						Coins:   sdk.NewCoins(sdk.NewInt64Coin("test", 1)),
+					},
+					{
+						Address: addr1Str,
+						Coins:   sdk.NewCoins(sdk.NewInt64Coin("test", 2)),
+					},
+				},
+			},
+			appendFlag: false,
+			expectErr:  true,
+			expErrMsg:  addr1Str + " already exists",
+		},
+		{
+			name: "same address twice in one file with append",
+			state: [][]genutil.GenesisAccount{
+				{
+					{
+						Address: addr1Str,
+						Coins:   sdk.NewCoins(sdk.NewInt64Coin("test", 1)),
+					},
+					{
+						Address: addr1Str,
+						Coins:   sdk.NewCoins(sdk.NewInt64Coin("test", 2)),
+					},
+				},
+			},
+			expected: map[string]sdk.Coins{
+				addr1Str: sdk.NewCoins(sdk.NewInt64Coin("test", 3)),
+			},
+			appendFlag: true,
+			expectErr:  false,
+		},
 		{
 			name: "multiple additions with append",
 			state: [][]genutil.GenesisAccount{
@@ -218,6 +258,7 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 			// The first iteration (pre-append) may not error.
 			// Check if any errors after all state transitions to genesis.
 			doesErr := false
+			var lastErr error
 
 			// apply multiple state iterations if applicable (e.g. --append)
 			for _, state := range tc.state {
@@ -238,9 +279,13 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 				err = cmd.ExecuteContext(ctx)
 				if err != nil {
 					doesErr = true
+					lastErr = err
 				}
 			}
 			require.Equal(t, tc.expectErr, doesErr)
+			if tc.expErrMsg != "" {
+				require.ErrorContains(t, lastErr, tc.expErrMsg)
+			}
 
 			// an error already occurred, no need to check the state
 			if doesErr {
@@ -262,6 +307,9 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 				expectedSupply = expectedSupply.Add(coins...)
 			}
 			require.Equal(t, expectedSupply, bankState.Supply)
+
+			authState := authtypes.GetGenesisStateFromAppState(appCodec, appState)
+			require.Len(t, authState.Accounts, len(tc.expected))
 		})
 	}
 }

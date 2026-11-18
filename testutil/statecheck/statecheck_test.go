@@ -103,3 +103,26 @@ func TestCheckRawPrefixes(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []statecheck.Result{{Name: feegrant.ModuleName, Checked: 0, Raw: 1}}, res)
 }
+
+// TestCodecTypes requires KeyType and CodecTypes to read the codecs of a map,
+// a key set and an item out of a built schema.
+func TestCodecTypes(t *testing.T) {
+	sb := collections.NewSchemaBuilder(runtime.NewKVStoreService(storetypes.NewKVStoreKey("codectypes")))
+	collections.NewMap(sb, collections.NewPrefix(1), "map", collections.StringKey, collections.Uint64Value)
+	collections.NewKeySet(sb, collections.NewPrefix(2), "set", collections.PairKeyCodec(collections.StringKey, collections.Uint64Key))
+	collections.NewItem(sb, collections.NewPrefix(3), "item", collections.BoolValue)
+	schema, err := sb.Build()
+	require.NoError(t, err)
+
+	type codecs struct{ keyType, key, value string }
+	got := map[string]codecs{}
+	for _, coll := range schema.ListCollections() {
+		key, value := statecheck.CodecTypes(coll)
+		got[coll.GetName()] = codecs{statecheck.KeyType(coll), key, value}
+	}
+	require.Equal(t, map[string]codecs{
+		"map":  {"string", "codec.stringKey[string]", "codec.keyToValueCodec[uint64]"},
+		"set":  {"Pair[string, uint64]", "collections.pairKeyCodec[string,uint64]", "collections.NoValue"},
+		"item": {"no_key", "collections.noKey", "codec.keyToValueCodec[bool]"},
+	}, got)
+}

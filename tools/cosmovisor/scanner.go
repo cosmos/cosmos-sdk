@@ -20,6 +20,10 @@ import (
 
 var errUntestAble = errors.New("untestable")
 
+// emptyFileRetrySleep is the wait between retries while upgrade-info.json is
+// still empty. It is a variable so tests can control it.
+var emptyFileRetrySleep = time.Sleep
+
 type fileWatcher struct {
 	daemonHome string
 	filename   string // full path to a watched file
@@ -134,7 +138,7 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 	// If new file is still empty, wait a small amount of time for write to complete
 	if stat.Size() == 0 {
 		for range 10 {
-			time.Sleep(2 * time.Millisecond)
+			emptyFileRetrySleep(2 * time.Millisecond)
 			stat, err = os.Stat(fw.filename)
 			if err != nil {
 				if os.IsNotExist(err) {

@@ -246,7 +246,8 @@ func isInternalMsg(typeURL string) (bool, error) {
 	name := protoreflect.FullName(strings.TrimPrefix(typeURL, "/"))
 	d, err := proto.HybridResolver.FindDescriptorByName(name)
 	if err != nil {
-		return false, fmt.Errorf("cannot resolve descriptor for %s: %w", typeURL, err)
+		// no descriptor means the type cannot declare the option: not internal
+		return false, nil
 	}
 	md, ok := d.(protoreflect.MessageDescriptor)
 	if !ok {

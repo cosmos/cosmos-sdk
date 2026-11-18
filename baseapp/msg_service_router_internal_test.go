@@ -61,3 +61,9 @@ func TestMsgServiceRouterIsInternal(t *testing.T) {
 	require.True(t, msr.IsInternal("/test.MsgInternal"))
 	require.False(t, msr.IsInternal("/test.MsgExternal"))
 }
+
+func TestIsInternalMsgNoDescriptor(t *testing.T) {
+	got, err := isInternalMsg("/")
+	require.NoError(t, err)
+	require.False(t, got)
+}

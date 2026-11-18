@@ -467,3 +467,5 @@ func (k Keeper) DequeueAndDeleteExpiredGrants(ctx context.Context, limit int32) 
 type internalChecker interface {
 	IsInternal(typeURL string) bool
 }
+
+var _ internalChecker = (*baseapp.MsgServiceRouter)(nil)

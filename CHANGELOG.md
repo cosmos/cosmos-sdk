@@ -50,7 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (testutil/statecheck) [#26991](https://github.com/cosmos/cosmos-sdk/pull/26991) Add `statecheck.Check`, which decodes every entry of a module store with the codecs of its collections schema and reports each entry that does not decode, and the `simd debug decode-state` command, which runs the check against the stores of a stopped node.
-* (baseapp) [#26594](https://github.com/cosmos/cosmos-sdk/issues/26594) Add the `cosmos.msg.v1.internal` message option. `MsgServiceRouter.IsInternal` reports marked messages, `RunTx` rejects them when submitted as top-level tx messages (in CheckTx, simulate and block execution), and `x/authz` refuses to dispatch them via `MsgExec`. No SDK message is marked internal yet.
+* (baseapp) [#26854](https://github.com/cosmos/cosmos-sdk/pull/26854) Add the `cosmos.msg.v1.internal` message option. `MsgServiceRouter.IsInternal` reports marked messages, `RunTx` rejects them when submitted as top-level tx messages (in CheckTx, simulate and block execution), and `x/authz` refuses to dispatch them via `MsgExec`. No SDK message is marked internal yet.
 * (x/distribution) [#26749](https://github.com/cosmos/cosmos-sdk/pull/26749) Add a `claimable` field to `QueryDelegationTotalRewardsResponse`, reporting the withdrawable amount as `sdk.Coins` by truncating each delegation reward the way `Msg/WithdrawDelegatorReward` does. `total` keeps its documented meaning as the raw `DecCoins` sum ([#24406](https://github.com/cosmos/cosmos-sdk/issues/24406)).
 
 ### Improvements

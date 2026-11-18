@@ -20,6 +20,12 @@
       "supply prefix=00 key=string value=math.Int key_codec=codec.stringKey[string] value_codec=types.intValueCodec"
     ]
   },
+  "consensus": {
+    "consensus_version": 1,
+    "collections": [
+      "params prefix=436F6E73656E737573 key=no_key value=github.com/cosmos/gogoproto/tendermint.types.ConsensusParams key_codec=collections.noKey value_codec=*codec.collValue[github.com/cometbft/cometbft/proto/tendermint/types.ConsensusParams,*github.com/cometbft/cometbft/proto/tendermint/types.ConsensusParams]"
+    ]
+  },
   "distribution": {
     "consensus_version": 3,
     "collections": [

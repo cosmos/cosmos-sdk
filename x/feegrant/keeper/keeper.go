@@ -294,6 +294,16 @@ func (k Keeper) InitGenesis(ctx context.Context, data *feegrant.GenesisState) er
 			return err
 		}
 
+		// GrantAllowance rejects an expiration before the block time, so skip
+		// allowances that expired before the chain restarted, as x/authz does.
+		exp, err := grant.ExpiresAt()
+		if err != nil {
+			return err
+		}
+		if exp != nil && exp.Before(sdk.UnwrapSDKContext(ctx).BlockTime()) {
+			continue
+		}
+
 		err = k.GrantAllowance(ctx, granter, grantee, grant)
 		if err != nil {
 			return err

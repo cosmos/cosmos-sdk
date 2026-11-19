@@ -155,8 +155,8 @@ func (t *Tx) FeePayer(cdc codec.Codec) []byte {
 	}
 	// use first signer as default if no payer specified
 	signers, _, err := t.GetSigners(cdc)
-	if err != nil {
-		panic(err)
+	if err != nil || len(signers) == 0 {
+		return nil
 	}
 
 	return signers[0]

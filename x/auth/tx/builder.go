@@ -219,7 +219,7 @@ func (w *wrapper) FeePayer() []byte {
 
 	// use first signer as default if no payer specified
 	signers, err := w.GetSigners()
-	if err != nil {
+	if err != nil || len(signers) == 0 {
 		return nil
 	}
 

@@ -578,3 +578,32 @@ func TestTxWithoutFeeAccessorsDoNotPanic(t *testing.T) {
 	require.True(t, ok)
 	require.ErrorContains(t, validatable.ValidateBasic(), "missing fee")
 }
+
+// TestFeePayerWithoutMessagesDoesNotPanic covers the fallback in FeePayer. When
+// no payer is set it defaults to the first signer, and a transaction carrying no
+// messages has no signers: GetSigners returns an empty slice and no error, so
+// indexing it unguarded panics.
+func TestFeePayerWithoutMessagesDoesNotPanic(t *testing.T) {
+	registry := codectestutil.CodecOptions{}.NewInterfaceRegistry()
+	testdata.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+
+	bodyBz, err := (&txtypes.TxBody{}).Marshal()
+	require.NoError(t, err)
+
+	authInfoBz, err := (&txtypes.AuthInfo{Fee: &txtypes.Fee{}}).Marshal()
+	require.NoError(t, err)
+
+	rawBz, err := (&txtypes.TxRaw{BodyBytes: bodyBz, AuthInfoBytes: authInfoBz}).Marshal()
+	require.NoError(t, err)
+
+	decoded, err := DefaultTxDecoder(cdc)(rawBz)
+	require.NoError(t, err)
+
+	feeTx, ok := decoded.(sdk.FeeTx)
+	require.True(t, ok)
+	require.NotPanics(t, func() { require.Nil(t, feeTx.FeePayer()) })
+
+	rawTx := &txtypes.Tx{Body: &txtypes.TxBody{}, AuthInfo: &txtypes.AuthInfo{Fee: &txtypes.Fee{}}}
+	require.NotPanics(t, func() { require.Nil(t, rawTx.FeePayer(cdc)) })
+}

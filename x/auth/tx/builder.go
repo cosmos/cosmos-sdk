@@ -200,15 +200,15 @@ func (w *wrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
 }
 
 func (w *wrapper) GetGas() uint64 {
-	return w.tx.AuthInfo.Fee.GasLimit
+	return w.tx.GetAuthInfo().GetFee().GetGasLimit()
 }
 
 func (w *wrapper) GetFee() sdk.Coins {
-	return w.tx.AuthInfo.Fee.Amount
+	return w.tx.GetAuthInfo().GetFee().GetAmount()
 }
 
 func (w *wrapper) FeePayer() []byte {
-	feePayer := w.tx.AuthInfo.Fee.Payer
+	feePayer := w.tx.GetAuthInfo().GetFee().GetPayer()
 	if feePayer != "" {
 		feePayerAddr, err := w.cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(feePayer)
 		if err != nil {
@@ -219,7 +219,7 @@ func (w *wrapper) FeePayer() []byte {
 
 	// use first signer as default if no payer specified
 	signers, err := w.GetSigners()
-	if err != nil {
+	if err != nil || len(signers) == 0 {
 		return nil
 	}
 

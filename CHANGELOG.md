@@ -64,7 +64,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (types/tx, x/auth/tx) [#27003](https://github.com/cosmos/cosmos-sdk/pull/27003) Return zero values from the `FeeTx` accessors when a decoded transaction carries no `AuthInfo.Fee`, instead of dereferencing a nil pointer. `Fee` is an optional proto3 message, so a peer can broadcast a transaction without one; `ValidateBasic` rejects such a transaction, but `GetGas`, `GetFee`, `FeePayer` and `FeeGranter` are reachable before that check runs. `FeePayer` also returns nil instead of indexing an empty slice when a transaction carries no messages and therefore no signers to fall back to.
+* (types/tx, x/auth/tx) [#27003](https://github.com/cosmos/cosmos-sdk/pull/27003) Return zero values from the `FeeTx` accessors when a decoded transaction carries no `AuthInfo.Fee`, instead of dereferencing a nil pointer. `Fee` is an optional proto3 message, so a peer can broadcast a transaction without one; `ValidateBasic` rejects such a transaction, but `GetGas`, `GetFee`, `FeePayer` and `FeeGranter` are reachable before that check runs. `FeePayer` also returns nil instead of indexing an empty slice when a transaction carries no messages, and so has no signers to fall back to.
 * (x/feegrant) [#26990](https://github.com/cosmos/cosmos-sdk/pull/26990) Build the collections schema in `NewKeeper`, so `Keeper.Schema` lists the `allowances` and `allowances_queue` collections. It was left empty.
 * (errors) [#26948](https://github.com/cosmos/cosmos-sdk/pull/26948) Preserve gRPC status codes through standard Go error wrappers and joined errors inside an SDK-wrapped error.
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.

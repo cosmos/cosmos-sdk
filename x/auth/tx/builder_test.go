@@ -526,3 +526,55 @@ func TestAdaptModeInfo_MultisigNilChildModeInfo(t *testing.T) {
 		require.NoError(t, err)
 	})
 }
+
+// TestTxWithoutFeeAccessorsDoNotPanic decodes a transaction whose AuthInfo
+// carries no Fee. The field is an optional proto3 message, so any peer can put
+// such bytes on the wire, and ValidateBasic is what rejects it. The FeeTx
+// accessors run before that check in some callers, so they must return zero
+// values instead of dereferencing a nil Fee.
+func TestTxWithoutFeeAccessorsDoNotPanic(t *testing.T) {
+	registry := codectestutil.CodecOptions{}.NewInterfaceRegistry()
+	testdata.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+
+	_, _, addr := testdata.KeyTestPubAddr()
+	anyMsg, err := codectypes.NewAnyWithValue(testdata.NewTestMsg(addr))
+	require.NoError(t, err)
+
+	body := &txtypes.TxBody{Messages: []*codectypes.Any{anyMsg}}
+	bodyBz, err := body.Marshal()
+	require.NoError(t, err)
+
+	// Fee is left unset, so the field is absent from the encoded AuthInfo.
+	authInfoBz, err := (&txtypes.AuthInfo{}).Marshal()
+	require.NoError(t, err)
+
+	rawBz, err := (&txtypes.TxRaw{BodyBytes: bodyBz, AuthInfoBytes: authInfoBz}).Marshal()
+	require.NoError(t, err)
+
+	decoded, err := DefaultTxDecoder(cdc)(rawBz)
+	require.NoError(t, err)
+
+	feeTx, ok := decoded.(sdk.FeeTx)
+	require.True(t, ok)
+
+	require.NotPanics(t, func() {
+		require.Zero(t, feeTx.GetGas())
+		require.True(t, feeTx.GetFee().IsZero())
+		require.Nil(t, feeTx.FeeGranter())
+		feeTx.FeePayer()
+	})
+
+	// The same accessors on the underlying Tx.
+	rawTx := &txtypes.Tx{Body: body, AuthInfo: &txtypes.AuthInfo{}}
+	require.NotPanics(t, func() {
+		require.Zero(t, rawTx.GetGas())
+		require.True(t, rawTx.GetFee().IsZero())
+		require.Nil(t, rawTx.FeeGranter(cdc))
+	})
+
+	// The transaction stays invalid: nothing here makes a fee-less tx acceptable.
+	validatable, ok := decoded.(sdk.HasValidateBasic)
+	require.True(t, ok)
+	require.ErrorContains(t, validatable.ValidateBasic(), "missing fee")
+}

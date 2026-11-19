@@ -119,7 +119,7 @@ func (t *Tx) GetSigners(cdc codec.Codec) ([][]byte, []protov2.Message, error) {
 	}
 
 	// ensure any specified fee payer is included in the required signers (at the end)
-	feePayer := t.AuthInfo.Fee.Payer
+	feePayer := t.GetAuthInfo().GetFee().GetPayer()
 	var feePayerAddr []byte
 	if feePayer != "" {
 		var err error
@@ -137,15 +137,15 @@ func (t *Tx) GetSigners(cdc codec.Codec) ([][]byte, []protov2.Message, error) {
 }
 
 func (t *Tx) GetGas() uint64 {
-	return t.AuthInfo.Fee.GasLimit
+	return t.GetAuthInfo().GetFee().GetGasLimit()
 }
 
 func (t *Tx) GetFee() sdk.Coins {
-	return t.AuthInfo.Fee.Amount
+	return t.GetAuthInfo().GetFee().GetAmount()
 }
 
 func (t *Tx) FeePayer(cdc codec.Codec) []byte {
-	feePayer := t.AuthInfo.Fee.Payer
+	feePayer := t.GetAuthInfo().GetFee().GetPayer()
 	if feePayer != "" {
 		feePayerAddr, err := cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(feePayer)
 		if err != nil {
@@ -163,7 +163,7 @@ func (t *Tx) FeePayer(cdc codec.Codec) []byte {
 }
 
 func (t *Tx) FeeGranter(cdc codec.Codec) []byte {
-	feeGranter := t.AuthInfo.Fee.Granter
+	feeGranter := t.GetAuthInfo().GetFee().GetGranter()
 	if feeGranter != "" {
 		feeGranterAddr, err := cdc.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(feeGranter)
 		if err != nil {

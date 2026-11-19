@@ -29,7 +29,7 @@ import (
 // These updates take effect in the next block.
 func (k *Keeper) EndBlocker(ctx sdk.Context) ([]abci.ValidatorUpdate, error) {
 	if ctx.BlockHeight() == 1 {
-		validateFeeRecipient()
+		k.validateFeeRecipient()
 	}
 
 	updates, err := k.ReapValidatorUpdates(ctx)
@@ -43,30 +43,44 @@ func (k *Keeper) EndBlocker(ctx sdk.Context) ([]abci.ValidatorUpdate, error) {
 	return updates, nil
 }
 
-// validateFeeRecipient panics if the ante handler's fee recipient is not set
-// to the POA module. When POA is active, fees must flow to the POA module
-// account so it can distribute them to validators. Every configured
-// DeductFeeDecorator must pay POA: a decorator left on the default
-// fee_collector would silently route its fees away from the module.
-func validateFeeRecipient() {
-	validateFeeRecipients(ante.FeeRecipientModule, ante.FeeRecipientModules())
+// validateFeeRecipient panics if fees are not sent to the POA module. When POA
+// is active, fees must flow to the POA module account so it can distribute them
+// to validators. If a FeeRecipients registry was set, every DeductFeeDecorator
+// installed in this app's ante handler must pay POA (and at least one must be
+// installed); otherwise the package-level ante.FeeRecipientModule is checked.
+func (k *Keeper) validateFeeRecipient() {
+	if k.feeRecipients == nil {
+		validateFeeRecipients(ante.FeeRecipientModule, nil, false)
+		return
+	}
+	validateFeeRecipients(ante.FeeRecipientModule, k.feeRecipients.Modules(), true)
 }
 
-func validateFeeRecipients(last string, configured []string) {
-	if last != types.ModuleName {
+func validateFeeRecipients(last string, installed []string, useRegistry bool) {
+	if !useRegistry {
+		if last != types.ModuleName {
+			panic(fmt.Sprintf(
+				"POA module requires fees to be sent to the %q module account, "+
+					"but the ante handler fee recipient is set to %q. "+
+					"Use DeductFeeDecorator.WithFeeRecipientModule(%q) when constructing the ante handler",
+				types.ModuleName, last, types.ModuleName,
+			))
+		}
+		return
+	}
+	if len(installed) == 0 {
 		panic(fmt.Sprintf(
 			"POA module requires fees to be sent to the %q module account, "+
-				"but the ante handler fee recipient is set to %q. "+
-				"Use DeductFeeDecorator.WithFeeRecipientModule(%q) when constructing the ante handler",
-			types.ModuleName, last, types.ModuleName,
+				"but no DeductFeeDecorator was installed through the FeeRecipients registry",
+			types.ModuleName,
 		))
 	}
-	for _, m := range configured {
+	for _, m := range installed {
 		if m != types.ModuleName {
 			panic(fmt.Sprintf(
 				"POA module requires fees to be sent to the %q module account, "+
-					"but a DeductFeeDecorator is configured to send fees to %q. "+
-					"Use DeductFeeDecorator.WithFeeRecipientModule(%q) on every decorator",
+					"but an installed DeductFeeDecorator sends fees to %q. "+
+					"Use DeductFeeDecorator.WithFeeRecipientModule(%q) on every installed decorator",
 				types.ModuleName, m, types.ModuleName,
 			))
 		}

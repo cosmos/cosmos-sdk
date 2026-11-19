@@ -222,19 +222,44 @@ func TestDeductFees_RecipientNotClobberedByLaterDecorator(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestFeeRecipientModules(t *testing.T) {
+func TestFeeRecipients(t *testing.T) {
 	s := SetupTestSuite(t, false)
+	newDfd := func() ante.DeductFeeDecorator {
+		return ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil)
+	}
 
-	// Redirecting a decorator moves its recipient; the plain decorator built
-	// afterwards still pays fee_collector.
-	redirected := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil).WithFeeRecipientModule("poa-test")
-	require.Contains(t, ante.FeeRecipientModules(), "poa-test")
-	_ = ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil)
-	require.Contains(t, ante.FeeRecipientModules(), "poa-test")
-	require.Contains(t, ante.FeeRecipientModules(), authtypes.FeeCollectorName)
+	// Decorators that are built but not installed are not recorded, whether they
+	// were built for a replaced ante handler or for another app in the process.
+	registry := ante.NewFeeRecipients()
+	_ = newDfd()
+	_ = ante.NewFeeRecipients().Install(newDfd())
+	registry.Install(newDfd().WithFeeRecipientModule("poa-test"))
+	require.Equal(t, []string{"poa-test"}, registry.Modules())
 
-	// Redirecting again releases the previous recipient.
-	_ = redirected.WithFeeRecipientModule("poa-test-2")
-	require.NotContains(t, ante.FeeRecipientModules(), "poa-test")
-	require.Contains(t, ante.FeeRecipientModules(), "poa-test-2")
+	// A redirected copy does not redirect the original: installing both
+	// records both recipients.
+	registry = ante.NewFeeRecipients()
+	base := newDfd()
+	redirected := base.WithFeeRecipientModule("poa-test")
+	registry.Install(redirected)
+	registry.Install(base)
+	require.Equal(t, []string{authtypes.FeeCollectorName, "poa-test"}, registry.Modules())
+
+	// A nil registry is a no-op.
+	var nilRegistry *ante.FeeRecipients
+	require.NotPanics(t, func() { _ = nilRegistry.Install(base) })
+	require.Empty(t, nilRegistry.Modules())
+}
+
+func TestNewAnteHandlerRecordsFeeRecipient(t *testing.T) {
+	s := SetupTestSuite(t, false)
+	registry := ante.NewFeeRecipients()
+	_, err := ante.NewAnteHandler(ante.HandlerOptions{
+		AccountKeeper:   s.accountKeeper,
+		BankKeeper:      s.bankKeeper,
+		SignModeHandler: s.clientCtx.TxConfig.SignModeHandler(),
+		FeeRecipients:   registry,
+	})
+	require.NoError(t, err)
+	require.Equal(t, []string{authtypes.FeeCollectorName}, registry.Modules())
 }

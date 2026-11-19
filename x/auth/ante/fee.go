@@ -17,46 +17,51 @@ import (
 // WithFeeRecipientModule (default: fee_collector). It is what DeductFees sends
 // fees to. It does NOT say where every DeductFeeDecorator sends fees: each
 // decorator deducts to the recipient it was configured with, so an app that
-// builds several decorators can have several recipients. Modules that need
-// fees to reach a specific module account should check FeeRecipientModules,
-// which lists the recipient of every configured decorator.
+// builds several decorators can have several recipients. Modules that need to
+// know where an app's fees go should use a FeeRecipients registry.
 var FeeRecipientModule = types.FeeCollectorName
 
-var (
-	feeRecipientsMu sync.Mutex
-	// feeRecipients counts the DeductFeeDecorators currently configured to pay
-	// each module account.
-	feeRecipients = map[string]int{}
-)
+// FeeRecipients records the fee recipient of every DeductFeeDecorator an app
+// installs. It is created per app (not per process), and only decorators passed
+// to Install are recorded, so decorators that are built but never installed,
+// or that belong to another app in the same process, are not counted.
+type FeeRecipients struct {
+	mu      sync.Mutex
+	modules map[string]struct{}
+}
 
-// FeeRecipientModules returns the sorted, de-duplicated module names that the
-// DeductFeeDecorators built so far deduct fees to. A decorator built with
-// NewDeductFeeDecorator counts towards fee_collector until it is redirected
-// with WithFeeRecipientModule.
-func FeeRecipientModules() []string {
-	feeRecipientsMu.Lock()
-	defer feeRecipientsMu.Unlock()
+// NewFeeRecipients returns an empty FeeRecipients registry.
+func NewFeeRecipients() *FeeRecipients {
+	return &FeeRecipients{modules: map[string]struct{}{}}
+}
 
-	modules := make([]string, 0, len(feeRecipients))
-	for m, n := range feeRecipients {
-		if n > 0 {
-			modules = append(modules, m)
-		}
+// Install records the recipient of the given decorator value and returns the
+// decorator unchanged, so it can wrap the decorator where it is added to the
+// ante chain. Install on a nil registry is a no-op.
+func (r *FeeRecipients) Install(dfd DeductFeeDecorator) DeductFeeDecorator {
+	if r == nil {
+		return dfd
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.modules[dfd.feeRecipientModule] = struct{}{}
+	return dfd
+}
+
+// Modules returns the sorted module names that the installed decorators
+// deduct fees to.
+func (r *FeeRecipients) Modules() []string {
+	if r == nil {
+		return nil
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	modules := make([]string, 0, len(r.modules))
+	for m := range r.modules {
+		modules = append(modules, m)
 	}
 	sort.Strings(modules)
 	return modules
-}
-
-func moveFeeRecipient(from, to string) {
-	feeRecipientsMu.Lock()
-	defer feeRecipientsMu.Unlock()
-
-	if from != "" {
-		if feeRecipients[from]--; feeRecipients[from] <= 0 {
-			delete(feeRecipients, from)
-		}
-	}
-	feeRecipients[to]++
 }
 
 // TxFeeChecker check if the provided fee is enough and returns the effective fee and tx priority,
@@ -80,8 +85,6 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 		tfc = checkTxFeeWithValidatorMinGasPrices
 	}
 
-	moveFeeRecipient("", types.FeeCollectorName)
-
 	return DeductFeeDecorator{
 		accountKeeper:      ak,
 		bankKeeper:         bk,
@@ -98,7 +101,6 @@ func (dfd DeductFeeDecorator) WithFeeRecipientModule(moduleName string) DeductFe
 	if moduleName == "" {
 		panic("fee recipient module name cannot be empty")
 	}
-	moveFeeRecipient(dfd.feeRecipientModule, moduleName)
 	dfd.feeRecipientModule = moduleName
 	FeeRecipientModule = moduleName
 	return dfd

@@ -53,25 +53,34 @@ func TestEndBlockerFeeRecipientValidation(t *testing.T) {
 	}
 }
 
-func TestValidateFeeRecipients(t *testing.T) {
-	tests := []struct {
-		name        string
-		last        string
-		configured  []string
-		shouldPanic bool
-	}{
-		{"only poa", poatypes.ModuleName, []string{poatypes.ModuleName}, false},
-		{"poa decorator plus plain decorator", poatypes.ModuleName, []string{"fee_collector", poatypes.ModuleName}, true},
-		{"last recipient not poa", "fee_collector", []string{poatypes.ModuleName}, true},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			run := func() { validateFeeRecipients(tc.last, tc.configured) }
-			if tc.shouldPanic {
-				require.Panics(t, run)
-			} else {
-				require.NotPanics(t, run)
-			}
-		})
-	}
+func TestEndBlockerFeeRecipientRegistry(t *testing.T) {
+	// Decorators built but never installed (e.g. a default ante handler that
+	// the app replaced, or another app in the same process) do not count.
+	f := setupTest(t)
+	ctx := f.ctx.WithBlockHeight(1)
+	ante.FeeRecipientModule = poatypes.ModuleName
+
+	registry := ante.NewFeeRecipients()
+	f.poaKeeper.SetFeeRecipients(registry)
+	_ = ante.NewDeductFeeDecorator(nil, nil, nil, nil)
+	registry.Install(ante.NewDeductFeeDecorator(nil, nil, nil, nil).WithFeeRecipientModule(poatypes.ModuleName))
+	require.NotPanics(t, func() { _, _ = f.poaKeeper.EndBlocker(ctx) })
+
+	// A copy redirected to poa does not redirect the original: installing both
+	// leaves fee_collector in the registry, so PoA rejects it.
+	f = setupTest(t)
+	ctx = f.ctx.WithBlockHeight(1)
+	registry = ante.NewFeeRecipients()
+	f.poaKeeper.SetFeeRecipients(registry)
+	base := ante.NewDeductFeeDecorator(nil, nil, nil, nil)
+	redirected := base.WithFeeRecipientModule(poatypes.ModuleName)
+	registry.Install(redirected)
+	registry.Install(base)
+	require.Panics(t, func() { _, _ = f.poaKeeper.EndBlocker(ctx) })
+
+	// An empty registry is rejected too.
+	f = setupTest(t)
+	ctx = f.ctx.WithBlockHeight(1)
+	f.poaKeeper.SetFeeRecipients(ante.NewFeeRecipients())
+	require.Panics(t, func() { _, _ = f.poaKeeper.EndBlocker(ctx) })
 }

@@ -443,6 +443,42 @@ func (s *TestSuite) TestDequeueAndDeleteExpiredGrantsCapsPerCall() {
 	require.Equal(0, remaining(), "expected no grants left after the backlog is fully drained")
 }
 
+// A revoked grant, or one re-granted with a different expiration, must not leave
+// an empty entry in the expiry queue: it would use up the per-call prune limit
+// without deleting anything.
+func (s *TestSuite) TestRemovedGrantLeavesNoQueueEntry() {
+	require := s.Require()
+	addrs := s.addrs
+	now := s.ctx.BlockTime()
+	early := now.AddDate(0, 0, 1)
+	late := now.AddDate(0, 0, 2)
+	a := banktypes.SendAuthorization{SpendLimit: coins100}
+	msgType := a.MsgTypeURL()
+
+	// revoked: the queue entry at `early` is the earliest one and is now empty
+	require.NoError(s.authzKeeper.SaveGrant(s.ctx, addrs[1], addrs[0], &a, &early))
+	require.NoError(s.authzKeeper.DeleteGrant(s.ctx, addrs[1], addrs[0], msgType))
+
+	// re-granted with a later expiration: the entry at `early` is left empty too
+	require.NoError(s.authzKeeper.SaveGrant(s.ctx, addrs[3], addrs[2], &a, &early))
+	require.NoError(s.authzKeeper.SaveGrant(s.ctx, addrs[3], addrs[2], &a, &late))
+
+	// a live grant that expires after the two empty entries
+	require.NoError(s.authzKeeper.SaveGrant(s.ctx, addrs[5], addrs[4], &a, &late))
+
+	newCtx := s.ctx.WithBlockTime(late.AddDate(0, 0, 1))
+
+	// both live grants are expired and the prune limit is 2: they must both be
+	// pruned, which fails if empty entries consume part of the limit
+	require.NoError(s.authzKeeper.DequeueAndDeleteExpiredGrants(newCtx, 2))
+
+	for _, p := range [][2]sdk.AccAddress{{addrs[2], addrs[3]}, {addrs[4], addrs[5]}} {
+		authzs, err := s.authzKeeper.GetAuthorizations(newCtx, p[1], p[0])
+		require.NoError(err)
+		require.Empty(authzs)
+	}
+}
+
 func (s *TestSuite) TestGetAuthorization() {
 	addr1 := s.addrs[3]
 	addr2 := s.addrs[4]

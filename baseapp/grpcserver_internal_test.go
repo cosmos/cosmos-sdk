@@ -3,16 +3,20 @@ package baseapp
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/log/v2"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
@@ -138,6 +142,58 @@ func TestGRPCQueryInterceptor_BlockHeightHeaderOk_NoTrailer(t *testing.T) {
 			require.GreaterOrEqual(t, logger.failedSetHeaderCount, tc.expectedMinFailCount)
 			if tc.expectedLastDebug != "" {
 				require.Equal(t, tc.expectedLastDebug, logger.lastDebug)
+			}
+		})
+	}
+}
+
+type panickingQueryServer struct {
+	testdata.UnimplementedQueryServer
+}
+
+func (*panickingQueryServer) Echo(context.Context, *testdata.EchoRequest) (*testdata.EchoResponse, error) {
+	panic("query handler panicked")
+}
+
+type capturingGRPCServer struct {
+	descs []*grpc.ServiceDesc
+}
+
+func (s *capturingGRPCServer) RegisterService(sd *grpc.ServiceDesc, _ any) {
+	s.descs = append(s.descs, sd)
+}
+
+func TestRegisterGRPCServer_PanicRespectsTrace(t *testing.T) {
+	for _, trace := range []bool{false, true} {
+		t.Run(fmt.Sprintf("trace=%t", trace), func(t *testing.T) {
+			app := setupBaseAppForGRPCQueryTests(t, log.NewNopLogger())
+			app.setTrace(trace)
+			app.GRPCQueryRouter().SetInterfaceRegistry(testdata.NewTestInterfaceRegistry())
+			testdata.RegisterQueryServer(app.GRPCQueryRouter(), &panickingQueryServer{})
+
+			srv := &capturingGRPCServer{}
+			app.RegisterGRPCServer(srv)
+
+			var echo grpc.MethodHandler
+			for _, desc := range srv.descs {
+				for _, method := range desc.Methods {
+					if desc.ServiceName == "testpb.Query" && method.MethodName == "Echo" {
+						echo = method.Handler
+					}
+				}
+			}
+			require.NotNil(t, echo)
+
+			grpcCtx := metadata.NewIncomingContext(context.Background(), metadata.MD{})
+			_, err := echo(&panickingQueryServer{}, grpcCtx, func(any) error { return nil }, nil)
+			require.Equal(t, codes.Internal, status.Code(err))
+
+			msg := status.Convert(err).Message()
+			require.Contains(t, msg, "query handler panicked")
+			if trace {
+				require.Contains(t, msg, "baseapp.(*panickingQueryServer).Echo")
+			} else {
+				require.Equal(t, "query handler panicked", msg)
 			}
 		})
 	}

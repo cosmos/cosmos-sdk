@@ -400,6 +400,12 @@ func (k Keeper) removeFromGrantQueue(ctx context.Context, grantKey []byte, grant
 			queueItems[index] = queueItems[end]
 			queueItems = queueItems[:end]
 
+			// don't leave an empty entry behind: it would sit in the store
+			// until the expiration and use up the per-block prune limit
+			if len(queueItems) == 0 {
+				return store.Delete(key)
+			}
+
 			if err := k.setGrantQueueItem(ctx, expiration, granter, grantee, &authz.GrantQueueItem{
 				MsgTypeUrls: queueItems,
 			}); err != nil {

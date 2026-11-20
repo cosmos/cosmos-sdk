@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"go.uber.org/mock/gomock"
 	"gotest.tools/v3/assert"
@@ -144,4 +145,36 @@ func TestInitGenesis(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Allowances that expired before the genesis block time are dropped on import,
+// instead of failing InitGenesis (and with it the chain start).
+func TestInitGenesisSkipsExpiredAllowances(t *testing.T) {
+	source := initFixture(t)
+	source.accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAddr).Return(authtypes.NewBaseAccountWithAddress(granteeAddr)).AnyTimes()
+
+	otherGranterAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	coins := sdk.NewCoins(sdk.NewCoin("foo", math.NewInt(1_000)))
+	now := source.ctx.BlockTime()
+	soon := now.Add(time.Hour)
+	oneYear := now.AddDate(1, 0, 0)
+
+	assert.NilError(t, source.feegrantKeeper.GrantAllowance(source.ctx, granterAddr, granteeAddr, &feegrant.BasicAllowance{SpendLimit: coins, Expiration: &soon}))
+	assert.NilError(t, source.feegrantKeeper.GrantAllowance(source.ctx, otherGranterAddr, granteeAddr, &feegrant.BasicAllowance{SpendLimit: coins, Expiration: &oneYear}))
+
+	genesis, err := source.feegrantKeeper.ExportGenesis(source.ctx)
+	assert.NilError(t, err)
+	assert.Equal(t, len(genesis.Allowances), 2)
+
+	// restart after the first allowance expired but before the second one did
+	target := initFixture(t)
+	target.accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAddr).Return(authtypes.NewBaseAccountWithAddress(granteeAddr)).AnyTimes()
+	ctx := target.ctx.WithBlockTime(soon.Add(time.Hour))
+
+	assert.NilError(t, target.feegrantKeeper.InitGenesis(ctx, genesis))
+
+	imported, err := target.feegrantKeeper.ExportGenesis(ctx)
+	assert.NilError(t, err)
+	assert.Equal(t, len(imported.Allowances), 1)
+	assert.Equal(t, imported.Allowances[0].Granter, otherGranterAddr.String())
 }

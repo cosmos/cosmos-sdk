@@ -38,7 +38,7 @@ var _ ante.FeegrantKeeper = &Keeper{}
 func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak feegrant.AccountKeeper) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 
-	return Keeper{
+	k := Keeper{
 		cdc:          cdc,
 		storeService: storeService,
 		authKeeper:   ak,
@@ -57,6 +57,13 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak feeg
 			collections.BoolValue,
 		),
 	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 // SetBankKeeper is a super ugly hack to not be breaking in v0.50 and v0.47

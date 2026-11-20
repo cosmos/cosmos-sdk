@@ -13,7 +13,7 @@ require (
 	github.com/99designs/keyring v1.2.1
 	github.com/RoaringBitmap/roaring/v2 v2.30.0
 	github.com/bgentry/speakeasy v0.2.0
-	github.com/bits-and-blooms/bitset v1.26.0
+	github.com/bits-and-blooms/bitset v1.29.0
 	github.com/chzyer/readline v1.5.1
 	github.com/cockroachdb/errors v1.13.0
 	github.com/cometbft/cometbft v0.40.0
@@ -348,6 +348,11 @@ replace (
 )
 
 retract (
+	// feegrant expiry queue entries written before v0.54 fail to decode; fixed in v0.55.1
+	v0.55.0
+	// feegrant expiry queue entries written before v0.54 fail to decode; fixed in v0.54.5
+	[v0.54.0, v0.54.4]
+
 	// incorrect tag for patch version
 	v0.53.1
 

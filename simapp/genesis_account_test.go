@@ -36,11 +36,13 @@ func TestSimGenesisAccountValidate(t *testing.T) {
 			false,
 		},
 		{
-			"invalid basic account with mismatching address/pubkey",
+			// A rekeyed account's pubkey does not hash to its address.
+			// authtypes.ValidateGenesis checks that case against the pubkey history.
+			"basic account with rotated pubkey",
 			simapp.SimGenesisAccount{
 				BaseAccount: authtypes.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0),
 			},
-			true,
+			false,
 		},
 		{
 			"valid basic account with module name",

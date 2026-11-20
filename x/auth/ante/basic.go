@@ -4,10 +4,14 @@ import (
 	"slices"
 	"time"
 
+	cmtmldsa65 "github.com/cometbft/cometbft/crypto/mldsa65"
+
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa65"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -127,33 +131,82 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 
 			acc := cgts.ak.GetAccount(ctx, signer)
 
-			// use placeholder simSecp256k1Pubkey if sig is nil
-			if acc == nil || acc.GetPubKey() == nil {
-				pubkey = simSecp256k1Pubkey
-			} else {
+			// Size the placeholder from the stored pubkey. An account with none
+			// yet (such as a native ML-DSA-65 account's first tx) falls back to
+			// the SignerInfo pubkey, then to simSecp256k1Pubkey. This only
+			// affects the simulate estimate.
+			switch {
+			case acc != nil && acc.GetPubKey() != nil:
 				pubkey = acc.GetPubKey()
+			case i < n && sigs[i].PubKey != nil:
+				pubkey = sigs[i].PubKey
+			default:
+				pubkey = simSecp256k1Pubkey
 			}
 
-			// use stdsignature to mock the size of a full signature
-			simSig := legacytx.StdSignature{ //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated
-				Signature: simSecp256k1Sig[:],
-				PubKey:    pubkey,
-			}
-
-			sigBz := legacy.Cdc.MustMarshal(simSig)
-			cost := storetypes.Gas(len(sigBz) + 6)
-
-			// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
-			// number of signers.
-			if _, ok := pubkey.(*multisig.LegacyAminoPubKey); ok {
-				cost *= params.TxSigLimit
-			}
-
-			ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*cost, "txSize")
+			ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*simSigTxSize(pubkey, params.TxSigLimit), "txSize")
 		}
 	}
 
 	return next(ctx, tx, simulate)
+}
+
+// simSigTxSize estimates the bytes a missing signature for pubkey adds to a
+// tx, for simulation only.
+func simSigTxSize(pubkey cryptotypes.PubKey, txSigLimit uint64) storetypes.Gas {
+	// Legacy Amino does not register secp256r1. Its compressed pubkey and
+	// signature have the same encoded lengths as secp256k1, so use the
+	// registered placeholder when estimating only the transaction size.
+	encodingPubKey := pubkey
+	if _, ok := pubkey.(*secp256r1.PubKey); ok {
+		encodingPubKey = simSecp256k1Pubkey
+	}
+
+	// use stdsignature to mock the size of a full signature
+	stdSigSize := func(sigSize int) storetypes.Gas {
+		simSig := legacytx.StdSignature{ //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated
+			Signature: make([]byte, sigSize),
+			PubKey:    encodingPubKey,
+		}
+		return storetypes.Gas(len(legacy.Cdc.MustMarshal(simSig)) + 6)
+	}
+
+	cost := stdSigSize(len(simSecp256k1Sig))
+
+	// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
+	// number of signers.
+	if _, ok := pubkey.(*multisig.LegacyAminoPubKey); ok {
+		cost *= txSigLimit
+	}
+
+	// Signatures larger than a secp256k1 one, such as ML-DSA-65 ones (possibly
+	// from an account rekeyed with MsgChangePubKey), are sized for their key
+	// type. This never lowers the estimate above.
+	if sigSize := simSigSize(pubkey); sigSize > len(simSecp256k1Sig) {
+		cost = max(cost, stdSigSize(sigSize))
+	}
+
+	return cost
+}
+
+// simSigSize returns an upper bound on the signature bytes pubkey produces: the
+// fixed ML-DSA-65 signature size, the sum over all subkeys for a multisig, and
+// the secp256k1 signature size for any other key. For a multisig, the summed
+// size only exceeds the TxSigLimit multiplier in simSigTxSize when TxSigLimit
+// is small (about 2 or less for ML-DSA-65 subkeys).
+func simSigSize(pubkey cryptotypes.PubKey) int {
+	switch pk := pubkey.(type) {
+	case *mldsa65.PubKey:
+		return cmtmldsa65.SignatureSize
+	case *multisig.LegacyAminoPubKey:
+		size := 0
+		for _, sub := range pk.GetPubKeys() {
+			size += simSigSize(sub)
+		}
+		return size
+	default:
+		return len(simSecp256k1Sig)
+	}
 }
 
 // isIncompleteSignature tests whether SignatureData is fully filled in for simulation purposes

@@ -34,8 +34,10 @@ type SignerExtractionAdapter interface {
 
 var _ SignerExtractionAdapter = DefaultSignerExtractionAdapter{}
 
-// DefaultSignerExtractionAdapter is the default implementation of SignerExtractionAdapter. It extracts the signers
-// from a cosmos-sdk tx via GetSignaturesV2.
+// DefaultSignerExtractionAdapter is the default implementation of SignerExtractionAdapter. It extracts the signer
+// addresses from a cosmos-sdk tx via GetSigners and pairs them index-wise with the sequences from GetSignaturesV2.
+// The signer address is not derived from the signature's pubkey: a rekeyed account's pubkey does not hash to its
+// address, and a tx may omit the pubkey once it is stored on chain.
 type DefaultSignerExtractionAdapter struct{}
 
 // NewDefaultSignerExtractionAdapter constructs a new DefaultSignerExtractionAdapter instance
@@ -55,10 +57,19 @@ func (DefaultSignerExtractionAdapter) GetSigners(tx sdk.Tx) ([]SignerData, error
 		return nil, err
 	}
 
+	addrs, err := sigTx.GetSigners()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(addrs) != len(sigs) {
+		return nil, fmt.Errorf("tx has %d signers but %d signatures", len(addrs), len(sigs))
+	}
+
 	signers := make([]SignerData, len(sigs))
 	for i, sig := range sigs {
 		signers[i] = NewSignerData(
-			sig.PubKey.Address().Bytes(),
+			addrs[i],
 			sig.Sequence,
 		)
 	}

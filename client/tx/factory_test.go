@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -210,4 +211,27 @@ func TestFactory_getSimSignatureDataErrors(t *testing.T) {
 		_, err := Factory{}.getSimSignatureData(pk)
 		require.ErrorContains(t, err, "failed to convert proto Any to public key")
 	})
+}
+
+func TestFactoryPrepare_WithSignerAddress(t *testing.T) {
+	t.Parallel()
+
+	keyAddr := sdk.AccAddress("signing_key_address_")
+	accountAddr := sdk.AccAddress("rekeyed_account_addr")
+	// The retriever only knows the rekeyed account, so Prepare succeeds only
+	// if it looks up the signer address rather than the key's address.
+	ar := client.TestAccountRetriever{Accounts: map[string]client.TestAccount{
+		accountAddr.String(): {Address: accountAddr, Num: 7, Seq: 3},
+	}}
+	clientCtx := client.Context{}.WithFromAddress(keyAddr)
+
+	_, err := Factory{}.WithAccountRetriever(ar).Prepare(clientCtx)
+	require.Error(t, err)
+
+	txf := Factory{}.WithAccountRetriever(ar).WithSignerAddress(accountAddr)
+	require.Equal(t, accountAddr, txf.SignerAddress())
+	out, err := txf.Prepare(clientCtx)
+	require.NoError(t, err)
+	require.Equal(t, uint64(7), out.AccountNumber())
+	require.Equal(t, uint64(3), out.Sequence())
 }

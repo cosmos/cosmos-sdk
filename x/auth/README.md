@@ -21,10 +21,14 @@ This module is used in the Cosmos Hub.
     * [Gas & Fees](#gas--fees)
 * [State](#state)
     * [Accounts](#accounts)
+    * [Account Rekeying State](#account-rekeying-state)
 * [AnteHandlers](#antehandlers)
+* [Messages](#messages)
+    * [MsgChangePubKey](#msgchangepubkey)
 * [Keepers](#keepers)
     * [Account Keeper](#account-keeper)
 * [Parameters](#parameters)
+* [Events](#events)
 * [Client](#client)
     * [CLI](#cli)
     * [gRPC](#grpc)
@@ -140,9 +144,31 @@ message BaseAccount {
 
 See [Vesting](https://docs.cosmos.network/main/modules/auth/vesting/).
 
+### Account Rekeying State
+
+An account can replace its public key with [`MsgChangePubKey`](#msgchangepubkey) and keep its address. After that,
+an account's address is no longer always the hash of its public key. Two more collections in the account store
+record rotations:
+
+* PubKeyHistory: `0x5b | Address | BigEndian(rotationIndex) -> ProtocolBuffer(PubKeyHistoryEntry)`. There is one entry
+  per rotation, keyed by a per-account rotation index (a `uint64` counting from 0). It holds the replaced pubkey, the
+  block height (`replaced_at_height`) and block time it was replaced, and the natural address of the key that
+  replaced it.
+* RekeyIndex: `0x5c | NaturalAddress | Address -> []byte{}`. `NaturalAddress` is the hash of the account's current
+  pubkey. An entry exists only while that hash differs from the account address, so rotating back to the original
+  key removes it.
+
+Genesis exports the history as `pub_key_history`. `InitGenesis` rebuilds the index from the accounts' stored
+pubkeys. `ValidateGenesis` accepts an account whose pubkey does not hash to its address only if `pub_key_history`
+has an entry for that address. Module credential accounts are exempt. Every `pub_key_history` entry must belong to an
+account in genesis whose pubkey is neither nil nor a module credential, and each history must form a chain: an entry's
+`new_key_address` is the natural address of the next entry's pubkey, and the last entry's is the natural address of the
+account's current pubkey. No entry's pubkey may be a module credential. `RemoveAccount` deletes the account's history
+and index entry along with the account, so an export never contains history without an account.
+
 ## AnteHandlers
 
-The `x/auth` module presently has no transaction handlers of its own, but does expose the special `AnteHandler`, used for performing basic validity checks on a transaction, such that it could be thrown out of the mempool.
+Besides its [messages](#messages), the `x/auth` module exposes the special `AnteHandler`, used for performing basic validity checks on a transaction, such that it could be thrown out of the mempool.
 The `AnteHandler` can be seen as a set of decorators that check transactions within the current context, per [ADR 010](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-010-modular-antehandler.md).
 
 Note that the `AnteHandler` is called on both `CheckTx` and `DeliverTx`, as CometBFT proposers presently have the ability to include in their proposed block transactions which fail `CheckTx`.
@@ -167,7 +193,7 @@ The auth module provides `AnteDecorator`s that are recursively chained together 
 
 * `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the `tx`. If the `x/feegrant` module is enabled and a fee granter is set, it deducts fees from the fee granter account.
 
-* `SetPubKeyDecorator`: Sets the pubkey from a `tx`'s signers that does not already have its corresponding pubkey saved in the state machine and in the current context.
+* `SetPubKeyDecorator`: Sets the pubkey from a `tx`'s signers that does not already have its corresponding pubkey saved in the state machine and in the current context. A signer without a stored pubkey must provide a pubkey whose address equals the signer address. If a signer already has a stored pubkey, which may have been rotated with `MsgChangePubKey`, any pubkey in the `tx` must equal the stored one.
 
 * `ValidateSigCountDecorator`: Validates the number of signatures in `tx` based on app-parameters.
 
@@ -176,6 +202,60 @@ The auth module provides `AnteDecorator`s that are recursively chained together 
 * `SigVerificationDecorator`: Verifies all signatures are valid. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
 
 * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
+
+## Messages
+
+### MsgUpdateParams
+
+Updates the module parameters. The authority, by default the governance module account, must sign it. It replaces
+all parameters at once.
+
+### MsgChangePubKey
+
+Replaces the public key of an account. The account keeps its address, account number, sequence, balances and
+any validator it operates. Signed by the account's current key, it changes the members or threshold of a
+multisig account, or moves an account to another key type, such as ML-DSA-65, without moving funds.
+
+```protobuf
+message MsgChangePubKey {
+  option (cosmos.msg.v1.signer) = "address";
+
+  string              address     = 1;
+  google.protobuf.Any new_pub_key = 2;
+  bytes               proof       = 3;
+}
+```
+
+`proof` is a proof of possession of `new_pub_key`. It is the proto encoding of a
+`cosmos.tx.signing.v1beta1.SignatureDescriptor.Data` that signs an
+[ADR-036](../../docs/architecture/adr-036-arbitrary-signature.md) amino-JSON sign doc. In that doc, `signer` is the
+bech32 address of `new_pub_key` and `data` is the proto encoding of
+`ChangePubKeyProofDoc{chain_id, account_number, address, new_pub_key}`. Every signature in the proof must use
+`SIGN_MODE_LEGACY_AMINO_JSON`, which Ledger devices support. For a multisig `new_pub_key`, the proof is a
+multisignature that meets its threshold. The doc binds the chain id, account number and address, so a proof cannot be
+replayed for another account or chain.
+
+The handler checks, in order:
+
+1. `pub_key_change_enabled` is `true` (`ErrPubKeyChangeDisabled`).
+2. The account exists, is not a module account, has a stored pubkey, and that pubkey is not a `ModuleCredential`
+   (`ErrAccountNotRekeyable`).
+3. `new_pub_key` is supported (`ErrInvalidNewPubKey`). Supported types are `secp256k1`, `secp256r1`, `ed25519`,
+   `mldsa65`, and `LegacyAminoPubKey` multisigs built from `secp256k1`, `ed25519` and `mldsa65` keys. A multisig may
+   contain multisigs, but those may not (at most 2 levels of multisig), and each multisig may have at most 32 direct
+   subkeys: these are the limits the ante handler accepts when flattening signatures. `secp256r1` is accepted only as
+   a top-level key. The total number of subkeys must not exceed `TxSigLimit`, so the account cannot lock itself out,
+   and the key must differ from the current one.
+4. It consumes `pub_key_change_cost` gas, then verifies the proof (`ErrInvalidPubKeyProof`).
+
+On success, it records the replaced key in the pubkey history, updates the rekey index, stores the new pubkey and
+emits a [`change_pubkey`](#events) event. From then on, the account's txs must be signed with the new key. Txs signed
+with the old key fail in `FinalizeBlock` and do not change state. One that includes the old pubkey also fails
+`SetPubKeyDecorator` on `RecheckTx` and is evicted from the mempool. One that omits its pubkey passes, and `RecheckTx`
+skips signature verification, so it can stay in the mempool until it expires or is included and fails.
+
+`x/authz` will not grant or execute `MsgChangePubKey`, because that would let the grantee take over the granter's
+account.
 
 ## Keepers
 
@@ -238,6 +318,21 @@ The auth module contains the following parameters:
 | TxSizeCostPerByte      |      uint64     | 10      |
 | SigVerifyCostED25519   |      uint64     | 590     |
 | SigVerifyCostSecp256k1 |      uint64     | 1000    |
+| PubKeyChangeEnabled    |      bool       | false   |
+| PubKeyChangeCost       |      uint64     | 50000   |
+
+`PubKeyChangeEnabled` turns `MsgChangePubKey` on. It defaults to `false`, and the 7 to 8 store migration sets it to
+`false`. `PubKeyChangeCost` is the gas that `MsgChangePubKey` consumes in addition to the normal tx gas.
+
+## Events
+
+### MsgChangePubKey
+
+| Type          | Attribute Key      | Attribute Value                        |
+| ------------- | ------------------ | -------------------------------------- |
+| change_pubkey | address            | {accountAddress}                       |
+| change_pubkey | old_pubkey_address | {naturalAddressOfReplacedPubKey}       |
+| change_pubkey | new_pubkey_address | {naturalAddressOfNewPubKey}            |
 
 ## Client
 
@@ -402,6 +497,24 @@ tx_sig_limit: "7"
 tx_size_cost_per_byte: "10"
 ```
 
+#### rekeyed-accounts
+
+The `rekeyed-accounts` command lists the accounts whose current pubkey hashes to the given address. After a
+`MsgChangePubKey`, a key controls an account whose address differs from the key's own address. Wallets that recover a
+key from a mnemonic use this command to find that account.
+
+```bash
+simd query auth rekeyed-accounts [address] [flags]
+```
+
+#### pubkey-history
+
+The `pubkey-history` command lists the pubkeys an account has replaced, with the height and time of each rotation.
+
+```bash
+simd query auth pubkey-history [address] [flags]
+```
+
 ### Transactions
 
 The `auth` module supports transactions commands to help you with signing and more. Compared to other modules you can access directly the `auth` module transactions commands using the only `tx` command.
@@ -503,6 +616,45 @@ simd tx broadcast tx.signed.json
 
 More information about the `broadcast` command can be found running `simd tx broadcast --help`.
 
+
+#### `sign-rekey-proof`
+
+The `sign-rekey-proof` command signs the proof of possession that `change-pubkey` needs from the new pubkey. The
+`--from` key must be the new pubkey or, for a multisig new pubkey, one of its direct members. Each member signs its
+own proof. The proof is always signed with `SIGN_MODE_LEGACY_AMINO_JSON`.
+
+```bash
+simd tx auth sign-rekey-proof [account-address] [new-pubkey-json] --from <new-key> > proof.json
+```
+
+#### `change-pubkey`
+
+The `change-pubkey` command sends a `MsgChangePubKey` signed by the account's current key. `--proof` takes one or
+more files written by `sign-rekey-proof`, comma separated. For a multisig new pubkey, they are combined into one
+multisignature.
+
+```bash
+simd tx auth change-pubkey [account-address] [new-pubkey-json] --proof proof1.json,proof2.json --from <current-key>
+```
+
+After the change, sign the account's txs with the new key and pass the account address with `--signer-address`,
+because the address of the `--from` key no longer matches the account. For commands such as `bank send` that take
+the sender as an argument, pass the new key's name there:
+
+```bash
+simd tx bank send <new-key> [to-address] 10stake --signer-address [account-address]
+```
+
+An account rekeyed to a multisig spends with the usual multisig flow, passing `--signer-address` to each step, so the
+signatures are made for the account rather than for the multisig key's own address. As for any multisig, only
+`SIGN_MODE_LEGACY_AMINO_JSON` is supported:
+
+```bash
+simd tx sign tx.json --from <member-key> --multisig <multisig-key> --signer-address [account-address] --sign-mode amino-json > sig.json
+simd tx multisign tx.json <multisig-key> sig1.json sig2.json --signer-address [account-address] > signed.json
+```
+
+`sign-batch --multisig` and `multisign-batch` accept `--signer-address` in the same way.
 
 ### gRPC
 
@@ -687,6 +839,40 @@ Example Output:
 }
 ```
 
+#### RekeyedAccounts
+
+The `RekeyedAccounts` endpoint returns the accounts whose current pubkey hashes to the given address.
+
+```bash
+cosmos.auth.v1beta1.Query/RekeyedAccounts
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"address":"cosmos1.."}' \
+    localhost:9090 \
+    cosmos.auth.v1beta1.Query/RekeyedAccounts
+```
+
+#### PubKeyHistory
+
+The `PubKeyHistory` endpoint returns the pubkeys an account has replaced.
+
+```bash
+cosmos.auth.v1beta1.Query/PubKeyHistory
+```
+
+Example:
+
+```bash
+grpcurl -plaintext \
+    -d '{"address":"cosmos1.."}' \
+    localhost:9090 \
+    cosmos.auth.v1beta1.Query/PubKeyHistory
+```
+
 ### REST
 
 A user can query the `auth` module using REST endpoints.
@@ -713,4 +899,20 @@ The `params` endpoint allows users to query the current auth parameters.
 
 ```bash
 /cosmos/auth/v1beta1/params
+```
+
+#### RekeyedAccounts
+
+The `rekeyed_accounts` endpoint returns the accounts whose current pubkey hashes to the given address.
+
+```bash
+/cosmos/auth/v1beta1/rekeyed_accounts/{address}
+```
+
+#### PubKeyHistory
+
+The `pub_key_history` endpoint returns the pubkeys an account has replaced.
+
+```bash
+/cosmos/auth/v1beta1/pub_key_history/{address}
 ```

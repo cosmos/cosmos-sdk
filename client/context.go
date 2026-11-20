@@ -56,6 +56,7 @@ type Context struct {
 	AccountRetriever      AccountRetriever
 	NodeURI               string
 	FeePayer              sdk.AccAddress
+	SignerAddress         sdk.AccAddress
 	FeeGranter            sdk.AccAddress
 	Viper                 *viper.Viper
 	LedgerHasProtobuf     bool
@@ -242,6 +243,15 @@ func (ctx Context) WithFeePayerAddress(addr sdk.AccAddress) Context {
 	return ctx
 }
 
+// WithSignerAddress returns a copy of the context with an updated signer
+// address. When set, the from key signs for this account address instead of
+// the address derived from its pubkey, as needed for an account whose pubkey
+// was changed with MsgChangePubKey.
+func (ctx Context) WithSignerAddress(addr sdk.AccAddress) Context {
+	ctx.SignerAddress = addr
+	return ctx
+}
+
 // WithFeeGranterAddress returns a copy of the context with an updated fee granter account
 // address.
 func (ctx Context) WithFeeGranterAddress(addr sdk.AccAddress) Context {
@@ -412,6 +422,8 @@ func (ctx Context) printOutput(out []byte) error {
 }
 
 // GetFromFields returns a from account address, account name and keyring type, given either an address or key name.
+// If clientCtx.SignerAddress is set, it is returned as the account address in
+// place of the address of the resolved key.
 // If clientCtx.Simulate is true the keystore is not accessed and a valid address must be provided
 // If clientCtx.GenerateOnly is true the keystore is only accessed if a key name is provided
 // If from is empty, the default key if specified in the context will be used
@@ -432,11 +444,11 @@ func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccA
 			return nil, "", 0, fmt.Errorf("a valid bech32 address must be provided in simulation mode: %w", err)
 		}
 
-		return addr, "", 0, nil
+		return clientCtx.signerAddressOr(addr), "", 0, nil
 
 	case clientCtx.GenerateOnly:
 		if err == nil {
-			return addr, "", 0, nil
+			return clientCtx.signerAddressOr(addr), "", 0, nil
 		}
 	}
 
@@ -458,7 +470,15 @@ func GetFromFields(clientCtx Context, kr keyring.Keyring, from string) (sdk.AccA
 		return nil, "", 0, err
 	}
 
-	return addr, k.Name, k.GetType(), nil
+	return clientCtx.signerAddressOr(addr), k.Name, k.GetType(), nil
+}
+
+// signerAddressOr returns ctx.SignerAddress if set, else addr.
+func (ctx Context) signerAddressOr(addr sdk.AccAddress) sdk.AccAddress {
+	if len(ctx.SignerAddress) > 0 {
+		return ctx.SignerAddress
+	}
+	return addr
 }
 
 // NewKeyringFromBackend gets a Keyring object from a backend

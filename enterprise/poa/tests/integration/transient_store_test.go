@@ -119,6 +119,7 @@ func initFixture(tb testing.TB) *fixture {
 		accountKeeper,
 		bankKeeper,
 	)
+	accountKeeper.SetPubKeyChangeHooks(poaKeeper.NewAuthHooks())
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)

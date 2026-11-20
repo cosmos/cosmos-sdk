@@ -9,6 +9,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/collections"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -244,4 +246,71 @@ func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInf
 			Sequence:      account.GetSequence(),
 		},
 	}, nil
+}
+
+// RekeyedAccounts returns the accounts whose current public key has the given
+// natural address, in ascending address order.
+func (s queryServer) RekeyedAccounts(ctx context.Context, req *types.QueryRekeyedAccountsRequest) (*types.QueryRekeyedAccountsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	keyAddr, err := s.parseAddress(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	addresses, pageRes, err := query.CollectionPaginate(ctx, s.k.RekeyIndex, req.Pagination,
+		func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], _ collections.NoValue) (string, error) {
+			return s.k.addressCodec.BytesToString(key.K2())
+		}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.AccAddress](keyAddr))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if addresses == nil {
+		addresses = []string{}
+	}
+
+	return &types.QueryRekeyedAccountsResponse{Addresses: addresses, Pagination: pageRes}, nil
+}
+
+// PubKeyHistory returns the public key rotation history of an account, in the
+// order the rotations happened.
+func (s queryServer) PubKeyHistory(ctx context.Context, req *types.QueryPubKeyHistoryRequest) (*types.QueryPubKeyHistoryResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	addr, err := s.parseAddress(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	entries, pageRes, err := query.CollectionPaginate(ctx, s.k.PubKeyHistory, req.Pagination,
+		func(_ collections.Pair[sdk.AccAddress, uint64], entry types.PubKeyHistoryEntry) (types.PubKeyHistoryEntry, error) {
+			return entry, nil
+		}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, uint64](addr))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if entries == nil {
+		entries = []types.PubKeyHistoryEntry{}
+	}
+
+	return &types.QueryPubKeyHistoryResponse{Entries: entries, Pagination: pageRes}, nil
+}
+
+// parseAddress decodes a non-empty address string, returning an
+// InvalidArgument status error on failure.
+func (s queryServer) parseAddress(address string) (sdk.AccAddress, error) {
+	if strings.TrimSpace(address) == "" {
+		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
+	}
+
+	bz, err := s.k.addressCodec.StringToBytes(address)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid address %q: %s", address, err)
+	}
+
+	return bz, nil
 }

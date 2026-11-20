@@ -15,14 +15,10 @@ func Migrate(ctx context.Context, params collections.Item[types.Params]) error {
 		return err
 	}
 
+	// Do not call p.Validate() here: it also checks params added in later
+	// versions, which are still unset when a chain runs this step on its way
+	// to a newer version. The value set here is a valid constant.
 	p.SigVerifyCostMlDsa65 = types.DefaultSigVerifyCostMlDsa65
-	if err = p.Validate(); err != nil {
-		return err
-	}
 
-	if err = params.Set(ctx, p); err != nil {
-		return err
-	}
-
-	return nil
+	return params.Set(ctx, p)
 }

@@ -411,7 +411,7 @@ func randomSendFields(
 	to, _ := simtypes.RandomAcc(r, accs)
 
 	// disallow sending money to yourself
-	for from.PubKey.Equals(to.PubKey) {
+	for from.Address.Equals(to.Address) {
 		to, _ = simtypes.RandomAcc(r, accs)
 	}
 

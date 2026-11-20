@@ -18,6 +18,8 @@ const (
 	SigVerifyCostED25519   = "sig_verify_cost_ed25519"
 	SigVerifyCostSECP256K1 = "sig_verify_cost_secp256k1"
 	SigVerifyCostMlDsa65   = "sig_verify_cost_mldsa65"
+	PubKeyChangeEnabled    = "pub_key_change_enabled"
+	PubKeyChangeCost       = "pub_key_change_cost"
 )
 
 // RandomGenesisAccounts defines the default RandomGenesisAccountsFn used on the SDK.
@@ -94,6 +96,18 @@ func GenSigVerifyCostMlDsa65(r *rand.Rand) uint64 {
 	return uint64(simulation.RandIntBetween(r, 500, 1000))
 }
 
+// GenPubKeyChangeEnabled randomized PubKeyChangeEnabled. It is biased towards
+// true so that MsgChangePubKey is exercised in most simulations.
+func GenPubKeyChangeEnabled(r *rand.Rand) bool {
+	return r.Intn(100) < 75
+}
+
+// GenPubKeyChangeCost randomized PubKeyChangeCost. It is always non-zero and
+// well below the gas limit of simulated txs.
+func GenPubKeyChangeCost(r *rand.Rand) uint64 {
+	return uint64(simulation.RandIntBetween(r, 1000, 40000))
+}
+
 // RandomizedGenState generates a random GenesisState for auth
 func RandomizedGenState(simState *module.SimulationState, randGenAccountsFn types.RandomGenesisAccountsFn) {
 	var maxMemoChars uint64
@@ -114,8 +128,15 @@ func RandomizedGenState(simState *module.SimulationState, randGenAccountsFn type
 	var sigVerifyCostMlDsa65 uint64
 	simState.AppParams.GetOrGenerate(SigVerifyCostMlDsa65, &sigVerifyCostMlDsa65, simState.Rand, func(r *rand.Rand) { sigVerifyCostMlDsa65 = GenSigVerifyCostMlDsa65(r) })
 
+	var pubKeyChangeEnabled bool
+	simState.AppParams.GetOrGenerate(PubKeyChangeEnabled, &pubKeyChangeEnabled, simState.Rand, func(r *rand.Rand) { pubKeyChangeEnabled = GenPubKeyChangeEnabled(r) })
+
+	var pubKeyChangeCost uint64
+	simState.AppParams.GetOrGenerate(PubKeyChangeCost, &pubKeyChangeCost, simState.Rand, func(r *rand.Rand) { pubKeyChangeCost = GenPubKeyChangeCost(r) })
+
 	params := types.NewParams(maxMemoChars, txSigLimit, txSizeCostPerByte,
-		sigVerifyCostED25519, sigVerifyCostSECP256K1, sigVerifyCostMlDsa65)
+		sigVerifyCostED25519, sigVerifyCostSECP256K1, sigVerifyCostMlDsa65,
+		pubKeyChangeEnabled, pubKeyChangeCost)
 	genesisAccs := randGenAccountsFn(simState)
 
 	authGenesis := types.NewGenesisState(params, genesisAccs)

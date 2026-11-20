@@ -19,6 +19,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -28,6 +29,7 @@ import (
 
 var (
 	bankSendAuthMsgType = banktypes.SendAuthorization{}.MsgTypeURL()
+	changePubKeyTypeURL = "/cosmos.auth.v1beta1.MsgChangePubKey"
 	coins10             = sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
 	coins100            = sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	coins1000           = sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
@@ -304,6 +306,25 @@ func (s *TestSuite) TestDispatchAction() {
 			tc.postRun()
 		})
 	}
+}
+
+func (s *TestSuite) TestDispatch_RejectsChangePubKey() {
+	require := s.Require()
+	now := s.ctx.BlockTime()
+	granterAddr, granteeAddr := s.addrs[0], s.addrs[1]
+
+	// x/authz matches MsgChangePubKey by a string constant; keep it in sync
+	// with the real x/auth type.
+	msg := &authtypes.MsgChangePubKey{Address: granterAddr.String()}
+	require.Equal(changePubKeyTypeURL, sdk.MsgTypeURL(msg))
+
+	// Simulate a GenericAuthorization written before MsgChangePubKey became
+	// non-authorizable (e.g. a grant that predates the upgrade).
+	expire := now.AddDate(1, 0, 0)
+	require.NoError(s.authzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, authz.NewGenericAuthorization(changePubKeyTypeURL), &expire))
+
+	_, err := s.authzKeeper.DispatchActions(s.ctx, granteeAddr, []sdk.Msg{msg})
+	require.ErrorIs(err, authz.ErrMsgNotAuthorizable)
 }
 
 // Tests that all msg events included in an authz MsgExec tx

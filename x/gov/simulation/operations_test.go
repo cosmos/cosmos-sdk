@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -476,6 +477,60 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	require.NotEqual(t, len(msg.Amount), 0)
 	require.Equal(t, "560969stake", msg.Amount[0].String())
 	require.Equal(t, simulation.TypeMsgDeposit, sdk.MsgTypeURL(&msg))
+}
+
+// TestSimulateMsgSubmitProposalScheduledVotesUseCurrentKeys checks that the
+// votes scheduled by a proposal sign with the voter's current key, not the key
+// captured when the proposal was submitted. MsgChangePubKey can rotate a key
+// between the two.
+func TestSimulateMsgSubmitProposalScheduledVotesUseCurrentKeys(t *testing.T) {
+	suite, ctx := createTestSuite(t, false)
+	app := suite.App
+
+	r := rand.New(rand.NewSource(1))
+	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
+
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: app.LastBlockHeight() + 1,
+		Hash:   app.LastCommitID().Hash,
+	})
+	require.NoError(t, err)
+
+	submittedID, err := suite.GovKeeper.ProposalID.Peek(ctx)
+	require.NoError(t, err)
+
+	op := simulation.SimulateMsgSubmitProposalWithVotes(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
+	operationMsg, votes, err := op(r, app.BaseApp, ctx, accounts, "")
+	require.NoError(t, err)
+	require.True(t, operationMsg.OK)
+
+	require.NotEmpty(t, votes)
+
+	// Activate voting for the submitted proposal if the initial deposit did
+	// not already activate it.
+	proposal, err := suite.GovKeeper.Proposals.Get(ctx, submittedID)
+	require.NoError(t, err)
+	if proposal.Status == v1.StatusDepositPeriod {
+		require.NoError(t, suite.GovKeeper.ActivateVotingPeriod(ctx, proposal))
+	}
+
+	// Rotate every account's key on chain and in the simulation account list
+	// after the votes were scheduled.
+	for i := range accounts {
+		newPriv := secp256k1.GenPrivKeyFromSecret([]byte(fmt.Sprintf("rotated-%d", i)))
+		acc := suite.AccountKeeper.GetAccount(ctx, accounts[i].Address)
+		require.NoError(t, acc.SetPubKey(newPriv.PubKey()))
+		suite.AccountKeeper.SetAccount(ctx, acc)
+		accounts[i].PrivKey = newPriv
+		accounts[i].PubKey = newPriv.PubKey()
+	}
+
+	for _, vote := range votes {
+		require.NotNil(t, vote.Op)
+		voteMsg, _, err := vote.Op(r, app.BaseApp, ctx, accounts, "")
+		require.NoError(t, err)
+		require.True(t, voteMsg.OK)
+	}
 }
 
 // TestSimulateMsgVote tests the normal scenario of a valid message of type TypeMsgVote.

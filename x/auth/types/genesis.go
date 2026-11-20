@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -37,6 +38,11 @@ func (g GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 		var account GenesisAccount
 		err := unpacker.UnpackAny(any, &account)
 		if err != nil {
+			return err
+		}
+	}
+	for i := range g.PubKeyHistory {
+		if err := g.PubKeyHistory[i].UnpackInterfaces(unpacker); err != nil {
 			return err
 		}
 	}
@@ -72,7 +78,150 @@ func ValidateGenesis(data GenesisState) error {
 		return err
 	}
 
-	return ValidateGenAccounts(genAccs)
+	if err := ValidateGenAccounts(genAccs); err != nil {
+		return err
+	}
+
+	accsByAddr := make(map[string]GenesisAccount, len(genAccs))
+	for _, acc := range genAccs {
+		accsByAddr[acc.GetAddress().String()] = acc
+	}
+
+	rekeyed, err := validatePubKeyHistory(data.PubKeyHistory, accsByAddr)
+	if err != nil {
+		return err
+	}
+
+	// An account whose pubkey does not hash to its address must have been
+	// rekeyed, so it must have a pubkey history.
+	for _, acc := range genAccs {
+		pk := acc.GetPubKey()
+		if pk == nil {
+			continue
+		}
+		if _, ok := pk.(*ModuleCredential); ok {
+			continue
+		}
+		addr := acc.GetAddress()
+		pkAddr, err := pubKeyAddress(pk)
+		if err != nil {
+			return fmt.Errorf("invalid account found in genesis state; address: %s, error: %w", addr, err)
+		}
+		if pkAddr.Equals(addr) {
+			continue
+		}
+		if !rekeyed[addr.String()] {
+			return fmt.Errorf("invalid account found in genesis state; address: %s, error: pubkey address does not match and account has no pubkey history", addr)
+		}
+	}
+
+	return nil
+}
+
+// validatePubKeyHistory checks the genesis pubkey history against the genesis
+// accounts (keyed by bech32 address) and returns the set of addresses (bech32)
+// that have history.
+//
+// Each history must belong to an account in genesis whose stored pubkey is
+// neither nil nor a ModuleCredential, since only such accounts can rekey. No
+// entry's pubkey may be a ModuleCredential, and every pubkey must be well
+// formed enough to derive an address. The first entry's pubkey must hash to the
+// account address, since it is the account's original key. The entries must
+// form a chain: each entry's new_key_address is the natural address of the next
+// entry's pubkey, and the last entry's new_key_address is the natural address
+// of the account's current pubkey.
+func validatePubKeyHistory(history []GenesisPubKeyHistory, accsByAddr map[string]GenesisAccount) (map[string]bool, error) {
+	seen := make(map[string]bool, len(history))
+	for _, h := range history {
+		addr, err := sdk.AccAddressFromBech32(h.Address)
+		if err != nil {
+			return nil, fmt.Errorf("invalid pubkey history address %q: %w", h.Address, err)
+		}
+		addrStr := addr.String()
+		if seen[addrStr] {
+			return nil, fmt.Errorf("duplicate pubkey history found in genesis state; address: %s", addrStr)
+		}
+		seen[addrStr] = true
+
+		if len(h.Entries) == 0 {
+			return nil, fmt.Errorf("pubkey history for %s has no entries", addrStr)
+		}
+
+		acc, ok := accsByAddr[addrStr]
+		if !ok {
+			return nil, fmt.Errorf("pubkey history for %s has no account in genesis state", addrStr)
+		}
+		currentPk := acc.GetPubKey()
+		if currentPk == nil {
+			return nil, fmt.Errorf("pubkey history for %s but the account has no pubkey", addrStr)
+		}
+		if _, ok := currentPk.(*ModuleCredential); ok {
+			return nil, fmt.Errorf("pubkey history for %s but the account's pubkey is a ModuleCredential", addrStr)
+		}
+		currentPkAddr, err := pubKeyAddress(currentPk)
+		if err != nil {
+			return nil, fmt.Errorf("pubkey history for %s: account pubkey: %w", addrStr, err)
+		}
+
+		// Entries are in rotation order. Heights may repeat (two rotations in
+		// one block) or decrease (rotations after a zero-height export).
+		newKeyAddrs := make([]sdk.AccAddress, len(h.Entries))
+		pubKeyAddrs := make([]sdk.AccAddress, len(h.Entries))
+		for i, entry := range h.Entries {
+			if entry.ReplacedAtHeight < 0 {
+				return nil, fmt.Errorf("pubkey history for %s has negative height %d", addrStr, entry.ReplacedAtHeight)
+			}
+			if entry.PubKey == nil {
+				return nil, fmt.Errorf("pubkey history for %s entry %d has no pubkey", addrStr, i)
+			}
+			pk, ok := entry.PubKey.GetCachedValue().(cryptotypes.PubKey)
+			if !ok || pk == nil {
+				return nil, fmt.Errorf("pubkey history for %s entry %d has no pubkey: cannot unpack %s", addrStr, i, entry.PubKey.TypeUrl)
+			}
+			if _, ok := pk.(*ModuleCredential); ok {
+				return nil, fmt.Errorf("pubkey history for %s entry %d is a ModuleCredential", addrStr, i)
+			}
+			pubKeyAddrs[i], err = pubKeyAddress(pk)
+			if err != nil {
+				return nil, fmt.Errorf("pubkey history for %s entry %d: %w", addrStr, i, err)
+			}
+			newKeyAddrs[i], err = sdk.AccAddressFromBech32(entry.NewKeyAddress)
+			if err != nil {
+				return nil, fmt.Errorf("pubkey history for %s entry %d has invalid new key address %q: %w", addrStr, i, entry.NewKeyAddress, err)
+			}
+		}
+
+		// The first entry holds the account's original key, which
+		// SetPubKeyDecorator only stores if it hashes to the account address.
+		if !pubKeyAddrs[0].Equals(addr) {
+			return nil, fmt.Errorf("pubkey history for %s entry 0 pubkey address %s does not match the account address", addrStr, pubKeyAddrs[0])
+		}
+
+		for i, newKeyAddr := range newKeyAddrs {
+			if i+1 < len(pubKeyAddrs) {
+				if !newKeyAddr.Equals(pubKeyAddrs[i+1]) {
+					return nil, fmt.Errorf("pubkey history for %s entry %d new key address %s does not match the next entry's pubkey", addrStr, i, newKeyAddr)
+				}
+				continue
+			}
+			if !newKeyAddr.Equals(currentPkAddr) {
+				return nil, fmt.Errorf("pubkey history for %s entry %d new key address %s does not match the account's current pubkey", addrStr, i, newKeyAddr)
+			}
+		}
+	}
+	return seen, nil
+}
+
+// pubKeyAddress returns pk's natural address. Address() panics on some
+// malformed keys, such as a secp256k1 key of the wrong length, which a
+// hand-edited genesis can contain, so the panic is returned as an error.
+func pubKeyAddress(pk cryptotypes.PubKey) (addr sdk.AccAddress, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("malformed pubkey %T: %v", pk, r)
+		}
+	}()
+	return sdk.AccAddress(pk.Address()), nil
 }
 
 // SanitizeGenesisAccounts sorts accounts and coin sets.

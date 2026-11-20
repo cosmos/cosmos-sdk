@@ -77,6 +77,7 @@ const (
 	FlagKeyType          = "key-type"
 	FlagFeePayer         = "fee-payer"
 	FlagFeeGranter       = "fee-granter"
+	FlagSignerAddress    = "signer-address"
 	FlagReverse          = "reverse"
 	FlagTip              = "tip"
 	FlagAux              = "aux"
@@ -140,6 +141,7 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	f.Bool(FlagUnordered, false, "Enable unordered transaction delivery; must be used in conjunction with --timeout-duration")
 	f.String(FlagFeePayer, "", "Fee payer pays fees for the transaction instead of deducting from the signer")
 	f.String(FlagFeeGranter, "", "Fee granter grants fees for the transaction")
+	f.String(FlagSignerAddress, "", "Account address to sign for when it differs from the address of the --from key, e.g. an account whose pubkey was changed to that key")
 	f.String(FlagTip, "", "Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator")
 	f.Bool(FlagAux, false, "Generate aux signer data instead of sending a tx")
 	f.String(FlagChainID, "", "The network chain ID")

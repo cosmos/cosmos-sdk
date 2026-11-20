@@ -1100,3 +1100,43 @@ func TestPriorityNonceMempool_UnorderedTx(t *testing.T) {
 		require.Equal(t, txs[i].id, tx.(testTx).id)
 	}
 }
+
+// TestPriorityNonce_RekeyedSender checks that txs from an account whose pubkey
+// was rotated are ordered as a single sender keyed by the signer address.
+func TestPriorityNonce_RekeyedSender(t *testing.T) {
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
+	sa := accounts[0].Address
+	sb := accounts[1].Address
+
+	mp := mempool.DefaultPriorityMempool()
+
+	txs := []testTx{
+		// account A before the rotation, signed by its original key
+		{id: 0, priority: 1, nonce: 0, address: sa},
+		// account A after the rotation, signed by a key whose natural address
+		// is B. The higher priority must not let it jump ahead of nonce 0.
+		{id: 1, priority: 10, nonce: 1, address: sa, pubKeyAddress: sb},
+		// account A, pubkey omitted from the tx
+		{id: 2, priority: 20, nonce: 2, address: sa, nilPubKey: true},
+	}
+	for _, tx := range txs {
+		require.NoError(t, mp.Insert(ctx.WithPriority(tx.priority), tx, mempool.InsertOption{}))
+	}
+	require.Equal(t, len(txs), mp.CountTx())
+
+	require.Equal(t, txs[0], mp.NextSenderTx(sa.String()))
+	require.Nil(t, mp.NextSenderTx(sb.String()))
+
+	orderedTxs := fetchTxs(mp.Select(ctx, nil), 1000)
+	require.Len(t, orderedTxs, len(txs))
+	for i, tx := range orderedTxs {
+		require.Equal(t, txs[i].id, tx.(testTx).id)
+	}
+
+	for _, tx := range txs {
+		require.NoError(t, mp.Remove(tx))
+	}
+	require.Equal(t, 0, mp.CountTx())
+	require.Nil(t, mp.NextSenderTx(sa.String()))
+}

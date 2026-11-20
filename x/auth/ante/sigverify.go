@@ -49,6 +49,8 @@ type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig sign
 
 // SetPubKeyDecorator sets PubKeys in context for any signer which does not already have pubkey set
 // PubKeys must be set in context for all signers before any other sigverify decorators run
+// A new pubkey must hash to the signer address. Once a pubkey is stored (it may have been
+// rotated with MsgChangePubKey), a pubkey given in the tx must equal the stored one.
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SetPubKeyDecorator struct {
 	ak AccountKeeper
@@ -89,11 +91,30 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			return sdk.Context{}, err
 		}
 
-		// PublicKey was omitted from slice since it has already been set in context
-		if pk == nil {
-			if !simulate {
-				continue
+		// PublicKey was omitted from slice since it has already been set in context.
+		// There is nothing to compare, so skip the account read.
+		if pk == nil && !simulate {
+			continue
+		}
+
+		acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
+		if err != nil {
+			return ctx, err
+		}
+
+		// The account already has a pubkey. It may have been rotated with
+		// MsgChangePubKey, so it need not hash to the signer address; a tx
+		// pubkey, when present, must equal the stored one. Only make check if
+		// simulate=false.
+		if storedPk := acc.GetPubKey(); storedPk != nil {
+			if !simulate && !pk.Equals(storedPk) && ctx.IsSigverifyTx() {
+				return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey,
+					"pubKey does not match the stored pubkey of signer %s with signer index: %d", signerStrs[i], i)
 			}
+			continue
+		}
+
+		if pk == nil {
 			pk = simSecp256k1Pubkey
 		}
 		// Only make check if simulate=false
@@ -102,14 +123,6 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 				"pubKey does not match signer address %s with signer index: %d", signerStrs[i], i)
 		}
 
-		acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
-		if err != nil {
-			return ctx, err
-		}
-		// account already has pubkey set, no need to reset
-		if acc.GetPubKey() != nil {
-			continue
-		}
 		err = acc.SetPubKey(pk)
 		if err != nil {
 			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
@@ -684,7 +697,7 @@ func CountSubKeys(pub cryptotypes.PubKey) int {
 // For SingleSignatureData, it returns the signature raw bytes.
 // For MultiSignatureData, it returns an array of all individual signatures + the aggregated signature.
 func flattenSignatures(data signing.SignatureData) ([][]byte, error) {
-	return flattenSignaturesAtDepth(data, 0, 2, 32)
+	return flattenSignaturesAtDepth(data, 0, types.MaxSignatureTreeDepth, types.MaxSignatureTreeBreadth)
 }
 
 func flattenSignaturesAtDepth(data signing.SignatureData, depth, maxDepth, maxLength int) ([][]byte, error) {

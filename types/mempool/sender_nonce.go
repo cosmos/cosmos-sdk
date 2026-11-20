@@ -12,7 +12,6 @@ import (
 	"github.com/huandu/skiplist"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var (
@@ -130,7 +129,7 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx, option Inser
 
 	memTx := NewPooledTx(tx, option.GasWanted)
 
-	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+	sigs, err := NewDefaultSignerExtractionAdapter().GetSigners(tx)
 	if err != nil {
 		return err
 	}
@@ -139,7 +138,7 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx, option Inser
 	}
 
 	sig := sigs[0]
-	sender := sdk.AccAddress(sig.PubKey.Address()).String()
+	sender := sig.Signer.String()
 	nonce, err := ChooseNonce(sig.Sequence, tx)
 	if err != nil {
 		return err
@@ -221,7 +220,7 @@ func (snm *SenderNonceMempool) CountTx() int {
 func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
 	snm.mtx.Lock()
 	defer snm.mtx.Unlock()
-	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
+	sigs, err := NewDefaultSignerExtractionAdapter().GetSigners(tx)
 	if err != nil {
 		return err
 	}
@@ -230,7 +229,7 @@ func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
 	}
 
 	sig := sigs[0]
-	sender := sdk.AccAddress(sig.PubKey.Address()).String()
+	sender := sig.Signer.String()
 	nonce, err := ChooseNonce(sig.Sequence, tx)
 	if err != nil {
 		return err

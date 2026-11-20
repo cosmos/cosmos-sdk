@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## UNRELEASED
 
+### Improvements
+
+* (autocli) [#26865](https://github.com/cosmos/cosmos-sdk/pull/26865) Tx commands honour `--signer-address`, so the `--from` key can sign for a rekeyed account (ADR-034): the account is set as the msg signer even when the signer is given as a positional argument or custom flag, and is used for the account lookup and `SignerData.Address`.
+
 ### Bug Fixes
 
 * (autocli) [#26735](https://github.com/cosmos/cosmos-sdk/pull/26735) Correctly encode `cosmos.Dec` fields supplied in positional JSON arguments.

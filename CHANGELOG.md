@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### State Machine Breaking
 
 * (x/auth/vesting) [#26987](https://github.com/cosmos/cosmos-sdk/pull/26987) Check for int64 overflow after each period length in `PeriodicVestingAccount.Validate`, so period lengths that wrap past the start time (e.g. `[MaxInt64, MaxInt64, 3]`) are rejected instead of producing an account that fully vests right after it starts. `MsgCreatePeriodicVestingAccount` txs with such periods now fail.
+* (x/authz) [#27001](https://github.com/cosmos/cosmos-sdk/issues/27001) Delete the expiry queue entry when its last grant is revoked or re-granted with a different expiration, instead of leaving an empty entry that counts against the per-block prune limit.
 * (enterprise/poa) [#26875](https://github.com/cosmos/cosmos-sdk/pull/26875) Truncate per-validator fee shares so a checkpoint never allocates more than the module balance, and add a v2 → v3 store migration that trims any excess already allocated. Previously, rounding could push allocated fees above the balance and make every fee checkpoint (validator create/update, key rotation, fee withdrawal) panic until a fee in that denom arrived. Allocated fees exceeding the balance now return `ErrInvalidAllocatedFees` instead of panicking. `InitGenesis` now checks imported allocated fees against the module balance, so bank genesis must run before poa: an excess of at most 1e-18 per exported validator per denom (v1.x rounding dust) is trimmed, and anything larger fails with `ErrInvalidAllocatedFees`.
 * (x/feegrant) [#26944](https://github.com/cosmos/cosmos-sdk/pull/26944) Add a v2 → v3 store migration that rewrites fee allowance expiry queue entries stored with an empty value to an encoded `true`, and write an encoded `true` in the v1 → v2 migration. The standalone `cosmossdk.io/x/feegrant` module and the v1 → v2 migration wrote empty values, which the keeper cannot decode, so `RemoveExpiredAllowances` returned an error from the `EndBlocker` once such an entry expired.
 
@@ -65,7 +66,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (x/authz) [#27001](https://github.com/cosmos/cosmos-sdk/issues/27001) Delete the expiry queue entry when its last grant is revoked or re-granted with a different expiration, instead of leaving an empty entry that counts against the per-block prune limit.
 * (x/feegrant) [#26990](https://github.com/cosmos/cosmos-sdk/pull/26990) Build the collections schema in `NewKeeper`, so `Keeper.Schema` lists the `allowances` and `allowances_queue` collections. It was left empty.
 * (errors) [#26948](https://github.com/cosmos/cosmos-sdk/pull/26948) Preserve gRPC status codes through standard Go error wrappers and joined errors inside an SDK-wrapped error.
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.

@@ -35,6 +35,7 @@ type (
 		AvailableVersions() []int
 		LoadVersionForOverwriting(targetVersion int64) error
 		TraverseStateChanges(startVersion, endVersion int64, fn func(version int64, changeSet *iavl.ChangeSet) error) error
+		Close() error
 	}
 
 	// immutableTree is a simple wrapper around a reference to an iavl.ImmutableTree
@@ -44,6 +45,9 @@ type (
 		*iavl.ImmutableTree
 	}
 )
+
+// Close does nothing because immutable trees have no background processes.
+func (it *immutableTree) Close() error { return nil }
 
 func (it *immutableTree) Set(_, _ []byte) (bool, error) {
 	panic("cannot call 'Set' on an immutable IAVL tree")

@@ -160,6 +160,10 @@ func (st *Store) GetPruning() pruningtypes.PruningOptions {
 	panic("cannot get pruning options on an initialized IAVL store")
 }
 
+// Close stops the tree's background IAVL pruning and waits for it to finish.
+// It must be called before the underlying database is closed.
+func (st *Store) Close() error { return st.tree.Close() }
+
 // VersionExists returns whether or not a given version is stored.
 func (st *Store) VersionExists(version int64) bool {
 	return st.tree.VersionExists(version)

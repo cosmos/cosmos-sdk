@@ -1,8 +1,8 @@
 # System tests
 
-Go black box tests that setup and interact with a local blockchain. The system test [framework](../../testutil/systemtests) 
+Go black box tests that setup and interact with a local blockchain. The system test [framework](../../tools/systemtests) 
 works with the compiled binary of the chain artifact only.
-To get up to speed, checkout the [getting started guide](../../testutil/systemtests/GETTING_STARTED.md).
+To get up to speed, checkout the [getting started guide](../../tools/systemtests/GETTING_STARTED.md).
 
 Besides the Go tests and testdata files, this directory can contain the following directories: 
 

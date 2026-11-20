@@ -3,6 +3,8 @@ package ante
 import (
 	"bytes"
 	"fmt"
+	"sort"
+	"sync"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -11,11 +13,56 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// FeeRecipientModule holds the module name that receives deducted tx fees.
-// It is set by NewDeductFeeDecorator (default: fee_collector) and updated by
-// WithFeeRecipientModule. Other modules can read this to verify that fees are
-// being routed to the expected destination.
-var FeeRecipientModule string
+// FeeRecipientModule holds the module name most recently passed to
+// WithFeeRecipientModule (default: fee_collector). It is what DeductFees sends
+// fees to. It does NOT say where every DeductFeeDecorator sends fees: each
+// decorator deducts to the recipient it was configured with, so an app that
+// builds several decorators can have several recipients. Modules that need to
+// know where an app's fees go should use a FeeRecipients registry.
+var FeeRecipientModule = types.FeeCollectorName
+
+// FeeRecipients records the fee recipient of every DeductFeeDecorator an app
+// installs. It is created per app (not per process), and only decorators passed
+// to Install are recorded, so decorators that are built but never installed,
+// or that belong to another app in the same process, are not counted.
+type FeeRecipients struct {
+	mu      sync.Mutex
+	modules map[string]struct{}
+}
+
+// NewFeeRecipients returns an empty FeeRecipients registry.
+func NewFeeRecipients() *FeeRecipients {
+	return &FeeRecipients{modules: map[string]struct{}{}}
+}
+
+// Install records the recipient of the given decorator value and returns the
+// decorator unchanged, so it can wrap the decorator where it is added to the
+// ante chain. Install on a nil registry is a no-op.
+func (r *FeeRecipients) Install(dfd DeductFeeDecorator) DeductFeeDecorator {
+	if r == nil {
+		return dfd
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.modules[dfd.feeRecipientModule] = struct{}{}
+	return dfd
+}
+
+// Modules returns the sorted module names that the installed decorators
+// deduct fees to.
+func (r *FeeRecipients) Modules() []string {
+	if r == nil {
+		return nil
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	modules := make([]string, 0, len(r.modules))
+	for m := range r.modules {
+		modules = append(modules, m)
+	}
+	sort.Strings(modules)
+	return modules
+}
 
 // TxFeeChecker check if the provided fee is enough and returns the effective fee and tx priority,
 // the effective fee should be deducted later, and the priority should be returned in abci response.
@@ -37,8 +84,6 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 	if tfc == nil {
 		tfc = checkTxFeeWithValidatorMinGasPrices
 	}
-
-	FeeRecipientModule = types.FeeCollectorName
 
 	return DeductFeeDecorator{
 		accountKeeper:      ak,
@@ -130,7 +175,7 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 
 	// deduct the fees
 	if !fee.IsZero() {
-		err := DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, fee)
+		err := deductFeesToModule(dfd.bankKeeper, ctx, deductFeesFromAcc, fee, dfd.feeRecipientModule)
 		if err != nil {
 			return err
 		}
@@ -151,11 +196,17 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 // DeductFees deducts fees from the given account and sends them to the
 // module configured via FeeRecipientModule.
 func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc sdk.AccountI, fees sdk.Coins) error {
+	return deductFeesToModule(bankKeeper, ctx, acc, fees, FeeRecipientModule)
+}
+
+// deductFeesToModule deducts fees from the given account and sends them to
+// the given module account.
+func deductFeesToModule(bankKeeper types.BankKeeper, ctx sdk.Context, acc sdk.AccountI, fees sdk.Coins, recipientModule string) error {
 	if !fees.IsValid() {
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), FeeRecipientModule, fees)
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), recipientModule, fees)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, "%s", err.Error())
 	}

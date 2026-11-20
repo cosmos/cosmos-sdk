@@ -196,3 +196,70 @@ func TestDeductFees_WithFeeRecipientModule(t *testing.T) {
 		})
 	}
 }
+
+// A decorator configured with a custom fee recipient must keep using it even
+// when another DeductFeeDecorator is constructed afterwards.
+func TestDeductFees_RecipientNotClobberedByLaterDecorator(t *testing.T) {
+	s := SetupTestSuite(t, false)
+	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
+	accs := s.CreateTestAccounts(1)
+
+	msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
+	feeAmount := testdata.NewTestFeeAmount()
+	require.NoError(t, s.txBuilder.SetMsgs(msg))
+	s.txBuilder.SetFeeAmount(feeAmount)
+	s.txBuilder.SetGasLimit(testdata.NewTestGasLimit())
+	tx, err := s.CreateTestTx(s.ctx, []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+	require.NoError(t, err)
+
+	custom := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil).WithFeeRecipientModule("mint")
+	// e.g. a second ante chain built by the app
+	_ = ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil)
+
+	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), "mint", feeAmount).Return(nil)
+
+	_, err = sdk.ChainAnteDecorators(custom)(s.ctx, tx, false)
+	require.NoError(t, err)
+}
+
+func TestFeeRecipients(t *testing.T) {
+	s := SetupTestSuite(t, false)
+	newDfd := func() ante.DeductFeeDecorator {
+		return ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil)
+	}
+
+	// Decorators that are built but not installed are not recorded, whether they
+	// were built for a replaced ante handler or for another app in the process.
+	registry := ante.NewFeeRecipients()
+	_ = newDfd()
+	_ = ante.NewFeeRecipients().Install(newDfd())
+	registry.Install(newDfd().WithFeeRecipientModule("poa-test"))
+	require.Equal(t, []string{"poa-test"}, registry.Modules())
+
+	// A redirected copy does not redirect the original: installing both
+	// records both recipients.
+	registry = ante.NewFeeRecipients()
+	base := newDfd()
+	redirected := base.WithFeeRecipientModule("poa-test")
+	registry.Install(redirected)
+	registry.Install(base)
+	require.Equal(t, []string{authtypes.FeeCollectorName, "poa-test"}, registry.Modules())
+
+	// A nil registry is a no-op.
+	var nilRegistry *ante.FeeRecipients
+	require.NotPanics(t, func() { _ = nilRegistry.Install(base) })
+	require.Empty(t, nilRegistry.Modules())
+}
+
+func TestNewAnteHandlerRecordsFeeRecipient(t *testing.T) {
+	s := SetupTestSuite(t, false)
+	registry := ante.NewFeeRecipients()
+	_, err := ante.NewAnteHandler(ante.HandlerOptions{
+		AccountKeeper:   s.accountKeeper,
+		BankKeeper:      s.bankKeeper,
+		SignModeHandler: s.clientCtx.TxConfig.SignModeHandler(),
+		FeeRecipients:   registry,
+	})
+	require.NoError(t, err)
+	require.Equal(t, []string{authtypes.FeeCollectorName}, registry.Modules())
+}

@@ -426,7 +426,13 @@ func NewSimApp(
 }
 
 func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
+	// The registry records the decorators actually installed in this app's ante
+	// handler; POA verifies it at block 1.
+	feeRecipients := ante.NewFeeRecipients()
+	app.POAKeeper.SetFeeRecipients(feeRecipients)
+
 	anteHandler, err := NewAnteHandler(ante.HandlerOptions{
+		FeeRecipients:   feeRecipients,
 		AccountKeeper:   app.AccountKeeper,
 		BankKeeper:      app.BankKeeper,
 		SignModeHandler: txConfig.SignModeHandler(),

@@ -27,6 +27,7 @@ The headline changes in this release are the removal of three legacy surfaces (`
 * [Behavior Changes Affecting Dapps and Indexers](#behavior-changes-affecting-dapps-and-indexers)
 * [x/feegrant (unreleased)](#xfeegrant-unreleased)
     * [Fee Allowance Queue Migration](#fee-allowance-queue-migration)
+* [x/auth/ante: Fee Recipient per Decorator (unreleased)](#xauthante-fee-recipient-per-decorator-unreleased)
 * [enterprise/poa (unreleased)](#enterprisepoa-unreleased)
     * [Fee Allocation Migration](#fee-allocation-migration)
 
@@ -306,6 +307,25 @@ Chains that started on v0.54 or later are not affected, and grants without an ex
 The feegrant consensus version goes from 2 to 3. `Migrate2to3` runs through `RunMigrations` in the upgrade handler and rewrites every queue entry that has an empty value to an encoded `true`. Entries that already store a value stay unchanged. The v1 → v2 migration now writes an encoded `true` as well.
 
 Affected chains must run this migration before the earliest empty-valued entry expires.
+
+## x/auth/ante: Fee Recipient per Decorator (unreleased)
+
+`DeductFeeDecorator` now sends fees to the module it was configured with (`fee_collector` by default, or the module passed to `WithFeeRecipientModule`). Before, it read the package-level `ante.FeeRecipientModule`, which every `NewDeductFeeDecorator` call reset to `fee_collector`.
+
+This is state machine breaking for apps that build more than one `DeductFeeDecorator` (for example a second ante chain) where at least one uses `WithFeeRecipientModule`: the same transactions now credit different module accounts, so committed balances change. Roll the change out at a coordinated upgrade height.
+
+`ante.FeeRecipients` is a new per-app registry of the fee recipients of the decorators an app installs. Pass it in `ante.HandlerOptions.FeeRecipients`, or wrap a decorator with `registry.Install(...)` in a custom ante handler. Only installed decorator values are recorded.
+
+`enterprise/poa` apps must also hand the same registry to the keeper so block 1 verifies it:
+
+```go
+feeRecipients := ante.NewFeeRecipients()
+app.POAKeeper.SetFeeRecipients(feeRecipients)
+// in the ante handler, for the fee decorator:
+// options.FeeRecipients.Install(ante.NewDeductFeeDecorator(...).WithFeeRecipientModule(poatypes.ModuleName))
+```
+
+Without the registry, PoA only checks the package-level `ante.FeeRecipientModule`.
 
 ## enterprise/poa (unreleased)
 

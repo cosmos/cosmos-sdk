@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	"encoding/binary"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -181,7 +183,13 @@ func (k Querier) ValidatorSlashes(ctx context.Context, req *types.QueryValidator
 	slashesStore := prefix.NewStore(store, types.GetValidatorSlashEventPrefix(valAddr))
 
 	events, pageRes, err := query.GenericFilteredPaginate(k.cdc, slashesStore, req.Pagination, func(key []byte, result *types.ValidatorSlashEvent) (*types.ValidatorSlashEvent, error) {
-		if result.ValidatorPeriod < req.StartingHeight || result.ValidatorPeriod > req.EndingHeight {
+		// keys under the validator prefix are <height (8 bytes)><period (8 bytes)>;
+		// filter on the block height the slash was recorded at.
+		if len(key) < 8 {
+			return nil, fmt.Errorf("invalid validator slash event key length %d", len(key))
+		}
+		height := binary.BigEndian.Uint64(key[:8])
+		if height < req.StartingHeight || height > req.EndingHeight {
 			return nil, nil
 		}
 

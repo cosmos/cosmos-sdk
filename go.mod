@@ -49,7 +49,7 @@ require (
 	github.com/mdp/qrterminal/v3 v3.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.25.0
-	github.com/prometheus/common v0.73.1
+	github.com/prometheus/common v0.74.0
 	github.com/rs/zerolog v1.35.1
 	github.com/shirou/gopsutil/v4 v4.26.10
 	github.com/spf13/cast v1.10.0
@@ -239,7 +239,7 @@ require (
 	github.com/nxadm/tail v1.4.11 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20251114093237-2ab5a27a1729 // indirect
 	github.com/oklog/run v1.2.0 // indirect
-	github.com/pandatix/go-abnf v0.5.3 // indirect
+	github.com/pandatix/go-abnf v0.5.5 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/petermattis/goid v0.0.0-20260330135022-df67b199bc81 // indirect
@@ -315,12 +315,12 @@ require (
 	go.uber.org/fx v1.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.1 // indirect
-	go.yaml.in/yaml/v2 v2.4.4 // indirect
+	go.yaml.in/yaml/v2 v2.4.5 // indirect
 	golang.org/x/arch v0.26.0 // indirect
 	golang.org/x/exp v0.0.0-20260908205506-85c1c2202aba // indirect
 	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/net v0.62.0 // indirect
-	golang.org/x/oauth2 v0.37.0 // indirect
+	golang.org/x/oauth2 v0.38.0 // indirect
 	golang.org/x/sys v0.50.0 // indirect
 	golang.org/x/telemetry v0.0.0-20261009151841-97e8ea77aa2a // indirect
 	golang.org/x/term v0.48.0 // indirect

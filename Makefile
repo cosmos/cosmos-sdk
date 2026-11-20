@@ -569,7 +569,7 @@ build-v54:
 
 # build-v55 builds the v0.55 simd binary for the upgrade system test from the
 # latest v0.55 release tag. Skips if $(BUILDDIR)/simdv55 exists.
-V055_TAG ?= v0.55.0
+V055_TAG ?= v0.55.1
 build-v55:
 	@if [ -f $(BUILDDIR)/simdv55 ]; then echo "build/simdv55 exists, skipping"; else \
 		bash scripts/build-simd-from-tag.sh $(V055_TAG) $(BUILDDIR)/simdv55; fi

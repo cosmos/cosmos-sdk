@@ -683,12 +683,14 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		WithConsensusParams(cp).
 		WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).
 		WithBlockHeight(req.Height).
+		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
 		WithExecMode(sdk.ExecModeVoteExtension).
 		WithHeaderInfo(coreheader.Info{
 			ChainID: app.chainID,
 			Height:  req.Height,
 			Hash:    req.Hash,
+			Time:    req.Time,
 		})
 
 	// add a deferred recover handler in case extendVote panics

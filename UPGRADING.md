@@ -325,3 +325,9 @@ return app.ModuleManager.RunMigrations(ctx, app.configurator, fromVM)
 ```
 
 Genesis import applies the same trim. `InitGenesis` now compares the imported allocated fees with the poa module balance, so bank's genesis must run before poa's (`SetOrderInitGenesis`). Rounding in v1.x leaves at most `1e-18` per validator per denom above the balance. An excess within that limit (the number of exported validators × `1e-18`, per denom) is trimmed; anything larger, including allocations imported before bank has funded the module, fails `InitGenesis` with `ErrInvalidAllocatedFees`.
+
+## store / x/bank (unreleased)
+
+### bank: IsSendEnabled gas change
+
+`cachekv.Has` now performs a true existence check without loading the value ([#26849](https://github.com/cosmos/cosmos-sdk/pull/26849)). `bank.getSendEnabled` and `upgrade.getProtocolVersion` no longer make redundant `Has` calls, so `IsSendEnabledDenom` now does two store Gets instead of Has+Get: it saves `HasCost` (1000 gas at default `KVGasConfig`) when a `SendEnabled` override is stored for the denom, and costs a little more when no override exists and the default is returned. `getProtocolVersion` now does one Get instead of Has+Get (1027 gas at default `KVGasConfig`). `GasUsed` for `SendCoins` and other bank send paths changes; chains or scripts asserting exact gas values must be updated.

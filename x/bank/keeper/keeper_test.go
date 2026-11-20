@@ -15,6 +15,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -2993,4 +2994,37 @@ func (suite *KeeperTestSuite) TestSetParams() {
 			require.True(actual[1].Enabled, "actual[1].Enabled")
 		}
 	})
+}
+
+func TestIsSendEnabledDenomGasChargesTwoStoreReads(t *testing.T) {
+	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
+	oKey := storetypes.NewObjectStoreKey(banktypes.ObjectStoreKey)
+	testCtx := testutil.DefaultContextWithObjectStore(t, key, storetypes.NewTransientStoreKey("transient_test"), oKey)
+	ctx := testCtx.Ctx.WithGasMeter(storetypes.NewGasMeter(100000))
+	encCfg := moduletestutil.MakeTestEncodingConfig()
+
+	ctrl := gomock.NewController(t)
+	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
+	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+
+	bankKeeper := keeper.NewBaseKeeper(
+		encCfg.Codec,
+		runtime.NewKVStoreService(key),
+		authKeeper,
+		map[string]bool{},
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		log.NewNopLogger(),
+	).WithObjStoreKey(oKey)
+
+	bankKeeper.SetSendEnabled(ctx, fooDenom, true)
+
+	start := ctx.GasMeter().GasConsumed()
+	require.True(t, bankKeeper.IsSendEnabledDenom(ctx, fooDenom))
+	charged := ctx.GasMeter().GasConsumed() - start
+
+	// One Get on the SendEnabled store and one Get on the params store:
+	// 2 * (ReadCostFlat 1000 + ReadCostPerByte 3 * value size). Update this
+	// constant if the store gas schedule changes.
+	require.Equal(t, uint64(2021), charged)
+	t.Logf("IsSendEnabledDenom charged %d gas", charged)
 }

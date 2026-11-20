@@ -1,8 +1,10 @@
 package cosmovisor
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -89,4 +91,33 @@ func TestParseUpgradeInfoFile(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCheckUpdateWaitsForEmptyFileWrite(t *testing.T) {
+	filename := filepath.Join(t.TempDir(), "upgrade-info.json")
+	require.NoError(t, os.WriteFile(filename, nil, 0o600))
+
+	fw := &fileWatcher{
+		filename:    filename,
+		currentInfo: upgradetypes.Plan{Name: "upgrade1", Height: 1},
+		initialized: true,
+	}
+
+	// Simulate the daemon finishing its write after the watcher observed the
+	// empty file: the file is written on the second retry wait, so the test
+	// never depends on the scheduler.
+	orig := emptyFileRetrySleep
+	t.Cleanup(func() { emptyFileRetrySleep = orig })
+	calls := 0
+	emptyFileRetrySleep = func(time.Duration) {
+		calls++
+		if calls == 2 {
+			require.NoError(t, os.WriteFile(filename, []byte(`{"name":"upgrade2","height":10}`), 0o600))
+		}
+	}
+
+	require.True(t, fw.CheckUpdate(upgradetypes.Plan{Name: "upgrade1"}))
+	require.Equal(t, 2, calls)
+	require.Equal(t, "upgrade2", fw.currentInfo.Name)
+	require.Equal(t, int64(10), fw.currentInfo.Height)
 }

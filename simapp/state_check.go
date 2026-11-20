@@ -25,6 +25,7 @@ func (app *SimApp) CollectionsModules() []statecheck.Module {
 	return []statecheck.Module{
 		{Name: authtypes.ModuleName, StoreKey: app.GetKey(authtypes.StoreKey), Schema: app.AccountKeeper.Schema},
 		{Name: banktypes.ModuleName, StoreKey: app.GetKey(banktypes.StoreKey), Schema: app.BankKeeper.Schema},
+		{Name: consensusparamtypes.ModuleName, StoreKey: app.GetKey(consensusparamtypes.StoreKey), Schema: app.ConsensusParamsKeeper.Schema},
 		// x/distribution keeps the previous proposer, reward records, withdraw
 		// addresses and slash events under raw keys outside its collections.
 		{Name: distrtypes.ModuleName, StoreKey: app.GetKey(distrtypes.StoreKey), Schema: app.DistrKeeper.Schema, RawPrefixes: [][]byte{
@@ -49,11 +50,10 @@ func (app *SimApp) CollectionsModules() []statecheck.Module {
 // read to the reason it is left out.
 func StateCheckExcludedStores() map[string]string {
 	return map[string]string{
-		stakingtypes.StoreKey:        "keeper reads raw store keys, not collections",
-		slashingtypes.StoreKey:       "keeper reads raw store keys, not collections",
-		upgradetypes.StoreKey:        "keeper reads raw store keys, not collections",
-		authzkeeper.StoreKey:         "keeper reads raw store keys, not collections",
-		consensusparamtypes.StoreKey: "keeper exports no collections schema",
+		stakingtypes.StoreKey:  "keeper reads raw store keys, not collections",
+		slashingtypes.StoreKey: "keeper reads raw store keys, not collections",
+		upgradetypes.StoreKey:  "keeper reads raw store keys, not collections",
+		authzkeeper.StoreKey:   "keeper reads raw store keys, not collections",
 	}
 }
 

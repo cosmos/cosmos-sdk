@@ -1,5 +1,40 @@
 # Upgrade Reference
 
+## Unreleased: ml_dsa_65 keys use PQHD derivation by default
+
+`keys add --key-type ml_dsa_65` now derives keys with the draft PQHD scheme instead of the
+BIP44 path shared with `secp256k1` keys. It derives
+`m/83696968'/505153'/coin_type'/201'/account'/index'`, then applies SHAKE256 to all
+64 bytes of BIP85 entropy to obtain the 32-byte key-generation seed. PQHD requires a
+24-word mnemonic, and its BIP39 passphrase whitespace is preserved.
+
+**Recovering `ml_dsa_65` keys created by v0.55 requires `--legacy-bip44`.** Without it, the
+same mnemonic derives a different key and address:
+
+```bash
+simd keys add mykey --key-type ml_dsa_65 --legacy-bip44 --recover
+```
+
+`--legacy-bip44` prints a warning, because such keys share the BIP44 index space with
+`secp256k1` keys. Create new post-quantum keys without it. Stored private keys continue to
+sign unchanged; no funds or accounts are migrated. `secp256k1` derivation is unchanged.
+This is not a consensus change.
+
+The unreleased `--bip85` flag is removed; PQHD is now the default. Keys from earlier
+unreleased drafts (the SDK-local path, direct BIP85-HMAC truncation, and the scheme-3
+SHAKE256 draft) cannot be recovered by this derivation, and there is no automatic fallback.
+
+Go code that calls `keyring.NewAccount` or `NewMnemonic` with `hd.MlDsa65` keeps the BIP44
+derivation; pass `hd.MlDsa65BIP85` with a path from `hd.CreateMlDsa65BIP85Path` for PQHD.
+Wallets restoring accounts from a mnemonic should try every entry of
+`hd.AccountKeyDerivations`.
+
+PQHD is pre-v1. See the
+[keyring guide](docs/docs/user/run-node/00-keyring.md#post-quantum-keys-from-a-24-word-mnemonic)
+for the pinned upstream revision, recovery inputs, and security limitations.
+
+## Upgrading from v0.54.x
+
 This document provides a reference for upgrading from `v0.54.x` to `v0.55.x` of Cosmos SDK. If you are upgrading directly from `v0.53.x`, see [Upgrading from v0.53.x](#upgrading-from-v053x) after reading the breaking changes below.
 
 For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.55.x/CHANGELOG.md).

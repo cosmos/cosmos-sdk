@@ -263,9 +263,20 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			return fmt.Errorf("version of store %s mismatch root store's version; expected %d got %d; new stores should be added using StoreUpgrades", key.Name(), ver, commitID.Version)
 		}
 
-		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)
-		if err != nil {
-			return errorsmod.Wrap(err, "failed to load store")
+		store, loaded := rs.stores[key]
+		iavlStore, isIAVL := rs.getCommitStore(key).(*iavl.Store)
+		if loaded && isIAVL && !upgrades.IsAdded(key.Name()) && upgrades.RenamedFrom(key.Name()) == "" {
+			// Reload the existing tree. A new tree would start a second pruning
+			// goroutine, and closing the old one would drop the prune it has queued.
+			if err := iavlStore.LoadVersion(commitID.Version); err != nil {
+				return errorsmod.Wrap(err, "failed to load store")
+			}
+		} else {
+			var err error
+			store, err = rs.loadCommitStoreFromParams(key, commitID, storeParams)
+			if err != nil {
+				return errorsmod.Wrap(err, "failed to load store")
+			}
 		}
 
 		newStores[key] = store
@@ -309,6 +320,18 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	}
 
 	return nil
+}
+
+// closeIAVLStore stops the background pruning of s if it is an IAVL store.
+// The caller no longer uses s, so a failure is logged instead of returned.
+func (rs *Store) closeIAVLStore(name string, s types.CommitStore) {
+	iavlStore, ok := s.(*iavl.Store)
+	if !ok {
+		return
+	}
+	if err := iavlStore.Close(); err != nil {
+		rs.logger.Error("failed to close IAVL store", "store", name, "err", err)
+	}
 }
 
 func (rs *Store) getCommitID(infos map[string]types.StoreInfo, name string) types.CommitID {
@@ -490,6 +513,7 @@ func (rs *Store) Commit() types.CommitID {
 	// remove remnants of removed stores
 	for sk := range rs.removalMap {
 		if _, ok := rs.stores[sk]; ok {
+			rs.closeIAVLStore(sk.Name(), rs.getCommitStore(sk))
 			delete(rs.stores, sk)
 			delete(rs.storesParams, sk)
 			delete(rs.keysByName, sk.Name())

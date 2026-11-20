@@ -29,11 +29,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (iavl) [#26998](https://github.com/cosmos/cosmos-sdk/pull/26998) Add `Store.Close`, which stops the tree's async pruning goroutine and waits for it to exit, and `Store.LoadVersion`, which reloads the existing tree at a version.
+
 ### Improvements
 
 ### Deprecated
 
 ### Bug Fixes
+
+* (rootmulti) [#26998](https://github.com/cosmos/cosmos-sdk/pull/26998) Stop leaking IAVL async pruning goroutines. A reload (state-sync `Restore`, `RollbackToVersion`, a repeated `LoadVersion`) now reloads the existing IAVL trees instead of creating new ones, and `Commit` closes the stores a store upgrade deletes or renames.
 
 ## v2.0.0 (April 10, 2026)
 

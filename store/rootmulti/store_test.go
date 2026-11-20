@@ -3,7 +3,10 @@ package rootmulti
 import (
 	"crypto/sha256"
 	"fmt"
+	"io"
 	"math/rand"
+	"runtime"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -15,10 +18,13 @@ import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
 
+	storecache "github.com/cosmos/cosmos-sdk/store/v2/cache"
 	"github.com/cosmos/cosmos-sdk/store/v2/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/v2/internal/maps"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/v2/transient"
 	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
@@ -367,6 +373,115 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.Equal(t, int64(2), ci.Version)
 	require.Equal(t, 3, len(ci.StoreInfos), ci.StoreInfos)
 	checkContains(t, ci.StoreInfos, []string{"store1", "restore2", "store4"})
+}
+
+func TestRestoreReusesIAVLStores(t *testing.T) {
+	for _, interBlockCache := range []bool{false, true} {
+		t.Run(fmt.Sprintf("interBlockCache=%t", interBlockCache), func(t *testing.T) {
+			source := newMultiStoreWithMounts(dbm.NewMemDB(), pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+			require.NoError(t, source.LoadLatestVersion())
+			source.GetStoreByName("store1").(types.KVStore).Set([]byte("key"), []byte("value"))
+			version := uint64(source.Commit().Version)
+
+			target := newMultiStoreWithMounts(dbm.NewMemDB(), pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+			if interBlockCache {
+				target.SetInterBlockCache(storecache.NewCommitKVStoreCacheManager(storecache.DefaultCommitKVStoreCacheSize))
+			}
+			require.NoError(t, target.LoadLatestVersion())
+			want := countPruningGoroutines()
+
+			chunks := make(chan io.ReadCloser, 100)
+			go func() {
+				w := snapshots.NewStreamWriter(chunks)
+				if err := source.Snapshot(version, w); err != nil {
+					w.CloseWithError(err)
+					return
+				}
+				_ = w.Close()
+			}()
+			r, err := snapshots.NewStreamReader(chunks)
+			require.NoError(t, err)
+			_, err = target.Restore(version, snapshottypes.CurrentFormat, r)
+			require.NoError(t, err)
+
+			requirePruningGoroutines(t, want)
+			require.Equal(t, []byte("value"), target.GetStoreByName("store1").(types.KVStore).Get([]byte("key")))
+			require.Equal(t, source.LastCommitID(), target.LastCommitID())
+		})
+	}
+}
+
+func TestReloadReusesIAVLStores(t *testing.T) {
+	for _, interBlockCache := range []bool{false, true} {
+		t.Run(fmt.Sprintf("interBlockCache=%t", interBlockCache), func(t *testing.T) {
+			ms := newMultiStoreWithMounts(dbm.NewMemDB(), pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+			if interBlockCache {
+				ms.SetInterBlockCache(storecache.NewCommitKVStoreCacheManager(storecache.DefaultCommitKVStoreCacheSize))
+			}
+			require.NoError(t, ms.LoadLatestVersion())
+			ms.GetStoreByName("store1").(types.KVStore).Set([]byte("committed"), []byte("value"))
+			commitID := ms.Commit()
+			ms.GetStoreByName("store1").(types.KVStore).Set([]byte("uncommitted"), []byte("value"))
+			branch := ms.CacheMultiStore()
+			want := countPruningGoroutines()
+
+			require.NoError(t, ms.LoadLatestVersion())
+
+			requirePruningGoroutines(t, want)
+			require.Equal(t, commitID, ms.LastCommitID())
+			store1 := ms.GetStoreByName("store1").(types.KVStore)
+			require.Equal(t, []byte("value"), store1.Get([]byte("committed")))
+			if !interBlockCache {
+				// The inter-block cache keeps its own copy of a write, before and after this change.
+				require.Nil(t, store1.Get([]byte("uncommitted")), "a reload must discard uncommitted writes")
+			}
+			require.Equal(t, []byte("value"), branch.GetKVStore(testStoreKey1).Get([]byte("committed")))
+		})
+	}
+}
+
+func TestUpgradeClosesRemovedIAVLStores(t *testing.T) {
+	for _, interBlockCache := range []bool{false, true} {
+		t.Run(fmt.Sprintf("interBlockCache=%t", interBlockCache), func(t *testing.T) {
+			db := dbm.NewMemDB()
+			store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+			require.NoError(t, store.LoadLatestVersion())
+			store.Commit()
+
+			upgraded, upgrades := newMultiStoreWithModifiedMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+			if interBlockCache {
+				upgraded.SetInterBlockCache(storecache.NewCommitKVStoreCacheManager(storecache.DefaultCommitKVStoreCacheSize))
+			}
+			before := countPruningGoroutines()
+			require.NoError(t, upgraded.LoadLatestVersionAndUpgrade(upgrades))
+			upgraded.Commit()
+
+			// store1, restore2 and store4 remain. The upgrade deleted store3 and renamed store2.
+			requirePruningGoroutines(t, before+3)
+		})
+	}
+}
+
+// countPruningGoroutines counts the IAVL async pruning goroutines in the process.
+// It matches the creator frame because a goroutine that has not started yet
+// does not show startPruning, and newNodeDB starts no other goroutine.
+func countPruningGoroutines() int {
+	buf := make([]byte, 1<<20)
+	for {
+		n := runtime.Stack(buf, true)
+		if n < len(buf) {
+			return strings.Count(string(buf[:n]), "created by github.com/cosmos/iavl.newNodeDB")
+		}
+		buf = make([]byte, 2*len(buf))
+	}
+}
+
+func requirePruningGoroutines(t *testing.T, want int) {
+	t.Helper()
+	require.Positive(t, want, "the stack marker in countPruningGoroutines matched nothing")
+	require.EventuallyWithT(t, func(c *assert.CollectT) {
+		assert.Equal(c, want, countPruningGoroutines(), "IAVL pruning goroutines")
+	}, time.Second, 10*time.Millisecond)
 }
 
 func TestParsePath(t *testing.T) {

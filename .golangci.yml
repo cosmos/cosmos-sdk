@@ -5,6 +5,7 @@ run:
     - ledger
     - test_ledger_mock
     - sims
+    - blockstm_fuzz
   tests: true
   allow-parallel-runners: true
 linters:

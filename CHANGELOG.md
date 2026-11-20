@@ -49,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (testutil/statecheck) [#26991](https://github.com/cosmos/cosmos-sdk/pull/26991) Add `statecheck.Check`, which decodes every entry of a module store with the codecs of its collections schema and reports each entry that does not decode, and the `simd debug decode-state` command, which runs the check against the stores of a stopped node.
 * (x/distribution) [#26749](https://github.com/cosmos/cosmos-sdk/pull/26749) Add a `claimable` field to `QueryDelegationTotalRewardsResponse`, reporting the withdrawable amount as `sdk.Coins` by truncating each delegation reward the way `Msg/WithdrawDelegatorReward` does. `total` keeps its documented meaning as the raw `DecCoins` sum ([#24406](https://github.com/cosmos/cosmos-sdk/issues/24406)).
 
 ### Improvements
@@ -63,6 +64,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (x/feegrant) [#26990](https://github.com/cosmos/cosmos-sdk/pull/26990) Build the collections schema in `NewKeeper`, so `Keeper.Schema` lists the `allowances` and `allowances_queue` collections. It was left empty.
 * (errors) [#26948](https://github.com/cosmos/cosmos-sdk/pull/26948) Preserve gRPC status codes through standard Go error wrappers and joined errors inside an SDK-wrapped error.
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.
 * (client/tx) [#26759](https://github.com/cosmos/cosmos-sdk/issues/26759) Populate the multisig bit array in simulation txs so `--gas auto` works for multisig senders.

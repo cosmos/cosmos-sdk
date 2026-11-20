@@ -228,7 +228,8 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V], T any](
 	}
 
 	if countTotal {
-		resp.Total = count + offset
+		// skipped equals offset unless the offset ran past the last item
+		resp.Total = count + skipped
 	}
 	return results, resp, nil
 }

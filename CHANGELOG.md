@@ -44,12 +44,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
+* (baseapp) [#26906](https://github.com/cosmos/cosmos-sdk/pull/26906) When the circuit breaker refuses a msg without an error of its own, the `MsgServiceRouter` and its hybrid handlers return the registered `sdkerrors.ErrCircuitBreakerTripped` (codespace `sdk`, code 43) instead of an unregistered error that reached clients as codespace `undefined`, code 1. An error the breaker returns, such as x/safety's `ErrMsgDisabled`, passes through as before.
+* (x/gov, enterprise/group) [#26906](https://github.com/cosmos/cosmos-sdk/pull/26906) `SubmitProposal` refuses a proposal that contains a msg the app's circuit breaker disallows, nested msgs included, in every exec mode, `FinalizeBlock` included. Before, the proposal was stored and failed at execution. The refusal applies with any breaker set through `SetCircuitBreaker`, `contrib/x/circuit` included, and the check charges no gas.
 * (enterprise/poa) [#26875](https://github.com/cosmos/cosmos-sdk/pull/26875) Truncate per-validator fee shares so a checkpoint never allocates more than the module balance, and add a v2 → v3 store migration that trims any excess already allocated. Previously, rounding could push allocated fees above the balance and make every fee checkpoint (validator create/update, key rotation, fee withdrawal) panic until a fee in that denom arrived. Allocated fees exceeding the balance now return `ErrInvalidAllocatedFees` instead of panicking. `InitGenesis` now checks imported allocated fees against the module balance, so bank genesis must run before poa: an excess of at most 1e-18 per exported validator per denom (v1.x rounding dust) is trimmed, and anything larger fails with `ErrInvalidAllocatedFees`.
 * (x/feegrant) [#26944](https://github.com/cosmos/cosmos-sdk/pull/26944) Add a v2 → v3 store migration that rewrites fee allowance expiry queue entries stored with an empty value to an encoded `true`, and write an encoded `true` in the v1 → v2 migration. The standalone `cosmossdk.io/x/feegrant` module and the v1 → v2 migration wrote empty values, which the keeper cannot decode, so `RemoveExpiredAllowances` returned an error from the `EndBlocker` once such an entry expired.
 
 ### Features
 
 * (testutil/statecheck) [#26991](https://github.com/cosmos/cosmos-sdk/pull/26991) Add `statecheck.Check`, which decodes every entry of a module store with the codecs of its collections schema and reports each entry that does not decode, and the `simd debug decode-state` command, which runs the check against the stores of a stopped node.
+* (types/msgservice) [#26906](https://github.com/cosmos/cosmos-sdk/pull/26906) Add `msgservice.Dispatch`, which runs an `sdk.Msg` through the app's `MsgServiceRouter` handler and returns the typed response, so code that would call another module's msg server directly, such as an EVM precompile, gets the router's circuit breaker check, `ValidateBasic` and events.
+* (x/auth/ante) [#26906](https://github.com/cosmos/cosmos-sdk/pull/26906) Add `HandlerOptions.CircuitBreaker`. When set, `NewAnteHandler` puts the new `CircuitBreakerDecorator` right after `SetUpContextDecorator`, so a tx with a msg the breaker disallows, at the top level or nested in authz `MsgExec` or a gov or group proposal, fails `CheckTx` before it pays fees. The decorator passes every tx on in `FinalizeBlock` and leaves the check to the router.
+* (x/safety) [#26906](https://github.com/cosmos/cosmos-sdk/pull/26906) Add `x/safety`, the replacement for `contrib/x/circuit`: one operator trips and resets msgs by exact type URL, proto package prefix or `*` within a scope set by the authority, and a hardcoded protected set keeps gov, upgrade and the module's own msgs executable. SimApp wires the module and sets it as its ante circuit breaker. The circuit breaker check charges no gas, so a msg uses the same gas, delivered and simulated, as with no circuit breaker set, and it logs each refusal at debug level with the type URL and the blocking pattern. The module supports manual wiring only, with no depinject config, no autocli options and gogoproto types only; operators trip and reset with the generic `tx safety trip` and `tx safety reset` commands. The `IsAllowed` query names the disabled entry that blocks a msg in `blocked_by`, and the `MatchingMsgs` query lists the registered msgs a pattern would block before anyone trips it. `Keeper.SetParams` lets the upgrade handler that adds the module name the operator, so it can trip from the upgrade block on.
 * (x/distribution) [#26749](https://github.com/cosmos/cosmos-sdk/pull/26749) Add a `claimable` field to `QueryDelegationTotalRewardsResponse`, reporting the withdrawable amount as `sdk.Coins` by truncating each delegation reward the way `Msg/WithdrawDelegatorReward` does. `total` keeps its documented meaning as the raw `DecCoins` sum ([#24406](https://github.com/cosmos/cosmos-sdk/issues/24406)).
 
 ### Improvements
@@ -66,6 +71,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/feegrant) [#26990](https://github.com/cosmos/cosmos-sdk/pull/26990) Build the collections schema in `NewKeeper`, so `Keeper.Schema` lists the `allowances` and `allowances_queue` collections. It was left empty.
 * (errors) [#26948](https://github.com/cosmos/cosmos-sdk/pull/26948) Preserve gRPC status codes through standard Go error wrappers and joined errors inside an SDK-wrapped error.
+* (types/query) [#26906](https://github.com/cosmos/cosmos-sdk/pull/26906) `CollectionPaginate` and `CollectionFilteredPaginate` report the real total, not the offset, when `count_total` is set and the offset runs past the last item.
+* (baseapp) [#26906](https://github.com/cosmos/cosmos-sdk/pull/26906) A hybrid handler from `MsgServiceRouter.HybridHandlerByMsgName` checks the circuit breaker against the msg type it handles, not the type of the request it is given, so a request of an allowed type whose bytes decode as a tripped msg no longer runs that msg. It reads the breaker on each call, so it checks a breaker the app sets after registration and no longer panics when the app removes one.
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.
 * (client/tx) [#26759](https://github.com/cosmos/cosmos-sdk/issues/26759) Populate the multisig bit array in simulation txs so `--gas auto` works for multisig senders.
 * (blockstm) [#26772](https://github.com/cosmos/cosmos-sdk/pull/26772) Panic with a descriptive error when accessing an unregistered store instead of silently using store index zero.
@@ -80,6 +87,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client/debug) [#26957](https://github.com/cosmos/cosmos-sdk/pull/26957) `debug raw-bytes` now accepts byte values above 127, such as the `[10 21 13 255]` in its own help text; each value was parsed as a signed 8-bit integer.
 
 ### Deprecated
+
+* (contrib/x/circuit) [#26906](https://github.com/cosmos/cosmos-sdk/pull/26906) `contrib/x/circuit` is deprecated in favor of `x/safety` and will be removed in a future release.
 
 ## [v0.55.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.55.0) - 2026-07-27
 

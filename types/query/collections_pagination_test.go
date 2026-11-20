@@ -154,6 +154,29 @@ func TestCollectionPagination(t *testing.T) {
 				{Key: 295, Value: 295},
 			},
 		},
+		"offset past the end counts every item": {
+			req: &PageRequest{
+				Offset:     310,
+				Limit:      3,
+				CountTotal: true,
+			},
+			expResp: &PageResponse{
+				Total: 300,
+			},
+		},
+		"filtered offset past the end counts every match": {
+			req: &PageRequest{
+				Offset:     200,
+				Limit:      3,
+				CountTotal: true,
+			},
+			expResp: &PageResponse{
+				Total: 150,
+			},
+			filter: func(key, value uint64) (bool, error) {
+				return key%2 == 0, nil
+			},
+		},
 		"filtered with offset": {
 			req: &PageRequest{
 				Offset:     3,

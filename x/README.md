@@ -33,6 +33,7 @@ capabilities of your blockchain or further specialize it.
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
 * [Epochs](./epochs/README.md) - Registration so SDK modules can have logic to be executed on timed tickers.
 * [Feegrant](./feegrant/README.md) - Grant fee allowances for executing transactions.
+* [Safety](./safety/README.md) - Emergency disabling of msg types by an operator; an authority can reset them and set params.
 
 ## Deprecated Modules
 
@@ -42,7 +43,7 @@ The following modules are deprecated.  They will no longer be maintained activel
 * [Params](./params/README.md) - _Deprecated_ Globally available parameter store.
 * [NFT](../contrib/x/nft/README.md) - _Deprecated_ NFT module implemented based on [ADR43](https://docs.cosmos.network/main/build/architecture/adr-043-nft-module).
 * [Group](../enterprise/group/README.md) - Allows for the creation and management of on-chain multisig accounts (enterprise module).  
-* [Circuit](../contrib/x/circuit/README.md) _Deprecated_ - Circuit breaker module for pausing messages.
+* [Circuit](../contrib/x/circuit/README.md) _Deprecated_ - Circuit breaker module for pausing messages. Replaced by [Safety](./safety/README.md).
 
 To learn more about the process of building modules, visit the [building modules reference documentation](https://docs.cosmos.network/main/building-modules/intro).
 

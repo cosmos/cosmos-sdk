@@ -66,5 +66,12 @@
       "minter prefix=00 key=no_key value=github.com/cosmos/gogoproto/cosmos.mint.v1beta1.Minter key_codec=collections.noKey value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/mint/types.Minter,*github.com/cosmos/cosmos-sdk/x/mint/types.Minter]",
       "params prefix=01 key=no_key value=github.com/cosmos/gogoproto/cosmos.mint.v1beta1.Params key_codec=collections.noKey value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/mint/types.Params,*github.com/cosmos/cosmos-sdk/x/mint/types.Params]"
     ]
+  },
+  "safety": {
+    "consensus_version": 1,
+    "collections": [
+      "disabled_list prefix=01 key=string value=no_value key_codec=codec.stringKey[string] value_codec=collections.NoValue",
+      "params prefix=00 key=no_key value=github.com/cosmos/gogoproto/cosmos.safety.v1.Params key_codec=collections.noKey value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/safety/types.Params,*github.com/cosmos/cosmos-sdk/x/safety/types.Params]"
+    ]
   }
 }

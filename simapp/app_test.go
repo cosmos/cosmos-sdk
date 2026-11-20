@@ -52,6 +52,8 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/safety"
+	safetytypes "github.com/cosmos/cosmos-sdk/x/safety/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -415,6 +417,7 @@ func TestRunMigrations(t *testing.T) {
 					evidencetypes.ModuleName: evidence.AppModule{}.ConsensusVersion(),
 					genutiltypes.ModuleName:  genutil.AppModule{}.ConsensusVersion(),
 					epochstypes.ModuleName:   epochs.AppModule{}.ConsensusVersion(),
+					safetytypes.ModuleName:   safety.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {

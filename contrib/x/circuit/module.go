@@ -1,3 +1,7 @@
+// Package circuit is the contrib circuit breaker module.
+//
+// Deprecated: x/safety replaces it, and a future release removes it. Use
+// github.com/cosmos/cosmos-sdk/x/safety; its README covers the move.
 package circuit
 
 import (

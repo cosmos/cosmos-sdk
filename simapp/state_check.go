@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	safetytypes "github.com/cosmos/cosmos-sdk/x/safety/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -42,6 +43,7 @@ func (app *SimApp) CollectionsModules() []statecheck.Module {
 		{Name: feegrant.ModuleName, StoreKey: app.GetKey(feegrant.StoreKey), Schema: app.FeeGrantKeeper.Schema},
 		{Name: govtypes.ModuleName, StoreKey: app.GetKey(govtypes.StoreKey), Schema: app.GovKeeper.Schema},
 		{Name: minttypes.ModuleName, StoreKey: app.GetKey(minttypes.StoreKey), Schema: app.MintKeeper.Schema},
+		{Name: safetytypes.ModuleName, StoreKey: app.GetKey(safetytypes.StoreKey), Schema: app.SafetyKeeper.Schema},
 	}
 }
 

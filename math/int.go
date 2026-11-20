@@ -558,8 +558,20 @@ func FormatInt(v string) (string, error) {
 		sign = "-"
 		v = v[1:]
 	}
+	// Reject a sign with no digits (e.g. "-"), which has nothing to format.
+	if len(v) == 0 {
+		return "", errors.New("cannot format empty string")
+	}
 	if len(v) > 1 {
 		v = strings.TrimLeft(v, "0")
+
+		// A value made up entirely of zeros (e.g. "00") is trimmed down to the
+		// empty string above. It represents zero, so normalize it back to a
+		// single "0" instead of failing the digit check below as if it held
+		// non-digits.
+		if v == "" {
+			v = "0"
+		}
 	}
 
 	// Ensure that the string contains only digits at this point.

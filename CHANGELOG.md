@@ -44,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
+* (x/auth/vesting) [#26987](https://github.com/cosmos/cosmos-sdk/pull/26987) Check for int64 overflow after each period length in `PeriodicVestingAccount.Validate`, so period lengths that wrap past the start time (e.g. `[MaxInt64, MaxInt64, 3]`) are rejected instead of producing an account that fully vests right after it starts. `MsgCreatePeriodicVestingAccount` txs with such periods now fail.
 * (enterprise/poa) [#26875](https://github.com/cosmos/cosmos-sdk/pull/26875) Truncate per-validator fee shares so a checkpoint never allocates more than the module balance, and add a v2 → v3 store migration that trims any excess already allocated. Previously, rounding could push allocated fees above the balance and make every fee checkpoint (validator create/update, key rotation, fee withdrawal) panic until a fee in that denom arrived. Allocated fees exceeding the balance now return `ErrInvalidAllocatedFees` instead of panicking. `InitGenesis` now checks imported allocated fees against the module balance, so bank genesis must run before poa: an excess of at most 1e-18 per exported validator per denom (v1.x rounding dust) is trimmed, and anything larger fails with `ErrInvalidAllocatedFees`.
 * (x/feegrant) [#26944](https://github.com/cosmos/cosmos-sdk/pull/26944) Add a v2 → v3 store migration that rewrites fee allowance expiry queue entries stored with an empty value to an encoded `true`, and write an encoded `true` in the v1 → v2 migration. The standalone `cosmossdk.io/x/feegrant` module and the v1 → v2 migration wrote empty values, which the keeper cannot decode, so `RemoveExpiredAllowances` returned an error from the `EndBlocker` once such an entry expired.
 
@@ -78,6 +79,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth/tx) [#26815](https://github.com/cosmos/cosmos-sdk/pull/26815) `GetSigningTxData` now converts the nested `ModeInfos` of a multisig `ModeInfo`; previously the converted entries were discarded and the slice was left as nil placeholders.
 * (keys) [#26833](https://github.com/cosmos/cosmos-sdk/pull/26833) Strip leading and trailing whitespace when reading a mnemonic from a source file.
 * (x/auth/tx) [#26955](https://github.com/cosmos/cosmos-sdk/pull/26955) `GetBlockWithTxs` now uses the default limit when `pagination.limit` is 0; a request that set only `offset` or `count_total` returned no txs. Reverse pagination now walks back from the last tx and includes the first one, with `offset` counted from the end like other paginated queries.
+* (client/debug) [#26957](https://github.com/cosmos/cosmos-sdk/pull/26957) `debug raw-bytes` now accepts byte values above 127, such as the `[10 21 13 255]` in its own help text; each value was parsed as a signed 8-bit integer.
 
 ### Deprecated
 

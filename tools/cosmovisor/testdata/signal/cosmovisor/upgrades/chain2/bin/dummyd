@@ -1,0 +1,14 @@
+#!/bin/sh
+
+test "$1" = pre-upgrade && exit 0
+trap 'echo Received SIGTERM; exit 0' TERM
+echo Chain 2 is live!
+echo Args: $@
+# runs until it is signaled
+i=0
+while [ $i -lt 300 ]; do
+    sleep 0.1
+    i=$((i+1))
+done
+echo Never should be printed!!!
+exit 1

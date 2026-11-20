@@ -2,6 +2,7 @@ package cache
 
 import (
 	"fmt"
+	"sync"
 
 	lru "github.com/hashicorp/golang-lru"
 
@@ -37,6 +38,9 @@ type (
 	CommitKVStoreCacheManager struct {
 		cacheSize uint
 		caches    map[string]types.CommitKVStore
+		// mu protects caches from concurrent Reset/GetStoreCache writers
+		// and Unwrap readers. The map itself is otherwise unsynchronized.
+		mu sync.RWMutex
 	}
 )
 
@@ -63,6 +67,9 @@ func NewCommitKVStoreCacheManager(size uint) *CommitKVStoreCacheManager {
 // StoreKey. If no Cache exists for the StoreKey, then one is created and set.
 // The returned Cache is meant to be used in a persistent manner.
 func (cmgr *CommitKVStoreCacheManager) GetStoreCache(key types.StoreKey, store types.CommitKVStore) types.CommitKVStore {
+	cmgr.mu.Lock()
+	defer cmgr.mu.Unlock()
+
 	if cmgr.caches[key.Name()] == nil {
 		cmgr.caches[key.Name()] = NewCommitKVStoreCache(store, cmgr.cacheSize)
 	}
@@ -72,6 +79,9 @@ func (cmgr *CommitKVStoreCacheManager) GetStoreCache(key types.StoreKey, store t
 
 // Unwrap returns the underlying CommitKVStore for a given StoreKey.
 func (cmgr *CommitKVStoreCacheManager) Unwrap(key types.StoreKey) types.CommitKVStore {
+	cmgr.mu.RLock()
+	defer cmgr.mu.RUnlock()
+
 	if ckv, ok := cmgr.caches[key.Name()]; ok {
 		return ckv.(*CommitKVStoreCache).CommitKVStore
 	}
@@ -81,6 +91,9 @@ func (cmgr *CommitKVStoreCacheManager) Unwrap(key types.StoreKey) types.CommitKV
 
 // Reset resets in the internal caches.
 func (cmgr *CommitKVStoreCacheManager) Reset() {
+	cmgr.mu.Lock()
+	defer cmgr.mu.Unlock()
+
 	// Clear the map.
 	// Please note that we are purposefully using the map clearing idiom.
 	// See https://github.com/cosmos/cosmos-sdk/issues/6681.

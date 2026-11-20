@@ -27,6 +27,8 @@ The headline changes in this release are the removal of three legacy surfaces (`
 * [Behavior Changes Affecting Dapps and Indexers](#behavior-changes-affecting-dapps-and-indexers)
 * [x/feegrant (unreleased)](#xfeegrant-unreleased)
     * [Fee Allowance Queue Migration](#fee-allowance-queue-migration)
+* [x/staking (unreleased)](#xstaking-unreleased)
+    * [Staking: AfterUnbondingInitiated Hook Errors](#staking-afterunbondinginitiated-hook-errors)
 * [enterprise/poa (unreleased)](#enterprisepoa-unreleased)
     * [Fee Allocation Migration](#fee-allocation-migration)
 
@@ -306,6 +308,17 @@ Chains that started on v0.54 or later are not affected, and grants without an ex
 The feegrant consensus version goes from 2 to 3. `Migrate2to3` runs through `RunMigrations` in the upgrade handler and rewrites every queue entry that has an empty value to an encoded `true`. Entries that already store a value stay unchanged. The v1 → v2 migration now writes an encoded `true` as well.
 
 Affected chains must run this migration before the earliest empty-valued entry expires.
+
+## x/staking (unreleased)
+
+### Staking: AfterUnbondingInitiated Hook Errors
+
+`x/staking` no longer ignores errors from the `AfterUnbondingInitiated` hook ([#26925](https://github.com/cosmos/cosmos-sdk/pull/26925)). If a staking hook returns an error, `MsgUndelegate` and `MsgBeginRedelegate` now fail; before, the error was only logged and the unbonding went ahead. The SDK's own hooks always return nil, so apps without custom hooks see no change.
+
+If your app has a custom hook:
+
+* Return an error only when the unbonding must not go ahead, never based on state another account can change, or that account can block other delegators from unbonding.
+* If your module calls `Undelegate` or `BeginRedelegation` outside a transaction (for example in `EndBlock`), wrap the call in `ctx.CacheContext()` and write only on success. Otherwise a hook error leaves the unbonding record and moved tokens in state without queuing the entry to mature.
 
 ## enterprise/poa (unreleased)
 

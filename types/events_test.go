@@ -139,11 +139,11 @@ func (s *eventsTestSuite) TestEventManagerTypedEvents() {
 	msg1, err := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[0])
 	s.Require().NoError(err)
 	s.Require().Equal(coin.String(), msg1.String())
-	s.Require().Equal(reflect.TypeOf(&coin), reflect.TypeOf(msg1))
+	s.Require().Equal(reflect.TypeFor[*sdk.Coin](), reflect.TypeOf(msg1))
 
 	msg2, err := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[1])
 	s.Require().NoError(err)
-	s.Require().Equal(reflect.TypeOf(&hasAnimal), reflect.TypeOf(msg2))
+	s.Require().Equal(reflect.TypeFor[*testdata.HasAnimal](), reflect.TypeOf(msg2))
 	response := msg2.(*testdata.HasAnimal)
 	s.Require().Equal(hasAnimal.Animal.String(), response.Animal.String())
 }

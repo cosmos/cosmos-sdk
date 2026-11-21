@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -465,6 +466,15 @@ func newCommitSnapshot(cInfo *types.CommitInfo) *commitSnapshot {
 	return snapshot
 }
 
+// commitID returns the memoized CommitID with a copied Hash so callers can't
+// mutate the shared snapshot.
+func (s *commitSnapshot) commitID() types.CommitID {
+	return types.CommitID{
+		Version: s.id.Version,
+		Hash:    bytes.Clone(s.id.Hash),
+	}
+}
+
 // setLastCommitInfo memoizes cInfo's CommitID and atomically swaps in the new
 // snapshot, returning it so callers can reuse the precomputed CommitID without
 // rebuilding the merkle root.
@@ -495,7 +505,7 @@ func (rs *Store) LastCommitID() types.CommitID {
 		}
 	}
 
-	return snapshot.id
+	return snapshot.commitID()
 }
 
 // Commit implements Committer/CommitStore.
@@ -550,7 +560,7 @@ func (rs *Store) Commit() types.CommitID {
 
 	// snapshot.id was computed from cInfo in setLastCommitInfo above; reuse it
 	// instead of rebuilding the merkle root a second time here.
-	return snapshot.id
+	return snapshot.commitID()
 }
 
 // WorkingHash returns the current hash of the store.

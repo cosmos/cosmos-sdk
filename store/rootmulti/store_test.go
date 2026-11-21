@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"fmt"
 	"math/rand"
@@ -185,6 +186,29 @@ func TestHashStableWithEmptyCommit(t *testing.T) {
 	require.Equal(t, workingHash, cID.Hash)
 	require.Equal(t, int64(2), cID.Version)
 	require.Equal(t, hash, cID.Hash)
+}
+
+func TestLastCommitIDReturnsHashCopy(t *testing.T) {
+	ms := newMultiStoreWithMounts(dbm.NewMemDB(), pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	require.NoError(t, ms.LoadLatestVersion())
+	ms.GetStoreByName("store1").(types.KVStore).Set([]byte("k"), []byte("v"))
+
+	commitID := ms.Commit()
+	want := bytes.Clone(commitID.Hash)
+
+	tests := map[string]func() types.CommitID{
+		"Commit":       func() types.CommitID { return commitID },
+		"LastCommitID": ms.LastCommitID,
+	}
+	for name, get := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := get()
+			for i := range got.Hash {
+				got.Hash[i] ^= 0xff
+			}
+			require.Equal(t, want, ms.LastCommitID().Hash)
+		})
+	}
 }
 
 func TestMultistoreCommitLoad(t *testing.T) {

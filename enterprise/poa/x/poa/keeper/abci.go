@@ -21,7 +21,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 // EndBlocker is called at the end of every block to return pending validator updates to CometBFT.
@@ -45,29 +44,23 @@ func (k *Keeper) EndBlocker(ctx sdk.Context) ([]abci.ValidatorUpdate, error) {
 
 // validateFeeRecipient panics if fees are not sent to the POA module. When POA
 // is active, fees must flow to the POA module account so it can distribute them
-// to validators. If a FeeRecipients registry was set, every DeductFeeDecorator
-// installed in this app's ante handler must pay POA (and at least one must be
-// installed); otherwise the package-level ante.FeeRecipientModule is checked.
+// to validators. The app must hand its ante.FeeRecipients registry to the keeper
+// with SetFeeRecipients, and every DeductFeeDecorator installed through it must
+// pay POA (at least one must be installed). It panics if the registry was never
+// set, since the check could not see the app's decorators.
 func (k *Keeper) validateFeeRecipient() {
 	if k.feeRecipients == nil {
-		validateFeeRecipients(ante.FeeRecipientModule, nil, false)
-		return
+		panic(fmt.Sprintf(
+			"POA module requires fees to be sent to the %q module account, "+
+				"but no FeeRecipients registry was set. "+
+				"Pass the ante.HandlerOptions.FeeRecipients registry to Keeper.SetFeeRecipients",
+			types.ModuleName,
+		))
 	}
-	validateFeeRecipients(ante.FeeRecipientModule, k.feeRecipients.Modules(), true)
+	validateFeeRecipients(k.feeRecipients.Modules())
 }
 
-func validateFeeRecipients(last string, installed []string, useRegistry bool) {
-	if !useRegistry {
-		if last != types.ModuleName {
-			panic(fmt.Sprintf(
-				"POA module requires fees to be sent to the %q module account, "+
-					"but the ante handler fee recipient is set to %q. "+
-					"Use DeductFeeDecorator.WithFeeRecipientModule(%q) when constructing the ante handler",
-				types.ModuleName, last, types.ModuleName,
-			))
-		}
-		return
-	}
+func validateFeeRecipients(installed []string) {
 	if len(installed) == 0 {
 		panic(fmt.Sprintf(
 			"POA module requires fees to be sent to the %q module account, "+

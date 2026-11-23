@@ -348,8 +348,8 @@ func (k *Keeper) validatePubkeyType(ctx sdk.Context, key cryptotypes.PubKey) err
 
 // SetFeeRecipients sets the per-app registry of installed fee recipients that
 // EndBlocker verifies at block 1. Pass the same registry as
-// ante.HandlerOptions.FeeRecipients. Without it, only the package-level
-// ante.FeeRecipientModule is checked.
+// ante.HandlerOptions.FeeRecipients. EndBlocker panics at block 1 if it was
+// never set.
 func (k *Keeper) SetFeeRecipients(r *ante.FeeRecipients) {
 	k.feeRecipients = r
 }

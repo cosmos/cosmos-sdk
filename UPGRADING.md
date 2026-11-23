@@ -325,7 +325,7 @@ app.POAKeeper.SetFeeRecipients(feeRecipients)
 // options.FeeRecipients.Install(ante.NewDeductFeeDecorator(...).WithFeeRecipientModule(poatypes.ModuleName))
 ```
 
-Without the registry, PoA only checks the package-level `ante.FeeRecipientModule`.
+The registry is required: if `SetFeeRecipients` is never called, PoA panics at block 1, because it cannot see which recipients the app's decorators use.
 
 ## enterprise/poa (unreleased)
 

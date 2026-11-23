@@ -60,6 +60,10 @@ func NewDefaultCalculateVoteResultsAndVotingPower(sk types.StakingKeeper) Calcul
 		results[v1.OptionNo] = math.LegacyZeroDec()
 		results[v1.OptionNoWithVeto] = math.LegacyZeroDec()
 
+		// Reuse the parsed-weight storage across voters, while keeping each voter's
+		// weights separate. Parse lazily so votes without bonded delegations do not
+		// require weight parsing.
+		var optionWeights []math.LegacyDec
 		rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposal.Id)
 		votesToRemove := []collections.Pair[uint64, sdk.AccAddress]{}
 		err = k.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
@@ -79,6 +83,7 @@ func NewDefaultCalculateVoteResultsAndVotingPower(sk types.StakingKeeper) Calcul
 			}
 
 			// iterate over all delegations from voter, deduct from any delegated-to validators
+			clear(optionWeights)
 			err = sk.IterateDelegations(ctx, voter, func(index int64, delegation stakingtypes.DelegationI) (stop bool) {
 				valAddrStr := delegation.GetValidatorAddr()
 
@@ -91,9 +96,14 @@ func NewDefaultCalculateVoteResultsAndVotingPower(sk types.StakingKeeper) Calcul
 					// delegation shares * bonded / total shares
 					votingPower := delegation.GetShares().MulInt(val.BondedTokens).Quo(val.DelegatorShares)
 
-					for _, option := range vote.Options {
-						weight, _ := math.LegacyNewDecFromStr(option.Weight)
-						subPower := votingPower.Mul(weight)
+					if len(optionWeights) < len(vote.Options) {
+						optionWeights = make([]math.LegacyDec, len(vote.Options))
+					}
+					for i, option := range vote.Options {
+						if optionWeights[i].IsNil() {
+							optionWeights[i], _ = math.LegacyNewDecFromStr(option.Weight)
+						}
+						subPower := votingPower.Mul(optionWeights[i])
 						results[option.Option] = results[option.Option].Add(subPower)
 					}
 					totalVotingPower = totalVotingPower.Add(votingPower)

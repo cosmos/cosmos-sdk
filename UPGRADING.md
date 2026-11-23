@@ -29,6 +29,8 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [Fee Allowance Queue Migration](#fee-allowance-queue-migration)
 * [enterprise/poa (unreleased)](#enterprisepoa-unreleased)
     * [Fee Allocation Migration](#fee-allocation-migration)
+* [x/auth/vesting (unreleased)](#xauthvesting-unreleased)
+    * [Periodic Vesting Overflow Check](#periodic-vesting-overflow-check)
 
 ## Breaking Changes
 
@@ -325,3 +327,9 @@ return app.ModuleManager.RunMigrations(ctx, app.configurator, fromVM)
 ```
 
 Genesis import applies the same trim. `InitGenesis` now compares the imported allocated fees with the poa module balance, so bank's genesis must run before poa's (`SetOrderInitGenesis`). Rounding in v1.x leaves at most `1e-18` per validator per denom above the balance. An excess within that limit (the number of exported validators × `1e-18`, per denom) is trimmed; anything larger, including allocations imported before bank has funded the module, fails `InitGenesis` with `ErrInvalidAllocatedFees`.
+
+## x/auth/vesting (unreleased)
+
+### Periodic Vesting Overflow Check
+
+`PeriodicVestingAccount.Validate` now checks for int64 overflow after each period length is added ([#26987](https://github.com/cosmos/cosmos-sdk/pull/26987)). Before, period lengths that summed past 2^64 could wrap back to an end time just after the start time and pass validation, so every coin vested almost at once. `MsgCreatePeriodicVestingAccount` with such periods used to succeed and now fails, so all nodes must switch at the same height through a coordinated upgrade. No store migration is needed. Accounts already in state are not touched, but `ValidateGenesis` rejects them, so an exported genesis that contains one fails validation.

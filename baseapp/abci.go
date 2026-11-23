@@ -20,7 +20,6 @@ import (
 	coreheader "cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
@@ -1395,21 +1394,31 @@ func (bapp *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, chec
 
 	var header *cmtproto.Header
 	isLatest := height == 0
-	for _, appState := range []*state.State{
-		bapp.stateManager.GetState(execModeCheck),
-		bapp.stateManager.GetState(execModeFinalize),
-	} {
-		if appState != nil {
-			// branch the commit multi-store for safety
-			h := appState.Context().BlockHeader()
-			if isLatest {
-				lastBlockHeight = qms.LatestVersion()
-			}
-			if !checkHeader || !isLatest || isLatest && h.Height == lastBlockHeight {
-				header = &h
-				break
+	for {
+		for _, appState := range bapp.stateManager.GetQueryStates() {
+			if appState != nil {
+				h := appState.Context().BlockHeader()
+				if isLatest && !checkHeader {
+					lastBlockHeight = qms.LatestVersion()
+				}
+				if !checkHeader || !isLatest || h.Height == lastBlockHeight {
+					header = &h
+					break
+				}
 			}
 		}
+		if !isLatest || !checkHeader {
+			break
+		}
+		// Commit can advance the store between reading its version and the
+		// state snapshot. Retry that snapshot instead of rejecting a valid
+		// latest-height query or combining a new version with an old header.
+		latestVersion := qms.LatestVersion()
+		if latestVersion == lastBlockHeight {
+			break
+		}
+		lastBlockHeight = latestVersion
+		header = nil
 	}
 
 	if header == nil {

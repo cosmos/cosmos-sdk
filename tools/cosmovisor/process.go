@@ -200,7 +200,10 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 	cmd.Stdin = stdin
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGTERM)
 	if err := cmd.Start(); err != nil {
+		signal.Stop(sigs)
 		return false, fmt.Errorf("launching process %s %s failed: %w", bin, strings.Join(args, " "), err)
 	}
 
@@ -212,20 +215,60 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 		BatchUpgradeWatcher(ctx, l.cfg, l.logger)
 	}()
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGTERM)
+	sigDone := make(chan struct{})
+	stopRequested := false
 	go func() {
-		sig := <-sigs
+		defer close(sigDone)
+		sig, ok := <-sigs
+		if !ok {
+			return
+		}
+		stopRequested = true
 		cancel()
 		wg.Wait()
 		if err := cmd.Process.Signal(sig); err != nil {
+			if errors.Is(err, os.ErrProcessDone) {
+				os.Exit(0)
+			}
 			l.logger.Error("terminated", "error", err, "bin", bin)
 			os.Exit(1)
 		}
 	}()
+	defer func() {
+		cancel()
+		wg.Wait()
+	}()
 
-	if needsUpdate, err := l.WaitForUpgradeOrExit(cmd); err != nil || !needsUpdate {
+	needsUpdate, err := l.WaitForUpgradeOrExit(cmd)
+
+	// The app has exited. Register the upgrade-step handler before stopping the
+	// app handler, so no stop signal gets the default action in between.
+	// signal.Stop delivers pending signals to sigs before it returns, and
+	// <-sigDone waits for the handler, so stopRequested is final after it.
+	upgradeSigs := make(chan os.Signal, 1)
+	signal.Notify(upgradeSigs, syscall.SIGQUIT, syscall.SIGTERM)
+	upgradeSigDone := make(chan struct{})
+	go func() {
+		defer close(upgradeSigDone)
+		if _, ok := <-upgradeSigs; ok {
+			os.Exit(0)
+		}
+	}()
+	defer func() {
+		signal.Stop(upgradeSigs)
+		close(upgradeSigs)
+		<-upgradeSigDone
+	}()
+	signal.Stop(sigs)
+	close(sigs)
+	<-sigDone
+
+	if err != nil || !needsUpdate {
 		return false, err
+	}
+	if stopRequested {
+		l.logger.Info("stop requested, skipping upgrade")
+		return false, nil
 	}
 
 	if !IsSkipUpgradeHeight(args, l.fw.currentInfo) {
@@ -249,9 +292,6 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 
 		return true, nil
 	}
-
-	cancel()
-	wg.Wait()
 
 	return false, nil
 }

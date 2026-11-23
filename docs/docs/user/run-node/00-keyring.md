@@ -143,3 +143,171 @@ MY_VALIDATOR_ADDRESS=$(simd keys show my_validator -a --keyring-backend test)
 This command generates a new 24-word mnemonic phrase, persists it to the relevant backend, and outputs information about the keypair. If this keypair will be used to hold value-bearing tokens, be sure to write down the mnemonic phrase somewhere safe!
 
 By default, the keyring generates a `secp256k1` keypair. The keyring also supports `ed25519` keys, which may be created by passing the `--algo ed25519` flag. A keyring can of course hold both types of keys simultaneously, and the Cosmos SDK's `x/auth` module supports natively these two public key algorithms.
+
+### Post-quantum keys from a 24-word mnemonic
+
+`simd keys add --key-type ml_dsa_65` derives ML-DSA-65 software account keys with the
+draft PQHD derivation, inspired by the
+[Project Eleven approach](https://www.projecteleven.com/blog/generating-post-quantum-keypairs-from-a-single-24word-seed-phrase):
+BIP39 mnemonic → BIP32 master → fully hardened child → 64-byte BIP85 entropy → SHAKE256 → ML-DSA-65 key generation.
+
+**Experimental:** This implements PQHD draft v0.1.0, not a finalized standard.
+Do not protect real assets with keys derived under this draft.
+
+```bash
+# Generate a fresh 24-word mnemonic and store an ML-DSA-65 key.
+simd keys add pq --key-type ml_dsa_65 --keyring-backend file
+
+# Restore it in a new keyring using the same mnemonic.
+simd keys add pq --key-type ml_dsa_65 --recover --keyring-backend file
+
+# Derive another account from that SAME mnemonic (not a newly generated one).
+simd keys add pq-next --key-type ml_dsa_65 --recover \
+  --account 7 --index 9 --keyring-backend file
+```
+
+The implementation pins the merged [PQHD framework](https://github.com/pqdh/pqhd/blob/befdce14cecbb5d485d3239982bfa5b207cdb922/spec/README.md),
+[family-block registry](https://github.com/pqdh/pqhd/blob/befdce14cecbb5d485d3239982bfa5b207cdb922/registry/registry.json),
+and [ML-DSA-65 test vectors](https://github.com/pqdh/pqhd/blob/befdce14cecbb5d485d3239982bfa5b207cdb922/test-vectors/201.json)
+at the same revision. This supersedes the earlier PR #2 scheme assignments, but remains pre-v1.
+The registry assigns families blocks of 100 indices; block 0 is never assigned.
+ML-DSA owns block 2, and its active ML-DSA-65 entry is `201`, with a 32-byte `xi` input
+to `ML-DSA.KeyGen_internal`.
+
+The path is `m/83696968'/505153'/coin_type'/201'/account'/index'`.
+The default `simd` path is `m/83696968'/505153'/118'/201'/0'/0'`.
+
+* `83696968'` is the BIP85 purpose.
+* `505153'` is PQHD's proposed application namespace ("PQS"); scheme `201'` identifies ML-DSA-65.
+  These are **not registered BIP85 or Project Eleven assignments**.
+* `--coin-type` selects the SLIP-44 coin type and defaults to the application's configured value
+  (`118` for Cosmos Hub). Different coin types derive different keys from the same mnemonic.
+* Account and index default to zero. Coin type, account, and index must each be less than 2³¹.
+  Every component is hardened; there is no BIP44 change level.
+  An invalid BIP32 master or child causes an error, never a silent retry at the next index.
+* `--hd-path` may override coin type/account/index, but must use this exact six-component namespace.
+  Ledger devices do not support `ml_dsa_65` keys.
+
+Only active scheme `201` is implemented here. Other schemes, including reserved FN-DSA
+indices `400` and `401`, are rejected. PQHD requires deprecated entries to remain derivable
+for recovery and discourages new keys under them; there are no deprecated entries in this
+pinned registry. The obsolete draft ID `3` is **unassigned**, not a deprecated recovery alias.
+The account-key API does not expose intermediate BIP32 xpubs or xprivs.
+
+The 32-byte big-endian child private scalar is processed with
+`HMAC-SHA512(key="bip-entropy-from-k", message=childPrivateKey)`.
+**All 64 bytes** seed SHAKE256; its first 32 output bytes become ML-DSA-65's `xi`.
+The HMAC is not truncated before expansion. No new signature implementation, wire format,
+address scheme, or consensus rule is introduced.
+
+**Recovery:** Back up the mnemonic, implementation revision, derivation mode (PQHD, or `--legacy-bip44`), coin type/account/index or full path,
+and any BIP39 passphrase. To set or recover a nonempty BIP39 passphrase, also pass `--interactive`.
+This passphrase is different from the keyring encryption password. The mnemonic must be a
+checksum-valid 24-word English BIP39 sentence: it is NFKD-normalized, split on Unicode whitespace,
+and rejoined with single ASCII spaces. The passphrase is NFKD-normalized **without trimming**;
+leading/trailing spaces and tabs matter, including in the CLI. A wrong passphrase silently derives
+a different valid key. Software keyring records store the resulting private key, not the mnemonic
+or derivation metadata. Signing with a stored key does not depend on how it was derived.
+
+**Opting out with `--legacy-bip44`:** Earlier releases derived `ml_dsa_65` keys on the BIP44
+path `m/44'/coin_type'/account'/0/index`, shared with `secp256k1` keys. To recover such a key,
+pass `--legacy-bip44`; without it, the same mnemonic derives a different key and address.
+`--legacy-bip44` accepts shorter mnemonics and prints a warning, because the resulting key shares
+the BIP44 index space with `secp256k1` keys. `secp256k1` derivation is unchanged. Switching
+derivations does not migrate funds or replace an existing account's public key.
+
+```bash
+simd keys add old-pq --key-type ml_dsa_65 --legacy-bip44 --recover --keyring-backend file
+```
+
+Go code calling `keyring.NewAccount` with `hd.MlDsa65` keeps the BIP44 derivation. Use
+`hd.MlDsa65BIP85` with a path from `hd.CreateMlDsa65BIP85Path` for PQHD.
+
+**Restoring every account from a mnemonic:** A stored key does not record which derivation produced
+it, and an address does not reveal it either: both derivation modes produce the same `ml_dsa_65`
+public key type. Under PQHD, the scheme is part of the path, so a wallet can find a user's accounts
+from the mnemonic alone by scanning a finite set of candidates:
+
+1. For each PQHD scheme the wallet supports (currently only `201'`, ML-DSA-65), derive
+   `m/83696968'/505153'/coin_type'/scheme'/account'/index'` for increasing account and index
+   values, and stop each scan after a run of unused addresses (a gap limit, conventionally 20).
+   A later registry version may add schemes under new IDs. Deprecated schemes stay derivable,
+   so a wallet should keep scanning them for recovery.
+2. For keys created before PQHD, also derive the BIP44 path `m/44'/coin_type'/account'/0/index`
+   **twice**, once as `secp256k1` and once as legacy `ml_dsa_65`. On this path the mnemonic alone
+   cannot tell the two apart.
+3. Treat a candidate as an account in use if its address has an on-chain account or history.
+
+Each PQHD candidate belongs to exactly one scheme, so step 1 never confuses algorithms.
+Step 2 is the ambiguity that PQHD removes for new keys.
+
+Go wallets can get the candidate list for one coin type, account, and index from
+`hd.AccountKeyDerivations(coinType, account, index)`. Each entry names its scheme, public key
+type, path, and the algorithm to pass to `keyring.NewAccount`. The list grows when a new scheme
+is supported, so wallets that iterate over it pick up new schemes without code changes.
+
+PQHD candidates require a 24-word mnemonic and return `hd.ErrMlDsa65BIP85Mnemonic` for a valid
+shorter backup, such as a 12-word mnemonic from an earlier release. Skip only that error and keep
+going, so the BIP44 candidates are still tried. Report any other error, such as a bad checksum:
+
+```go
+derivations, err := hd.AccountKeyDerivations(coinType, account, index)
+if err != nil {
+    return err
+}
+for _, d := range derivations {
+    bz, err := d.Algo.Derive()(mnemonic, bip39Passphrase, d.Path)
+    if errors.Is(err, hd.ErrMlDsa65BIP85Mnemonic) {
+        continue // PQHD needs 24 words; shorter backups only have BIP44 keys.
+    }
+    if err != nil {
+        return err
+    }
+    pubKey := d.Algo.Generate()(bz).PubKey()
+    // Look up pubKey.Address() on chain; if it is in use, restore it with
+    // kr.NewAccount(name, mnemonic, bip39Passphrase, d.Path, d.Algo).
+}
+```
+
+**Keys from earlier unreleased PQHD drafts are incompatible.** The initial SDK-local path
+(`m/83696968'/118'/65'/account'/index'`), the scoped derivation that used the first 32 HMAC
+bytes directly, and the subsequent SHAKE256 draft using scheme `3` all produce different keys.
+The old scoped path `m/83696968'/505153'/coin_type'/3'/account'/index'` is rejected;
+there is no silent fallback to any earlier derivation.
+Existing stored private keys still sign unchanged, but mnemonic recovery of those draft keys
+requires the original implementation and derivation settings. Preserve those backups before
+updating; this change does not migrate their funds.
+
+Go applications can use the same flow through the existing keyring API:
+
+```go
+path, err := hd.CreateMlDsa65BIP85Path(118, 7, 9)
+if err != nil {
+    return err
+}
+record, err := kr.NewAccount("pq", mnemonic, bip39Passphrase, path, hd.MlDsa65BIP85)
+```
+
+Use the same coin type, account, index, mnemonic, and passphrase to reproduce a scoped
+PQHD ML-DSA-65 key. These keys intentionally differ from Project Eleven's unscoped
+namespace (`503131'`) and direct HMAC truncation.
+
+For other applications, `hd.DeriveBIP85Entropy(masterPrivateKey, chainCode, path, numBytes)`
+accepts BIP32 master material from `hd.ComputeMastersFromSeed` and returns 1–64 secret bytes.
+This generic BIP85 API returns raw HMAC entropy, **not** PQHD's SHAKE256 output.
+It supports the article's exact paths `m/83696968'/503131'/0'` (32 bytes for ML-DSA-44)
+and `m/83696968'/503131'/2'` (48 bytes for SLH-DSA-SHA2-128s). However, **this integration
+generates SDK account keys only for ML-DSA-65**; it does not add ML-DSA-44 or SLH-DSA signing,
+key codecs, or transaction acceptance. Never reuse an entropy path for different algorithms.
+
+:::warning
+This draft derivation integration needs independent security review before production use.
+It does not make an entire chain quantum-safe or strengthen a previously exposed mnemonic.
+Do not export extended public or private keys for PQHD path nodes. Keep the mnemonic,
+master/ancestor extended keys, and intermediate BIP32 keys secret: BIP32 still uses secp256k1,
+and an exposed ancestor extended public key is vulnerable to a future quantum attacker.
+Prefer a fresh mnemonic if an existing wallet's exposure is uncertain. The mnemonic and BIP32
+scalars cap the derived keys at about 128 bits of quantum security, despite ML-DSA-65's
+NIST category-3 classification.
+Buffers are cleared where practical, but Go does not guarantee complete erasure of secret copies.
+:::

@@ -65,6 +65,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (x/distribution) [#26860](https://github.com/cosmos/cosmos-sdk/pull/26860) Use `rewards-by-validator` in the `rewards-by-validator` CLI example.
 * (x/feegrant) [#26990](https://github.com/cosmos/cosmos-sdk/pull/26990) Build the collections schema in `NewKeeper`, so `Keeper.Schema` lists the `allowances` and `allowances_queue` collections. It was left empty.
 * (errors) [#26948](https://github.com/cosmos/cosmos-sdk/pull/26948) Preserve gRPC status codes through standard Go error wrappers and joined errors inside an SDK-wrapped error.
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.

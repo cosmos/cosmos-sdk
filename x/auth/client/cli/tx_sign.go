@@ -96,26 +96,28 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		if !clientCtx.Offline {
-			if ms == "" {
-				from, err := cmd.Flags().GetString(flags.FlagFrom)
+			// query the account number and starting sequence of the account the
+			// txs are signed on behalf of (the multisig account when --multisig is
+			// set) once; the sequence is then incremented locally for each tx.
+			signer := ms
+			if signer == "" {
+				signer, err = cmd.Flags().GetString(flags.FlagFrom)
 				if err != nil {
 					return err
 				}
-
-				addr, _, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), from)
-				if err != nil {
-					return err
-				}
-
-				acc, err := txFactory.AccountRetriever().GetAccount(clientCtx, addr)
-				if err != nil {
-					return err
-				}
-
-				txFactory = txFactory.WithAccountNumber(acc.GetAccountNumber()).WithSequence(acc.GetSequence())
-			} else {
-				txFactory = txFactory.WithAccountNumber(0).WithSequence(0)
 			}
+
+			addr, _, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), signer)
+			if err != nil {
+				return err
+			}
+
+			accNum, seq, err := txFactory.AccountRetriever().GetAccountNumberSequence(clientCtx, addr)
+			if err != nil {
+				return err
+			}
+
+			txFactory = txFactory.WithAccountNumber(accNum).WithSequence(seq)
 		}
 
 		appendMessagesToSingleTx, _ := cmd.Flags().GetBool(flagAppend)
@@ -181,9 +183,17 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			cmd.Printf("%s\n", json)
 		} else {
 			// It will generate signed tx for each tx
-			for sequence := txFactory.Sequence(); scanner.Scan(); sequence++ {
+			sequence := txFactory.Sequence()
+			for scanner.Scan() {
 				unsignedStdTx := scanner.Tx()
-				txFactory = txFactory.WithSequence(sequence)
+				// Unordered txs are signed with sequence 0 and do not consume a
+				// sequence number, so later ordered txs keep consecutive sequences.
+				if utx, ok := unsignedStdTx.(sdk.TxWithUnordered); ok && utx.GetUnordered() {
+					txFactory = txFactory.WithSequence(0)
+				} else {
+					txFactory = txFactory.WithSequence(sequence)
+					sequence++
+				}
 				txBuilder, err := txCfg.WrapTxBuilder(unsignedStdTx)
 				if err != nil {
 					return err
@@ -265,13 +275,15 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 		return fmt.Errorf("signing key is not a part of multisig key")
 	}
 
+	// account number and sequence are already set on txFactory by the caller,
+	// so don't let SignTxWithSignerAddress re-query them from state (offline=true).
 	if err = authclient.SignTxWithSignerAddress(
 		txFactory,
 		clientCtx,
 		multisigAddr,
 		clientCtx.FromName,
 		txBuilder,
-		clientCtx.Offline,
+		true,
 		true,
 	); err != nil {
 		return err

@@ -24,6 +24,10 @@ type HandlerOptions struct {
 	// This allows for modification of signature verification behavior, such as how long an unordered transaction can
 	// be valid, or how much gas to charge for unordered transactions.
 	SigVerifyOptions []SigVerificationDecoratorOption
+	// FeeRecipients, if set, records the fee recipient of the DeductFeeDecorator
+	// installed by NewAnteHandler. Modules that need to verify where an app's
+	// fees go (such as enterprise/poa) read the same registry.
+	FeeRecipients *FeeRecipients
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -49,7 +53,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewTxTimeoutHeightDecorator(),
 		NewValidateMemoDecorator(options.AccountKeeper),
 		NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+		options.FeeRecipients.Install(NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker)),
 		NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		NewValidateSigCountDecorator(options.AccountKeeper),
 		NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),

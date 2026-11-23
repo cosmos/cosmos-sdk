@@ -32,11 +32,15 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 // Keeper maintains the POA module state and provides methods for validator management and fee distribution.
 type Keeper struct {
-	params collections.Item[types.Params]
+	// feeRecipients, if set, is the registry of fee recipients of the
+	// DeductFeeDecorators installed in this app's ante handler.
+	feeRecipients *ante.FeeRecipients
+	params        collections.Item[types.Params]
 	// Validators keyed by consensus address
 	validators *collections.IndexedMap[sdk.ConsAddress, types.Validator, ValidatorIndexes]
 	// totalPower of all validators
@@ -340,4 +344,12 @@ func (k *Keeper) validatePubkeyType(ctx sdk.Context, key cryptotypes.PubKey) err
 		return fmt.Errorf("public key type %s is not in the consensus parameters validator public key types: [%s]", key.Type(), strings.Join(validPkTypes, ","))
 	}
 	return nil
+}
+
+// SetFeeRecipients sets the per-app registry of installed fee recipients that
+// EndBlocker verifies at block 1. Pass the same registry as
+// ante.HandlerOptions.FeeRecipients. EndBlocker panics at block 1 if it was
+// never set.
+func (k *Keeper) SetFeeRecipients(r *ante.FeeRecipients) {
+	k.feeRecipients = r
 }

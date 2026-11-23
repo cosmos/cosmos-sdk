@@ -551,6 +551,11 @@ func TestFormatIntNonDigits(t *testing.T) {
 func TestFormatIntEmptyString(t *testing.T) {
 	_, err := math.FormatInt("")
 	require.ErrorContains(t, err, "cannot format empty string")
+
+	// A sign with no digits (e.g. "-") has nothing to format and must error
+	// rather than normalizing to "0".
+	_, err = math.FormatInt("-")
+	require.ErrorContains(t, err, "cannot format empty string")
 }
 
 func TestFormatIntCorrectness(t *testing.T) {
@@ -559,6 +564,10 @@ func TestFormatIntCorrectness(t *testing.T) {
 		want string
 	}{
 		{"0", "0"},
+		{"00", "0"},
+		{"000", "0"},
+		{"0000000", "0"},
+		{"007", "7"},
 		{"-2", "-2"},
 		{"10", "10"},
 		{"123", "123"},

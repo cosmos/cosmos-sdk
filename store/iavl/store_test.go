@@ -176,6 +176,18 @@ func TestTestGetImmutableIterator(t *testing.T) {
 	require.Equal(t, len(expected), i)
 }
 
+func TestIAVLStoreClose(t *testing.T) {
+	cs, err := LoadStore(dbm.NewMemDB(), log.NewNopLogger(), types.NewKVStoreKey("test"), types.CommitID{}, cacheSize, false)
+	require.NoError(t, err)
+	st := cs.(*Store)
+	cID := st.Commit()
+
+	imm, err := st.GetImmutable(cID.Version)
+	require.NoError(t, err)
+	require.NoError(t, imm.Close())
+	require.NoError(t, st.Close())
+}
+
 func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)

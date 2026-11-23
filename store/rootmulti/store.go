@@ -74,6 +74,9 @@ type Store struct {
 	removalMap      map[types.StoreKey]bool
 	interBlockCache types.MultiStorePersistentCache
 	listeners       map[types.StoreKey]*types.MemoryListener
+	// replacedIAVLStores holds the IAVL stores that a reload replaced. Their
+	// pending pruning keeps running, and Close stops it.
+	replacedIAVLStores []*iavl.Store
 
 	commitHeader cmtproto.Header
 }
@@ -300,6 +303,15 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		}
 	}
 
+	// Keep the IAVL stores this load replaces for Close. Closing them now would
+	// drop a prune they have queued but not started, and the new stores would
+	// not run it.
+	for key, old := range rs.stores {
+		if s, ok := old.(*iavl.Store); ok && newStores[key] != old {
+			rs.replacedIAVLStores = append(rs.replacedIAVLStores, s)
+		}
+	}
+
 	rs.lastCommitInfo.Store(cInfo)
 	rs.stores = newStores
 
@@ -454,6 +466,25 @@ func (rs *Store) LastCommitID() types.CommitID {
 	}
 
 	return info.CommitID()
+}
+
+// Close stops the background pruning of every IAVL store, including those a
+// reload replaced, and waits for it to finish. It does not close the database,
+// which the caller still owns and must close after Close returns.
+func (rs *Store) Close() error {
+	var errs []error
+	for key := range rs.stores {
+		// Only IAVL stores: a StoreTypeDB store's Close would close rs.db through its PrefixDB.
+		// getCommitStore unwraps the inter-block cache, which does not forward Close.
+		if s, ok := rs.getCommitStore(key).(*iavl.Store); ok {
+			errs = append(errs, s.Close())
+		}
+	}
+	for _, s := range rs.replacedIAVLStores {
+		errs = append(errs, s.Close())
+	}
+	rs.replacedIAVLStores = nil
+	return errors.Join(errs...)
 }
 
 // Commit implements Committer/CommitStore.
@@ -1050,7 +1081,15 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 			// Wrap and get a CommitKVStore with inter-block caching. Note, this should
 			// only wrap the primary CommitKVStore, not any store that is already
 			// branched as that will create unexpected behavior.
-			store = rs.interBlockCache.GetStoreCache(key, store)
+			cached := rs.interBlockCache.GetStoreCache(key, store)
+			// The cache keeps the store it first wrapped for key, so on a reload the
+			// store just loaded goes unused. Close it to stop its pruning goroutine.
+			if inner := rs.interBlockCache.Unwrap(key); inner != nil && inner != store {
+				if err := store.(*iavl.Store).Close(); err != nil {
+					return nil, err
+				}
+			}
+			store = cached
 		}
 
 		return store, err

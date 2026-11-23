@@ -2,6 +2,7 @@ package cache_test
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -99,4 +100,35 @@ func TestCacheWrap(t *testing.T) {
 
 	cacheWrapper := mngr.GetStoreCache(sKey, store).CacheWrap()
 	require.IsType(t, &cachekv.Store{}, cacheWrapper)
+}
+
+func TestCacheManagerConcurrentResetAndReaders(t *testing.T) {
+	db := wrapper.NewDBWrapper(dbm.NewMemDB())
+	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
+
+	sKey := types.NewKVStoreKey("test")
+	tree := iavl.NewMutableTree(db, 100, false, log.NewNopLogger())
+	store := iavlstore.UnsafeNewStore(tree)
+
+	const goroutines = 16
+	const iters = 200
+
+	var wg sync.WaitGroup
+	wg.Add(goroutines)
+	for i := 0; i < goroutines; i++ {
+		go func(id int) {
+			defer wg.Done()
+			for j := 0; j < iters; j++ {
+				switch id % 3 {
+				case 0:
+					_ = mngr.GetStoreCache(sKey, store)
+				case 1:
+					_ = mngr.Unwrap(sKey)
+				default:
+					mngr.Reset()
+				}
+			}
+		}(i)
+	}
+	wg.Wait()
 }

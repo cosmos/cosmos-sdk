@@ -8,6 +8,7 @@ import (
 	"math"
 	"sort"
 	"strings"
+	"sync"
 	"sync/atomic"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -73,7 +74,13 @@ type Store struct {
 	initialVersion  int64
 	removalMap      map[types.StoreKey]bool
 	interBlockCache types.MultiStorePersistentCache
-	listeners       map[types.StoreKey]*types.MemoryListener
+	// interBlockCacheMu serializes Reset + the subsequent LoadLatestVersion
+	// reload (including the rs.stores swap) with concurrent query readers.
+	// A method-level lock on the cache manager alone would still expose the
+	// empty cache map between Reset and the completed reload, and would not
+	// protect CacheMultiStoreWithVersion's iteration of rs.stores.
+	interBlockCacheMu sync.RWMutex
+	listeners         map[types.StoreKey]*types.MemoryListener
 
 	commitHeader cmtproto.Header
 }
@@ -160,9 +167,26 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db db
 	rs.keysByName[key.Name()] = key
 }
 
+// lockInterBlockCacheForRead acquires the inter-block cache read lock when
+// caching is enabled. The returned function must be deferred by the caller.
+func (rs *Store) lockInterBlockCacheForRead() func() {
+	if rs.interBlockCache == nil {
+		return func() {}
+	}
+	rs.interBlockCacheMu.RLock()
+	return rs.interBlockCacheMu.RUnlock
+}
+
 // getCommitStore returns a mounted CommitStore for a given StoreKey. If the
 // store is wrapped in an inter-block cache, it will be unwrapped before returning.
 func (rs *Store) getCommitStore(key types.StoreKey) types.CommitStore {
+	defer rs.lockInterBlockCacheForRead()()
+	return rs.getCommitStoreUnlocked(key)
+}
+
+// getCommitStoreUnlocked is getCommitStore without acquiring interBlockCacheMu.
+// The caller must already hold the lock (or know the cache is not being reset).
+func (rs *Store) getCommitStoreUnlocked(key types.StoreKey) types.CommitStore {
 	// If the Store has an inter-block cache, first attempt to lookup and unwrap
 	// the underlying CommitKVStore by StoreKey. If it does not exist, fallback to
 	// the main mapping of CommitKVStores.
@@ -179,6 +203,15 @@ func (rs *Store) getCommitStore(key types.StoreKey) types.CommitStore {
 // store is wrapped in an inter-block cache, it will be unwrapped before returning.
 func (rs *Store) getCommitKVStore(key types.StoreKey) types.CommitKVStore {
 	store, ok := rs.getCommitStore(key).(types.CommitKVStore)
+	if !ok {
+		panic(fmt.Sprintf("store with key %v is not CommitKVStore", key))
+	}
+
+	return store
+}
+
+func (rs *Store) getCommitKVStoreUnlocked(key types.StoreKey) types.CommitKVStore {
+	store, ok := rs.getCommitStoreUnlocked(key).(types.CommitKVStore)
 	if !ok {
 		panic(fmt.Sprintf("store with key %v is not CommitKVStore", key))
 	}
@@ -551,6 +584,8 @@ func (rs *Store) CacheWrap() types.CacheWrap {
 // CacheMultiStore creates ephemeral branch of the multi-store and returns a CacheMultiStore.
 // It implements the MultiStore interface.
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
+	defer rs.lockInterBlockCacheForRead()()
+
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for k, v := range rs.stores {
 		store := types.CacheWrapper(v)
@@ -571,6 +606,11 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 // any store cannot be loaded. This should only be used for querying and
 // iterating at past heights.
 func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
+	// Hold the read lock for the entire reload-sensitive section: ranging
+	// rs.stores and unwrapping. Nested getCommitKVStore locking would deadlock
+	// if a Restore writer is already waiting on interBlockCacheMu.
+	defer rs.lockInterBlockCacheForRead()()
+
 	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
 	var commitInfo *types.CommitInfo
 	storeInfos := map[string]bool{}
@@ -580,7 +620,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 		case types.StoreTypeIAVL:
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
-			store = rs.getCommitKVStore(key)
+			store = rs.getCommitKVStoreUnlocked(key)
 
 			// Attempt to lazy-load an already saved IAVL store version. If the
 			// version does not exist or is pruned, an error should be returned.
@@ -652,6 +692,8 @@ func (rs *Store) GetStore(key types.StoreKey) types.Store {
 // NOTE: The returned KVStore may be wrapped in an inter-block cache if it is
 // set on the root store.
 func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
+	defer rs.lockInterBlockCacheForRead()()
+
 	s := rs.stores[key]
 	if s == nil {
 		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
@@ -1024,6 +1066,20 @@ loop:
 	}
 
 	rs.flushMetadata(rs.db, int64(height), rs.buildCommitInfo(int64(height)))
+
+	// Entries cached against the pre-restore (empty) stores, including misses
+	// cached by CheckTx during state sync, must not survive the restore.
+	// Reset the cache before reloading stores to ensure stale wrappers and
+	// entries do not persist across the restore.
+	if rs.interBlockCache != nil {
+		// Hold exclusive access across Reset and the complete reload so
+		// concurrent query readers never observe a half-reset cache or
+		// race on the unsynchronized caches map.
+		rs.interBlockCacheMu.Lock()
+		defer rs.interBlockCacheMu.Unlock()
+		rs.interBlockCache.Reset()
+	}
+
 	return snapshotItem, rs.LoadLatestVersion()
 }
 

@@ -3,6 +3,7 @@ package iavl
 import (
 	"errors"
 	"fmt"
+	"io"
 
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	dbm "github.com/cosmos/cosmos-db"
@@ -158,6 +159,28 @@ func (st *Store) SetPruning(_ pruningtypes.PruningOptions) {
 // since IAVl accepts pruning options directly.
 func (st *Store) GetPruning() pruningtypes.PruningOptions {
 	panic("cannot get pruning options on an initialized IAVL store")
+}
+
+// Close stops the tree's background pruning and waits for it to finish. It
+// does not close the database. Do not use the store after Close.
+func (st *Store) Close() error {
+	if c, ok := st.tree.(io.Closer); ok {
+		return c.Close()
+	}
+	return nil
+}
+
+// LoadVersion discards unsaved changes and loads the tree at version. Version 0
+// loads the latest version. The store keeps its tree, so a prune the tree has
+// queued still runs.
+func (st *Store) LoadVersion(version int64) error {
+	tree, ok := st.tree.(*iavl.MutableTree)
+	if !ok {
+		return errors.New("iavl load failed: unable to find mutable tree")
+	}
+	tree.Rollback()
+	_, err := tree.LoadVersion(version)
+	return err
 }
 
 // VersionExists returns whether or not a given version is stored.

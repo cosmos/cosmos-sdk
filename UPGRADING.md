@@ -31,6 +31,8 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [Fee Allocation Migration](#fee-allocation-migration)
 * [store/v2 (unreleased)](#storev2-unreleased)
     * [IAVL Tree Close](#iavl-tree-close)
+* [x/auth/vesting (unreleased)](#xauthvesting-unreleased)
+    * [Periodic Vesting Overflow Check](#periodic-vesting-overflow-check)
 
 ## Breaking Changes
 
@@ -350,3 +352,9 @@ return db.Close()
 ```
 
 `BaseApp.Close` does not call `rootmulti.Store.Close` yet. That call lands when the root module moves to a `store/v2` release that contains this change. Until then, code that creates a `rootmulti.Store` outside `BaseApp` must call `Close` before closing the database.
+
+## x/auth/vesting (unreleased)
+
+### Periodic Vesting Overflow Check
+
+`PeriodicVestingAccount.Validate` now checks for int64 overflow after each period length is added ([#26987](https://github.com/cosmos/cosmos-sdk/pull/26987)). Before, period lengths that summed past 2^64 could wrap back to an end time just after the start time and pass validation, so every coin vested almost at once. `MsgCreatePeriodicVestingAccount` with such periods used to succeed and now fails, so all nodes must switch at the same height through a coordinated upgrade. No store migration is needed. Accounts already in state are not touched, but `ValidateGenesis` rejects them, so an exported genesis that contains one fails validation.

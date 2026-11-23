@@ -300,6 +300,16 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		}
 	}
 
+	// Close the IAVL stores this load replaces, so their pruning stops before the
+	// caller can close the DB.
+	for key, old := range rs.stores {
+		if s, ok := old.(*iavl.Store); ok && newStores[key] != old {
+			if err := s.Close(); err != nil {
+				return errorsmod.Wrapf(err, "failed to close replaced store %s", key.Name())
+			}
+		}
+	}
+
 	rs.lastCommitInfo.Store(cInfo)
 	rs.stores = newStores
 
@@ -1065,7 +1075,15 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 			// Wrap and get a CommitKVStore with inter-block caching. Note, this should
 			// only wrap the primary CommitKVStore, not any store that is already
 			// branched as that will create unexpected behavior.
-			store = rs.interBlockCache.GetStoreCache(key, store)
+			cached := rs.interBlockCache.GetStoreCache(key, store)
+			// The cache keeps the store it first wrapped for key, so on a reload the
+			// store just loaded goes unused. Close it to stop its pruning goroutine.
+			if inner := rs.interBlockCache.Unwrap(key); inner != nil && inner != store {
+				if err := store.(*iavl.Store).Close(); err != nil {
+					return nil, err
+				}
+			}
+			store = cached
 		}
 
 		return store, err

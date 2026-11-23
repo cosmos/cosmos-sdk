@@ -2,7 +2,7 @@
 
 set -e -o pipefail
 
-LINT_TAGS="e2e,ledger,test_ledger_mock,system_test,sims"
+LINT_TAGS="e2e,ledger,test_ledger_mock,system_test,sims,blockstm_fuzz"
 export LINT_TAGS
 
 REPO_ROOT="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"

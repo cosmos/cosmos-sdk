@@ -1224,20 +1224,24 @@ func (d *lateOpDB) NewBatch() dbm.Batch { d.hit(); return d.DB.NewBatch() }
 func (d *lateOpDB) NewBatchWithSize(n int) dbm.Batch { d.hit(); return d.DB.NewBatchWithSize(n) }
 
 // Close must stop IAVL's async pruning so no DB operation may run after the DB is closed.
-// With reload, a pending prune belongs to a tree that LoadLatestVersion replaced.
+// The last commit queues one large prune, so it is still running at Close. With reload,
+// it runs on a tree that LoadLatestVersion replaced.
 func TestStoreCloseStopsAsyncPruning(t *testing.T) {
+	const commits = 100
 	for _, tc := range []struct{ withCache, reload bool }{{false, false}, {true, false}, {false, true}, {true, true}} {
 		t.Run(fmt.Sprintf("interBlockCache=%t/reload=%t", tc.withCache, tc.reload), func(t *testing.T) {
 			gdb, err := dbm.NewGoLevelDB("test", t.TempDir(), nil)
 			require.NoError(t, err)
 			db := &lateOpDB{DB: gdb}
-			ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningEverything))
+			ms := NewStore(db, log.NewNopLogger())
+			ms.SetPruning(pruningtypes.NewCustomPruningOptions(2, commits))
+			ms.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
 			if tc.withCache {
 				ms.SetInterBlockCache(cache.NewCommitKVStoreCacheManager(1000))
 			}
 			require.NoError(t, ms.LoadLatestVersion())
-			kv := ms.getCommitKVStore(ms.keysByName["store1"])
-			for i := range 300 {
+			kv := ms.getCommitKVStore(testStoreKey1)
+			for i := range commits {
 				for j := range 100 {
 					kv.(types.KVStore).Set([]byte(fmt.Sprintf("k%d-%d", i%7, j)), []byte(fmt.Sprintf("v%d", i)))
 				}

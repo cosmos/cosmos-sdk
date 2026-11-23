@@ -74,6 +74,9 @@ type Store struct {
 	removalMap      map[types.StoreKey]bool
 	interBlockCache types.MultiStorePersistentCache
 	listeners       map[types.StoreKey]*types.MemoryListener
+	// replacedIAVLStores holds the IAVL stores that a reload replaced. Their
+	// pending pruning keeps running, and Close stops it.
+	replacedIAVLStores []*iavl.Store
 
 	commitHeader cmtproto.Header
 }
@@ -300,13 +303,12 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		}
 	}
 
-	// Close the IAVL stores this load replaces, so their pruning stops before the
-	// caller can close the DB.
+	// Keep the IAVL stores this load replaces for Close. Closing them now would
+	// drop a prune they have queued but not started, and the new stores would
+	// not run it.
 	for key, old := range rs.stores {
 		if s, ok := old.(*iavl.Store); ok && newStores[key] != old {
-			if err := s.Close(); err != nil {
-				return errorsmod.Wrapf(err, "failed to close replaced store %s", key.Name())
-			}
+			rs.replacedIAVLStores = append(rs.replacedIAVLStores, s)
 		}
 	}
 
@@ -466,9 +468,9 @@ func (rs *Store) LastCommitID() types.CommitID {
 	return info.CommitID()
 }
 
-// Close stops the background pruning of every IAVL store and waits for it to
-// finish. It does not close the database, which the caller still owns and must
-// close after Close returns.
+// Close stops the background pruning of every IAVL store, including those a
+// reload replaced, and waits for it to finish. It does not close the database,
+// which the caller still owns and must close after Close returns.
 func (rs *Store) Close() error {
 	var errs []error
 	for key := range rs.stores {
@@ -478,6 +480,10 @@ func (rs *Store) Close() error {
 			errs = append(errs, s.Close())
 		}
 	}
+	for _, s := range rs.replacedIAVLStores {
+		errs = append(errs, s.Close())
+	}
+	rs.replacedIAVLStores = nil
 	return errors.Join(errs...)
 }
 

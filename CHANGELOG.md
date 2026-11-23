@@ -79,6 +79,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (keys) [#26833](https://github.com/cosmos/cosmos-sdk/pull/26833) Strip leading and trailing whitespace when reading a mnemonic from a source file.
 * (x/auth/tx) [#26955](https://github.com/cosmos/cosmos-sdk/pull/26955) `GetBlockWithTxs` now uses the default limit when `pagination.limit` is 0; a request that set only `offset` or `count_total` returned no txs. Reverse pagination now walks back from the last tx and includes the first one, with `offset` counted from the end like other paginated queries.
 * (client/debug) [#26957](https://github.com/cosmos/cosmos-sdk/pull/26957) `debug raw-bytes` now accepts byte values above 127, such as the `[10 21 13 255]` in its own help text; each value was parsed as a signed 8-bit integer.
+* (baseapp) [#26786](https://github.com/cosmos/cosmos-sdk/pull/26786) Make `BaseApp.Close` idempotent so the two deferred cleanups in `server/start.go` no longer close the application database twice, which panicked on pebble-backed nodes at the end of an otherwise clean shutdown.
 
 ### Deprecated
 

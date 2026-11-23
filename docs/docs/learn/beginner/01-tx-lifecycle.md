@@ -93,7 +93,7 @@ changes while in the process of verifying transactions, but still need a copy of
 state in order to answer queries - they should not respond using state with uncommitted changes.
 
 In order to verify a `Tx`, full-nodes call `CheckTx`, which includes both _stateless_ and _stateful_
-checks. Further validation happens later in the [`DeliverTx`](#delivertx) stage. `CheckTx` goes
+checks. Further validation happens later in the [`DeliverTx`](#transaction-execution) stage. `CheckTx` goes
 through several steps, beginning with decoding `Tx`.
 
 ### Decoding
@@ -103,7 +103,7 @@ When `Tx` is received by the application from the underlying consensus engine (e
 ### ValidateBasic (deprecated)
 
 Messages ([`sdk.Msg`](../advanced/01-transactions.md#messages)) are extracted from transactions (`Tx`). The `ValidateBasic` method of the `sdk.Msg` interface implemented by the module developer is run for each transaction.
-To discard obviously invalid messages, the `BaseApp` type calls the `ValidateBasic` method very early in the processing of the message in the [`CheckTx`](../advanced/00-baseapp.md#checktx) and [`DeliverTx`](../advanced/00-baseapp.md#delivertx) transactions.
+To discard obviously invalid messages, the `BaseApp` type calls the `ValidateBasic` method very early in the processing of the message in the [`CheckTx`](../advanced/00-baseapp.md#checktx) and [`DeliverTx`](../advanced/00-baseapp.md#transaction-execution) transactions.
 `ValidateBasic` can include only **stateless** checks (the checks that do not require access to the state). 
 
 :::warning

@@ -34,7 +34,7 @@ import (
 )
 
 // ConsensusVersion defines the current x/bank module consensus version.
-const ConsensusVersion = 4
+const ConsensusVersion = 5
 
 var (
 	_ module.AppModuleBasic      = AppModule{}
@@ -111,6 +111,15 @@ func (am AppModule) IsAppModule() {}
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+
+	bk, ok := am.keeper.(keeper.BaseKeeper)
+	if !ok {
+		panic("x/bank migration requires keeper.BaseKeeper")
+	}
+	m := keeper.NewMigrator(bk)
+	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4to5); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 4 to 5: %v", types.ModuleName, err))
+	}
 }
 
 // NewAppModule creates a new AppModule object

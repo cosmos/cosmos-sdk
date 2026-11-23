@@ -65,6 +65,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (baseapp) [#26994](https://github.com/cosmos/cosmos-sdk/pull/26994) Respect `--trace` for panics in gRPC queries: the returned error now carries the panic's stack trace, as ABCI queries already do.
 * (x/feegrant) [#26990](https://github.com/cosmos/cosmos-sdk/pull/26990) Build the collections schema in `NewKeeper`, so `Keeper.Schema` lists the `allowances` and `allowances_queue` collections. It was left empty.
 * (errors) [#26948](https://github.com/cosmos/cosmos-sdk/pull/26948) Preserve gRPC status codes through standard Go error wrappers and joined errors inside an SDK-wrapped error.
 * (store) [#26787](https://github.com/cosmos/cosmos-sdk/pull/26787) clear in-flight snapshot state when creation fails.

@@ -27,4 +27,9 @@ extend google.protobuf.MessageOptions {
   // kind in case the signer information is contained within
   // a message inside the cosmos message.
   repeated string signer = 11110000;
+
+  // internal marks a Msg as internal-only: it may be dispatched via
+  // governance or module routing, but is rejected when submitted as a
+  // top-level message of a user-signed transaction.
+  bool internal = 11110007;
 }

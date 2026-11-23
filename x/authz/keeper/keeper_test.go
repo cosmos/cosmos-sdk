@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	corestoretypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -45,11 +46,13 @@ type TestSuite struct {
 	encCfg        moduletestutil.TestEncodingConfig
 	queryClient   authz.QueryClient
 	msgSrvr       authz.MsgServer
+	storeService  corestoretypes.KVStoreService
 }
 
 func (s *TestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(authzkeeper.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
+	s.storeService = storeService
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})

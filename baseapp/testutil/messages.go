@@ -16,10 +16,12 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgCounter{},
 		&MsgCounter2{},
 		&MsgKeyValue{},
+		&MsgInternal{},
 	)
 	msgservice.RegisterMsgServiceDesc(registry, &_Counter_serviceDesc)
 	msgservice.RegisterMsgServiceDesc(registry, &_Counter2_serviceDesc)
 	msgservice.RegisterMsgServiceDesc(registry, &_KeyValue_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, &_Internal_serviceDesc)
 
 	codec.RegisterInterfaces(registry)
 }
@@ -68,4 +70,14 @@ func (msg *MsgKeyValue) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid signer: %v", err)
 	}
 	return nil
+}
+
+var _ sdk.Msg = &MsgInternal{}
+
+func (msg *MsgInternal) GetSigners() []sdk.AccAddress {
+	if len(msg.Signer) == 0 {
+		return []sdk.AccAddress{}
+	}
+
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Signer)}
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa65"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -33,6 +34,14 @@ func TestSimulateGasCoversSignatureSize(t *testing.T) {
 			k, err := mldsa65.GenPrivKey()
 			require.NoError(t, err)
 			return &k
+		},
+		// secp256r1.PubKey isn't registered with the legacy Amino codec that
+		// ConsumeTxSizeGasDecorator uses to size the placeholder signature.
+		"secp256r1": func(t *testing.T) cryptotypes.PrivKey {
+			t.Helper()
+			k, err := secp256r1.GenPrivKey()
+			require.NoError(t, err)
+			return k
 		},
 	}
 

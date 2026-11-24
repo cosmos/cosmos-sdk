@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa65"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -148,7 +149,17 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 				PubKey:    pubkey,
 			}
 
-			sigBz := legacy.Cdc.MustMarshal(simSig)
+			sigBz, err := legacy.Cdc.Marshal(simSig)
+			if err != nil {
+				// pubkey's concrete type isn't registered with the legacy
+				// Amino codec (e.g. secp256r1); size a registered placeholder
+				// of the same byte length instead, so the result still
+				// reflects the real key's size.
+				sigBz = legacy.Cdc.MustMarshal(legacytx.StdSignature{ //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated
+					Signature: simSig.Signature,
+					PubKey:    &secp256k1.PubKey{Key: make([]byte, len(pubkey.Bytes()))},
+				})
+			}
 			cost := storetypes.Gas(len(sigBz) + 6)
 
 			// If the pubkey is a multi-signature pubkey, then we estimate for the maximum

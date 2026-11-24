@@ -243,7 +243,7 @@ func AddGenesisAccounts(
 
 		if _, ok := balanceCache[addr]; ok {
 			if !appendAcct {
-				return fmt.Errorf(" Account %s already exists\nUse `append` flag to append account at existing address", accAddr)
+				return fmt.Errorf(" Account %s already exists\nUse `append` flag to append account at existing address", addr)
 			}
 
 			for idx, acc := range bankGenState.Balances {
@@ -258,6 +258,7 @@ func AddGenesisAccounts(
 		} else {
 			accs = append(accs, genAccount)
 			bankGenState.Balances = append(bankGenState.Balances, balances)
+			balanceCache[addr] = balances
 		}
 
 		newSupplyCoinsCache = newSupplyCoinsCache.Add(coins...)

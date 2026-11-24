@@ -1,0 +1,70 @@
+{
+  "auth": {
+    "consensus_version": 7,
+    "collections": [
+      "account_by_number prefix=6163636F756E744E756D626572 key=uint64 value=sdk.AccAddress key_codec=codec.uint64Key[uint64] value_codec=codec.keyToValueCodec[github.com/cosmos/cosmos-sdk/types.AccAddress]",
+      "account_number prefix=02 key=no_key value=uint64 key_codec=collections.noKey value_codec=codec.keyToValueCodec[uint64]",
+      "accounts prefix=01 key=sdk.AccAddress value=<nil> key_codec=types.genericAddressKey[github.com/cosmos/cosmos-sdk/types.AccAddress] value_codec=codec.collInterfaceValue[github.com/cosmos/cosmos-sdk/types.AccountI]",
+      "params prefix=00 key=no_key value=github.com/cosmos/gogoproto/cosmos.auth.v1beta1.Params key_codec=collections.noKey value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/auth/types.Params,*github.com/cosmos/cosmos-sdk/x/auth/types.Params]",
+      "unordered_nonces prefix=5A key=Pair[int64, bytes] value=no_value key_codec=collections.pairKeyCodec[int64,[]uint8] value_codec=collections.NoValue"
+    ]
+  },
+  "bank": {
+    "consensus_version": 4,
+    "collections": [
+      "address_by_denom_index prefix=03 key=Pair[string, index_key/sdk.AccAddress] value=no_value key_codec=collections.pairKeyCodec[string,github.com/cosmos/cosmos-sdk/types.AccAddress] value_codec=codec.AltValueCodec[cosmossdk.io/collections.NoValue]",
+      "balances prefix=02 key=Pair[sdk.AccAddress, string] value=math.Int key_codec=collections.pairKeyCodec[github.com/cosmos/cosmos-sdk/types.AccAddress,string] value_codec=codec.AltValueCodec[cosmossdk.io/math.Int]",
+      "denom_metadata prefix=01 key=string value=github.com/cosmos/gogoproto/cosmos.bank.v1beta1.Metadata key_codec=codec.stringKey[string] value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/bank/types.Metadata,*github.com/cosmos/cosmos-sdk/x/bank/types.Metadata]",
+      "params prefix=05 key=no_key value=github.com/cosmos/gogoproto/cosmos.bank.v1beta1.Params key_codec=collections.noKey value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/bank/types.Params,*github.com/cosmos/cosmos-sdk/x/bank/types.Params]",
+      "send_enabled prefix=04 key=string value=protobuf/bool key_codec=codec.stringKey[string] value_codec=codec.boolValue",
+      "supply prefix=00 key=string value=math.Int key_codec=codec.stringKey[string] value_codec=types.intValueCodec"
+    ]
+  },
+  "distribution": {
+    "consensus_version": 3,
+    "collections": [
+      "fee_pool prefix=00 key=no_key value=github.com/cosmos/gogoproto/cosmos.distribution.v1beta1.FeePool key_codec=collections.noKey value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/distribution/types.FeePool,*github.com/cosmos/cosmos-sdk/x/distribution/types.FeePool]",
+      "params prefix=09 key=no_key value=github.com/cosmos/gogoproto/cosmos.distribution.v1beta1.Params key_codec=collections.noKey value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/distribution/types.Params,*github.com/cosmos/cosmos-sdk/x/distribution/types.Params]"
+    ]
+  },
+  "epochs": {
+    "consensus_version": 1,
+    "collections": [
+      "epoch_info prefix=01 key=string value=github.com/cosmos/gogoproto/cosmos.epochs.v1beta1.EpochInfo key_codec=codec.stringKey[string] value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/epochs/types.EpochInfo,*github.com/cosmos/cosmos-sdk/x/epochs/types.EpochInfo]"
+    ]
+  },
+  "evidence": {
+    "consensus_version": 1,
+    "collections": [
+      "evidences prefix=00 key=bytes value=<nil> key_codec=codec.bytesKey[[]uint8] value_codec=codec.collInterfaceValue[github.com/cosmos/cosmos-sdk/x/evidence/exported.Evidence]"
+    ]
+  },
+  "feegrant": {
+    "consensus_version": 3,
+    "collections": [
+      "allowances prefix=00 key=Pair[index_key/sdk.AccAddress, index_key/sdk.AccAddress] value=github.com/cosmos/gogoproto/cosmos.feegrant.v1beta1.Grant key_codec=collections.pairKeyCodec[github.com/cosmos/cosmos-sdk/types.AccAddress,github.com/cosmos/cosmos-sdk/types.AccAddress] value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/feegrant.Grant,*github.com/cosmos/cosmos-sdk/x/feegrant.Grant]",
+      "allowances_queue prefix=01 key=Triple[sdk/time.Time,index_key/sdk.AccAddress,index_key/sdk.AccAddress] value=bool key_codec=collections.tripleKeyCodec[time.Time,github.com/cosmos/cosmos-sdk/types.AccAddress,github.com/cosmos/cosmos-sdk/types.AccAddress] value_codec=codec.keyToValueCodec[bool]"
+    ]
+  },
+  "gov": {
+    "consensus_version": 5,
+    "collections": [
+      "active_proposals_queue prefix=01 key=Pair[sdk/time.Time, uint64] value=uint64 key_codec=collections.pairKeyCodec[time.Time,uint64] value_codec=codec.keyToValueCodec[uint64]",
+      "constitution prefix=31 key=no_key value=string key_codec=collections.noKey value_codec=codec.keyToValueCodec[string]",
+      "deposits prefix=10 key=Pair[uint64, index_key/sdk.AccAddress] value=github.com/cosmos/gogoproto/cosmos.gov.v1.Deposit key_codec=collections.pairKeyCodec[uint64,github.com/cosmos/cosmos-sdk/types.AccAddress] value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/gov/types/v1.Deposit,*github.com/cosmos/cosmos-sdk/x/gov/types/v1.Deposit]",
+      "inactive_proposals_queue prefix=02 key=Pair[sdk/time.Time, uint64] value=uint64 key_codec=collections.pairKeyCodec[time.Time,uint64] value_codec=codec.keyToValueCodec[uint64]",
+      "params prefix=30 key=no_key value=github.com/cosmos/gogoproto/cosmos.gov.v1.Params key_codec=collections.noKey value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/gov/types/v1.Params,*github.com/cosmos/cosmos-sdk/x/gov/types/v1.Params]",
+      "proposal_id prefix=03 key=no_key value=uint64 key_codec=collections.noKey value_codec=codec.keyToValueCodec[uint64]",
+      "proposals prefix=00 key=uint64 value=github.com/cosmos/gogoproto/cosmos.gov.v1.Proposal key_codec=codec.uint64Key[uint64] value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/gov/types/v1.Proposal,*github.com/cosmos/cosmos-sdk/x/gov/types/v1.Proposal]",
+      "votes prefix=20 key=Pair[uint64, index_key/sdk.AccAddress] value=github.com/cosmos/gogoproto/cosmos.gov.v1.Vote key_codec=collections.pairKeyCodec[uint64,github.com/cosmos/cosmos-sdk/types.AccAddress] value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/gov/types/v1.Vote,*github.com/cosmos/cosmos-sdk/x/gov/types/v1.Vote]",
+      "voting_period_proposals prefix=04 key=uint64 value=bytes key_codec=codec.uint64Key[uint64] value_codec=codec.keyToValueCodec[[]uint8]"
+    ]
+  },
+  "mint": {
+    "consensus_version": 3,
+    "collections": [
+      "minter prefix=00 key=no_key value=github.com/cosmos/gogoproto/cosmos.mint.v1beta1.Minter key_codec=collections.noKey value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/mint/types.Minter,*github.com/cosmos/cosmos-sdk/x/mint/types.Minter]",
+      "params prefix=01 key=no_key value=github.com/cosmos/gogoproto/cosmos.mint.v1beta1.Params key_codec=collections.noKey value_codec=*codec.collValue[github.com/cosmos/cosmos-sdk/x/mint/types.Params,*github.com/cosmos/cosmos-sdk/x/mint/types.Params]"
+    ]
+  }
+}

@@ -25,6 +25,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
 	oneAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1))
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 1))
+	fiveEth := sdk.NewCoins(sdk.NewInt64Coin("eth", 5))
 	emptyCoins := sdk.Coins{}
 
 	now := ctx.BlockTime()
@@ -152,6 +153,55 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			remainsPeriod: emptyCoins,
 			periodReset:   oneHour.Add(tenMinutes), // one step from last reset, not now
 		},
+		"multi denom, period limit above basic on one denom only": {
+			allow: feegrant.PeriodicAllowance{
+				Basic: feegrant.BasicAllowance{
+					SpendLimit: atom.Add(eth...),
+					Expiration: &twoHours,
+				},
+				Period:           tenMinutes,
+				PeriodReset:      now,
+				PeriodSpendLimit: smallAtom.Add(fiveEth...),
+			},
+			valid:         true,
+			fee:           smallAtom,
+			blockTime:     oneHour,
+			accept:        true,
+			remove:        false,
+			remainsPeriod: eth,
+			remains:       leftAtom.Add(eth...),
+			periodReset:   oneHour.Add(tenMinutes),
+		},
+		"multi denom, period limit above basic on one denom only, over the other": {
+			allow: feegrant.PeriodicAllowance{
+				Basic: feegrant.BasicAllowance{
+					SpendLimit: atom.Add(eth...),
+					Expiration: &twoHours,
+				},
+				Period:           tenMinutes,
+				PeriodReset:      now,
+				PeriodSpendLimit: smallAtom.Add(fiveEth...),
+			},
+			valid:     true,
+			fee:       smallAtom.Add(oneAtom...),
+			blockTime: oneHour,
+			accept:    false,
+		},
+		"denom missing from period limit is not spendable": {
+			allow: feegrant.PeriodicAllowance{
+				Basic: feegrant.BasicAllowance{
+					SpendLimit: smallAtom.Add(eth...),
+					Expiration: &twoHours,
+				},
+				Period:           tenMinutes,
+				PeriodReset:      now,
+				PeriodSpendLimit: atom,
+			},
+			valid:     true,
+			fee:       eth,
+			blockTime: oneHour,
+			accept:    false,
+		},
 		"expired": {
 			allow: feegrant.PeriodicAllowance{
 				Basic: feegrant.BasicAllowance{
@@ -213,4 +263,23 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestPeriodicResetEmptySpendLimit checks that the period reset treats an empty,
+// non-nil Basic.SpendLimit as set, like Accept does, and gives no period allowance.
+func TestPeriodicResetEmptySpendLimit(t *testing.T) {
+	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+
+	now := time.Now()
+	allow := feegrant.PeriodicAllowance{
+		Basic:            feegrant.BasicAllowance{SpendLimit: sdk.Coins{}},
+		Period:           time.Hour,
+		PeriodSpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 10)),
+		PeriodReset:      now,
+	}
+	ctx := testCtx.Ctx.WithBlockTime(now.Add(time.Minute))
+	_, err := allow.Accept(ctx, sdk.NewCoins(sdk.NewInt64Coin("atom", 1)), []sdk.Msg{})
+	require.ErrorIs(t, err, feegrant.ErrFeeLimitExceeded)
+	require.ErrorContains(t, err, "period limit")
 }

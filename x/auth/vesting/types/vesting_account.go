@@ -366,6 +366,9 @@ func (pva PeriodicVestingAccount) Validate() error {
 		if p.Length < 0 {
 			return fmt.Errorf("period #%d has a negative length: %d", i, p.Length)
 		}
+		if endTime+p.Length < endTime {
+			return fmt.Errorf("period #%d: cumulative endTime overflowed", i)
+		}
 		endTime += p.Length
 
 		if !p.Amount.IsValid() || !p.Amount.IsAllPositive() {
@@ -376,9 +379,6 @@ func (pva PeriodicVestingAccount) Validate() error {
 	}
 	if endTime != pva.EndTime {
 		return errors.New("vesting end time does not match length of all vesting periods")
-	}
-	if endTime < pva.GetStartTime() {
-		return errors.New("cumulative endTime overflowed, and/or is less than startTime")
 	}
 	if !originalVesting.Equal(pva.OriginalVesting) {
 		return fmt.Errorf("original vesting coins (%v) does not match the sum of all coins in vesting periods (%v)", pva.OriginalVesting, originalVesting)

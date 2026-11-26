@@ -375,3 +375,11 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestSchema() {
+	var names []string
+	for _, c := range s.consensusParamsKeeper.Schema.ListCollections() {
+		names = append(names, c.GetName())
+	}
+	s.Require().ElementsMatch([]string{"params"}, names)
+}

@@ -246,7 +246,7 @@ func (m Map[K, V]) IterateRaw(ctx context.Context, start, end []byte, order Orde
 		prefixedEnd = concatNew(m.prefix, end)
 	}
 
-	if bytes.Compare(prefixedStart, prefixedEnd) == 1 {
+	if prefixedEnd != nil && bytes.Compare(prefixedStart, prefixedEnd) == 1 {
 		return Iterator[K, V]{}, ErrInvalidIterator
 	}
 

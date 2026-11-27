@@ -31,6 +31,8 @@ The headline changes in this release are the removal of three legacy surfaces (`
     * [Fee Allocation Migration](#fee-allocation-migration)
 * [x/auth/vesting (unreleased)](#xauthvesting-unreleased)
     * [Periodic Vesting Overflow Check](#periodic-vesting-overflow-check)
+* [Collections (unreleased)](#collections-unreleased)
+    * [Unbounded Collection Iteration](#unbounded-collection-iteration)
 
 ## Breaking Changes
 
@@ -333,3 +335,9 @@ Genesis import applies the same trim. `InitGenesis` now compares the imported al
 ### Periodic Vesting Overflow Check
 
 `PeriodicVestingAccount.Validate` now checks for int64 overflow after each period length is added ([#26987](https://github.com/cosmos/cosmos-sdk/pull/26987)). Before, period lengths that summed past 2^64 could wrap back to an end time just after the start time and pass validation, so every coin vested almost at once. `MsgCreatePeriodicVestingAccount` with such periods used to succeed and now fails, so all nodes must switch at the same height through a coordinated upgrade. No store migration is needed. Accounts already in state are not touched, but `ValidateGenesis` rejects them, so an exported genesis that contains one fails validation.
+
+## Collections (unreleased)
+
+### Unbounded Collection Iteration
+
+Collections with an all-`0xff` prefix, including `collections.NewPrefix(255)`, now support typed and raw iteration, walking and clearing without a finite upper endpoint. These operations previously returned `ErrInvalidIterator` because the nil upper bound was compared as an ordinary byte slice. Storage key encoding is unchanged and this fix requires no key migration. Applications using the affected operations in deterministic state transitions should activate the change in a coordinated upgrade, since the operations now succeed instead of returning an error.

@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"math"
 	"testing"
 	"time"
 
@@ -440,6 +441,15 @@ func TestOverflowAndNegativeVestedCoinsPeriods(t *testing.T) {
 				types.Period{Length: 6 * 60 * 60, Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
 			},
 			"vesting start-time cannot be before end-time", // it overflow to a negative number, making start-time > end-time
+		},
+		{
+			"overflow that wraps back past start-time",
+			types.Periods{
+				types.Period{Length: math.MaxInt64, Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
+				types.Period{Length: math.MaxInt64, Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+				types.Period{Length: 3, Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+			},
+			"cumulative endTime overflowed", // wraps around to startTime + 1
 		},
 		{
 			"good periods that are not negative nor overflow",

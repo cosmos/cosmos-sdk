@@ -432,6 +432,34 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 			expErrMsg: "not allowed to receive funds",
 		},
 		{
+			name: "period lengths overflow end time",
+			preRun: func() {
+				s.bankKeeper.EXPECT().IsSendEnabledCoins(gomock.Any(), gomock.Any()).Return(nil)
+				s.bankKeeper.EXPECT().BlockedAddr(to3Addr).Return(false)
+			},
+			input: vestingtypes.NewMsgCreatePeriodicVestingAccount(
+				fromAddr,
+				to3Addr,
+				time.Now().Unix(),
+				[]vestingtypes.Period{
+					{
+						Length: 1<<63 - 1,
+						Amount: sdk.NewCoins(periodCoin),
+					},
+					{
+						Length: 1<<63 - 1,
+						Amount: sdk.NewCoins(periodCoin),
+					},
+					{
+						Length: 3,
+						Amount: sdk.NewCoins(periodCoin),
+					},
+				},
+			),
+			expErr:    true,
+			expErrMsg: "cumulative endTime overflowed",
+		},
+		{
 			name: "create a valid periodic vesting account",
 			preRun: func() {
 				s.bankKeeper.EXPECT().IsSendEnabledCoins(gomock.Any(), periodCoin.Add(fooCoin)).Return(nil)
